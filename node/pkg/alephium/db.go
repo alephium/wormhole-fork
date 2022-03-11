@@ -7,8 +7,6 @@ import (
 	"github.com/dgraph-io/badger/v3"
 )
 
-type contractId [32]byte
-
 type db struct {
 	*badger.DB
 }
@@ -51,12 +49,12 @@ func (db *db) get(key []byte) (b []byte, err error) {
 	return
 }
 
-func (db *db) addTokenWrapper(tokenId []byte, tokenWrapperId contractId) error {
+func (db *db) addTokenWrapper(tokenId Byte32, tokenWrapperId Byte32) error {
 	return db.put(tokenWrapperKey(tokenId), tokenWrapperId[:])
 }
 
-func (db *db) getTokenWrapper(tokenId []byte) (contractId, error) {
-	var result contractId
+func (db *db) getTokenWrapper(tokenId Byte32) (Byte32, error) {
+	var result Byte32
 	value, err := db.get(tokenWrapperKey(tokenId))
 	if err != nil {
 		return result, err
@@ -65,12 +63,12 @@ func (db *db) getTokenWrapper(tokenId []byte) (contractId, error) {
 	return result, nil
 }
 
-func (db *db) addRemoteChain(chainId uint16, tokenBridgeForChainId contractId) error {
+func (db *db) addRemoteChain(chainId uint16, tokenBridgeForChainId Byte32) error {
 	return db.put(chainKey(chainId), tokenBridgeForChainId[:])
 }
 
-func (db *db) getRemoteChain(chainId uint16) (contractId, error) {
-	var result contractId
+func (db *db) getRemoteChain(chainId uint16) (Byte32, error) {
+	var result Byte32
 	value, err := db.get(chainKey(chainId))
 	if err != nil {
 		return result, err
@@ -93,8 +91,8 @@ func (db *db) getLatestHeight() (uint32, error) {
 	return binary.BigEndian.Uint32(value), nil
 }
 
-func tokenWrapperKey(tokenId []byte) []byte {
-	return append(tokenWrapperPrefix, tokenId...)
+func tokenWrapperKey(tokenId Byte32) []byte {
+	return append(tokenWrapperPrefix, tokenId[:]...)
 }
 
 func chainKey(chainId uint16) []byte {
