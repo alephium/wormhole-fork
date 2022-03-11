@@ -127,7 +127,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 
 	getMessagesFromBlock := func(height uint32) (*PendingMessages, error) {
-		hashes, err := client.GetHashes(w.chainIndex, height)
+		hashes, err := client.GetHashes(ctx, w.chainIndex, height)
 		if err != nil {
 			return nil, err
 		}
@@ -137,12 +137,12 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		}
 
 		blockHash := hashes[0]
-		events, err := client.GetContractEventsFromBlock(blockHash, contracts)
+		events, err := client.GetContractEventsFromBlock(ctx, blockHash, contracts)
 		if err != nil {
 			return nil, err
 		}
 
-		header, err := client.GetBlockHeader(blockHash)
+		header, err := client.GetBlockHeader(ctx, blockHash)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +168,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			}
 
 			blockHash := pending.messages[0].event.BlockHash
-			isCanonical, err := client.IsBlockInMainChain(blockHash)
+			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
 			if err != nil {
 				return err
 			}
@@ -222,7 +222,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			height, err := client.GetCurrentHeight(w.chainIndex)
+			height, err := client.GetCurrentHeight(ctx, w.chainIndex)
 			if err != nil {
 				logger.Error("failed to get current height", zap.Error(err))
 				errC <- err
