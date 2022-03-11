@@ -30,6 +30,8 @@ type Watcher struct {
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	minConfirmations uint64
+
+	dbPath string
 }
 
 type message struct {
@@ -45,7 +47,6 @@ type PendingMessages struct {
 type ConfirmedMessages struct {
 	blockHeader *BlockHeader
 	messages    []*message
-	finished    bool
 }
 
 func messageFromEvent(
@@ -86,6 +87,7 @@ func NewAlephiumWatcher(
 	setEvents chan *common.GuardianSet,
 	minConfirmations uint64,
 	obsvReqC chan *gossipv1.ObservationRequest,
+	dbPath string,
 ) *Watcher {
 	if len(contracts) != 3 {
 		return nil
@@ -107,6 +109,7 @@ func NewAlephiumWatcher(
 		setChan:          setEvents,
 		obsvReqC:         obsvReqC,
 		minConfirmations: minConfirmations,
+		dbPath:           dbPath,
 	}
 }
 
@@ -115,9 +118,26 @@ func (w *Watcher) Run(ctx context.Context) error {
 		ContractAddress: w.governanceContract,
 	})
 
-	// logger := supervisor.Logger(ctx)
-	// client = NewClient(w.url, w.apiKey, 10)
-	return nil
+	db, err := open(w.dbPath)
+	if err != nil {
+		return err
+	}
+
+	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
+	client := NewClient(w.url, w.apiKey, 10)
+	confirmedC := make(chan *ConfirmedMessages, 8)
+	errC := make(chan error)
+	validator := newValidator(contracts, confirmedC, w.msgChan, db)
+
+	go w.getEvents(ctx, client, 0, errC, confirmedC)
+	go validator.run(ctx, errC)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-errC:
+		return err
+	}
 }
 
 func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint32, errC chan<- error, confirmedC chan<- *ConfirmedMessages) {
@@ -200,10 +220,8 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			}
 			// it's safe to update map entry within range loop
 			if len(unconfirmedMessages) == 0 {
-				confirmed.finished = true
 				delete(pendings, height)
 			} else {
-				confirmed.finished = false
 				pendings[height] = &PendingMessages{
 					messages:    unconfirmedMessages,
 					blockHeader: pendingMsg.blockHeader,
@@ -213,6 +231,13 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		}
 		return nil
 	}
+
+	msgs, err := getMessagesFromBlock(fromHeight)
+	if err != nil {
+		errC <- err
+		return
+	}
+	pendings[fromHeight] = msgs
 
 	t := time.NewTicker(20 * time.Second)
 	defer t.Stop()

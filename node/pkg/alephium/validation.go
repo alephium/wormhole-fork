@@ -38,10 +38,8 @@ func newValidator(
 	confirmedC <-chan *ConfirmedMessages,
 	msgC chan<- *common.MessagePublication,
 	db *db,
-) (*validator, error) {
-	if len(contracts) != 3 {
-		return nil, fmt.Errorf("expect 3 contracts, but have: %v", contracts)
-	}
+) *validator {
+	assume(len(contracts) == 3)
 	return &validator{
 		governanceContract:          contracts[0],
 		tokenBridgeContract:         contracts[1],
@@ -54,7 +52,7 @@ func newValidator(
 		tokenWrapperCache: map[Byte32]*Byte32{},
 
 		db: db,
-	}, nil
+	}
 }
 
 func (v *validator) run(ctx context.Context, errC chan<- error) {
@@ -95,10 +93,6 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 					// TODO: handle contract create event
 
 				}
-			}
-
-			if confirmed.finished {
-				batch.updateHeight(confirmed.blockHeader.Height)
 			}
 
 			if err := v.db.writeBatch(batch); err != nil {
