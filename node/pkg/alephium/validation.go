@@ -65,13 +65,15 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 		case <-ctx.Done():
 			return
 		case confirmed := <-v.confirmedC:
-			// TODO: batch write
+			batch := newBatch()
 			for _, message := range confirmed.messages {
 				switch message.event.ContractId {
 				case v.governanceContract:
 					wormholeMsg, err := WormholeMessageFromEvent(message.event)
 					if err != nil {
 						logger.Error("invalid wormhole message", zap.Any("fields", message.event.Fields))
+						errC <- err
+						return
 					}
 					if !wormholeMsg.isTransferMessage() {
 						v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
@@ -80,7 +82,9 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 					}
 					transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
 					if err := v.validateTransferMessage(transferMsg); err != nil {
+						errC <- err
 						logger.Error("invalid wormhole message", zap.Error(err))
+						return
 					}
 					v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
 
@@ -94,7 +98,12 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 			}
 
 			if confirmed.finished {
-				v.db.updateLatestHeight(confirmed.blockHeader.Height)
+				batch.updateHeight(confirmed.blockHeader.Height)
+			}
+
+			if err := v.db.writeBatch(batch); err != nil {
+				errC <- err
+				return
 			}
 		}
 	}

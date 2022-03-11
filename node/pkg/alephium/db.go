@@ -91,6 +91,17 @@ func (db *db) getLatestHeight() (uint32, error) {
 	return binary.BigEndian.Uint32(value), nil
 }
 
+func (db *db) writeBatch(batch *batch) error {
+	return db.Update(func(txn *badger.Txn) error {
+		for i, key := range batch.keys {
+			if err := txn.Set(key, batch.values[i]); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func tokenWrapperKey(tokenId Byte32) []byte {
 	return append(tokenWrapperPrefix, tokenId[:]...)
 }
@@ -99,4 +110,33 @@ func chainKey(chainId uint16) []byte {
 	bytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(bytes, chainId)
 	return append(chainPrefix, bytes...)
+}
+
+type batch struct {
+	keys   [][]byte
+	values [][]byte
+}
+
+func newBatch() *batch {
+	return &batch{
+		keys:   make([][]byte, 0),
+		values: make([][]byte, 0),
+	}
+}
+
+func (b *batch) writeChain(chainId uint16, contractId Byte32) {
+	b.keys = append(b.keys, chainKey(chainId))
+	b.values = append(b.values, contractId[:])
+}
+
+func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperId Byte32) {
+	b.keys = append(b.keys, tokenWrapperKey(tokenId))
+	b.values = append(b.values, wrapperId[:])
+}
+
+func (b *batch) updateHeight(height uint32) {
+	b.keys = append(b.keys, latestBlockHeightKey)
+	bytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytes, height)
+	b.values = append(b.values, bytes)
 }
