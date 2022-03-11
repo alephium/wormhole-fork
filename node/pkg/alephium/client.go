@@ -49,38 +49,62 @@ func (c *Client) get(path string, result interface{}) error {
 	return json.NewDecoder(response.Body).Decode(result)
 }
 
-func (c *Client) GetCurrentHeight(fromGroup, toGroup uint8) (uint32, error) {
-	path := fmt.Sprintf("/blockflow/chain-info?fromGroup=%d&toGroup=%d", fromGroup, toGroup)
+func (c *Client) GetCurrentHeight(chainIndex *ChainIndex) (uint32, error) {
+	path := fmt.Sprintf("/blockflow/chain-info?fromGroup=%d&toGroup=%d", chainIndex.FromGroup, chainIndex.ToGroup)
 	result := struct {
 		CurrentHeight uint32 `json:"currentHeight"`
 	}{}
 
 	err := c.get(path, &result)
-	if err != nil {
-		return 0, err
-	}
-	return result.CurrentHeight, nil
+	return result.CurrentHeight, err
 }
 
-func (c *Client) GetHashes(fromGroup, toGroup uint8, height uint32) ([]string, error) {
-	path := fmt.Sprintf("/blockflow/hashes?fromGroup=%d&toGroup=%d&height=%d", fromGroup, toGroup, height)
+func (c *Client) GetHashes(chainIndex *ChainIndex, height uint32) ([]string, error) {
+	path := fmt.Sprintf("/blockflow/hashes?fromGroup=%d&toGroup=%d&height=%d", chainIndex.FromGroup, chainIndex.ToGroup, height)
 	result := struct {
 		Headers []string `json:"headers"`
 	}{}
-
 	err := c.get(path, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result.Headers, nil
+	return result.Headers, err
 }
 
-func (c *Client) GetEvents(from, to, contractAddress string) (*Events, error) {
+func (c *Client) GetBlockHeader(hash string) (*BlockHeader, error) {
+	path := fmt.Sprintf("/blockflow/blocks/%s", hash)
+	var header BlockHeader
+	err := c.get(path, &header)
+	return &header, err
+}
+
+func (c *Client) IsBlockInMainChain(hash string) (bool, error) {
+	path := fmt.Sprintf("/blockflow/is-block-in-main-chain?blockHash=%s", hash)
+	var result bool
+	err := c.get(path, &result)
+	return result, err
+}
+
+func (c *Client) GetEventsFromBlocks(from, to, contractAddress string) (*Events, error) {
 	path := fmt.Sprintf("/events/within-blocks?fromBlock=%s&toBlock=%s&contractAddress=%s", from, to, contractAddress)
 	var result Events
 	err := c.get(path, &result)
-	if err != nil {
-		return nil, err
+	return &result, err
+}
+
+func (c *Client) GetEventsFromBlock(hash string, contractAddress string) (*Events, error) {
+	path := fmt.Sprintf("/events/in-block?block=%s&contractAddress=%s", hash, contractAddress)
+	var result Events
+	err := c.get(path, &result)
+	return &result, err
+}
+
+// TODO: reduce the number of request
+func (c *Client) GetContractEventsFromBlock(hash string, contracts []string) ([]*Event, error) {
+	result := make([]*Event, 0)
+	for _, contract := range contracts {
+		events, err := c.GetEventsFromBlock(hash, contract)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, events.Events...)
 	}
-	return &result, nil
+	return result, nil
 }
