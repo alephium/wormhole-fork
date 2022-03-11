@@ -3,6 +3,7 @@ package alephium
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
@@ -30,6 +31,7 @@ type Watcher struct {
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	minConfirmations uint64
+	currentHeight    uint32
 
 	dbPath string
 }
@@ -123,6 +125,9 @@ func (w *Watcher) Run(ctx context.Context) error {
 		return err
 	}
 
+	logger := supervisor.Logger(ctx)
+	logger.Info("Alephium watcher started")
+
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 	client := NewClient(w.url, w.apiKey, 10)
 	confirmedC := make(chan *ConfirmedMessages, 8)
@@ -137,6 +142,18 @@ func (w *Watcher) Run(ctx context.Context) error {
 		return ctx.Err()
 	case err := <-errC:
 		return err
+	}
+}
+
+func (w *Watcher) handleObsvRequest(ctx context.Context, client *Client) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case req := <-w.obsvReqC:
+			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
+			// TODO: get event by txId
+		}
 	}
 }
 
@@ -252,6 +269,8 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				logger.Error("failed to get current height", zap.Error(err))
 				errC <- err
 			}
+
+			atomic.StoreUint32(&w.currentHeight, height)
 
 			if height <= currentHeight {
 				continue
