@@ -33,7 +33,7 @@ type Watcher struct {
 	minConfirmations uint64
 	currentHeight    uint32
 
-	dbPath string
+	db *db
 }
 
 type message struct {
@@ -90,10 +90,15 @@ func NewAlephiumWatcher(
 	minConfirmations uint64,
 	obsvReqC chan *gossipv1.ObservationRequest,
 	dbPath string,
-) *Watcher {
+) (*Watcher, error) {
 	if len(contracts) != 3 {
-		return nil
+		return nil, fmt.Errorf("invalid contract ids")
 	}
+	db, err := open(dbPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Watcher{
 		url:                         url,
 		apiKey:                      apiKey,
@@ -111,19 +116,18 @@ func NewAlephiumWatcher(
 		setChan:          setEvents,
 		obsvReqC:         obsvReqC,
 		minConfirmations: minConfirmations,
-		dbPath:           dbPath,
-	}
+		db:               db,
+	}, nil
+}
+
+func (w *Watcher) ContractServer(logger *zap.Logger, listenAddr string) (supervisor.Runnable, error) {
+	return contractServiceRunnable(w.db, listenAddr, logger)
 }
 
 func (w *Watcher) Run(ctx context.Context) error {
 	p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
 		ContractAddress: w.governanceContract,
 	})
-
-	db, err := open(w.dbPath)
-	if err != nil {
-		return err
-	}
 
 	logger := supervisor.Logger(ctx)
 	logger.Info("Alephium watcher started")
@@ -132,7 +136,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	client := NewClient(w.url, w.apiKey, 10)
 	confirmedC := make(chan *ConfirmedMessages, 8)
 	errC := make(chan error)
-	validator := newValidator(contracts, confirmedC, w.msgChan, db)
+	validator := newValidator(contracts, confirmedC, w.msgChan, w.db)
 
 	go w.getEvents(ctx, client, 0, errC, confirmedC)
 	go validator.run(ctx, errC)

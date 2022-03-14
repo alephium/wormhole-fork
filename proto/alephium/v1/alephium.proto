@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package alephium.v1;
+
+option go_package = "github.com/certusone/wormhole/node/pkg/proto/alephium/v1;alephiumv1";
+
+import "google/api/annotations.proto";
+
+service ContractService {
+    rpc GetTokenWrapperID (GetTokenWrapperIDRequest) returns (GetTokenWrapperIDResponse) {
+        option (google.api.http) = {
+            get: "/v1/alph/token_wrapper/{token_id}"
+        };
+    }
+
+    rpc GetTokenBridgeForChainID (GetTokenBridgeForChainIDRequest) returns (GetTokenBridgeForChainIDResponse) {
+        option (google.api.http) = {
+            get: "/v1/alph/token_bridge_for_chain/{chain_id}"
+        };
+    }
+}
+
+message GetTokenWrapperIDRequest {
+    // token id hex string
+    string token_id = 1;
+}
+
+message GetTokenWrapperIDResponse {
+    // token wrapper id hex string
+    string token_wrapper_id = 1;
+}
+
+message GetTokenBridgeForChainIDRequest {
+    uint32 chain_id = 1;
+}
+
+message GetTokenBridgeForChainIDResponse {
+    string token_bridge_for_chain_id = 1;
+}
