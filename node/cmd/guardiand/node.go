@@ -5,18 +5,20 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/certusone/wormhole/node/pkg/db"
-	"github.com/certusone/wormhole/node/pkg/notify/discord"
-	"github.com/certusone/wormhole/node/pkg/telemetry"
-	"github.com/certusone/wormhole/node/pkg/version"
-	"github.com/gagliardetto/solana-go/rpc"
-	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/certusone/wormhole/node/pkg/alephium"
+	"github.com/certusone/wormhole/node/pkg/db"
+	"github.com/certusone/wormhole/node/pkg/notify/discord"
+	"github.com/certusone/wormhole/node/pkg/telemetry"
+	"github.com/certusone/wormhole/node/pkg/version"
+	"github.com/gagliardetto/solana-go/rpc"
+	"go.uber.org/zap/zapcore"
 
 	solana_types "github.com/gagliardetto/solana-go"
 	"github.com/gorilla/mux"
@@ -101,6 +103,13 @@ var (
 	solanaWsRPC *string
 	solanaRPC   *string
 
+	alphRPC               *string
+	alphApiKey            *string
+	alphContractServerRPC *string
+	alphContractIds       *[]string
+	alphGroupIndex        *uint8
+	alphMinConfirmations  *uint8
+
 	logLevel *string
 
 	unsafeDevMode   *bool
@@ -183,6 +192,13 @@ func init() {
 
 	solanaWsRPC = NodeCmd.Flags().String("solanaWS", "", "Solana Websocket URL (required")
 	solanaRPC = NodeCmd.Flags().String("solanaRPC", "", "Solana RPC URL (required")
+
+	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
+	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
+	alphContractServerRPC = NodeCmd.Flags().String("alphContractServerRpc", "", "Listen address for alephium contract server gRPC interface (required)")
+	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Aephium contract ids (required)")
+	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
+	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -292,6 +308,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *unsafeDevMode {
 		readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
+		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 	}
 	readiness.RegisterComponent(common.ReadinessBSCSyncing)
 	readiness.RegisterComponent(common.ReadinessPolygonSyncing)
@@ -609,6 +626,9 @@ func runNode(cmd *cobra.Command, args []string) {
 		chainObsvReqC[vaa.ChainIDAcala] = make(chan *gossipv1.ObservationRequest)
 		chainObsvReqC[vaa.ChainIDEthereumRopsten] = make(chan *gossipv1.ObservationRequest)
 	}
+	if *unsafeDevMode {
+		chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
+	}
 
 	// Multiplex observation requests to the appropriate chain
 	go func() {
@@ -775,6 +795,26 @@ func runNode(cmd *cobra.Command, args []string) {
 		if *unsafeDevMode {
 			if err := supervisor.Run(ctx, "algorandwatch",
 				algorand.NewWatcher(*algorandRPC, *algorandToken, *algorandContract, lockC, setC).Run); err != nil {
+				return err
+			}
+
+			alphDbPath := path.Join(*dataDir, "alephium")
+			alphWatcher, err := alephium.NewAlephiumWatcher(
+				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds,
+				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDbPath,
+			)
+			if err != nil {
+				return err
+			}
+
+			contractServer, err := alphWatcher.ContractServer(logger, *alphContractServerRPC)
+			if err != nil {
+				return err
+			}
+			if err := supervisor.Run(ctx, "alph-contract-server", contractServer); err != nil {
+				return err
+			}
+			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
 				return err
 			}
 		}
