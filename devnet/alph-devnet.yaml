@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alph-devnet
+  labels:
+    app: alph-devnet
+spec:
+  clusterIP: None
+  selector:
+    app: alph-devnet
+  ports:
+  - name: alph-rest
+    port: 12973
+    targetPort: alph-rest
+#  - name: alph-mining
+#    port: 10973
+#    targetPort: alph-mining
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alph-devnet
+spec:
+  selector:
+    matchLabels:
+      app: alph-devnet
+  serviceName: alph-devnet
+  template:
+    metadata:
+      labels:
+        app: alph-devnet
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: alph-devnet
+          image: alephium
+          command:
+            - /bin/sh
+            - -c
+            - java -jar /alephium.jar
+          ports:
+            - containerPort: 12973
+              name: alph-rest
+              protocol: TCP
+#            - containerPort: 10973
+#              name: alph-mining
+#              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 12973
+

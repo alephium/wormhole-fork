@@ -257,6 +257,25 @@ if solana:
         trigger_mode = trigger_mode,
     )
 
+# alephium devnet
+
+docker_build(
+  ref = "alephium",
+  context = "./alephium",
+  dockerfile = "./alephium/Dockerfile"
+)
+
+k8s_yaml_with_ns("devnet/alph-devnet.yaml")
+
+k8s_resource(
+  "alph-devnet",
+  port_forwards = [
+    port_forward(12973, name = "Alephium REST [:12973]", host = webHost),
+    # port_forward(10973, name = "Alephium Mining [:10973]", host = webHost),
+  ],
+  trigger_mode = trigger_mode,
+)
+
 # eth devnet
 
 docker_build(
