@@ -50,4 +50,5 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 12973
+#            initialDelaySeconds: 20
 

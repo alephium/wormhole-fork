@@ -203,6 +203,7 @@ k8s_resource(
         port_forward(7070, name = "Public gRPC [:7070]", host = webHost),
         port_forward(7071, name = "Public REST [:7071]", host = webHost),
         port_forward(2345, name = "Debugger [:2345]", host = webHost),
+        port_forward(31102, name = "Alph contract server [:31102]", host = webHost)
     ],
     labels = ["guardian"],
     trigger_mode = trigger_mode,
@@ -273,6 +274,7 @@ k8s_resource(
     port_forward(12973, name = "Alephium REST [:12973]", host = webHost),
     # port_forward(10973, name = "Alephium Mining [:10973]", host = webHost),
   ],
+  labels = ["alephium"],
   trigger_mode = trigger_mode,
 )
 

@@ -16,6 +16,9 @@ spec:
     - port: 7071
       name: public-rest
       protocol: TCP
+    - port: 31102
+      name: alph-server
+      protocol: TCP
   clusterIP: None
   selector:
     app: guardian
@@ -101,6 +104,14 @@ spec:
             - ws://solana-devnet:8900
             - --solanaRPC
             - http://solana-devnet:8899
+            - --alphRPC
+            - http://alph-devnet:12973
+            - --alphApiKey
+            - 0e9afae96a96ac75720addc97231b3a1cdd9c331b2e23cfcc1f781cdd068d8c3
+            - --alphContractServerRpc
+            - "[::]:31102"
+            - --alphContractIds
+            - "25TUd67ynxGeSyKkXNifQV7DTDq94Ja6gUtdtMdLqjYB1,27tMEw3uuSp1f5FV7jUDF4s4q5ZoY9BkGeMxqJnwebqas,2AqKqXdCeUtQKEX35xRSwPd8rGZWBRcUCeLwXaFArctk7"
             - --unsafeDevMode
             - --guardianKey
             - /tmp/bridge.key
@@ -112,7 +123,7 @@ spec:
             - /tmp/admin.sock
             - --dataDir
             - /tmp/data
-#            - --logLevel=debug
+            - --logLevel=debug
           securityContext:
             capabilities:
               add:
@@ -122,6 +133,7 @@ spec:
             httpGet:
               port: 6060
               path: /readyz
+            initialDelaySeconds: 5
           ports:
             - containerPort: 8999
               name: p2p
@@ -137,4 +149,7 @@ spec:
               protocol: TCP
             - containerPort: 2345
               name: debugger
+              protocol: TCP
+            - containerPort: 31102
+              name: alph-server
               protocol: TCP
