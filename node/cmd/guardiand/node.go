@@ -17,10 +17,8 @@ import (
 	"github.com/certusone/wormhole/node/pkg/notify/discord"
 	"github.com/certusone/wormhole/node/pkg/telemetry"
 	"github.com/certusone/wormhole/node/pkg/version"
-	"github.com/gagliardetto/solana-go/rpc"
 	"go.uber.org/zap/zapcore"
 
-	solana_types "github.com/gagliardetto/solana-go"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -32,7 +30,6 @@ import (
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	"github.com/certusone/wormhole/node/pkg/readiness"
 	"github.com/certusone/wormhole/node/pkg/reporter"
-	solana "github.com/certusone/wormhole/node/pkg/solana"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	eth_common "github.com/ethereum/go-ethereum/common"
@@ -304,7 +301,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
-	readiness.RegisterComponent(common.ReadinessSolanaSyncing)
+	// readiness.RegisterComponent(common.ReadinessSolanaSyncing)
 	readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *unsafeDevMode {
 		readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
@@ -537,10 +534,12 @@ func runNode(cmd *cobra.Command, args []string) {
 	fantomContractAddr := eth_common.HexToAddress(*fantomContract)
 	karuraContractAddr := eth_common.HexToAddress(*karuraContract)
 	acalaContractAddr := eth_common.HexToAddress(*acalaContract)
-	solAddress, err := solana_types.PublicKeyFromBase58(*solanaContract)
-	if err != nil {
-		logger.Fatal("invalid Solana contract address", zap.Error(err))
-	}
+	/*
+		solAddress, err := solana_types.PublicKeyFromBase58(*solanaContract)
+		if err != nil {
+			logger.Fatal("invalid Solana contract address", zap.Error(err))
+		}
+	*/
 
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
@@ -613,7 +612,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
 
 	// Observation request channel for each chain supporting observation requests.
-	chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDTerra] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
@@ -821,15 +820,17 @@ func runNode(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if err := supervisor.Run(ctx, "solwatch-confirmed",
-			solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, nil, rpc.CommitmentConfirmed).Run); err != nil {
-			return err
-		}
+		/*
+			if err := supervisor.Run(ctx, "solwatch-confirmed",
+				solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, nil, rpc.CommitmentConfirmed).Run); err != nil {
+				return err
+			}
 
-		if err := supervisor.Run(ctx, "solwatch-finalized",
-			solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, chainObsvReqC[vaa.ChainIDSolana], rpc.CommitmentFinalized).Run); err != nil {
-			return err
-		}
+			if err := supervisor.Run(ctx, "solwatch-finalized",
+				solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, chainObsvReqC[vaa.ChainIDSolana], rpc.CommitmentFinalized).Run); err != nil {
+				return err
+			}
+		*/
 
 		p := processor.NewProcessor(ctx,
 			db,
