@@ -151,3 +151,7 @@ type TxStatus struct {
 	FromGroupConfirmations int    `json:"fromGroupConfirmations"`
 	ToGroupConfirmations   int    `json:"toGroupConfirmations"`
 }
+
+type NodeInfo struct {
+	Version string `json:"version"`
+}

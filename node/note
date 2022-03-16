@@ -1,0 +1,2 @@
+* findmissing.go  => 请求missing event，更新local store
+* repair_CHAIN.go => 除了findmissing的功能之外还可以去re-observation event，即签名并广播

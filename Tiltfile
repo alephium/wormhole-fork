@@ -191,7 +191,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-devnet"]
 if solana:
     guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
 

@@ -119,3 +119,9 @@ func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStat
 	err := c.get(ctx, path, &result)
 	return &result, err
 }
+
+func (c *Client) GetNode(ctx context.Context) (*NodeInfo, error) {
+	var info NodeInfo
+	err := c.get(ctx, "/infos/node", &info)
+	return &info, err
+}

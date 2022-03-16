@@ -130,11 +130,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 		ContractAddress: w.governanceContract,
 	})
 
+	client := NewClient(w.url, w.apiKey, 10)
 	logger := supervisor.Logger(ctx)
-	logger.Info("Alephium watcher started")
+	nodeInfo, err := client.GetNode(ctx)
+	if err != nil {
+		logger.Error("get node info error", zap.Error(err))
+		return err
+	}
+	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.Version))
 
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
-	client := NewClient(w.url, w.apiKey, 10)
 	confirmedC := make(chan *ConfirmedMessages, 8)
 	errC := make(chan error)
 	validator := newValidator(contracts, confirmedC, w.msgChan, w.db)
