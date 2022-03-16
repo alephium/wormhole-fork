@@ -329,6 +329,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		return nil
 	}
 
+	readiness.SetReady(w.readiness)
 	msgs, err := getMessagesFromBlock(fromHeight)
 	if err != nil {
 		errC <- err
