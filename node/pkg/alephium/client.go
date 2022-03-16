@@ -112,3 +112,10 @@ func (c *Client) GetContractEventsFromBlock(ctx context.Context, hash string, co
 	}
 	return result, nil
 }
+
+func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStatus, error) {
+	path := fmt.Sprintf("/transactions/status?txId=%s", txId)
+	var result TxStatus
+	err := c.get(ctx, path, &result)
+	return &result, err
+}

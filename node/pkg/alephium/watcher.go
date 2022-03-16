@@ -2,6 +2,7 @@ package alephium
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -140,6 +141,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	go w.getEvents(ctx, client, 0, errC, confirmedC)
 	go validator.run(ctx, errC)
+	go w.handleObsvRequest(ctx, client, confirmedC)
 
 	select {
 	case <-ctx.Done():
@@ -149,16 +151,114 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 }
 
-func (w *Watcher) handleObsvRequest(ctx context.Context, client *Client) {
+func (w *Watcher) handleObsvRequest(ctx context.Context, client *Client, confirmedC chan<- *ConfirmedMessages) {
+	logger := supervisor.Logger(ctx)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case req := <-w.obsvReqC:
 			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
-			// TODO: get event by txId
+			txId := hex.EncodeToString(req.TxHash)
+			txStatus, err := client.GetTransactionStatus(ctx, txId)
+			if err != nil {
+				logger.Error("failed to get transaction status", zap.String("txId", txId), zap.Error(err))
+				continue
+			}
+
+			blockHash := txStatus.BlockHash
+			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
+			if err != nil {
+				logger.Error("failed to check mainchain block", zap.String("blockHash", blockHash), zap.Error(err))
+				continue
+			}
+			if !isCanonical {
+				logger.Info("ignore orphan block", zap.String("blockHash", blockHash))
+				continue
+			}
+
+			currentHeight := atomic.LoadUint32(&w.currentHeight)
+
+			filter := func(events []*Event) []*Event {
+				results := make([]*Event, 0)
+				for _, event := range events {
+					if event.TxId == txId {
+						results = append(results, event)
+					}
+				}
+				return results
+			}
+			pendingMsg, err := w.getPendingMessageFromBlockHash(ctx, client, blockHash, []string{w.governanceContract}, filter)
+			if err != nil {
+				logger.Info("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
+				continue
+			}
+
+			confirmedMsgs := make([]*message, 0)
+			for _, msg := range pendingMsg.messages {
+				if pendingMsg.blockHeader.Height+uint32(msg.confirmations) <= currentHeight {
+					logger.Info("re-boserve event",
+						zap.String("txId", txId),
+						zap.String("blockHash", blockHash),
+						zap.Uint32("blockHeight", pendingMsg.blockHeader.Height),
+						zap.Uint32("currentHeight", currentHeight),
+						zap.Uint8("confirmations", msg.confirmations),
+					)
+					confirmedMsgs = append(confirmedMsgs, msg)
+				} else {
+					logger.Info("ignore unconfirmed re-observed event",
+						zap.String("txId", txId),
+						zap.String("blockHash", blockHash),
+						zap.Uint32("blockHeight", pendingMsg.blockHeader.Height),
+						zap.Uint32("currentHeight", currentHeight),
+						zap.Uint8("confirmations", msg.confirmations),
+					)
+				}
+			}
+			if len(confirmedMsgs) > 0 {
+				confirmed := &ConfirmedMessages{
+					blockHeader: pendingMsg.blockHeader,
+					messages:    confirmedMsgs,
+				}
+				confirmedC <- confirmed
+			}
 		}
 	}
+}
+
+func (w *Watcher) getPendingMessageFromBlockHash(
+	ctx context.Context,
+	client *Client,
+	blockHash string,
+	contracts []string,
+	filter func([]*Event) []*Event,
+) (*PendingMessages, error) {
+	events, err := client.GetContractEventsFromBlock(ctx, blockHash, contracts)
+	if err != nil {
+		return nil, err
+	}
+
+	if filter != nil {
+		events = filter(events)
+	}
+	header, err := client.GetBlockHeader(ctx, blockHash)
+	if err != nil {
+		return nil, err
+	}
+
+	messages := make([]*message, len(events))
+	for i, event := range events {
+		msg, err := messageFromEvent(event, w.governanceContract, uint8(w.minConfirmations))
+		if err != nil {
+			return nil, err
+		}
+		messages[i] = msg
+	}
+	return &PendingMessages{
+		messages:    messages,
+		blockHeader: header,
+	}, nil
 }
 
 func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint32, errC chan<- error, confirmedC chan<- *ConfirmedMessages) {
@@ -172,34 +272,10 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		if err != nil {
 			return nil, err
 		}
-
 		if len(hashes) == 0 {
 			return nil, fmt.Errorf("empty hashes for block %d", height)
 		}
-
-		blockHash := hashes[0]
-		events, err := client.GetContractEventsFromBlock(ctx, blockHash, contracts)
-		if err != nil {
-			return nil, err
-		}
-
-		header, err := client.GetBlockHeader(ctx, blockHash)
-		if err != nil {
-			return nil, err
-		}
-
-		messages := make([]*message, len(events))
-		for i, event := range events {
-			msg, err := messageFromEvent(event, w.governanceContract, uint8(w.minConfirmations))
-			if err != nil {
-				return nil, err
-			}
-			messages[i] = msg
-		}
-		return &PendingMessages{
-			messages:    messages,
-			blockHeader: header,
-		}, nil
+		return w.getPendingMessageFromBlockHash(ctx, client, hashes[0], contracts, nil)
 	}
 
 	checkConfirmations := func(currentHeight uint32) error {
@@ -259,6 +335,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 		return
 	}
 	pendings[fromHeight] = msgs
+	logger.Info("get event from height", zap.Uint32("fromHeight", fromHeight))
 
 	t := time.NewTicker(20 * time.Second)
 	defer t.Stop()
@@ -274,9 +351,11 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				errC <- err
 			}
 
+			logger.Info("current block height", zap.Uint32("height", height))
 			atomic.StoreUint32(&w.currentHeight, height)
 
 			if height <= currentHeight {
+				currentHeight = height
 				continue
 			}
 

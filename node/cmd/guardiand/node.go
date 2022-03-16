@@ -804,6 +804,7 @@ func runNode(cmd *cobra.Command, args []string) {
 				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDbPath,
 			)
 			if err != nil {
+				logger.Error("create alephium watcher failed", zap.Error(err))
 				return err
 			}
 
@@ -815,6 +816,7 @@ func runNode(cmd *cobra.Command, args []string) {
 				return err
 			}
 			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
+				logger.Error("run alephium watcher failed", zap.Error((err)))
 				return err
 			}
 		}

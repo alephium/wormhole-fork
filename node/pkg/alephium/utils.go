@@ -142,3 +142,12 @@ type BlockHeader struct {
 	Height    uint32 `json:"height"`
 	// we don't need other fields now
 }
+
+type TxStatus struct {
+	Type                   string `json:"type"`
+	BlockHash              string `json:"blockHash"`
+	TxIndex                int    `json:"txIndex"`
+	ChainConfirmations     int    `json:"chainConfirmations"`
+	FromGroupConfirmations int    `json:"fromGroupConfirmations"`
+	ToGroupConfirmations   int    `json:"toGroupConfirmations"`
+}
