@@ -1,0 +1,21 @@
+TxContract Serde() {
+    pub fn encodeBool(value: Bool) -> (ByteVec) {
+        return #00 ++ byteVec!(value)
+    }
+
+    pub fn encodeI256(number: I256) -> (ByteVec) {
+        return #01 ++ byteVec!(number)
+    }
+
+    pub fn encodeU256(number: U256) -> (ByteVec) {
+        return #02 ++ byteVec!(number)
+    }
+
+    pub fn encodeByteVec(byteVec: ByteVec) -> (ByteVec) {
+        return #03 ++ byteVec!(i256!(size!(byteVec))) ++ byteVec
+    }
+
+    pub fn encodeAddress(address: Address) -> (ByteVec) {
+        return #04 ++ byteVec!(address)
+    }
+}

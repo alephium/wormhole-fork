@@ -1,0 +1,155 @@
+import "governance.ral"
+import "sequence.ral"
+import "token.ral"
+import "serde.ral"
+
+TxContract TokenBridge(
+    governanceId: ByteVec, // governance contract id
+    governanceChainId: U256,
+    governanceContractId: ByteVec,
+    mut initialized: Bool,
+    mut governanceSequenceContract: ByteVec, // the sequence contract address
+    localChainId: U256,
+    mut sequence: U256     // the sequence of next message published by self
+) {
+    pub fn init(address: ByteVec) -> () {
+        assert!(!initialized)
+        initialized = true
+        let sequenceContract = Sequence(address)
+        // TODO: check code hash and initial state
+        assert!(sequenceContract.getOwner() == selfContractId!())
+        governanceSequenceContract = address
+    }
+
+    pub fn getGovernanceId() -> (ByteVec) {
+        return governanceId
+    }
+
+    pub fn getLocalChainId() -> (U256) {
+        return localChainId
+    }
+
+    pub fn getMessageFee() -> (U256) {
+        let governance = Governance(governanceId)
+        return governance.getMessageFee()
+    }
+
+    fn checkModuleAndAction(payload: ByteVec, start: U256, action: ByteVec) -> () {
+        let tokenBridgeModule = #000000000000000000000000000000000000000000546f6b656e427269646765
+        assert!(byteVecSlice!(payload, start, start + 32) == tokenBridgeModule)
+        assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
+        return
+    }
+
+    pub fn parseAndVerify(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
+        assert!(initialized)
+        let governance = Governance(governanceId)
+        return governance.parseAndVerifyVAA(vaa)
+    }
+
+    fn verifyGovernanceVAA(vaa: ByteVec) -> (ByteVec) {
+        let (emitterChainId, emitterAddress, msgSequence, payload) = parseAndVerify(vaa)
+        assert!(emitterChainId == governanceChainId)
+        assert!(emitterAddress == governanceContractId)
+        let sequenceContract = Sequence(governanceSequenceContract)
+        sequenceContract.checkSequence(msgSequence)
+        return payload
+    }
+
+    fn parseRegisterChain(vaa: ByteVec) -> (U256, ByteVec) {
+        let payload = verifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #01)
+        let mut index = 33
+        let chainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        index = index + 2
+        assert!(chainId == localChainId || chainId == 0)
+        let remoteChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        assert!(remoteChainId != localChainId)
+        index = index + 2
+        let remoteTokenBridgeId = byteVecSlice!(payload, index, index + 32)
+        index = index + 32
+        assert!(size!(payload) == index)
+        return remoteChainId, remoteTokenBridgeId
+    }
+
+    // register chain is a governance action
+    pub payable fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        assert!(initialized)
+        let (remoteChainId, remoteTokenBridgeId) = parseRegisterChain(vaa)
+        assert!(remoteChainId != localChainId)
+
+        let serde = Serde(#{{ serdeAddress }})
+        let contractCode = #{{ tokenBridgeForChainBinCode }}
+        let encodedState = byteVec!(5i) ++  // state size
+                           serde.encodeU256(localChainId) ++
+                           serde.encodeByteVec(selfContractId!()) ++
+                           serde.encodeU256(remoteChainId) ++
+                           serde.encodeByteVec(remoteTokenBridgeId) ++
+                           serde.encodeU256(0)
+
+        approveAlph!(payer, createContractAlphAmount)
+        createContract!(contractCode, encodedState)
+    }
+
+    pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
+        assert!(initialized)
+        assert!(size!(tokenId) == 32)
+        assert!(size!(nonce) == 4)
+        let token = Token(tokenId)
+        let symbol = token.getSymbol()
+        assert!(size!(symbol) == 32)
+        let name = token.getName()
+        assert!(size!(name) == 32)
+        let payload = #02 ++ // payloadId
+            tokenId ++
+            u256To2Byte!(localChainId) ++
+            u256To1Byte!(token.getDecimals()) ++
+            symbol ++
+            name
+        let governance = Governance(governanceId)
+        approveAlph!(payer, governance.getMessageFee())
+        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+    }
+
+    fn nextSequence() -> (U256) {
+        let current = sequence
+        sequence = sequence + 1
+        return current
+    }
+
+    pub payable fn publishTransferNative(
+        payer: Address,
+        data: ByteVec,
+        nonce: ByteVec,
+        consistencyLevel: U256
+    ) -> () {
+        assert!(initialized)
+        assert!(callerCodeHash!() == #{{ tokenBridgeForChainCodeHash }})
+
+        let payload = data ++ byteVec!(true) ++ callerContractId!()
+        let governance = Governance(governanceId)
+        approveAlph!(payer, governance.getMessageFee())
+        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+    }
+
+    pub payable fn publishTransferWrapped(
+        payer: Address,
+        data: ByteVec,
+        nonce: ByteVec,
+        consistencyLevel: U256
+    ) -> () {
+        assert!(initialized)
+        assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
+
+        let payload = data ++ byteVec!(false) ++ callerContractId!()
+        let governance = Governance(governanceId)
+        approveAlph!(payer, governance.getMessageFee())
+        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+    }
+
+    // ===================== debug functions ======================
+
+    pub fn checkSequence(number: U256) -> () {
+        assert!(number == sequence)
+    }
+}

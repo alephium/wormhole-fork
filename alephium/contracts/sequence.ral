@@ -1,0 +1,59 @@
+// sequence started from 0, set `executed = 0` when init contract state
+TxContract Sequence(
+    owner: ByteVec,
+    mut executed: U256,   // TODO: better name
+    mut next1: [U256; 20],
+    mut next2: [U256; 20]
+) {
+    pub fn getOwner() -> (ByteVec) {
+        return owner
+    }
+
+    fn checkExecuted(value: U256) -> (Bool) {
+        return value == 0xffffffffffffffffffffffffffffffff
+    }
+
+    fn compact() -> (Bool) {
+        let mut allExecuted = true
+        loop(0, 20, 1, allExecuted = allExecuted && checkExecuted(next1[?]))
+        if (allExecuted) {
+            executed = executed + 20
+            next1 = next2
+            loop(0, 20, 1, next2[?] = 0)
+        }
+        return allExecuted
+    }
+
+    pub fn checkSequence(sequence: U256) -> () {
+        checkOwner()
+        assert!(sequence >= executed)
+        if (sequence >= (executed + 40) && compact()) {
+            checkSequence(sequence)
+            return
+        }
+
+        assert!(executed <= sequence && sequence < (executed + 40))
+        let mut index = sequence - executed
+        if (index < 20) {
+            loop(0, 20, 1,
+                if (? == index) {
+                    assert!(!checkExecuted(next1[?]))
+                    next1[?] = 0xffffffffffffffffffffffffffffffff
+                }
+            )
+            return
+        }
+        
+        index = index - 20
+        loop(0, 20, 1,
+            if (? == index) {
+                assert!(!checkExecuted(next2[?]))
+                next2[?] = 0xffffffffffffffffffffffffffffffff
+            }
+        )
+    }
+
+    fn checkOwner() -> () {
+        assert!(callerContractId!() == owner)
+    }
+}

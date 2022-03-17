@@ -1,0 +1,8 @@
+import "governance.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        let governance = Governance(#{{ governanceAddress }})
+        governance.init(#{{ sequenceAddress }})
+    }
+}

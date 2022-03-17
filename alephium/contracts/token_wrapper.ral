@@ -1,0 +1,90 @@
+import "token_bridge.ral"
+import "token_bridge_for_chain.ral"
+
+TxContract TokenWrapper(
+    tokenBridgeId: ByteVec,
+    tokenBridgeForChainId: ByteVec,
+    localChainId: U256,
+    tokenChainId: U256,
+    tokenContractId: ByteVec,
+    decimals: U256,
+    symbol: ByteVec,
+    name: ByteVec
+) {
+    fn pow(x: U256, y: U256) -> (U256) {
+        let mut i = 0
+        let mut result = 1
+        while (i < y) {
+            result = result * x
+            i = i + 1
+        }
+        return result
+    }
+
+    fn normalizeAmount(amount: U256) -> (U256) {
+        if (decimals > 8) {
+            return amount / pow(10, decimals - 8)
+        }
+        return amount
+    }
+
+    fn deNormalizeAmount(amount: U256) -> (U256) {
+        if (decimals > 8) {
+            return amount * pow(10, decimals - 8)
+        }
+        return amount
+    }
+
+    pub payable fn transfer(
+        payer: Address,
+        fromAddress: Address,
+        toAddress: ByteVec,
+        amount: U256,
+        arbiterFee: U256,
+        nonce: ByteVec,
+        consistencyLevel: U256
+    ) -> () {
+        assert!(size!(toAddress) == 32)
+        assert!(size!(nonce) == 4)
+        assert!(size!(tokenContractId) == 32)
+
+        let normalizedAmount = normalizeAmount(amount)
+        let normalizedFee = normalizeAmount(arbiterFee)
+        assert!(normalizedFee < normalizedAmount)
+
+        let transferAmount = deNormalizeAmount(normalizedAmount)
+        transferTokenToSelf!(fromAddress, selfContractId!(), transferAmount)
+
+        let payload = #01 ++ // payloadId
+            u256To32Byte!(normalizedAmount) ++
+            tokenContractId ++
+            u256To2Byte!(tokenChainId) ++
+            toAddress ++
+            u256To2Byte!(tokenChainId) ++
+            u256To32Byte!(normalizedFee)
+        let tokenBridge = TokenBridge(tokenBridgeId)
+        approveAlph!(payer, tokenBridge.getMessageFee())
+        tokenBridge.publishTransferWrapped(payer, payload, nonce, consistencyLevel)
+    }
+
+    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        let (wrappedTokenId, wrappedTokenChainId, recipientAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
+        assert!(wrappedTokenId == tokenContractId)
+        assert!(wrappedTokenChainId == tokenChainId)
+
+        let denomalizedAmount = deNormalizeAmount(amount)
+        let denomalizedFee = deNormalizeAmount(arbiterFee)
+        assert!(denomalizedAmount > denomalizedFee)
+        let transferAmount = denomalizedAmount - denomalizedFee
+        let tokenId = selfContractId!()
+        let recipient = byteVecToAddress!(#00 ++ recipientAddress)
+        transferAlphFromSelf!(recipient, 1000000000000) // dustAmount
+        transferTokenFromSelf!(recipient, tokenId, transferAmount)
+        transferTokenFromSelf!(arbiter, tokenId, denomalizedFee)
+    }
+
+    pub payable fn deposit(from: Address, amount: U256) -> () {
+        transferAlphToSelf!(from, amount)
+    }
+}

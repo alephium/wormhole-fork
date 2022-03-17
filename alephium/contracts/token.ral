@@ -1,0 +1,34 @@
+TxContract Token(
+    symbol: ByteVec, // length is 32
+    name: ByteVec,   // length is 32
+    decimals: U256,
+    totalSupply: U256
+) {
+    pub fn getTotalSupply() -> (U256) {
+        return totalSupply
+    }
+
+    pub fn getDecimals() -> (U256) {
+        return decimals
+    }
+
+    pub fn getSymbol() -> (ByteVec) {
+        return symbol
+    }
+
+    pub fn getName() -> (ByteVec) {
+        return name
+    }
+
+    pub payable fn transfer(from: Address, to: Address, amount: U256) -> () {
+        transferToken!(from, to, selfContractId!(), amount)
+    }
+
+    pub payable fn buy(from: Address, amount: U256) -> () {
+        let tokenAmount = amount
+        transferAlphToSelf!(from, amount)
+        transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)
+    }
+    
+    // others
+}

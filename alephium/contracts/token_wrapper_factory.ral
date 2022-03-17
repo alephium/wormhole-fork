@@ -1,0 +1,34 @@
+import "serde.ral"
+
+TxContract TokenWrapperFactory() {
+    pub payable fn createTokenWrapper(
+        tokenBridgeId: ByteVec,
+        tokenBridgeForChainId: ByteVec,
+        localChainId: U256,
+        tokenChainId: U256,
+        tokenContractId: ByteVec,
+        tokenDecimals: U256,
+        tokenSymbol: ByteVec,
+        tokenName: ByteVec,
+        payer: Address,
+        createContractAlphAmount: U256
+    ) -> () {
+        let serde = Serde(#{{ serdeAddress }})
+        let contractCode = #{{ tokenWrapperBinCode }}
+        let encodedState = byteVec!(8i) ++ // state size
+                           serde.encodeByteVec(tokenBridgeId) ++
+                           serde.encodeByteVec(tokenBridgeForChainId) ++
+                           serde.encodeU256(localChainId) ++
+                           serde.encodeU256(tokenChainId) ++
+                           serde.encodeByteVec(tokenContractId) ++
+                           serde.encodeU256(tokenDecimals) ++
+                           serde.encodeByteVec(tokenSymbol) ++
+                           serde.encodeByteVec(tokenName)
+
+        approveAlph!(payer, createContractAlphAmount)
+        assert!(tokenChainId != localChainId)
+        let maxAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        createContractWithToken!(contractCode, encodedState, maxAmount)
+        // TODO: emit event
+    }
+}
