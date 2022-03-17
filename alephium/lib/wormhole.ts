@@ -1,4 +1,4 @@
-import { CliqueClient, Contract, Script, Signer, Val } from 'alephium-js'
+import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, Val } from 'alephium-js'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13
@@ -83,6 +83,28 @@ export class Wormhole {
         })
         const initScriptTx = await initScript.transactionForDeployment(this.signer)
         const submitResult = await this.signer.submitTransaction(initScriptTx.unsignedTx, initScriptTx.txId)
+        return submitResult.txId
+    }
+
+    async registerChainToAlph(
+        tokenBridgeAddress: string,
+        vaa: string,
+        payer: string,
+        amount: Number256,
+        params: BuildScriptTx,
+    ): Promise<string> {
+        const script = await Script.from(this.client, "register_chain.ral", {
+            tokenBridgeAddress: tokenBridgeAddress,
+            vaa: vaa,
+            payer: payer,
+            amount: amount,
+            serdeAddress: "00",
+            tokenBridgeForChainBinCode: "00",
+            tokenBridgeForChainCodeHash: "00",
+            tokenWrapperCodeHash: "00",
+        })
+        const scriptTx = await script.transactionForDeployment(this.signer, params)
+        const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return submitResult.txId
     }
 }
