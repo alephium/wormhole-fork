@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/certusone/wormhole/node/pkg/alephium"
-	"github.com/certusone/wormhole/node/pkg/algorand"
 	"github.com/certusone/wormhole/node/pkg/db"
 	"github.com/certusone/wormhole/node/pkg/ethereum"
 	"github.com/certusone/wormhole/node/pkg/notify/discord"
@@ -302,7 +301,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// readiness.RegisterComponent(common.ReadinessSolanaSyncing)
 	readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *unsafeDevMode {
-		readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
+		// readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
 		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 	}
 	readiness.RegisterComponent(common.ReadinessBSCSyncing)
@@ -790,10 +789,12 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if *unsafeDevMode {
-			if err := supervisor.Run(ctx, "algorandwatch",
-				algorand.NewWatcher(*algorandRPC, *algorandToken, *algorandContract, lockC, setC).Run); err != nil {
-				return err
-			}
+			/*
+				if err := supervisor.Run(ctx, "algorandwatch",
+					algorand.NewWatcher(*algorandRPC, *algorandToken, *algorandContract, lockC, setC).Run); err != nil {
+					return err
+				}
+			*/
 
 			alphDbPath := path.Join(*dataDir, "alephium")
 			alphWatcher, err := alephium.NewAlephiumWatcher(
