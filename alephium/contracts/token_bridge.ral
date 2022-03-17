@@ -80,12 +80,13 @@ TxContract TokenBridge(
 
         let serde = Serde(#{{ serdeAddress }})
         let contractCode = #{{ tokenBridgeForChainBinCode }}
-        let encodedState = byteVec!(5i) ++  // state size
+        let encodedState = byteVec!(6i) ++  // state size
                            serde.encodeU256(localChainId) ++
                            serde.encodeByteVec(selfContractId!()) ++
                            serde.encodeU256(remoteChainId) ++
                            serde.encodeByteVec(remoteTokenBridgeId) ++
-                           serde.encodeU256(0)
+                           serde.encodeBool(false) ++
+                           serde.encodeByteVec(#00)
 
         approveAlph!(payer, createContractAlphAmount)
         createContract!(contractCode, encodedState)

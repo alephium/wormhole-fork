@@ -1,0 +1,9 @@
+import "token_bridge.ral" 
+
+TxScript Main {
+    pub payable fn main() -> () {
+        approveAlph!(@{{ payer }}, {{ amount }})
+        let tokenBridge = TokenBridge(#{{ tokenBridgeAddress }})
+        tokenBridge.registerChain(#{{ vaa }}, @{{ payer }}, {{ amount }})
+    }
+}
