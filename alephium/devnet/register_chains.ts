@@ -1,4 +1,5 @@
-import { Wormhole } from '../lib/wormhole'
+import { CliqueClient, Script, Signer } from 'alephium-js'
+import { deploySequence, Wormhole } from '../lib/wormhole'
 import * as env from './env'
 
 export interface RemoteChains {
@@ -38,10 +39,36 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[3], payer, env.dustAmount, params)
     const bridgeForBsc = "29jMRScyxsiQ1W2aGRB2JYUpXb19nEfMv916AAfmneiv1"
     console.log("register bsc txId: " + txId)
+
+    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForEth)
+    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForTerra)
+    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForSolana)
+    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForBsc)
+
     return {
         eth: bridgeForEth,
         terra: bridgeForTerra,
         solana: bridgeForSolana,
         bsc: bridgeForBsc
     }
+}
+
+async function initTokenBridgeForChain(
+    client: CliqueClient,
+    signer: Signer,
+    address: string
+) {
+    const deployResult = await deploySequence(client, signer, address)
+    const script = await Script.from(client, 'token_bridge_for_chain_init.ral', {
+        tokenBridgeForChainAddress: address,
+        sequenceAddress: deployResult.address,
+        serdeAddress: "00",
+        tokenWrapperFactoryAddress: "00",
+        tokenWrapperCodeHash: "00",
+        tokenWrapperBinCode: "00",
+        tokenBridgeForChainBinCode: "00",
+        tokenBridgeForChainCodeHash: "00",
+    })
+    const scriptTx = await script.transactionForDeployment(signer)
+    await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
 }

@@ -126,7 +126,7 @@ async function _deploy(
     }
 }
 
-async function deploySequence(
+export async function deploySequence(
     client: CliqueClient,
     signer: Signer,
     owner: string
