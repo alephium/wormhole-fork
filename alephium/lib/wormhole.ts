@@ -24,6 +24,7 @@ export class Wormhole {
     tokenBridgeGovernanceContractId: string
     initGuardianSet: string[]
     initGuardianSetIndex: number
+    initMessageFee: bigint
 
     constructor(
         client: CliqueClient,
@@ -33,7 +34,8 @@ export class Wormhole {
         tokenBridgeGovernanceChainId: number,
         tokenBridgeGovernanceContractId: string,
         initGuardianSet: string[],
-        initGuardianSetIndex: number
+        initGuardianSetIndex: number,
+        initMessageFee: bigint
     ) {
         this.client = client
         this.signer = signer
@@ -43,6 +45,7 @@ export class Wormhole {
         this.tokenBridgeGovernanceContractId = tokenBridgeGovernanceContractId
         this.initGuardianSet = initGuardianSet
         this.initGuardianSetIndex = initGuardianSetIndex
+        this.initMessageFee = initMessageFee
     }
 
     async deployContracts(): Promise<WormholeContracts> {
@@ -53,7 +56,7 @@ export class Wormhole {
         )
         const governanceDeployResult = await deployGovernance(
             this.client, this.signer, this.governanceChainId, this.governanceContractId,
-            this.initGuardianSet, this.initGuardianSetIndex
+            this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeForChain = await tokenBridgeForChainContract(
             this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash)
@@ -141,10 +144,10 @@ async function deployGovernance(
     governanceChainId: number,
     governanceContractId: string,
     initGuardianSet: string[],
-    initGuardianSetIndex: number
+    initGuardianSetIndex: number,
+    initMessageFee: bigint
 ): Promise<DeployResult> {
     const governance = await Contract.from(client, 'governance.ral')
-    const initMessageFee = BigInt("100000000000000")
     const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
     const initGuardianSetSize = initGuardianSet.length
     if (initGuardianSetSize > 19) {
