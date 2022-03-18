@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"time"
@@ -24,8 +25,7 @@ type validator struct {
 	tokenBridgeContract         string
 	tokenWrapperFactoryContract string
 
-	confirmedC <-chan *ConfirmedMessages
-	msgC       chan<- *common.MessagePublication
+	msgC chan<- *common.MessagePublication
 
 	remoteChainCache  map[uint16]*Byte32
 	tokenWrapperCache map[Byte32]*Byte32
@@ -35,7 +35,6 @@ type validator struct {
 
 func newValidator(
 	contracts []string,
-	confirmedC <-chan *ConfirmedMessages,
 	msgC chan<- *common.MessagePublication,
 	db *db,
 ) *validator {
@@ -45,8 +44,7 @@ func newValidator(
 		tokenBridgeContract:         contracts[1],
 		tokenWrapperFactoryContract: contracts[2],
 
-		confirmedC: confirmedC,
-		msgC:       msgC,
+		msgC: msgC,
 
 		remoteChainCache:  map[uint16]*Byte32{},
 		tokenWrapperCache: map[Byte32]*Byte32{},
@@ -55,17 +53,17 @@ func newValidator(
 	}
 }
 
-func (v *validator) run(ctx context.Context, errC chan<- error) {
+func (v *validator) run(ctx context.Context, errC chan<- error, confirmedC <-chan *ConfirmedMessages) {
 	logger := supervisor.Logger(ctx)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case confirmed := <-v.confirmedC:
+		case confirmed := <-confirmedC:
 			batch := newBatch()
 			for _, message := range confirmed.messages {
-				switch message.event.ContractId {
+				switch message.event.ContractAddress {
 				case v.governanceContract:
 					wormholeMsg, err := WormholeMessageFromEvent(message.event)
 					if err != nil {
@@ -73,6 +71,11 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 						errC <- err
 						return
 					}
+					logger.Debug(
+						"receive event from alephium contract",
+						zap.String("emitter", wormholeMsg.emitter.ToHex()),
+						zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
+					)
 					if !wormholeMsg.isTransferMessage() {
 						v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
 						// we only need to validate transfer message
@@ -80,7 +83,6 @@ func (v *validator) run(ctx context.Context, errC chan<- error) {
 					}
 					transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
 					if err := v.validateTransferMessage(transferMsg); err != nil {
-						errC <- err
 						logger.Error("invalid wormhole message", zap.Error(err))
 						return
 					}

@@ -57,7 +57,7 @@ func messageFromEvent(
 	governanceContract string,
 	minConfirmations uint8,
 ) (*message, error) {
-	if event.ContractId != governanceContract {
+	if event.ContractAddress != governanceContract {
 		return &message{
 			event:         event,
 			confirmations: minConfirmations,
@@ -142,10 +142,10 @@ func (w *Watcher) Run(ctx context.Context) error {
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 	confirmedC := make(chan *ConfirmedMessages, 8)
 	errC := make(chan error)
-	validator := newValidator(contracts, confirmedC, w.msgChan, w.db)
+	validator := newValidator(contracts, w.msgChan, w.db)
 
+	go validator.run(ctx, errC, confirmedC)
 	go w.getEvents(ctx, client, 0, errC, confirmedC)
-	go validator.run(ctx, errC)
 	go w.handleObsvRequest(ctx, client, confirmedC)
 
 	select {
@@ -285,6 +285,10 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 
 	checkConfirmations := func(currentHeight uint32) error {
 		for height, pending := range pendings {
+			if len(pending.messages) == 0 {
+				continue
+			}
+
 			if height+uint32(w.minConfirmations) > currentHeight {
 				continue
 			}
@@ -292,6 +296,8 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			blockHash := pending.messages[0].event.BlockHash
 			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
 			if err != nil {
+				logger.Error("failed to check canonical block", zap.Error(err))
+				errC <- err
 				return err
 			}
 
@@ -301,6 +307,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				msgs, err := getMessagesFromBlock(height)
 				if err != nil {
 					logger.Error("handle fork: failed to get events", zap.Uint32("height", height))
+					errC <- err
 					return err
 				}
 				pendingMsg = msgs
@@ -316,10 +323,13 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				confirmedMessages = append(confirmedMessages, message)
 			}
 
+			logger.Debug("event confirmations", zap.Int("unconfirmed", len(unconfirmedMessages)), zap.Int("confirmed", len(confirmedMessages)))
 			confirmed := &ConfirmedMessages{
 				blockHeader: pendingMsg.blockHeader,
 				messages:    confirmedMessages,
 			}
+			confirmedC <- confirmed
+
 			// it's safe to update map entry within range loop
 			if len(unconfirmedMessages) == 0 {
 				delete(pendings, height)
@@ -329,7 +339,6 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 					blockHeader: pendingMsg.blockHeader,
 				}
 			}
-			confirmedC <- confirmed
 		}
 		return nil
 	}
@@ -337,6 +346,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 	readiness.SetReady(w.readiness)
 	msgs, err := getMessagesFromBlock(fromHeight)
 	if err != nil {
+		logger.Error("failed to get events", zap.Error(err), zap.Uint32("height", fromHeight))
 		errC <- err
 		return
 	}
@@ -355,6 +365,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			if err != nil {
 				logger.Error("failed to get current height", zap.Error(err))
 				errC <- err
+				return
 			}
 
 			logger.Info("current block height", zap.Uint32("height", height))
@@ -369,6 +380,8 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				msgs, err := getMessagesFromBlock(h)
 				if err != nil {
 					logger.Error("failed to get events", zap.Error(err), zap.Uint32("height", h))
+					errC <- err
+					return
 				}
 				pendings[h] = msgs
 			}

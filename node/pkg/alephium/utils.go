@@ -121,11 +121,11 @@ func (f *Field) ToUint8() (uint8, error) {
 }
 
 type Event struct {
-	BlockHash  string   `json:"blockHash"`
-	ContractId string   `json:"contractId"`
-	TxId       string   `json:"txId"`
-	Index      int32    `json:"index"`
-	Fields     []*Field `json:"fields"`
+	BlockHash       string   `json:"blockHash"`
+	ContractAddress string   `json:"contractAddress"`
+	TxId            string   `json:"txId"`
+	Index           int32    `json:"index"`
+	Fields          []*Field `json:"fields"`
 }
 
 type Events struct {
