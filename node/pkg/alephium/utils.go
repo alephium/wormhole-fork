@@ -74,7 +74,7 @@ type Field struct {
 }
 
 func (f *Field) ToBool() bool {
-	assume(f.Type == "bool")
+	assume(f.Type == "Bool")
 	return f.Value.(bool)
 }
 
@@ -85,22 +85,22 @@ func (f *Field) toBigInt() *big.Int {
 }
 
 func (f *Field) ToU256() *big.Int {
-	assume(f.Type == "u256")
+	assume(f.Type == "U256")
 	return f.toBigInt()
 }
 
 func (f *Field) ToI256() *big.Int {
-	assume(f.Type == "i256")
+	assume(f.Type == "I256")
 	return f.toBigInt()
 }
 
 func (f *Field) ToByteVec() []byte {
-	assume(f.Type == "bytevec")
+	assume(f.Type == "ByteVec")
 	return HexToBytes(f.Value.(string))
 }
 
 func (f *Field) ToAddress() string {
-	assume(f.Type == "address")
+	assume(f.Type == "Address")
 	return f.Value.(string)
 }
 
