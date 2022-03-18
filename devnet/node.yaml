@@ -106,12 +106,10 @@ spec:
             - http://solana-devnet:8899
             - --alphRPC
             - http://alph-devnet:12973
-            - --alphApiKey
-            - 0e9afae96a96ac75720addc97231b3a1cdd9c331b2e23cfcc1f781cdd068d8c3
             - --alphContractServerRpc
             - "[::]:31102"
             - --alphContractIds
-            - "25TUd67ynxGeSyKkXNifQV7DTDq94Ja6gUtdtMdLqjYB1,27tMEw3uuSp1f5FV7jUDF4s4q5ZoY9BkGeMxqJnwebqas,2AqKqXdCeUtQKEX35xRSwPd8rGZWBRcUCeLwXaFArctk7"
+            - "2AiLoHmb7C7a54z4wvQ6o35aHr7y8oPnN9q5t3KjpvBvY,29gCabHNnGtjxVufKg8zS2mzw762td5LtwKRpSQ4TMK3k,2AqKqXdCeUtQKEX35xRSwPd8rGZWBRcUCeLwXaFArctk7"
             - --unsafeDevMode
             - --guardianKey
             - /tmp/bridge.key
