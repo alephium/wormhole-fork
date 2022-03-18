@@ -1,0 +1,20 @@
+import "token.ral"
+import "token_bridge_for_chain.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        approveAlph!(@{{ sender }}, {{ messageFee }})
+        approveToken!(@{{ sender }}, #{{ tokenId }}, {{ tokenAmount }})
+        let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
+        tokenBridgeForChain.transferNative(
+            @{{ sender }},
+            #{{ tokenId }},
+            @{{ sender }},
+            #{{ toAddress }},
+            {{ tokenAmount }},
+            {{ arbiterFee }},
+            #{{ nonce }},
+            {{ consistencyLevel }}
+        )
+    }
+}

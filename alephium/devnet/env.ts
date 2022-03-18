@@ -6,3 +6,4 @@ export const initGuardianIndex = 0
 export const payer = '12LgGdbjE6EtnTKw5gdBwV2RRXuXPtzYM7SDZ45YJTRht'
 export const messageFee = BigInt("100000000000000")
 export const consistencyLevel = 1
+export const oneAlph = BigInt("1000000000000000000")

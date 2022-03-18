@@ -1,0 +1,9 @@
+import "token.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        approveAlph!(@{{ sender }}, {{ amount }})
+        let token = Token(#{{ tokenAddress }})
+        token.buy(@{{ sender }}, {{ amount }})
+    }
+}
