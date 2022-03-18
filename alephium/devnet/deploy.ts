@@ -25,7 +25,28 @@ const wormhole = new Wormhole(
     env.messageFee
 )
 
+async function createWallet() {
+    const testWallet = 'alephium-js-test-only-wallet'
+    const wallets = await client.wallets.getWallets()
+    const exists = wallets.data.some(status => status.walletName == testWallet)
+    if (exists) {
+        console.log('test wallet already exists')
+        return
+    }
+
+    const password = 'alph'
+    const mnemonic = 'vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault'
+    await client.wallets.putWallets({
+        walletName: testWallet,
+        mnemonic: mnemonic,
+        password: password
+    })
+    console.log('create test wallet succeed')
+}
+
 async function deploy() {
+    await createWallet()
+
     const contracts = await wormhole.deployContracts()
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.address)
