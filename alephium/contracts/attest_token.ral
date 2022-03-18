@@ -1,0 +1,9 @@
+import "token_bridge.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        approveAlph!(@{{ payer }}, {{ messageFee }})
+        let tokenBridge = TokenBridge(#{{ tokenBridgeAddress }})
+        tokenBridge.attestToken(@{{ payer }}, #{{ tokenId }}, #{{ nonce }}, {{ consistencyLevel }})
+    }
+}
