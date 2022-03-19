@@ -15,6 +15,33 @@ import (
 type contractService struct {
 	alephiumv1.UnsafeContractServiceServer
 	db *db
+
+	tokenWrapperCache        map[Byte32]string
+	tokenBridgeForChainCache map[uint16]string
+}
+
+func (c *contractService) getTokenWrapper(tokenId Byte32) (string, error) {
+	if value, ok := c.tokenWrapperCache[tokenId]; ok {
+		return value, nil
+	}
+	contractAddress, err := c.db.getTokenWrapper(tokenId)
+	if err != nil {
+		return "", err
+	}
+	c.tokenWrapperCache[tokenId] = contractAddress
+	return contractAddress, nil
+}
+
+func (c *contractService) getTokenBridgeForChain(chainId uint16) (string, error) {
+	if value, ok := c.tokenBridgeForChainCache[chainId]; ok {
+		return value, nil
+	}
+	contractAddress, err := c.db.getRemoteChain(chainId)
+	if err != nil {
+		return "", err
+	}
+	c.tokenBridgeForChainCache[chainId] = contractAddress
+	return contractAddress, nil
 }
 
 func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
@@ -28,7 +55,7 @@ func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *aleph
 
 	var byte32 Byte32
 	copy(byte32[:], bytes)
-	tokenWrapperAddress, err := c.db.getTokenWrapper(byte32)
+	tokenWrapperAddress, err := c.getTokenWrapper(byte32)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +65,7 @@ func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *aleph
 }
 
 func (c *contractService) GetTokenBridgeForChainAddress(ctx context.Context, req *alephiumv1.GetTokenBridgeForChainAddressRequest) (*alephiumv1.GetTokenBridgeForChainAddressResponse, error) {
-	contractAddress, err := c.db.getRemoteChain(uint16(req.ChainId))
+	contractAddress, err := c.getTokenBridgeForChain(uint16(req.ChainId))
 	if err != nil {
 		return nil, err
 	}
