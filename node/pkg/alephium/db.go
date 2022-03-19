@@ -49,32 +49,28 @@ func (db *db) get(key []byte) (b []byte, err error) {
 	return
 }
 
-func (db *db) addTokenWrapper(tokenId Byte32, tokenWrapperId Byte32) error {
-	return db.put(tokenWrapperKey(tokenId), tokenWrapperId[:])
+func (db *db) addTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
+	return db.put(tokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
 }
 
-func (db *db) getTokenWrapper(tokenId Byte32) (Byte32, error) {
-	var result Byte32
+func (db *db) getTokenWrapper(tokenId Byte32) (string, error) {
 	value, err := db.get(tokenWrapperKey(tokenId))
 	if err != nil {
-		return result, err
+		return "", err
 	}
-	copy(result[:], value)
-	return result, nil
+	return string(value), nil
 }
 
-func (db *db) addRemoteChain(chainId uint16, tokenBridgeForChainId Byte32) error {
-	return db.put(chainKey(chainId), tokenBridgeForChainId[:])
+func (db *db) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
+	return db.put(chainKey(chainId), []byte(tokenBridgeForChainAddress))
 }
 
-func (db *db) getRemoteChain(chainId uint16) (Byte32, error) {
-	var result Byte32
+func (db *db) getRemoteChain(chainId uint16) (string, error) {
 	value, err := db.get(chainKey(chainId))
 	if err != nil {
-		return result, err
+		return "", err
 	}
-	copy(result[:], value)
-	return result, nil
+	return string(value), nil
 }
 
 func (db *db) updateLatestHeight(height uint32) error {
@@ -124,14 +120,14 @@ func newBatch() *batch {
 	}
 }
 
-func (b *batch) writeChain(chainId uint16, contractId Byte32) {
+func (b *batch) writeChain(chainId uint16, contractAddress string) {
 	b.keys = append(b.keys, chainKey(chainId))
-	b.values = append(b.values, contractId[:])
+	b.values = append(b.values, []byte(contractAddress))
 }
 
-func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperId Byte32) {
+func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperAddress string) {
 	b.keys = append(b.keys, tokenWrapperKey(tokenId))
-	b.values = append(b.values, wrapperId[:])
+	b.values = append(b.values, []byte(wrapperAddress))
 }
 
 func (b *batch) updateHeight(height uint32) {

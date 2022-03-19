@@ -17,7 +17,7 @@ type contractService struct {
 	db *db
 }
 
-func (c *contractService) GetTokenWrapperID(ctx context.Context, req *alephiumv1.GetTokenWrapperIDRequest) (*alephiumv1.GetTokenWrapperIDResponse, error) {
+func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
 	bytes, err := hex.DecodeString(req.TokenId)
 	if err != nil {
 		return nil, err
@@ -28,22 +28,22 @@ func (c *contractService) GetTokenWrapperID(ctx context.Context, req *alephiumv1
 
 	var byte32 Byte32
 	copy(byte32[:], bytes)
-	tokenWrapperId, err := c.db.getTokenWrapper(byte32)
+	tokenWrapperAddress, err := c.db.getTokenWrapper(byte32)
 	if err != nil {
 		return nil, err
 	}
-	return &alephiumv1.GetTokenWrapperIDResponse{
-		TokenWrapperId: tokenWrapperId.ToHex(),
+	return &alephiumv1.GetTokenWrapperAddressResponse{
+		TokenWrapperAddress: tokenWrapperAddress,
 	}, nil
 }
 
-func (c *contractService) GetTokenBridgeForChainID(ctx context.Context, req *alephiumv1.GetTokenBridgeForChainIDRequest) (*alephiumv1.GetTokenBridgeForChainIDResponse, error) {
-	contractId, err := c.db.getRemoteChain(uint16(req.ChainId))
+func (c *contractService) GetTokenBridgeForChainAddress(ctx context.Context, req *alephiumv1.GetTokenBridgeForChainAddressRequest) (*alephiumv1.GetTokenBridgeForChainAddressResponse, error) {
+	contractAddress, err := c.db.getRemoteChain(uint16(req.ChainId))
 	if err != nil {
 		return nil, err
 	}
-	return &alephiumv1.GetTokenBridgeForChainIDResponse{
-		TokenBridgeForChainId: contractId.ToHex(),
+	return &alephiumv1.GetTokenBridgeForChainAddressResponse{
+		TokenBridgeForChainAddress: contractAddress,
 	}, nil
 }
 

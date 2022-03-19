@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
@@ -31,6 +32,14 @@ type validator struct {
 	tokenWrapperCache map[Byte32]*Byte32
 
 	db *db
+}
+
+func toContractId(address string) Byte32 {
+	var byte32 Byte32
+	contractId := base58.Decode(address)
+	assume(len(contractId) == 33)
+	copy(byte32[:], contractId[1:])
+	return byte32
 }
 
 func newValidator(
@@ -127,10 +136,11 @@ func (v *validator) getRemoteChain(chainId uint16) (*Byte32, error) {
 	if value, ok := v.remoteChainCache[chainId]; ok {
 		return value, nil
 	}
-	contractId, err := v.db.getRemoteChain(chainId)
+	contractAddress, err := v.db.getRemoteChain(chainId)
 	if err != nil {
 		return nil, err
 	}
+	contractId := toContractId(contractAddress)
 	v.remoteChainCache[chainId] = &contractId
 	return &contractId, nil
 }
@@ -139,10 +149,11 @@ func (v *validator) getTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	if value, ok := v.tokenWrapperCache[tokenId]; ok {
 		return value, nil
 	}
-	contractId, err := v.db.getTokenWrapper(tokenId)
+	contractAddress, err := v.db.getTokenWrapper(tokenId)
 	if err != nil {
 		return nil, err
 	}
+	contractId := toContractId(contractAddress)
 	v.tokenWrapperCache[tokenId] = &contractId
 	return &contractId, err
 }
