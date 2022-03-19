@@ -263,6 +263,7 @@ if solana:
 docker_build(
   ref = "alephium",
   context = "./alephium",
+  ignore = ["./artifacts", "./contracts", "./node_modules", "./dist", "./test"],
   dockerfile = "./alephium/Dockerfile"
 )
 
@@ -286,7 +287,7 @@ docker_build(
     dockerfile = "./ethereum/Dockerfile",
 
     # ignore local node_modules (in case they're present)
-    ignore = ["./ethereum/node_modules"],
+    ignore = ["./node_modules"],
 
     # sync external scripts for incremental development
     # (everything else needs to be restarted from scratch for determinism)
@@ -452,7 +453,7 @@ if explorer:
         ref = "explorer",
         context = "./explorer",
         dockerfile = "./explorer/Dockerfile",
-        ignore = ["./explorer/node_modules"],
+        ignore = ["./node_modules"],
         live_update = [
             sync("./explorer/src", "/home/node/app/src"),
             sync("./explorer/public", "/home/node/app/public"),
