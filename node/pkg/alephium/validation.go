@@ -286,7 +286,7 @@ func readUint16(reader *bytes.Reader, num *uint16) {
 	assume(err == nil)
 }
 
-func readByte32(reader *bytes.Reader, byte32 Byte32) {
+func readByte32(reader *bytes.Reader, byte32 *Byte32) {
 	size, err := reader.Read(byte32[:])
 	assume(size == 32)
 	assume(err == nil)
@@ -303,12 +303,12 @@ func TransferMessageFromBytes(data []byte) *TransferMessage {
 	reader := bytes.NewReader(data[1:]) // skip the payloadId
 	var message TransferMessage
 	readBigInt(reader, &message.amount)
-	readByte32(reader, message.tokenId)
+	readByte32(reader, &message.tokenId)
 	readUint16(reader, &message.tokenChainId)
-	readByte32(reader, message.toAddress)
+	readByte32(reader, &message.toAddress)
 	readUint16(reader, &message.toChainId)
 	readBigInt(reader, &message.fee)
 	message.isNativeToken = readBool(reader)
-	readByte32(reader, message.senderId)
+	readByte32(reader, &message.senderId)
 	return &message
 }
