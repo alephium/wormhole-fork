@@ -142,7 +142,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 	confirmedC := make(chan *ConfirmedMessages, 8)
 	errC := make(chan error)
-	validator := newValidator(contracts, w.msgChan, w.db)
+	validator := newValidator(client, w.chainIndex.FromGroup, contracts, w.msgChan, w.db)
 
 	go validator.run(ctx, errC, confirmedC)
 	go w.getEvents(ctx, client, 0, errC, confirmedC)

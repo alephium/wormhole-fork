@@ -87,14 +87,14 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 }
 
 func (c *Client) GetEventsFromBlocks(ctx context.Context, from, to, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/within-blocks?fromBlock=%s&toBlock=%s&contractAddress=%s", from, to, contractAddress)
+	path := fmt.Sprintf("/events/contract/within-blocks?fromBlock=%s&toBlock=%s&contractAddress=%s", from, to, contractAddress)
 	var result Events
 	err := c.get(ctx, path, &result)
 	return &result, err
 }
 
 func (c *Client) GetEventsFromBlock(ctx context.Context, hash string, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/in-block?block=%s&contractAddress=%s", hash, contractAddress)
+	path := fmt.Sprintf("/events/contract/in-block?block=%s&contractAddress=%s", hash, contractAddress)
 	var result Events
 	err := c.get(ctx, path, &result)
 	return &result, err
@@ -124,4 +124,11 @@ func (c *Client) GetNode(ctx context.Context) (*NodeInfo, error) {
 	var info NodeInfo
 	err := c.get(ctx, "/infos/node", &info)
 	return &info, err
+}
+
+func (c *Client) GetContractState(ctx context.Context, contractAddress string, groupIndex uint8) (*ContractState, error) {
+	path := fmt.Sprintf("/contracts/%s/state?group=%d", contractAddress, groupIndex)
+	var result ContractState
+	err := c.get(ctx, path, &result)
+	return &result, err
 }

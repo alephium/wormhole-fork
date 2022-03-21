@@ -2,7 +2,7 @@ package alephium
 
 import (
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"math"
 	"math/big"
 	"runtime/debug"
@@ -99,6 +99,16 @@ func (f *Field) ToByteVec() []byte {
 	return HexToBytes(f.Value.(string))
 }
 
+func (f *Field) ToByte32() (*Byte32, error) {
+	bytes := f.ToByteVec()
+	if len(bytes) != 32 {
+		return nil, errors.New("invalid byte32")
+	}
+	var byte32 Byte32
+	copy(byte32[:], bytes)
+	return &byte32, nil
+}
+
 func (f *Field) ToAddress() string {
 	assume(f.Type == "Address")
 	return f.Value.(string)
@@ -109,7 +119,15 @@ func (f *Field) ToUint64() (uint64, error) {
 	if bigInt.IsUint64() {
 		return bigInt.Uint64(), nil
 	}
-	return 0, fmt.Errorf("invalid uint64")
+	return 0, errors.New("invalid uint64")
+}
+
+func (f *Field) ToUint16() (uint16, error) {
+	bigInt := f.ToU256()
+	if bigInt.Cmp(big.NewInt(math.MaxUint16)) < 0 {
+		return uint16(bigInt.Uint64()), nil
+	}
+	return 0, errors.New("invalid uint16")
 }
 
 func (f *Field) ToUint8() (uint8, error) {
@@ -117,7 +135,7 @@ func (f *Field) ToUint8() (uint8, error) {
 	if bigInt.Cmp(big.NewInt(math.MaxUint8)) < 0 {
 		return uint8(bigInt.Uint64()), nil
 	}
-	return 0, fmt.Errorf("invalid uint8")
+	return 0, errors.New("invalid uint8")
 }
 
 type Event struct {
@@ -154,4 +172,10 @@ type TxStatus struct {
 
 type NodeInfo struct {
 	Version string `json:"version"`
+}
+
+type ContractState struct {
+	Address  string   `json:"address"`
+	CodeHash string   `json:"codeHash"`
+	Fields   []*Field `json:"fields"`
 }

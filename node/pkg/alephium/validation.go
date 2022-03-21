@@ -26,6 +26,9 @@ type validator struct {
 	tokenBridgeContract         string
 	tokenWrapperFactoryContract string
 
+	client     *Client
+	groupIndex uint8
+
 	msgC chan<- *common.MessagePublication
 
 	remoteChainCache  map[uint16]*Byte32
@@ -43,6 +46,8 @@ func toContractId(address string) Byte32 {
 }
 
 func newValidator(
+	client *Client,
+	groupIndex uint8,
 	contracts []string,
 	msgC chan<- *common.MessagePublication,
 	db *db,
@@ -52,6 +57,9 @@ func newValidator(
 		governanceContract:          contracts[0],
 		tokenBridgeContract:         contracts[1],
 		tokenWrapperFactoryContract: contracts[2],
+
+		client:     client,
+		groupIndex: groupIndex,
 
 		msgC: msgC,
 
@@ -98,16 +106,48 @@ func (v *validator) run(ctx context.Context, errC chan<- error, confirmedC <-cha
 					v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
 
 				case v.tokenBridgeContract:
-					// TODO: handle contract create event
+					assume(len(message.event.Fields) == 1)
+					tokenBridgeForChainAddress := message.event.Fields[0].ToAddress()
+					contractState, err := v.client.GetContractState(ctx, tokenBridgeForChainAddress, v.groupIndex)
+					if err != nil {
+						errC <- err
+						logger.Error("failed to get contract state", zap.String("address", tokenBridgeForChainAddress), zap.Error(err))
+						return
+					}
+					assume(contractState.Address == tokenBridgeForChainAddress)
+					remoteChainId, err := contractState.Fields[2].ToUint16()
+					if err != nil {
+						errC <- err
+						logger.Error("invalid chain id", zap.Uint16("chainId", remoteChainId))
+						return
+					}
+					logger.Info("new remote chain registered", zap.Uint16("chainId", remoteChainId), zap.String("address", tokenBridgeForChainAddress))
+					batch.writeChain(remoteChainId, tokenBridgeForChainAddress)
 
 				case v.tokenWrapperFactoryContract:
-					// TODO: handle contract create event
-
+					assume(len(message.event.Fields) == 1)
+					tokenWrapperAddress := message.event.Fields[0].ToAddress()
+					contractState, err := v.client.GetContractState(ctx, tokenWrapperAddress, v.groupIndex)
+					if err != nil {
+						errC <- err
+						logger.Error("failed to get contract state", zap.String("address", tokenWrapperAddress), zap.Error(err))
+						return
+					}
+					assume(contractState.Address == tokenWrapperAddress)
+					remoteTokenId, err := contractState.Fields[4].ToByte32()
+					if err != nil {
+						errC <- err
+						logger.Error("invalid token id", zap.Any("tokenId", contractState.Fields[4]))
+						return
+					}
+					logger.Info("new token wrapper created", zap.String("tokenId", remoteTokenId.ToHex()), zap.String("address", tokenWrapperAddress))
+					batch.writeTokenWrapper(*remoteTokenId, tokenWrapperAddress)
 				}
 			}
 
 			if err := v.db.writeBatch(batch); err != nil {
 				errC <- err
+				logger.Error("failed to write db", zap.Error(err))
 				return
 			}
 		}
