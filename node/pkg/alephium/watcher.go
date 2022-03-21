@@ -419,8 +419,6 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				messages:    confirmedMessages,
 				reObserved:  false,
 			}
-			confirmedC <- confirmed
-
 			if len(unconfirmedMessages) == 0 {
 				confirmed.finished = true
 				delete(pendings, height)
@@ -431,6 +429,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 					blockHeader: pending.blockHeader,
 				}
 			}
+			confirmedC <- confirmed
 		}
 		return nil
 	}
