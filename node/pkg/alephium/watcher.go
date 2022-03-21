@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"sync/atomic"
 	"time"
 
@@ -266,6 +267,19 @@ func (w *Watcher) getPendingMessageFromBlockHash(
 	}, nil
 }
 
+func sortedHeights(m map[uint32]*PendingMessages) []uint32 {
+	heights := make([]uint32, len(m))
+	index := 0
+	for height := range m {
+		heights[index] = height
+		index++
+	}
+	sort.Slice(heights, func(i, j int) bool {
+		return heights[i] < heights[j]
+	})
+	return heights
+}
+
 func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint32, errC chan<- error, confirmedC chan<- *ConfirmedMessages) {
 	logger := supervisor.Logger(ctx)
 	currentHeight := fromHeight
@@ -284,7 +298,10 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 	}
 
 	checkConfirmations := func(currentHeight uint32) error {
-		for height, pending := range pendings {
+		// TODO: improve this
+		heights := sortedHeights(pendings)
+		for _, height := range heights {
+			pending := pendings[height]
 			if len(pending.messages) == 0 {
 				continue
 			}
@@ -301,7 +318,6 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 				return err
 			}
 
-			pendingMsg := pending
 			// forked, we need to re-request events for the height
 			if !isCanonical {
 				msgs, err := getMessagesFromBlock(height)
@@ -310,12 +326,12 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 					errC <- err
 					return err
 				}
-				pendingMsg = msgs
+				pending = msgs
 			}
 
 			unconfirmedMessages := make([]*message, 0)
 			confirmedMessages := make([]*message, 0)
-			for _, message := range pendingMsg.messages {
+			for _, message := range pending.messages {
 				if height+uint32(message.confirmations) > currentHeight {
 					unconfirmedMessages = append(unconfirmedMessages, message)
 					continue
@@ -325,18 +341,17 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 
 			logger.Debug("event confirmations", zap.Int("unconfirmed", len(unconfirmedMessages)), zap.Int("confirmed", len(confirmedMessages)))
 			confirmed := &ConfirmedMessages{
-				blockHeader: pendingMsg.blockHeader,
+				blockHeader: pending.blockHeader,
 				messages:    confirmedMessages,
 			}
 			confirmedC <- confirmed
 
-			// it's safe to update map entry within range loop
 			if len(unconfirmedMessages) == 0 {
 				delete(pendings, height)
 			} else {
 				pendings[height] = &PendingMessages{
 					messages:    unconfirmedMessages,
-					blockHeader: pendingMsg.blockHeader,
+					blockHeader: pending.blockHeader,
 				}
 			}
 		}
