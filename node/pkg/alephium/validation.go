@@ -236,9 +236,10 @@ func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.Mess
 
 func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
 	assume(len(event.Fields) == 4)
-	var emitter Byte32
-	copy(emitter[:], event.Fields[0].ToByteVec())
-
+	emitter, err := event.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
 	sequence, err := event.Fields[1].ToUint64()
 	if err != nil {
 		return nil, err
@@ -253,7 +254,7 @@ func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
 	payload := data[4:]
 	return &WormholeMessage{
 		event:            event,
-		emitter:          emitter,
+		emitter:          *emitter,
 		nonce:            nonce,
 		payload:          payload,
 		sequence:         sequence,
