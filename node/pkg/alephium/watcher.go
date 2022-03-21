@@ -339,14 +339,11 @@ func (w *Watcher) getPendingMessageFromBlockHash(
 }
 
 func (w *Watcher) getMessagesFromBlock(ctx context.Context, client *Client, height uint32, contracts []string) (*PendingMessages, error) {
-	hashes, err := client.GetHashes(ctx, w.chainIndex, height)
+	hash, err := client.GetHashByHeight(ctx, w.chainIndex, height)
 	if err != nil {
 		return nil, err
 	}
-	if len(hashes) == 0 {
-		return nil, fmt.Errorf("empty hashes for block %d", height)
-	}
-	return w.getPendingMessageFromBlockHash(ctx, client, hashes[0], contracts, nil)
+	return w.getPendingMessageFromBlockHash(ctx, client, *hash, contracts, nil)
 }
 
 func sortedHeights(m map[uint32]*PendingMessages) []uint32 {

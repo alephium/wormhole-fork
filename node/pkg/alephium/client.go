@@ -72,6 +72,17 @@ func (c *Client) GetHashes(ctx context.Context, chainIndex *ChainIndex, height u
 	return result.Headers, err
 }
 
+func (c *Client) GetHashByHeight(ctx context.Context, chainIndex *ChainIndex, height uint32) (*string, error) {
+	hashes, err := c.GetHashes(ctx, chainIndex, height)
+	if err != nil {
+		return nil, err
+	}
+	if len(hashes) == 0 {
+		return nil, fmt.Errorf("no block for height %v", height)
+	}
+	return &hashes[0], nil
+}
+
 func (c *Client) GetBlockHeader(ctx context.Context, hash string) (*BlockHeader, error) {
 	path := fmt.Sprintf("/blockflow/blocks/%s", hash)
 	var header BlockHeader
@@ -114,14 +125,11 @@ func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string
 }
 
 func (c *Client) GetContractEventsFromBlockHeight(ctx context.Context, chainIndex *ChainIndex, height uint32, contracts []string) ([]*Event, error) {
-	hashes, err := c.GetHashes(ctx, chainIndex, height)
+	hash, err := c.GetHashByHeight(ctx, chainIndex, height)
 	if err != nil {
 		return nil, err
 	}
-	if len(hashes) == 0 {
-		return nil, fmt.Errorf("no block for height %v", height)
-	}
-	return c.GetContractEventsFromBlockHash(ctx, hashes[0], contracts)
+	return c.GetContractEventsFromBlockHash(ctx, *hash, contracts)
 }
 
 func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStatus, error) {
