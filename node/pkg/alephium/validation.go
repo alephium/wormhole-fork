@@ -70,8 +70,31 @@ func newValidator(
 	}
 }
 
-func (v *validator) run(ctx context.Context, errC chan<- error, confirmedC <-chan *ConfirmedMessages) {
+func (v *validator) run(ctx context.Context, _fromHeight uint32, errC chan<- error, confirmedC <-chan *ConfirmedMessages) {
 	logger := supervisor.Logger(ctx)
+	fromHeight := _fromHeight
+	blocks := map[uint32]bool{}
+
+	updateProcessedHeight := func(height uint32, batch *batch) {
+		if height < fromHeight {
+			// fork happend
+			fromHeight = height
+			return
+		}
+		for h := fromHeight; h <= height; h++ {
+			if finished := blocks[h]; !finished {
+				return
+			} else {
+				delete(blocks, h)
+			}
+		}
+		fromHeight = height + 1
+		lastHeight := uint32(0)
+		if height > MaxForkHeight {
+			lastHeight = height - MaxForkHeight
+		}
+		batch.updateHeight(lastHeight)
+	}
 
 	for {
 		select {
@@ -82,69 +105,31 @@ func (v *validator) run(ctx context.Context, errC chan<- error, confirmedC <-cha
 			for _, message := range confirmed.messages {
 				switch message.event.ContractAddress {
 				case v.governanceContract:
-					wormholeMsg, err := WormholeMessageFromEvent(message.event)
-					if err != nil {
-						logger.Error("invalid wormhole message", zap.Any("fields", message.event.Fields))
+					if err := v.handleGovernanceEvent(logger, message, confirmed.blockHeader); err != nil {
 						errC <- err
 						return
 					}
-					logger.Debug(
-						"receive event from alephium contract",
-						zap.String("emitter", wormholeMsg.emitter.ToHex()),
-						zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
-					)
-					if !wormholeMsg.isTransferMessage() {
-						v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
-						// we only need to validate transfer message
-						continue
-					}
-					transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
-					if err := v.validateTransferMessage(transferMsg); err != nil {
-						logger.Error("invalid wormhole message", zap.Error(err))
-						return
-					}
-					v.msgC <- wormholeMsg.toMessagePublication(confirmed.blockHeader)
 
 				case v.tokenBridgeContract:
-					assume(len(message.event.Fields) == 1)
-					tokenBridgeForChainAddress := message.event.Fields[0].ToAddress()
-					contractState, err := v.client.GetContractState(ctx, tokenBridgeForChainAddress, v.groupIndex)
-					if err != nil {
+					if err := v.handleTokenBridgeEvent(logger, ctx, message.event, batch); err != nil {
 						errC <- err
-						logger.Error("failed to get contract state", zap.String("address", tokenBridgeForChainAddress), zap.Error(err))
 						return
 					}
-					assume(contractState.Address == tokenBridgeForChainAddress)
-					remoteChainId, err := contractState.Fields[2].ToUint16()
-					if err != nil {
-						errC <- err
-						logger.Error("invalid chain id", zap.Uint16("chainId", remoteChainId))
-						return
-					}
-					logger.Info("new remote chain registered", zap.Uint16("chainId", remoteChainId), zap.String("address", tokenBridgeForChainAddress))
-					batch.writeChain(remoteChainId, tokenBridgeForChainAddress)
 
 				case v.tokenWrapperFactoryContract:
-					assume(len(message.event.Fields) == 1)
-					tokenWrapperAddress := message.event.Fields[0].ToAddress()
-					contractState, err := v.client.GetContractState(ctx, tokenWrapperAddress, v.groupIndex)
-					if err != nil {
+					if err := v.handleTokenWrapperFactoryEvent(logger, ctx, message.event, batch); err != nil {
 						errC <- err
-						logger.Error("failed to get contract state", zap.String("address", tokenWrapperAddress), zap.Error(err))
 						return
 					}
-					assume(contractState.Address == tokenWrapperAddress)
-					remoteTokenId, err := contractState.Fields[4].ToByte32()
-					if err != nil {
-						errC <- err
-						logger.Error("invalid token id", zap.Any("tokenId", contractState.Fields[4]))
-						return
-					}
-					logger.Info("new token wrapper created", zap.String("tokenId", remoteTokenId.ToHex()), zap.String("address", tokenWrapperAddress))
-					batch.writeTokenWrapper(*remoteTokenId, tokenWrapperAddress)
 				}
 			}
 
+			if !confirmed.reObserved {
+				blocks[confirmed.blockHeader.Height] = confirmed.finished
+				if confirmed.finished {
+					updateProcessedHeight(confirmed.blockHeader.Height, batch)
+				}
+			}
 			if err := v.db.writeBatch(batch); err != nil {
 				errC <- err
 				logger.Error("failed to write db", zap.Error(err))
@@ -152,6 +137,51 @@ func (v *validator) run(ctx context.Context, errC chan<- error, confirmedC <-cha
 			}
 		}
 	}
+}
+
+func (v *validator) handleGovernanceEvent(logger *zap.Logger, message *message, header *BlockHeader) error {
+	wormholeMsg, err := WormholeMessageFromEvent(message.event)
+	if err != nil {
+		logger.Error("invalid wormhole message", zap.Any("fields", message.event.Fields))
+		return err
+	}
+	logger.Debug(
+		"receive event from alephium contract",
+		zap.String("emitter", wormholeMsg.emitter.ToHex()),
+		zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
+	)
+	if !wormholeMsg.isTransferMessage() {
+		v.msgC <- wormholeMsg.toMessagePublication(header)
+		return nil
+		// we only need to validate transfer message
+	}
+	transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
+	if err := v.validateTransferMessage(transferMsg); err != nil {
+		logger.Error("invalid wormhole message, just ignore", zap.Error(err))
+		return nil
+	}
+	v.msgC <- wormholeMsg.toMessagePublication(header)
+	return nil
+}
+
+func (v *validator) handleTokenBridgeEvent(logger *zap.Logger, ctx context.Context, event *Event, batch *batch) error {
+	remoteChainId, tokenBridgeForChainAddress, err := v.client.GetTokenBridgeForChainInfo(ctx, event, v.groupIndex)
+	if err != nil {
+		logger.Error("failed to get token bridge for chain info", zap.Error(err))
+		return err
+	}
+	batch.writeChain(*remoteChainId, *tokenBridgeForChainAddress)
+	return nil
+}
+
+func (v *validator) handleTokenWrapperFactoryEvent(logger *zap.Logger, ctx context.Context, event *Event, batch *batch) error {
+	remoteTokenId, tokenWrapperAddress, err := v.client.GetTokenWrapperInfo(ctx, event, v.groupIndex)
+	if err != nil {
+		logger.Error("failed to get token wrapper info", zap.Error(err))
+		return err
+	}
+	batch.writeTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
+	return nil
 }
 
 func (v *validator) validateTransferMessage(transferMsg *TransferMessage) error {

@@ -101,6 +101,7 @@ var (
 	alphApiKey            *string
 	alphContractServerRPC *string
 	alphContractIds       *[]string
+	alphInitHeight        *uint32
 	alphGroupIndex        *uint8
 	alphMinConfirmations  *uint8
 
@@ -190,7 +191,8 @@ func init() {
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphContractServerRPC = NodeCmd.Flags().String("alphContractServerRpc", "", "Listen address for alephium contract server gRPC interface (required)")
-	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Aephium contract ids (required)")
+	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
+	alphInitHeight = NodeCmd.Flags().Uint32("alphInitHeight", 0, "Init height for event subscription")
 	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
 
@@ -798,7 +800,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 			alphDbPath := path.Join(*dataDir, "alephium")
 			alphWatcher, err := alephium.NewAlephiumWatcher(
-				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds,
+				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds, *alphInitHeight,
 				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDbPath,
 			)
 			if err != nil {

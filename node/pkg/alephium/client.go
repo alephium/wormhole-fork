@@ -101,7 +101,7 @@ func (c *Client) GetEventsFromBlock(ctx context.Context, hash string, contractAd
 }
 
 // TODO: reduce the number of request
-func (c *Client) GetContractEventsFromBlock(ctx context.Context, hash string, contracts []string) ([]*Event, error) {
+func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string, contracts []string) ([]*Event, error) {
 	result := make([]*Event, 0)
 	for _, contract := range contracts {
 		events, err := c.GetEventsFromBlock(ctx, hash, contract)
@@ -111,6 +111,17 @@ func (c *Client) GetContractEventsFromBlock(ctx context.Context, hash string, co
 		result = append(result, events.Events...)
 	}
 	return result, nil
+}
+
+func (c *Client) GetContractEventsFromBlockHeight(ctx context.Context, chainIndex *ChainIndex, height uint32, contracts []string) ([]*Event, error) {
+	hashes, err := c.GetHashes(ctx, chainIndex, height)
+	if err != nil {
+		return nil, err
+	}
+	if len(hashes) == 0 {
+		return nil, fmt.Errorf("no block for height %v", height)
+	}
+	return c.GetContractEventsFromBlockHash(ctx, hashes[0], contracts)
 }
 
 func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStatus, error) {
@@ -131,4 +142,28 @@ func (c *Client) GetContractState(ctx context.Context, contractAddress string, g
 	var result ContractState
 	err := c.get(ctx, path, &result)
 	return &result, err
+}
+
+func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, event *Event, groupIndex uint8) (*uint16, *string, error) {
+	assume(len(event.Fields) == 1)
+	tokenBridgeForChainAddress := event.Fields[0].ToAddress()
+	contractState, err := c.GetContractState(ctx, tokenBridgeForChainAddress, groupIndex)
+	if err != nil {
+		return nil, nil, err
+	}
+	assume(contractState.Address == tokenBridgeForChainAddress)
+	remoteChainId, err := contractState.Fields[2].ToUint16()
+	return &remoteChainId, &tokenBridgeForChainAddress, err
+}
+
+func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*Byte32, *string, error) {
+	assume(len(event.Fields) == 1)
+	tokenWrapperAddress := event.Fields[0].ToAddress()
+	contractState, err := c.GetContractState(ctx, tokenWrapperAddress, groupIndex)
+	if err != nil {
+		return nil, nil, err
+	}
+	assume(contractState.Address == tokenWrapperAddress)
+	remoteTokenId, err := contractState.Fields[4].ToByte32()
+	return remoteTokenId, &tokenWrapperAddress, err
 }

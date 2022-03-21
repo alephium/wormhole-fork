@@ -14,8 +14,11 @@ import (
 	"github.com/certusone/wormhole/node/pkg/readiness"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/dgraph-io/badger/v3"
 	"go.uber.org/zap"
 )
+
+const MaxForkHeight = uint32(100)
 
 type Watcher struct {
 	url    string
@@ -25,6 +28,7 @@ type Watcher struct {
 	tokenBridgeContract         string
 	tokenWrapperFactoryContract string
 	chainIndex                  *ChainIndex
+	initHeight                  uint32
 
 	readiness readiness.Component
 
@@ -51,6 +55,8 @@ type PendingMessages struct {
 type ConfirmedMessages struct {
 	blockHeader *BlockHeader
 	messages    []*message
+	finished    bool
+	reObserved  bool
 }
 
 func messageFromEvent(
@@ -86,6 +92,7 @@ func NewAlephiumWatcher(
 	fromGroup uint8,
 	toGroup uint8,
 	contracts []string,
+	initHeight uint32,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
 	setEvents chan *common.GuardianSet,
@@ -108,6 +115,7 @@ func NewAlephiumWatcher(
 		tokenBridgeContract:         contracts[1],
 		tokenWrapperFactoryContract: contracts[2],
 
+		initHeight: initHeight,
 		chainIndex: &ChainIndex{
 			FromGroup: fromGroup,
 			ToGroup:   toGroup,
@@ -140,13 +148,20 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.Version))
 
+	fromHeight, err := w.fetchContractAddresses(ctx, logger, client)
+	if err != nil {
+		logger.Error("failed to fetch contract addresses", zap.Error(err))
+		return err
+	}
+	logger.Info("fetch contract addresses completed")
+
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 	confirmedC := make(chan *ConfirmedMessages, 8)
 	errC := make(chan error)
 	validator := newValidator(client, w.chainIndex.FromGroup, contracts, w.msgChan, w.db)
 
-	go validator.run(ctx, errC, confirmedC)
-	go w.getEvents(ctx, client, 0, errC, confirmedC)
+	go validator.run(ctx, *fromHeight, errC, confirmedC)
+	go w.getEvents(ctx, client, *fromHeight, errC, confirmedC)
 	go w.handleObsvRequest(ctx, client, confirmedC)
 
 	select {
@@ -155,6 +170,60 @@ func (w *Watcher) Run(ctx context.Context) error {
 	case err := <-errC:
 		return err
 	}
+}
+
+func (w *Watcher) fetchContractAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint32, error) {
+	latestHeight, err := w.db.getLatestHeight()
+	if err == badger.ErrKeyNotFound {
+		return &w.initHeight, nil
+	}
+	if err != nil {
+		logger.Error("failed to get latest height from db", zap.Error(err))
+		return nil, err
+	}
+	currentHeight, err := client.GetCurrentHeight(ctx, w.chainIndex)
+	if err != nil {
+		logger.Error("failed to get current height", zap.Error(err))
+		return nil, err
+	}
+	if latestHeight+MaxForkHeight >= currentHeight {
+		return &latestHeight, nil
+	}
+
+	toHeight := currentHeight - MaxForkHeight
+	batch := newBatch()
+	contracts := []string{w.tokenBridgeContract, w.tokenWrapperFactoryContract}
+	for h := latestHeight + 1; h < toHeight; h++ {
+		events, err := client.GetContractEventsFromBlockHeight(ctx, w.chainIndex, h, contracts)
+		if err != nil {
+			logger.Error("failed to get contract events", zap.Uint32("height", h), zap.Error(err))
+			return nil, err
+		}
+		for _, event := range events {
+			switch event.ContractAddress {
+			case w.tokenBridgeContract:
+				chainId, address, err := client.GetTokenBridgeForChainInfo(ctx, event, w.chainIndex.FromGroup)
+				if err != nil {
+					logger.Error("failed to get token bridge for chain info", zap.Error(err))
+					return nil, err
+				}
+				batch.writeChain(*chainId, *address)
+			case w.tokenWrapperFactoryContract:
+				tokenId, address, err := client.GetTokenWrapperInfo(ctx, event, w.chainIndex.FromGroup)
+				if err != nil {
+					logger.Error("failed to get token wrapper info", zap.Error(err))
+					return nil, err
+				}
+				batch.writeTokenWrapper(*tokenId, *address)
+			}
+		}
+	}
+	batch.updateHeight(toHeight - 1)
+	if err := w.db.writeBatch(batch); err != nil {
+		logger.Error("write to db failed", zap.Error(err))
+		return nil, err
+	}
+	return &toHeight, nil
 }
 
 func (w *Watcher) handleObsvRequest(ctx context.Context, client *Client, confirmedC chan<- *ConfirmedMessages) {
@@ -226,6 +295,8 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, client *Client, confirm
 				confirmed := &ConfirmedMessages{
 					blockHeader: pendingMsg.blockHeader,
 					messages:    confirmedMsgs,
+					finished:    true,
+					reObserved:  true,
 				}
 				confirmedC <- confirmed
 			}
@@ -240,7 +311,7 @@ func (w *Watcher) getPendingMessageFromBlockHash(
 	contracts []string,
 	filter func([]*Event) []*Event,
 ) (*PendingMessages, error) {
-	events, err := client.GetContractEventsFromBlock(ctx, blockHash, contracts)
+	events, err := client.GetContractEventsFromBlockHash(ctx, blockHash, contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -267,6 +338,17 @@ func (w *Watcher) getPendingMessageFromBlockHash(
 	}, nil
 }
 
+func (w *Watcher) getMessagesFromBlock(ctx context.Context, client *Client, height uint32, contracts []string) (*PendingMessages, error) {
+	hashes, err := client.GetHashes(ctx, w.chainIndex, height)
+	if err != nil {
+		return nil, err
+	}
+	if len(hashes) == 0 {
+		return nil, fmt.Errorf("empty hashes for block %d", height)
+	}
+	return w.getPendingMessageFromBlockHash(ctx, client, hashes[0], contracts, nil)
+}
+
 func sortedHeights(m map[uint32]*PendingMessages) []uint32 {
 	heights := make([]uint32, len(m))
 	index := 0
@@ -286,23 +368,18 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 	pendings := map[uint32]*PendingMessages{}
 	contracts := []string{w.governanceContract, w.tokenBridgeContract, w.tokenWrapperFactoryContract}
 
-	getMessagesFromBlock := func(height uint32) (*PendingMessages, error) {
-		hashes, err := client.GetHashes(ctx, w.chainIndex, height)
-		if err != nil {
-			return nil, err
-		}
-		if len(hashes) == 0 {
-			return nil, fmt.Errorf("empty hashes for block %d", height)
-		}
-		return w.getPendingMessageFromBlockHash(ctx, client, hashes[0], contracts, nil)
-	}
-
 	checkConfirmations := func(currentHeight uint32) error {
 		// TODO: improve this
 		heights := sortedHeights(pendings)
 		for _, height := range heights {
 			pending := pendings[height]
 			if len(pending.messages) == 0 {
+				confirmedC <- &ConfirmedMessages{
+					blockHeader: pending.blockHeader,
+					messages:    pending.messages,
+					reObserved:  false,
+					finished:    true,
+				}
 				continue
 			}
 
@@ -320,7 +397,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 
 			// forked, we need to re-request events for the height
 			if !isCanonical {
-				msgs, err := getMessagesFromBlock(height)
+				msgs, err := w.getMessagesFromBlock(ctx, client, height, contracts)
 				if err != nil {
 					logger.Error("handle fork: failed to get events", zap.Uint32("height", height))
 					errC <- err
@@ -343,12 +420,15 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			confirmed := &ConfirmedMessages{
 				blockHeader: pending.blockHeader,
 				messages:    confirmedMessages,
+				reObserved:  false,
 			}
 			confirmedC <- confirmed
 
 			if len(unconfirmedMessages) == 0 {
+				confirmed.finished = true
 				delete(pendings, height)
 			} else {
+				confirmed.finished = false
 				pendings[height] = &PendingMessages{
 					messages:    unconfirmedMessages,
 					blockHeader: pending.blockHeader,
@@ -359,7 +439,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 	}
 
 	readiness.SetReady(w.readiness)
-	msgs, err := getMessagesFromBlock(fromHeight)
+	msgs, err := w.getMessagesFromBlock(ctx, client, fromHeight, contracts)
 	if err != nil {
 		logger.Error("failed to get events", zap.Error(err), zap.Uint32("height", fromHeight))
 		errC <- err
@@ -392,7 +472,7 @@ func (w *Watcher) getEvents(ctx context.Context, client *Client, fromHeight uint
 			}
 
 			for h := currentHeight + 1; h <= height; h++ {
-				msgs, err := getMessagesFromBlock(h)
+				msgs, err := w.getMessagesFromBlock(ctx, client, h, contracts)
 				if err != nil {
 					logger.Error("failed to get events", zap.Error(err), zap.Uint32("height", h))
 					errC <- err
