@@ -33,7 +33,7 @@ type testData struct {
 	chainContractAddress string
 	tokenId              Byte32
 	tokenWrapperAddress  string
-	latestHeight         uint32
+	lastHeight           uint32
 }
 
 func randTestData() *testData {
@@ -42,7 +42,7 @@ func randTestData() *testData {
 		chainContractAddress: randomAddress(),
 		tokenId:              randomByte32(),
 		tokenWrapperAddress:  randomAddress(),
-		latestHeight:         rand.Uint32(),
+		lastHeight:           rand.Uint32(),
 	}
 }
 
@@ -51,13 +51,13 @@ func TestReadWrite(t *testing.T) {
 	db, err := open(t.TempDir())
 	assert.Nil(t, err)
 
-	_, err = db.getLatestHeight()
+	_, err = db.getLastHeight()
 	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.updateLatestHeight(td.latestHeight)
+	err = db.updateLastHeight(td.lastHeight)
 	assert.Nil(t, err)
-	latestHeight, err := db.getLatestHeight()
+	lastHeight, err := db.getLastHeight()
 	assert.Nil(t, err)
-	assert.Equal(t, latestHeight, td.latestHeight)
+	assert.Equal(t, lastHeight, td.lastHeight)
 
 	_, err = db.getRemoteChain(td.chainId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
@@ -82,16 +82,16 @@ func TestBatchWrite(t *testing.T) {
 	assert.Nil(t, err)
 
 	batch := newBatch()
-	batch.updateHeight(td.latestHeight)
+	batch.updateHeight(td.lastHeight)
 	batch.writeChain(td.chainId, td.chainContractAddress)
 	batch.writeTokenWrapper(td.tokenId, td.tokenWrapperAddress)
 
 	err = db.writeBatch(batch)
 	assert.Nil(t, err)
 
-	latestHeight, err := db.getLatestHeight()
+	lastHeight, err := db.getLastHeight()
 	assert.Nil(t, err)
-	assert.Equal(t, latestHeight, td.latestHeight)
+	assert.Equal(t, lastHeight, td.lastHeight)
 
 	chainContractId, err := db.getRemoteChain(td.chainId)
 	assert.Nil(t, err)

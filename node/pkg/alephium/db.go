@@ -12,9 +12,9 @@ type db struct {
 }
 
 var (
-	tokenWrapperPrefix   = []byte("token-wrapper")
-	chainPrefix          = []byte("token-bridge-for-chain")
-	latestBlockHeightKey = []byte("latest-block-height")
+	tokenWrapperPrefix = []byte("token-wrapper")
+	chainPrefix        = []byte("token-bridge-for-chain")
+	lastBlockHeightKey = []byte("last-block-height")
 )
 
 func open(path string) (*db, error) {
@@ -73,14 +73,14 @@ func (db *db) getRemoteChain(chainId uint16) (string, error) {
 	return string(value), nil
 }
 
-func (db *db) updateLatestHeight(height uint32) error {
+func (db *db) updateLastHeight(height uint32) error {
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, height)
-	return db.put(latestBlockHeightKey, bytes)
+	return db.put(lastBlockHeightKey, bytes)
 }
 
-func (db *db) getLatestHeight() (uint32, error) {
-	value, err := db.get(latestBlockHeightKey)
+func (db *db) getLastHeight() (uint32, error) {
+	value, err := db.get(lastBlockHeightKey)
 	if err != nil {
 		return 0, err
 	}
@@ -131,7 +131,7 @@ func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperAddress string) {
 }
 
 func (b *batch) updateHeight(height uint32) {
-	b.keys = append(b.keys, latestBlockHeightKey)
+	b.keys = append(b.keys, lastBlockHeightKey)
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, height)
 	b.values = append(b.values, bytes)

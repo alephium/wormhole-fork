@@ -173,12 +173,12 @@ func (w *Watcher) Run(ctx context.Context) error {
 }
 
 func (w *Watcher) fetchContractAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint32, error) {
-	latestHeight, err := w.db.getLatestHeight()
+	lastHeight, err := w.db.getLastHeight()
 	if err == badger.ErrKeyNotFound {
 		return &w.initHeight, nil
 	}
 	if err != nil {
-		logger.Error("failed to get latest height from db", zap.Error(err))
+		logger.Error("failed to get last height from db", zap.Error(err))
 		return nil, err
 	}
 	currentHeight, err := client.GetCurrentHeight(ctx, w.chainIndex)
@@ -186,14 +186,14 @@ func (w *Watcher) fetchContractAddresses(ctx context.Context, logger *zap.Logger
 		logger.Error("failed to get current height", zap.Error(err))
 		return nil, err
 	}
-	if latestHeight+MaxForkHeight >= currentHeight {
-		return &latestHeight, nil
+	if lastHeight+MaxForkHeight >= currentHeight {
+		return &lastHeight, nil
 	}
 
 	toHeight := currentHeight - MaxForkHeight
 	batch := newBatch()
 	contracts := []string{w.tokenBridgeContract, w.tokenWrapperFactoryContract}
-	for h := latestHeight + 1; h < toHeight; h++ {
+	for h := lastHeight + 1; h < toHeight; h++ {
 		events, err := client.GetContractEventsFromBlockHeight(ctx, w.chainIndex, h, contracts)
 		if err != nil {
 			logger.Error("failed to get contract events", zap.Uint32("height", h), zap.Error(err))
