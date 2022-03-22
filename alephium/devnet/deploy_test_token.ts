@@ -36,7 +36,8 @@ export async function attestToken(
         serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",
         tokenBridgeForChainCodeHash: "00",
-        tokenWrapperCodeHash: "00"
+        tokenWrapperCodeHash: "00",
+        sequenceCodeHash: "00"
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const submitResult = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

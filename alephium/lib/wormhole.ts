@@ -78,6 +78,7 @@ export class Wormhole {
         const initScript = await Script.from(this.client, "token_bridge_for_chain_init.ral", {
             tokenBridgeForChainAddress: tokenBridgeForChainAddress,
             sequenceAddress: sequenceDeployResult.address,
+            sequenceCodeHash: "00",
             serdeAddress: "00",
             tokenBridgeForChainBinCode: "00",
             tokenBridgeForChainCodeHash: "00",
@@ -96,7 +97,9 @@ export class Wormhole {
         amount: Number256,
         params: BuildScriptTx,
     ): Promise<string> {
+        const sequenceContract = await Contract.from(this.client, 'sequence.ral')
         const script = await Script.from(this.client, "register_chain.ral", {
+            sequenceCodeHash: sequenceContract.codeHash,
             tokenBridgeAddress: tokenBridgeAddress,
             vaa: vaa,
             payer: payer,
@@ -129,13 +132,14 @@ async function _deploy(
 export async function deploySequence(
     client: CliqueClient,
     signer: Signer,
-    owner: string
+    owner: string,
+    sequence?: Contract
 ): Promise<DeployResult> {
-    const sequence = await Contract.from(client, 'sequence.ral')
+    let contract: Contract = sequence ? sequence : await Contract.from(client, 'sequence.ral')
     const next1 = Array(20).fill(0)
     const next2 = Array(20).fill(0)
     const initFields = [owner, 0, next1, next2]
-    return _deploy(signer, sequence, initFields)
+    return _deploy(signer, contract, initFields)
 }
 
 async function deployGovernance(
@@ -147,7 +151,10 @@ async function deployGovernance(
     initGuardianSetIndex: number,
     initMessageFee: bigint
 ): Promise<DeployResult> {
-    const governance = await Contract.from(client, 'governance.ral')
+    const sequenceContract = await Contract.from(client, 'sequence.ral')
+    const governance = await Contract.from(client, 'governance.ral', {
+        sequenceCodeHash: sequenceContract.codeHash
+    })
     const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
     const initGuardianSetSize = initGuardianSet.length
     if (initGuardianSetSize > 19) {
@@ -165,8 +172,9 @@ async function deployGovernance(
     ]
 
     const governanceDeployResult = await _deploy(signer, governance, initFields)
-    const sequenceDeployResult = await deploySequence(client, signer, governanceDeployResult.address)
+    const sequenceDeployResult = await deploySequence(client, signer, governanceDeployResult.address, sequenceContract)
     const initScript = await Script.from(client, 'governance_init.ral', {
+        sequenceCodeHash: sequenceContract.codeHash,
         governanceAddress: governanceDeployResult.address,
         sequenceAddress: sequenceDeployResult.address
     })
@@ -208,7 +216,9 @@ async function deployTokenBridge(
     tokenBridgeForChainCodeHash: string,
     tokenWrapperCodeHash: string
 ): Promise<DeployResult> {
+    const sequenceContract = await Contract.from(client, 'sequence.ral')
     const variables = {
+        sequenceCodeHash: sequenceContract.codeHash,
         serdeAddress: serdeAddress,
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
         tokenBridgeForChainCodeHash: tokenBridgeForChainCodeHash,
@@ -220,8 +230,9 @@ async function deployTokenBridge(
     ]
 
     const tokenBridgeDeployResult = await _deploy(signer, tokenBridge, initFields)
-    const sequenceDeployResult = await deploySequence(client, signer, tokenBridgeDeployResult.address)
+    const sequenceDeployResult = await deploySequence(client, signer, tokenBridgeDeployResult.address, sequenceContract)
     const initScript = await Script.from(client, 'token_bridge_init.ral', {
+        sequenceCodeHash: sequenceContract.codeHash,
         tokenBridgeAddress: tokenBridgeDeployResult.address,
         sequenceAddress: sequenceDeployResult.address,
         serdeAddress: "00",
@@ -239,9 +250,11 @@ async function tokenBridgeForChainContract(
     tokenWrapperFactoryAddress: string,
     tokenWrapperCodeHash: string
 ): Promise<Contract> {
+    const sequenceContract = await Contract.from(client, 'sequence.ral')
     const variables = {
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
+        sequenceCodeHash: sequenceContract.codeHash,
         tokenWrapperBinCode: "00",
         serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",
@@ -252,6 +265,7 @@ async function tokenBridgeForChainContract(
 
 async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
     const variables = {
+        sequenceCodeHash: "00",
         serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",
         tokenBridgeForChainCodeHash: "00",

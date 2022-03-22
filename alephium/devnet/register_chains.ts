@@ -28,16 +28,16 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     }
 
     var txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[0], payer, env.dustAmount, params)
-    const bridgeForEth = "y9dvJcZAQUjgx3hL5ZGwvT488cpdpy7N6TDSK7Vk8TWs"
+    const bridgeForEth = "24N8dYt8zwhpDbzVLQiMLYYBYNfzujoAPV17zDe8kYTd3"
     console.log("register eth txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[1], payer, env.dustAmount, params)
-    const bridgeForTerra = "wTFbhHDHE8QhWiWXRSLrX8T8ANcn1pWwHKxf9R3shtQm"
+    const bridgeForTerra = "xqQXvmp8pRpo3hao2a57kNYqm5qN4zcGN4YbMJCNwwgP"
     console.log("register terra txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[2], payer, env.dustAmount, params)
-    const bridgeForSolana = "25ED4e59Nb1oqpcE7bRyDnyC13fLuV9xkVTe3KZuQKHYf"
+    const bridgeForSolana = "zY1TdLLNBzGmcJrgiqs52ESzsckqye1Mys6yjMZwvubX"
     console.log("register solana txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[3], payer, env.dustAmount, params)
-    const bridgeForBsc = "29jMRScyxsiQ1W2aGRB2JYUpXb19nEfMv916AAfmneiv1"
+    const bridgeForBsc = "2Bg3TvRG7XU8FNHC5G2cevvHzXj5AjJSP3Ec2Rajw1pyE"
     console.log("register bsc txId: " + txId)
 
     await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForEth)
@@ -68,6 +68,7 @@ async function initTokenBridgeForChain(
         tokenWrapperBinCode: "00",
         tokenBridgeForChainBinCode: "00",
         tokenBridgeForChainCodeHash: "00",
+        sequenceCodeHash: "00"
     })
     const scriptTx = await script.transactionForDeployment(signer)
     await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

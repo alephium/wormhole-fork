@@ -109,7 +109,7 @@ spec:
             - --alphContractServerRpc
             - "[::]:31102"
             - --alphContractIds
-            - "2AiLoHmb7C7a54z4wvQ6o35aHr7y8oPnN9q5t3KjpvBvY,29gCabHNnGtjxVufKg8zS2mzw762td5LtwKRpSQ4TMK3k,2AqKqXdCeUtQKEX35xRSwPd8rGZWBRcUCeLwXaFArctk7"
+            - "28d5iWgrjZH6NC4qpgqHdV4pLRMnoB9MHU4z2jaNLbtMN,vFHAXydiAp7RiBsi4LxWupJUpct9hQhnsDy4SyQresFh,2AqKqXdCeUtQKEX35xRSwPd8rGZWBRcUCeLwXaFArctk7"
             - --alphGroupIndex
             - "3"
             - --alphMinConfirmations

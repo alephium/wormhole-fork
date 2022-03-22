@@ -15,9 +15,14 @@ TxContract TokenBridge(
     pub fn init(address: ByteVec) -> () {
         assert!(!initialized)
         initialized = true
+        assert!(contractCodeHash!(address) == #{{ sequenceCodeHash }})
         let sequenceContract = Sequence(address)
-        // TODO: check code hash and initial state
         assert!(sequenceContract.getOwner() == selfContractId!())
+        assert!(sequenceContract.getExecuted() == 0)
+        let next1 = sequenceContract.getNext1()
+        loop(0, 20, 1, assert!(next1[?] == 0))
+        let next2 = sequenceContract.getNext2()
+        loop(0, 20, 1, assert!(next2[?] == 0))
         governanceSequenceContract = address
     }
 
