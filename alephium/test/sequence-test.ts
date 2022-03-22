@@ -1,40 +1,11 @@
 import { CliqueClient, Contract } from 'alephium-js'
-import * as base58 from 'bs58'
-import { toHex } from "../lib/utils"
-import { randomBytes } from "crypto"
-import { dustAmount } from '../devnet/env'
+import { dustAmount, expectAssertionFailed, randomAddress, toContractId } from './wormhole-fixture'
 
 describe("test sequence", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
     const sequenceTestAddress = randomAddress()
     const sequenceAddress = randomAddress()
     const executedFlag = BigInt("0xffffffffffffffffffffffffffffffff")
-
-    function toContractId(address: string): string {
-        const bytes = base58.decode(address)
-        return toHex(bytes.slice(1))
-    }
-
-    interface Failed {
-        error: {
-            detail: string
-        }
-    }
-
-    function randomAddress(): string {
-        const prefix = Buffer.from([0x03])
-        const bytes = Buffer.concat([prefix, randomBytes(32)])
-        return base58.encode(bytes)
-    }
-
-    async function expectAssertionFailed<T>(func: () => Promise<T>) {
-        try {
-            await func()
-        } catch (exp) {
-            const detail = (exp as Failed).error.detail
-            expect(detail).toEqual("AssertionFailed")
-        }
-    }
 
     it("should check sequence owner", async () => {
         const sequenceTest = await Contract.from(client, 'sequence_test.ral')
@@ -133,4 +104,3 @@ describe("test sequence", () => {
         }
     }, 10000)
 })
-
