@@ -1,8 +1,8 @@
 import Web3  from 'web3'
-import BN from 'bn.js'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
-import { nonce, toHex } from '../lib/utils'
+import { nonce, toHex, zeroPad } from '../../lib/utils'
+import * as elliptic from 'elliptic'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -13,6 +13,7 @@ export const governanceChainId = 0
 export const governanceContractAddress = '0000000000000000000000000000000000000000000000000000000000000004'
 export const dustAmount = BigInt("1000000000000")
 export const messageFee = BigInt("100000000000000")
+export const oneAlph = BigInt("1000000000000000000")
 
 export class GuardianSet {
     privateKeys: string[]
@@ -32,6 +33,10 @@ export class GuardianSet {
         return this.privateKeys.map(key => ethAccounts.privateKeyToAccount(key).address)
     }
 
+    guardianSetAddresses(size: number): string[] {
+        return this.addresses().map(addr => addr.slice(2)).concat(Array(size - this.size()).fill('00'))
+    }
+
     size(): number {
         return this.privateKeys.length
     }
@@ -46,13 +51,20 @@ export class GuardianSet {
             .sort((a, b) => a[0] - b[0])
             .slice(0, size)
             .sort((a, b) => a[1] - b[1])
-        const hash = web3Utils.keccak256(web3Utils.keccak256(new BN(body.encode())))
+        const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + toHex(body.encode())))
         const signatures = keys.map(element => {
             const keyIndex = element[1]
-            const signature = ethAccounts.sign(hash, this.privateKeys[keyIndex])
+            const ec = new elliptic.ec('secp256k1')
+            const key = ec.keyFromPrivate(this.privateKeys[keyIndex].slice(2))
+            const sig = key.sign(hash.slice(2), {canonical: true})
+            const signature = [
+                zeroPad(sig.r.toString(16), 32),
+                zeroPad(sig.s.toString(16), 32),
+                zeroPad((sig.recoveryParam as number + 27).toString(16), 1)
+            ].join("")
             const buffer = Buffer.allocUnsafe(66)
             buffer.writeUint8(keyIndex, 0)
-            buffer.write(signature.signature.slice(2), 1, 'hex')
+            buffer.write(signature, 1, 'hex')
             return buffer
         })
         return new VAA(1, this.index, signatures, body)
@@ -125,7 +137,13 @@ export class VAA {
     }
 }
 
-export function randomAddress(): string {
+export function randomAssetAddress(): string {
+    const prefix = Buffer.from([0x00])
+    const bytes = Buffer.concat([prefix, randomBytes(32)])
+    return base58.encode(bytes)
+}
+
+export function randomContractAddress(): string {
     const prefix = Buffer.from([0x03])
     const bytes = Buffer.concat([prefix, randomBytes(32)])
     return base58.encode(bytes)

@@ -1,16 +1,16 @@
 import { CliqueClient, Contract } from 'alephium-js'
-import { dustAmount, expectAssertionFailed, randomAddress, toContractId } from './wormhole-fixture'
+import { dustAmount, expectAssertionFailed, randomContractAddress, toContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
-    const sequenceTestAddress = randomAddress()
-    const sequenceAddress = randomAddress()
+    const sequenceTestAddress = randomContractAddress()
+    const sequenceAddress = randomContractAddress()
     const executedFlag = BigInt("0xffffffffffffffffffffffffffffffff")
 
     it("should check sequence owner", async () => {
         const sequenceTest = await Contract.from(client, 'sequence_test.ral')
         const sequence = await Contract.from(client, 'sequence.ral')
-        const owner = randomAddress()
+        const owner = randomContractAddress()
         const contractState = sequence.toState([toContractId(owner), 0, Array(20).fill(0), Array(20).fill(0)], {alphAmount: dustAmount}, sequenceAddress)
         expectAssertionFailed(async () => {
             return await sequenceTest.test(client, "check", {

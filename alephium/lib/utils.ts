@@ -10,3 +10,12 @@ export function nonce(): string {
     const bytes = randomBytes(4)
     return toHex(bytes)
 }
+
+export function zeroPad(value: string, length: number) {
+    const expectedLength = 2 * length
+    if (value.length < expectedLength) {
+        const prefix = Array(expectedLength - value.length).fill('0').join("")
+        return prefix + value
+    }
+    return value
+}
