@@ -9,6 +9,18 @@ TxContract Sequence(
         return owner
     }
 
+    pub fn getExecuted() -> (U256) {
+        return executed
+    }
+
+    pub fn getNext1() -> ([U256; 20]) {
+        return next1
+    }
+
+    pub fn getNext2() -> ([U256; 20]) {
+        return next2
+    }
+
     fn checkExecuted(value: U256) -> (Bool) {
         return value == 0xffffffffffffffffffffffffffffffff
     }
@@ -24,12 +36,14 @@ TxContract Sequence(
         return allExecuted
     }
 
-    pub fn checkSequence(sequence: U256) -> () {
-        assert!(callerContractId!() == owner)
+    fn checkSequence_(sequence: U256, caller: ByteVec) -> () {
+        assert!(caller == owner)
         assert!(sequence >= executed)
-        if (sequence >= (executed + 40) && compact()) {
-            checkSequence(sequence)
-            return
+        if (sequence >= (executed + 40)) {
+            if (compact()) {
+                checkSequence_(sequence, caller)
+                return
+            }
         }
 
         assert!(executed <= sequence && sequence < (executed + 40))
@@ -51,5 +65,9 @@ TxContract Sequence(
                 next2[?] = 0xffffffffffffffffffffffffffffffff
             }
         )
+    }
+
+    pub fn checkSequence(sequence: U256) -> () {
+        checkSequence_(sequence, callerContractId!())
     }
 }
