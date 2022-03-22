@@ -14,7 +14,7 @@
     "dev": "tsnd --respawn lib/index.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --fix --ext .ts",
-    "jest": "jest --useStderr --silent=false --verbose=true --config jestconfig.json",
+    "jest": "jest --runInBand --detectOpenHandles --useStderr --silent=false --verbose=true --config jestconfig.json",
     "test": "npm run compile && npm run jest",
     "test:watch": "npm run compile && npm run jest -- --watch",
     "prepublishOnly": "npm run compile",
@@ -22,10 +22,16 @@
     "start-devnet": "node scripts/start-devnet.js ${npm_package_config_alephium_version}",
     "stop-devnet": "node scripts/stop-devnet.js"
   },
-  "dependencies": {},
-  "devDependencies": {},
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.3"
+  },
+  "dependencies": {
+    "bs58": "^5.0.0"
   }
 }

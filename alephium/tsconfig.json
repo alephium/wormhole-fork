@@ -1,5 +1,5 @@
 {
-  "include": ["lib", "test", "devnet"],
+  "include": ["lib", "devnet"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "target": "es2020",
