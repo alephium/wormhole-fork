@@ -42,6 +42,15 @@ export async function createSequence(client: CliqueClient, owner: string): Promi
     return new ContractInfo(sequenceContract, contractState, [], address)
 }
 
+export async function createSerde(client: CliqueClient): Promise<ContractInfo> {
+    const serdeContract = await Contract.from(client, 'serde.ral')
+    const address = randomContractAddress()
+    const contractState = serdeContract.toState(
+        [], {alphAmount: dustAmount}, address
+    )
+    return new ContractInfo(serdeContract, contractState, [], address)
+}
+
 export class GuardianSet {
     privateKeys: string[]
     index: number
