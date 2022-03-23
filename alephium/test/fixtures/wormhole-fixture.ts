@@ -3,17 +3,44 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
+import { CliqueClient, Contract, ContractState } from 'alephium-js'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
 export const web3Utils = web3.utils
 
 export const alphChainId = 13
-export const governanceChainId = 0
-export const governanceContractAddress = '0000000000000000000000000000000000000000000000000000000000000004'
 export const dustAmount = BigInt("1000000000000")
-export const messageFee = BigInt("100000000000000")
 export const oneAlph = BigInt("1000000000000000000")
+
+export class ContractInfo {
+    contract: Contract
+    selfState: ContractState
+    dependencies: ContractState[]
+    address: string
+
+    states(): ContractState[] {
+        return [this.selfState].concat(this.dependencies)
+    }
+
+    constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string) {
+        this.contract = contract
+        this.selfState = selfState 
+        this.dependencies = dependencies
+        this.address = address
+    }
+}
+
+export async function createSequence(client: CliqueClient, owner: string): Promise<ContractInfo> {
+    const sequenceContract = await Contract.from(client, 'sequence.ral')
+    const address = randomContractAddress()
+    const contractState = sequenceContract.toState(
+        [toContractId(owner), 0, Array(20).fill(0), Array(20).fill(0)],
+        {alphAmount: dustAmount},
+        address
+    )
+    return new ContractInfo(sequenceContract, contractState, [], address)
+}
 
 export class GuardianSet {
     privateKeys: string[]
