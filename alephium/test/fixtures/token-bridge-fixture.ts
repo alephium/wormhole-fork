@@ -1,8 +1,8 @@
-import { CliqueClient, Contract } from 'alephium-js'
+import { CliqueClient, Contract, ContractState } from 'alephium-js'
 import { createGovernance, governanceChainId, governanceContractAddress } from './governance-fixture'
 import { alphChainId, ContractInfo, createSequence, createSerde, dustAmount, randomContractAddress, toContractId } from './wormhole-fixture'
 import { randomBytes } from 'crypto'
-import { toHex } from '../../lib/utils'
+import { toHex, zeroPad } from '../../lib/utils'
 
 const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
 
@@ -49,6 +49,36 @@ export class RegisterChain {
         buffer.writeUint16BE(this.targetChainId, 33)
         buffer.writeUint16BE(this.remoteChainId, 35)
         buffer.write(this.remoteTokenBridgeId, 37, 'hex')
+        return buffer
+    }
+}
+
+export class Transfer {
+    amount: bigint
+    tokenId: string
+    tokenChainId: number
+    recipient: string
+    remoteChainId: number
+    arbiterFee: bigint
+
+    constructor(amount: bigint, tokenId: string, tokenChainId: number, recipient: string, remoteChainId: number, arbiterFee: bigint) {
+        this.amount = amount
+        this.tokenId = tokenId
+        this.tokenChainId = tokenChainId
+        this.recipient = recipient
+        this.remoteChainId = remoteChainId
+        this.arbiterFee = arbiterFee
+    }
+
+    encode(): Uint8Array {
+        let buffer = Buffer.allocUnsafe(133)
+        buffer.writeUint8(1, 0) // payloadId
+        buffer.write(zeroPad(this.amount.toString(16), 32), 1, 'hex')
+        buffer.write(this.tokenId, 33, 'hex')
+        buffer.writeUint16BE(this.tokenChainId, 65)
+        buffer.write(this.recipient, 67, 'hex')
+        buffer.writeUint16BE(this.remoteChainId, 99)
+        buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 101, 'hex')
         return buffer
     }
 }
@@ -114,7 +144,25 @@ export async function getTokenBridgeForChainContract(
     })
 }
 
-export async function createTokenBridge(client: CliqueClient): Promise<ContractInfo> {
+export class TokenBridgeInfo extends ContractInfo {
+    governance: ContractInfo
+    tokenWrapperFactory: ContractInfo
+
+    constructor(
+        contract: Contract,
+        selfState: ContractState,
+        deps: ContractState[],
+        address: string,
+        governance: ContractInfo,
+        tokenWrapperFctory: ContractInfo
+    ) {
+        super(contract, selfState, deps, address)
+        this.governance = governance
+        this.tokenWrapperFactory = tokenWrapperFctory
+    }
+}
+
+export async function createTokenBridge(client: CliqueClient): Promise<TokenBridgeInfo> {
     const serde = await createSerde(client)
     const governance = await createGovernance(client)
     const tokenWrapper = await getTokenWrapperContract(client)
@@ -145,5 +193,28 @@ export async function createTokenBridge(client: CliqueClient): Promise<ContractI
         sequence.states(),
         tokenWrapperFactory.states()
     )
-    return new ContractInfo(tokenBridge, state, deps, tokenBridgeAddress)
+    return new TokenBridgeInfo(tokenBridge, state, deps, tokenBridgeAddress, governance, tokenWrapperFactory)
+}
+
+export async function createTokenBridgeForChain(
+    client: CliqueClient,
+    tokenBridgeInfo: TokenBridgeInfo,
+    remoteChainId: number,
+    remoteTokenBridgeId: string
+): Promise<ContractInfo> {
+    const tokenWrapper = await getTokenWrapperContract(client)
+    const address = randomContractAddress()
+    const sequence = await createSequence(client, address)
+    const tokenBridgeForChain = await getTokenBridgeForChainContract(
+        client, 
+        sequence.contract.codeHash,
+        tokenBridgeInfo.tokenWrapperFactory.address,
+        tokenWrapper.codeHash
+    )
+    const state = tokenBridgeForChain.toState(
+        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, true, sequence.address],
+        {alphAmount: dustAmount},
+        address
+    )
+    return new ContractInfo(tokenBridgeForChain, state, tokenBridgeInfo.states(), address)
 }
