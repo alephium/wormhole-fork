@@ -50,7 +50,8 @@ export class Wormhole {
 
     async deployContracts(): Promise<WormholeContracts> {
         const serdeDeployResult = await deploySerde(this.client, this.signer)
-        const tokenWrapper = await tokenWrapperContract(this.client)
+        const mathDeployResult = await deployMath(this.client, this.signer)
+        const tokenWrapper = await tokenWrapperContract(this.client, mathDeployResult.address)
         const tokenWrapperFactoryDeployResult = await deployTokenWrapperFactory(
             this.client, this.signer, serdeDeployResult.address, tokenWrapper.bytecode
         )
@@ -59,7 +60,7 @@ export class Wormhole {
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeForChain = await tokenBridgeForChainContract(
-            this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash)
+            this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash, mathDeployResult.address)
         const tokenBridgeDeployResult = await deployTokenBridge(
             this.client, this.signer, governanceDeployResult.address,
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId,
@@ -78,8 +79,10 @@ export class Wormhole {
         const initScript = await Script.from(this.client, "token_bridge_for_chain_init.ral", {
             tokenBridgeForChainAddress: tokenBridgeForChainAddress,
             sequenceAddress: sequenceDeployResult.address,
-            sequenceCodeHash: "00",
+            mathAddress: "00",
             serdeAddress: "00",
+            tokenWrapperFactoryAddress: "00",
+            sequenceCodeHash: "00",
             tokenBridgeForChainBinCode: "00",
             tokenBridgeForChainCodeHash: "00",
             tokenWrapperBinCode: "00",
@@ -191,6 +194,14 @@ async function deploySerde(
     return _deploy(signer, serde)
 }
 
+async function deployMath(
+    client: CliqueClient,
+    signer: Signer
+): Promise<DeployResult> {
+    const math = await Contract.from(client, 'math.ral')
+    return _deploy(signer, math)
+}
+
 async function deployTokenWrapperFactory(
     client: CliqueClient,
     signer: Signer,
@@ -248,10 +259,12 @@ async function deployTokenBridge(
 async function tokenBridgeForChainContract(
     client: CliqueClient,
     tokenWrapperFactoryAddress: string,
-    tokenWrapperCodeHash: string
+    tokenWrapperCodeHash: string,
+    mathAddress: string
 ): Promise<Contract> {
     const sequenceContract = await Contract.from(client, 'sequence.ral')
     const variables = {
+        mathAddress: mathAddress,
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
         sequenceCodeHash: sequenceContract.codeHash,
@@ -263,8 +276,9 @@ async function tokenBridgeForChainContract(
     return Contract.from(client, 'token_bridge_for_chain.ral', variables)
 }
 
-async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
+async function tokenWrapperContract(client: CliqueClient, mathAddress: string): Promise<Contract> {
     const variables = {
+        mathAddress: mathAddress,
         sequenceCodeHash: "00",
         serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",

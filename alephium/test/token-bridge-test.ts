@@ -29,7 +29,7 @@ describe("test token bridge", () => {
             existingContracts: tokenBridgeInfo.dependencies.concat(testToken.states())
         })
         const governanceOutput = testResult.txOutputs[0]
-        expect(governanceOutput.address).toEqual(tokenBridgeInfo.dependencies[1].address)
+        expect(governanceOutput.address).toEqual(tokenBridgeInfo.governance.address)
         expect(governanceOutput.alphAmount).toEqual(Number(dustAmount + messageFee))
 
         const message = new AttestToken(
@@ -261,7 +261,7 @@ describe("test token bridge", () => {
         const symbol = toHex(randomBytes(32))
         const name = toHex(randomBytes(32))
         const tokenWrapperInfo = await createTokenWrapper(
-            client, wrappedTokenId, remoteChainId, decimals, symbol,
+            wrappedTokenId, remoteChainId, decimals, symbol,
             name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
         const tokenWrapperContract = tokenWrapperInfo.contract
@@ -336,7 +336,7 @@ describe("test token bridge", () => {
         const symbol = toHex(randomBytes(32))
         const name = toHex(randomBytes(32))
         const tokenWrapperInfo = await createTokenWrapper(
-            client, wrappedTokenId, remoteChainId, decimals, symbol,
+            wrappedTokenId, remoteChainId, decimals, symbol,
             name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
         const toAddress = randomAssetAddress()

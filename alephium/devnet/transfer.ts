@@ -39,6 +39,7 @@ export async function transferNative(
         arbiterFee: arbiterFee,
         nonce: nonce(),
         consistencyLevel: consistencyLevel,
+        mathAddress: "00",
         serdeAddress: "00",
         tokenWrapperFactoryAddress: "00",
         tokenWrapperCodeHash: "00",

@@ -1,5 +1,6 @@
 import "token_bridge.ral"
 import "token_bridge_for_chain.ral"
+import "math.ral"
 
 TxContract TokenWrapper(
     tokenBridgeId: ByteVec,
@@ -11,30 +12,6 @@ TxContract TokenWrapper(
     symbol: ByteVec,
     name: ByteVec
 ) {
-    fn pow(x: U256, y: U256) -> (U256) {
-        let mut i = 0
-        let mut result = 1
-        while (i < y) {
-            result = result * x
-            i = i + 1
-        }
-        return result
-    }
-
-    fn normalizeAmount(amount: U256) -> (U256) {
-        if (decimals > 8) {
-            return amount / pow(10, decimals - 8)
-        }
-        return amount
-    }
-
-    fn deNormalizeAmount(amount: U256) -> (U256) {
-        if (decimals > 8) {
-            return amount * pow(10, decimals - 8)
-        }
-        return amount
-    }
-
     pub payable fn transfer(
         fromAddress: Address,
         toAddress: ByteVec,
@@ -47,11 +24,12 @@ TxContract TokenWrapper(
         assert!(size!(nonce) == 4)
         assert!(size!(tokenContractId) == 32)
 
-        let normalizedAmount = normalizeAmount(amount)
-        let normalizedFee = normalizeAmount(arbiterFee)
+        let math = Math(#{{ mathAddress }})
+        let normalizedAmount = math.normalizeAmount(amount, decimals)
+        let normalizedFee = math.normalizeAmount(arbiterFee, decimals)
         assert!(normalizedFee < normalizedAmount)
 
-        let transferAmount = deNormalizeAmount(normalizedAmount)
+        let transferAmount = math.deNormalizeAmount(normalizedAmount, decimals)
         transferTokenToSelf!(fromAddress, selfContractId!(), transferAmount)
 
         let payload = #01 ++ // payloadId
@@ -61,6 +39,7 @@ TxContract TokenWrapper(
             toAddress ++
             u256To2Byte!(tokenChainId) ++
             u256To32Byte!(normalizedFee)
+
         let tokenBridge = TokenBridge(tokenBridgeId)
         approveAlph!(fromAddress, tokenBridge.getMessageFee())
         tokenBridge.publishTransferWrapped(fromAddress, payload, nonce, consistencyLevel)
@@ -72,9 +51,11 @@ TxContract TokenWrapper(
         assert!(wrappedTokenId == tokenContractId)
         assert!(wrappedTokenChainId == tokenChainId)
 
-        let denomalizedAmount = deNormalizeAmount(amount)
-        let denomalizedFee = deNormalizeAmount(arbiterFee)
+        let math = Math(#{{ mathAddress }})
+        let denomalizedAmount = math.deNormalizeAmount(amount, decimals)
+        let denomalizedFee = math.deNormalizeAmount(arbiterFee, decimals)
         assert!(denomalizedAmount > denomalizedFee)
+
         let transferAmount = denomalizedAmount - denomalizedFee
         let tokenId = selfContractId!()
         let recipient = byteVecToAddress!(#00 ++ recipientAddress)

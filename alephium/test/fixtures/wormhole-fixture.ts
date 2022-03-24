@@ -52,6 +52,15 @@ export async function createSerde(client: CliqueClient): Promise<ContractInfo> {
     return new ContractInfo(serdeContract, contractState, [], address)
 }
 
+export async function createMath(client: CliqueClient): Promise<ContractInfo> {
+    const mathContract = await Contract.from(client, 'math.ral')
+    const address = randomContractAddress()
+    const contractState = mathContract.toState(
+        [], {alphAmount: dustAmount}, address
+    )
+    return new ContractInfo(mathContract, contractState, [], address)
+}
+
 export class GuardianSet {
     privateKeys: string[]
     index: number

@@ -28,22 +28,22 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     }
 
     var txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[0], payer, env.dustAmount, params)
-    const bridgeForEth = "24N8dYt8zwhpDbzVLQiMLYYBYNfzujoAPV17zDe8kYTd3"
+    const bridgeForEth = "28LuiBNpdNvfboT1exZPgxVfn9DG3z5sjswZNUsLfj51a"
     console.log("register eth txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[1], payer, env.dustAmount, params)
-    const bridgeForTerra = "xqQXvmp8pRpo3hao2a57kNYqm5qN4zcGN4YbMJCNwwgP"
+    const bridgeForTerra = "wjUG4R8Hh7xjytAu1zUHayK9347PN2pARqmzPLt41YZF"
     console.log("register terra txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[2], payer, env.dustAmount, params)
-    const bridgeForSolana = "zY1TdLLNBzGmcJrgiqs52ESzsckqye1Mys6yjMZwvubX"
+    const bridgeForSolana = "2AYbowCAy9KJVux97tRnVA1DDNVhEfPN5XgaAMZeJXtfJ"
     console.log("register solana txId: " + txId)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[3], payer, env.dustAmount, params)
-    const bridgeForBsc = "2Bg3TvRG7XU8FNHC5G2cevvHzXj5AjJSP3Ec2Rajw1pyE"
+    const bridgeForBsc = "21xvm6uVpDif3BaxYagJhVbyC1DYcvWzKZmbdcX8xbcUD"
     console.log("register bsc txId: " + txId)
 
-    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForEth)
-    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForTerra)
-    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForSolana)
-    await initTokenBridgeForChain(wormhole.client, wormhole.signer, bridgeForBsc)
+    await wormhole.initTokenBridgeForChain(bridgeForEth)
+    await wormhole.initTokenBridgeForChain(bridgeForTerra)
+    await wormhole.initTokenBridgeForChain(bridgeForSolana)
+    await wormhole.initTokenBridgeForChain(bridgeForBsc)
 
     return {
         eth: bridgeForEth,
@@ -51,25 +51,4 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
         solana: bridgeForSolana,
         bsc: bridgeForBsc
     }
-}
-
-async function initTokenBridgeForChain(
-    client: CliqueClient,
-    signer: Signer,
-    address: string
-) {
-    const deployResult = await deploySequence(client, signer, address)
-    const script = await Script.from(client, 'token_bridge_for_chain_init.ral', {
-        tokenBridgeForChainAddress: address,
-        sequenceAddress: deployResult.address,
-        serdeAddress: "00",
-        tokenWrapperFactoryAddress: "00",
-        tokenWrapperCodeHash: "00",
-        tokenWrapperBinCode: "00",
-        tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
-        sequenceCodeHash: "00"
-    })
-    const scriptTx = await script.transactionForDeployment(signer)
-    await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
 }
