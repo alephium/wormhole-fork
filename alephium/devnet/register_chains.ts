@@ -1,5 +1,6 @@
-import { CliqueClient, Script, Signer } from 'alephium-js'
-import { deploySequence, Wormhole } from '../lib/wormhole'
+import { CliqueClient } from 'alephium-js'
+import { Confirmed, TxStatus } from 'alephium-js/api/alephium'
+import { Wormhole } from '../lib/wormhole'
 import * as env from './env'
 
 export interface RemoteChains {
@@ -7,6 +8,23 @@ export interface RemoteChains {
     terra: string,
     solana: string,
     bsc: string
+}
+
+function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {
+    return (txStatus as Confirmed).blockHash !== undefined
+}
+
+async function getTokenBridgeForChainContractAddress(client: CliqueClient, txId: string): Promise<string> {
+    const status = await client.transactions.getTransactionsStatus({txId: txId})
+    if (!isConfirmed(status.data)) {
+        console.log(txId + ' is not confirmed')
+        await new Promise(r => setTimeout(r, 2000))
+        return getTokenBridgeForChainContractAddress(client, txId)
+    }
+
+    const block = await client.blockflow.getBlockflowBlocksBlockHash(status.data.blockHash)
+    const tx = block.data.transactions[status.data.txIndex]
+    return tx.generatedOutputs[0].address
 }
 
 export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: string): Promise<RemoteChains> {
@@ -28,17 +46,17 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     }
 
     var txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[0], payer, env.dustAmount, params)
-    const bridgeForEth = "28LuiBNpdNvfboT1exZPgxVfn9DG3z5sjswZNUsLfj51a"
-    console.log("register eth txId: " + txId)
+    const bridgeForEth = await getTokenBridgeForChainContractAddress(wormhole.client, txId)
+    console.log("register eth tx id: " + txId + ', contract address: ' + bridgeForEth)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[1], payer, env.dustAmount, params)
-    const bridgeForTerra = "wjUG4R8Hh7xjytAu1zUHayK9347PN2pARqmzPLt41YZF"
-    console.log("register terra txId: " + txId)
+    const bridgeForTerra = await getTokenBridgeForChainContractAddress(wormhole.client, txId)
+    console.log("register terra tx id: " + txId + ', contract address: ' + bridgeForTerra)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[2], payer, env.dustAmount, params)
-    const bridgeForSolana = "2AYbowCAy9KJVux97tRnVA1DDNVhEfPN5XgaAMZeJXtfJ"
-    console.log("register solana txId: " + txId)
+    const bridgeForSolana = await getTokenBridgeForChainContractAddress(wormhole.client, txId)
+    console.log("register solana tx id: " + txId + ', contract address: ' + bridgeForSolana)
     txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[3], payer, env.dustAmount, params)
-    const bridgeForBsc = "21xvm6uVpDif3BaxYagJhVbyC1DYcvWzKZmbdcX8xbcUD"
-    console.log("register bsc txId: " + txId)
+    const bridgeForBsc = await getTokenBridgeForChainContractAddress(wormhole.client, txId)
+    console.log("register bsc tx id: " + txId + ', contractAddress: ' + bridgeForBsc)
 
     await wormhole.initTokenBridgeForChain(bridgeForEth)
     await wormhole.initTokenBridgeForChain(bridgeForTerra)
