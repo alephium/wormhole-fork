@@ -7,7 +7,6 @@ TxScript Main {
         approveToken!(@{{ sender }}, #{{ tokenId }}, {{ tokenAmount }})
         let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
         tokenBridgeForChain.transferNative(
-            @{{ sender }},
             #{{ tokenId }},
             @{{ sender }},
             #{{ toAddress }},

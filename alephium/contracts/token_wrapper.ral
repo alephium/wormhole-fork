@@ -36,7 +36,6 @@ TxContract TokenWrapper(
     }
 
     pub payable fn transfer(
-        payer: Address,
         fromAddress: Address,
         toAddress: ByteVec,
         amount: U256,
@@ -63,8 +62,8 @@ TxContract TokenWrapper(
             u256To2Byte!(tokenChainId) ++
             u256To32Byte!(normalizedFee)
         let tokenBridge = TokenBridge(tokenBridgeId)
-        approveAlph!(payer, tokenBridge.getMessageFee())
-        tokenBridge.publishTransferWrapped(payer, payload, nonce, consistencyLevel)
+        approveAlph!(fromAddress, tokenBridge.getMessageFee())
+        tokenBridge.publishTransferWrapped(fromAddress, payload, nonce, consistencyLevel)
     }
 
     pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {

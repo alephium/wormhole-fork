@@ -112,7 +112,6 @@ TxContract TokenBridgeForChain(
 
     // transfer native token to remote chain
     pub payable fn transferNative(
-        payer: Address,
         nativeTokenId: ByteVec,
         fromAddress: Address,
         toAddress: ByteVec,
@@ -144,8 +143,8 @@ TxContract TokenBridgeForChain(
             u256To2Byte!(remoteChainId) ++
             u256To32Byte!(normalizedFee)
         let tokenBridge = TokenBridge(localTokenBridgeId)
-        approveAlph!(payer, tokenBridge.getMessageFee())
-        tokenBridge.publishTransferNative(payer, payload, nonce, consistencyLevel)
+        approveAlph!(fromAddress, tokenBridge.getMessageFee())
+        tokenBridge.publishTransferNative(fromAddress, payload, nonce, consistencyLevel)
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
