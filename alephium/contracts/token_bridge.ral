@@ -43,7 +43,6 @@ TxContract TokenBridge(
         let tokenBridgeModule = #000000000000000000000000000000000000000000546f6b656e427269646765
         assert!(byteVecSlice!(payload, start, start + 32) == tokenBridgeModule)
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
-        return
     }
 
     pub fn parseAndVerify(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec) {

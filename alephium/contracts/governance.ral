@@ -112,7 +112,6 @@ TxContract Governance(
         let coreModule = #00000000000000000000000000000000000000000000000000000000436f7265
         assert!(byteVecSlice!(payload, start, start + 32) == coreModule)
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
-        return
     }
 
     fn updateGuardianSet_(guardianSet: [ByteVec; 19], index: U256, size: U256) -> () {
@@ -148,7 +147,6 @@ TxContract Governance(
         )
         updateGuardianSet_(newGuardianSet, newGuardianSetIndex, newGuardianSetSize)
         assert!(size!(payload) == index)
-        return
     }
 
     pub fn setMessageFee(vaa: ByteVec) -> () {
@@ -163,7 +161,6 @@ TxContract Governance(
         index = index + 32
         assert!(size!(payload) == index)
         messageFee = fee
-        return
     }
 
     pub payable fn submitTransferFee(vaa: ByteVec) -> () {
@@ -180,7 +177,6 @@ TxContract Governance(
         index = index + 32
         assert!(size!(payload) == index)
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
-        return
     }
 
     fn verifySignature(
