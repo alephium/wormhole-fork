@@ -197,13 +197,21 @@ interface Failed {
     }
 }
 
-export async function expectAssertionFailed<T>(func: () => Promise<T>) {
+async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
     try {
         await func()
     } catch (exp) {
         const detail = (exp as Failed).error.detail
-        expect(detail).toEqual("AssertionFailed")
+        expect(details).toContain(detail)
     }
+}
+
+export async function expectAssertionFailed<T>(func: () => Promise<T>) {
+    expectFailed(func, ['AssertionFailed'])
+}
+
+export async function expectAssertionFailedOrRecoverEthAddressFailed<T>(func: () => Promise<T>) {
+    expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
 }
 
 export function toContractId(address: string): string {

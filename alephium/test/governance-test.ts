@@ -1,6 +1,6 @@
 import { Asset, CliqueClient, InputAsset, TestContractResult } from 'alephium-js'
 import { toHex } from '../lib/utils'
-import { alphChainId, expectAssertionFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
+import { alphChainId, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { createGovernance, governanceChainId, governanceContractAddress, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
@@ -21,7 +21,7 @@ describe("test governance", () => {
         })
     }
 
-    it('should update guardian set', async () => {
+    test('should update guardian set', async () => {
         const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
         const vaaBody = new VAABody(updateGuardianSet.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
@@ -33,7 +33,7 @@ describe("test governance", () => {
         ))
         expect(governanceState.fields[7]).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
         expect(governanceState.fields[8]).toEqual(Array(initGuardianSet.size(), updateGuardianSet.newGuardianSet.size()))
-    })
+    }, 10000)
 
     it('should failed if signature is not enough', async () => {
         const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
@@ -61,7 +61,7 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
-        expectAssertionFailed(async () => {
+        expectAssertionFailedOrRecoverEthAddressFailed(async () => {
             return await testCase(invalidVaa, 'updateGuardianSet')
         })
     })
