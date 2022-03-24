@@ -8,12 +8,14 @@ const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e4
 
 export class AttestToken {
     tokenId: string
+    tokenChainId: number
     symbol: string
     name: string
     decimals: number
 
-    constructor(tokenId: string, symbol: string, name: string, decimals: number) {
+    constructor(tokenId: string, tokenChainId: number, symbol: string, name: string, decimals: number) {
         this.tokenId = tokenId
+        this.tokenChainId = tokenChainId
         this.symbol = symbol
         this.name = name
         this.decimals = decimals
@@ -23,7 +25,7 @@ export class AttestToken {
         let buffer = Buffer.allocUnsafe(100)
         buffer.writeUint8(2, 0) // payloadId
         buffer.write(this.tokenId, 1, 'hex')
-        buffer.writeUInt16BE(alphChainId, 33)
+        buffer.writeUInt16BE(this.tokenChainId, 33)
         buffer.writeUint8(this.decimals, 35)
         buffer.write(this.symbol, 36, 'hex')
         buffer.write(this.name, 68, 'hex')
@@ -58,15 +60,15 @@ export class Transfer {
     tokenId: string
     tokenChainId: number
     recipient: string
-    remoteChainId: number
+    recipientChainId: number
     arbiterFee: bigint
 
-    constructor(amount: bigint, tokenId: string, tokenChainId: number, recipient: string, remoteChainId: number, arbiterFee: bigint) {
+    constructor(amount: bigint, tokenId: string, tokenChainId: number, recipient: string, recipientChainId: number, arbiterFee: bigint) {
         this.amount = amount
         this.tokenId = tokenId
         this.tokenChainId = tokenChainId
         this.recipient = recipient
-        this.remoteChainId = remoteChainId
+        this.recipientChainId = recipientChainId 
         this.arbiterFee = arbiterFee
     }
 
@@ -77,7 +79,7 @@ export class Transfer {
         buffer.write(this.tokenId, 33, 'hex')
         buffer.writeUint16BE(this.tokenChainId, 65)
         buffer.write(this.recipient, 67, 'hex')
-        buffer.writeUint16BE(this.remoteChainId, 99)
+        buffer.writeUint16BE(this.recipientChainId, 99)
         buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 101, 'hex')
         return buffer
     }
@@ -216,5 +218,25 @@ export async function createTokenBridgeForChain(
         {alphAmount: dustAmount},
         address
     )
-    return new ContractInfo(tokenBridgeForChain, state, tokenBridgeInfo.states(), address)
+    return new ContractInfo(tokenBridgeForChain, state, tokenBridgeInfo.states().concat(sequence.states()), address)
+}
+
+export async function createTokenWrapper(
+    client: CliqueClient,
+    wrappedTokenId: string,
+    tokenChainId: number,
+    decimals: number,
+    symbol: string,
+    name: string,
+    tokenBridgeInfo: TokenBridgeInfo,
+    tokenBridgeForChainInfo: ContractInfo
+): Promise<ContractInfo> {
+    const tokenWrapperContract = await getTokenWrapperContract(client)
+    const address = randomContractAddress()
+    const state = tokenWrapperContract.toState(
+        [tokenBridgeInfo.address, tokenBridgeForChainInfo.address, alphChainId, tokenChainId, wrappedTokenId, decimals, symbol, name],
+        {alphAmount: dustAmount},
+        address
+    )
+    return new ContractInfo(tokenWrapperContract, state, tokenBridgeForChainInfo.states(), address)
 }

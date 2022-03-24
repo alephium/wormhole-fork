@@ -12,6 +12,7 @@ export const web3Utils = web3.utils
 export const alphChainId = 13
 export const dustAmount = BigInt("1000000000000")
 export const oneAlph = BigInt("1000000000000000000")
+export const u256Max = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 export class ContractInfo {
     contract: Contract
@@ -177,6 +178,11 @@ export function randomAssetAddress(): string {
     const prefix = Buffer.from([0x00])
     const bytes = Buffer.concat([prefix, randomBytes(32)])
     return base58.encode(bytes)
+}
+
+export function toRecipientId(address: string): string {
+    const bytes = base58.decode(address)
+    return toHex(bytes.slice(1))
 }
 
 export function randomContractAddress(): string {
