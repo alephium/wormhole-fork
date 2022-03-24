@@ -20,9 +20,9 @@ TxContract TokenBridge(
         assert!(sequenceContract.getOwner() == selfContractId!())
         assert!(sequenceContract.getExecuted() == 0)
         let next1 = sequenceContract.getNext1()
-        loop(0, 20, 1, assert!(next1[?] == 0))
+        loop(0, 20, 1, assert!(next1[?] == false))
         let next2 = sequenceContract.getNext2()
-        loop(0, 20, 1, assert!(next2[?] == 0))
+        loop(0, 20, 1, assert!(next2[?] == false))
         governanceSequenceContract = address
     }
 

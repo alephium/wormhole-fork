@@ -136,8 +136,8 @@ export async function deploySequence(
     sequence?: Contract
 ): Promise<DeployResult> {
     let contract: Contract = sequence ? sequence : await Contract.from(client, 'sequence.ral')
-    const next1 = Array(20).fill(0)
-    const next2 = Array(20).fill(0)
+    const next1 = Array(20).fill(false)
+    const next2 = Array(20).fill(false)
     const initFields = [owner, 0, next1, next2]
     return _deploy(signer, contract, initFields)
 }

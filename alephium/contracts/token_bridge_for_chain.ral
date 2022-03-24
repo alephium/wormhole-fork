@@ -18,9 +18,9 @@ TxContract TokenBridgeForChain(
         assert!(sequence.getOwner() == selfContractId!())
         assert!(sequence.getExecuted() == 0)
         let next1 = sequence.getNext1()
-        loop(0, 20, 1, assert!(next1[?] == 0))
+        loop(0, 20, 1, assert!(next1[?] == false))
         let next2 = sequence.getNext2()
-        loop(0, 20, 1, assert!(next2[?] == 0))
+        loop(0, 20, 1, assert!(next2[?] == false))
         sequenceContract = address
     }
 

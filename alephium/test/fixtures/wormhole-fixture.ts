@@ -36,7 +36,7 @@ export async function createSequence(client: CliqueClient, owner: string): Promi
     const sequenceContract = await Contract.from(client, 'sequence.ral')
     const address = randomContractAddress()
     const contractState = sequenceContract.toState(
-        [toContractId(owner), 0, Array(20).fill(0), Array(20).fill(0)],
+        [toContractId(owner), 0, Array(20).fill(false), Array(20).fill(false)],
         {alphAmount: dustAmount},
         address
     )

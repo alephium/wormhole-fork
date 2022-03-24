@@ -2,8 +2,8 @@
 TxContract Sequence(
     owner: ByteVec,
     mut executed: U256,   // TODO: better name
-    mut next1: [U256; 20],
-    mut next2: [U256; 20]
+    mut next1: [Bool; 20],
+    mut next2: [Bool; 20]
 ) {
     pub fn getOwner() -> (ByteVec) {
         return owner
@@ -13,25 +13,21 @@ TxContract Sequence(
         return executed
     }
 
-    pub fn getNext1() -> ([U256; 20]) {
+    pub fn getNext1() -> ([Bool; 20]) {
         return next1
     }
 
-    pub fn getNext2() -> ([U256; 20]) {
+    pub fn getNext2() -> ([Bool; 20]) {
         return next2
-    }
-
-    fn checkExecuted(value: U256) -> (Bool) {
-        return value == 0xffffffffffffffffffffffffffffffff
     }
 
     fn compact() -> (Bool) {
         let mut allExecuted = true
-        loop(0, 20, 1, allExecuted = allExecuted && checkExecuted(next1[?]))
+        loop(0, 20, 1, allExecuted = allExecuted && next1[?])
         if (allExecuted) {
             executed = executed + 20
             next1 = next2
-            loop(0, 20, 1, next2[?] = 0)
+            loop(0, 20, 1, next2[?] = false)
         }
         return allExecuted
     }
@@ -51,8 +47,8 @@ TxContract Sequence(
         if (index < 20) {
             loop(0, 20, 1,
                 if (? == index) {
-                    assert!(!checkExecuted(next1[?]))
-                    next1[?] = 0xffffffffffffffffffffffffffffffff
+                    assert!(!next1[?])
+                    next1[?] = true
                 }
             )
             return
@@ -61,8 +57,8 @@ TxContract Sequence(
         index = index - 20
         loop(0, 20, 1,
             if (? == index) {
-                assert!(!checkExecuted(next2[?]))
-                next2[?] = 0xffffffffffffffffffffffffffffffff
+                assert!(!next2[?])
+                next2[?] = true
             }
         )
     }
