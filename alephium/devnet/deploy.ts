@@ -17,9 +17,9 @@ const wormhole = new Wormhole(
     client,
     signer,
     env.governanceChainId,
-    env.governanceChainAddress,
+    env.governanceContractAddress,
     env.governanceChainId,
-    env.governanceChainAddress,
+    env.governanceContractAddress,
     env.initGuardianSet,
     env.initGuardianIndex,
     env.messageFee
