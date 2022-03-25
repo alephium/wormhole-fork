@@ -124,6 +124,16 @@ func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string
 	return result, nil
 }
 
+func (c *Client) GetContractEventsByIndex(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
+	// TODO: implementation
+	return nil, nil
+}
+
+func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*uint64, error) {
+	// TODO: implementation
+	return nil, nil
+}
+
 func (c *Client) GetContractEventsFromBlockHeight(ctx context.Context, chainIndex *ChainIndex, height uint32, contracts []string) ([]*Event, error) {
 	hash, err := c.GetHashByHeight(ctx, chainIndex, height)
 	if err != nil {

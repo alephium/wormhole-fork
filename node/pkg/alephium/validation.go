@@ -11,7 +11,6 @@ import (
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/certusone/wormhole/node/pkg/common"
-	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"go.uber.org/zap"
 
@@ -22,12 +21,7 @@ import (
 const transferPayloadId byte = 1
 
 type validator struct {
-	governanceContract          string
-	tokenBridgeContract         string
-	tokenWrapperFactoryContract string
-
-	client     *Client
-	groupIndex uint8
+	governanceContract string
 
 	msgC chan<- *common.MessagePublication
 
@@ -46,20 +40,12 @@ func toContractId(address string) Byte32 {
 }
 
 func newValidator(
-	client *Client,
-	groupIndex uint8,
-	contracts []string,
+	governanceContract string,
 	msgC chan<- *common.MessagePublication,
 	db *db,
 ) *validator {
-	assume(len(contracts) == 3)
 	return &validator{
-		governanceContract:          contracts[0],
-		tokenBridgeContract:         contracts[1],
-		tokenWrapperFactoryContract: contracts[2],
-
-		client:     client,
-		groupIndex: groupIndex,
+		governanceContract: governanceContract,
 
 		msgC: msgC,
 
@@ -70,79 +56,45 @@ func newValidator(
 	}
 }
 
-func (v *validator) run(ctx context.Context, _fromHeight uint32, errC chan<- error, confirmedC <-chan *ConfirmedMessages) {
-	logger := supervisor.Logger(ctx)
-	fromHeight := _fromHeight
-	blocks := map[uint32]bool{}
-
-	updateProcessedHeight := func(height uint32, batch *batch) {
-		if height < fromHeight {
-			// fork happend
-			fromHeight = height
-			return
-		}
-		for h := fromHeight; h <= height; h++ {
-			if finished := blocks[h]; !finished {
-				return
-			} else {
-				delete(blocks, h)
-			}
-		}
-		fromHeight = height + 1
-		lastHeight := uint32(0)
-		if height > MaxForkHeight {
-			lastHeight = height - MaxForkHeight
-		}
-		batch.updateHeight(lastHeight)
-	}
-
+func (v *validator) run(ctx context.Context, logger *zap.Logger, errC chan<- error, confirmedC <-chan []*UnconfirmedEvent) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case confirmed := <-confirmedC:
-			batch := newBatch()
-			for _, message := range confirmed.messages {
-				switch message.event.ContractAddress {
-				case v.governanceContract:
-					if err := v.handleGovernanceEvent(logger, message, confirmed.blockHeader); err != nil {
-						errC <- err
-						return
-					}
-
-				case v.tokenBridgeContract:
-					if err := v.handleTokenBridgeEvent(logger, ctx, message.event, batch); err != nil {
-						errC <- err
-						return
-					}
-
-				case v.tokenWrapperFactoryContract:
-					if err := v.handleTokenWrapperFactoryEvent(logger, ctx, message.event, batch); err != nil {
-						errC <- err
-						return
-					}
+			for _, event := range confirmed {
+				assume(event.event.ContractAddress == v.governanceContract)
+				wormholeMsg, err := WormholeMessageFromEvent(event.event)
+				if err != nil {
+					logger.Error("invalid wormhole message", zap.Any("fields", event.event.Fields))
+					errC <- err
+					return
 				}
-			}
-
-			if !confirmed.reObserved {
-				blocks[confirmed.blockHeader.Height] = confirmed.finished
-				if confirmed.finished {
-					updateProcessedHeight(confirmed.blockHeader.Height, batch)
+				logger.Debug(
+					"receive event from alephium contract",
+					zap.String("emitter", wormholeMsg.emitter.ToHex()),
+					zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
+				)
+				if !wormholeMsg.isTransferMessage() {
+					// we only need to validate transfer message
+					v.msgC <- wormholeMsg.toMessagePublication(event.blockHeader)
+					continue
 				}
-			}
-			if err := v.db.writeBatch(batch); err != nil {
-				errC <- err
-				logger.Error("failed to write db", zap.Error(err))
-				return
+				transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
+				if err := v.validateTransferMessage(transferMsg); err != nil {
+					logger.Error("invalid wormhole message, just ignore", zap.Error(err))
+					continue
+				}
+				v.msgC <- wormholeMsg.toMessagePublication(event.blockHeader)
 			}
 		}
 	}
 }
 
-func (v *validator) handleGovernanceEvent(logger *zap.Logger, message *message, header *BlockHeader) error {
-	wormholeMsg, err := WormholeMessageFromEvent(message.event)
+func (v *validator) handleGovernanceEvent(logger *zap.Logger, event *Event, header *BlockHeader) error {
+	wormholeMsg, err := WormholeMessageFromEvent(event)
 	if err != nil {
-		logger.Error("invalid wormhole message", zap.Any("fields", message.event.Fields))
+		logger.Error("invalid wormhole message", zap.Any("fields", event.Fields))
 		return err
 	}
 	logger.Debug(
@@ -161,26 +113,6 @@ func (v *validator) handleGovernanceEvent(logger *zap.Logger, message *message, 
 		return nil
 	}
 	v.msgC <- wormholeMsg.toMessagePublication(header)
-	return nil
-}
-
-func (v *validator) handleTokenBridgeEvent(logger *zap.Logger, ctx context.Context, event *Event, batch *batch) error {
-	remoteChainId, tokenBridgeForChainAddress, err := v.client.GetTokenBridgeForChainInfo(ctx, event, v.groupIndex)
-	if err != nil {
-		logger.Error("failed to get token bridge for chain info", zap.Error(err))
-		return err
-	}
-	batch.writeChain(*remoteChainId, *tokenBridgeForChainAddress)
-	return nil
-}
-
-func (v *validator) handleTokenWrapperFactoryEvent(logger *zap.Logger, ctx context.Context, event *Event, batch *batch) error {
-	remoteTokenId, tokenWrapperAddress, err := v.client.GetTokenWrapperInfo(ctx, event, v.groupIndex)
-	if err != nil {
-		logger.Error("failed to get token wrapper info", zap.Error(err))
-		return err
-	}
-	batch.writeTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
 	return nil
 }
 

@@ -12,9 +12,10 @@ type db struct {
 }
 
 var (
-	tokenWrapperPrefix = []byte("token-wrapper")
-	chainPrefix        = []byte("token-bridge-for-chain")
-	lastBlockHeightKey = []byte("last-block-height")
+	tokenWrapperPrefix              = []byte("token-wrapper")
+	tokenBridgeForChainPrefix       = []byte("token-bridge-for-chain")
+	lastTokenBridgeEventIndexKey    = []byte("last-token-bridge-event-index")
+	lastTokenWrapperFactoryIndexKey = []byte("last-token-wrapper-factory-index")
 )
 
 func open(path string) (*db, error) {
@@ -73,18 +74,22 @@ func (db *db) getRemoteChain(chainId uint16) (string, error) {
 	return string(value), nil
 }
 
-func (db *db) updateLastHeight(height uint32) error {
-	bytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(bytes, height)
-	return db.put(lastBlockHeightKey, bytes)
+func (db *db) getLastTokenBridgeEventIndex() (*uint64, error) {
+	bytes, err := db.get(lastTokenBridgeEventIndexKey)
+	if err != nil {
+		return nil, err
+	}
+	index := binary.BigEndian.Uint64(bytes)
+	return &index, nil
 }
 
-func (db *db) getLastHeight() (uint32, error) {
-	value, err := db.get(lastBlockHeightKey)
+func (db *db) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
+	bytes, err := db.get(lastTokenWrapperFactoryIndexKey)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return binary.BigEndian.Uint32(value), nil
+	index := binary.BigEndian.Uint64(bytes)
+	return &index, nil
 }
 
 func (db *db) writeBatch(batch *batch) error {
@@ -105,7 +110,7 @@ func tokenWrapperKey(tokenId Byte32) []byte {
 func chainKey(chainId uint16) []byte {
 	bytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(bytes, chainId)
-	return append(chainPrefix, bytes...)
+	return append(tokenBridgeForChainPrefix, bytes...)
 }
 
 type batch struct {
@@ -120,7 +125,7 @@ func newBatch() *batch {
 	}
 }
 
-func (b *batch) writeChain(chainId uint16, contractAddress string) {
+func (b *batch) writeTokenBridgeForChain(chainId uint16, contractAddress string) {
 	b.keys = append(b.keys, chainKey(chainId))
 	b.values = append(b.values, []byte(contractAddress))
 }
@@ -130,9 +135,16 @@ func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperAddress string) {
 	b.values = append(b.values, []byte(wrapperAddress))
 }
 
-func (b *batch) updateHeight(height uint32) {
-	b.keys = append(b.keys, lastBlockHeightKey)
-	bytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(bytes, height)
+func (b *batch) updateLastTokenBridgeEventIndex(index uint64) {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, index)
+	b.keys = append(b.keys, lastTokenBridgeEventIndexKey)
+	b.values = append(b.values, bytes)
+}
+
+func (b *batch) updateLastTokenWrapperFactoryEventIndex(index uint64) {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, index)
+	b.keys = append(b.keys, lastTokenWrapperFactoryIndexKey)
 	b.values = append(b.values, bytes)
 }
