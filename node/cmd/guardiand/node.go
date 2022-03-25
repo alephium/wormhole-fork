@@ -804,19 +804,21 @@ func runNode(cmd *cobra.Command, args []string) {
 				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDbPath,
 			)
 			if err != nil {
-				logger.Error("create alephium watcher failed", zap.Error(err))
+				logger.Error("failed to create alephium watcher", zap.Error(err))
 				return err
 			}
 
 			contractServer, err := alphWatcher.ContractServer(logger, *alphContractServerRPC)
 			if err != nil {
+				logger.Error("failed to create alephium contract server", zap.Error(err))
 				return err
 			}
 			if err := supervisor.Run(ctx, "alph-contract-server", contractServer); err != nil {
+				logger.Error("failed to run alephium contract server", zap.Error(err))
 				return err
 			}
 			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
-				logger.Error("run alephium watcher failed", zap.Error((err)))
+				logger.Error("failed to run alephium watcher", zap.Error((err)))
 				return err
 			}
 		}
