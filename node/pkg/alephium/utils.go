@@ -171,7 +171,12 @@ type TxStatus struct {
 }
 
 type NodeInfo struct {
-	Version string `json:"version"`
+	BuildInfo *BuildInfo `json:"buildInfo"`
+}
+
+type BuildInfo struct {
+	ReleaseVersion string `json:"releaseVersion"`
+	Commit         string `json:"commit"`
 }
 
 type ContractState struct {

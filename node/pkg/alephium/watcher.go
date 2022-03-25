@@ -141,12 +141,12 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	client := NewClient(w.url, w.apiKey, 10)
 	logger := supervisor.Logger(ctx)
-	nodeInfo, err := client.GetNode(ctx)
+	nodeInfo, err := client.GetNodeInfo(ctx)
 	if err != nil {
 		logger.Error("get node info error", zap.Error(err))
 		return err
 	}
-	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.Version))
+	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
 	fromHeight, err := w.fetchContractAddresses(ctx, logger, client)
 	if err != nil {
