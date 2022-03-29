@@ -1,8 +1,0 @@
-import "token_bridge.ral"
-
-TxScript Main {
-    pub payable fn main() -> () {
-        let tokenBridge = TokenBridge(#{{ tokenBridgeAddress }})
-        tokenBridge.init(#{{ sequenceAddress }})
-    }
-}

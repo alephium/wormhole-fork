@@ -8,10 +8,10 @@ TxContract TokenWrapper(
     localChainId: U256,
     tokenChainId: U256,
     tokenContractId: ByteVec,
-    decimals: U256,
+    tokenDecimals: U256,
     symbol: ByteVec,
     name: ByteVec
-) {
+) extends Math() {
     pub payable fn transfer(
         fromAddress: Address,
         toAddress: ByteVec,
@@ -24,12 +24,11 @@ TxContract TokenWrapper(
         assert!(size!(nonce) == 4)
         assert!(size!(tokenContractId) == 32)
 
-        let math = Math(#{{ mathAddress }})
-        let normalizedAmount = math.normalizeAmount(amount, decimals)
-        let normalizedFee = math.normalizeAmount(arbiterFee, decimals)
+        let normalizedAmount = normalizeAmount(amount, tokenDecimals)
+        let normalizedFee = normalizeAmount(arbiterFee, tokenDecimals)
         assert!(normalizedFee < normalizedAmount)
 
-        let transferAmount = math.deNormalizeAmount(normalizedAmount, decimals)
+        let transferAmount = deNormalizeAmount(normalizedAmount, tokenDecimals)
         transferTokenToSelf!(fromAddress, selfContractId!(), transferAmount)
 
         let payload = #01 ++ // payloadId
@@ -51,9 +50,8 @@ TxContract TokenWrapper(
         assert!(wrappedTokenId == tokenContractId)
         assert!(wrappedTokenChainId == tokenChainId)
 
-        let math = Math(#{{ mathAddress }})
-        let denomalizedAmount = math.deNormalizeAmount(amount, decimals)
-        let denomalizedFee = math.deNormalizeAmount(arbiterFee, decimals)
+        let denomalizedAmount = deNormalizeAmount(amount, tokenDecimals)
+        let denomalizedFee = deNormalizeAmount(arbiterFee, tokenDecimals)
         assert!(denomalizedAmount > denomalizedFee)
 
         let transferAmount = denomalizedAmount - denomalizedFee

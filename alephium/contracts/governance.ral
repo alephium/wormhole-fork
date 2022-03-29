@@ -4,28 +4,15 @@ TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceContract: ByteVec,
-    mut initialized: Bool,
-    mut governanceSequenceContract: ByteVec,  // the sequence contract address
+    mut next: U256,
+    mut next1: [Bool; 20],
+    mut next2: [Bool; 20],
     mut messageFee: U256,
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut guardianSetSizes: [U256; 2],
     mut previousGuardianSetExpirationTime: U256
-) {
-    pub fn init(address: ByteVec) -> () {
-        assert!(!initialized)
-        initialized = true
-        assert!(contractCodeHash!(address) == #{{ sequenceCodeHash }})
-        let sequence = Sequence(address)
-        assert!(sequence.getOwner() == selfContractId!())
-        assert!(sequence.getExecuted() == 0)
-        let next1 = sequence.getNext1()
-        loop(0, 20, 1, assert!(next1[?] == false))
-        let next2 = sequence.getNext2()
-        loop(0, 20, 1, assert!(next2[?] == false))
-        governanceSequenceContract = address
-    }
-
+) extends Sequence(next, next1, next2) {
     pub fn getChainId() -> (U256) {
         return chainId
     }
@@ -39,7 +26,6 @@ TxContract Governance(
     event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
 
     pub payable fn publishMessage(payer: Address, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256) -> () {
-        assert!(initialized)
         transferAlphToSelf!(payer, messageFee)
         // We support up to 4 fields
         emit WormholeMessage(callerContractId!(), sequence, nonce ++ payload, consistencyLevel)
@@ -47,7 +33,6 @@ TxContract Governance(
 
     // return emitterChainId, emitterAddress, sequence, payload
     pub fn parseBody(body: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
-        assert!(initialized)
         let mut index = 0
         let timestamp = u256From4Byte!(byteVecSlice!(body, index, index + 4))
         index = index + 4
@@ -70,13 +55,11 @@ TxContract Governance(
         let (emitterChainId, emitterAddress, msgSequence, payload) = parseBody(body)
         assert!(emitterChainId == governanceChainId)
         assert!(emitterAddress == governanceContract)
-        let sequence = Sequence(governanceSequenceContract)
-        sequence.checkSequence(msgSequence)
+        checkSequence(msgSequence)
         return payload
     }
 
     pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
-        assert!(initialized)
         let body = parseAndVerifySignatures(vaa, false)
         return parseBody(body)
     }
@@ -125,7 +108,6 @@ TxContract Governance(
     }
 
     pub fn updateGuardianSet(vaa: ByteVec) -> () {
-        assert!(initialized)
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #02)
         let mut index = 33
@@ -150,7 +132,6 @@ TxContract Governance(
     }
 
     pub fn setMessageFee(vaa: ByteVec) -> () {
-        assert!(initialized)
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
         let mut index = 33
@@ -164,7 +145,6 @@ TxContract Governance(
     }
 
     pub payable fn submitTransferFee(vaa: ByteVec) -> () {
-        assert!(initialized)
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #04)
         let mut index = 33
@@ -238,34 +218,5 @@ TxContract Governance(
             return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
         }
         return [#00; 19], 0, 0
-    }
-
-
-    // ========================= debug functions ========================
-
-    pub fn checkCurrentGuardianSet(
-        guardianSet: [ByteVec; 19],
-        guardianSetIndex: U256,
-        guardianSetSize: U256
-    ) -> () {
-        loop(0, 19, 1, assert!(guardianSet[?] == guardianSets[1][?]))
-        assert!(guardianSetIndex == guardianSetIndexes[1])
-        assert!(guardianSetSize == guardianSetSizes[1])
-    }
-
-    pub fn checkPreviousGuardianSet(
-        guardianSet: [ByteVec; 19],
-        guardianSetIndex: U256,
-        guardianSetSize: U256,
-        expirationTime: U256
-    ) -> () {
-        loop(0, 19, 1, assert!(guardianSet[?] == guardianSets[0][?]))
-        assert!(guardianSetIndex == guardianSetIndexes[0])
-        assert!(guardianSetSize == guardianSetSizes[0])
-        assert!(expirationTime == previousGuardianSetExpirationTime)
-    }
-
-    pub fn checkMessageFee(fee: U256) -> () {
-        assert!(fee == messageFee)
     }
 }
