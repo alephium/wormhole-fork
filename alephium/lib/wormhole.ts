@@ -49,48 +49,26 @@ export class Wormhole {
     }
 
     async deployContracts(): Promise<WormholeContracts> {
-        const serdeDeployResult = await deploySerde(this.client, this.signer)
-        const mathDeployResult = await deployMath(this.client, this.signer)
-        const tokenWrapper = await tokenWrapperContract(this.client, mathDeployResult.address)
+        const tokenWrapper = await tokenWrapperContract(this.client)
         const tokenWrapperFactoryDeployResult = await deployTokenWrapperFactory(
-            this.client, this.signer, serdeDeployResult.address, tokenWrapper.bytecode
+            this.client, this.signer, tokenWrapper.bytecode
         )
         const governanceDeployResult = await deployGovernance(
             this.client, this.signer, this.governanceChainId, this.governanceContractId,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeForChain = await tokenBridgeForChainContract(
-            this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash, mathDeployResult.address)
+            this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash)
         const tokenBridgeDeployResult = await deployTokenBridge(
             this.client, this.signer, governanceDeployResult.address,
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId,
-            serdeDeployResult.address, tokenBridgeForChain.bytecode, tokenBridgeForChain.codeHash,
-            tokenWrapper.codeHash
+            tokenBridgeForChain.bytecode, tokenBridgeForChain.codeHash, tokenWrapper.codeHash
         )
         return {
             governance: governanceDeployResult,
             tokenBridge: tokenBridgeDeployResult,
             tokenWrapperFactory: tokenWrapperFactoryDeployResult
         }
-    }
-
-    async initTokenBridgeForChain(tokenBridgeForChainAddress: string): Promise<string> {
-        const sequenceDeployResult = await deploySequence(this.client, this.signer, tokenBridgeForChainAddress)
-        const initScript = await Script.from(this.client, "token_bridge_for_chain_init.ral", {
-            tokenBridgeForChainAddress: tokenBridgeForChainAddress,
-            sequenceAddress: sequenceDeployResult.address,
-            mathAddress: "00",
-            serdeAddress: "00",
-            tokenWrapperFactoryAddress: "00",
-            sequenceCodeHash: "00",
-            tokenBridgeForChainBinCode: "00",
-            tokenBridgeForChainCodeHash: "00",
-            tokenWrapperBinCode: "00",
-            tokenWrapperCodeHash: "00",
-        })
-        const initScriptTx = await initScript.transactionForDeployment(this.signer)
-        const submitResult = await this.signer.submitTransaction(initScriptTx.unsignedTx, initScriptTx.txId)
-        return submitResult.txId
     }
 
     async registerChainToAlph(
@@ -100,14 +78,11 @@ export class Wormhole {
         amount: Number256,
         params: BuildScriptTx,
     ): Promise<string> {
-        const sequenceContract = await Contract.from(this.client, 'sequence.ral')
         const script = await Script.from(this.client, "register_chain.ral", {
-            sequenceCodeHash: sequenceContract.codeHash,
             tokenBridgeAddress: tokenBridgeAddress,
             vaa: vaa,
             payer: payer,
             amount: amount,
-            serdeAddress: "00",
             tokenBridgeForChainBinCode: "00",
             tokenBridgeForChainCodeHash: "00",
             tokenWrapperCodeHash: "00",
@@ -132,19 +107,6 @@ async function _deploy(
     }
 }
 
-export async function deploySequence(
-    client: CliqueClient,
-    signer: Signer,
-    owner: string,
-    sequence?: Contract
-): Promise<DeployResult> {
-    let contract: Contract = sequence ? sequence : await Contract.from(client, 'sequence.ral')
-    const next1 = Array(20).fill(false)
-    const next2 = Array(20).fill(false)
-    const initFields = [owner, 0, next1, next2]
-    return _deploy(signer, contract, initFields)
-}
-
 async function deployGovernance(
     client: CliqueClient,
     signer: Signer,
@@ -154,10 +116,7 @@ async function deployGovernance(
     initGuardianSetIndex: number,
     initMessageFee: bigint
 ): Promise<DeployResult> {
-    const sequenceContract = await Contract.from(client, 'sequence.ral')
-    const governance = await Contract.from(client, 'governance.ral', {
-        sequenceCodeHash: sequenceContract.codeHash
-    })
+    const governance = await Contract.from(client, 'governance.ral')
     const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
     const initGuardianSetSize = initGuardianSet.length
     if (initGuardianSetSize > 19) {
@@ -169,47 +128,20 @@ async function deployGovernance(
     const initGuardianIndexes = Array(0, initGuardianSetIndex)
     const initGuardianSizes = Array(0, initGuardianSet.length)
     const previousGuardianSetExpirationTime = 0
+    const initSequence = Array(20).fill(false)
     const initFields = [
-        AlephiumChainId, governanceChainId, governanceContractId, false, Byte32Zero, initMessageFee,
+        AlephiumChainId, governanceChainId, governanceContractId, 0, initSequence, initSequence, initMessageFee,
         initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
     ]
-
-    const governanceDeployResult = await _deploy(signer, governance, initFields)
-    const sequenceDeployResult = await deploySequence(client, signer, governanceDeployResult.address, sequenceContract)
-    const initScript = await Script.from(client, 'governance_init.ral', {
-        sequenceCodeHash: sequenceContract.codeHash,
-        governanceAddress: governanceDeployResult.address,
-        sequenceAddress: sequenceDeployResult.address
-    })
-    const initScriptTx = await initScript.transactionForDeployment(signer)
-    await signer.submitTransaction(initScriptTx.unsignedTx, initScriptTx.txId)
-    return governanceDeployResult
-}
-
-async function deploySerde(
-    client: CliqueClient,
-    signer: Signer
-): Promise<DeployResult> {
-    const serde = await Contract.from(client, 'serde.ral')
-    return _deploy(signer, serde)
-}
-
-async function deployMath(
-    client: CliqueClient,
-    signer: Signer
-): Promise<DeployResult> {
-    const math = await Contract.from(client, 'math.ral')
-    return _deploy(signer, math)
+    return await _deploy(signer, governance, initFields)
 }
 
 async function deployTokenWrapperFactory(
     client: CliqueClient,
     signer: Signer,
-    serdeAddress: string,
     tokenWrapperBinCode: string
 ): Promise<DeployResult> {
     const variables = {
-        serdeAddress: serdeAddress,
         tokenWrapperBinCode: tokenWrapperBinCode
     }
     const tokenWrapperFactory = await Contract.from(client, 'token_wrapper_factory.ral', variables)
@@ -222,70 +154,46 @@ async function deployTokenBridge(
     governanceAddress: string,
     governanceChainId: number,
     governanceContractId: string,
-    serdeAddress: string,
     tokenBridgeForChainBinCode: string,
     tokenBridgeForChainCodeHash: string,
     tokenWrapperCodeHash: string
 ): Promise<DeployResult> {
-    const sequenceContract = await Contract.from(client, 'sequence.ral')
     const variables = {
-        sequenceCodeHash: sequenceContract.codeHash,
-        serdeAddress: serdeAddress,
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
         tokenBridgeForChainCodeHash: tokenBridgeForChainCodeHash,
         tokenWrapperCodeHash: tokenWrapperCodeHash
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
+    const initSequence = Array(20).fill(false)
     const initFields = [
-        governanceAddress, governanceChainId, governanceContractId, false, Byte32Zero, AlephiumChainId, 0
+        governanceAddress, governanceChainId, governanceContractId,
+        0, initSequence, initSequence, AlephiumChainId, 0
     ]
-
-    const tokenBridgeDeployResult = await _deploy(signer, tokenBridge, initFields)
-    const sequenceDeployResult = await deploySequence(client, signer, tokenBridgeDeployResult.address, sequenceContract)
-    const initScript = await Script.from(client, 'token_bridge_init.ral', {
-        sequenceCodeHash: sequenceContract.codeHash,
-        tokenBridgeAddress: tokenBridgeDeployResult.address,
-        sequenceAddress: sequenceDeployResult.address,
-        serdeAddress: "00",
-        tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
-        tokenWrapperCodeHash: "00",
-    })
-    const initScriptTx = await initScript.transactionForDeployment(signer)
-    await signer.submitTransaction(initScriptTx.unsignedTx, initScriptTx.txId)
-    return tokenBridgeDeployResult
+    return await _deploy(signer, tokenBridge, initFields)
 }
 
 async function tokenBridgeForChainContract(
     client: CliqueClient,
     tokenWrapperFactoryAddress: string,
-    tokenWrapperCodeHash: string,
-    mathAddress: string
+    tokenWrapperCodeHash: string
 ): Promise<Contract> {
-    const sequenceContract = await Contract.from(client, 'sequence.ral')
     const variables = {
-        mathAddress: mathAddress,
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
-        sequenceCodeHash: sequenceContract.codeHash,
         tokenWrapperBinCode: "00",
-        serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",
         tokenBridgeForChainCodeHash: "00",
     }
     return Contract.from(client, 'token_bridge_for_chain.ral', variables)
 }
 
-async function tokenWrapperContract(client: CliqueClient, mathAddress: string): Promise<Contract> {
+async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
     const variables = {
-        mathAddress: mathAddress,
-        sequenceCodeHash: "00",
-        serdeAddress: "00",
         tokenBridgeForChainBinCode: "00",
         tokenBridgeForChainCodeHash: "00",
         tokenWrapperBinCode: "00",
         tokenWrapperCodeHash: "00",
-        tokenWrapperFactoryAddress: "00",
+        tokenWrapperFactoryAddress: "00"
     }
     return Contract.from(client, 'token_wrapper.ral', variables)
 }

@@ -58,11 +58,6 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     const bridgeForBsc = await getTokenBridgeForChainContractAddress(wormhole.client, txId)
     console.log("register bsc tx id: " + txId + ', contractAddress: ' + bridgeForBsc)
 
-    await wormhole.initTokenBridgeForChain(bridgeForEth)
-    await wormhole.initTokenBridgeForChain(bridgeForTerra)
-    await wormhole.initTokenBridgeForChain(bridgeForSolana)
-    await wormhole.initTokenBridgeForChain(bridgeForBsc)
-
     return {
         eth: bridgeForEth,
         terra: bridgeForTerra,

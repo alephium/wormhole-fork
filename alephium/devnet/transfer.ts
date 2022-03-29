@@ -39,14 +39,11 @@ export async function transferNative(
         arbiterFee: arbiterFee,
         nonce: nonce(),
         consistencyLevel: consistencyLevel,
-        mathAddress: "00",
-        serdeAddress: "00",
         tokenWrapperFactoryAddress: "00",
         tokenWrapperCodeHash: "00",
         tokenWrapperBinCode: "00",
         tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
-        sequenceCodeHash: "00"
+        tokenBridgeForChainCodeHash: "00"
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
