@@ -1,4 +1,4 @@
-import { Asset, CliqueClient, InputAsset } from 'alephium-js'
+import { Asset, CliqueClient, ContractEvent, InputAsset } from 'alephium-js'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createTokenWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
@@ -66,7 +66,7 @@ describe("test token bridge", () => {
         })
 
         expect(testResult.events.length).toEqual(1)
-        const event = testResult.events[0]
+        const event = testResult.events[0] as ContractEvent
         expect(event.fields.length).toEqual(1)
         expect(event.name).toEqual("ContractCreated")
         expect(event.contractAddress).toEqual(tokenBridgeInfo.address)
@@ -82,10 +82,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client,
-            tokenBridgeInfo,
-            remoteChainId,
-            remoteTokenBridgeId
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
         const testTokenInfo = await createTestToken(client)
@@ -149,10 +146,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client,
-            tokenBridgeInfo,
-            remoteChainId,
-            remoteTokenBridgeId
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
         const testTokenInfo = await createTestToken(client)
@@ -216,7 +210,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const remoteTokenId = toHex(randomBytes(32))
         const symbol = toHex(randomBytes(32))
@@ -243,7 +237,7 @@ describe("test token bridge", () => {
         }])
 
         expect(testResult.events.length).toEqual(1)
-        const event = testResult.events[0]
+        const event = testResult.events[0] as ContractEvent
         expect(event.name).toEqual('ContractCreated')
         expect(event.contractAddress).toEqual(tokenBridgeInfo.tokenWrapperFactory.address)
         expect(event.fields).toEqual([tokenWrapperOutput.address])
@@ -254,7 +248,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const decimals = 8
@@ -326,10 +320,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client,
-            tokenBridgeInfo,
-            remoteChainId,
-            remoteTokenBridgeId
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const decimals = 8
