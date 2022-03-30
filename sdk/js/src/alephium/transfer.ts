@@ -191,3 +191,28 @@ export function completeTransferWrappedCode(
         loadLocal(0) +
         callExternal(1)
 }
+
+export function attestTokenCode(
+    tokenBridgeAddress: string,
+    tokenId: string,
+    payer: string,
+    messageFee: bigint,
+    nonce: string,
+    consistencyLevel: number
+): string {
+    return "010101000200" + // methodLength + public + payable + argLen + localVarLen + returnLen
+        "0d" + // instrLen
+        encodeAddress(payer) +
+        storeLocal(0) +
+        loadLocal(0) +
+        u256(messageFee) +
+        approveAlph +
+        encodeContractId(tokenBridgeAddress) +
+        storeLocal(1) +
+        loadLocal(0) +
+        encodeContractId(tokenId) +
+        encodeBytes(nonce) +
+        encodeConsistencyLevel(consistencyLevel) +
+        loadLocal(1) +
+        callExternal(8)
+}
