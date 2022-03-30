@@ -1,4 +1,4 @@
-import { transferNativeCode, completeTransferNativeCode, transferWrappedCode, completeTransferWrappedCode, attestTokenCode } from '../token_bridge'
+import { transferNativeCode, completeTransferNativeCode, transferWrappedCode, completeTransferWrappedCode, attestTokenCode, createWrapperCode } from '../token_bridge'
 
 describe('test transfer', () => {
     const contractAddress = '2A84hPgNsaNWrRbpXkbQmy793ChJRPFPZauWiXUPMczg4'
@@ -42,5 +42,10 @@ describe('test transfer', () => {
     it('should get attest token code', () => {
         const bytecode = attestTokenCode(contractAddress, tokenId, sender, messageFee, nonceHex, consistencyLevel)
         expect(bytecode.toLowerCase()).toEqual('0101010002000d150013e61fdce36f2910229ad91ef7ae8b17cfe58c2e4f0d04917f8d17521b696da31700160013c25af3107a4000a2144020e54e44ee1d76011f61b9858c2f558b3134752b25c08f636da6e42db67a36a11517011600144020273426b1f2876726828352cde1a9ce3d89ee09281fe9fa7f89464b7db8eab3161404208b9ef70d16010108')
+    })
+
+    it('should get create token wrapper code', () => {
+        const bytecode = createWrapperCode(contractAddress, vaa, sender, tokenAmount)
+        expect(bytecode.toLowerCase()).toEqual('01010100010007144020e54e44ee1d76011f61b9858c2f558b3134752b25c08f636da6e42db67a36a11517001441382abace7db3f82629373393b7bd61d8bfd70d6f661aa05d76538a66661166cea76e3e7b619f028d006b9989759122aea7bc6e2e175e574502f33630ade6b8a2053ada456b6893f833a54d092a88f205d1ddcec7eee46d2e50d183c865bbc41640897a0e9fc188fbeb393a381509848d7c120bbd47cc091819fa7fc0a33eb096cd03545f15d581a1984e77a141675463c8520a7da36016baf33c65064ac3b30068862c34e3022c6d01aa302aded024d5cb286d10612b6de883bc176aca2cfda3084db317fe44cce70cda64fd9cc3b86f65f5ba57455b88a1acfa70d5c32a21334d14783a2a3790fdec429f07222ef930fb271da38e8d6223a71bd420f29d908123fde5b373fcf6d3a73a2e24bad59395df7c4fcfa80fdff7a0318a8afc9357f410210a222b4182e6bb03cc79309b28d54650f96f926fa382ab150013e61fdce36f2910229ad91ef7ae8b17cfe58c2e4f0d04917f8d17521b696da313c40de0b6b3a764000016000104')
     })
 })

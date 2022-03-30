@@ -216,3 +216,20 @@ export function attestTokenCode(
         loadLocal(1) +
         callExternal(8)
 }
+
+export function createWrapperCode(
+    tokenBridgeForChainAddress: string,
+    vaa: string,
+    payer: string,
+    alphAmount: bigint
+): string {
+    return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
+        "07" + // instrLen
+        encodeContractId(tokenBridgeForChainAddress) +
+        storeLocal(0) +
+        encodeBytes(vaa) +
+        encodeAddress(payer) +
+        u256(alphAmount) +
+        loadLocal(0) +
+        callExternal(4)
+}
