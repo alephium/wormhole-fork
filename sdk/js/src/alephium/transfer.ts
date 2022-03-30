@@ -1,6 +1,9 @@
 import * as base58 from 'bs58'
 import { encodePositiveInt, encodeU256 } from './serde'
 
+const approveAlph = 'a2'
+const approveToken = 'a3'
+
 function toHex(bytes: Uint8Array): string {
     return Array.from(bytes, b => {
         return b.toString(16).padStart(2, '0')
@@ -8,18 +11,49 @@ function toHex(bytes: Uint8Array): string {
 }
 
 function encodeAddress(address: string): string {
-    return toHex(base58.decode(address))
+    // addressConstInstr + addressBytes
+    return '15' + toHex(base58.decode(address))
 }
 
-function getTokenId(tokenId: string): string {
+function encodeContractId(tokenId: string): string {
+    // bytesConstInstr + 32 bytes prefix
+    const prefix = '14' + '4020'
     if (tokenId.length == 64) {
-        return tokenId
+        return prefix + tokenId
     }
-    return toHex(base58.decode(tokenId).slice(1))
+    return prefix + toHex(base58.decode(tokenId).slice(1))
 }
 
-function getContractId(address: string): string {
-    return toHex(base58.decode(address).slice(1))
+function storeLocal(index: number): string {
+    if (index > 255) {
+        throw Error('invalid variable index: ' + index)
+    }
+    // storeLocalInstr + index
+    return '17' + index.toString(16).padStart(2, '0')
+}
+
+function loadLocal(index: number): string {
+    if (index > 255) {
+        throw Error('invalid variable index: ' + index)
+    }
+    // loadLocalInstr + index
+    return '16' + index.toString(16).padStart(2, '0')
+}
+
+function u256(num: bigint): string {
+    return '13' + toHex(encodeU256(num))
+}
+
+function encodeBytes(hex: string): string {
+    const length = hex.length / 2
+    return '14' + toHex(encodePositiveInt(length)) + hex
+}
+
+function callExternal(index: number): string {
+    if (index > 255) {
+        throw Error('invalid method index: ' + index)
+    }
+    return '01' + index.toString(16).padStart(2, '0')
 }
 
 function encodeConsistencyLevel(num: number): string {
@@ -57,42 +91,30 @@ export function transferNativeCode(
 
     return "010101000400" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "18" + // instrLen
-        "15" + // addressConstInstr
         encodeAddress(sender) +
-        "1700" + // storeLocal(0)
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        getTokenId(tokenId) + // tokenId
-        "1701" + // storeLocal(1)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(tokenAmount)) + // tokenAmount
-        "1702" + // storeLocal(2)
-        "1600" + // loadLocal(0)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(messageFee)) +
-        "a2" + // approveAlph
-        "1600" + // loadLocal(0)
-        "1601" + // loadLocal(1)
-        "1602" + // loadLocal(2)
-        "a3" + // approveToken
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        getContractId(tokenBridgeForChainAddress) +
-        "1703" + // storeLocal(3)
-        "1601" + // loadLocal(1)
-        "1600" + // loadLocal(0)
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        toAddress +
-        "1602" + // loadLocal(2)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(arbiterFee)) +
-        "14" + // bytesConstInstr
-        "04" + // nonceLen
-        nonce +
+        storeLocal(0) +
+        encodeContractId(tokenId) +
+        storeLocal(1) +
+        u256(tokenAmount) +
+        storeLocal(2) +
+        loadLocal(0) +
+        u256(messageFee) +
+        approveAlph +
+        loadLocal(0) +
+        loadLocal(1) +
+        loadLocal(2) +
+        approveToken +
+        encodeContractId(tokenBridgeForChainAddress) +
+        storeLocal(3) +
+        loadLocal(1) +
+        loadLocal(0) +
+        encodeBytes(toAddress) +
+        loadLocal(2) +
+        u256(arbiterFee) +
+        encodeBytes(nonce) +
         encodeConsistencyLevel(consistencyLevel) +
-        "1603" + // localLocal(3)
-        "0105" // callExternal(5)
+        loadLocal(3) +
+        callExternal(5)
 }
 
 export function completeTransferNativeCode(
@@ -102,17 +124,12 @@ export function completeTransferNativeCode(
 ): string {
     return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "06" + // instrLen
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        getContractId(tokenBridgeForChainAddress) +
-        "1700" + // storeLocal(0)
-        "14" + // bytesConstInstr
-        toHex(encodePositiveInt(vaa.length / 2)) + // prefix
-        vaa +
-        "15" + // addressConstInstr
+        encodeContractId(tokenBridgeForChainAddress) +
+        storeLocal(0) +
+        encodeBytes(vaa) +
         encodeAddress(arbiter) +
-        "1600" + // loadLocal(0)
-        "0108" // callExternal(8)
+        loadLocal(0) +
+        callExternal(8)
 }
 
 export function transferWrappedCode(
@@ -135,39 +152,29 @@ export function transferWrappedCode(
 
     return "010101000400" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "17" + // instrLen
-        "15" + // addressConstInstr
         encodeAddress(sender) +
-        "1700" + // storeLocal(0)
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        getContractId(tokenWrapperAddress) +
-        "1701" + // storeLocal(1)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(tokenAmount)) +
-        "1702" + // storeLocal(2)
-        "1600" + // loadLocal(1)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(messageFee)) +
-        "a2" + // approveAlph
-        "1600" + // loadLocal(0)
-        "1601" + // loadLocal(1)
-        "1602" + // loadLocal(2)
-        "a3" + // approveToken
-        "1601" + // loadLocal(1)
-        "1703" + // storeLocal(3)
-        "1600" + // loadLocal(0)
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        toAddress +
-        "1602" + // loadLocal(2)
-        "13" + // u256ConstInstr
-        toHex(encodeU256(arbiterFee)) +
-        "14" + // bytesConstInstr
-        "04" + // nonceLen
-        nonce +
+        storeLocal(0) +
+        encodeContractId(tokenWrapperAddress) +
+        storeLocal(1) +
+        u256(tokenAmount) +
+        storeLocal(2) +
+        loadLocal(0) +
+        u256(messageFee) +
+        approveAlph +
+        loadLocal(0) +
+        loadLocal(1) +
+        loadLocal(2) +
+        approveToken +
+        loadLocal(1) +
+        storeLocal(3) +
+        loadLocal(0) +
+        encodeBytes(toAddress) +
+        loadLocal(2) +
+        u256(arbiterFee) +
+        encodeBytes(nonce) +
         encodeConsistencyLevel(consistencyLevel) +
-        "1603" + // loadLocal(3)
-        "0100" // callExternal(0)
+        loadLocal(3) +
+        callExternal(0)
 }
 
 export function completeTransferWrappedCode(
@@ -177,15 +184,10 @@ export function completeTransferWrappedCode(
 ): string {
     return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "06" + // instrLen
-        "14" + // bytesConstInstr
-        "4020" + // 32 bytes prefix
-        getContractId(tokenWrapperAddress) +
-        "1700" + // storeLocal(0)
-        "14" + // bytesConstInstr
-        toHex(encodePositiveInt(vaa.length / 2)) +
-        vaa +
-        "15" + // addressConstInstr
+        encodeContractId(tokenWrapperAddress) +
+        storeLocal(0) +
+        encodeBytes(vaa) +
         encodeAddress(arbiter) +
-        "1600" + // loadLocal(0)
-        "0101" // callExternal(1)
+        loadLocal(0) +
+        callExternal(1)
 }
