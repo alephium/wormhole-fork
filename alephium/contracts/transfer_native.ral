@@ -3,14 +3,17 @@ import "token_bridge_for_chain.ral"
 
 TxScript Main {
     pub payable fn main() -> () {
-        approveAlph!(@{{ sender }}, {{ messageFee }})
-        approveToken!(@{{ sender }}, #{{ tokenId }}, {{ tokenAmount }})
+        let sender = @{{ sender }}
+        let tokenId = #{{ tokenId }}
+        let tokenAmount = {{ tokenAmount }}
+        approveAlph!(sender, {{ messageFee }})
+        approveToken!(sender, tokenId, tokenAmount)
         let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
         tokenBridgeForChain.transferNative(
-            #{{ tokenId }},
-            @{{ sender }},
+            tokenId,
+            sender,
             #{{ toAddress }},
-            {{ tokenAmount }},
+            tokenAmount,
             {{ arbiterFee }},
             #{{ nonce }},
             {{ consistencyLevel }}
