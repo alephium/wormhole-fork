@@ -1,4 +1,4 @@
-import { transferNativeCode, completeTransferNativeCode, transferWrappedCode, completeTransferWrappedCode, attestTokenCode } from '../transfer'
+import { transferNativeCode, completeTransferNativeCode, transferWrappedCode, completeTransferWrappedCode, attestTokenCode } from '../token_bridge'
 
 describe('test transfer', () => {
     const contractAddress = '2A84hPgNsaNWrRbpXkbQmy793ChJRPFPZauWiXUPMczg4'
