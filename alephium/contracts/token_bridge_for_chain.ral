@@ -31,8 +31,8 @@ TxContract TokenBridgeForChain(
         return payload
     }
 
-    // return (tokenChainId, tokenContractId, tokenDecimals, tokenSymbol, tokenName)
-    fn parseAttestToken(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec, ByteVec) {
+    // return (tokenContractId, tokenDecimals, tokenSymbol, tokenName)
+    fn parseAttestToken(vaa: ByteVec) -> (ByteVec, U256, ByteVec, ByteVec) {
         let payload = verifyVAA(vaa)
         let mut index = 0
         assert!(byteVecSlice!(payload, index, index + 1) == #02) // payload id
@@ -49,21 +49,37 @@ TxContract TokenBridgeForChain(
         let name = byteVecSlice!(payload, index, index + 32)
         index = index + 32
         assert!(size!(payload) == index)
-        return tokenChainId, tokenContractId, decimals, symbol, name
+        return tokenContractId, decimals, symbol, name
     }
 
-    pub payable fn createWrapper(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        let (tokenChainId, tokenContractId, decimals, symbol, name) = parseAttestToken(vaa)
-        assert!(tokenChainId != localChainId)
-
+    pub payable fn createWrapperForNativeToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        let token = Token(tokenId)
         let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
         approveAlph!(payer, createContractAlphAmount)
-        tokenWrapperFactory.createTokenWrapper(
+        tokenWrapperFactory.createWrapper(
             localTokenBridgeId,
-            selfContractId!(),
             localChainId,
-            tokenChainId,
+            remoteChainId,
+            tokenId,
+            true,
+            token.getDecimals(),
+            token.getSymbol(),
+            token.getName(),
+            payer,
+            createContractAlphAmount
+        )
+    }
+
+    pub payable fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        let (tokenContractId, decimals, symbol, name) = parseAttestToken(vaa)
+        let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
+        approveAlph!(payer, createContractAlphAmount)
+        tokenWrapperFactory.createWrapper(
+            localTokenBridgeId,
+            localChainId,
+            remoteChainId,
             tokenContractId,
+            false,
             decimals,
             symbol,
             name,
@@ -72,48 +88,8 @@ TxContract TokenBridgeForChain(
         )
     }
 
-    // transfer native token to remote chain
-    pub payable fn transferNative(
-        nativeTokenId: ByteVec,
-        fromAddress: Address,
-        toAddress: ByteVec,
-        amount: U256,
-        arbiterFee: U256,
-        nonce: ByteVec,
-        consistencyLevel: U256
-    ) -> () {
-        assert!(size!(nativeTokenId) == 32)
-        assert!(size!(toAddress) == 32)
-        assert!(size!(nonce) == 4)
-
-        let token = Token(nativeTokenId)
-        let decimals = token.getDecimals()
-        let normalizedAmount = normalizeAmount(amount, decimals)
-        let normalizedFee = normalizeAmount(arbiterFee, decimals)
-        assert!(normalizedFee < normalizedAmount)
-
-        // TODO: Do we need to consider potential transfer fees
-        let transferAmount = deNormalizeAmount(normalizedAmount, decimals)
-        transferTokenToSelf!(fromAddress, nativeTokenId, transferAmount)
-
-        let payload = #01 ++ // payloadId
-            u256To32Byte!(normalizedAmount) ++
-            nativeTokenId ++
-            u256To2Byte!(localChainId) ++
-            toAddress ++
-            u256To2Byte!(remoteChainId) ++
-            u256To32Byte!(normalizedFee)
-        let tokenBridge = TokenBridge(localTokenBridgeId)
-        approveAlph!(fromAddress, tokenBridge.getMessageFee())
-        tokenBridge.publishTransferNative(fromAddress, payload, nonce, consistencyLevel)
-    }
-
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
         assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
-        return parseTransfer_(vaa)
-    }
-
-    fn parseTransfer_(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
         let payload = verifyVAA(vaa)
         let mut index = 0
         assert!(byteVecSlice!(payload, index, index + 1) == #01) // payloadId
@@ -133,27 +109,5 @@ TxContract TokenBridgeForChain(
         index = index + 32
         assert!(size!(payload) == index)
         return tokenId, tokenChainId, recipientAddress, amount, arbiterFee
-    }
-
-    // transfer native token from remote chain
-    pub payable fn completeNative(vaa: ByteVec, arbiter: Address) -> () {
-        let (tokenId, tokenChainId, recipientAddress, amount, arbiterFee) = parseTransfer_(vaa)
-        assert!(tokenChainId == localChainId)
-
-        let token = Token(tokenId)
-        let decimals = token.getDecimals()
-        let denomalizedAmount = deNormalizeAmount(amount, decimals)
-        let denomalizedFee = deNormalizeAmount(arbiterFee, decimals)
-        assert!(denomalizedAmount > denomalizedFee)
-
-        let transferAmount = denomalizedAmount - denomalizedFee
-        let recipient = byteVecToAddress!(#00 ++ recipientAddress)
-        transferAlphFromSelf!(recipient, 1000000000000) // dustAmount
-        transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, denomalizedFee)
-    }
-
-    pub payable fn deposit(from: Address, amount: U256) -> () {
-        transferAlphToSelf!(from, amount)
     }
 }

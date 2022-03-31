@@ -1,12 +1,12 @@
 import "serde.ral"
 
 TxContract TokenWrapperFactory() extends Serde() {
-    pub payable fn createTokenWrapper(
+    pub payable fn createWrapper(
         tokenBridgeId: ByteVec,
-        tokenBridgeForChainId: ByteVec,
         localChainId: U256,
-        tokenChainId: U256,
+        remoteChainId: U256,
         tokenContractId: ByteVec,
+        isNativeToken: Bool,
         tokenDecimals: U256,
         tokenSymbol: ByteVec,
         tokenName: ByteVec,
@@ -14,19 +14,24 @@ TxContract TokenWrapperFactory() extends Serde() {
         createContractAlphAmount: U256
     ) -> () {
         let contractCode = #{{ tokenWrapperBinCode }}
-        let encodedState = byteVec!(8i) ++ // state size
+        let encodedState = byteVec!(9i) ++ // state size
                            encodeByteVec(tokenBridgeId) ++
-                           encodeByteVec(tokenBridgeForChainId) ++
+                           encodeByteVec(callerContractId!()) ++
                            encodeU256(localChainId) ++
-                           encodeU256(tokenChainId) ++
+                           encodeU256(remoteChainId) ++
                            encodeByteVec(tokenContractId) ++
+                           encodeBool(isNativeToken) ++
                            encodeU256(tokenDecimals) ++
                            encodeByteVec(tokenSymbol) ++
                            encodeByteVec(tokenName)
 
         approveAlph!(payer, createContractAlphAmount)
-        assert!(tokenChainId != localChainId)
-        let maxAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-        createContractWithToken!(contractCode, encodedState, maxAmount)
+        assert!(remoteChainId != localChainId)
+        if (isNativeToken) {
+            createContract!(contractCode, encodedState)
+        } else {
+            let maxAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+            createContractWithToken!(contractCode, encodedState, maxAmount)
+        }
     }
 }

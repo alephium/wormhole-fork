@@ -108,21 +108,7 @@ TxContract TokenBridge(
         return current
     }
 
-    pub payable fn publishTransferNative(
-        payer: Address,
-        data: ByteVec,
-        nonce: ByteVec,
-        consistencyLevel: U256
-    ) -> () {
-        assert!(callerCodeHash!() == #{{ tokenBridgeForChainCodeHash }})
-
-        let payload = data ++ byteVec!(true) ++ callerContractId!()
-        let governance = Governance(governanceId)
-        approveAlph!(payer, governance.getMessageFee())
-        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
-    }
-
-    pub payable fn publishTransferWrapped(
+    pub payable fn publishTransfer(
         payer: Address,
         data: ByteVec,
         nonce: ByteVec,
@@ -130,7 +116,7 @@ TxContract TokenBridge(
     ) -> () {
         assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
 
-        let payload = data ++ byteVec!(false) ++ callerContractId!()
+        let payload = data ++ callerContractId!()
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
         governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
