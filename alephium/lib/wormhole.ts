@@ -62,7 +62,7 @@ export class Wormhole {
         const tokenBridgeDeployResult = await deployTokenBridge(
             this.client, this.signer, governanceDeployResult.address,
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId,
-            tokenBridgeForChain.bytecode, tokenBridgeForChain.codeHash, tokenWrapper.codeHash
+            tokenBridgeForChain.bytecode, tokenWrapper.codeHash
         )
         return {
             governance: governanceDeployResult,
@@ -76,7 +76,7 @@ export class Wormhole {
         vaa: string,
         payer: string,
         amount: Number256,
-        params: BuildScriptTx,
+        params?: BuildScriptTx,
     ): Promise<string> {
         const script = await Script.from(this.client, "register_chain.ral", {
             tokenBridgeAddress: tokenBridgeAddress,
@@ -84,12 +84,32 @@ export class Wormhole {
             payer: payer,
             amount: amount,
             tokenBridgeForChainBinCode: "00",
-            tokenBridgeForChainCodeHash: "00",
             tokenWrapperCodeHash: "00",
         })
         const scriptTx = await script.transactionForDeployment(this.signer, params)
         const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return submitResult.txId
+    }
+
+    async createWrapper(
+        tokenBridgeForChainAddress: string,
+        nativeTokenId: string,
+        payer: string,
+        alphAmount: bigint
+    ): Promise<string> {
+        const script = await Script.from(this.client, 'create_wrapper.ral', {
+            tokenBridgeForChainAddress: tokenBridgeForChainAddress,
+            tokenId: nativeTokenId,
+            payer: payer,
+            alphAmount: alphAmount,
+            tokenWrapperFactoryAddress: "00",
+            tokenWrapperCodeHash: "00",
+            tokenWrapperBinCode: "00",
+            tokenBridgeForChainBinCode: "00"
+        })
+        const scriptTx = await script.transactionForDeployment(this.signer)
+        const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
+        return result.txId
     }
 }
 
@@ -155,12 +175,10 @@ async function deployTokenBridge(
     governanceChainId: number,
     governanceContractId: string,
     tokenBridgeForChainBinCode: string,
-    tokenBridgeForChainCodeHash: string,
     tokenWrapperCodeHash: string
 ): Promise<DeployResult> {
     const variables = {
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
-        tokenBridgeForChainCodeHash: tokenBridgeForChainCodeHash,
         tokenWrapperCodeHash: tokenWrapperCodeHash
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
@@ -181,8 +199,7 @@ async function tokenBridgeForChainContract(
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
         tokenWrapperBinCode: "00",
-        tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
+        tokenBridgeForChainBinCode: "00"
     }
     return Contract.from(client, 'token_bridge_for_chain.ral', variables)
 }
@@ -190,7 +207,6 @@ async function tokenBridgeForChainContract(
 async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
     const variables = {
         tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
         tokenWrapperBinCode: "00",
         tokenWrapperCodeHash: "00",
         tokenWrapperFactoryAddress: "00"

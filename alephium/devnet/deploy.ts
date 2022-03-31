@@ -4,7 +4,8 @@ import { registerChains } from './register_chains'
 import * as env from './env'
 import { attestToken, deployTestToken } from './deploy_test_token'
 import { nonce } from '../lib/utils'
-import { createWrapper, getToken, transferNative } from './transfer'
+import { getToken, transferNative } from './transfer'
+import { getCreatedContractAddress } from './get_contract_address'
 
 if (process.argv.length < 3) {
     throw Error('invalid args, expect rpc port arg')
@@ -60,7 +61,9 @@ async function deploy() {
     const getTokenTxId = await getToken(client, signer, testTokenId, env.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
-    const tokenWrapper = await createWrapper(client, signer, remoteChains.eth, testTokenId, env.payer, env.oneAlph)
+    const createWrapperTxId = await wormhole.createWrapper(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
+    const tokenWrapper = await getCreatedContractAddress(client, createWrapperTxId)
+    console.log('native token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapper)
     // transfer to eth
     const transferAmount = env.oneAlph * 5n
     const arbiterFee = env.messageFee
