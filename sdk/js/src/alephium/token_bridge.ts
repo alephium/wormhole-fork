@@ -1,14 +1,9 @@
 import * as base58 from 'bs58'
+import { toHex } from '../utils/hex'
 import { encodePositiveInt, encodeU256 } from './serde'
 
 const approveAlph = 'a2'
 const approveToken = 'a3'
-
-function toHex(bytes: Uint8Array): string {
-    return Array.from(bytes, b => {
-        return b.toString(16).padStart(2, '0')
-    }).join('')
-}
 
 function encodeAddress(address: string): string {
     // addressConstInstr + addressBytes
@@ -82,11 +77,11 @@ export function transferNativeCode(
     consistencyLevel: number
 ): string {
     if (toAddress.length != 64) {
-        throw Error('invalid toAddress')
+        throw Error('invalid toAddress: ' + toAddress)
     }
 
     if (nonce.length != 8) {
-        throw Error('invalid nonce')
+        throw Error('invalid nonce: ' + nonce)
     }
 
     return "010101000400" + // methodLength + public + payable + argLen + localVarLen + returnLen
@@ -143,11 +138,11 @@ export function transferWrappedCode(
     consistencyLevel: number
 ): string {
     if (toAddress.length != 64) {
-        throw Error('invalid toAddress')
+        throw Error('invalid toAddress: ' + toAddress)
     }
 
     if (nonce.length != 8) {
-        throw Error('invalid nonce')
+        throw Error('invalid nonce: ' + nonce)
     }
 
     return "010101000400" + // methodLength + public + payable + argLen + localVarLen + returnLen
@@ -200,6 +195,10 @@ export function attestTokenCode(
     nonce: string,
     consistencyLevel: number
 ): string {
+    if (nonce.length != 8) {
+        throw Error('invalid nonce: ' + nonce)
+    }
+
     return "010101000200" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "0d" + // instrLen
         encodeAddress(payer) +
@@ -217,7 +216,7 @@ export function attestTokenCode(
         callExternal(8)
 }
 
-export function createWrapperCode(
+export function createWrappedCode(
     tokenBridgeForChainAddress: string,
     vaa: string,
     payer: string,
