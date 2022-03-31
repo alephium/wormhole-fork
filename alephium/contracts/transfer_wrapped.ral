@@ -4,9 +4,10 @@ TxScript Main {
     pub payable fn main() -> () {
         let sender = @{{ sender }}
         let tokenAmount = {{ tokenAmount }}
+        let tokenWrapperId = #{{ tokenWrapperAddress }}
         approveAlph!(sender, {{ messageFee }})
-        approveToken!(sender, #{{ tokenId }}, tokenAmount)
-        let tokenWrapper = TokenWrapper(#{{ tokenWrapperAddress }})
+        approveToken!(sender, tokenWrapperId, tokenAmount)
+        let tokenWrapper = TokenWrapper(tokenWrapperId)
         tokenWrapper.transfer(
             sender,
             #{{ toAddress }},
