@@ -1,6 +1,8 @@
 import { CliqueClient, Script, Signer } from "alephium-js";
+import { Confirmed, TxStatus } from "alephium-js/api/alephium";
 import { nonce } from "../lib/utils";
 import { consistencyLevel, messageFee } from "./env";
+import { getCreatedContractAddress } from "./utils";
 
 export async function getToken(
     client: CliqueClient,
@@ -19,10 +21,33 @@ export async function getToken(
     return result.txId
 }
 
-export async function transferNative(
+export async function createWrapper(
     client: CliqueClient,
     signer: Signer,
     tokenBridgeForChainAddress: string,
+    nativeTokenId: string,
+    payer: string,
+    alphAmount: bigint
+): Promise<string> {
+    const script = await Script.from(client, 'create_wrapper.ral', {
+        tokenBridgeForChainAddress: tokenBridgeForChainAddress,
+        tokenId: nativeTokenId,
+        payer: payer,
+        alphAmount: alphAmount,
+        tokenWrapperFactoryAddress: "00",
+        tokenWrapperCodeHash: "00",
+        tokenWrapperBinCode: "00",
+        tokenBridgeForChainBinCode: "00"
+    })
+    const scriptTx = await script.transactionForDeployment(signer)
+    const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
+    return getCreatedContractAddress(client, result.txId)
+}
+
+export async function transferNative(
+    client: CliqueClient,
+    signer: Signer,
+    tokenWrapperAddress: string,
     nativeTokenId: string,
     sender: string,
     toAddress: string,
@@ -34,7 +59,7 @@ export async function transferNative(
         messageFee: messageFee,
         tokenId: nativeTokenId,
         tokenAmount: transferAmount,
-        tokenBridgeForChainAddress: tokenBridgeForChainAddress,
+        tokenWrapperAddress: tokenWrapperAddress,
         toAddress: toAddress,
         arbiterFee: arbiterFee,
         nonce: nonce(),
@@ -42,8 +67,7 @@ export async function transferNative(
         tokenWrapperFactoryAddress: "00",
         tokenWrapperCodeHash: "00",
         tokenWrapperBinCode: "00",
-        tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00"
+        tokenBridgeForChainBinCode: "00"
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

@@ -4,7 +4,7 @@ import { registerChains } from './register_chains'
 import * as env from './env'
 import { attestToken, deployTestToken } from './deploy_test_token'
 import { nonce } from '../lib/utils'
-import { getToken, transferNative } from './transfer'
+import { createWrapper, getToken, transferNative } from './transfer'
 
 if (process.argv.length < 3) {
     throw Error('invalid args, expect rpc port arg')
@@ -51,15 +51,16 @@ async function deploy() {
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.address)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
-    const testToken = await deployTestToken(client, signer)
+    const testTokenId = await deployTestToken(client, signer)
     await attestToken(
-        client, signer, contracts.tokenBridge.address, nonce(), testToken
+        client, signer, contracts.tokenBridge.address, nonce(), testTokenId
     )
 
     const tokenAmount = env.oneAlph * 10n
-    const getTokenId = await getToken(client, signer, testToken, env.payer, tokenAmount)
-    console.log('get token txId: ' + getTokenId)
+    const getTokenTxId = await getToken(client, signer, testTokenId, env.payer, tokenAmount)
+    console.log('get token txId: ' + getTokenTxId)
 
+    const tokenWrapper = await createWrapper(client, signer, remoteChains.eth, testTokenId, env.payer, env.oneAlph)
     // transfer to eth
     const transferAmount = env.oneAlph * 5n
     const arbiterFee = env.messageFee
@@ -68,8 +69,8 @@ async function deploy() {
     const transferNativeId = await transferNative(
         client,
         signer,
-        remoteChains.eth,
-        testToken,
+        tokenWrapper,
+        testTokenId,
         env.payer,
         receiver.padStart(64, '0'),
         transferAmount,
