@@ -97,17 +97,15 @@ TxContract Governance(
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
     }
 
-    fn updateGuardianSet_(guardianSet: [ByteVec; 19], index: U256, size: U256) -> () {
+    fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
-        guardianSets[1] = guardianSet
         guardianSetIndexes[0] = guardianSetIndexes[1]
-        guardianSetIndexes[1] = index
         guardianSetSizes[0] = guardianSetSizes[1]
-        guardianSetSizes[1] = size
         previousGuardianSetExpirationTime = blockTimeStamp!() + 86400000 // expired after one day
     }
 
     pub fn updateGuardianSet(vaa: ByteVec) -> () {
+        updatePreviousGuardianSet()
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #02)
         let mut index = 33
@@ -120,15 +118,17 @@ TxContract Governance(
         let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, index, index + 1))
         assert!(newGuardianSetSize > 0 && newGuardianSetSize <= 19)
         index = index + 1
-        let mut newGuardianSet = [#00; 19]
         loop(0, 19, 1,
             if (? < newGuardianSetSize) {
-                newGuardianSet[?] = byteVecSlice!(payload, index, index + 20)
+                guardianSets[1][?] = byteVecSlice!(payload, index, index + 20)
                 index = index + 20
+            } else {
+                guardianSets[1][?] = #00
             }
         )
-        updateGuardianSet_(newGuardianSet, newGuardianSetIndex, newGuardianSetSize)
         assert!(size!(payload) == index)
+        guardianSetIndexes[1] = newGuardianSetIndex
+        guardianSetSizes[1] = newGuardianSetSize
     }
 
     pub fn setMessageFee(vaa: ByteVec) -> () {
