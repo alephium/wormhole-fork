@@ -1,10 +1,27 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
+import { BuildScriptTx, Signer } from "alephium-js";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
+import { createWrappedCode } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
+import { toHex } from "../utils/hex";
+import { executeScript } from "./utils";
+
+export async function createWrappedOnAlph(
+  signer: Signer,
+  tokenBridgeForChainAddress: string,
+  signedVAA: Uint8Array,
+  payer: string,
+  alphAmount: bigint,
+  params?: BuildScriptTx
+) {
+  const vaaHex = toHex(signedVAA)
+  const bytecode = createWrappedCode(tokenBridgeForChainAddress, vaaHex, payer, alphAmount)
+  return executeScript(signer, bytecode, params)
+}
 
 export async function createWrappedOnEth(
   tokenBridgeAddress: string,
