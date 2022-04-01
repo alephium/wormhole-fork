@@ -1,59 +1,57 @@
 // sequence started from 0, set `next = 0` when init contract state
 TxContract Sequence(
     mut next: U256,
-    mut next1: [Bool; 20], // TODO: better name
-    mut next2: [Bool; 20]
+    mut next1: U256, // TODO: better name
+    mut next2: U256 
 ) {
-    pub fn getNext() -> (U256) {
+    pub fn getNext() -> U256 {
         return next 
     }
 
-    pub fn getNext1() -> ([Bool; 20]) {
+    pub fn getNext1() -> U256 {
         return next1
     }
 
-    pub fn getNext2() -> ([Bool; 20]) {
+    pub fn getNext2() -> U256 {
         return next2
     }
 
     fn compact() -> (Bool) {
-        let mut allExecuted = true
-        loop(0, 20, 1, allExecuted = allExecuted && next1[?])
-        if (allExecuted) {
-            next = next + 20
+        if (next1 == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
+            next = next + 256
             next1 = next2
-            loop(0, 20, 1, next2[?] = false)
+            next2 = 0
+            return true
         }
-        return allExecuted
+        return false
+    }
+
+    fn setExecuted(pos: U256, offset: U256, current: U256) -> U256 {
+        let shift = pos * 8
+        let value = (current >> shift) & 0xff
+        let flag = 1 << offset
+        assert!(value & flag == 0)
+        let executed = value | flag
+        return current | (executed << shift)
     }
 
     fn checkSequence(seq: U256) -> () {
         assert!(seq >= next)
-        if (seq >= (next + 40)) {
+        if (seq >= (next + 512)) {
             if (compact()) {
                 checkSequence(seq)
                 return
             }
         }
 
-        assert!(next <= seq && seq < (next + 40))
-        let mut index = seq - next 
-        if (index < 20) {
-            loop(0, 20, 1,
-                if (? == index) {
-                    assert!(!next1[?])
-                    next1[?] = true
-                }
-            )
-            return
+        assert!(next <= seq && seq < (next + 512))
+        let seqIndex = seq - next
+        let pos = seqIndex / 8
+        let offset = seqIndex % 8
+        if (pos < 32) {
+            next1 = setExecuted(pos, offset, next1)
+        } else {
+            next2 = setExecuted(pos - 32, offset, next2)
         }
-        
-        index = index - 20
-        loop(0, 20, 1,
-            if (? == index) {
-                assert!(!next2[?])
-                next2[?] = true
-            }
-        )
     }
 }

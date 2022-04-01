@@ -2,8 +2,8 @@ import "sequence.ral"
 
 TxContract SequenceTest(
     mut next: U256,
-    mut next1: [Bool; 20],
-    mut next2: [Bool; 20]
+    mut next1: U256,
+    mut next2: U256
 ) extends Sequence(next, next1, next2) {
     pub fn check(seq: U256) -> () {
         checkSequence(seq)
