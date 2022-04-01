@@ -6,7 +6,7 @@ TxContract TokenWrapperFactory() extends Serde() {
         localChainId: U256,
         remoteChainId: U256,
         tokenContractId: ByteVec,
-        isNativeToken: Bool,
+        isLocalToken: Bool,
         tokenDecimals: U256,
         tokenSymbol: ByteVec,
         tokenName: ByteVec,
@@ -20,14 +20,14 @@ TxContract TokenWrapperFactory() extends Serde() {
                            encodeU256(localChainId) ++
                            encodeU256(remoteChainId) ++
                            encodeByteVec(tokenContractId) ++
-                           encodeBool(isNativeToken) ++
+                           encodeBool(isLocalToken) ++
                            encodeU256(tokenDecimals) ++
                            encodeByteVec(tokenSymbol) ++
                            encodeByteVec(tokenName)
 
         approveAlph!(payer, createContractAlphAmount)
         assert!(remoteChainId != localChainId)
-        if (isNativeToken) {
+        if (isLocalToken) {
             createContract!(contractCode, encodedState)
         } else {
             let maxAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

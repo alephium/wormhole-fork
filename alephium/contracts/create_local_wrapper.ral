@@ -6,6 +6,6 @@ TxScript Main {
         let alphAmount = {{ alphAmount }}
         approveAlph!(payer, alphAmount)
         let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
-        tokenBridgeForChain.createWrapperForNativeToken(#{{ tokenId }}, payer, alphAmount)
+        tokenBridgeForChain.createWrapperForLocalToken(#{{ tokenId }}, payer, alphAmount)
     }
 }

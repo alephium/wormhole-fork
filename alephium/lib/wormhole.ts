@@ -93,13 +93,13 @@ export class Wormhole {
 
     async createWrapper(
         tokenBridgeForChainAddress: string,
-        nativeTokenId: string,
+        localTokenId: string,
         payer: string,
         alphAmount: bigint
     ): Promise<string> {
         const script = await Script.from(this.client, 'create_wrapper.ral', {
             tokenBridgeForChainAddress: tokenBridgeForChainAddress,
-            tokenId: nativeTokenId,
+            tokenId: localTokenId,
             payer: payer,
             alphAmount: alphAmount,
             tokenWrapperFactoryAddress: "00",

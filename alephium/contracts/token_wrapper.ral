@@ -8,20 +8,20 @@ TxContract TokenWrapper(
     localChainId: U256,
     remoteChainId: U256,
     tokenContractId: ByteVec,
-    isNativeToken: Bool,
+    isLocalToken: Bool,
     tokenDecimals: U256,
     symbol: ByteVec,
     name: ByteVec
 ) extends Math() {
     fn getTokenId() -> ByteVec {
-        if (isNativeToken) {
+        if (isLocalToken) {
             return tokenContractId
         }
         return selfContractId!()
     }
 
     fn getTokenChainId() -> U256 {
-        if (isNativeToken) {
+        if (isLocalToken) {
             return localChainId
         }
         return remoteChainId
@@ -53,7 +53,7 @@ TxContract TokenWrapper(
             toAddress ++
             u256To2Byte!(remoteChainId) ++
             u256To32Byte!(normalizedFee) ++
-            byteVec!(isNativeToken)
+            byteVec!(isLocalToken)
 
         let tokenBridge = TokenBridge(tokenBridgeId)
         approveAlph!(fromAddress, tokenBridge.getMessageFee())

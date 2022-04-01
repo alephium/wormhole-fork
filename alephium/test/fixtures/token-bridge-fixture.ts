@@ -221,7 +221,7 @@ export async function createTokenBridgeForChain(
 
 export async function createWrapper(
     tokenId: string,
-    isNativeToken: boolean,
+    isLocalToken: boolean,
     decimals: number,
     symbol: string,
     name: string,
@@ -232,7 +232,7 @@ export async function createWrapper(
     const address = randomContractAddress()
     const state = tokenWrapperContract.toState(
         [tokenBridgeInfo.address, tokenBridgeForChainInfo.address, alphChainId,
-        tokenBridgeForChainInfo.remoteChainId, tokenId, isNativeToken, decimals, symbol, name],
+        tokenBridgeForChainInfo.remoteChainId, tokenId, isLocalToken, decimals, symbol, name],
         {alphAmount: dustAmount},
         address
     )

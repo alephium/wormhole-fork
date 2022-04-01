@@ -52,7 +52,7 @@ TxContract TokenBridgeForChain(
         return tokenContractId, decimals, symbol, name
     }
 
-    pub payable fn createWrapperForNativeToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    pub payable fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let token = Token(tokenId)
         let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
         approveAlph!(payer, createContractAlphAmount)

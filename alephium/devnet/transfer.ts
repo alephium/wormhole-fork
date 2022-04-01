@@ -19,20 +19,20 @@ export async function getToken(
     return result.txId
 }
 
-export async function transferNative(
+export async function transferLocal(
     client: CliqueClient,
     signer: Signer,
     tokenWrapperAddress: string,
-    nativeTokenId: string,
+    localTokenId: string,
     sender: string,
     toAddress: string,
     transferAmount: bigint,
     arbiterFee: bigint
 ): Promise<string> {
-    const script = await Script.from(client, 'transfer_native.ral', {
+    const script = await Script.from(client, 'transfer_local.ral', {
         sender: sender,
         messageFee: messageFee,
-        tokenId: nativeTokenId,
+        tokenId: localTokenId,
         tokenAmount: transferAmount,
         tokenWrapperAddress: tokenWrapperAddress,
         toAddress: toAddress,

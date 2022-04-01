@@ -81,7 +81,7 @@ describe("test token bridge", () => {
         expect(output.alphAmount).toEqual(Number(dustAmount))
     })
 
-    it('should create token wrapper for native token', async () => {
+    it('should create token wrapper for local token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
@@ -90,7 +90,7 @@ describe("test token bridge", () => {
         )
         const testToken = await createTestToken(client, decimals, symbol, name)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForNativeToken', {
+        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForLocalToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,
             testArgs: [testToken.address, payer, dustAmount],
@@ -109,7 +109,7 @@ describe("test token bridge", () => {
         expect(event.fields).toEqual([tokenWrapperOutput.address])
     })
 
-    it('should transfer native token', async () => {
+    it('should transfer local token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
@@ -176,7 +176,7 @@ describe("test token bridge", () => {
         ])
     })
 
-    it('should complete native token transfer', async () => {
+    it('should complete local token transfer', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)

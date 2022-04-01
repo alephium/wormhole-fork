@@ -4,7 +4,7 @@ import { registerChains } from './register_chains'
 import * as env from './env'
 import { attestToken, deployTestToken } from './deploy_test_token'
 import { nonce } from '../lib/utils'
-import { getToken, transferNative } from './transfer'
+import { getToken, transferLocal } from './transfer'
 import { getCreatedContractAddress } from './get_contract_address'
 
 if (process.argv.length < 3) {
@@ -63,13 +63,13 @@ async function deploy() {
 
     const createWrapperTxId = await wormhole.createWrapper(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
     const tokenWrapper = await getCreatedContractAddress(client, createWrapperTxId)
-    console.log('native token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapper)
+    console.log('local token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapper)
     // transfer to eth
     const transferAmount = env.oneAlph * 5n
     const arbiterFee = env.messageFee
     // privateKey: 89dd2124dd1366f30bc5edfa9025f56e1aaa56d0a7786181df43aa8ee2520c9d
     const receiver = '0d0F183465284CB5cb426902445860456ed59b34'
-    const transferNativeId = await transferNative(
+    const transferTxId = await transferLocal(
         client,
         signer,
         tokenWrapper,
@@ -79,7 +79,7 @@ async function deploy() {
         transferAmount,
         arbiterFee
     )
-    console.log('transfer native token txId: ' + transferNativeId)
+    console.log('transfer local token txId: ' + transferTxId)
 }
 
 deploy()
