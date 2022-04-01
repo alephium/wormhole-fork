@@ -10,8 +10,8 @@ TxContract TokenBridgeForChain(
     remoteChainId: U256,
     remoteTokenBridgeId: ByteVec, // remote chain token bridge contract id
     mut next: U256,
-    mut next1: [Bool; 20],
-    mut next2: [Bool; 20]
+    mut next1: U256,
+    mut next2: U256
 ) extends Sequence(next, next1, next2), Math() {
     pub fn getLocalTokenBridgeId() -> (ByteVec) {
         return localTokenBridgeId

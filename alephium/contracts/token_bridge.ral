@@ -8,8 +8,8 @@ TxContract TokenBridge(
     governanceChainId: U256,
     governanceContractId: ByteVec,
     mut next: U256,
-    mut next1: [Bool; 20],
-    mut next2: [Bool; 20],
+    mut next1: U256,
+    mut next2: U256,
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
 ) extends Sequence(next, next1, next2), Serde() {
@@ -67,17 +67,14 @@ TxContract TokenBridge(
         assert!(remoteChainId != localChainId)
 
         let contractCode = #{{ tokenBridgeForChainBinCode }}
-        let mut encodedState = byteVec!(45i) ++  // state size
+        let mut encodedState = byteVec!(7i) ++  // state size
                            encodeU256(localChainId) ++
                            encodeByteVec(selfContractId!()) ++
                            encodeU256(remoteChainId) ++
                            encodeByteVec(remoteTokenBridgeId) ++
+                           encodeU256(0) ++
+                           encodeU256(0) ++
                            encodeU256(0)
-        let mut i = 0
-        while (i < 40) {
-            encodedState = encodedState ++ encodeBool(false)
-            i = i + 1
-        }
 
         approveAlph!(payer, createContractAlphAmount)
         createContract!(contractCode, encodedState)

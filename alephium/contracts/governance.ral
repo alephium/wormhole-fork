@@ -5,8 +5,8 @@ TxContract Governance(
     governanceChainId: U256,
     governanceContract: ByteVec,
     mut next: U256,
-    mut next1: [Bool; 20],
-    mut next2: [Bool; 20],
+    mut next1: U256,
+    mut next2: U256,
     mut messageFee: U256,
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],

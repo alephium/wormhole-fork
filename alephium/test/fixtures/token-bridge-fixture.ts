@@ -1,8 +1,7 @@
 import { CliqueClient, Contract, ContractState } from 'alephium-js'
 import { createGovernance, governanceChainId, governanceContractAddress } from './governance-fixture'
 import { alphChainId, ContractInfo, dustAmount, randomContractAddress, } from './wormhole-fixture'
-import { randomBytes } from 'crypto'
-import { toHex, zeroPad } from '../../lib/utils'
+import { zeroPad } from '../../lib/utils'
 
 const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
 
@@ -190,9 +189,8 @@ export async function createTokenBridge(client: CliqueClient): Promise<TokenBrid
         tokenBridgeForChainBinCode: tokenBridgeForChainContract.bytecode,
         tokenWrapperCodeHash: tokenWrapper.codeHash
     })
-    const initSequence = Array(20).fill(false)
     const state = tokenBridge.toState(
-        [governance.address, governanceChainId, governanceContractAddress, 0, initSequence, initSequence, alphChainId, 0],
+        [governance.address, governanceChainId, governanceContractAddress, 0, 0, 0, alphChainId, 0],
         {alphAmount: dustAmount},
         tokenBridgeAddress
     )
@@ -213,9 +211,8 @@ export async function createTokenBridgeForChain(
 ): Promise<TokenBridgeForChainInfo> {
     const address = randomContractAddress()
     const tokenBridgeForChain = tokenBridgeInfo.tokenBridgeForChainContract
-    const initSequence = Array(20).fill(false)
     const state = tokenBridgeForChain.toState(
-        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, initSequence, initSequence],
+        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, 0, 0],
         {alphAmount: dustAmount},
         address
     )
