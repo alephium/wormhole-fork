@@ -97,6 +97,6 @@ func TestTransferEvent(t *testing.T) {
 	fee, succeed := new(big.Int).SetString("100000000000000", 10)
 	assert.True(t, succeed)
 	assert.Equal(t, transferMessage.fee, *fee)
-	assert.True(t, transferMessage.isNativeToken)
+	assert.True(t, transferMessage.isLocalToken)
 	assert.Equal(t, transferMessage.senderId.ToHex(), "4244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634")
 }

@@ -25,8 +25,9 @@ type validator struct {
 
 	msgC chan<- *common.MessagePublication
 
-	remoteChainCache  map[uint16]*Byte32
-	tokenWrapperCache map[Byte32]*Byte32
+	remoteChainCache        map[uint16]*Byte32
+	remoteTokenWrapperCache map[Byte32]*Byte32
+	localTokenWrapperCache  map[Byte32]map[uint16]*Byte32
 
 	db *db
 }
@@ -43,8 +44,9 @@ func newValidator(
 
 		msgC: msgC,
 
-		remoteChainCache:  map[uint16]*Byte32{},
-		tokenWrapperCache: map[Byte32]*Byte32{},
+		remoteChainCache:        map[uint16]*Byte32{},
+		remoteTokenWrapperCache: map[Byte32]*Byte32{},
+		localTokenWrapperCache:  map[Byte32]map[uint16]*Byte32{},
 
 		db: db,
 	}
@@ -79,6 +81,7 @@ func (v *validator) run(ctx context.Context, logger *zap.Logger, errC chan<- err
 						continue
 					}
 					if info.isLocalToken {
+						// TODO: check if token wrapper exist
 						batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperAddress)
 					} else {
 						batch.writeRemoteTokenWrapper(info.tokenId, info.tokenWrapperAddress)
@@ -160,10 +163,10 @@ func (v *validator) handleConfirmedGovernanceEvent(logger *zap.Logger, event *Ev
 func (v *validator) validateTransferMessage(transferMsg *TransferMessage) error {
 	var contractId *Byte32
 	var err error
-	if transferMsg.isNativeToken {
-		contractId, err = v.getRemoteChain(transferMsg.toChainId)
+	if transferMsg.isLocalToken {
+		contractId, err = v.getLocalTokenWrapper(transferMsg.tokenId, transferMsg.toChainId)
 	} else {
-		contractId, err = v.getTokenWrapper(transferMsg.tokenId)
+		contractId, err = v.getRemoteTokenWrapper(transferMsg.tokenId)
 	}
 
 	if err != nil {
@@ -191,8 +194,8 @@ func (v *validator) getRemoteChain(chainId uint16) (*Byte32, error) {
 	return &contractId, nil
 }
 
-func (v *validator) getTokenWrapper(tokenId Byte32) (*Byte32, error) {
-	if value, ok := v.tokenWrapperCache[tokenId]; ok {
+func (v *validator) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
+	if value, ok := v.remoteTokenWrapperCache[tokenId]; ok {
 		return value, nil
 	}
 	contractAddress, err := v.db.getRemoteTokenWrapper(tokenId)
@@ -203,7 +206,29 @@ func (v *validator) getTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	if err != nil {
 		return nil, err
 	}
-	v.tokenWrapperCache[tokenId] = &contractId
+	v.remoteTokenWrapperCache[tokenId] = &contractId
+	return &contractId, err
+}
+
+func (v *validator) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*Byte32, error) {
+	wrappers, exist := v.localTokenWrapperCache[tokenId]
+	if exist {
+		if value, ok := wrappers[remoteChainId]; ok {
+			return value, nil
+		}
+	}
+	contractAddress, err := v.db.getLocalTokenWrapper(tokenId, remoteChainId)
+	if err != nil {
+		return nil, err
+	}
+	contractId, err := toContractId(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		v.localTokenWrapperCache[tokenId] = map[uint16]*Byte32{}
+	}
+	v.localTokenWrapperCache[tokenId][remoteChainId] = &contractId
 	return &contractId, err
 }
 
@@ -273,14 +298,14 @@ func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
 
 // published message from alephium bridge contract
 type TransferMessage struct {
-	amount        big.Int
-	tokenId       Byte32
-	tokenChainId  uint16
-	toAddress     Byte32
-	toChainId     uint16
-	fee           big.Int
-	isNativeToken bool
-	senderId      Byte32
+	amount       big.Int
+	tokenId      Byte32
+	tokenChainId uint16
+	toAddress    Byte32
+	toChainId    uint16
+	fee          big.Int
+	isLocalToken bool
+	senderId     Byte32
 }
 
 func readBigInt(reader *bytes.Reader, num *big.Int) {
@@ -318,7 +343,7 @@ func TransferMessageFromBytes(data []byte) *TransferMessage {
 	readByte32(reader, &message.toAddress)
 	readUint16(reader, &message.toChainId)
 	readBigInt(reader, &message.fee)
-	message.isNativeToken = readBool(reader)
+	message.isLocalToken = readBool(reader)
 	readByte32(reader, &message.senderId)
 	return &message
 }
