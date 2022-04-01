@@ -250,7 +250,7 @@ func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Lo
 			logger.Error("failed to get token wrapper info", zap.Error(err))
 			return nil, err
 		}
-		batch.writeTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
+		batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
 	}
 	batch.updateLastTokenWrapperFactoryEventIndex(*count)
 	return count, nil
@@ -430,7 +430,7 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 				logger.Error("failed to get token wrapper info", zap.Error(err))
 				return err
 			}
-			batch.writeTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
+			batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
 		}
 		batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
 		return w.db.writeBatch(batch)

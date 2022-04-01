@@ -12,7 +12,8 @@ type db struct {
 }
 
 var (
-	tokenWrapperPrefix              = []byte("token-wrapper")
+	remoteTokenWrapperPrefix        = []byte("remote-token-wrapper")
+	localTokenWrapperPrefix         = []byte("local-token-wrapper")
 	tokenBridgeForChainPrefix       = []byte("token-bridge-for-chain")
 	lastTokenBridgeEventIndexKey    = []byte("last-token-bridge-event-index")
 	lastTokenWrapperFactoryIndexKey = []byte("last-token-wrapper-factory-index")
@@ -50,12 +51,24 @@ func (db *db) get(key []byte) (b []byte, err error) {
 	return
 }
 
-func (db *db) addTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
-	return db.put(tokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
+func (db *db) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
+	return db.put(remoteTokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
 }
 
-func (db *db) getTokenWrapper(tokenId Byte32) (string, error) {
-	value, err := db.get(tokenWrapperKey(tokenId))
+func (db *db) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
+	value, err := db.get(remoteTokenWrapperKey(tokenId))
+	if err != nil {
+		return "", err
+	}
+	return string(value), nil
+}
+
+func (db *db) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
+	return db.put(localTokenWrapperKey(tokenId, remoteChainId), []byte(tokenWrapperAddress))
+}
+
+func (db *db) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
+	value, err := db.get(localTokenWrapperKey(tokenId, remoteChainId))
 	if err != nil {
 		return "", err
 	}
@@ -103,8 +116,17 @@ func (db *db) writeBatch(batch *batch) error {
 	})
 }
 
-func tokenWrapperKey(tokenId Byte32) []byte {
-	return append(tokenWrapperPrefix, tokenId[:]...)
+func remoteTokenWrapperKey(tokenId Byte32) []byte {
+	return append(remoteTokenWrapperPrefix, tokenId[:]...)
+}
+
+func localTokenWrapperKey(tokenId Byte32, remoteChainId uint16) []byte {
+	bytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(bytes, remoteChainId)
+	var key []byte
+	key = append(localTokenWrapperPrefix, tokenId[:]...)
+	key = append(key, bytes[:]...)
+	return key
 }
 
 func chainKey(chainId uint16) []byte {
@@ -130,8 +152,13 @@ func (b *batch) writeTokenBridgeForChain(chainId uint16, contractAddress string)
 	b.values = append(b.values, []byte(contractAddress))
 }
 
-func (b *batch) writeTokenWrapper(tokenId Byte32, wrapperAddress string) {
-	b.keys = append(b.keys, tokenWrapperKey(tokenId))
+func (b *batch) writeRemoteTokenWrapper(tokenId Byte32, wrapperAddress string) {
+	b.keys = append(b.keys, remoteTokenWrapperKey(tokenId))
+	b.values = append(b.values, []byte(wrapperAddress))
+}
+
+func (b *batch) writeLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, wrapperAddress string) {
+	b.keys = append(b.keys, localTokenWrapperKey(tokenId, remoteChainId))
 	b.values = append(b.values, []byte(wrapperAddress))
 }
 

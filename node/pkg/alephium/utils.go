@@ -3,9 +3,12 @@ package alephium
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"runtime/debug"
+
+	"github.com/btcsuite/btcutil/base58"
 )
 
 const HashLength = 32
@@ -15,6 +18,17 @@ func assume(cond bool) {
 		debug.PrintStack()
 		panic(cond)
 	}
+}
+
+func toContractId(address string) (Byte32, error) {
+	var byte32 Byte32
+	contractId := base58.Decode(address)
+	if len(contractId) != 33 {
+		return byte32, fmt.Errorf("invalid contract address %s", address)
+	}
+	assume(len(contractId) == 33)
+	copy(byte32[:], contractId[1:])
+	return byte32, nil
 }
 
 type Hash [HashLength]byte

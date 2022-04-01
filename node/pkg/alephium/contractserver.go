@@ -16,19 +16,38 @@ type contractService struct {
 	alephiumv1.UnsafeContractServiceServer
 	db *db
 
-	tokenWrapperCache        map[Byte32]string
+	remoteTokenWrapperCache  map[Byte32]string
+	localTokenWrapperCache   map[Byte32]map[uint16]string
 	tokenBridgeForChainCache map[uint16]string
 }
 
-func (c *contractService) getTokenWrapper(tokenId Byte32) (string, error) {
-	if value, ok := c.tokenWrapperCache[tokenId]; ok {
+func (c *contractService) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
+	if value, ok := c.remoteTokenWrapperCache[tokenId]; ok {
 		return value, nil
 	}
-	contractAddress, err := c.db.getTokenWrapper(tokenId)
+	contractAddress, err := c.db.getRemoteTokenWrapper(tokenId)
 	if err != nil {
 		return "", err
 	}
-	c.tokenWrapperCache[tokenId] = contractAddress
+	c.remoteTokenWrapperCache[tokenId] = contractAddress
+	return contractAddress, nil
+}
+
+func (c *contractService) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
+	wrappers, exist := c.localTokenWrapperCache[tokenId]
+	if exist {
+		if value, ok := wrappers[remoteChainId]; ok {
+			return value, nil
+		}
+	}
+	contractAddress, err := c.db.getLocalTokenWrapper(tokenId, remoteChainId)
+	if err != nil {
+		return "", err
+	}
+	if !exist {
+		c.localTokenWrapperCache[tokenId] = map[uint16]string{}
+	}
+	c.localTokenWrapperCache[tokenId][remoteChainId] = contractAddress
 	return contractAddress, nil
 }
 
@@ -44,7 +63,7 @@ func (c *contractService) getTokenBridgeForChain(chainId uint16) (string, error)
 	return contractAddress, nil
 }
 
-func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
+func (c *contractService) GetRemoteTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetRemoteTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
 	bytes, err := hex.DecodeString(req.TokenId)
 	if err != nil {
 		return nil, err
@@ -55,7 +74,21 @@ func (c *contractService) GetTokenWrapperAddress(ctx context.Context, req *aleph
 
 	var byte32 Byte32
 	copy(byte32[:], bytes)
-	tokenWrapperAddress, err := c.getTokenWrapper(byte32)
+	tokenWrapperAddress, err := c.getRemoteTokenWrapper(byte32)
+	if err != nil {
+		return nil, err
+	}
+	return &alephiumv1.GetTokenWrapperAddressResponse{
+		TokenWrapperAddress: tokenWrapperAddress,
+	}, nil
+}
+
+func (c *contractService) GetLocalTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetLocalTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
+	tokenId, err := toContractId(req.TokenId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid local token address %s", req.TokenId)
+	}
+	tokenWrapperAddress, err := c.getLocalTokenWrapper(tokenId, uint16(req.ChainId))
 	if err != nil {
 		return nil, err
 	}
