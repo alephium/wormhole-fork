@@ -1,7 +1,7 @@
 import { Asset, CliqueClient, ContractEvent, InputAsset } from 'alephium-js'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createTokenWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
+import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
 import { alphChainId, dustAmount, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 
@@ -16,10 +16,14 @@ describe("test token bridge", () => {
         }
     }
 
+    const decimals = 8
+    const symbol = toHex(randomBytes(32))
+    const name = toHex(randomBytes(32))
+
     it('should attest token', async () => {
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridge = tokenBridgeInfo.contract
-        const testToken = await createTestToken(client)
+        const testToken = await createTestToken(client, decimals, symbol, name)
         const nonceHex = nonce()
         const testResult = await tokenBridge.test(client, 'attestToken', {
             address: tokenBridgeInfo.address,
@@ -77,6 +81,34 @@ describe("test token bridge", () => {
         expect(output.alphAmount).toEqual(Number(dustAmount))
     })
 
+    it('should create token wrapper for native token', async () => {
+        const remoteChainId = alphChainId + 1
+        const remoteTokenBridgeId = toHex(randomBytes(32))
+        const tokenBridgeInfo = await createTokenBridge(client)
+        const tokenBridgeForChainInfo = await createTokenBridgeForChain(
+            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+        )
+        const testToken = await createTestToken(client, decimals, symbol, name)
+        const tokenBridgeForChain = tokenBridgeForChainInfo.contract
+        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForNativeToken', {
+            address: tokenBridgeForChainInfo.address,
+            initialFields: tokenBridgeForChainInfo.selfState.fields,
+            testArgs: [testToken.address, payer, dustAmount],
+            inputAssets: [inputAsset],
+            existingContracts: tokenBridgeForChainInfo.dependencies.concat(testToken.states())
+        })
+
+        const tokenWrapperOutput = testResult.txOutputs[0]
+        expect(tokenWrapperOutput.alphAmount).toEqual(Number(dustAmount))
+        expect(tokenWrapperOutput.tokens).toEqual([])
+
+        expect(testResult.events.length).toEqual(1)
+        const event = testResult.events[0] as ContractEvent
+        expect(event.name).toEqual('ContractCreated')
+        expect(event.contractAddress).toEqual(tokenBridgeInfo.tokenWrapperFactory.address)
+        expect(event.fields).toEqual([tokenWrapperOutput.address])
+    })
+
     it('should transfer native token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
@@ -84,8 +116,10 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
-        const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testTokenInfo = await createTestToken(client)
+        const testTokenInfo = await createTestToken(client, decimals, symbol, name)
+        const tokenWrapperInfo = await createWrapper(
+            testTokenInfo.address, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
+        )
         const fromAddress = randomAssetAddress()
         const toAddress = toHex(randomBytes(32))
         const transferAmount = oneAlph
@@ -101,12 +135,13 @@ describe("test token bridge", () => {
                 }]
             }
         }
-        const testResult = await tokenBridgeForChain.test(client, 'transferNative', {
-            address: tokenBridgeForChainInfo.address,
-            initialFields: tokenBridgeForChainInfo.selfState.fields,
-            testArgs: [testTokenInfo.address, fromAddress, toAddress, transferAmount, arbiterFee, nonceHex, 0],
+        const tokenWrapper = tokenWrapperInfo.contract
+        const testResult = await tokenWrapper.test(client, 'transfer', {
+            address: tokenWrapperInfo.address,
+            initialFields: tokenWrapperInfo.selfState.fields,
+            testArgs: [fromAddress, toAddress, transferAmount, arbiterFee, nonceHex, 0],
             inputAssets: [inputAsset],
-            existingContracts: tokenBridgeForChainInfo.dependencies.concat(testTokenInfo.states())
+            existingContracts: tokenWrapperInfo.dependencies.concat(testTokenInfo.states())
         })
 
         const tokenBridgeForChainOutput = testResult.txOutputs[0]
@@ -131,7 +166,7 @@ describe("test token bridge", () => {
 
         let postfix = Buffer.allocUnsafe(33)
         postfix.writeUint8(1, 0)
-        postfix.write(toContractId(tokenBridgeForChainInfo.address), 1, 'hex')
+        postfix.write(toContractId(tokenWrapperInfo.address), 1, 'hex')
 
         expect(event.fields).toEqual([
             toContractId(tokenBridgeInfo.address),
@@ -148,8 +183,10 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
-        const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testTokenInfo = await createTestToken(client)
+        const testTokenInfo = await createTestToken(client, decimals, symbol, name)
+        const tokenWrapperInfo = await createWrapper(
+            testTokenInfo.address, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
+        )
         const toAddress = randomAssetAddress()
         const transferAmount = oneAlph
         const arbiterFee = messageFee
@@ -171,13 +208,14 @@ describe("test token bridge", () => {
             address: arbiter,
             asset: {alphAmount: dustAmount}
         }
-        const testResult = await tokenBridgeForChain.test(client, 'completeNative', {
-            address: tokenBridgeForChainInfo.address,
-            initialFields: tokenBridgeForChainInfo.selfState.fields,
+        const tokenWrapper = tokenWrapperInfo.contract
+        const testResult = await tokenWrapper.test(client, 'completeTransfer', {
+            address: tokenWrapperInfo.address,
+            initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), arbiter],
             initialAsset: initAsset,
             inputAssets: [inputAsset, arbiterInputAsset],
-            existingContracts: tokenBridgeForChainInfo.dependencies.concat(testTokenInfo.states())
+            existingContracts: tokenWrapperInfo.dependencies.concat(testTokenInfo.states())
         })
 
         const recipientOutput = testResult.txOutputs[0]
@@ -197,7 +235,7 @@ describe("test token bridge", () => {
         }])
 
         const contractOutput = testResult.txOutputs[2]
-        expect(contractOutput.address).toEqual(tokenBridgeForChainInfo.address)
+        expect(contractOutput.address).toEqual(tokenWrapperInfo.address)
         expect(contractOutput.alphAmount).toEqual((initAsset.alphAmount as bigint) - dustAmount)
         expect(contractOutput.tokens).toEqual([{
             id: toContractId(testTokenInfo.address),
@@ -205,7 +243,7 @@ describe("test token bridge", () => {
         }])
     })
 
-    it('should create token wrapper contract', async () => {
+    it('should create token wrapper for remote token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
@@ -213,14 +251,11 @@ describe("test token bridge", () => {
             tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const remoteTokenId = toHex(randomBytes(32))
-        const symbol = toHex(randomBytes(32))
-        const name = toHex(randomBytes(32))
-        const decimals = 8
         const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
         const vaaBody = new VAABody(attestToken.encode(), remoteChainId, remoteTokenBridgeId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testResult = await tokenBridgeForChain.test(client, 'createWrapper', {
+        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForRemoteToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), payer, dustAmount],
@@ -251,11 +286,8 @@ describe("test token bridge", () => {
             tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
-        const decimals = 8
-        const symbol = toHex(randomBytes(32))
-        const name = toHex(randomBytes(32))
-        const tokenWrapperInfo = await createTokenWrapper(
-            wrappedTokenId, remoteChainId, decimals, symbol,
+        const tokenWrapperInfo = await createWrapper(
+            wrappedTokenId, false, decimals, symbol,
             name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
         const tokenWrapperContract = tokenWrapperInfo.contract
@@ -323,11 +355,8 @@ describe("test token bridge", () => {
             tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
-        const decimals = 8
-        const symbol = toHex(randomBytes(32))
-        const name = toHex(randomBytes(32))
-        const tokenWrapperInfo = await createTokenWrapper(
-            wrappedTokenId, remoteChainId, decimals, symbol,
+        const tokenWrapperInfo = await createWrapper(
+            wrappedTokenId, false, decimals, symbol,
             name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
         const toAddress = randomAssetAddress()
