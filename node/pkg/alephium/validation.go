@@ -20,7 +20,8 @@ import (
 const transferPayloadId byte = 1
 
 type validator struct {
-	governanceContract string
+	governanceContract          string
+	tokenWrapperFactoryContract string
 
 	msgC chan<- *common.MessagePublication
 
@@ -32,11 +33,13 @@ type validator struct {
 
 func newValidator(
 	governanceContract string,
+	tokenWrapperFactoryContract string,
 	msgC chan<- *common.MessagePublication,
 	db *db,
 ) *validator {
 	return &validator{
-		governanceContract: governanceContract,
+		governanceContract:          governanceContract,
+		tokenWrapperFactoryContract: tokenWrapperFactoryContract,
 
 		msgC: msgC,
 
@@ -47,42 +50,89 @@ func newValidator(
 	}
 }
 
-func (v *validator) run(ctx context.Context, logger *zap.Logger, errC chan<- error, confirmedC <-chan []*UnconfirmedEvent) {
+func (v *validator) run(ctx context.Context, logger *zap.Logger, errC chan<- error, confirmedC <-chan *ConfirmedEvents) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case confirmed := <-confirmedC:
-			for _, event := range confirmed {
-				assume(event.event.ContractAddress == v.governanceContract)
-				wormholeMsg, err := WormholeMessageFromEvent(event.event)
-				if err != nil {
-					logger.Error("invalid wormhole message", zap.Any("fields", event.event.Fields))
-					errC <- err
-					return
+			switch confirmed.contractAddress {
+			case v.governanceContract:
+				for _, event := range confirmed.events {
+					err := v.handleConfirmedGovernanceEvent(logger, event.event, event.blockHeader)
+					if err != nil {
+						errC <- err
+						return
+					}
 				}
-				logger.Debug(
-					"receive event from alephium contract",
-					zap.String("emitter", wormholeMsg.emitter.ToHex()),
-					zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
-				)
-				if !wormholeMsg.isTransferMessage() {
-					// we only need to validate transfer message
-					v.msgC <- wormholeMsg.toMessagePublication(event.blockHeader)
-					continue
+			case v.tokenWrapperFactoryContract:
+				maxIndex := uint64(0)
+				batch := newBatch()
+				for _, event := range confirmed.events {
+					if event.eventIndex > maxIndex {
+						maxIndex = event.eventIndex
+					}
+
+					info, err := v.validateTokenWrapper(event.event)
+					if err != nil {
+						logger.Error("ignore invalid token wrapper", zap.Error(err))
+						continue
+					}
+					if info.isLocalToken {
+						batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperAddress)
+					} else {
+						batch.writeRemoteTokenWrapper(info.tokenId, info.tokenWrapperAddress)
+					}
 				}
-				transferMsg := TransferMessageFromBytes(wormholeMsg.payload)
-				if err := v.validateTransferMessage(transferMsg); err != nil {
-					logger.Error("invalid wormhole message, just ignore", zap.Error(err))
-					continue
-				}
-				v.msgC <- wormholeMsg.toMessagePublication(event.blockHeader)
+				batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
 			}
 		}
 	}
 }
 
-func (v *validator) handleGovernanceEvent(logger *zap.Logger, event *Event, header *BlockHeader) error {
+type tokenWrapperInfo struct {
+	isLocalToken        bool
+	remoteChainId       uint16
+	tokenId             Byte32
+	tokenWrapperAddress string
+}
+
+func (v *validator) validateTokenWrapper(event *Event) (*tokenWrapperInfo, error) {
+	// TODO: we only support 4 fields
+	tokenBridgeForChainAddress := event.Fields[0].ToByteVec()
+	tokenWrapperId := event.Fields[1].ToByteVec()
+	tokenId, err := event.Fields[2].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+
+	remoteChainId, err := event.Fields[3].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+	isLocalToken := event.Fields[4].ToBool()
+
+	address, err := v.getRemoteChain(remoteChainId)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(tokenBridgeForChainAddress, (*address)[:]) {
+		return nil, fmt.Errorf("invalid token bridge for chain address")
+	}
+
+	tokenWrapperAddress, err := toContractAddress(tokenWrapperId)
+	if err != nil {
+		return nil, err
+	}
+	return &tokenWrapperInfo{
+		isLocalToken:        isLocalToken,
+		remoteChainId:       remoteChainId,
+		tokenId:             *tokenId,
+		tokenWrapperAddress: tokenWrapperAddress,
+	}, nil
+}
+
+func (v *validator) handleConfirmedGovernanceEvent(logger *zap.Logger, event *Event, header *BlockHeader) error {
 	wormholeMsg, err := WormholeMessageFromEvent(event)
 	if err != nil {
 		logger.Error("invalid wormhole message", zap.Any("fields", event.Fields))

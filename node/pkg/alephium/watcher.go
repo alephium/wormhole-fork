@@ -48,6 +48,11 @@ type UnconfirmedEvent struct {
 	confirmations uint8
 }
 
+type ConfirmedEvents struct {
+	events          []*UnconfirmedEvent
+	contractAddress string
+}
+
 func NewAlephiumWatcher(
 	url string,
 	apiKey string,
@@ -125,16 +130,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 	readiness.SetReady(w.readiness)
 
 	errC := make(chan error)
-	confirmedEventsC := make(chan []*UnconfirmedEvent)
+	confirmedEventsC := make(chan *ConfirmedEvents)
 	tokenBridgeHeightC := make(chan uint32)
 	tokenWrapperFactoryHeightC := make(chan uint32)
 	governanceHeightC := make(chan uint32)
-	validator := newValidator(w.governanceContract, w.msgChan, w.db)
+	validator := newValidator(w.governanceContract, w.tokenWrapperFactoryContract, w.msgChan, w.db)
 
 	go w.handleObsvRequest(ctx, logger, client, confirmedEventsC)
 	go w.monitoringHeight(ctx, logger, client, errC, []chan<- uint32{tokenBridgeHeightC, tokenWrapperFactoryHeightC, governanceHeightC})
 	go w.handleTokenBridgeEvents(ctx, logger, client, *nextTokenBridgeEventIndex, errC, tokenBridgeHeightC)
-	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC, tokenWrapperFactoryHeightC)
+	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC, tokenWrapperFactoryHeightC, confirmedEventsC)
 	go w.handleGovernanceEvents(ctx, logger, client, errC, governanceHeightC, confirmedEventsC)
 	go validator.run(ctx, logger, errC, confirmedEventsC)
 
@@ -256,7 +261,7 @@ func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Lo
 	return count, nil
 }
 
-func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, client *Client, confirmedC chan<- []*UnconfirmedEvent) {
+func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, client *Client, confirmedC chan<- *ConfirmedEvents) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -311,7 +316,10 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				}
 			}
 			if len(confirmedEvents) > 0 {
-				confirmedC <- confirmedEvents
+				confirmedC <- &ConfirmedEvents{
+					events:          confirmedEvents,
+					contractAddress: w.governanceContract,
+				}
 			}
 		}
 	}
@@ -412,28 +420,41 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 	nextIndex uint64,
 	errC chan<- error,
 	newBlockC <-chan uint32,
+	confirmedC chan<- *ConfirmedEvents,
 ) {
+	/*
+		handler := func(confirmed []*UnconfirmedEvent) error {
+			if len(confirmed) == 0 {
+				return nil
+			}
+
+			maxIndex := uint64(0)
+			batch := newBatch()
+			for _, event := range confirmed {
+				if event.eventIndex > maxIndex {
+					maxIndex = event.eventIndex
+				}
+
+				remoteTokenId, tokenWrapperAddress, err := client.GetTokenWrapperInfo(ctx, event.event, w.chainIndex.FromGroup)
+				if err != nil {
+					logger.Error("failed to get token wrapper info", zap.Error(err))
+					return err
+				}
+				batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
+			}
+			batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
+			return w.db.writeBatch(batch)
+		}
+	*/
 	handler := func(confirmed []*UnconfirmedEvent) error {
 		if len(confirmed) == 0 {
 			return nil
 		}
-
-		maxIndex := uint64(0)
-		batch := newBatch()
-		for _, event := range confirmed {
-			if event.eventIndex > maxIndex {
-				maxIndex = event.eventIndex
-			}
-
-			remoteTokenId, tokenWrapperAddress, err := client.GetTokenWrapperInfo(ctx, event.event, w.chainIndex.FromGroup)
-			if err != nil {
-				logger.Error("failed to get token wrapper info", zap.Error(err))
-				return err
-			}
-			batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
+		confirmedC <- &ConfirmedEvents{
+			events:          confirmed,
+			contractAddress: w.tokenWrapperFactoryContract,
 		}
-		batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
-		return w.db.writeBatch(batch)
+		return nil
 	}
 
 	w.getContractEvents(ctx, logger, client, w.tokenWrapperFactoryContract, nextIndex, errC, newBlockC, handler)
@@ -445,7 +466,7 @@ func (w *Watcher) handleGovernanceEvents(
 	client *Client,
 	errC chan<- error,
 	newBlockC <-chan uint32,
-	confirmedC chan<- []*UnconfirmedEvent,
+	confirmedC chan<- *ConfirmedEvents,
 ) error {
 	count, err := client.GetContractEventsCount(ctx, w.governanceContract)
 	if err != nil {
@@ -455,7 +476,10 @@ func (w *Watcher) handleGovernanceEvents(
 	}
 
 	handler := func(confirmed []*UnconfirmedEvent) error {
-		confirmedC <- confirmed
+		confirmedC <- &ConfirmedEvents{
+			events:          confirmed,
+			contractAddress: w.governanceContract,
+		}
 		return nil
 	}
 

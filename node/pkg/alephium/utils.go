@@ -31,6 +31,15 @@ func toContractId(address string) (Byte32, error) {
 	return byte32, nil
 }
 
+func toContractAddress(id []byte) (string, error) {
+	if len(id) != 32 {
+		return "", fmt.Errorf("invalid contract id %s", id)
+	}
+	bytes := []byte{0x03}
+	bytes = append(bytes, id[:]...)
+	return base58.Encode(bytes), nil
+}
+
 type Hash [HashLength]byte
 
 func (h Hash) ToHex() string {
