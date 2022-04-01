@@ -3,6 +3,7 @@ package alephium
 import (
 	"encoding/json"
 	"math/big"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -54,4 +55,20 @@ func TestField(t *testing.T) {
 			assert.Equal(t, field.ToAddress(), fields[i].Value)
 		}
 	}
+}
+
+func TestContractConversion(t *testing.T) {
+	bytes := make([]byte, 32)
+	n, err := rand.Read(bytes)
+	assume(n == 32)
+	assume(err == nil)
+	address, err := toContractAddress(bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := toContractId(address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, bytes, id[:])
 }
