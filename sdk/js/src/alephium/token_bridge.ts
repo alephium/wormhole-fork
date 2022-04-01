@@ -1,4 +1,5 @@
 import * as base58 from 'bs58'
+import { encode } from 'bs58'
 import { toHex } from '../utils/hex'
 import { encodePositiveInt, encodeU256 } from './serde'
 
@@ -65,8 +66,8 @@ function encodeConsistencyLevel(num: number): string {
     return '13' + toHex(encodeU256(BigInt(num)))
 }
 
-export function transferNativeCode(
-    tokenBridgeForChainAddress: string,
+export function transferLocalTokenCode(
+    tokenWrapperAddress: string,
     sender: string,
     tokenId: string,
     toAddress: string,
@@ -84,50 +85,47 @@ export function transferNativeCode(
         throw Error('invalid nonce: ' + nonce)
     }
 
-    return "010101000400" + // methodLength + public + payable + argLen + localVarLen + returnLen
-        "18" + // instrLen
+    return "010101000300" + // methodLength + public + payable + argLen + localVarLen + returnLen
+        "15" + // instrLen
         encodeAddress(sender) +
         storeLocal(0) +
-        encodeContractId(tokenId) +
-        storeLocal(1) +
         u256(tokenAmount) +
-        storeLocal(2) +
+        storeLocal(1) +
         loadLocal(0) +
         u256(messageFee) +
         approveAlph +
         loadLocal(0) +
+        encodeContractId(tokenId) +
         loadLocal(1) +
-        loadLocal(2) +
         approveToken +
-        encodeContractId(tokenBridgeForChainAddress) +
-        storeLocal(3) +
-        loadLocal(1) +
+        encodeContractId(tokenWrapperAddress) +
+        storeLocal(2) +
         loadLocal(0) +
         encodeBytes(toAddress) +
-        loadLocal(2) +
+        loadLocal(1) +
         u256(arbiterFee) +
         encodeBytes(nonce) +
         encodeConsistencyLevel(consistencyLevel) +
-        loadLocal(3) +
-        callExternal(5)
+        loadLocal(2) +
+        callExternal(2)
 }
 
-export function completeTransferNativeCode(
-    tokenBridgeForChainAddress: string,
+export function completeTransfer(
+    tokenWrapperAddress: string,
     vaa: string,
     arbiter: string
 ): string {
     return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
         "06" + // instrLen
-        encodeContractId(tokenBridgeForChainAddress) +
+        encodeContractId(tokenWrapperAddress) +
         storeLocal(0) +
         encodeBytes(vaa) +
         encodeAddress(arbiter) +
         loadLocal(0) +
-        callExternal(8)
+        callExternal(3)
 }
 
-export function transferWrappedCode(
+export function transferRemoteTokenCode(
     tokenWrapperAddress: string,
     sender: string,
     toAddress: string,
@@ -149,42 +147,27 @@ export function transferWrappedCode(
         "17" + // instrLen
         encodeAddress(sender) +
         storeLocal(0) +
-        encodeContractId(tokenWrapperAddress) +
-        storeLocal(1) +
         u256(tokenAmount) +
+        storeLocal(1) +
+        encodeContractId(tokenWrapperAddress) +
         storeLocal(2) +
         loadLocal(0) +
         u256(messageFee) +
         approveAlph +
         loadLocal(0) +
-        loadLocal(1) +
         loadLocal(2) +
-        approveToken +
         loadLocal(1) +
+        approveToken +
+        loadLocal(2) +
         storeLocal(3) +
         loadLocal(0) +
         encodeBytes(toAddress) +
-        loadLocal(2) +
+        loadLocal(1) +
         u256(arbiterFee) +
         encodeBytes(nonce) +
         encodeConsistencyLevel(consistencyLevel) +
         loadLocal(3) +
-        callExternal(0)
-}
-
-export function completeTransferWrappedCode(
-    tokenWrapperAddress: string,
-    vaa: string,
-    arbiter: string
-): string {
-    return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
-        "06" + // instrLen
-        encodeContractId(tokenWrapperAddress) +
-        storeLocal(0) +
-        encodeBytes(vaa) +
-        encodeAddress(arbiter) +
-        loadLocal(0) +
-        callExternal(1)
+        callExternal(2)
 }
 
 export function attestTokenCode(
@@ -216,19 +199,50 @@ export function attestTokenCode(
         callExternal(8)
 }
 
-export function createWrappedCode(
+export function createLocalTokenWrapperCode(
+    tokenBridgeForChainAddress: string,
+    localTokenId: string,
+    payer: string,
+    alphAmount: bigint
+): string {
+    return "010101000300" + // methodLength + public + payable + argLen + localVarLen + returnLen
+        "0e" + // instrLen
+        encodeAddress(payer) +
+        storeLocal(0) +
+        u256(alphAmount) +
+        storeLocal(1) +
+        loadLocal(0) +
+        loadLocal(1) +
+        approveAlph +
+        encodeContractId(tokenBridgeForChainAddress) +
+        storeLocal(2) +
+        encodeContractId(localTokenId) +
+        loadLocal(0) +
+        loadLocal(1) +
+        loadLocal(2) +
+        callExternal(4)
+}
+
+export function createRemoteTokenWrapperCode(
     tokenBridgeForChainAddress: string,
     vaa: string,
     payer: string,
     alphAmount: bigint
 ): string {
-    return "010101000100" + // methodLength + public + payable + argLen + localVarLen + returnLen
-        "07" + // instrLen
-        encodeContractId(tokenBridgeForChainAddress) +
-        storeLocal(0) +
-        encodeBytes(vaa) +
+    return "010101000300" + // methodLength + public + payable + argLen + localVarLen + returnLen
+        "0e" + // instrLen
         encodeAddress(payer) +
+        storeLocal(0) +
         u256(alphAmount) +
+        storeLocal(1) +
         loadLocal(0) +
-        callExternal(4)
+        loadLocal(1) +
+        approveAlph +
+        encodeContractId(tokenBridgeForChainAddress) +
+        storeLocal(2) +
+        encodeBytes(vaa) +
+        loadLocal(0) +
+        loadLocal(1) +
+        loadLocal(2) +
+        callExternal(5)
 }

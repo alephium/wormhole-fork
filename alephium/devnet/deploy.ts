@@ -61,7 +61,7 @@ async function deploy() {
     const getTokenTxId = await getToken(client, signer, testTokenId, env.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
-    const createWrapperTxId = await wormhole.createWrapper(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
+    const createWrapperTxId = await wormhole.createWrapperForLocalToken(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
     const tokenWrapper = await getCreatedContractAddress(client, createWrapperTxId)
     console.log('local token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapper)
     // transfer to eth

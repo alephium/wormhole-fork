@@ -10,7 +10,7 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { BuildScriptTx, Signer } from "alephium-js";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
-import { transferNativeCode, transferWrappedCode } from "../alephium/token_bridge";
+import { transferLocalTokenCode, transferRemoteTokenCode } from "../alephium/token_bridge";
 import {
   Bridge__factory,
   TokenImplementation__factory,
@@ -21,9 +21,9 @@ import { ChainId, CHAIN_ID_SOLANA, createNonce, WSOL_ADDRESS } from "../utils";
 import { toHex } from "../utils/hex";
 import { executeScript } from "./utils";
 
-export async function transferNativeFromAlph(
+export async function transferLocalTokenFromAlph(
   signer: Signer,
-  tokenBridgeForChainAddress: string,
+  tokenWrapperAddress: string,
   sender: string,
   tokenId: string,
   toAddress: string,
@@ -36,14 +36,14 @@ export async function transferNativeFromAlph(
 ) {
   const nonceHex = nonce ? nonce : toHex(createNonce())
   const cl = consistencyLevel ? consistencyLevel : 10
-  const bytecode = transferNativeCode(
-    tokenBridgeForChainAddress, sender, tokenId, toAddress,
+  const bytecode = transferLocalTokenCode(
+    tokenWrapperAddress, sender, tokenId, toAddress,
     tokenAmount, messageFee, arbiterFee, nonceHex, cl
   )
   return executeScript(signer, bytecode, params)
 }
 
-export async function transferWrappedFromAlph(
+export async function transferRemoteTokenFromAlph(
   signer: Signer,
   tokenWrapperAddress: string,
   sender: string,
@@ -57,7 +57,7 @@ export async function transferWrappedFromAlph(
 ) {
   const nonceHex = nonce ? nonce : toHex(createNonce())
   const cl = consistencyLevel ? consistencyLevel : 10
-  const bytecode = transferWrappedCode(
+  const bytecode = transferRemoteTokenCode(
     tokenWrapperAddress, sender, toAddress, tokenAmount,
     messageFee, arbiterFee, nonceHex, cl
   )

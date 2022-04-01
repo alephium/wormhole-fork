@@ -91,13 +91,13 @@ export class Wormhole {
         return submitResult.txId
     }
 
-    async createWrapper(
+    async createWrapperForLocalToken(
         tokenBridgeForChainAddress: string,
         localTokenId: string,
         payer: string,
         alphAmount: bigint
     ): Promise<string> {
-        const script = await Script.from(this.client, 'create_wrapper.ral', {
+        const script = await Script.from(this.client, 'create_local_wrapper.ral', {
             tokenBridgeForChainAddress: tokenBridgeForChainAddress,
             tokenId: localTokenId,
             payer: payer,
@@ -148,9 +148,8 @@ async function deployGovernance(
     const initGuardianIndexes = Array(0, initGuardianSetIndex)
     const initGuardianSizes = Array(0, initGuardianSet.length)
     const previousGuardianSetExpirationTime = 0
-    const initSequence = Array(20).fill(false)
     const initFields = [
-        AlephiumChainId, governanceChainId, governanceContractId, 0, initSequence, initSequence, initMessageFee,
+        AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, initMessageFee,
         initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
     ]
     return await _deploy(signer, governance, initFields)
@@ -182,10 +181,9 @@ async function deployTokenBridge(
         tokenWrapperCodeHash: tokenWrapperCodeHash
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
-    const initSequence = Array(20).fill(false)
     const initFields = [
         governanceAddress, governanceChainId, governanceContractId,
-        0, initSequence, initSequence, AlephiumChainId, 0
+        0, 0, 0, AlephiumChainId, 0
     ]
     return await _deploy(signer, tokenBridge, initFields)
 }
