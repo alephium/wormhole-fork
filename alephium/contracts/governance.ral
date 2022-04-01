@@ -79,8 +79,8 @@ TxContract Governance(
         index = index + 1
         let mut signatures = [#00; 19]
         loop(0, 19, 1,
-            if (? < signatureSize) {
-                // 1 byte `guardianIndex` and 65 bytes signature
+            // 1 byte `guardianIndex` and 65 bytes signature
+            if (? == u256From1Byte!(byteVecSlice!(data, index, index + 1))) {
                 signatures[?] = byteVecSlice!(data, index, index + 66)
                 index = index + 66
             }
@@ -159,35 +159,13 @@ TxContract Governance(
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
     }
 
-    fn verifySignature(
-        guardianIndex: U256,
-        index: U256,
-        hash: ByteVec,
-        key: ByteVec,
-        signature: ByteVec
-    ) -> () {
-        if (guardianIndex == index) {
-            assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
-        }
-    }
-
-    fn verifySignatureForKey(hash: ByteVec, signature: ByteVec, keys: [ByteVec; 19]) -> (U256) {
-        let guardianIndex = u256From1Byte!(byteVecSlice!(signature, 0, 1))
-        loop(0, 19, 1, verifySignature(guardianIndex, ?, hash, keys[?], signature))
-        return guardianIndex
-    }
-
-    fn verifySignatureAndGuardianIndex(
-        latestGuardianIndex: U256,
-        hash: ByteVec,
-        signature: ByteVec,
-        keys: [ByteVec; 19]
-    ) -> (U256) {
+    fn verifySignature(lastGuardianIndex: I256, signature: ByteVec, key: ByteVec, hash: ByteVec) -> I256 {
         if (signature == #00) {
-          return latestGuardianIndex
+            return lastGuardianIndex
         }
-        let guardianIndex = verifySignatureForKey(hash, signature, keys)
-        assert!(guardianIndex > latestGuardianIndex)
+        let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
+        assert!(guardianIndex > lastGuardianIndex)
+        assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
         return guardianIndex
     }
 
@@ -203,11 +181,9 @@ TxContract Governance(
         }
         // check signature quorum size
         assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
-        let mut latestGuardianIndex = verifySignatureForKey(hash, signatures[0], keys)
-        // TODO: optimize verify signatures, now we use nested loop to verify signatures, which is expensive
-        loop(1, 19, 1, latestGuardianIndex = verifySignatureAndGuardianIndex(
-            latestGuardianIndex, hash, signatures[?], keys
-        ))
+
+        let mut lastGuardianIndex = -1i
+        loop(0, 19, 1, lastGuardianIndex = verifySignature(lastGuardianIndex, signatures[?], keys[?], hash))
     }
 
     fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256, U256) {
