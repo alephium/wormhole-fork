@@ -1,0 +1,79 @@
+TxContract UndoneSequence(
+    mut undone: ByteVec
+) {
+    event SequenceRemoved(seq: U256)
+
+    // TODO: make these functions as private
+    pub fn add(seq: U256) -> () {
+        if (undone == #) {
+            undone = u256To8Byte!(seq)
+            return
+        }
+
+        let length = size!(undone)
+        let max = u256From8Byte!(byteVecSlice!(undone, length - 8, length))
+        assert!(seq > max)
+        undone = undone ++ u256To8Byte!(seq)
+    }
+
+    fn addSequences(current: U256, bitMap: U256) -> () {
+        let mut index = 0
+        while (index < 8) {
+            if ((bitMap >> index) & 0x01 == 0) {
+                add(current + index)
+            }
+            index = index + 1
+        }
+    }
+
+    pub fn addToUndone(current: U256, bitMap: U256) -> () {
+        let mut index = 0
+        while (index < 256) {
+            let value = (bitMap >> index) & 0xff
+            if (value != 0xff) {
+                addSequences(current + index, value)
+            }
+            index = index + 8
+        }
+    }
+
+    pub fn removeOldUndone(current: U256) -> () {
+        if (undone == #) {
+            return
+        }
+
+        let mut min = u256From8Byte!(byteVecSlice!(undone, 0, 8))
+        while (current > min + {{ distance }}) {
+            let removed = u256From8Byte!(byteVecSlice!(undone, 0, 8))
+            emit SequenceRemoved(removed)
+            undone = byteVecSlice!(undone, 8, size!(undone))
+            if (undone != #) {
+                min = u256From8Byte!(byteVecSlice!(undone, 0, 8))
+            } else {
+                return
+            }
+        }
+    }
+
+    pub fn trySetDone(seq: U256) -> Bool {
+        let mut begin = 0i
+        let mut end = i256!(size!(undone) / 8) - 1i
+        while (begin <= end) {
+            let mid = (begin + end) / 2i
+            let offset = u256!(mid * 8i)
+            let midSeq = u256From8Byte!(byteVecSlice!(undone, offset, offset + 8))
+
+            if (seq == midSeq) {
+                undone = byteVecSlice!(undone, 0, offset) ++ byteVecSlice!(undone, offset + 8, size!(undone))
+                return true
+            }
+
+            if (seq > midSeq) {
+                begin = mid + 1i
+            } else {
+                end = mid - 1i
+            }
+        }
+        return false
+    }
+}

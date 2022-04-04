@@ -1,9 +1,12 @@
+import "undone_sequence.ral"
+
 // sequence started from 0, set `next = 0` when init contract state
 TxContract Sequence(
     mut next: U256,
     mut next1: U256, // TODO: better name
-    mut next2: U256 
-) {
+    mut next2: U256,
+    mut undone: ByteVec
+) extends UndoneSequence(undone) {
     pub fn getNext() -> U256 {
         return next 
     }
@@ -16,14 +19,13 @@ TxContract Sequence(
         return next2
     }
 
-    fn compact() -> (Bool) {
-        if (next1 == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
-            next = next + 256
-            next1 = next2
-            next2 = 0
-            return true
+    fn compact() -> () {
+        if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
+            addToUndone(next, next1)
         }
-        return false
+        next = next + 256
+        next1 = next2
+        next2 = 0
     }
 
     fn setExecuted(pos: U256, offset: U256, current: U256) -> U256 {
@@ -36,15 +38,18 @@ TxContract Sequence(
     }
 
     fn checkSequence(seq: U256) -> () {
-        assert!(seq >= next)
-        if (seq >= (next + 512)) {
-            if (compact()) {
-                checkSequence(seq)
-                return
-            }
+        if (seq < next) {
+            assert!(trySetDone(seq))
+            return
         }
 
-        assert!(next <= seq && seq < (next + 512))
+        if (seq >= (next + 512)) {
+            compact()
+        }
+
+        assert!(seq < (next + 512))
+        removeOldUndone(seq)
+
         let seqIndex = seq - next
         let pos = seqIndex / 8
         let offset = seqIndex % 8
