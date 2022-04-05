@@ -83,8 +83,10 @@ export class Wormhole {
             vaa: vaa,
             payer: payer,
             amount: amount,
+            tokenWrapperFactoryAddress: "",
             tokenBridgeForChainBinCode: "",
             tokenWrapperCodeHash: "",
+            tokenWrapperBinCode: '',
             distance: 64
         })
         const scriptTx = await script.transactionForDeployment(this.signer, params)
@@ -181,7 +183,9 @@ async function deployTokenBridge(
     const variables = {
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
-        distance: 64
+        tokenWrapperFactoryAddress: "",
+        tokenWrapperBinCode: '',
+        distance: 64,
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
     const initFields = [

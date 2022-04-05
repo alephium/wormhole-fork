@@ -190,7 +190,9 @@ export async function createTokenBridge(client: CliqueClient): Promise<TokenBrid
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', {
         distance: 64,
         tokenBridgeForChainBinCode: tokenBridgeForChainContract.bytecode,
-        tokenWrapperCodeHash: tokenWrapper.codeHash
+        tokenWrapperCodeHash: tokenWrapper.codeHash,
+        tokenWrapperFactoryAddress: '',
+        tokenWrapperBinCode: ''
     })
     const state = tokenBridge.toState(
         [governance.address, governanceChainId, governanceContractAddress, 0, 0, 0, '', alphChainId, 0],
