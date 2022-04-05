@@ -34,7 +34,9 @@ export async function attestToken(
         nonce: nonce,
         consistencyLevel: env.consistencyLevel,
         tokenBridgeForChainBinCode: "",
+        tokenWrapperFactoryAddress: "",
         tokenBridgeForChainCodeHash: "",
+        tokenWrapperBinCode: "",
         tokenWrapperCodeHash: "",
         distance: 64
     })
