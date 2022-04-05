@@ -49,16 +49,12 @@ TxContract TokenBridge(
     fn parseRegisterChain(vaa: ByteVec) -> (U256, ByteVec) {
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #01)
-        let mut index = 33
-        let chainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
-        index = index + 2
+        let chainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(chainId == localChainId || chainId == 0)
-        let remoteChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        let remoteChainId = u256From2Byte!(byteVecSlice!(payload, 35, 37))
         assert!(remoteChainId != localChainId)
-        index = index + 2
-        let remoteTokenBridgeId = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        assert!(size!(payload) == index)
+        let remoteTokenBridgeId = byteVecSlice!(payload, 37, 69)
+        assert!(size!(payload) == 69)
         return remoteChainId, remoteTokenBridgeId
     }
 

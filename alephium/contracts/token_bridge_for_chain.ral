@@ -35,21 +35,14 @@ TxContract TokenBridgeForChain(
     // return (tokenContractId, tokenDecimals, tokenSymbol, tokenName)
     fn parseAttestToken(vaa: ByteVec) -> (ByteVec, U256, ByteVec, ByteVec) {
         let payload = verifyVAA(vaa)
-        let mut index = 0
-        assert!(byteVecSlice!(payload, index, index + 1) == #02) // payload id
-        index = index + 1
-        let tokenContractId = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        assert!(byteVecSlice!(payload, 0, 1) == #02) // payload id
+        let tokenContractId = byteVecSlice!(payload, 1, 33)
+        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(tokenChainId == remoteChainId)
-        index = index + 2
-        let decimals = u256From1Byte!(byteVecSlice!(payload, index, index + 1))
-        index = index + 1
-        let symbol = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        let name = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        assert!(size!(payload) == index)
+        let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
+        let symbol = byteVecSlice!(payload, 36, 68)
+        let name = byteVecSlice!(payload, 68, 100)
+        assert!(size!(payload) == 100)
         return tokenContractId, decimals, symbol, name
     }
 
@@ -92,23 +85,15 @@ TxContract TokenBridgeForChain(
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
         assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
         let payload = verifyVAA(vaa)
-        let mut index = 0
-        assert!(byteVecSlice!(payload, index, index + 1) == #01) // payloadId
-        index = index + 1
-        let amount = u256From32Byte!(byteVecSlice!(payload, index, index + 32))
-        index = index + 32
-        let tokenId = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
-        index = index + 2
-        let recipientAddress = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        let recipientChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let tokenId = byteVecSlice!(payload, 33, 65)
+        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let recipientAddress = byteVecSlice!(payload, 67, 99)
+        let recipientChainId = u256From2Byte!(byteVecSlice!(payload, 99, 101))
         assert!(recipientChainId == localChainId)
-        index = index + 2
-        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, index, index + 32))
-        index = index + 32
-        assert!(size!(payload) == index)
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 101, 133))
+        assert!(size!(payload) == 133)
         return tokenId, tokenChainId, recipientAddress, amount, arbiterFee
     }
 }
