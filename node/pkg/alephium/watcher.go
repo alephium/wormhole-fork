@@ -422,30 +422,6 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 	newBlockC <-chan uint32,
 	confirmedC chan<- *ConfirmedEvents,
 ) {
-	/*
-		handler := func(confirmed []*UnconfirmedEvent) error {
-			if len(confirmed) == 0 {
-				return nil
-			}
-
-			maxIndex := uint64(0)
-			batch := newBatch()
-			for _, event := range confirmed {
-				if event.eventIndex > maxIndex {
-					maxIndex = event.eventIndex
-				}
-
-				remoteTokenId, tokenWrapperAddress, err := client.GetTokenWrapperInfo(ctx, event.event, w.chainIndex.FromGroup)
-				if err != nil {
-					logger.Error("failed to get token wrapper info", zap.Error(err))
-					return err
-				}
-				batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
-			}
-			batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
-			return w.db.writeBatch(batch)
-		}
-	*/
 	handler := func(confirmed []*UnconfirmedEvent) error {
 		if len(confirmed) == 0 {
 			return nil
