@@ -41,6 +41,10 @@ TxContract TokenWrapper(
         return selfContractId!()
     }
 
+    pub fn getRemoteChainId() -> U256 {
+        return remoteChainId
+    }
+
     fn getTokenChainId() -> U256 {
         if (isLocalToken) {
             return localChainId
@@ -81,21 +85,35 @@ TxContract TokenWrapper(
         tokenBridge.publishTransfer(fromAddress, payload, nonce, consistencyLevel)
     }
 
-    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
-        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        let (msgTokenId, msgTokenChainId, recipientAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
-        assert!(msgTokenId == tokenContractId)
-        assert!(msgTokenChainId == getTokenChainId())
-
+    fn getTransferAmount(amount: U256, arbiterFee: U256) -> (U256, U256) {
         let denomalizedAmount = deNormalizeAmount(amount, decimals_)
         let denomalizedFee = deNormalizeAmount(arbiterFee, decimals_)
         assert!(denomalizedAmount > denomalizedFee)
-
         let transferAmount = denomalizedAmount - denomalizedFee
-        let recipient = byteVecToAddress!(#00 ++ recipientAddress)
+        return transferAmount, denomalizedFee
+    }
+
+    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
+        assert!(msgTokenId == tokenContractId)
+        assert!(msgTokenChainId == getTokenChainId())
+
+        let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
         transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, denomalizedFee)
+        transferTokenFromSelf!(arbiter, tokenId, transferFee)
+    }
+
+    pub payable fn completeFailedTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
+        assert!(callerContractId!() == tokenBridgeId)
+        let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        let tokenId = getTokenId()
+        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
+        transferTokenFromSelf!(recipient, tokenId, transferAmount)
+        transferTokenFromSelf!(arbiter, tokenId, transferFee)
     }
 }
