@@ -2,6 +2,7 @@ import "governance.ral"
 import "sequence.ral"
 import "token.ral"
 import "serde.ral"
+import "token_wrapper.ral"
 
 TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
@@ -115,5 +116,23 @@ TxContract TokenBridge(
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
         governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+    }
+
+    // TODO: rename
+    event FailedTransferDone(remoteChainId: U256, seq: U256)
+
+    // handle failed transfer message
+    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+        let payload = verifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #03)
+        let failedSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
+        let tokenWrapperId = byteVecSlice!(payload, 41, 73)
+        let toAddress = byteVecSlice!(payload, 73, 105)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 105, 137))
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 137, 169))
+        assert!(size!(payload) == 169)
+        let tokenWrapper = TokenWrapper(tokenWrapperId)
+        tokenWrapper.completeFailedTransfer(toAddress, amount, arbiterFee, arbiter)
+        emit FailedTransferDone(tokenWrapper.getRemoteChainId(), failedSequence)
     }
 }
