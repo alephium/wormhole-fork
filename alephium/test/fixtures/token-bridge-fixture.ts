@@ -1,6 +1,6 @@
 import { CliqueClient, Contract, ContractState } from 'alephium-js'
 import { createGovernance, governanceChainId, governanceContractAddress } from './governance-fixture'
-import { alphChainId, ContractInfo, dustAmount, randomContractAddress, } from './wormhole-fixture'
+import { alphChainId, ContractInfo, dustAmount, randomContractAddress } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 
 const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
@@ -50,6 +50,34 @@ export class RegisterChain {
         buffer.writeUint16BE(this.targetChainId, 33)
         buffer.writeUint16BE(this.remoteChainId, 35)
         buffer.write(this.remoteTokenBridgeId, 37, 'hex')
+        return buffer
+    }
+}
+
+export class CompleteFailedTransfer {
+    tokenWrapperId: string
+    failedSequence: number
+    toAddress: string
+    amount: bigint
+    arbiterFee: bigint
+
+    constructor(tokenWrapperId: string, failedSequence: number, toAddress: string, amount: bigint, arbiterFee: bigint) {
+        this.tokenWrapperId = tokenWrapperId
+        this.failedSequence = failedSequence
+        this.toAddress = toAddress
+        this.amount = amount
+        this.arbiterFee = arbiterFee
+    }
+
+    encode(): Uint8Array {
+        let buffer = Buffer.allocUnsafe(169)
+        buffer.write(tokenBridgeModule, 0, 'hex')
+        buffer.writeUint8(3, 32)
+        buffer.writeBigUint64BE(BigInt(this.failedSequence), 33)
+        buffer.write(this.tokenWrapperId, 41, 'hex')
+        buffer.write(this.toAddress, 73, 'hex')
+        buffer.write(zeroPad(this.amount.toString(16), 32), 105, 'hex')
+        buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 137, 'hex')
         return buffer
     }
 }
