@@ -86,10 +86,11 @@ export class Transfer {
 
 export async function getTokenWrapperContract(client: CliqueClient): Promise<Contract> {
     return await Contract.from(client, 'token_wrapper.ral', {
-        tokenBridgeForChainBinCode: '00',
-        tokenWrapperCodeHash: '00',
-        tokenWrapperFactoryAddress: '00',
-        tokenWrapperBinCode: '00'
+        tokenBridgeForChainBinCode: '',
+        tokenWrapperCodeHash: '',
+        tokenWrapperFactoryAddress: '',
+        tokenWrapperBinCode: '',
+        distance: 64
     })
 }
 
@@ -130,8 +131,9 @@ export async function getTokenBridgeForChainContract(
     return await Contract.from(client, 'token_bridge_for_chain.ral', {
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
-        tokenWrapperBinCode: '00',
-        tokenBridgeForChainBinCode: '00'
+        distance: 64,
+        tokenWrapperBinCode: '',
+        tokenBridgeForChainBinCode: ''
     })
 }
 
@@ -186,11 +188,12 @@ export async function createTokenBridge(client: CliqueClient): Promise<TokenBrid
         tokenWrapper.codeHash,
     )
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', {
+        distance: 64,
         tokenBridgeForChainBinCode: tokenBridgeForChainContract.bytecode,
         tokenWrapperCodeHash: tokenWrapper.codeHash
     })
     const state = tokenBridge.toState(
-        [governance.address, governanceChainId, governanceContractAddress, 0, 0, 0, alphChainId, 0],
+        [governance.address, governanceChainId, governanceContractAddress, 0, 0, 0, '', alphChainId, 0],
         {alphAmount: dustAmount},
         tokenBridgeAddress
     )
@@ -212,7 +215,7 @@ export async function createTokenBridgeForChain(
     const address = randomContractAddress()
     const tokenBridgeForChain = tokenBridgeInfo.tokenBridgeForChainContract
     const state = tokenBridgeForChain.toState(
-        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, 0, 0],
+        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, 0, 0, ''],
         {alphAmount: dustAmount},
         address
     )

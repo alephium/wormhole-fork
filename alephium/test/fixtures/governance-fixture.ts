@@ -69,7 +69,9 @@ export class SubmitTransferFee {
 
 export async function createGovernance(client: CliqueClient): Promise<ContractInfo> {
     const address = randomContractAddress()
-    const governanceContract = await Contract.from(client, 'governance.ral')
+    const governanceContract = await Contract.from(client, 'governance.ral', {
+        distance: 64,
+    })
     const initFields = [
         alphChainId,
         governanceChainId,
@@ -77,6 +79,7 @@ export async function createGovernance(client: CliqueClient): Promise<ContractIn
         0,
         0,
         0,
+        '',
         messageFee,
         Array(Array(19).fill('00'), initGuardianSet.guardianSetAddresses(19)),
         [0, initGuardianSet.index],

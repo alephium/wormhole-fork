@@ -83,8 +83,9 @@ export class Wormhole {
             vaa: vaa,
             payer: payer,
             amount: amount,
-            tokenBridgeForChainBinCode: "00",
-            tokenWrapperCodeHash: "00",
+            tokenBridgeForChainBinCode: "",
+            tokenWrapperCodeHash: "",
+            distance: 64
         })
         const scriptTx = await script.transactionForDeployment(this.signer, params)
         const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
@@ -102,10 +103,11 @@ export class Wormhole {
             tokenId: localTokenId,
             payer: payer,
             alphAmount: alphAmount,
-            tokenWrapperFactoryAddress: "00",
-            tokenWrapperCodeHash: "00",
-            tokenWrapperBinCode: "00",
-            tokenBridgeForChainBinCode: "00"
+            tokenWrapperFactoryAddress: "",
+            tokenWrapperCodeHash: "",
+            tokenWrapperBinCode: "",
+            tokenBridgeForChainBinCode: "",
+            distance: 64
         })
         const scriptTx = await script.transactionForDeployment(this.signer)
         const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
@@ -136,7 +138,7 @@ async function deployGovernance(
     initGuardianSetIndex: number,
     initMessageFee: bigint
 ): Promise<DeployResult> {
-    const governance = await Contract.from(client, 'governance.ral')
+    const governance = await Contract.from(client, 'governance.ral', { distance: 64 })
     const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
     const initGuardianSetSize = initGuardianSet.length
     if (initGuardianSetSize > 19) {
@@ -149,7 +151,7 @@ async function deployGovernance(
     const initGuardianSizes = Array(0, initGuardianSet.length)
     const previousGuardianSetExpirationTime = 0
     const initFields = [
-        AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, initMessageFee,
+        AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee,
         initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
     ]
     return await _deploy(signer, governance, initFields)
@@ -178,12 +180,13 @@ async function deployTokenBridge(
 ): Promise<DeployResult> {
     const variables = {
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
-        tokenWrapperCodeHash: tokenWrapperCodeHash
+        tokenWrapperCodeHash: tokenWrapperCodeHash,
+        distance: 64
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
     const initFields = [
         governanceAddress, governanceChainId, governanceContractId,
-        0, 0, 0, AlephiumChainId, 0
+        0, 0, 0, '', AlephiumChainId, 0
     ]
     return await _deploy(signer, tokenBridge, initFields)
 }
@@ -196,18 +199,20 @@ async function tokenBridgeForChainContract(
     const variables = {
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
-        tokenWrapperBinCode: "00",
-        tokenBridgeForChainBinCode: "00"
+        distance: 64,
+        tokenWrapperBinCode: "",
+        tokenBridgeForChainBinCode: ""
     }
     return Contract.from(client, 'token_bridge_for_chain.ral', variables)
 }
 
 async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
     const variables = {
-        tokenBridgeForChainBinCode: "00",
-        tokenWrapperBinCode: "00",
-        tokenWrapperCodeHash: "00",
-        tokenWrapperFactoryAddress: "00"
+        tokenBridgeForChainBinCode: "",
+        tokenWrapperBinCode: "",
+        tokenWrapperCodeHash: "",
+        tokenWrapperFactoryAddress: "",
+        distance: 64
     }
     return Contract.from(client, 'token_wrapper.ral', variables)
 }

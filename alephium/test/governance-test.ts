@@ -27,12 +27,12 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'updateGuardianSet')
         const governanceState = testResult.contracts[0]
-        expect(governanceState.fields[7]).toEqual(Array(
+        expect(governanceState.fields[8]).toEqual(Array(
             initGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase()),
             updateGuardianSet.newGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase())
         ))
-        expect(governanceState.fields[8]).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
-        expect(governanceState.fields[9]).toEqual(Array(initGuardianSet.size(), updateGuardianSet.newGuardianSet.size()))
+        expect(governanceState.fields[9]).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
+        expect(governanceState.fields[10]).toEqual(Array(initGuardianSet.size(), updateGuardianSet.newGuardianSet.size()))
     }, 10000)
 
     it('should failed if signature is not enough', async () => {
@@ -72,7 +72,7 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'setMessageFee')
         const governanceState = testResult.contracts[0]
-        expect(governanceState.fields[6]).toEqual(Number(setMessageFee.newMessageFee))
+        expect(governanceState.fields[7]).toEqual(Number(setMessageFee.newMessageFee))
     })
 
     it('should transfer message fee to recipient', async () => {
