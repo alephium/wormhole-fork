@@ -174,14 +174,44 @@ func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, event *Event, g
 	return &remoteChainId, &tokenBridgeForChainAddress, err
 }
 
-func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*Byte32, *string, error) {
+type tokenWrapperInfo struct {
+	tokenBridgeForChainId Byte32
+	isLocalToken          bool
+	remoteChainId         uint16
+	tokenId               Byte32
+	tokenWrapperAddress   string
+}
+
+func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*tokenWrapperInfo, error) {
 	assume(len(event.Fields) == 1)
 	tokenWrapperAddress := event.Fields[0].ToAddress()
 	contractState, err := c.GetContractState(ctx, tokenWrapperAddress, groupIndex)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	assume(contractState.Address == tokenWrapperAddress)
-	remoteTokenId, err := contractState.Fields[4].ToByte32()
-	return remoteTokenId, &tokenWrapperAddress, err
+
+	tokenBridgeForChainId, err := contractState.Fields[1].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+
+	remoteChainId, err := contractState.Fields[3].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+
+	tokenContractId, err := contractState.Fields[4].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+
+	isLocalToken := contractState.Fields[5].ToBool()
+	return &tokenWrapperInfo{
+		tokenBridgeForChainId: *tokenBridgeForChainId,
+		isLocalToken:          isLocalToken,
+		remoteChainId:         remoteChainId,
+		tokenId:               *tokenContractId,
+		tokenWrapperAddress:   tokenWrapperAddress,
+	}, nil
 }

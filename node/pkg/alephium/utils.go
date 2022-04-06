@@ -31,13 +31,10 @@ func toContractId(address string) (Byte32, error) {
 	return byte32, nil
 }
 
-func toContractAddress(id []byte) (string, error) {
-	if len(id) != 32 {
-		return "", fmt.Errorf("invalid contract id %s", id)
-	}
+func toContractAddress(id Byte32) string {
 	bytes := []byte{0x03}
 	bytes = append(bytes, id[:]...)
-	return base58.Encode(bytes), nil
+	return base58.Encode(bytes)
 }
 
 type Hash [HashLength]byte
@@ -167,6 +164,19 @@ type Event struct {
 	TxId            string   `json:"txId"`
 	Index           int32    `json:"index"`
 	Fields          []*Field `json:"fields"`
+}
+
+func (e *Event) getConsistencyLevel(minConfirmations uint8) (*uint8, error) {
+	consistencyLevel, err := e.Fields[len(e.Fields)-1].ToUint8()
+	if err != nil {
+		return nil, err
+	}
+
+	confirmations := consistencyLevel
+	if confirmations < minConfirmations {
+		confirmations = minConfirmations
+	}
+	return &confirmations, nil
 }
 
 type Events struct {

@@ -2,7 +2,6 @@ package alephium
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"github.com/certusone/wormhole/node/pkg/readiness"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
-	"github.com/dgraph-io/badger/v3"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +32,10 @@ type Watcher struct {
 	msgChan  chan *common.MessagePublication
 	setChan  chan *common.GuardianSet
 	obsvReqC chan *gossipv1.ObservationRequest
+
+	tokenBridgeForChainCache map[uint16]*Byte32
+	remoteTokenWrapperCache  map[Byte32]*Byte32
+	localTokenWrapperCache   map[Byte32]map[uint16]*Byte32
 
 	minConfirmations uint8
 	currentHeight    uint32
@@ -88,10 +90,15 @@ func NewAlephiumWatcher(
 			ToGroup:   toGroup,
 		},
 
-		readiness:        readiness,
-		msgChan:          messageEvents,
-		setChan:          setEvents,
-		obsvReqC:         obsvReqC,
+		readiness: readiness,
+		msgChan:   messageEvents,
+		setChan:   setEvents,
+		obsvReqC:  obsvReqC,
+
+		tokenBridgeForChainCache: map[uint16]*Byte32{},
+		remoteTokenWrapperCache:  map[Byte32]*Byte32{},
+		localTokenWrapperCache:   map[Byte32]map[uint16]*Byte32{},
+
 		minConfirmations: uint8(minConfirmations),
 		db:               db,
 	}, nil
@@ -130,18 +137,12 @@ func (w *Watcher) Run(ctx context.Context) error {
 	readiness.SetReady(w.readiness)
 
 	errC := make(chan error)
-	confirmedEventsC := make(chan *ConfirmedEvents)
-	tokenBridgeHeightC := make(chan uint32)
-	tokenWrapperFactoryHeightC := make(chan uint32)
-	governanceHeightC := make(chan uint32)
-	validator := newValidator(w.governanceContract, w.tokenWrapperFactoryContract, w.msgChan, w.db)
 
-	go w.handleObsvRequest(ctx, logger, client, confirmedEventsC)
-	go w.monitoringHeight(ctx, logger, client, errC, []chan<- uint32{tokenBridgeHeightC, tokenWrapperFactoryHeightC, governanceHeightC})
-	go w.handleTokenBridgeEvents(ctx, logger, client, *nextTokenBridgeEventIndex, errC, tokenBridgeHeightC)
-	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC, tokenWrapperFactoryHeightC, confirmedEventsC)
-	go w.handleGovernanceEvents(ctx, logger, client, errC, governanceHeightC, confirmedEventsC)
-	go validator.run(ctx, logger, errC, confirmedEventsC)
+	go w.handleObsvRequest(ctx, logger, client)
+	go w.fetchHeight(ctx, logger, client, errC)
+	go w.handleTokenBridgeEvents(ctx, logger, client, *nextTokenBridgeEventIndex, errC)
+	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC)
+	go w.handleGovernanceEvents(ctx, logger, client, errC)
 
 	select {
 	case <-ctx.Done():
@@ -151,11 +152,9 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 }
 
-func (w *Watcher) monitoringHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, destinations []chan<- uint32) {
+func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error) {
 	t := time.NewTicker(10 * time.Second)
 	defer t.Stop()
-
-	lastHeight := uint32(0)
 
 	for {
 		select {
@@ -170,192 +169,17 @@ func (w *Watcher) monitoringHeight(ctx context.Context, logger *zap.Logger, clie
 			}
 
 			atomic.StoreUint32(&w.currentHeight, height)
-
-			if height != lastHeight {
-				lastHeight = height
-				for _, dest := range destinations {
-					dest <- height
-				}
-			}
 		}
 	}
 }
 
-func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	lastTokenBridgeEventIndex, err := w.db.getLastTokenBridgeEventIndex()
-	if err == badger.ErrKeyNotFound {
-		from := uint64(0)
-		return &from, nil
-	}
-
-	if err != nil {
-		logger.Error("failed to get last token bridge event index", zap.Error(err))
-		return nil, err
-	}
-
-	count, err := client.GetContractEventsCount(ctx, w.tokenBridgeContract)
-	if err != nil {
-		logger.Error("failed to get token bridge event count", zap.Error(err))
-		return nil, err
-	}
-
-	from := *lastTokenBridgeEventIndex + 1
-	to := *count - 1
-	events, err := client.GetContractEventsByIndex(ctx, w.tokenBridgeContract, from, to)
-	if err != nil {
-		logger.Error("failed to get token bridge events", zap.Uint64("from", from), zap.Uint64("to", to))
-		return nil, err
-	}
-
-	// TODO: wait for confirmed???
-	batch := newBatch()
-	for _, event := range events.Events {
-		remoteChainId, tokenBridgeForChainAddress, err := client.GetTokenBridgeForChainInfo(ctx, event, w.chainIndex.FromGroup)
-		if err != nil {
-			logger.Error("failed to get token bridge for chain info", zap.Error(err))
-			return nil, err
-		}
-		batch.writeTokenBridgeForChain(*remoteChainId, *tokenBridgeForChainAddress)
-	}
-	batch.updateLastTokenBridgeEventIndex(*count)
-	return count, nil
-}
-
-func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	lastTokenWrapperFactoryEventIndex, err := w.db.getLastTokenWrapperFactoryEventIndex()
-	if err == badger.ErrKeyNotFound {
-		from := uint64(0)
-		return &from, nil
-	}
-
-	if err != nil {
-		logger.Error("failed to get last token wrapper factory event index", zap.Error(err))
-		return nil, err
-	}
-
-	count, err := client.GetContractEventsCount(ctx, w.tokenWrapperFactoryContract)
-	if err != nil {
-		logger.Error("failed to get token wrapper factory event count", zap.Error(err))
-		return nil, err
-	}
-
-	from := *lastTokenWrapperFactoryEventIndex + 1
-	to := *count - 1
-	events, err := client.GetContractEventsByIndex(ctx, w.tokenWrapperFactoryContract, from, to)
-	if err != nil {
-		logger.Error("failed to get token wrapper factory events", zap.Uint64("from", from), zap.Uint64("to", to))
-		return nil, err
-	}
-
-	// TODO: wait for confirmed???
-	batch := newBatch()
-	for _, event := range events.Events {
-		remoteTokenId, tokenWrapperAddress, err := client.GetTokenWrapperInfo(ctx, event, w.chainIndex.FromGroup)
-		if err != nil {
-			logger.Error("failed to get token wrapper info", zap.Error(err))
-			return nil, err
-		}
-		batch.writeRemoteTokenWrapper(*remoteTokenId, *tokenWrapperAddress)
-	}
-	batch.updateLastTokenWrapperFactoryEventIndex(*count)
-	return count, nil
-}
-
-func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, client *Client, confirmedC chan<- *ConfirmedEvents) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case req := <-w.obsvReqC:
-			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
-			txId := hex.EncodeToString(req.TxHash)
-			txStatus, err := client.GetTransactionStatus(ctx, txId)
-			if err != nil {
-				logger.Error("failed to get transaction status", zap.String("txId", txId), zap.Error(err))
-				continue
-			}
-
-			blockHash := txStatus.BlockHash
-			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
-			if err != nil {
-				logger.Error("failed to check mainchain block", zap.String("blockHash", blockHash), zap.Error(err))
-				continue
-			}
-			if !isCanonical {
-				logger.Info("ignore orphan block", zap.String("blockHash", blockHash))
-				continue
-			}
-
-			currentHeight := atomic.LoadUint32(&w.currentHeight)
-
-			unconfirmedEvents, err := w.getGovernanceEventsFromBlockHash(ctx, client, blockHash, txId)
-			if err != nil {
-				logger.Info("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
-				continue
-			}
-
-			confirmedEvents := make([]*UnconfirmedEvent, 0)
-			for _, event := range unconfirmedEvents {
-				if event.blockHeader.Height+uint32(event.confirmations) <= currentHeight {
-					logger.Info("re-boserve event",
-						zap.String("txId", txId),
-						zap.String("blockHash", blockHash),
-						zap.Uint32("blockHeight", event.blockHeader.Height),
-						zap.Uint32("currentHeight", currentHeight),
-						zap.Uint8("confirmations", event.confirmations),
-					)
-					confirmedEvents = append(confirmedEvents, event)
-				} else {
-					logger.Info("ignore unconfirmed re-observed event",
-						zap.String("txId", txId),
-						zap.String("blockHash", blockHash),
-						zap.Uint32("blockHeight", event.blockHeader.Height),
-						zap.Uint32("currentHeight", currentHeight),
-						zap.Uint8("confirmations", event.confirmations),
-					)
-				}
-			}
-			if len(confirmedEvents) > 0 {
-				confirmedC <- &ConfirmedEvents{
-					events:          confirmedEvents,
-					contractAddress: w.governanceContract,
-				}
-			}
-		}
-	}
-}
-
-func (w *Watcher) getGovernanceEventsFromBlockHash(
-	ctx context.Context,
-	client *Client,
-	blockHash string,
-	txId string,
-) ([]*UnconfirmedEvent, error) {
-	events, err := client.GetContractEventsFromBlockHash(ctx, blockHash, []string{w.governanceContract})
+func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
+	// TODO: cache
+	header, err := client.GetBlockHeader(ctx, event.BlockHash)
 	if err != nil {
 		return nil, err
 	}
 
-	header, err := client.GetBlockHeader(ctx, blockHash)
-	if err != nil {
-		return nil, err
-	}
-
-	unconfirmedEvents := make([]*UnconfirmedEvent, len(events))
-	for _, event := range events {
-		if event.TxId != txId {
-			continue
-		}
-		unconfirmed, err := w.toUnconfirmedEvent(ctx, event, header)
-		if err != nil {
-			return nil, err
-		}
-		unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
-	}
-	return unconfirmedEvents, nil
-}
-
-func (w *Watcher) toUnconfirmedEvent(ctx context.Context, event *Event, header *BlockHeader) (*UnconfirmedEvent, error) {
 	if event.ContractAddress != w.governanceContract {
 		return &UnconfirmedEvent{
 			blockHeader:   header,
@@ -364,53 +188,61 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, event *Event, header *
 		}, nil
 	}
 
-	consistencyLevel, err := event.Fields[len(event.Fields)-1].ToUint64()
-	if err != nil {
-		return nil, err
+	confirmations, err := event.getConsistencyLevel(w.minConfirmations)
+	return &UnconfirmedEvent{
+		blockHeader:   header,
+		event:         event,
+		confirmations: *confirmations,
+	}, err
+}
+
+func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*Event) ([]*UnconfirmedEvent, error) {
+	unconfirmedEvents := make([]*UnconfirmedEvent, len(events))
+	for i, event := range events {
+		unconfirmed, err := w.toUnconfirmedEvent(ctx, client, event)
+		if err != nil {
+			return nil, err
+		}
+		unconfirmedEvents[i] = unconfirmed
+	}
+	return unconfirmedEvents, nil
+}
+
+func (w *Watcher) updateTokenBridgeForChain(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+	if len(confirmed.events) == 0 {
+		return nil
 	}
 
-	confirmations := uint8(consistencyLevel)
-	if confirmations < w.minConfirmations {
-		confirmations = w.minConfirmations
+	maxIndex := uint64(0)
+	batch := newBatch()
+	for _, event := range confirmed.events {
+		if event.eventIndex > maxIndex {
+			maxIndex = event.eventIndex
+		}
+
+		remoteChainId, tokenBridgeForChainAddress, err := client.GetTokenBridgeForChainInfo(ctx, event.event, w.chainIndex.FromGroup)
+		if err != nil {
+			logger.Error("failed to get token bridge for chain info", zap.Error(err))
+			return err
+		}
+		batch.writeTokenBridgeForChain(*remoteChainId, *tokenBridgeForChainAddress)
 	}
-	return &UnconfirmedEvent{
-		event:         event,
-		confirmations: confirmations,
-	}, nil
+	batch.updateLastTokenBridgeEventIndex(maxIndex)
+	return w.db.writeBatch(batch)
 }
 
 func (w *Watcher) handleTokenBridgeEvents(
 	ctx context.Context,
 	logger *zap.Logger,
 	client *Client,
-	nextIndex uint64,
+	fromIndex uint64,
 	errC chan<- error,
-	newBlockC <-chan uint32,
 ) {
-	handler := func(confirmed []*UnconfirmedEvent) error {
-		if len(confirmed) == 0 {
-			return nil
-		}
-
-		maxIndex := uint64(0)
-		batch := newBatch()
-		for _, event := range confirmed {
-			if event.eventIndex > maxIndex {
-				maxIndex = event.eventIndex
-			}
-
-			remoteChainId, tokenBridgeForChainAddress, err := client.GetTokenBridgeForChainInfo(ctx, event.event, w.chainIndex.FromGroup)
-			if err != nil {
-				logger.Error("failed to get token bridge for chain info", zap.Error(err))
-				return err
-			}
-			batch.writeTokenBridgeForChain(*remoteChainId, *tokenBridgeForChainAddress)
-		}
-		batch.updateLastTokenBridgeEventIndex(maxIndex)
-		return w.db.writeBatch(batch)
+	handler := func(confirmed *ConfirmedEvents) error {
+		return w.updateTokenBridgeForChain(ctx, logger, client, confirmed)
 	}
 
-	w.getContractEvents(ctx, logger, client, w.tokenBridgeContract, nextIndex, errC, newBlockC, handler)
+	w.subscribe(ctx, logger, client, w.tokenBridgeContract, fromIndex, w.toUnconfirmedEvent, handler, errC)
 }
 
 func (w *Watcher) handleTokenWrapperFactoryEvents(
@@ -419,21 +251,15 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 	client *Client,
 	nextIndex uint64,
 	errC chan<- error,
-	newBlockC <-chan uint32,
-	confirmedC chan<- *ConfirmedEvents,
 ) {
-	handler := func(confirmed []*UnconfirmedEvent) error {
-		if len(confirmed) == 0 {
+	handler := func(confirmed *ConfirmedEvents) error {
+		if len(confirmed.events) == 0 {
 			return nil
 		}
-		confirmedC <- &ConfirmedEvents{
-			events:          confirmed,
-			contractAddress: w.tokenWrapperFactoryContract,
-		}
-		return nil
+		return w.validateTokenWrapperEvents(ctx, logger, client, confirmed)
 	}
 
-	w.getContractEvents(ctx, logger, client, w.tokenWrapperFactoryContract, nextIndex, errC, newBlockC, handler)
+	w.subscribe(ctx, logger, client, w.tokenWrapperFactoryContract, nextIndex, w.toUnconfirmedEvent, handler, errC)
 }
 
 func (w *Watcher) handleGovernanceEvents(
@@ -441,8 +267,6 @@ func (w *Watcher) handleGovernanceEvents(
 	logger *zap.Logger,
 	client *Client,
 	errC chan<- error,
-	newBlockC <-chan uint32,
-	confirmedC chan<- *ConfirmedEvents,
 ) error {
 	count, err := client.GetContractEventsCount(ctx, w.governanceContract)
 	if err != nil {
@@ -451,40 +275,76 @@ func (w *Watcher) handleGovernanceEvents(
 		return err
 	}
 
-	handler := func(confirmed []*UnconfirmedEvent) error {
-		confirmedC <- &ConfirmedEvents{
-			events:          confirmed,
-			contractAddress: w.governanceContract,
-		}
-		return nil
+	handler := func(confirmed *ConfirmedEvents) error {
+		return w.validateGovernanceEvents(logger, confirmed)
 	}
 
-	w.getContractEvents(ctx, logger, client, w.governanceContract, *count, errC, newBlockC, handler)
+	w.subscribe(ctx, logger, client, w.governanceContract, *count, w.toUnconfirmedEvent, handler, errC)
 	return nil
 }
 
-func (w *Watcher) getContractEvents(
+func (w *Watcher) subscribe(
 	ctx context.Context,
 	logger *zap.Logger,
 	client *Client,
 	contractAddress string,
-	_nextIndex uint64,
+	fromIndex uint64,
+	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
+	handler func(*ConfirmedEvents) error,
 	errC chan<- error,
-	newBlockC <-chan uint32,
-	handler func([]*UnconfirmedEvent) error,
 ) {
 	unconfirmedEvents := map[uint64]*UnconfirmedEvent{}
-	nextIndex := _nextIndex
+	nextIndex := fromIndex
+	lastHeight := atomic.LoadUint32(&w.currentHeight)
 
-	t := time.NewTicker(10 * time.Second)
-	defer t.Stop()
+	eventTick := time.NewTicker(30 * time.Second)
+	defer eventTick.Stop()
+
+	process := func() error {
+		height := atomic.LoadUint32(&w.currentHeight)
+		if height <= lastHeight {
+			return nil
+		}
+
+		confirmed := make([]*UnconfirmedEvent, 0)
+		for eventIndex, unconfirmed := range unconfirmedEvents {
+			if unconfirmed.blockHeader.Height+uint32(unconfirmed.confirmations) > height {
+				continue
+			}
+
+			isCanonical, err := client.IsBlockInMainChain(ctx, unconfirmed.event.BlockHash)
+			if err != nil {
+				logger.Error("failed to check mainchain block", zap.Error(err))
+				return err
+			}
+
+			if !isCanonical {
+				// it's safe to update map in range loop
+				delete(unconfirmedEvents, eventIndex)
+				continue
+			}
+
+			confirmed = append(confirmed, unconfirmed)
+			delete(unconfirmedEvents, eventIndex)
+		}
+
+		confirmedEvents := &ConfirmedEvents{
+			events:          confirmed,
+			contractAddress: contractAddress,
+		}
+		if err := handler(confirmedEvents); err != nil {
+			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
+			return err
+		}
+		return nil
+	}
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
-		case <-t.C:
+		case <-eventTick.C:
 			count, err := client.GetContractEventsCount(ctx, contractAddress)
 			if err != nil {
 				logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
@@ -492,7 +352,11 @@ func (w *Watcher) getContractEvents(
 				return
 			}
 
-			if nextIndex+1 > *count {
+			if *count <= nextIndex {
+				if err := process(); err != nil {
+					errC <- err
+					return
+				}
 				continue
 			}
 
@@ -506,13 +370,7 @@ func (w *Watcher) getContractEvents(
 
 			assume(len(events.Events) == int(to-nextIndex+1))
 			for i, event := range events.Events {
-				header, err := client.GetBlockHeader(ctx, event.BlockHash)
-				if err != nil {
-					logger.Error("failed to get block header", zap.String("hash", event.BlockHash), zap.Error(err))
-					errC <- err
-					return
-				}
-				unconfirmed, err := w.toUnconfirmedEvent(ctx, event, header)
+				unconfirmed, err := toUnconfirmed(ctx, client, event)
 				if err != nil {
 					logger.Error("failed to convert to unconfirmed event", zap.Error(err))
 					errC <- err
@@ -522,32 +380,8 @@ func (w *Watcher) getContractEvents(
 				unconfirmedEvents[unconfirmed.eventIndex] = unconfirmed
 			}
 
-		case height := <-newBlockC:
-			confirmed := make([]*UnconfirmedEvent, 0)
-			for eventIndex, unconfirmed := range unconfirmedEvents {
-				if unconfirmed.blockHeader.Height+uint32(unconfirmed.confirmations) > height {
-					continue
-				}
-
-				isCanonical, err := client.IsBlockInMainChain(ctx, unconfirmed.event.BlockHash)
-				if err != nil {
-					logger.Error("failed to check mainchain block", zap.Error(err))
-					errC <- err
-					return
-				}
-
-				if !isCanonical {
-					// it's safe to update map in range loop
-					delete(unconfirmedEvents, eventIndex)
-					continue
-				}
-
-				confirmed = append(confirmed, unconfirmed)
-				delete(unconfirmedEvents, eventIndex)
-			}
-
-			if err := handler(confirmed); err != nil {
-				logger.Error("failed to handle confirmed events", zap.Error(err))
+			nextIndex = *count
+			if err := process(); err != nil {
 				errC <- err
 				return
 			}
