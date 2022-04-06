@@ -7,29 +7,36 @@ import (
 	"go.uber.org/zap"
 )
 
-func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	lastTokenBridgeEventIndex, err := w.db.getLastTokenBridgeEventIndex()
+func (w *Watcher) fetchEvents(
+	ctx context.Context,
+	logger *zap.Logger,
+	client *Client,
+	lastEventIndexGetter func() (*uint64, error),
+	contractAddress string,
+	handler func(*ConfirmedEvents) error,
+) (*uint64, error) {
+	lastEventIndex, err := lastEventIndexGetter()
 	if err == badger.ErrKeyNotFound {
 		from := uint64(0)
 		return &from, nil
 	}
 
 	if err != nil {
-		logger.Error("failed to get last token bridge event index", zap.Error(err))
+		logger.Error("failed to get last event index", zap.Error(err), zap.String("contractAddress", contractAddress))
 		return nil, err
 	}
 
-	count, err := client.GetContractEventsCount(ctx, w.tokenBridgeContract)
+	count, err := client.GetContractEventsCount(ctx, contractAddress)
 	if err != nil {
-		logger.Error("failed to get token bridge event count", zap.Error(err))
+		logger.Error("failed to get event count", zap.Error(err), zap.String("contractAddress", contractAddress))
 		return nil, err
 	}
 
-	from := *lastTokenBridgeEventIndex + 1
+	from := *lastEventIndex + 1
 	to := *count - 1
-	events, err := client.GetContractEventsByIndex(ctx, w.tokenBridgeContract, from, to)
+	events, err := client.GetContractEventsByIndex(ctx, contractAddress, from, to)
 	if err != nil {
-		logger.Error("failed to get token bridge events", zap.Uint64("from", from), zap.Uint64("to", to))
+		logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.Uint64("to", to), zap.String("contractAddress", contractAddress))
 		return nil, err
 	}
 
@@ -43,92 +50,29 @@ func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger 
 		events:          unconfirmed,
 		contractAddress: w.tokenBridgeContract,
 	}
-	if err := w.updateTokenBridgeForChain(ctx, logger, client, confirmed); err != nil {
+	if err := handler(confirmed); err != nil {
 		return nil, err
 	}
 	return count, nil
+}
+
+func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
+	handler := func(confirmed *ConfirmedEvents) error {
+		return w.updateTokenBridgeForChain(ctx, logger, client, confirmed)
+	}
+	return w.fetchEvents(ctx, logger, client, w.db.getLastTokenBridgeEventIndex, w.tokenBridgeContract, handler)
 }
 
 func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	lastTokenWrapperFactoryEventIndex, err := w.db.getLastTokenWrapperFactoryEventIndex()
-	if err == badger.ErrKeyNotFound {
-		from := uint64(0)
-		return &from, nil
+	handler := func(confirmed *ConfirmedEvents) error {
+		return w.validateTokenWrapperEvents(ctx, logger, client, confirmed)
 	}
-
-	if err != nil {
-		logger.Error("failed to get last token wrapper factory event index", zap.Error(err))
-		return nil, err
-	}
-
-	count, err := client.GetContractEventsCount(ctx, w.tokenWrapperFactoryContract)
-	if err != nil {
-		logger.Error("failed to get token wrapper factory event count", zap.Error(err))
-		return nil, err
-	}
-
-	from := *lastTokenWrapperFactoryEventIndex + 1
-	to := *count - 1
-	events, err := client.GetContractEventsByIndex(ctx, w.tokenWrapperFactoryContract, from, to)
-	if err != nil {
-		logger.Error("failed to get token wrapper factory events", zap.Uint64("from", from), zap.Uint64("to", to))
-		return nil, err
-	}
-
-	unconfirmed, err := w.toUnconfirmedEvents(ctx, client, events.Events)
-	if err != nil {
-		logger.Error("failed to fetch unconfirmed events", zap.Error(err))
-		return nil, err
-	}
-	// TODO: wait for confirmed???
-	confirmed := &ConfirmedEvents{
-		events:          unconfirmed,
-		contractAddress: w.tokenWrapperFactoryContract,
-	}
-	if err := w.validateTokenWrapperEvents(ctx, logger, client, confirmed); err != nil {
-		return nil, err
-	}
-	return count, nil
+	return w.fetchEvents(ctx, logger, client, w.db.getLastTokenWrapperFactoryEventIndex, w.tokenWrapperFactoryContract, handler)
 }
 
 func (w *Watcher) fetchUndoneSequences(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	lastUndoneSequenceEventIndex, err := w.db.getLastUndoneSequenceEventIndex()
-	if err == badger.ErrKeyNotFound {
-		from := uint64(0)
-		return &from, nil
+	handler := func(confirmed *ConfirmedEvents) error {
+		return w.validateUndoneSequenceEvents(ctx, logger, client, confirmed)
 	}
-
-	if err != nil {
-		logger.Error("failed to get last undone sequence factory event index", zap.Error(err))
-		return nil, err
-	}
-
-	count, err := client.GetContractEventsCount(ctx, w.tokenWrapperFactoryContract)
-	if err != nil {
-		logger.Error("failed to get undone sequence event count", zap.Error(err))
-		return nil, err
-	}
-
-	from := *lastUndoneSequenceEventIndex + 1
-	to := *count - 1
-	events, err := client.GetContractEventsByIndex(ctx, w.undoneSequenceEmitterContract, from, to)
-	if err != nil {
-		logger.Error("failed to get undone sequence events", zap.Uint64("from", from), zap.Uint64("to", to))
-		return nil, err
-	}
-
-	unconfirmed, err := w.toUnconfirmedEvents(ctx, client, events.Events)
-	if err != nil {
-		logger.Error("failed to fetch unconfirmed events", zap.Error(err))
-		return nil, err
-	}
-	// TODO: wait for confirmed???
-	confirmed := &ConfirmedEvents{
-		events:          unconfirmed,
-		contractAddress: w.undoneSequenceEmitterContract,
-	}
-	if err := w.validateUndoneSequenceEvents(ctx, logger, client, confirmed); err != nil {
-		return nil, err
-	}
-	return count, nil
+	return w.fetchEvents(ctx, logger, client, w.db.getLastUndoneSequenceEventIndex, w.undoneSequenceEmitterContract, handler)
 }
