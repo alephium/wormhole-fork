@@ -267,9 +267,6 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 	errC chan<- error,
 ) {
 	handler := func(confirmed *ConfirmedEvents) error {
-		if len(confirmed.events) == 0 {
-			return nil
-		}
 		return w.validateTokenWrapperEvents(ctx, logger, client, confirmed)
 	}
 
@@ -305,9 +302,6 @@ func (w *Watcher) handleUndoneSequenceEvents(
 	errC chan<- error,
 ) {
 	handler := func(confirmed *ConfirmedEvents) error {
-		if len(confirmed.events) == 0 {
-			return nil
-		}
 		return w.validateUndoneSequenceEvents(ctx, logger, client, confirmed)
 	}
 

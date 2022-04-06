@@ -20,6 +20,10 @@ import (
 const transferPayloadId byte = 1
 
 func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+	if len(confirmed.events) == 0 {
+		return nil
+	}
+
 	maxIndex := uint64(0)
 	batch := newBatch()
 	for _, event := range confirmed.events {
@@ -112,6 +116,10 @@ func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) error {
 }
 
 func (w *Watcher) validateUndoneSequenceEvents(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+	if len(confirmed.events) == 0 {
+		return nil
+	}
+
 	maxIndex := uint64(0)
 	batch := newBatch()
 	for _, e := range confirmed.events {
