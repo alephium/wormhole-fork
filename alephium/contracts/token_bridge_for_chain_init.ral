@@ -1,8 +1,0 @@
-import "token_bridge_for_chain.ral"
-
-TxScript Main {
-    pub payable fn main() -> () {
-        let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
-        tokenBridgeForChain.init(#{{ sequenceAddress }})
-    }
-}

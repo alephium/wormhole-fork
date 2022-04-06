@@ -7,8 +7,10 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
+import { BuildScriptTx, Signer } from "alephium-js";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
+import { completeTransfer } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importCoreWasm, importTokenWasm } from "../solana/wasm";
@@ -19,7 +21,23 @@ import {
   MAX_VAA_DECIMALS,
 } from "../utils";
 import { hexToNativeString } from "../utils/array";
+import { toHex } from "../utils/hex";
 import { parseTransferPayload } from "../utils/parseVaa";
+import { executeScript } from "./utils";
+
+export async function redeemOnAlph(
+  signer: Signer,
+  tokenWrapperAddress: string,
+  signedVAA: Uint8Array,
+  arbiterAddress: string,
+  params?: BuildScriptTx
+) {
+  const vaaHex = toHex(signedVAA)
+  const bytecode = completeTransfer(
+    tokenWrapperAddress, vaaHex, arbiterAddress
+  )
+  return executeScript(signer, bytecode, params)
+}
 
 export async function redeemOnEth(
   tokenBridgeAddress: string,

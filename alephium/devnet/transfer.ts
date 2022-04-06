@@ -19,34 +19,31 @@ export async function getToken(
     return result.txId
 }
 
-export async function transferNative(
+export async function transferLocal(
     client: CliqueClient,
     signer: Signer,
-    tokenBridgeForChainAddress: string,
-    nativeTokenId: string,
+    tokenWrapperAddress: string,
+    localTokenId: string,
     sender: string,
     toAddress: string,
     transferAmount: bigint,
     arbiterFee: bigint
 ): Promise<string> {
-    const script = await Script.from(client, 'transfer_native.ral', {
+    const script = await Script.from(client, 'transfer_local.ral', {
         sender: sender,
         messageFee: messageFee,
-        tokenId: nativeTokenId,
+        tokenId: localTokenId,
         tokenAmount: transferAmount,
-        tokenBridgeForChainAddress: tokenBridgeForChainAddress,
+        tokenWrapperAddress: tokenWrapperAddress,
         toAddress: toAddress,
         arbiterFee: arbiterFee,
         nonce: nonce(),
         consistencyLevel: consistencyLevel,
-        mathAddress: "00",
-        serdeAddress: "00",
-        tokenWrapperFactoryAddress: "00",
-        tokenWrapperCodeHash: "00",
-        tokenWrapperBinCode: "00",
-        tokenBridgeForChainBinCode: "00",
-        tokenBridgeForChainCodeHash: "00",
-        sequenceCodeHash: "00"
+        distance: 64,
+        tokenWrapperFactoryAddress: "",
+        tokenWrapperCodeHash: "",
+        tokenWrapperBinCode: "",
+        tokenBridgeForChainBinCode: ""
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

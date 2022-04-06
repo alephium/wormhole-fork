@@ -7,8 +7,10 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
+import { BuildScriptTx, Signer } from "alephium-js";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
+import { transferLocalTokenCode, transferRemoteTokenCode } from "../alephium/token_bridge";
 import {
   Bridge__factory,
   TokenImplementation__factory,
@@ -16,6 +18,51 @@ import {
 import { getBridgeFeeIx, ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
 import { ChainId, CHAIN_ID_SOLANA, createNonce, WSOL_ADDRESS } from "../utils";
+import { toHex } from "../utils/hex";
+import { executeScript } from "./utils";
+
+export async function transferLocalTokenFromAlph(
+  signer: Signer,
+  tokenWrapperAddress: string,
+  sender: string,
+  tokenId: string,
+  toAddress: string,
+  tokenAmount: bigint,
+  messageFee: bigint,
+  arbiterFee: bigint,
+  nonce?: string,
+  consistencyLevel?: number,
+  params?: BuildScriptTx
+) {
+  const nonceHex = nonce ? nonce : toHex(createNonce())
+  const cl = consistencyLevel ? consistencyLevel : 10
+  const bytecode = transferLocalTokenCode(
+    tokenWrapperAddress, sender, tokenId, toAddress,
+    tokenAmount, messageFee, arbiterFee, nonceHex, cl
+  )
+  return executeScript(signer, bytecode, params)
+}
+
+export async function transferRemoteTokenFromAlph(
+  signer: Signer,
+  tokenWrapperAddress: string,
+  sender: string,
+  toAddress: string,
+  tokenAmount: bigint,
+  messageFee: bigint,
+  arbiterFee: bigint,
+  nonce?: string,
+  consistencyLevel?: number,
+  params?: BuildScriptTx
+) {
+  const nonceHex = nonce ? nonce : toHex(createNonce())
+  const cl = consistencyLevel ? consistencyLevel : 10
+  const bytecode = transferRemoteTokenCode(
+    tokenWrapperAddress, sender, toAddress, tokenAmount,
+    messageFee, arbiterFee, nonceHex, cl
+  )
+  return executeScript(signer, bytecode, params)
+}
 
 export async function getAllowanceEth(
   tokenBridgeAddress: string,

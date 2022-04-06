@@ -1,103 +1,150 @@
 import { CliqueClient, Contract } from 'alephium-js'
-import { dustAmount, expectAssertionFailed, randomContractAddress, toContractId } from './fixtures/wormhole-fixture'
+import { expectAssertionFailed, randomContractAddress } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
     const sequenceTestAddress = randomContractAddress()
-    const sequenceAddress = randomContractAddress()
+    const allExecuted = (BigInt(1) << BigInt(256)) - 1n
 
-    it("should check sequence owner", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral')
-        const sequence = await Contract.from(client, 'sequence.ral')
-        const owner = randomContractAddress()
-        const contractState = sequence.toState([toContractId(owner), 0, Array(20).fill(false), Array(20).fill(false)], {alphAmount: dustAmount}, sequenceAddress)
-        expectAssertionFailed(async () => {
-            return await sequenceTest.test(client, "check", {
-                initialFields: [true, sequenceAddress],
+    function sequenceToHex(seq: number): string {
+        const buffer = Buffer.allocUnsafe(8)
+        buffer.writeBigUInt64BE(BigInt(seq), 0)
+        return buffer.toString('hex')
+    }
+
+    test("should execute correctly", async () => {
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const initFields = [0, 0, 0, '']
+        for (let seq = 0; seq < 256; seq++) {
+            const testResult = await sequenceTest.test(client, 'check', {
+                initialFields: initFields,
                 address: sequenceTestAddress,
-                testArgs: [0],
-                existingContracts: [contractState]
+                testArgs: [seq]
+            })
+            expect(testResult.contracts[0].fields[0]).toEqual(0)
+            const next1 = BigInt(1) << BigInt(seq)
+            expect(testResult.contracts[0].fields[1].toString()).toEqual(next1.toString())
+            expect(testResult.contracts[0].fields[2]).toEqual(0)
+            expect(testResult.contracts[0].fields[3]).toEqual('')
+            expect(testResult.events.length).toEqual(0)
+        }
+
+        for (let seq = 256; seq < 512; seq++) {
+            const testResult = await sequenceTest.test(client, 'check', {
+                initialFields: initFields,
+                address: sequenceTestAddress,
+                testArgs: [seq]
+            })
+            expect(testResult.contracts[0].fields[0]).toEqual(0)
+            expect(testResult.contracts[0].fields[1]).toEqual(0)
+            const next2 = BigInt(1) << BigInt(seq - 256)
+            expect(testResult.contracts[0].fields[2].toString()).toEqual(next2.toString())
+            expect(testResult.contracts[0].fields[3]).toEqual('')
+            expect(testResult.events.length).toEqual(0)
+        }
+    }, 90000)
+
+    it('should failed if sequence too large', async () => {
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const initFields = [0, allExecuted, 0, '']
+        expectAssertionFailed(async() => {
+            await sequenceTest.test(client, 'check', {
+                initialFields: initFields,
+                address: sequenceTestAddress,
+                testArgs: [1024]
             })
         })
     })
 
-    test("should execute correctly", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral')
-        const sequence = await Contract.from(client, 'sequence.ral')
-        const initFields = [toContractId(sequenceTestAddress), 0, Array(20).fill(false), Array(20).fill(false)]
-        const contractState = sequence.toState(initFields, {alphAmount: dustAmount}, sequenceAddress)
-        for (let seq of Array.from(Array(20).keys()).reverse()) {
-            const testResult = await sequenceTest.test(client, 'check', {
-                initialFields: [true, sequenceAddress],
-                address: sequenceTestAddress,
-                testArgs: [seq],
-                existingContracts: [contractState]
-            })
-            expect(testResult.contracts[0].fields[1]).toEqual(0)
-            let next1 = Array(20).fill(false)
-            next1[seq] = true
-            expect(testResult.contracts[0].fields[2]).toEqual(next1)
-            expect(testResult.contracts[0].fields[3]).toEqual(Array(20).fill(false))
-        }
+    it('should move sequences to undone list', async () => {
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 512 })
+        const next1 = (BigInt(1) << 253n) - BigInt(1)
+        const oldUndoneSequence = 0
+        const initFields = [0, next1, 0, sequenceToHex(oldUndoneSequence)]
+        const testResult = await sequenceTest.test(client, 'check', {
+            initialFields: initFields,
+            address: sequenceTestAddress,
+            testArgs: [513]
+        })
+        expect(testResult.contracts[0].fields[0]).toEqual(256)
+        expect(testResult.contracts[0].fields[1]).toEqual(0)
+        expect(testResult.contracts[0].fields[2]).toEqual(2)
+        expect(testResult.contracts[0].fields[3]).toEqual(sequenceToHex(253) + sequenceToHex(254) + sequenceToHex(255))
+        expect(testResult.events.length).toEqual(1)
 
-        for (let seq of Array.from(Array(40).keys()).slice(20)) {
-            const testResult = await sequenceTest.test(client, 'check', {
-                initialFields: [true, sequenceAddress],
+        const event = testResult.events[0]
+        expect(event.fields).toEqual([oldUndoneSequence])
+    })
+
+    it('should set sequence to done', async () => {
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 512 })
+        const initFields = [256, 0, 0, sequenceToHex(12) + sequenceToHex(15)]
+        const testResult = await sequenceTest.test(client, 'check', {
+            initialFields: initFields,
+            address: sequenceTestAddress,
+            testArgs: [12]
+        })
+        expect(testResult.contracts[0].fields[0]).toEqual(256)
+        expect(testResult.contracts[0].fields[1]).toEqual(0)
+        expect(testResult.contracts[0].fields[2]).toEqual(0)
+        expect(testResult.contracts[0].fields[3]).toEqual(sequenceToHex(15))
+        expect(testResult.events.length).toEqual(0)
+
+        expectAssertionFailed(async() => {
+            await sequenceTest.test(client, 'check', {
+                initialFields: initFields,
                 address: sequenceTestAddress,
-                testArgs: [seq],
-                existingContracts: [contractState]
+                testArgs: [14]
             })
-            expect(testResult.contracts[0].fields[1]).toEqual(0)
-            expect(testResult.contracts[0].fields[2]).toEqual(Array(20).fill(false))
-            let next2 = Array(20).fill(false)
-            next2[seq - 20] = true
-            expect(testResult.contracts[0].fields[3]).toEqual(next2)
-        }
-    }, 10000)
+        })
+    })
 
     it("should increase executed sequence", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral')
-        const sequence = await Contract.from(client, 'sequence.ral')
-        const initFields = [toContractId(sequenceTestAddress), 40, Array(20).fill(true), Array(20).fill(true)]
-        const contractState = sequence.toState(initFields, {alphAmount: dustAmount}, sequenceAddress)
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const initFields = [512, allExecuted, allExecuted, '']
         const testResult = await sequenceTest.test(client, 'check', {
-            initialFields: [true, sequenceAddress],
+            initialFields: initFields,
             address: sequenceTestAddress,
-            testArgs: [81],
-            existingContracts: [contractState]
+            testArgs: [1025]
         })
-        expect(testResult.contracts[0].fields[1]).toEqual(60)
-        expect(testResult.contracts[0].fields[2]).toEqual(Array(20).fill(true))
-        let next2 = Array(20).fill(false)
-        next2[1] = true
-        expect(testResult.contracts[0].fields[3]).toEqual(next2)
+        expect(testResult.contracts[0].fields[0]).toEqual(512 + 256)
+        expect(testResult.contracts[0].fields[1]).toEqual(allExecuted)
+        expect(testResult.contracts[0].fields[2]).toEqual(2)
+        expect(testResult.contracts[0].fields[3]).toEqual('')
+        expect(testResult.events.length).toEqual(0)
     })
 
     test("should fail when executed repeatedly", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral')
-        const sequence = await Contract.from(client, 'sequence.ral')
-        const initFields0 = [toContractId(sequenceTestAddress), 0, Array(20).fill(true), Array(20).fill(false)]
-        const contractState0 = sequence.toState(initFields0, {alphAmount: dustAmount}, sequenceAddress)
-        for (let seq of Array(20).keys()) {
+        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const initFields0 = [0, allExecuted, 0, '']
+        for (let seq = 0; seq < 256; seq++) {
             expectAssertionFailed(async() => {
                 return await sequenceTest.test(client, "check", {
-                    initialFields: [true, sequenceAddress],
+                    initialFields: initFields0,
                     address: sequenceTestAddress,
-                    testArgs: [seq],
-                    existingContracts: [contractState0]
+                    testArgs: [seq]
                 })
             })
         }
 
-        const initFields1 = [toContractId(sequenceTestAddress), 40, Array(20).fill(false), Array(20).fill(false)]
-        const contractState1 = sequence.toState(initFields1, {alphAmount: dustAmount}, sequenceAddress)
-        for (let seq of Array(40).keys()) {
+        const initFields1 = [0, 0, allExecuted, '']
+        for (let seq = 256; seq < 512; seq++) {
             expectAssertionFailed(async() => {
                 return await sequenceTest.test(client, "check", {
-                    initialFields: [true, sequenceAddress],
+                    initialFields: initFields1,
                     address: sequenceTestAddress,
-                    testArgs: [seq],
-                    existingContracts: [contractState1]
+                    testArgs: [seq]
+                })
+            })
+        }
+
+        const initFields2 = [512, 0, 0, '']
+        for (let seq = 0; seq < 512; seq++) {
+            expectAssertionFailed(async() => {
+                return await sequenceTest.test(client, "check", {
+                    initialFields: initFields2,
+                    address: sequenceTestAddress,
+                    testArgs: [seq]
                 })
             })
         }

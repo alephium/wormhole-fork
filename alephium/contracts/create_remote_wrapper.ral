@@ -1,0 +1,11 @@
+import "token_bridge_for_chain.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        let payer = @{{ payer }}
+        let alphAmount = {{ alphAmount }}
+        approveAlph!(payer, alphAmount)
+        let tokenBridgeForChain = TokenBridgeForChain(#{{ tokenBridgeForChainAddress }})
+        tokenBridgeForChain.createWrapperForRemoteToken(#{{ vaa }}, payer, alphAmount)
+    }
+}

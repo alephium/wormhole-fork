@@ -4,28 +4,16 @@ TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceContract: ByteVec,
-    mut initialized: Bool,
-    mut governanceSequenceContract: ByteVec,  // the sequence contract address
+    mut next: U256,
+    mut next1: U256,
+    mut next2: U256,
+    mut undone: ByteVec,
     mut messageFee: U256,
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut guardianSetSizes: [U256; 2],
     mut previousGuardianSetExpirationTime: U256
-) {
-    pub fn init(address: ByteVec) -> () {
-        assert!(!initialized)
-        initialized = true
-        assert!(contractCodeHash!(address) == #{{ sequenceCodeHash }})
-        let sequence = Sequence(address)
-        assert!(sequence.getOwner() == selfContractId!())
-        assert!(sequence.getExecuted() == 0)
-        let next1 = sequence.getNext1()
-        loop(0, 20, 1, assert!(next1[?] == false))
-        let next2 = sequence.getNext2()
-        loop(0, 20, 1, assert!(next2[?] == false))
-        governanceSequenceContract = address
-    }
-
+) extends Sequence(next, next1, next2, undone) {
     pub fn getChainId() -> (U256) {
         return chainId
     }
@@ -39,7 +27,6 @@ TxContract Governance(
     event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
 
     pub payable fn publishMessage(payer: Address, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256) -> () {
-        assert!(initialized)
         transferAlphToSelf!(payer, messageFee)
         // We support up to 4 fields
         emit WormholeMessage(callerContractId!(), sequence, nonce ++ payload, consistencyLevel)
@@ -47,21 +34,13 @@ TxContract Governance(
 
     // return emitterChainId, emitterAddress, sequence, payload
     pub fn parseBody(body: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
-        assert!(initialized)
-        let mut index = 0
-        let timestamp = u256From4Byte!(byteVecSlice!(body, index, index + 4))
-        index = index + 4
-        let nonce = u256From4Byte!(byteVecSlice!(body, index, index + 4))
-        index = index + 4
-        let emitterChainId = u256From2Byte!(byteVecSlice!(body, index, index + 2))
-        index = index + 2
-        let emitterAddress = byteVecSlice!(body, index, index + 32)
-        index = index + 32
-        let sequence = u256From8Byte!(byteVecSlice!(body, index, index + 8))
-        index = index + 8
-        let consistencyLevel = u256From1Byte!(byteVecSlice!(body, index, index + 1))
-        index = index + 1
-        let payload = byteVecSlice!(body, index, size!(body))
+        let timestamp = u256From4Byte!(byteVecSlice!(body, 0, 4))
+        let nonce = u256From4Byte!(byteVecSlice!(body, 4, 8))
+        let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
+        let emitterAddress = byteVecSlice!(body, 10, 42)
+        let sequence = u256From8Byte!(byteVecSlice!(body, 42, 50))
+        let consistencyLevel = u256From1Byte!(byteVecSlice!(body, 50, 51))
+        let payload = byteVecSlice!(body, 51, size!(body))
         return emitterChainId, emitterAddress, sequence, payload
     }
 
@@ -70,34 +49,29 @@ TxContract Governance(
         let (emitterChainId, emitterAddress, msgSequence, payload) = parseBody(body)
         assert!(emitterChainId == governanceChainId)
         assert!(emitterAddress == governanceContract)
-        let sequence = Sequence(governanceSequenceContract)
-        sequence.checkSequence(msgSequence)
+        checkSequence(msgSequence)
         return payload
     }
 
     pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
-        assert!(initialized)
         let body = parseAndVerifySignatures(vaa, false)
         return parseBody(body)
     }
 
     // parse VAA and verify signatures, return body
     fn parseAndVerifySignatures(data: ByteVec, checkGuardianSetIndex: Bool) -> (ByteVec) {
-        let mut index = 0
-        assert!(byteVecSlice!(data, index, index + 1) == #01)
-        index = index + 1
-        let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, index, index + 4))
+        assert!(byteVecSlice!(data, 0, 1) == #01)
+        let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
         if (checkGuardianSetIndex) {
             assert!(guardianSetIndex == guardianSetIndexes[1])
         }
-        index = index + 4
-        let signatureSize = u256From1Byte!(byteVecSlice!(data, index, index + 1))
+        let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
         assert!(signatureSize <= 19)
-        index = index + 1
+        let mut index = 6
         let mut signatures = [#00; 19]
         loop(0, 19, 1,
-            if (? < signatureSize) {
-                // 1 byte `guardianIndex` and 65 bytes signature
+            // 1 byte `guardianIndex` and 65 bytes signature
+            if (? == u256From1Byte!(byteVecSlice!(data, index, index + 1))) {
                 signatures[?] = byteVecSlice!(data, index, index + 66)
                 index = index + 66
             }
@@ -114,100 +88,65 @@ TxContract Governance(
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
     }
 
-    fn updateGuardianSet_(guardianSet: [ByteVec; 19], index: U256, size: U256) -> () {
+    fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
-        guardianSets[1] = guardianSet
         guardianSetIndexes[0] = guardianSetIndexes[1]
-        guardianSetIndexes[1] = index
         guardianSetSizes[0] = guardianSetSizes[1]
-        guardianSetSizes[1] = size
         previousGuardianSetExpirationTime = blockTimeStamp!() + 86400000 // expired after one day
     }
 
     pub fn updateGuardianSet(vaa: ByteVec) -> () {
-        assert!(initialized)
+        updatePreviousGuardianSet()
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #02)
-        let mut index = 33
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId || vaaChainId == 0)
-        index = index + 2
-        let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, index, index + 4))
-        index = index + 4
+        let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, 35, 39))
         assert!(newGuardianSetIndex == guardianSetIndexes[1] + 1)
-        let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, index, index + 1))
+        let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, 39, 40))
         assert!(newGuardianSetSize > 0 && newGuardianSetSize <= 19)
-        index = index + 1
-        let mut newGuardianSet = [#00; 19]
+        let mut index = 40
         loop(0, 19, 1,
             if (? < newGuardianSetSize) {
-                newGuardianSet[?] = byteVecSlice!(payload, index, index + 20)
+                guardianSets[1][?] = byteVecSlice!(payload, index, index + 20)
                 index = index + 20
+            } else {
+                guardianSets[1][?] = #00
             }
         )
-        updateGuardianSet_(newGuardianSet, newGuardianSetIndex, newGuardianSetSize)
         assert!(size!(payload) == index)
+        guardianSetIndexes[1] = newGuardianSetIndex
+        guardianSetSizes[1] = newGuardianSetSize
     }
 
     pub fn setMessageFee(vaa: ByteVec) -> () {
-        assert!(initialized)
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
-        let mut index = 33
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId)
-        index = index + 2
-        let fee = u256From32Byte!(byteVecSlice!(payload, index, index + 32))
-        index = index + 32
-        assert!(size!(payload) == index)
+        let fee = u256From32Byte!(byteVecSlice!(payload, 35, 67))
+        assert!(size!(payload) == 67)
         messageFee = fee
     }
 
     pub payable fn submitTransferFee(vaa: ByteVec) -> () {
-        assert!(initialized)
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #04)
-        let mut index = 33
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, index, index + 2))
-        index = index + 2
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId || vaaChainId == 0)
-        let amount = u256From32Byte!(byteVecSlice!(payload, index, index + 32))
-        index = index + 32
-        let recipient = byteVecSlice!(payload, index, index + 32)
-        index = index + 32
-        assert!(size!(payload) == index)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 35, 67))
+        let recipient = byteVecSlice!(payload, 67, 99)
+        assert!(size!(payload) == 99)
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
     }
 
-    fn verifySignature(
-        guardianIndex: U256,
-        index: U256,
-        hash: ByteVec,
-        key: ByteVec,
-        signature: ByteVec
-    ) -> () {
-        if (guardianIndex == index) {
-            assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
-        }
-    }
-
-    fn verifySignatureForKey(hash: ByteVec, signature: ByteVec, keys: [ByteVec; 19]) -> (U256) {
-        let guardianIndex = u256From1Byte!(byteVecSlice!(signature, 0, 1))
-        loop(0, 19, 1, verifySignature(guardianIndex, ?, hash, keys[?], signature))
-        return guardianIndex
-    }
-
-    fn verifySignatureAndGuardianIndex(
-        latestGuardianIndex: U256,
-        hash: ByteVec,
-        signature: ByteVec,
-        keys: [ByteVec; 19]
-    ) -> (U256) {
+    fn verifySignature(lastGuardianIndex: I256, signature: ByteVec, key: ByteVec, hash: ByteVec) -> I256 {
         if (signature == #00) {
-          return latestGuardianIndex
+            return lastGuardianIndex
         }
-        let guardianIndex = verifySignatureForKey(hash, signature, keys)
-        assert!(guardianIndex > latestGuardianIndex)
+        let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
+        assert!(guardianIndex > lastGuardianIndex)
+        assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
         return guardianIndex
     }
 
@@ -223,11 +162,9 @@ TxContract Governance(
         }
         // check signature quorum size
         assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
-        let mut latestGuardianIndex = verifySignatureForKey(hash, signatures[0], keys)
-        // TODO: optimize verify signatures, now we use nested loop to verify signatures, which is expensive
-        loop(1, 19, 1, latestGuardianIndex = verifySignatureAndGuardianIndex(
-            latestGuardianIndex, hash, signatures[?], keys
-        ))
+
+        let mut lastGuardianIndex = -1i
+        loop(0, 19, 1, lastGuardianIndex = verifySignature(lastGuardianIndex, signatures[?], keys[?], hash))
     }
 
     fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256, U256) {
@@ -238,34 +175,5 @@ TxContract Governance(
             return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
         }
         return [#00; 19], 0, 0
-    }
-
-
-    // ========================= debug functions ========================
-
-    pub fn checkCurrentGuardianSet(
-        guardianSet: [ByteVec; 19],
-        guardianSetIndex: U256,
-        guardianSetSize: U256
-    ) -> () {
-        loop(0, 19, 1, assert!(guardianSet[?] == guardianSets[1][?]))
-        assert!(guardianSetIndex == guardianSetIndexes[1])
-        assert!(guardianSetSize == guardianSetSizes[1])
-    }
-
-    pub fn checkPreviousGuardianSet(
-        guardianSet: [ByteVec; 19],
-        guardianSetIndex: U256,
-        guardianSetSize: U256,
-        expirationTime: U256
-    ) -> () {
-        loop(0, 19, 1, assert!(guardianSet[?] == guardianSets[0][?]))
-        assert!(guardianSetIndex == guardianSetIndexes[0])
-        assert!(guardianSetSize == guardianSetSizes[0])
-        assert!(expirationTime == previousGuardianSetExpirationTime)
-    }
-
-    pub fn checkMessageFee(fee: U256) -> () {
-        assert!(fee == messageFee)
     }
 }

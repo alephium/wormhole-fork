@@ -32,17 +32,6 @@ export class ContractInfo {
     }
 }
 
-export async function createSequence(client: CliqueClient, owner: string): Promise<ContractInfo> {
-    const sequenceContract = await Contract.from(client, 'sequence.ral')
-    const address = randomContractAddress()
-    const contractState = sequenceContract.toState(
-        [toContractId(owner), 0, Array(20).fill(false), Array(20).fill(false)],
-        {alphAmount: dustAmount},
-        address
-    )
-    return new ContractInfo(sequenceContract, contractState, [], address)
-}
-
 export async function createSerde(client: CliqueClient): Promise<ContractInfo> {
     const serdeContract = await Contract.from(client, 'serde.ral')
     const address = randomContractAddress()

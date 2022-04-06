@@ -1,0 +1,19 @@
+import "token_wrapper.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        let sender = @{{ sender }}
+        let tokenAmount = {{ tokenAmount }}
+        approveAlph!(sender, {{ messageFee }})
+        approveToken!(sender, #{{ tokenId }}, tokenAmount)
+        let tokenWrapper = TokenWrapper(#{{ tokenWrapperAddress }})
+        tokenWrapper.transfer(
+            sender,
+            #{{ toAddress }},
+            tokenAmount,
+            {{ arbiterFee }},
+            #{{ nonce }},
+            {{ consistencyLevel }}
+        )
+    }
+}

@@ -1,17 +1,12 @@
 import "sequence.ral"
 
-TxContract SequenceTest(mut initialized: Bool, mut sequenceAddress: ByteVec) {
-    pub fn init(address: ByteVec) -> () {
-        assert!(!initialized)
-        initialized = true
-        let sequence = Sequence(address)
-        assert!(sequence.getOwner() == selfContractId!())
-        sequenceAddress = address
-    }
-
+TxContract SequenceTest(
+    mut next: U256,
+    mut next1: U256,
+    mut next2: U256,
+    mut undone: ByteVec
+) extends Sequence(next, next1, next2, undone) {
     pub fn check(seq: U256) -> () {
-        assert!(initialized)
-        let sequence = Sequence(sequenceAddress)
-        sequence.checkSequence(seq)
+        checkSequence(seq)
     }
 }

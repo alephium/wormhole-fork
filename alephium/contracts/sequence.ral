@@ -1,69 +1,62 @@
-// sequence started from 0, set `executed = 0` when init contract state
+import "undone_sequence.ral"
+
+// sequence started from 0, set `next = 0` when init contract state
 TxContract Sequence(
-    owner: ByteVec,
-    mut executed: U256,   // TODO: better name
-    mut next1: [Bool; 20],
-    mut next2: [Bool; 20]
-) {
-    pub fn getOwner() -> (ByteVec) {
-        return owner
+    mut next: U256,
+    mut next1: U256, // TODO: better name
+    mut next2: U256,
+    mut undone: ByteVec
+) extends UndoneSequence(undone) {
+    pub fn getNext() -> U256 {
+        return next 
     }
 
-    pub fn getExecuted() -> (U256) {
-        return executed
-    }
-
-    pub fn getNext1() -> ([Bool; 20]) {
+    pub fn getNext1() -> U256 {
         return next1
     }
 
-    pub fn getNext2() -> ([Bool; 20]) {
+    pub fn getNext2() -> U256 {
         return next2
     }
 
-    fn compact() -> (Bool) {
-        let mut allExecuted = true
-        loop(0, 20, 1, allExecuted = allExecuted && next1[?])
-        if (allExecuted) {
-            executed = executed + 20
-            next1 = next2
-            loop(0, 20, 1, next2[?] = false)
+    fn compact() -> () {
+        if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
+            addToUndone(next, next1)
         }
-        return allExecuted
+        next = next + 256
+        next1 = next2
+        next2 = 0
     }
 
-    fn checkSequence_(sequence: U256, caller: ByteVec) -> () {
-        assert!(caller == owner)
-        assert!(sequence >= executed)
-        if (sequence >= (executed + 40)) {
-            if (compact()) {
-                checkSequence_(sequence, caller)
-                return
-            }
-        }
+    fn setExecuted(pos: U256, offset: U256, current: U256) -> U256 {
+        let shift = pos * 8
+        let value = (current >> shift) & 0xff
+        let flag = 1 << offset
+        assert!(value & flag == 0)
+        let executed = value | flag
+        return current | (executed << shift)
+    }
 
-        assert!(executed <= sequence && sequence < (executed + 40))
-        let mut index = sequence - executed
-        if (index < 20) {
-            loop(0, 20, 1,
-                if (? == index) {
-                    assert!(!next1[?])
-                    next1[?] = true
-                }
-            )
+    fn checkSequence(seq: U256) -> () {
+        if (seq < next) {
+            assert!(trySetDone(seq))
             return
         }
-        
-        index = index - 20
-        loop(0, 20, 1,
-            if (? == index) {
-                assert!(!next2[?])
-                next2[?] = true
-            }
-        )
-    }
 
-    pub fn checkSequence(sequence: U256) -> () {
-        checkSequence_(sequence, callerContractId!())
+        if (seq >= (next + 512)) {
+            compact()
+        }
+
+        assert!(seq < (next + 512))
+        removeOldUndone(seq)
+
+        let seqIndex = seq - next
+        let pos = seqIndex / 8
+        let offset = seqIndex % 8
+        if (pos < 32) {
+            next1 = setExecuted(pos, offset, next1)
+        } else {
+            next2 = setExecuted(pos - 32, offset, next2)
+        }
     }
 }
