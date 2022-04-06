@@ -162,16 +162,33 @@ func (c *Client) GetContractState(ctx context.Context, contractAddress string, g
 	return &result, err
 }
 
-func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, event *Event, groupIndex uint8) (*uint16, *string, error) {
-	assume(len(event.Fields) == 1)
-	tokenBridgeForChainAddress := event.Fields[0].ToAddress()
-	contractState, err := c.GetContractState(ctx, tokenBridgeForChainAddress, groupIndex)
+type tokenBridgeForChainInfo struct {
+	remoteChainId uint16
+	address       string
+	contractId    Byte32
+}
+
+func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, address string, groupIndex uint8) (*tokenBridgeForChainInfo, error) {
+	contractState, err := c.GetContractState(ctx, address, groupIndex)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	assume(contractState.Address == tokenBridgeForChainAddress)
+
+	assume(contractState.Address == address)
 	remoteChainId, err := contractState.Fields[2].ToUint16()
-	return &remoteChainId, &tokenBridgeForChainAddress, err
+	if err != nil {
+		return nil, err
+	}
+
+	contractId, err := toContractId(address)
+	if err != nil {
+		return nil, err
+	}
+	return &tokenBridgeForChainInfo{
+		remoteChainId: remoteChainId,
+		address:       address,
+		contractId:    contractId,
+	}, nil
 }
 
 type tokenWrapperInfo struct {
@@ -180,6 +197,7 @@ type tokenWrapperInfo struct {
 	remoteChainId         uint16
 	tokenId               Byte32
 	tokenWrapperAddress   string
+	tokenWrapperId        Byte32
 }
 
 func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*tokenWrapperInfo, error) {
@@ -207,11 +225,17 @@ func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupInd
 	}
 
 	isLocalToken := contractState.Fields[5].ToBool()
+	tokenWrapperId, err := toContractId(tokenWrapperAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	return &tokenWrapperInfo{
 		tokenBridgeForChainId: *tokenBridgeForChainId,
 		isLocalToken:          isLocalToken,
 		remoteChainId:         remoteChainId,
 		tokenId:               *tokenContractId,
 		tokenWrapperAddress:   tokenWrapperAddress,
+		tokenWrapperId:        tokenWrapperId,
 	}, nil
 }

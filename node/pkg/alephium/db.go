@@ -64,11 +64,19 @@ func (db *db) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
 }
 
 func (db *db) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
-	return db.put(localTokenWrapperKey(tokenId, remoteChainId), []byte(tokenWrapperAddress))
+	key := &LocalTokenWrapperKey{
+		localTokenId:  tokenId,
+		remoteChainId: remoteChainId,
+	}
+	return db.put(key.encode(), []byte(tokenWrapperAddress))
 }
 
 func (db *db) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
-	value, err := db.get(localTokenWrapperKey(tokenId, remoteChainId))
+	key := &LocalTokenWrapperKey{
+		localTokenId:  tokenId,
+		remoteChainId: remoteChainId,
+	}
+	value, err := db.get(key.encode())
 	if err != nil {
 		return "", err
 	}
@@ -120,11 +128,16 @@ func remoteTokenWrapperKey(tokenId Byte32) []byte {
 	return append(remoteTokenWrapperPrefix, tokenId[:]...)
 }
 
-func localTokenWrapperKey(tokenId Byte32, remoteChainId uint16) []byte {
+type LocalTokenWrapperKey struct {
+	localTokenId  Byte32
+	remoteChainId uint16
+}
+
+func (k *LocalTokenWrapperKey) encode() []byte {
 	bytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(bytes, remoteChainId)
+	binary.BigEndian.PutUint16(bytes, k.remoteChainId)
 	var key []byte
-	key = append(localTokenWrapperPrefix, tokenId[:]...)
+	key = append(localTokenWrapperPrefix, k.localTokenId[:]...)
 	key = append(key, bytes[:]...)
 	return key
 }
@@ -158,7 +171,11 @@ func (b *batch) writeRemoteTokenWrapper(tokenId Byte32, wrapperAddress string) {
 }
 
 func (b *batch) writeLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, wrapperAddress string) {
-	b.keys = append(b.keys, localTokenWrapperKey(tokenId, remoteChainId))
+	key := &LocalTokenWrapperKey{
+		localTokenId:  tokenId,
+		remoteChainId: remoteChainId,
+	}
+	b.keys = append(b.keys, key.encode())
 	b.values = append(b.values, []byte(wrapperAddress))
 }
 

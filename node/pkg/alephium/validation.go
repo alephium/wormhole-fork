@@ -45,8 +45,14 @@ func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Lo
 
 		if info.isLocalToken {
 			// TODO: check if token wrapper exist
+			key := LocalTokenWrapperKey{
+				localTokenId:  info.tokenId,
+				remoteChainId: info.remoteChainId,
+			}
+			w.localTokenWrapperCache.Store(key, &info.tokenWrapperId)
 			batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperAddress)
 		} else {
+			w.remoteTokenWrapperCache.Store(info.tokenId, &info.tokenWrapperId)
 			batch.writeRemoteTokenWrapper(info.tokenId, info.tokenWrapperAddress)
 		}
 	}
@@ -106,8 +112,8 @@ func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) error {
 }
 
 func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
-	if value, ok := w.tokenBridgeForChainCache[chainId]; ok {
-		return value, nil
+	if value, ok := w.tokenBridgeForChainCache.Load(chainId); ok {
+		return value.(*Byte32), nil
 	}
 	contractAddress, err := w.db.getRemoteChain(chainId)
 	if err != nil {
@@ -117,13 +123,13 @@ func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.tokenBridgeForChainCache[chainId] = &contractId
+	w.tokenBridgeForChainCache.Store(chainId, &contractId)
 	return &contractId, nil
 }
 
 func (w *Watcher) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
-	if value, ok := w.remoteTokenWrapperCache[tokenId]; ok {
-		return value, nil
+	if value, ok := w.remoteTokenWrapperCache.Load(tokenId); ok {
+		return value.(*Byte32), nil
 	}
 	contractAddress, err := w.db.getRemoteTokenWrapper(tokenId)
 	if err != nil {
@@ -133,16 +139,17 @@ func (w *Watcher) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.remoteTokenWrapperCache[tokenId] = &contractId
+	w.remoteTokenWrapperCache.Store(tokenId, &contractId)
 	return &contractId, err
 }
 
 func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*Byte32, error) {
-	wrappers, exist := w.localTokenWrapperCache[tokenId]
-	if exist {
-		if value, ok := wrappers[remoteChainId]; ok {
-			return value, nil
-		}
+	key := LocalTokenWrapperKey{
+		localTokenId:  tokenId,
+		remoteChainId: remoteChainId,
+	}
+	if value, ok := w.localTokenWrapperCache.Load(key); ok {
+		return value.(*Byte32), nil
 	}
 	contractAddress, err := w.db.getLocalTokenWrapper(tokenId, remoteChainId)
 	if err != nil {
@@ -152,10 +159,7 @@ func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*B
 	if err != nil {
 		return nil, err
 	}
-	if !exist {
-		w.localTokenWrapperCache[tokenId] = map[uint16]*Byte32{}
-	}
-	w.localTokenWrapperCache[tokenId][remoteChainId] = &contractId
+	w.localTokenWrapperCache.Store(key, &contractId)
 	return &contractId, err
 }
 

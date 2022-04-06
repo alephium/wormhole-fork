@@ -41,7 +41,7 @@ func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger 
 	// TODO: wait for confirmed???
 	confirmed := &ConfirmedEvents{
 		events:          unconfirmed,
-		contractAddress: w.tokenWrapperFactoryContract,
+		contractAddress: w.tokenBridgeContract,
 	}
 	if err := w.updateTokenBridgeForChain(ctx, logger, client, confirmed); err != nil {
 		return nil, err

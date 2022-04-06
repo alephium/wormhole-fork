@@ -3,6 +3,7 @@ package alephium
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -33,9 +34,9 @@ type Watcher struct {
 	setChan  chan *common.GuardianSet
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	tokenBridgeForChainCache map[uint16]*Byte32
-	remoteTokenWrapperCache  map[Byte32]*Byte32
-	localTokenWrapperCache   map[Byte32]map[uint16]*Byte32
+	tokenBridgeForChainCache sync.Map
+	remoteTokenWrapperCache  sync.Map
+	localTokenWrapperCache   sync.Map
 
 	minConfirmations uint8
 	currentHeight    uint32
@@ -95,9 +96,9 @@ func NewAlephiumWatcher(
 		setChan:   setEvents,
 		obsvReqC:  obsvReqC,
 
-		tokenBridgeForChainCache: map[uint16]*Byte32{},
-		remoteTokenWrapperCache:  map[Byte32]*Byte32{},
-		localTokenWrapperCache:   map[Byte32]map[uint16]*Byte32{},
+		tokenBridgeForChainCache: sync.Map{},
+		remoteTokenWrapperCache:  sync.Map{},
+		localTokenWrapperCache:   sync.Map{},
 
 		minConfirmations: uint8(minConfirmations),
 		db:               db,
@@ -220,12 +221,15 @@ func (w *Watcher) updateTokenBridgeForChain(ctx context.Context, logger *zap.Log
 			maxIndex = event.eventIndex
 		}
 
-		remoteChainId, tokenBridgeForChainAddress, err := client.GetTokenBridgeForChainInfo(ctx, event.event, w.chainIndex.FromGroup)
+		assume(len(event.event.Fields) == 1)
+		address := event.event.Fields[0].ToAddress()
+		info, err := client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
 		if err != nil {
 			logger.Error("failed to get token bridge for chain info", zap.Error(err))
 			return err
 		}
-		batch.writeTokenBridgeForChain(*remoteChainId, *tokenBridgeForChainAddress)
+		w.tokenBridgeForChainCache.Store(info.remoteChainId, &info.contractId)
+		batch.writeTokenBridgeForChain(info.remoteChainId, info.address)
 	}
 	batch.updateLastTokenBridgeEventIndex(maxIndex)
 	return w.db.writeBatch(batch)
