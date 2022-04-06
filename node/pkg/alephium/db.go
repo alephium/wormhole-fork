@@ -1,6 +1,7 @@
 package alephium
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -12,11 +13,20 @@ type db struct {
 }
 
 var (
-	remoteTokenWrapperPrefix        = []byte("remote-token-wrapper")
-	localTokenWrapperPrefix         = []byte("local-token-wrapper")
-	tokenBridgeForChainPrefix       = []byte("token-bridge-for-chain")
+	remoteTokenWrapperPrefix  = []byte("remote-token-wrapper")
+	localTokenWrapperPrefix   = []byte("local-token-wrapper")
+	tokenBridgeForChainPrefix = []byte("token-bridge-for-chain")
+	undoneSequencePrefix      = []byte("undone-sequence")
+
 	lastTokenBridgeEventIndexKey    = []byte("last-token-bridge-event-index")
 	lastTokenWrapperFactoryIndexKey = []byte("last-token-wrapper-factory-index")
+	lastUndoneSequenceIndexKey      = []byte("last-undone-sequence-index")
+)
+
+const (
+	sequenceInit      byte = 0
+	sequenceExecuting byte = 1
+	sequenceExecuted  byte = 2
 )
 
 func open(path string) (*db, error) {
@@ -113,6 +123,15 @@ func (db *db) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
+func (db *db) getLastUndoneSequenceEventIndex() (*uint64, error) {
+	bytes, err := db.get(lastUndoneSequenceIndexKey)
+	if err != nil {
+		return nil, err
+	}
+	index := binary.BigEndian.Uint64(bytes)
+	return &index, nil
+}
+
 func (db *db) writeBatch(batch *batch) error {
 	return db.Update(func(txn *badger.Txn) error {
 		for i, key := range batch.keys {
@@ -122,6 +141,32 @@ func (db *db) writeBatch(batch *batch) error {
 		}
 		return nil
 	})
+}
+
+// TODO: store the vaa id
+func (db *db) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
+	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceInit}, []byte{sequenceExecuting})
+}
+
+func (db *db) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
+	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceExecuting}, []byte{sequenceExecuted})
+}
+
+func (db *db) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	keyBytes := key.encode()
+	value, err := db.get(keyBytes)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(value, expected) {
+		return fmt.Errorf("invalid status %v, sequence %d, remoteChainId %d", value, sequence, remoteChainId)
+	}
+	return db.put(keyBytes, updated)
 }
 
 func remoteTokenWrapperKey(tokenId Byte32) []byte {
@@ -146,6 +191,18 @@ func chainKey(chainId uint16) []byte {
 	bytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(bytes, chainId)
 	return append(tokenBridgeForChainPrefix, bytes...)
+}
+
+type UndoneSequenceKey struct {
+	remoteChainId uint16
+	sequence      uint64
+}
+
+func (k *UndoneSequenceKey) encode() []byte {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint16(bytes, k.remoteChainId)
+	binary.BigEndian.PutUint64(bytes[2:], k.sequence)
+	return append(undoneSequencePrefix, bytes...)
 }
 
 type batch struct {
@@ -179,6 +236,15 @@ func (b *batch) writeLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, wra
 	b.values = append(b.values, []byte(wrapperAddress))
 }
 
+func (b *batch) writeUndoneSequence(remoteChainId uint16, sequence uint64) {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	b.keys = append(b.keys, key.encode())
+	b.values = append(b.values, []byte{sequenceInit})
+}
+
 func (b *batch) updateLastTokenBridgeEventIndex(index uint64) {
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, index)
@@ -190,5 +256,12 @@ func (b *batch) updateLastTokenWrapperFactoryEventIndex(index uint64) {
 	bytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(bytes, index)
 	b.keys = append(b.keys, lastTokenWrapperFactoryIndexKey)
+	b.values = append(b.values, bytes)
+}
+
+func (b *batch) updateLastUndoneSequenceEventIndex(index uint64) {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, index)
+	b.keys = append(b.keys, lastUndoneSequenceIndexKey)
 	b.values = append(b.values, bytes)
 }

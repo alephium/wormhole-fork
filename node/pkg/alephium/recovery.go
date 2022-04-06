@@ -90,3 +90,45 @@ func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Lo
 	}
 	return count, nil
 }
+
+func (w *Watcher) fetchUndoneSequences(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
+	lastUndoneSequenceEventIndex, err := w.db.getLastUndoneSequenceEventIndex()
+	if err == badger.ErrKeyNotFound {
+		from := uint64(0)
+		return &from, nil
+	}
+
+	if err != nil {
+		logger.Error("failed to get last undone sequence factory event index", zap.Error(err))
+		return nil, err
+	}
+
+	count, err := client.GetContractEventsCount(ctx, w.tokenWrapperFactoryContract)
+	if err != nil {
+		logger.Error("failed to get undone sequence event count", zap.Error(err))
+		return nil, err
+	}
+
+	from := *lastUndoneSequenceEventIndex + 1
+	to := *count - 1
+	events, err := client.GetContractEventsByIndex(ctx, w.undoneSequenceEmitterContract, from, to)
+	if err != nil {
+		logger.Error("failed to get undone sequence events", zap.Uint64("from", from), zap.Uint64("to", to))
+		return nil, err
+	}
+
+	unconfirmed, err := w.toUnconfirmedEvents(ctx, client, events.Events)
+	if err != nil {
+		logger.Error("failed to fetch unconfirmed events", zap.Error(err))
+		return nil, err
+	}
+	// TODO: wait for confirmed???
+	confirmed := &ConfirmedEvents{
+		events:          unconfirmed,
+		contractAddress: w.undoneSequenceEmitterContract,
+	}
+	if err := w.validateUndoneSequenceEvents(ctx, logger, client, confirmed); err != nil {
+		return nil, err
+	}
+	return count, nil
+}

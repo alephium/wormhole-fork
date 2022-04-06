@@ -33,12 +33,12 @@ func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Lo
 			return err
 		}
 
-		address, err := w.getTokenBridgeForChain(info.remoteChainId)
+		contractId, err := w.getTokenBridgeForChain(info.remoteChainId)
 		if err != nil {
 			logger.Error("failed to get token bridge for chain contract", zap.Error(err), zap.Uint16("chainId", info.remoteChainId))
 			return err
 		}
-		if !bytes.Equal(info.tokenBridgeForChainId[:], (*address)[:]) {
+		if !bytes.Equal(info.tokenBridgeForChainId[:], contractId[:]) {
 			logger.Error("ignore invalid token wrapper", zap.Error(err))
 			continue
 		}
@@ -109,6 +109,61 @@ func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) error {
 		return fmt.Errorf("invalid sender, expect %s, have %s", contractId.ToHex(), transferMsg.senderId.ToHex())
 	}
 	return nil
+}
+
+func (w *Watcher) validateUndoneSequenceEvents(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+	maxIndex := uint64(0)
+	batch := newBatch()
+	for _, e := range confirmed.events {
+		if e.eventIndex > maxIndex {
+			maxIndex = e.eventIndex
+		}
+
+		assume(len(e.event.Fields) == 2)
+		contractId, err := e.event.Fields[0].ToByte32()
+		if err != nil {
+			logger.Error("invalid contract id for undone sequence event", zap.Error(err), zap.Any("contractId", e.event.Fields[0].Value))
+			return err
+		}
+
+		info, err := w.getTokenBridgeForChainInfo(ctx, client, *contractId)
+		if err != nil {
+			logger.Error("failed to get token bridge for chain info", zap.Error(err))
+			return err
+		}
+		tokenBridgeForChainId, err := w.getTokenBridgeForChain(info.remoteChainId)
+		if err != nil {
+			logger.Error("failed to get token bridge for chain id", zap.Error(err))
+			return err
+		}
+
+		if !bytes.Equal(tokenBridgeForChainId[:], info.contractId[:]) {
+			err := fmt.Errorf("invalid token bridge for chain id, expected: %s, have: %s", info.contractId.ToHex(), tokenBridgeForChainId.ToHex())
+			logger.Error(err.Error())
+			return err
+		}
+		sequence, err := e.event.Fields[1].ToUint64()
+		if err != nil {
+			logger.Error("invalid undone sequence", zap.Error(err), zap.Any("sequence", e.event.Fields[1].Value))
+			return err
+		}
+		batch.writeUndoneSequence(info.remoteChainId, sequence)
+	}
+	batch.updateLastUndoneSequenceEventIndex(maxIndex)
+	return w.db.writeBatch(batch)
+}
+
+func (w *Watcher) getTokenBridgeForChainInfo(ctx context.Context, client *Client, contractId Byte32) (*tokenBridgeForChainInfo, error) {
+	if value, ok := w.tokenBridgeForChainInfoCache.Load(contractId); ok {
+		return (value).(*tokenBridgeForChainInfo), nil
+	}
+	contractAddress := toContractAddress(contractId)
+	info, err := client.GetTokenBridgeForChainInfo(ctx, contractAddress, w.chainIndex.FromGroup)
+	if err != nil {
+		return nil, err
+	}
+	w.tokenBridgeForChainInfoCache.Store(contractId, info)
+	return info, nil
 }
 
 func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {

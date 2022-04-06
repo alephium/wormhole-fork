@@ -22,11 +22,12 @@ type Watcher struct {
 	url    string
 	apiKey string
 
-	governanceContract          string
-	tokenBridgeContract         string
-	tokenWrapperFactoryContract string
-	chainIndex                  *ChainIndex
-	initHeight                  uint32
+	governanceContract            string
+	tokenBridgeContract           string
+	tokenWrapperFactoryContract   string
+	undoneSequenceEmitterContract string
+	chainIndex                    *ChainIndex
+	initHeight                    uint32
 
 	readiness readiness.Component
 
@@ -34,9 +35,10 @@ type Watcher struct {
 	setChan  chan *common.GuardianSet
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	tokenBridgeForChainCache sync.Map
-	remoteTokenWrapperCache  sync.Map
-	localTokenWrapperCache   sync.Map
+	tokenBridgeForChainCache     sync.Map
+	remoteTokenWrapperCache      sync.Map
+	localTokenWrapperCache       sync.Map
+	tokenBridgeForChainInfoCache sync.Map
 
 	minConfirmations uint8
 	currentHeight    uint32
@@ -79,11 +81,12 @@ func NewAlephiumWatcher(
 	}
 
 	return &Watcher{
-		url:                         url,
-		apiKey:                      apiKey,
-		governanceContract:          contracts[0],
-		tokenBridgeContract:         contracts[1],
-		tokenWrapperFactoryContract: contracts[2],
+		url:                           url,
+		apiKey:                        apiKey,
+		governanceContract:            contracts[0],
+		tokenBridgeContract:           contracts[1],
+		tokenWrapperFactoryContract:   contracts[2],
+		undoneSequenceEmitterContract: contracts[3],
 
 		initHeight: initHeight,
 		chainIndex: &ChainIndex{
@@ -96,9 +99,10 @@ func NewAlephiumWatcher(
 		setChan:   setEvents,
 		obsvReqC:  obsvReqC,
 
-		tokenBridgeForChainCache: sync.Map{},
-		remoteTokenWrapperCache:  sync.Map{},
-		localTokenWrapperCache:   sync.Map{},
+		tokenBridgeForChainCache:     sync.Map{},
+		remoteTokenWrapperCache:      sync.Map{},
+		localTokenWrapperCache:       sync.Map{},
+		tokenBridgeForChainInfoCache: sync.Map{},
 
 		minConfirmations: uint8(minConfirmations),
 		db:               db,
@@ -135,8 +139,13 @@ func (w *Watcher) Run(ctx context.Context) error {
 		return err
 	}
 
-	readiness.SetReady(w.readiness)
+	nextUndoneSequenceEventIndex, err := w.fetchUndoneSequences(ctx, logger, client)
+	if err != nil {
+		logger.Error("failed to fetch undone sequences", zap.Error(err))
+		return err
+	}
 
+	readiness.SetReady(w.readiness)
 	errC := make(chan error)
 
 	go w.handleObsvRequest(ctx, logger, client)
@@ -144,6 +153,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	go w.handleTokenBridgeEvents(ctx, logger, client, *nextTokenBridgeEventIndex, errC)
 	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC)
 	go w.handleGovernanceEvents(ctx, logger, client, errC)
+	go w.handleUndoneSequenceEvents(ctx, logger, client, *nextUndoneSequenceEventIndex, errC)
 
 	select {
 	case <-ctx.Done():
@@ -285,6 +295,23 @@ func (w *Watcher) handleGovernanceEvents(
 
 	w.subscribe(ctx, logger, client, w.governanceContract, *count, w.toUnconfirmedEvent, handler, errC)
 	return nil
+}
+
+func (w *Watcher) handleUndoneSequenceEvents(
+	ctx context.Context,
+	logger *zap.Logger,
+	client *Client,
+	nextIndex uint64,
+	errC chan<- error,
+) {
+	handler := func(confirmed *ConfirmedEvents) error {
+		if len(confirmed.events) == 0 {
+			return nil
+		}
+		return w.validateUndoneSequenceEvents(ctx, logger, client, confirmed)
+	}
+
+	w.subscribe(ctx, logger, client, w.undoneSequenceEmitterContract, nextIndex, w.toUnconfirmedEvent, handler, errC)
 }
 
 func (w *Watcher) subscribe(
