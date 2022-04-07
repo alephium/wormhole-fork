@@ -48,7 +48,7 @@ func randTestData() *testData {
 
 func TestReadWrite(t *testing.T) {
 	td := randTestData()
-	db, err := open(t.TempDir())
+	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 
 	_, err = db.getRemoteChain(td.chainId)
@@ -70,7 +70,7 @@ func TestReadWrite(t *testing.T) {
 
 func TestBatchWrite(t *testing.T) {
 	td := randTestData()
-	db, err := open(t.TempDir())
+	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 
 	batch := newBatch()

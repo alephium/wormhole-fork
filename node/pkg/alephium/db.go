@@ -8,7 +8,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 )
 
-type db struct {
+type AlphDatabase struct {
 	*badger.DB
 }
 
@@ -29,23 +29,23 @@ const (
 	sequenceExecuted  byte = 2
 )
 
-func open(path string) (*db, error) {
+func Open(path string) (*AlphDatabase, error) {
 	database, err := badger.Open(badger.DefaultOptions(path))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-	return &db{
+	return &AlphDatabase{
 		database,
 	}, nil
 }
 
-func (db *db) put(key []byte, value []byte) error {
+func (db *AlphDatabase) put(key []byte, value []byte) error {
 	return db.Update(func(txn *badger.Txn) error {
 		return txn.Set(key, value)
 	})
 }
 
-func (db *db) get(key []byte) (b []byte, err error) {
+func (db *AlphDatabase) get(key []byte) (b []byte, err error) {
 	err = db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
 		if err != nil {
@@ -61,11 +61,15 @@ func (db *db) get(key []byte) (b []byte, err error) {
 	return
 }
 
-func (db *db) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
+func (db *AlphDatabase) Close() error {
+	return db.DB.Close()
+}
+
+func (db *AlphDatabase) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
 	return db.put(remoteTokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
 }
 
-func (db *db) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
+func (db *AlphDatabase) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
 	value, err := db.get(remoteTokenWrapperKey(tokenId))
 	if err != nil {
 		return "", err
@@ -73,7 +77,7 @@ func (db *db) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
 	return string(value), nil
 }
 
-func (db *db) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
+func (db *AlphDatabase) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
@@ -81,7 +85,7 @@ func (db *db) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWr
 	return db.put(key.encode(), []byte(tokenWrapperAddress))
 }
 
-func (db *db) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
+func (db *AlphDatabase) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
@@ -93,11 +97,11 @@ func (db *db) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string
 	return string(value), nil
 }
 
-func (db *db) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
+func (db *AlphDatabase) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
 	return db.put(chainKey(chainId), []byte(tokenBridgeForChainAddress))
 }
 
-func (db *db) getRemoteChain(chainId uint16) (string, error) {
+func (db *AlphDatabase) getRemoteChain(chainId uint16) (string, error) {
 	value, err := db.get(chainKey(chainId))
 	if err != nil {
 		return "", err
@@ -105,7 +109,7 @@ func (db *db) getRemoteChain(chainId uint16) (string, error) {
 	return string(value), nil
 }
 
-func (db *db) getLastTokenBridgeEventIndex() (*uint64, error) {
+func (db *AlphDatabase) getLastTokenBridgeEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastTokenBridgeEventIndexKey)
 	if err != nil {
 		return nil, err
@@ -114,7 +118,7 @@ func (db *db) getLastTokenBridgeEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
-func (db *db) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
+func (db *AlphDatabase) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastTokenWrapperFactoryIndexKey)
 	if err != nil {
 		return nil, err
@@ -123,7 +127,7 @@ func (db *db) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
-func (db *db) getLastUndoneSequenceEventIndex() (*uint64, error) {
+func (db *AlphDatabase) getLastUndoneSequenceEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastUndoneSequenceIndexKey)
 	if err != nil {
 		return nil, err
@@ -132,7 +136,7 @@ func (db *db) getLastUndoneSequenceEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
-func (db *db) writeBatch(batch *batch) error {
+func (db *AlphDatabase) writeBatch(batch *batch) error {
 	return db.Update(func(txn *badger.Txn) error {
 		for i, key := range batch.keys {
 			if err := txn.Set(key, batch.values[i]); err != nil {
@@ -144,15 +148,15 @@ func (db *db) writeBatch(batch *batch) error {
 }
 
 // TODO: store the vaa id
-func (db *db) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
+func (db *AlphDatabase) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceInit}, []byte{sequenceExecuting})
 }
 
-func (db *db) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
+func (db *AlphDatabase) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceExecuting}, []byte{sequenceExecuted})
 }
 
-func (db *db) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
+func (db *AlphDatabase) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
 	key := &UndoneSequenceKey{
 		remoteChainId: remoteChainId,
 		sequence:      sequence,

@@ -564,6 +564,17 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	defer db.Close()
 
+	// Alephium Database
+	alphDbPath := path.Join(*dataDir, "alephium")
+	if err := os.MkdirAll(dbPath, 0700); err != nil {
+		logger.Fatal("failed to create alephium database directory", zap.Error(err))
+	}
+	alphDb, err := alephium.Open(alphDbPath)
+	if err != nil {
+		logger.Fatal("failed to open alephium database", zap.Error(err))
+	}
+	defer alphDb.Close()
+
 	// Guardian key
 	gk, err := loadGuardianKey(*guardianKeyPath)
 	if err != nil {
@@ -798,10 +809,9 @@ func runNode(cmd *cobra.Command, args []string) {
 				}
 			*/
 
-			alphDbPath := path.Join(*dataDir, "alephium")
 			alphWatcher, err := alephium.NewAlephiumWatcher(
 				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds, *alphInitHeight,
-				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDbPath,
+				common.ReadinessAlephiumSyncing, lockC, nil, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium], alphDb,
 			)
 			if err != nil {
 				logger.Error("failed to create alephium watcher", zap.Error(err))
