@@ -73,12 +73,8 @@ TxContract TokenWrapper(
         let transferAmount = denomalizedAmount - denomalizedFee
         let recipient = byteVecToAddress!(#00 ++ recipientAddress)
         let tokenId = getTokenId()
-        transferAlphFromSelf!(recipient, 1000000000000) // dustAmount
+        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         transferTokenFromSelf!(arbiter, tokenId, denomalizedFee)
-    }
-
-    pub payable fn deposit(from: Address, amount: U256) -> () {
-        transferAlphToSelf!(from, amount)
     }
 }
