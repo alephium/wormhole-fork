@@ -43,7 +43,7 @@ type Watcher struct {
 	minConfirmations uint8
 	currentHeight    uint32
 
-	db *AlphDatabase
+	db *Database
 }
 
 type UnconfirmedEvent struct {
@@ -70,7 +70,7 @@ func NewAlephiumWatcher(
 	setEvents chan *common.GuardianSet,
 	minConfirmations uint64,
 	obsvReqC chan *gossipv1.ObservationRequest,
-	db *AlphDatabase,
+	db *Database,
 ) (*Watcher, error) {
 	if len(contracts) != 3 {
 		return nil, fmt.Errorf("invalid contract ids")

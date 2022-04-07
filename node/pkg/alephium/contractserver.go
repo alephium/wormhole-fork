@@ -14,7 +14,7 @@ import (
 
 type contractService struct {
 	alephiumv1.UnsafeContractServiceServer
-	db *AlphDatabase
+	db *Database
 
 	remoteTokenWrapperCache  map[Byte32]string
 	localTokenWrapperCache   map[Byte32]map[uint16]string
@@ -107,7 +107,7 @@ func (c *contractService) GetTokenBridgeForChainAddress(ctx context.Context, req
 	}, nil
 }
 
-func contractServiceRunnable(db *AlphDatabase, listenAddr string, logger *zap.Logger) (supervisor.Runnable, error) {
+func contractServiceRunnable(db *Database, listenAddr string, logger *zap.Logger) (supervisor.Runnable, error) {
 	l, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return nil, err

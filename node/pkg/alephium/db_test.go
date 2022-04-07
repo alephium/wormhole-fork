@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcutil/base58"
+	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/stretchr/testify/assert"
 )
@@ -87,4 +88,48 @@ func TestBatchWrite(t *testing.T) {
 	tokenWrapperId, err := db.getRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
 	assert.Equal(t, tokenWrapperId, td.tokenWrapperAddress)
+}
+
+func TestGetUndoneSequences(t *testing.T) {
+	status := []byte{sequenceInit, sequenceExecuting, sequenceExecuted}
+	remoteChainId0 := uint16(10)
+	remoteChainId1 := uint16(11)
+	sequenceSize := 1000
+	sequences0 := make([]*nodev1.UndoneSequence, sequenceSize)
+	sequences1 := make([]*nodev1.UndoneSequence, sequenceSize)
+
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+
+	for i := 0; i < sequenceSize; i++ {
+		s := &nodev1.UndoneSequence{
+			Sequence: uint64(i),
+			Status:   toProtoStatus(status[rand.Int()%2]),
+		}
+		sequences0[i] = s
+		sequences1[i] = s
+		key0 := UndoneSequenceKey{
+			remoteChainId: remoteChainId0,
+			sequence:      uint64(i),
+		}
+		db.put(key0.encode(), []byte{byte(s.Status)})
+		key1 := UndoneSequenceKey{
+			remoteChainId: remoteChainId1,
+			sequence:      uint64(i),
+		}
+		db.put(key1.encode(), []byte{byte(s.Status)})
+	}
+
+	result0, err := db.GetUndoneSequences(remoteChainId0)
+	assert.Nil(t, err)
+	result1, err := db.GetUndoneSequences(remoteChainId1)
+	assert.Nil(t, err)
+	assert.Equal(t, len(result0), sequenceSize)
+	assert.Equal(t, len(result1), sequenceSize)
+	for i := 0; i < sequenceSize; i++ {
+		assert.Equal(t, result0[i].Sequence, sequences0[i].Sequence)
+		assert.Equal(t, result0[i].Status, sequences0[i].Status)
+		assert.Equal(t, result1[i].Sequence, sequences0[i].Sequence)
+		assert.Equal(t, result1[i].Status, sequences0[i].Status)
+	}
 }

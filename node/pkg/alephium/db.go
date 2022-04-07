@@ -5,10 +5,11 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
 	"github.com/dgraph-io/badger/v3"
 )
 
-type AlphDatabase struct {
+type Database struct {
 	*badger.DB
 }
 
@@ -29,23 +30,35 @@ const (
 	sequenceExecuted  byte = 2
 )
 
-func Open(path string) (*AlphDatabase, error) {
+func toProtoStatus(status byte) nodev1.UndoneSequenceStatus {
+	switch status {
+	case sequenceInit:
+		return nodev1.UndoneSequenceStatus_INIT
+	case sequenceExecuting:
+		return nodev1.UndoneSequenceStatus_EXECUTING
+	case sequenceExecuted:
+		return nodev1.UndoneSequenceStatus_EXECUTED
+	}
+	panic("invalid undone sequence status")
+}
+
+func Open(path string) (*Database, error) {
 	database, err := badger.Open(badger.DefaultOptions(path))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-	return &AlphDatabase{
+	return &Database{
 		database,
 	}, nil
 }
 
-func (db *AlphDatabase) put(key []byte, value []byte) error {
+func (db *Database) put(key []byte, value []byte) error {
 	return db.Update(func(txn *badger.Txn) error {
 		return txn.Set(key, value)
 	})
 }
 
-func (db *AlphDatabase) get(key []byte) (b []byte, err error) {
+func (db *Database) get(key []byte) (b []byte, err error) {
 	err = db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
 		if err != nil {
@@ -61,15 +74,42 @@ func (db *AlphDatabase) get(key []byte) (b []byte, err error) {
 	return
 }
 
-func (db *AlphDatabase) Close() error {
+func (db *Database) Close() error {
 	return db.DB.Close()
 }
 
-func (db *AlphDatabase) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
+func (db *Database) GetUndoneSequences(remoteChainId uint16) ([]*nodev1.UndoneSequence, error) {
+	sequences := make([]*nodev1.UndoneSequence, 0)
+	err := db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		prefix := append(undoneSequencePrefix, Uint16ToBytes(remoteChainId)...)
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			key := item.Key()
+			value := make([]byte, 1)
+			err := item.Value(func(v []byte) error {
+				copy(value, v)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+			sequences = append(sequences, &nodev1.UndoneSequence{
+				Sequence: binary.BigEndian.Uint64(key[len(prefix):]),
+				Status:   toProtoStatus(value[0]),
+			})
+		}
+		return nil
+	})
+	return sequences, err
+}
+
+func (db *Database) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress string) error {
 	return db.put(remoteTokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
 }
 
-func (db *AlphDatabase) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
+func (db *Database) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
 	value, err := db.get(remoteTokenWrapperKey(tokenId))
 	if err != nil {
 		return "", err
@@ -77,7 +117,7 @@ func (db *AlphDatabase) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
 	return string(value), nil
 }
 
-func (db *AlphDatabase) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
+func (db *Database) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperAddress string) error {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
@@ -85,7 +125,7 @@ func (db *AlphDatabase) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint1
 	return db.put(key.encode(), []byte(tokenWrapperAddress))
 }
 
-func (db *AlphDatabase) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
+func (db *Database) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
@@ -97,11 +137,11 @@ func (db *AlphDatabase) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint1
 	return string(value), nil
 }
 
-func (db *AlphDatabase) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
+func (db *Database) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
 	return db.put(tokenBridgeForChainKey(chainId), []byte(tokenBridgeForChainAddress))
 }
 
-func (db *AlphDatabase) getRemoteChain(chainId uint16) (string, error) {
+func (db *Database) getRemoteChain(chainId uint16) (string, error) {
 	value, err := db.get(tokenBridgeForChainKey(chainId))
 	if err != nil {
 		return "", err
@@ -109,7 +149,7 @@ func (db *AlphDatabase) getRemoteChain(chainId uint16) (string, error) {
 	return string(value), nil
 }
 
-func (db *AlphDatabase) getLastTokenBridgeEventIndex() (*uint64, error) {
+func (db *Database) getLastTokenBridgeEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastTokenBridgeEventIndexKey)
 	if err != nil {
 		return nil, err
@@ -118,7 +158,7 @@ func (db *AlphDatabase) getLastTokenBridgeEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
-func (db *AlphDatabase) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
+func (db *Database) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastTokenWrapperFactoryIndexKey)
 	if err != nil {
 		return nil, err
@@ -127,7 +167,7 @@ func (db *AlphDatabase) getLastTokenWrapperFactoryEventIndex() (*uint64, error) 
 	return &index, nil
 }
 
-func (db *AlphDatabase) getLastUndoneSequenceEventIndex() (*uint64, error) {
+func (db *Database) getLastUndoneSequenceEventIndex() (*uint64, error) {
 	bytes, err := db.get(lastUndoneSequenceIndexKey)
 	if err != nil {
 		return nil, err
@@ -136,7 +176,7 @@ func (db *AlphDatabase) getLastUndoneSequenceEventIndex() (*uint64, error) {
 	return &index, nil
 }
 
-func (db *AlphDatabase) writeBatch(batch *batch) error {
+func (db *Database) writeBatch(batch *batch) error {
 	return db.Update(func(txn *badger.Txn) error {
 		for i, key := range batch.keys {
 			if err := txn.Set(key, batch.values[i]); err != nil {
@@ -148,15 +188,15 @@ func (db *AlphDatabase) writeBatch(batch *batch) error {
 }
 
 // TODO: store the vaa id
-func (db *AlphDatabase) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
+func (db *Database) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceInit}, []byte{sequenceExecuting})
 }
 
-func (db *AlphDatabase) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
+func (db *Database) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceExecuting}, []byte{sequenceExecuted})
 }
 
-func (db *AlphDatabase) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
+func (db *Database) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
 	key := &UndoneSequenceKey{
 		remoteChainId: remoteChainId,
 		sequence:      sequence,

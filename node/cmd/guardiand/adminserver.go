@@ -7,6 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/db"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
@@ -15,12 +23,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math"
-	"math/rand"
-	"net"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
@@ -31,6 +33,7 @@ import (
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
 	db           *db.Database
+	alphDb       *alephium.Database
 	injectC      chan<- *vaa.VAA
 	obsvReqSendC chan *gossipv1.ObservationRequest
 	logger       *zap.Logger
@@ -340,7 +343,16 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	}, nil
 }
 
-func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- *vaa.VAA, signedInC chan *gossipv1.SignedVAAWithQuorum, obsvReqSendC chan *gossipv1.ObservationRequest, db *db.Database, gst *common.GuardianSetState) (supervisor.Runnable, error) {
+func adminServiceRunnable(
+	logger *zap.Logger,
+	socketPath string,
+	injectC chan<- *vaa.VAA,
+	signedInC chan *gossipv1.SignedVAAWithQuorum,
+	obsvReqSendC chan *gossipv1.ObservationRequest,
+	db *db.Database,
+	alphDb *alephium.Database,
+	gst *common.GuardianSetState,
+) (supervisor.Runnable, error) {
 	// Delete existing UNIX socket, if present.
 	fi, err := os.Stat(socketPath)
 	if err == nil {
@@ -376,6 +388,7 @@ func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- 
 		injectC:      injectC,
 		obsvReqSendC: obsvReqSendC,
 		db:           db,
+		alphDb:       alphDb,
 		logger:       logger.Named("adminservice"),
 		signedInC:    signedInC,
 	}
@@ -392,4 +405,14 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	s.obsvReqSendC <- req.ObservationRequest
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
+}
+
+func (s *nodePrivilegedService) GetUndoneSequences(ctx context.Context, req *nodev1.UndoneSequenceRequest) (*nodev1.UndoneSequenceResponse, error) {
+	sequences, err := s.alphDb.GetUndoneSequences(uint16(req.RemoteChainId))
+	if err != nil {
+		return nil, err
+	}
+	return &nodev1.UndoneSequenceResponse{
+		Sequences: sequences,
+	}, nil
 }
