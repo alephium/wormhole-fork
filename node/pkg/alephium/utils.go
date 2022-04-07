@@ -1,6 +1,7 @@
 package alephium
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -156,6 +157,18 @@ func (f *Field) ToUint8() (uint8, error) {
 		return uint8(bigInt.Uint64()), nil
 	}
 	return 0, errors.New("invalid uint8")
+}
+
+func Uint16ToBytes(value uint16) []byte {
+	bytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(bytes, value)
+	return bytes
+}
+
+func Uint64ToBytes(value uint64) []byte {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, value)
+	return bytes
 }
 
 type Event struct {

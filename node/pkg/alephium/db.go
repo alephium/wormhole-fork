@@ -98,11 +98,11 @@ func (db *AlphDatabase) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint1
 }
 
 func (db *AlphDatabase) addRemoteChain(chainId uint16, tokenBridgeForChainAddress string) error {
-	return db.put(chainKey(chainId), []byte(tokenBridgeForChainAddress))
+	return db.put(tokenBridgeForChainKey(chainId), []byte(tokenBridgeForChainAddress))
 }
 
 func (db *AlphDatabase) getRemoteChain(chainId uint16) (string, error) {
-	value, err := db.get(chainKey(chainId))
+	value, err := db.get(tokenBridgeForChainKey(chainId))
 	if err != nil {
 		return "", err
 	}
@@ -183,18 +183,14 @@ type LocalTokenWrapperKey struct {
 }
 
 func (k *LocalTokenWrapperKey) encode() []byte {
-	bytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(bytes, k.remoteChainId)
 	var key []byte
 	key = append(localTokenWrapperPrefix, k.localTokenId[:]...)
-	key = append(key, bytes[:]...)
+	key = append(key, Uint16ToBytes(k.remoteChainId)...)
 	return key
 }
 
-func chainKey(chainId uint16) []byte {
-	bytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(bytes, chainId)
-	return append(tokenBridgeForChainPrefix, bytes...)
+func tokenBridgeForChainKey(remoteChainId uint16) []byte {
+	return append(tokenBridgeForChainPrefix, Uint16ToBytes(remoteChainId)...)
 }
 
 type UndoneSequenceKey struct {
@@ -203,7 +199,7 @@ type UndoneSequenceKey struct {
 }
 
 func (k *UndoneSequenceKey) encode() []byte {
-	bytes := make([]byte, 8)
+	bytes := make([]byte, 10)
 	binary.BigEndian.PutUint16(bytes, k.remoteChainId)
 	binary.BigEndian.PutUint64(bytes[2:], k.sequence)
 	return append(undoneSequencePrefix, bytes...)
@@ -222,7 +218,7 @@ func newBatch() *batch {
 }
 
 func (b *batch) writeTokenBridgeForChain(chainId uint16, contractAddress string) {
-	b.keys = append(b.keys, chainKey(chainId))
+	b.keys = append(b.keys, tokenBridgeForChainKey(chainId))
 	b.values = append(b.values, []byte(contractAddress))
 }
 
@@ -250,22 +246,16 @@ func (b *batch) writeUndoneSequence(remoteChainId uint16, sequence uint64) {
 }
 
 func (b *batch) updateLastTokenBridgeEventIndex(index uint64) {
-	bytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, index)
 	b.keys = append(b.keys, lastTokenBridgeEventIndexKey)
-	b.values = append(b.values, bytes)
+	b.values = append(b.values, Uint64ToBytes(index))
 }
 
 func (b *batch) updateLastTokenWrapperFactoryEventIndex(index uint64) {
-	bytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, index)
 	b.keys = append(b.keys, lastTokenWrapperFactoryIndexKey)
-	b.values = append(b.values, bytes)
+	b.values = append(b.values, Uint64ToBytes(index))
 }
 
 func (b *batch) updateLastUndoneSequenceEventIndex(index uint64) {
-	bytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(bytes, index)
 	b.keys = append(b.keys, lastUndoneSequenceIndexKey)
-	b.values = append(b.values, bytes)
+	b.values = append(b.values, Uint64ToBytes(index))
 }
