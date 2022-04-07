@@ -1,4 +1,4 @@
-import { Asset, CliqueClient, ContractEvent, InputAsset } from 'alephium-web3'
+import { Asset, AssetOutput, CliqueClient, ContractEvent, InputAsset, Output, Token } from 'alephium-web3'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
@@ -14,6 +14,16 @@ describe("test token bridge", () => {
         asset: {
             alphAmount: oneAlph * 4n
         }
+    }
+    const gasPrice = BigInt("100000000000")
+    const maxGas = BigInt("625000")
+    const gasFee = gasPrice * maxGas
+
+    function checkTxCallerBalance(output: Output, spent: bigint) {
+        const remain = inputAsset.asset.alphAmount as bigint - gasFee - spent
+        expect(output.address).toEqual(payer)
+        expect(output.alphAmount).toEqual(remain)
+        expect(output.tokens).toEqual([])
     }
 
     const decimals = 8
@@ -236,11 +246,13 @@ describe("test token bridge", () => {
 
         const contractOutput = testResult.txOutputs[2]
         expect(contractOutput.address).toEqual(tokenWrapperInfo.address)
-        expect(contractOutput.alphAmount).toEqual((initAsset.alphAmount as bigint) - dustAmount)
+        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount)
         expect(contractOutput.tokens).toEqual([{
             id: toContractId(testTokenInfo.address),
             amount: initTokenAmount - transferAmount
         }])
+
+        checkTxCallerBalance(testResult.txOutputs[3], dustAmount)
     })
 
     it('should create token wrapper for remote token', async () => {
@@ -408,10 +420,12 @@ describe("test token bridge", () => {
 
         const contractOutput = testResult.txOutputs[2]
         expect(contractOutput.address).toEqual(tokenWrapperInfo.address)
-        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount as bigint - dustAmount)
+        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount)
         expect(contractOutput.tokens).toEqual([{
             id: toContractId(tokenWrapperInfo.address),
             amount: initTokenAmount - transferAmount
         }])
+
+        checkTxCallerBalance(testResult.txOutputs[3], dustAmount)
     })
 })
