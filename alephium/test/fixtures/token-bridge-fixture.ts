@@ -1,4 +1,4 @@
-import { CliqueClient, Contract, ContractState } from 'alephium-js'
+import { CliqueClient, Contract, ContractState } from 'alephium-web3'
 import { createGovernance, governanceChainId, governanceContractAddress } from './governance-fixture'
 import { alphChainId, ContractInfo, dustAmount, randomContractAddress, } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'

@@ -1,4 +1,4 @@
-import { CliqueClient, Contract } from 'alephium-js'
+import { CliqueClient, Contract } from 'alephium-web3'
 import { expectAssertionFailed, randomContractAddress } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
@@ -13,10 +13,10 @@ describe("test sequence", () => {
     }
 
     test("should execute correctly", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields = [0, 0, 0, '']
         for (let seq = 0; seq < 256; seq++) {
-            const testResult = await sequenceTest.test(client, 'check', {
+            const testResult = await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
                 testArgs: [seq]
@@ -30,7 +30,7 @@ describe("test sequence", () => {
         }
 
         for (let seq = 256; seq < 512; seq++) {
-            const testResult = await sequenceTest.test(client, 'check', {
+            const testResult = await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
                 testArgs: [seq]
@@ -45,10 +45,10 @@ describe("test sequence", () => {
     }, 90000)
 
     it('should failed if sequence too large', async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields = [0, allExecuted, 0, '']
         expectAssertionFailed(async() => {
-            await sequenceTest.test(client, 'check', {
+            await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
                 testArgs: [1024]
@@ -57,11 +57,11 @@ describe("test sequence", () => {
     })
 
     it('should move sequences to undone list', async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 512 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 512 })
         const next1 = (BigInt(1) << 253n) - BigInt(1)
         const oldUndoneSequence = 0
         const initFields = [0, next1, 0, sequenceToHex(oldUndoneSequence)]
-        const testResult = await sequenceTest.test(client, 'check', {
+        const testResult = await sequenceTest.testPrivateMethod(client, 'checkSequence', {
             initialFields: initFields,
             address: sequenceTestAddress,
             testArgs: [513]
@@ -77,9 +77,9 @@ describe("test sequence", () => {
     })
 
     it('should set sequence to done', async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 512 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 512 })
         const initFields = [256, 0, 0, sequenceToHex(12) + sequenceToHex(15)]
-        const testResult = await sequenceTest.test(client, 'check', {
+        const testResult = await sequenceTest.testPrivateMethod(client, 'checkSequence', {
             initialFields: initFields,
             address: sequenceTestAddress,
             testArgs: [12]
@@ -91,7 +91,7 @@ describe("test sequence", () => {
         expect(testResult.events.length).toEqual(0)
 
         expectAssertionFailed(async() => {
-            await sequenceTest.test(client, 'check', {
+            await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
                 testArgs: [14]
@@ -100,9 +100,9 @@ describe("test sequence", () => {
     })
 
     it("should increase executed sequence", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields = [512, allExecuted, allExecuted, '']
-        const testResult = await sequenceTest.test(client, 'check', {
+        const testResult = await sequenceTest.testPrivateMethod(client, 'checkSequence', {
             initialFields: initFields,
             address: sequenceTestAddress,
             testArgs: [1025]
@@ -115,11 +115,11 @@ describe("test sequence", () => {
     })
 
     test("should fail when executed repeatedly", async () => {
-        const sequenceTest = await Contract.from(client, 'sequence_test.ral', { distance: 32 })
+        const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields0 = [0, allExecuted, 0, '']
         for (let seq = 0; seq < 256; seq++) {
             expectAssertionFailed(async() => {
-                return await sequenceTest.test(client, "check", {
+                return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields0,
                     address: sequenceTestAddress,
                     testArgs: [seq]
@@ -130,7 +130,7 @@ describe("test sequence", () => {
         const initFields1 = [0, 0, allExecuted, '']
         for (let seq = 256; seq < 512; seq++) {
             expectAssertionFailed(async() => {
-                return await sequenceTest.test(client, "check", {
+                return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields1,
                     address: sequenceTestAddress,
                     testArgs: [seq]
@@ -141,7 +141,7 @@ describe("test sequence", () => {
         const initFields2 = [512, 0, 0, '']
         for (let seq = 0; seq < 512; seq++) {
             expectAssertionFailed(async() => {
-                return await sequenceTest.test(client, "check", {
+                return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields2,
                     address: sequenceTestAddress,
                     testArgs: [seq]

@@ -1,4 +1,4 @@
-import { Asset, CliqueClient, InputAsset, TestContractResult } from 'alephium-js'
+import { Asset, CliqueClient, InputAsset, TestContractResult } from 'alephium-web3'
 import { toHex } from '../lib/utils'
 import { alphChainId, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
@@ -11,7 +11,7 @@ describe("test governance", () => {
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {
         const governanceInfo = await createGovernance(client)
         const contract = governanceInfo.contract
-        return await contract.test(client, method, {
+        return await contract.testPublicMethod(client, method, {
             initialFields: governanceInfo.selfState.fields,
             address: governanceInfo.address,
             existingContracts: governanceInfo.dependencies,

@@ -1,4 +1,4 @@
-import { CliqueClient, Signer } from 'alephium-js'
+import { CliqueClient, Signer } from 'alephium-web3'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import * as env from './env'

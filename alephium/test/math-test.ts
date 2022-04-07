@@ -1,4 +1,4 @@
-import { CliqueClient, Number256 } from "alephium-js"
+import { CliqueClient, Number256 } from "alephium-web3"
 import { createMath } from "./fixtures/wormhole-fixture"
 
 describe('test math', () => {
@@ -36,14 +36,14 @@ describe('test math', () => {
             }
         ]
         cases.forEach(async tc => {
-            let testResult = await contract.test(client, 'normalizeAmount', {
+            let testResult = await contract.testPublicMethod(client, 'normalizeAmount', {
                 testArgs: [tc.amount, tc.decimals]
             })
             expect(testResult.returns.length).toEqual(1)
             const normalizedAmount = testResult.returns[0] as Number256
             expect(normalizedAmount).toEqual(Number(tc.normalizedAmount))
 
-            testResult = await contract.test(client, 'deNormalizeAmount', {
+            testResult = await contract.testPublicMethod(client, 'deNormalizeAmount', {
                 testArgs: [tc.normalizedAmount, tc.decimals]
             })
             expect(testResult.returns.length).toEqual(1)

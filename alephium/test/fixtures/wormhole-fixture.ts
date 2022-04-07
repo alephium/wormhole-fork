@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { CliqueClient, Contract, ContractState } from 'alephium-js'
+import { CliqueClient, Contract, ContractState } from 'alephium-web3'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts

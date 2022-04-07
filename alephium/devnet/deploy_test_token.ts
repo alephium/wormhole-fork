@@ -1,4 +1,4 @@
-import { CliqueClient, Contract, Script, Signer } from 'alephium-js'
+import { CliqueClient, Contract, Script, Signer } from 'alephium-web3'
 import * as env from './env'
 import { toHex } from '../lib/utils'
 
