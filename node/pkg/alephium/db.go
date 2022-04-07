@@ -109,7 +109,7 @@ func (db *Database) addRemoteTokenWrapper(tokenId Byte32, tokenWrapperAddress st
 	return db.put(remoteTokenWrapperKey(tokenId), []byte(tokenWrapperAddress))
 }
 
-func (db *Database) getRemoteTokenWrapper(tokenId Byte32) (string, error) {
+func (db *Database) GetRemoteTokenWrapper(tokenId Byte32) (string, error) {
 	value, err := db.get(remoteTokenWrapperKey(tokenId))
 	if err != nil {
 		return "", err
@@ -125,7 +125,7 @@ func (db *Database) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, t
 	return db.put(key.encode(), []byte(tokenWrapperAddress))
 }
 
-func (db *Database) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
+func (db *Database) GetLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (string, error) {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
@@ -188,7 +188,7 @@ func (db *Database) writeBatch(batch *batch) error {
 }
 
 // TODO: store the vaa id
-func (db *Database) setSequenceExecuting(remoteChainId uint16, sequence uint64) error {
+func (db *Database) SetSequenceExecuting(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceInit}, []byte{sequenceExecuting})
 }
 

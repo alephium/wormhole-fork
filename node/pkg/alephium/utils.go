@@ -21,7 +21,7 @@ func assume(cond bool) {
 	}
 }
 
-func toContractId(address string) (Byte32, error) {
+func ToContractId(address string) (Byte32, error) {
 	var byte32 Byte32
 	contractId := base58.Decode(address)
 	if len(contractId) != 33 {

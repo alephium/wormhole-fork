@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/certusone/wormhole/node/pkg/common"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/pflag"
-	"io/ioutil"
-	"log"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/status-im/keycard-go/hexutils"
@@ -43,12 +44,14 @@ func init() {
 
 	AdminClientInjectGuardianSetUpdateCmd.Flags().AddFlagSet(pf)
 	AdminClientFindMissingMessagesCmd.Flags().AddFlagSet(pf)
+	AdminClientExecuteUndoneSequenceCmd.Flags().AddFlagSet(pf)
 	AdminClientListNodes.Flags().AddFlagSet(pf)
 	DumpVAAByMessageID.Flags().AddFlagSet(pf)
 	SendObservationRequest.Flags().AddFlagSet(pf)
 
 	AdminCmd.AddCommand(AdminClientInjectGuardianSetUpdateCmd)
 	AdminCmd.AddCommand(AdminClientFindMissingMessagesCmd)
+	AdminCmd.AddCommand(AdminClientExecuteUndoneSequenceCmd)
 	AdminCmd.AddCommand(AdminClientGovernanceVAAVerifyCmd)
 	AdminCmd.AddCommand(AdminClientListNodes)
 	AdminCmd.AddCommand(DumpVAAByMessageID)
@@ -72,6 +75,13 @@ var AdminClientFindMissingMessagesCmd = &cobra.Command{
 	Short: "Find sequence number gaps for the given chain ID and emitter address",
 	Run:   runFindMissingMessages,
 	Args:  cobra.ExactArgs(2),
+}
+
+var AdminClientExecuteUndoneSequenceCmd = &cobra.Command{
+	Use:   "execute-undone-sequence [CHAIN_ID] [EMITTER_ADDRESS] [SEQUENCE] [GOV_SEQUENCE]",
+	Short: "Execute undone sequence and get the governance vaa",
+	Run:   runExecuteUndoneSequence,
+	Args:  cobra.ExactArgs(4),
 }
 
 var DumpVAAByMessageID = &cobra.Command{
@@ -175,6 +185,44 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 
 	log.Printf("processed %s sequences %d to %d (%d gaps)",
 		emitterAddress, resp.FirstSequence, resp.LastSequence, len(resp.MissingMessages))
+}
+
+func runExecuteUndoneSequence(cmd *cobra.Command, args []string) {
+	chainId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatalf("invalid chain id: %v", err)
+	}
+	emitterAddress := args[1]
+	sequence, err := strconv.ParseUint(args[2], 10, 64)
+	if err != nil {
+		log.Fatalf("invalid sequence: %v", err)
+	}
+	govSequence, err := strconv.ParseUint(args[3], 10, 64)
+	if err != nil {
+		log.Fatalf("invalid governance sequence: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	conn, err, c := getAdminClient(ctx, *clientSocketPath)
+	defer conn.Close()
+	if err != nil {
+		log.Fatalf("failed to get admin client: %v", err)
+	}
+
+	request := &nodev1.ExecuteUndoneSequenceRequest{
+		EmitterChain:   uint32(chainId),
+		EmitterAddress: emitterAddress,
+		Sequence:       sequence,
+		GovSequence:    govSequence,
+		BackfillNodes:  common.PublicRPCEndpoints,
+	}
+	resp, err := c.ExecuteUndoneSequence(ctx, request)
+	if err != nil {
+		log.Fatalf("failed to run ExecuteUndoneSequence rpc, error: %v", err)
+	}
+	log.Printf("vaa body: %v", resp.VaaBody)
 }
 
 // runDumpVAAByMessageID uses GetSignedVAA to request the given message,

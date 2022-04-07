@@ -182,7 +182,7 @@ func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := toContractId(contractAddress)
+	contractId, err := ToContractId(contractAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -194,11 +194,11 @@ func (w *Watcher) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	if value, ok := w.remoteTokenWrapperCache.Load(tokenId); ok {
 		return value.(*Byte32), nil
 	}
-	contractAddress, err := w.db.getRemoteTokenWrapper(tokenId)
+	contractAddress, err := w.db.GetRemoteTokenWrapper(tokenId)
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := toContractId(contractAddress)
+	contractId, err := ToContractId(contractAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -214,11 +214,11 @@ func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*B
 	if value, ok := w.localTokenWrapperCache.Load(key); ok {
 		return value.(*Byte32), nil
 	}
-	contractAddress, err := w.db.getLocalTokenWrapper(tokenId, remoteChainId)
+	contractAddress, err := w.db.GetLocalTokenWrapper(tokenId, remoteChainId)
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := toContractId(contractAddress)
+	contractId, err := ToContractId(contractAddress)
 	if err != nil {
 		return nil, err
 	}

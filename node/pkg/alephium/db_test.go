@@ -60,11 +60,11 @@ func TestReadWrite(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, chainContractId, td.chainContractAddress)
 
-	_, err = db.getRemoteTokenWrapper(td.tokenId)
+	_, err = db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
 	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperAddress)
 	assert.Nil(t, err)
-	tokenWrapperId, err := db.getRemoteTokenWrapper(td.tokenId)
+	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
 	assert.Equal(t, tokenWrapperId, td.tokenWrapperAddress)
 }
@@ -85,7 +85,7 @@ func TestBatchWrite(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, chainContractId, td.chainContractAddress)
 
-	tokenWrapperId, err := db.getRemoteTokenWrapper(td.tokenId)
+	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
 	assert.Equal(t, tokenWrapperId, td.tokenWrapperAddress)
 }

@@ -25,7 +25,7 @@ func (c *contractService) getRemoteTokenWrapper(tokenId Byte32) (string, error) 
 	if value, ok := c.remoteTokenWrapperCache[tokenId]; ok {
 		return value, nil
 	}
-	contractAddress, err := c.db.getRemoteTokenWrapper(tokenId)
+	contractAddress, err := c.db.GetRemoteTokenWrapper(tokenId)
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func (c *contractService) getLocalTokenWrapper(tokenId Byte32, remoteChainId uin
 			return value, nil
 		}
 	}
-	contractAddress, err := c.db.getLocalTokenWrapper(tokenId, remoteChainId)
+	contractAddress, err := c.db.GetLocalTokenWrapper(tokenId, remoteChainId)
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +84,7 @@ func (c *contractService) GetRemoteTokenWrapperAddress(ctx context.Context, req 
 }
 
 func (c *contractService) GetLocalTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetLocalTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
-	tokenId, err := toContractId(req.TokenId)
+	tokenId, err := ToContractId(req.TokenId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid local token address %s", req.TokenId)
 	}

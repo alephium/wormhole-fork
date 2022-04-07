@@ -180,7 +180,7 @@ func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, address string,
 		return nil, err
 	}
 
-	contractId, err := toContractId(address)
+	contractId, err := ToContractId(address)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupInd
 	}
 
 	isLocalToken := contractState.Fields[5].ToBool()
-	tokenWrapperId, err := toContractId(tokenWrapperAddress)
+	tokenWrapperId, err := ToContractId(tokenWrapperAddress)
 	if err != nil {
 		return nil, err
 	}

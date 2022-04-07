@@ -59,7 +59,7 @@ func TestField(t *testing.T) {
 func TestContractConversion(t *testing.T) {
 	bytes := randomByte32()
 	address := toContractAddress(bytes)
-	id, err := toContractId(address)
+	id, err := ToContractId(address)
 	if err != nil {
 		t.Fatal(err)
 	}
