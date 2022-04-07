@@ -47,7 +47,7 @@ describe("test sequence", () => {
     it('should failed if sequence too large', async () => {
         const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields = [0, allExecuted, 0, '']
-        expectAssertionFailed(async() => {
+        await expectAssertionFailed(async() => {
             await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
@@ -90,7 +90,7 @@ describe("test sequence", () => {
         expect(testResult.contracts[0].fields[3]).toEqual(sequenceToHex(15))
         expect(testResult.events.length).toEqual(0)
 
-        expectAssertionFailed(async() => {
+        await expectAssertionFailed(async() => {
             await sequenceTest.testPrivateMethod(client, 'checkSequence', {
                 initialFields: initFields,
                 address: sequenceTestAddress,
@@ -118,7 +118,7 @@ describe("test sequence", () => {
         const sequenceTest = await Contract.from(client, 'sequence.ral', { distance: 32 })
         const initFields0 = [0, allExecuted, 0, '']
         for (let seq = 0; seq < 256; seq++) {
-            expectAssertionFailed(async() => {
+            await expectAssertionFailed(async() => {
                 return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields0,
                     address: sequenceTestAddress,
@@ -129,7 +129,7 @@ describe("test sequence", () => {
 
         const initFields1 = [0, 0, allExecuted, '']
         for (let seq = 256; seq < 512; seq++) {
-            expectAssertionFailed(async() => {
+            await expectAssertionFailed(async() => {
                 return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields1,
                     address: sequenceTestAddress,
@@ -140,7 +140,7 @@ describe("test sequence", () => {
 
         const initFields2 = [512, 0, 0, '']
         for (let seq = 0; seq < 512; seq++) {
-            expectAssertionFailed(async() => {
+            await expectAssertionFailed(async() => {
                 return await sequenceTest.testPrivateMethod(client, "checkSequence", {
                     initialFields: initFields2,
                     address: sequenceTestAddress,
@@ -148,5 +148,5 @@ describe("test sequence", () => {
                 })
             })
         }
-    }, 10000)
+    }, 180000)
 })

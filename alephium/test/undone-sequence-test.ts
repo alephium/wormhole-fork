@@ -32,8 +32,8 @@ describe("test undone sequence", () => {
         expect(undoneList).toEqual(sequenceToHex(1) + sequenceToHex(3))
 
         const invalids = [2, 3]
-        invalids.forEach(seq => {
-            expectAssertionFailed(async () => {
+        invalids.forEach(async seq => {
+            await expectAssertionFailed(async () => {
                 await undoneSequencetTest.testPrivateMethod(client, 'add', {
                     initialFields: [undoneList],
                     address: contractAddress,

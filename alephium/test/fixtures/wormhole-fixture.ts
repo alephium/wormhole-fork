@@ -205,11 +205,11 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed'])
+    await expectFailed(func, ['AssertionFailed'])
 }
 
 export async function expectAssertionFailedOrRecoverEthAddressFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
+    await expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
 }
 
 export function toContractId(address: string): string {

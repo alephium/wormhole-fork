@@ -39,7 +39,7 @@ describe("test governance", () => {
         const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
         const vaaBody = new VAABody(updateGuardianSet.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
-        expectAssertionFailed(async () => {
+        await expectAssertionFailed(async () => {
             return await testCase(vaa, 'updateGuardianSet')
         })
     })
@@ -50,7 +50,7 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
-        expectAssertionFailed(async () => {
+        await expectAssertionFailed(async () => {
             return await testCase(invalidVaa, 'updateGuardianSet')
         })
     })
@@ -61,7 +61,7 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
-        expectAssertionFailedOrRecoverEthAddressFailed(async () => {
+        await expectAssertionFailedOrRecoverEthAddressFailed(async () => {
             return await testCase(invalidVaa, 'updateGuardianSet')
         })
     })
