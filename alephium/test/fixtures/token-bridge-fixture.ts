@@ -101,7 +101,7 @@ export async function createTestToken(
     name: string,
     supply?: bigint
 ): Promise<ContractInfo> {
-    const token = await Contract.from(client, 'token.ral')
+    const token = await Contract.from(client, 'test_token.ral')
     const address = randomContractAddress()
     const tokenSupply = supply ? supply : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
     const initFields = [symbol, name, decimals, tokenSupply]

@@ -14,6 +14,9 @@ TxContract Governance(
     mut guardianSetSizes: [U256; 2],
     mut previousGuardianSetExpirationTime: U256
 ) extends Sequence(next, next1, next2, undone) {
+
+    event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
+
     pub fn getChainId() -> (U256) {
         return chainId
     }
@@ -23,8 +26,6 @@ TxContract Governance(
     }
 
     // TODO: how to upgrade contract???
-
-    event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
 
     pub payable fn publishMessage(payer: Address, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256) -> () {
         transferAlphToSelf!(payer, messageFee)
