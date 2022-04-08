@@ -1,7 +1,6 @@
 import "governance.ral"
 import "sequence.ral"
 import "token_interface.ral"
-import "serde.ral"
 
 TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
@@ -13,7 +12,7 @@ TxContract TokenBridge(
     mut undone: ByteVec,
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
-) extends Sequence(next, next1, next2, undone), Serde() {
+) extends Sequence(next, next1, next2, undone) {
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
@@ -64,15 +63,9 @@ TxContract TokenBridge(
         assert!(remoteChainId != localChainId)
 
         let contractCode = #{{ tokenBridgeForChainBinCode }}
-        let mut encodedState = byteVec!(8i) ++  // state size
-                           encodeU256(localChainId) ++
-                           encodeByteVec(selfContractId!()) ++
-                           encodeU256(remoteChainId) ++
-                           encodeByteVec(remoteTokenBridgeId) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeByteVec(#)
+        let mut encodedState = encode!(
+            localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
+        )
 
         approveAlph!(payer, createContractAlphAmount)
         createContract!(contractCode, encodedState)
