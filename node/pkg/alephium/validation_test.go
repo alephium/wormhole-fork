@@ -1,12 +1,15 @@
 package alephium
 
 import (
+	"context"
 	"encoding/hex"
 	"math/big"
+	"sync"
 	"testing"
 
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func decodeHex(str string) []byte {
@@ -99,4 +102,156 @@ func TestTransferEvent(t *testing.T) {
 	assert.Equal(t, transferMessage.fee, *fee)
 	assert.True(t, transferMessage.isLocalToken)
 	assert.Equal(t, transferMessage.senderId.ToHex(), "4244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634")
+}
+
+func TestValidateTokenWrapperEvents(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	watcher := &Watcher{
+		chainIndex: &ChainIndex{
+			FromGroup: 0,
+			ToGroup:   0,
+		},
+		db:                       db,
+		tokenBridgeForChainCache: sync.Map{},
+		localTokenWrapperCache:   sync.Map{},
+		remoteTokenWrapperCache:  sync.Map{},
+	}
+
+	tokenWrapperAddresses := []string{randomAddress(), randomAddress()}
+	toUnconfirmedEvent := func(address string) *UnconfirmedEvent {
+		return &UnconfirmedEvent{
+			event: &Event{
+				Fields: []*Field{
+					{
+						Type:  "Address",
+						Value: address,
+					},
+				},
+			},
+		}
+	}
+	var confirmedEvents ConfirmedEvents
+	for _, address := range tokenWrapperAddresses {
+		confirmedEvents.events = append(confirmedEvents.events, toUnconfirmedEvent(address))
+	}
+	confirmedEvents.events[0].eventIndex = 3
+	confirmedEvents.events[1].eventIndex = 2
+
+	remoteChainId := uint16(2)
+	tokenBridgeForChainId := randomByte32()
+	err = db.addRemoteChain(remoteChainId, toContractAddress(tokenBridgeForChainId))
+	assert.Nil(t, err)
+
+	localTokenId := randomByte32()
+	remoteTokenId := randomByte32()
+
+	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
+		info := &tokenWrapperInfo{
+			tokenBridgeForChainId: tokenBridgeForChainId,
+			remoteChainId:         remoteChainId,
+		}
+
+		if address == tokenWrapperAddresses[0] {
+			info.isLocalToken = true
+			info.tokenId = localTokenId
+			info.tokenWrapperAddress = tokenWrapperAddresses[0]
+			info.tokenWrapperId = mustToContractId(tokenWrapperAddresses[0])
+			return info, nil
+		}
+		if address == tokenWrapperAddresses[1] {
+			info.isLocalToken = false
+			info.tokenId = remoteTokenId
+			info.tokenWrapperAddress = tokenWrapperAddresses[1]
+			info.tokenWrapperId = mustToContractId(tokenWrapperAddresses[1])
+			return info, nil
+		}
+		return nil, nil
+	}
+
+	ctx := context.Background()
+	logger, err := zap.NewProduction()
+	assert.Nil(t, err)
+	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+	assert.Nil(t, err)
+
+	checkEventIndex := func(expectedIndex uint64) {
+		eventIndex, err := db.getLastTokenWrapperFactoryEventIndex()
+		assert.Nil(t, err)
+		assert.Equal(t, *eventIndex, expectedIndex)
+	}
+
+	checkEventIndex(3)
+
+	// check local token wrapper
+	localTokenWrapperKey := LocalTokenWrapperKey{
+		remoteChainId: remoteChainId,
+		localTokenId:  localTokenId,
+	}
+	localTokenWrapperAddress, err := db.GetLocalTokenWrapper(localTokenId, remoteChainId)
+	assert.Nil(t, err)
+	assert.Equal(t, localTokenWrapperAddress, tokenWrapperAddresses[0])
+	localTokenWrapperId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
+	assert.True(t, ok)
+	assert.Equal(t, *localTokenWrapperId.(*Byte32), mustToContractId(tokenWrapperAddresses[0]))
+
+	// check remote token wrapper
+	remoteTokenWrapperAddress, err := db.GetRemoteTokenWrapper(remoteTokenId)
+	assert.Nil(t, err)
+	assert.Equal(t, remoteTokenWrapperAddress, tokenWrapperAddresses[1])
+	remoteTokenWrapperId, ok := watcher.remoteTokenWrapperCache.Load(remoteTokenId)
+	assert.True(t, ok)
+	assert.Equal(t, *remoteTokenWrapperId.(*Byte32), mustToContractId(tokenWrapperAddresses[1]))
+
+	// token bridge for chain does not exist
+	invalidTokenWrapperAddress := randomAddress()
+	invalidInfo := &tokenWrapperInfo{
+		tokenBridgeForChainId: tokenBridgeForChainId,
+		remoteChainId:         remoteChainId + 1,
+		isLocalToken:          true,
+		tokenId:               randomByte32(),
+		tokenWrapperAddress:   invalidTokenWrapperAddress,
+		tokenWrapperId:        mustToContractId(invalidTokenWrapperAddress),
+	}
+	ignoreInvalidEvent := func(info *tokenWrapperInfo, index uint64) {
+		checkEventIndex(index)
+		invalidTokenWrapperKey := LocalTokenWrapperKey{
+			remoteChainId: invalidInfo.remoteChainId,
+			localTokenId:  invalidInfo.tokenId,
+		}
+		_, ok = watcher.localTokenWrapperCache.Load(invalidTokenWrapperKey)
+		assert.False(t, ok)
+	}
+	tokenWrapperInfoGetter = func(address string) (*tokenWrapperInfo, error) {
+		return invalidInfo, err
+	}
+	confirmedEvents = ConfirmedEvents{
+		events: []*UnconfirmedEvent{toUnconfirmedEvent(invalidTokenWrapperAddress)},
+	}
+	confirmedEvents.events[0].eventIndex = 4
+	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+	assert.Nil(t, err)
+	ignoreInvalidEvent(invalidInfo, 4)
+
+	// invalid sender contract id
+	invalidInfo.tokenBridgeForChainId = randomByte32()
+	invalidInfo.remoteChainId = remoteChainId
+	confirmedEvents.events[0].eventIndex = 5
+	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+	assert.Nil(t, err)
+	ignoreInvalidEvent(invalidInfo, 5)
+
+	// local token wrapper already exist
+	invalidInfo.tokenBridgeForChainId = tokenBridgeForChainId
+	invalidInfo.tokenId = localTokenId
+	confirmedEvents.events[0].eventIndex = 6
+	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+	assert.Nil(t, err)
+
+	checkEventIndex(6)
+	contractId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
+	assert.True(t, ok)
+	assert.Equal(t, contractId, localTokenWrapperId)
 }

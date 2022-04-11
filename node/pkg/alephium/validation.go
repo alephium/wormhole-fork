@@ -20,7 +20,12 @@ import (
 
 const transferPayloadId byte = 1
 
-func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+func (w *Watcher) validateTokenWrapperEvents(
+	ctx context.Context,
+	logger *zap.Logger,
+	confirmed *ConfirmedEvents,
+	tokenWrapperInfoGetter func(string) (*tokenWrapperInfo, error),
+) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
@@ -32,8 +37,7 @@ func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Lo
 			maxIndex = event.eventIndex
 		}
 
-		address := event.event.Fields[0].ToAddress()
-		info, err := client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
+		info, err := tokenWrapperInfoGetter(event.event.Fields[0].ToAddress())
 		if err != nil {
 			logger.Error("failed to get token wrapper info", zap.Error(err))
 			return err

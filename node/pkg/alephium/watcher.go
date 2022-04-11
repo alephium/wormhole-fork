@@ -244,8 +244,12 @@ func (w *Watcher) handleTokenWrapperFactoryEvents(
 	nextIndex uint64,
 	errC chan<- error,
 ) {
+	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
+		return client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
+	}
+
 	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateTokenWrapperEvents(ctx, logger, client, confirmed)
+		return w.validateTokenWrapperEvents(ctx, logger, confirmed, tokenWrapperInfoGetter)
 	}
 
 	w.subscribe(ctx, logger, client, w.tokenWrapperFactoryContract, nextIndex, w.toUnconfirmedEvent, handler, errC)

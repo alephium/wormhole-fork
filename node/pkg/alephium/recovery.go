@@ -76,8 +76,12 @@ func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger 
 }
 
 func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
+	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
+		return client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
+	}
+
 	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateTokenWrapperEvents(ctx, logger, client, confirmed)
+		return w.validateTokenWrapperEvents(ctx, logger, confirmed, tokenWrapperInfoGetter)
 	}
 	return w.fetchEvents(ctx, logger, client, w.db.getLastTokenWrapperFactoryEventIndex, w.tokenWrapperFactoryContract, handler)
 }
