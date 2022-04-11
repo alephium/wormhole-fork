@@ -97,26 +97,6 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 	return result, err
 }
 
-func (c *Client) GetEventsFromBlock(ctx context.Context, hash string, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/contract/in-block?block=%s&contractAddress=%s", hash, contractAddress)
-	var result Events
-	err := c.get(ctx, path, &result)
-	return &result, err
-}
-
-// TODO: reduce the number of request
-func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string, contracts []string) ([]*Event, error) {
-	result := make([]*Event, 0)
-	for _, contract := range contracts {
-		events, err := c.GetEventsFromBlock(ctx, hash, contract)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, events.Events...)
-	}
-	return result, nil
-}
-
 func (c *Client) GetContractEventsByIndex(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
 	path := fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
 	var result Events

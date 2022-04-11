@@ -2,6 +2,7 @@ package alephium
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"sync/atomic"
 
@@ -16,7 +17,9 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 			return
 		case req := <-w.obsvReqC:
 			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
-			txId := hex.EncodeToString(req.TxHash)
+			assume(len(req.TxHash) == 40) // txId + eventIndex
+			txId := hex.EncodeToString(req.TxHash[0:32])
+			eventIndex := binary.BigEndian.Uint64(req.TxHash[32:])
 			txStatus, err := client.GetTransactionStatus(ctx, txId)
 			if err != nil {
 				logger.Error("failed to get transaction status", zap.String("txId", txId), zap.Error(err))
@@ -36,7 +39,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 
 			currentHeight := atomic.LoadUint32(&w.currentHeight)
 
-			unconfirmedEvents, err := w.getGovernanceEventsFromBlockHash(ctx, client, blockHash, txId)
+			unconfirmedEvents, err := w.getGovernanceEventsByIndex(ctx, client, blockHash, txId, eventIndex)
 			if err != nil {
 				logger.Info("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
 				continue
@@ -79,13 +82,14 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 	}
 }
 
-func (w *Watcher) getGovernanceEventsFromBlockHash(
+func (w *Watcher) getGovernanceEventsByIndex(
 	ctx context.Context,
 	client *Client,
 	blockHash string,
 	txId string,
+	eventIndex uint64,
 ) ([]*UnconfirmedEvent, error) {
-	events, err := client.GetContractEventsFromBlockHash(ctx, blockHash, []string{w.governanceContract})
+	events, err := client.GetContractEventsByIndex(ctx, w.governanceContract, eventIndex, eventIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +99,8 @@ func (w *Watcher) getGovernanceEventsFromBlockHash(
 		return nil, err
 	}
 
-	unconfirmedEvents := make([]*UnconfirmedEvent, len(events))
-	for _, event := range events {
+	unconfirmedEvents := make([]*UnconfirmedEvent, len(events.Events))
+	for _, event := range events.Events {
 		if event.TxId != txId {
 			continue
 		}
