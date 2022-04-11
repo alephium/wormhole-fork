@@ -175,15 +175,13 @@ type tokenWrapperInfo struct {
 	tokenWrapperId        Byte32
 }
 
-func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*tokenWrapperInfo, error) {
-	assume(len(event.Fields) == 1)
-	tokenWrapperAddress := event.Fields[0].ToAddress()
-	contractState, err := c.GetContractState(ctx, tokenWrapperAddress, groupIndex)
+func (c *Client) GetTokenWrapperInfo(ctx context.Context, address string, groupIndex uint8) (*tokenWrapperInfo, error) {
+	contractState, err := c.GetContractState(ctx, address, groupIndex)
 	if err != nil {
 		return nil, err
 	}
-	assume(contractState.Address == tokenWrapperAddress)
 
+	assume(contractState.Address == address)
 	tokenBridgeForChainId, err := contractState.Fields[1].ToByte32()
 	if err != nil {
 		return nil, err
@@ -200,7 +198,7 @@ func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupInd
 	}
 
 	isLocalToken := contractState.Fields[5].ToBool()
-	tokenWrapperId, err := ToContractId(tokenWrapperAddress)
+	tokenWrapperId, err := ToContractId(address)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +208,7 @@ func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupInd
 		isLocalToken:          isLocalToken,
 		remoteChainId:         remoteChainId,
 		tokenId:               *tokenContractId,
-		tokenWrapperAddress:   tokenWrapperAddress,
+		tokenWrapperAddress:   address,
 		tokenWrapperId:        tokenWrapperId,
 	}, nil
 }

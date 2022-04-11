@@ -51,6 +51,7 @@ func TestReadWrite(t *testing.T) {
 	td := randTestData()
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
+	defer db.Close()
 
 	_, err = db.getRemoteChain(td.chainId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
@@ -73,6 +74,7 @@ func TestBatchWrite(t *testing.T) {
 	td := randTestData()
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
+	defer db.Close()
 
 	batch := newBatch()
 	batch.writeTokenBridgeForChain(td.chainId, td.chainContractAddress)
@@ -100,6 +102,7 @@ func TestGetUndoneSequences(t *testing.T) {
 
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
+	defer db.Close()
 
 	for i := 0; i < sequenceSize; i++ {
 		s := &nodev1.UndoneSequence{
@@ -132,4 +135,34 @@ func TestGetUndoneSequences(t *testing.T) {
 		assert.Equal(t, result1[i].Sequence, sequences0[i].Sequence)
 		assert.Equal(t, result1[i].Status, sequences0[i].Status)
 	}
+}
+
+func TestLocalTokenWrapperExist(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	key := &LocalTokenWrapperKey{
+		localTokenId:  randomByte32(),
+		remoteChainId: uint16(3),
+	}
+
+	batch0 := newBatch()
+	exist, err := batch0.localTokenWrapperExist(key, db)
+	assert.Nil(t, err)
+	assert.False(t, exist)
+
+	wrapperAddress := randomAddress()
+	batch0.writeLocalTokenWrapper(key.localTokenId, key.remoteChainId, wrapperAddress)
+	exist, err = batch0.localTokenWrapperExist(key, db)
+	assert.Nil(t, err)
+	assert.True(t, exist)
+
+	err = db.writeBatch(batch0)
+	assert.Nil(t, err)
+
+	batch1 := newBatch()
+	exist, err = batch1.localTokenWrapperExist(key, db)
+	assert.Nil(t, err)
+	assert.True(t, exist)
 }

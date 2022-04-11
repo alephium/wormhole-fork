@@ -11,6 +11,7 @@ import (
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/dgraph-io/badger/v3"
 	"go.uber.org/zap"
 
 	// We should not rely on ETH, but some data structures of wormhole use ETH hash
@@ -24,20 +25,25 @@ func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Lo
 		return nil
 	}
 
-	maxIndex := uint64(0)
+	maxIndex := confirmed.events[0].eventIndex
 	batch := newBatch()
 	for _, event := range confirmed.events {
 		if event.eventIndex > maxIndex {
 			maxIndex = event.eventIndex
 		}
 
-		info, err := client.GetTokenWrapperInfo(ctx, event.event, w.chainIndex.FromGroup)
+		address := event.event.Fields[0].ToAddress()
+		info, err := client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
 		if err != nil {
 			logger.Error("failed to get token wrapper info", zap.Error(err))
 			return err
 		}
 
 		contractId, err := w.getTokenBridgeForChain(info.remoteChainId)
+		if err == badger.ErrKeyNotFound {
+			logger.Error("token bridge for chain does not exist", zap.Uint16("chainId", info.remoteChainId))
+			continue
+		}
 		if err != nil {
 			logger.Error("failed to get token bridge for chain contract", zap.Error(err), zap.Uint16("chainId", info.remoteChainId))
 			return err
@@ -48,11 +54,21 @@ func (w *Watcher) validateTokenWrapperEvents(ctx context.Context, logger *zap.Lo
 		}
 
 		if info.isLocalToken {
-			// TODO: check if token wrapper exist
 			key := LocalTokenWrapperKey{
 				localTokenId:  info.tokenId,
 				remoteChainId: info.remoteChainId,
 			}
+			exist, err := batch.localTokenWrapperExist(&key, w.db)
+			if err != nil {
+				logger.Error("failed to check if local token wrapper already exist", zap.Error(err))
+				return err
+			}
+
+			if exist {
+				logger.Error("local token wrapper already exist")
+				continue
+			}
+
 			w.localTokenWrapperCache.Store(key, &info.tokenWrapperId)
 			batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperAddress)
 		} else {

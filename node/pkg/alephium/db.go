@@ -276,6 +276,24 @@ func (b *batch) writeLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, wra
 	b.values = append(b.values, []byte(wrapperAddress))
 }
 
+func (b *batch) localTokenWrapperExist(key *LocalTokenWrapperKey, db *Database) (bool, error) {
+	keyBytes := key.encode()
+	_, err := db.get(keyBytes)
+	if err == badger.ErrKeyNotFound {
+		for _, k := range b.keys {
+			if bytes.Equal(k, keyBytes) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (b *batch) writeUndoneSequence(remoteChainId uint16, sequence uint64) {
 	key := &UndoneSequenceKey{
 		remoteChainId: remoteChainId,
