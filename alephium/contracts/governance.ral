@@ -24,12 +24,11 @@ TxContract Governance(
 
     // TODO: how to upgrade contract???
 
-    event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
+    event WormholeMessage(sender: ByteVec, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256)
 
     pub payable fn publishMessage(payer: Address, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256) -> () {
         transferAlphToSelf!(payer, messageFee)
-        // We support up to 4 fields
-        emit WormholeMessage(callerContractId!(), sequence, nonce ++ payload, consistencyLevel)
+        emit WormholeMessage(callerContractId!(), sequence, nonce, payload, consistencyLevel)
     }
 
     // return emitterChainId, emitterAddress, sequence, payload
