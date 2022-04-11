@@ -69,8 +69,11 @@ func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, event
 }
 
 func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
+	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
+		return client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
+	}
 	handler := func(confirmed *ConfirmedEvents) error {
-		return w.updateTokenBridgeForChain(ctx, logger, client, confirmed)
+		return w.updateTokenBridgeForChain(ctx, logger, confirmed, tokenBridgeForChainInfoGetter)
 	}
 	return w.fetchEvents(ctx, logger, client, w.db.getLastTokenBridgeEventIndex, w.tokenBridgeContract, handler)
 }

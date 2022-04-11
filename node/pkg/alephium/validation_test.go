@@ -128,12 +128,7 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 	toUnconfirmedEvent := func(address string) *UnconfirmedEvent {
 		return &UnconfirmedEvent{
 			event: &Event{
-				Fields: []*Field{
-					{
-						Type:  "Address",
-						Value: address,
-					},
-				},
+				Fields: []*Field{fieldFromAddress(address)},
 			},
 		}
 	}

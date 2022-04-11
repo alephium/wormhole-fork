@@ -3,7 +3,7 @@ package alephium
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -22,45 +22,20 @@ func TestSubscribeEvents(t *testing.T) {
 	contractAddress := randomAddress()
 	eventCount := uint64(0)
 
-	event0 := &Event{
-		BlockHash:       randomByte32().ToHex(),
-		ContractAddress: contractAddress,
-		TxId:            randomByte32().ToHex(),
-		Index:           0,
-		Fields: []*Field{
-			{
-				Type:  "U256",
-				Value: "0",
-			},
-		},
+	randomEvent := func(confirmations uint8) *Event {
+		return &Event{
+			BlockHash:       randomByte32().ToHex(),
+			ContractAddress: contractAddress,
+			TxId:            randomByte32().ToHex(),
+			Index:           0,
+			Fields:          []*Field{fieldFromBigInt(big.NewInt(int64(confirmations)))},
+		}
 	}
 
-	event1 := &Event{
-		BlockHash:       randomByte32().ToHex(),
-		ContractAddress: contractAddress,
-		TxId:            randomByte32().ToHex(),
-		Index:           0,
-		Fields: []*Field{
-			{
-				Type:  "U256",
-				Value: "2",
-			},
-		},
-	}
-
+	event0 := randomEvent(0)
+	event1 := randomEvent(2)
 	// event from orphan block
-	event2 := &Event{
-		BlockHash:       randomByte32().ToHex(),
-		ContractAddress: contractAddress,
-		TxId:            randomByte32().ToHex(),
-		Index:           0,
-		Fields: []*Field{
-			{
-				Type:  "U256",
-				Value: "0",
-			},
-		},
-	}
+	event2 := randomEvent(0)
 
 	events := make([]*Event, 0)
 	isCanonicalBlock := uint32(1)
@@ -95,6 +70,8 @@ func TestSubscribeEvents(t *testing.T) {
 	}))
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	logger := zap.NewNop()
 	client := NewClient(server.URL, "", 10)
 	errC := make(chan error)
@@ -152,8 +129,6 @@ func TestSubscribeEvents(t *testing.T) {
 	events = append(events, event2)
 	time.Sleep(1 * time.Second)
 	assert.True(t, len(confirmedEvents) == 2)
-
-	cancel()
 }
 
 func TestUpdateTokenBridgeForChain(t *testing.T) {
@@ -173,29 +148,19 @@ func TestUpdateTokenBridgeForChain(t *testing.T) {
 	contractAddresses := []string{
 		randomAddress(), randomAddress(), randomAddress(),
 	}
-	tokenBridgeForChains := make(map[string]*ContractState)
+	tokenBridgeForChains := make(map[string]*tokenBridgeForChainInfo)
 	var confirmedEvents ConfirmedEvents
 	for i := 0; i < 3; i++ {
 		address := contractAddresses[i]
-		tokenBridgeForChains[address] = &ContractState{
-			Address: address,
-			Fields: []*Field{
-				{}, {},
-				{
-					Type:  "U256",
-					Value: fmt.Sprintf("%d", i),
-				},
-			},
+		tokenBridgeForChains[address] = &tokenBridgeForChainInfo{
+			remoteChainId: uint16(i),
+			address:       address,
+			contractId:    toContractId(address),
 		}
 
 		confirmedEvents.events = append(confirmedEvents.events, &UnconfirmedEvent{
 			event: &Event{
-				Fields: []*Field{
-					{
-						Type:  "Address",
-						Value: address,
-					},
-				},
+				Fields: []*Field{fieldFromAddress(address)},
 			},
 		})
 	}
@@ -203,14 +168,11 @@ func TestUpdateTokenBridgeForChain(t *testing.T) {
 	confirmedEvents.events[1].eventIndex = 1
 	confirmedEvents.events[2].eventIndex = 3
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.Split(r.URL.Path, "/")
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(tokenBridgeForChains[parts[2]])
-	}))
+	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
+		return tokenBridgeForChains[address], nil
+	}
 
-	client := NewClient(server.URL, "", 10)
-	err = watcher.updateTokenBridgeForChain(context.Background(), zap.NewNop(), client, &confirmedEvents)
+	err = watcher.updateTokenBridgeForChain(context.Background(), zap.NewNop(), &confirmedEvents, tokenBridgeForChainInfoGetter)
 	assert.Nil(t, err)
 
 	eventIndex, err := watcher.db.getLastTokenBridgeEventIndex()
@@ -224,6 +186,6 @@ func TestUpdateTokenBridgeForChain(t *testing.T) {
 
 		contractId, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
 		assert.True(t, ok)
-		assert.Equal(t, *contractId.(*Byte32), toContractId(contractAddresses[0]))
+		assert.Equal(t, *contractId.(*Byte32), toContractId(contractAddresses[i]))
 	}
 }

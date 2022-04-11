@@ -197,7 +197,12 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event 
 	}, err
 }
 
-func (w *Watcher) updateTokenBridgeForChain(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
+func (w *Watcher) updateTokenBridgeForChain(
+	ctx context.Context,
+	logger *zap.Logger,
+	confirmed *ConfirmedEvents,
+	tokenBridgeForChainInfoGetter func(string) (*tokenBridgeForChainInfo, error),
+) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
@@ -211,7 +216,7 @@ func (w *Watcher) updateTokenBridgeForChain(ctx context.Context, logger *zap.Log
 
 		assume(len(event.event.Fields) == 1)
 		address := event.event.Fields[0].ToAddress()
-		info, err := client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
+		info, err := tokenBridgeForChainInfoGetter(address)
 		if err != nil {
 			logger.Error("failed to get token bridge for chain info", zap.Error(err))
 			return err
@@ -230,8 +235,12 @@ func (w *Watcher) handleTokenBridgeEvents(
 	fromIndex uint64,
 	errC chan<- error,
 ) {
+	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
+		return client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
+	}
+
 	handler := func(confirmed *ConfirmedEvents) error {
-		return w.updateTokenBridgeForChain(ctx, logger, client, confirmed)
+		return w.updateTokenBridgeForChain(ctx, logger, confirmed, tokenBridgeForChainInfoGetter)
 	}
 
 	w.subscribe(ctx, logger, client, w.tokenBridgeContract, fromIndex, w.toUnconfirmedEvent, handler, errC)
