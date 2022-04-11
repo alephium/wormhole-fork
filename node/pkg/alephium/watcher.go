@@ -308,11 +308,25 @@ func (w *Watcher) subscribe(
 	handler func(*ConfirmedEvents) error,
 	errC chan<- error,
 ) {
+	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 30*time.Second, errC)
+}
+
+func (w *Watcher) subscribe_(
+	ctx context.Context,
+	logger *zap.Logger,
+	client *Client,
+	contractAddress string,
+	fromIndex uint64,
+	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
+	handler func(*ConfirmedEvents) error,
+	tickDuration time.Duration,
+	errC chan<- error,
+) {
 	unconfirmedEvents := map[uint64]*UnconfirmedEvent{}
 	nextIndex := fromIndex
 	lastHeight := atomic.LoadUint32(&w.currentHeight)
 
-	eventTick := time.NewTicker(30 * time.Second)
+	eventTick := time.NewTicker(tickDuration)
 	defer eventTick.Stop()
 
 	process := func() error {
@@ -341,6 +355,10 @@ func (w *Watcher) subscribe(
 
 			confirmed = append(confirmed, unconfirmed)
 			delete(unconfirmedEvents, eventIndex)
+		}
+
+		if len(confirmed) == 0 {
+			return nil
 		}
 
 		confirmedEvents := &ConfirmedEvents{

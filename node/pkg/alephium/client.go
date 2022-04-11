@@ -97,17 +97,23 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 	return result, err
 }
 
+func getEventsURI(contractAddress string, from, to uint64) string {
+	return fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
+}
+
 func (c *Client) GetContractEventsByIndex(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
-	path := fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
 	var result Events
-	err := c.get(ctx, path, &result)
+	err := c.get(ctx, getEventsURI(contractAddress, from, to), &result)
 	return &result, err
 }
 
+func eventCountURI(contractAddress string) string {
+	return fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
+}
+
 func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*uint64, error) {
-	path := fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
 	var result uint64
-	err := c.get(ctx, path, &result)
+	err := c.get(ctx, eventCountURI(contractAddress), &result)
 	return &result, err
 }
 
