@@ -97,13 +97,6 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 	return result, err
 }
 
-func (c *Client) GetEventsFromBlocks(ctx context.Context, from, to, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/contract/within-blocks?fromBlock=%s&toBlock=%s&contractAddress=%s", from, to, contractAddress)
-	var result Events
-	err := c.get(ctx, path, &result)
-	return &result, err
-}
-
 func (c *Client) GetEventsFromBlock(ctx context.Context, hash string, contractAddress string) (*Events, error) {
 	path := fmt.Sprintf("/events/contract/in-block?block=%s&contractAddress=%s", hash, contractAddress)
 	var result Events
@@ -125,21 +118,17 @@ func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string
 }
 
 func (c *Client) GetContractEventsByIndex(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
-	// TODO: implementation
-	return nil, nil
+	path := fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
+	var result Events
+	err := c.get(ctx, path, &result)
+	return &result, err
 }
 
 func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*uint64, error) {
-	// TODO: implementation
-	return nil, nil
-}
-
-func (c *Client) GetContractEventsFromBlockHeight(ctx context.Context, chainIndex *ChainIndex, height uint32, contracts []string) ([]*Event, error) {
-	hash, err := c.GetHashByHeight(ctx, chainIndex, height)
-	if err != nil {
-		return nil, err
-	}
-	return c.GetContractEventsFromBlockHash(ctx, *hash, contracts)
+	path := fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
+	var result uint64
+	err := c.get(ctx, path, &result)
+	return &result, err
 }
 
 func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStatus, error) {
