@@ -9,10 +9,10 @@ TxContract TokenBridge(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec,
+    mut undoneSequenceId: ByteVec,
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
-) extends Sequence(next, next1, next2, undone) {
+) extends Sequence(next, next1, next2, undoneSequenceId) {
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
