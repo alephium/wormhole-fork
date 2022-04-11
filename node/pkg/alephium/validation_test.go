@@ -4,10 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"math/big"
+	"math/rand"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -158,14 +162,14 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 			info.isLocalToken = true
 			info.tokenId = localTokenId
 			info.tokenWrapperAddress = tokenWrapperAddresses[0]
-			info.tokenWrapperId = mustToContractId(tokenWrapperAddresses[0])
+			info.tokenWrapperId = toContractId(tokenWrapperAddresses[0])
 			return info, nil
 		}
 		if address == tokenWrapperAddresses[1] {
 			info.isLocalToken = false
 			info.tokenId = remoteTokenId
 			info.tokenWrapperAddress = tokenWrapperAddresses[1]
-			info.tokenWrapperId = mustToContractId(tokenWrapperAddresses[1])
+			info.tokenWrapperId = toContractId(tokenWrapperAddresses[1])
 			return info, nil
 		}
 		return nil, nil
@@ -195,7 +199,7 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 	assert.Equal(t, localTokenWrapperAddress, tokenWrapperAddresses[0])
 	localTokenWrapperId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
 	assert.True(t, ok)
-	assert.Equal(t, *localTokenWrapperId.(*Byte32), mustToContractId(tokenWrapperAddresses[0]))
+	assert.Equal(t, *localTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[0]))
 
 	// check remote token wrapper
 	remoteTokenWrapperAddress, err := db.GetRemoteTokenWrapper(remoteTokenId)
@@ -203,7 +207,7 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 	assert.Equal(t, remoteTokenWrapperAddress, tokenWrapperAddresses[1])
 	remoteTokenWrapperId, ok := watcher.remoteTokenWrapperCache.Load(remoteTokenId)
 	assert.True(t, ok)
-	assert.Equal(t, *remoteTokenWrapperId.(*Byte32), mustToContractId(tokenWrapperAddresses[1]))
+	assert.Equal(t, *remoteTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[1]))
 
 	// token bridge for chain does not exist
 	invalidTokenWrapperAddress := randomAddress()
@@ -213,7 +217,7 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 		isLocalToken:          true,
 		tokenId:               randomByte32(),
 		tokenWrapperAddress:   invalidTokenWrapperAddress,
-		tokenWrapperId:        mustToContractId(invalidTokenWrapperAddress),
+		tokenWrapperId:        toContractId(invalidTokenWrapperAddress),
 	}
 	ignoreInvalidEvent := func(info *tokenWrapperInfo, index uint64) {
 		checkEventIndex(index)
@@ -254,4 +258,135 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 	contractId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
 	assert.True(t, ok)
 	assert.Equal(t, contractId, localTokenWrapperId)
+}
+
+func TestValidateGovernanceEvents(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	logger, err := zap.NewProduction()
+	assert.Nil(t, err)
+
+	watcher := &Watcher{
+		db:                      db,
+		localTokenWrapperCache:  sync.Map{},
+		remoteTokenWrapperCache: sync.Map{},
+		msgChan:                 make(chan *common.MessagePublication, 4),
+		tokenBridgeContract:     randomAddress(),
+	}
+
+	remoteChainId := uint16(2)
+	localChainId := uint16(3)
+	localTokenId := randomByte32()
+	localTokenWrapperAddress := randomAddress()
+	localTokenWrapperId := toContractId(localTokenWrapperAddress)
+	remoteTokenId := randomByte32()
+	remoteTokenWrapperAddress := randomAddress()
+	remoteTokenWrapperId := toContractId(remoteTokenWrapperAddress)
+
+	err = db.addLocalTokenWrapper(localTokenId, remoteChainId, localTokenWrapperAddress)
+	assert.Nil(t, err)
+	err = db.addRemoteTokenWrapper(remoteTokenId, remoteTokenWrapperAddress)
+	assert.Nil(t, err)
+
+	received := func() *common.MessagePublication {
+		timer := time.NewTimer(200 * time.Millisecond)
+		defer timer.Stop()
+
+		select {
+		case msg := <-watcher.msgChan:
+			return msg
+		case <-timer.C:
+			return nil
+		}
+	}
+
+	tokenBridgeContractId := toContractId(watcher.tokenBridgeContract)
+	test := func(transferMsg *TransferMessage) {
+		unconfirmedEvent := &UnconfirmedEvent{
+			blockHeader: &BlockHeader{},
+			event: &Event{
+				Fields: []*Field{
+					fieldFromByte32(tokenBridgeContractId),
+					fieldFromBigInt(big.NewInt(1)),
+					fieldFromByteVec(randomBytes(4)),
+					fieldFromByteVec(transferMsg.encode()),
+					fieldFromBigInt(big.NewInt(0)),
+				},
+			},
+		}
+		confirmedEvents := &ConfirmedEvents{events: []*UnconfirmedEvent{unconfirmedEvent}}
+		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
+		assert.Nil(t, err)
+		wormholeMsg, err := WormholeMessageFromEvent(confirmedEvents.events[0].event)
+		assert.Nil(t, err)
+		diff := deep.Equal(*received(), *wormholeMsg.toMessagePublication(&BlockHeader{}))
+		assert.Nil(t, diff)
+
+		confirmedEvents.events[0].event.Fields[0] = fieldFromByte32(randomByte32())
+		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
+		assert.Nil(t, err)
+		assert.Nil(t, received())
+
+		confirmedEvents.events[0].event.Fields[0] = fieldFromByte32(tokenBridgeContractId)
+		transferMsg.senderId = randomByte32()
+		confirmedEvents.events[0].event.Fields[3] = fieldFromByteVec(transferMsg.encode())
+		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
+		assert.Nil(t, err)
+		assert.Nil(t, received())
+	}
+
+	// transfer local token message
+	test(&TransferMessage{
+		amount:       *big.NewInt(10),
+		tokenId:      localTokenId,
+		tokenChainId: localChainId,
+		toAddress:    randomByte32(),
+		toChainId:    remoteChainId,
+		fee:          *big.NewInt(1),
+		isLocalToken: true,
+		senderId:     localTokenWrapperId,
+	})
+
+	// transfer remote token message
+	test(&TransferMessage{
+		amount:       *big.NewInt(10),
+		tokenId:      remoteTokenId,
+		tokenChainId: remoteChainId,
+		toAddress:    randomByte32(),
+		toChainId:    remoteChainId,
+		fee:          *big.NewInt(1),
+		isLocalToken: false,
+		senderId:     remoteTokenWrapperId,
+	})
+
+	// non-transfer message
+	unconfirmedEvent := &UnconfirmedEvent{
+		blockHeader: &BlockHeader{},
+		event: &Event{
+			Fields: []*Field{
+				fieldFromByte32(tokenBridgeContractId),
+				fieldFromBigInt(big.NewInt(1)),
+				fieldFromByteVec(randomBytes(4)),
+				fieldFromByteVec([]byte{100, 10}),
+				fieldFromBigInt(big.NewInt(0)),
+			},
+		},
+	}
+	confirmedEvents := &ConfirmedEvents{events: []*UnconfirmedEvent{unconfirmedEvent}}
+	err = watcher.validateGovernanceEvents(logger, confirmedEvents)
+	assert.Nil(t, err)
+	wormholeMsg, err := WormholeMessageFromEvent(confirmedEvents.events[0].event)
+	assert.Nil(t, err)
+	diff := deep.Equal(*received(), *wormholeMsg.toMessagePublication(&BlockHeader{}))
+	assert.Nil(t, diff)
+}
+
+func randomBytes(length int) []byte {
+	data := make([]byte, length)
+	size, err := rand.Read(data)
+	assume(size == length)
+	assume(err == nil)
+	return data
 }

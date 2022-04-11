@@ -156,12 +156,6 @@ func TestSubscribeEvents(t *testing.T) {
 	cancel()
 }
 
-func mustToContractId(address string) Byte32 {
-	contractId, err := ToContractId(address)
-	assume(err == nil)
-	return contractId
-}
-
 func TestUpdateTokenBridgeForChain(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
@@ -230,6 +224,6 @@ func TestUpdateTokenBridgeForChain(t *testing.T) {
 
 		contractId, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
 		assert.True(t, ok)
-		assert.Equal(t, *contractId.(*Byte32), mustToContractId(contractAddresses[0]))
+		assert.Equal(t, *contractId.(*Byte32), toContractId(contractAddresses[0]))
 	}
 }

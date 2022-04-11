@@ -38,6 +38,12 @@ func toContractAddress(id Byte32) string {
 	return base58.Encode(bytes)
 }
 
+func toContractId(address string) Byte32 {
+	contractId, err := ToContractId(address)
+	assume(err == nil)
+	return contractId
+}
+
 type Hash [HashLength]byte
 
 func (h Hash) ToHex() string {
@@ -99,6 +105,13 @@ func (f *Field) ToBool() bool {
 	return f.Value.(bool)
 }
 
+func fieldFromBool(value bool) *Field {
+	return &Field{
+		Type:  "Bool",
+		Value: value,
+	}
+}
+
 func (f *Field) toBigInt() *big.Int {
 	num, succeed := new(big.Int).SetString(f.Value.(string), 10)
 	assume(succeed)
@@ -110,6 +123,16 @@ func (f *Field) ToU256() *big.Int {
 	return f.toBigInt()
 }
 
+func fieldFromBigInt(num *big.Int) *Field {
+	assume(num.Sign() >= 0)
+	var byte32 Byte32
+	num.FillBytes(byte32[:])
+	return &Field{
+		Type:  "U256",
+		Value: byte32.ToHex(),
+	}
+}
+
 func (f *Field) ToI256() *big.Int {
 	assume(f.Type == "I256")
 	return f.toBigInt()
@@ -118,6 +141,17 @@ func (f *Field) ToI256() *big.Int {
 func (f *Field) ToByteVec() []byte {
 	assume(f.Type == "ByteVec")
 	return HexToBytes(f.Value.(string))
+}
+
+func fieldFromByteVec(data []byte) *Field {
+	return &Field{
+		Type:  "ByteVec",
+		Value: hex.EncodeToString(data),
+	}
+}
+
+func fieldFromByte32(byte32 Byte32) *Field {
+	return fieldFromByteVec(byte32[:])
 }
 
 func (f *Field) ToByte32() (*Byte32, error) {
@@ -133,6 +167,13 @@ func (f *Field) ToByte32() (*Byte32, error) {
 func (f *Field) ToAddress() string {
 	assume(f.Type == "Address")
 	return f.Value.(string)
+}
+
+func fieldFromAddress(address string) *Field {
+	return &Field{
+		Type:  "Address",
+		Value: address,
+	}
 }
 
 func (f *Field) ToUint64() (uint64, error) {

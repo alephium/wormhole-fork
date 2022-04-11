@@ -283,7 +283,7 @@ func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.Mess
 }
 
 func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
-	assume(len(event.Fields) == 4)
+	assume(len(event.Fields) == 5)
 	emitter, err := event.Fields[0].ToByte32()
 	if err != nil {
 		return nil, err
@@ -292,14 +292,14 @@ func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	data := event.Fields[2].ToByteVec()
-
-	consistencyLevel, err := event.Fields[3].ToUint8()
+	nonceBytes := event.Fields[2].ToByteVec()
+	assume(len(nonceBytes) == 4)
+	nonce := binary.BigEndian.Uint32(nonceBytes)
+	payload := event.Fields[3].ToByteVec()
+	consistencyLevel, err := event.Fields[4].ToUint8()
 	if err != nil {
 		return nil, err
 	}
-	nonce := binary.BigEndian.Uint32(data[0:4])
-	payload := data[4:]
 	return &WormholeMessage{
 		event:            event,
 		emitter:          *emitter,
@@ -345,6 +345,39 @@ func readBool(reader *bytes.Reader) bool {
 	b, err := reader.ReadByte()
 	assume(err == nil)
 	return b == 1
+}
+
+func writeBigInt(buffer *bytes.Buffer, num *big.Int) {
+	var byte32 Byte32
+	buffer.Write(num.FillBytes(byte32[:]))
+}
+
+func writeUint16(buffer *bytes.Buffer, value uint16) {
+	data := make([]byte, 2)
+	binary.BigEndian.PutUint16(data, value)
+	buffer.Write(data)
+}
+
+func writeBool(buffer *bytes.Buffer, value bool) {
+	if value {
+		buffer.WriteByte(1)
+	} else {
+		buffer.WriteByte(0)
+	}
+}
+
+func (t *TransferMessage) encode() []byte {
+	buffer := new(bytes.Buffer)
+	buffer.WriteByte(transferPayloadId)
+	writeBigInt(buffer, &t.amount)
+	buffer.Write(t.tokenId[:])
+	writeUint16(buffer, t.tokenChainId)
+	buffer.Write(t.toAddress[:])
+	writeUint16(buffer, t.toChainId)
+	writeBigInt(buffer, &t.fee)
+	writeBool(buffer, t.isLocalToken)
+	buffer.Write(t.senderId[:])
+	return buffer.Bytes()
 }
 
 func TransferMessageFromBytes(data []byte) *TransferMessage {
