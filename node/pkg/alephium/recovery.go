@@ -56,6 +56,18 @@ func (w *Watcher) fetchEvents(
 	return count, nil
 }
 
+func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*Event) ([]*UnconfirmedEvent, error) {
+	unconfirmedEvents := make([]*UnconfirmedEvent, len(events))
+	for i, event := range events {
+		unconfirmed, err := w.toUnconfirmedEvent(ctx, client, event)
+		if err != nil {
+			return nil, err
+		}
+		unconfirmedEvents[i] = unconfirmed
+	}
+	return unconfirmedEvents, nil
+}
+
 func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
 	handler := func(confirmed *ConfirmedEvents) error {
 		return w.updateTokenBridgeForChain(ctx, logger, client, confirmed)

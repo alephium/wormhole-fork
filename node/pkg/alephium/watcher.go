@@ -197,24 +197,12 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event 
 	}, err
 }
 
-func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*Event) ([]*UnconfirmedEvent, error) {
-	unconfirmedEvents := make([]*UnconfirmedEvent, len(events))
-	for i, event := range events {
-		unconfirmed, err := w.toUnconfirmedEvent(ctx, client, event)
-		if err != nil {
-			return nil, err
-		}
-		unconfirmedEvents[i] = unconfirmed
-	}
-	return unconfirmedEvents, nil
-}
-
 func (w *Watcher) updateTokenBridgeForChain(ctx context.Context, logger *zap.Logger, client *Client, confirmed *ConfirmedEvents) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
 
-	maxIndex := uint64(0)
+	maxIndex := confirmed.events[0].eventIndex
 	batch := newBatch()
 	for _, event := range confirmed.events {
 		if event.eventIndex > maxIndex {

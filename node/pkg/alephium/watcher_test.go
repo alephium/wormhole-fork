@@ -3,10 +3,12 @@ package alephium
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -152,4 +154,82 @@ func TestSubscribeEvents(t *testing.T) {
 	assert.True(t, len(confirmedEvents) == 2)
 
 	cancel()
+}
+
+func mustToContractId(address string) Byte32 {
+	contractId, err := ToContractId(address)
+	assume(err == nil)
+	return contractId
+}
+
+func TestUpdateTokenBridgeForChain(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	watcher := &Watcher{
+		chainIndex: &ChainIndex{
+			FromGroup: 0,
+			ToGroup:   0,
+		},
+		db:                       db,
+		tokenBridgeForChainCache: sync.Map{},
+	}
+
+	contractAddresses := []string{
+		randomAddress(), randomAddress(), randomAddress(),
+	}
+	tokenBridgeForChains := make(map[string]*ContractState)
+	var confirmedEvents ConfirmedEvents
+	for i := 0; i < 3; i++ {
+		address := contractAddresses[i]
+		tokenBridgeForChains[address] = &ContractState{
+			Address: address,
+			Fields: []*Field{
+				{}, {},
+				{
+					Type:  "U256",
+					Value: fmt.Sprintf("%d", i),
+				},
+			},
+		}
+
+		confirmedEvents.events = append(confirmedEvents.events, &UnconfirmedEvent{
+			event: &Event{
+				Fields: []*Field{
+					{
+						Type:  "Address",
+						Value: address,
+					},
+				},
+			},
+		})
+	}
+	confirmedEvents.events[0].eventIndex = 2
+	confirmedEvents.events[1].eventIndex = 1
+	confirmedEvents.events[2].eventIndex = 3
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(tokenBridgeForChains[parts[2]])
+	}))
+
+	client := NewClient(server.URL, "", 10)
+	err = watcher.updateTokenBridgeForChain(context.Background(), zap.NewNop(), client, &confirmedEvents)
+	assert.Nil(t, err)
+
+	eventIndex, err := watcher.db.getLastTokenBridgeEventIndex()
+	assert.Nil(t, err)
+	assert.Equal(t, *eventIndex, uint64(3))
+
+	for i := 0; i < 3; i++ {
+		address, err := watcher.db.getRemoteChain(uint16(i))
+		assert.Nil(t, err)
+		assert.Equal(t, address, contractAddresses[i])
+
+		contractId, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
+		assert.True(t, ok)
+		assert.Equal(t, *contractId.(*Byte32), mustToContractId(contractAddresses[0]))
+	}
 }
