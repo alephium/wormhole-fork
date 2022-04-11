@@ -293,7 +293,9 @@ func WormholeMessageFromEvent(event *Event) (*WormholeMessage, error) {
 		return nil, err
 	}
 	nonceBytes := event.Fields[2].ToByteVec()
-	assume(len(nonceBytes) == 4)
+	if len(nonceBytes) != 4 {
+		return nil, fmt.Errorf("invalid nonce size")
+	}
 	nonce := binary.BigEndian.Uint32(nonceBytes)
 	payload := event.Fields[3].ToByteVec()
 	consistencyLevel, err := event.Fields[4].ToUint8()
