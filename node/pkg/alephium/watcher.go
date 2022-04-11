@@ -27,12 +27,10 @@ type Watcher struct {
 	tokenWrapperFactoryContract   string
 	undoneSequenceEmitterContract string
 	chainIndex                    *ChainIndex
-	initHeight                    uint32
 
 	readiness readiness.Component
 
 	msgChan  chan *common.MessagePublication
-	setChan  chan *common.GuardianSet
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	tokenBridgeForChainCache     sync.Map
@@ -64,10 +62,8 @@ func NewAlephiumWatcher(
 	fromGroup uint8,
 	toGroup uint8,
 	contracts []string,
-	initHeight uint32,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
-	setEvents chan *common.GuardianSet,
 	minConfirmations uint64,
 	obsvReqC chan *gossipv1.ObservationRequest,
 	db *Database,
@@ -84,7 +80,6 @@ func NewAlephiumWatcher(
 		tokenWrapperFactoryContract:   contracts[2],
 		undoneSequenceEmitterContract: contracts[3],
 
-		initHeight: initHeight,
 		chainIndex: &ChainIndex{
 			FromGroup: fromGroup,
 			ToGroup:   toGroup,
@@ -92,7 +87,6 @@ func NewAlephiumWatcher(
 
 		readiness: readiness,
 		msgChan:   messageEvents,
-		setChan:   setEvents,
 		obsvReqC:  obsvReqC,
 
 		tokenBridgeForChainCache:     sync.Map{},
