@@ -45,6 +45,7 @@ func init() {
 	AdminClientInjectGuardianSetUpdateCmd.Flags().AddFlagSet(pf)
 	AdminClientFindMissingMessagesCmd.Flags().AddFlagSet(pf)
 	AdminClientExecuteUndoneSequenceCmd.Flags().AddFlagSet(pf)
+	AdminClientListUndoneSequenceCmd.Flags().AddFlagSet(pf)
 	AdminClientListNodes.Flags().AddFlagSet(pf)
 	DumpVAAByMessageID.Flags().AddFlagSet(pf)
 	SendObservationRequest.Flags().AddFlagSet(pf)
@@ -52,6 +53,7 @@ func init() {
 	AdminCmd.AddCommand(AdminClientInjectGuardianSetUpdateCmd)
 	AdminCmd.AddCommand(AdminClientFindMissingMessagesCmd)
 	AdminCmd.AddCommand(AdminClientExecuteUndoneSequenceCmd)
+	AdminCmd.AddCommand(AdminClientListUndoneSequenceCmd)
 	AdminCmd.AddCommand(AdminClientGovernanceVAAVerifyCmd)
 	AdminCmd.AddCommand(AdminClientListNodes)
 	AdminCmd.AddCommand(DumpVAAByMessageID)
@@ -75,6 +77,13 @@ var AdminClientFindMissingMessagesCmd = &cobra.Command{
 	Short: "Find sequence number gaps for the given chain ID and emitter address",
 	Run:   runFindMissingMessages,
 	Args:  cobra.ExactArgs(2),
+}
+
+var AdminClientListUndoneSequenceCmd = &cobra.Command{
+	Use:   "list-undone-sequences [CHAIN_ID]",
+	Short: "List undone sequences",
+	Run:   runListUndoneSequences,
+	Args:  cobra.ExactArgs(1),
 }
 
 var AdminClientExecuteUndoneSequenceCmd = &cobra.Command{
@@ -223,6 +232,35 @@ func runExecuteUndoneSequence(cmd *cobra.Command, args []string) {
 		log.Fatalf("failed to run ExecuteUndoneSequence rpc, error: %v", err)
 	}
 	log.Printf("vaa body: %v", resp.VaaBody)
+}
+
+func runListUndoneSequences(cmd *cobra.Command, args []string) {
+	chainId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatalf("invalid chain id: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	conn, err, c := getAdminClient(ctx, *clientSocketPath)
+	defer conn.Close()
+	if err != nil {
+		log.Fatalf("failed to get admin client: %v", err)
+	}
+
+	request := &nodev1.UndoneSequenceRequest{
+		RemoteChainId: uint32(chainId),
+	}
+	resp, err := c.GetUndoneSequences(ctx, request)
+	if err != nil {
+		log.Fatalf("failed to run ListUndoneSequences rpc, error: %v", err)
+	}
+	undoneSequences := resp.Sequences
+	for _, s := range undoneSequences {
+		fmt.Printf("sequence: %v, status: %v\n", s.Sequence, s.Status)
+	}
+	fmt.Printf("undone sequence size: %v\n", len(undoneSequences))
 }
 
 // runDumpVAAByMessageID uses GetSignedVAA to request the given message,
