@@ -72,8 +72,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 			}
 
 			confirmed := &ConfirmedEvents{
-				events:          confirmedEvents,
-				contractAddress: w.governanceContract,
+				events: confirmedEvents,
 			}
 			if err := w.validateGovernanceEvents(logger, confirmed); err != nil {
 				logger.Error("failed to reobserve transfer message", zap.Error(err))

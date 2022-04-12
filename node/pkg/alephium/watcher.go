@@ -52,8 +52,7 @@ type UnconfirmedEvent struct {
 }
 
 type ConfirmedEvents struct {
-	events          []*UnconfirmedEvent
-	contractAddress string
+	events []*UnconfirmedEvent
 }
 
 func NewAlephiumWatcher(
@@ -363,8 +362,7 @@ func (w *Watcher) subscribe_(
 		}
 
 		confirmedEvents := &ConfirmedEvents{
-			events:          confirmed,
-			contractAddress: contractAddress,
+			events: confirmed,
 		}
 		if err := handler(confirmedEvents); err != nil {
 			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))

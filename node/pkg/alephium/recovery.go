@@ -49,8 +49,7 @@ func (w *Watcher) fetchEvents(
 	}
 	// TODO: wait for confirmed???
 	confirmed := &ConfirmedEvents{
-		events:          unconfirmed,
-		contractAddress: contractAddress,
+		events: unconfirmed,
 	}
 	if err := handler(confirmed); err != nil {
 		return nil, err
