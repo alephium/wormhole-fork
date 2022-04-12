@@ -175,7 +175,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 }
 
 func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
-	// TODO: cache
+	// TODO: LRU cache
 	header, err := client.GetBlockHeader(ctx, event.BlockHash)
 	if err != nil {
 		return nil, err
