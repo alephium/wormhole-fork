@@ -26,7 +26,7 @@ describe("test governance", () => {
         const vaaBody = new VAABody(updateGuardianSet.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'updateGuardianSet')
-        const governanceState = testResult.contracts[0]
+        const governanceState = testResult.contracts[1]
         expect(governanceState.fields[8]).toEqual(Array(
             initGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase()),
             updateGuardianSet.newGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase())
@@ -71,7 +71,7 @@ describe("test governance", () => {
         const vaaBody = new VAABody(setMessageFee.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'setMessageFee')
-        const governanceState = testResult.contracts[0]
+        const governanceState = testResult.contracts[1]
         expect(governanceState.fields[7]).toEqual(Number(setMessageFee.newMessageFee))
     })
 
@@ -97,7 +97,7 @@ describe("test governance", () => {
         expect(BigInt(assetOutput.alphAmount)).toEqual(amount)
 
         const contractOutput = testResult.txOutputs[1]
-        const governanceState = testResult.contracts[0]
+        const governanceState = testResult.contracts[1]
         expect(contractOutput.type).toEqual("ContractOutput")
         expect(contractOutput.address).toEqual(governanceState.address)
         expect(contractOutput.alphAmount).toEqual(BigInt(asset.alphAmount) - amount)

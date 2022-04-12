@@ -12,8 +12,8 @@ TxContract TokenBridgeForChain(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec
-) extends Sequence(next, next1, next2, undone), Math() {
+    mut undoneSequenceId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId), Math() {
     pub fn getLocalTokenBridgeId() -> (ByteVec) {
         return localTokenBridgeId
     }

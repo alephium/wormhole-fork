@@ -1,60 +1,84 @@
 TxContract UndoneSequence(
+    owner: ByteVec,
     mut undone: ByteVec
 ) {
-    event SequenceRemoved(seq: U256)
+    event SequencesRemoved(seqs: ByteVec)
 
-    fn add(seq: U256) -> () {
-        if (undone == #) {
-            undone = u256To8Byte!(seq)
-            return
-        }
-
-        let length = size!(undone)
-        let max = u256From8Byte!(byteVecSlice!(undone, length - 8, length))
-        assert!(seq > max)
-        undone = undone ++ u256To8Byte!(seq)
+    pub fn getOwner() -> ByteVec {
+        return owner
     }
 
-    fn addSequences(current: U256, bitMap: U256) -> () {
+    pub fn getUndoneList() -> ByteVec {
+        return undone
+    }
+
+    fn add(seq: U256) -> ByteVec {
+        if (undone == #) {
+            undone = u256To8Byte!(seq)
+            return #
+        }
+
+        let mut length = size!(undone)
+        let max = u256From8Byte!(byteVecSlice!(undone, length - 8, length))
+        assert!(seq > max)
+
+        undone = undone ++ u256To8Byte!(seq)
+        length = length + 8
+        if ((length / 8) > {{ listMaxSize }}) {
+            let removed = byteVecSlice!(undone, 0, 8)
+            undone = byteVecSlice!(undone, 8, length)
+            return removed
+        }
+        return #
+    }
+
+    fn addSequences(seq: U256, bitMap: U256) -> ByteVec {
         let mut index = 0
+        let mut removed = #
         while (index < 8) {
             if ((bitMap >> index) & 0x01 == 0) {
-                add(current + index)
+                removed = removed ++ add(seq + index)
             }
             index = index + 1
         }
+        return removed
     }
 
-    fn addToUndone(current: U256, bitMap: U256) -> () {
+    pub fn addToUndone(seq: U256, current: U256, bitMap: U256) -> () {
+        assert!(owner == callerContractId!())
         let mut index = 0
+        let mut removed = #
         while (index < 256) {
             let value = (bitMap >> index) & 0xff
             if (value != 0xff) {
-                addSequences(current + index, value)
+                removed = removed ++ addSequences(seq + index, value)
             }
             index = index + 8
         }
+        emit SequencesRemoved(removed ++ removeOldUndone(current))
     }
 
-    fn removeOldUndone(current: U256) -> () {
+    fn removeOldUndone(current: U256) -> ByteVec {
         if (undone == #) {
-            return
+            return #
         }
 
         let mut min = u256From8Byte!(byteVecSlice!(undone, 0, 8))
+        let mut removed = #
         while (current > min + {{ distance }}) {
-            let removed = u256From8Byte!(byteVecSlice!(undone, 0, 8))
-            emit SequenceRemoved(removed)
+            removed = removed ++ byteVecSlice!(undone, 0, 8)
             undone = byteVecSlice!(undone, 8, size!(undone))
-            if (undone != #) {
+            if undone != # {
                 min = u256From8Byte!(byteVecSlice!(undone, 0, 8))
             } else {
-                return
+                return removed
             }
         }
+        return removed
     }
 
-    fn trySetDone(seq: U256) -> Bool {
+    pub fn trySetDone(seq: U256) -> Bool {
+        assert!(owner == callerContractId!())
         let mut begin = 0i
         let mut end = i256!(size!(undone) / 8) - 1i
         while (begin <= end) {

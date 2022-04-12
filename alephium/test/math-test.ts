@@ -35,7 +35,7 @@ describe('test math', () => {
                 deNormalizedAmount: BigInt("10000000000")
             }
         ]
-        cases.forEach(async tc => {
+        for (let tc of cases) {
             let testResult = await contract.testPublicMethod(client, 'normalizeAmount', {
                 testArgs: [tc.amount, tc.decimals]
             })
@@ -49,6 +49,6 @@ describe('test math', () => {
             expect(testResult.returns.length).toEqual(1)
             const deNormalizedAmount = testResult.returns[0] as Number256
             expect(deNormalizedAmount).toEqual(Number(tc.deNormalizedAmount))
-        })
+        }
     })
 })

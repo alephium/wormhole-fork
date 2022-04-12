@@ -1,5 +1,6 @@
 import { CliqueClient, Contract } from 'alephium-web3'
 import { zeroPad } from '../../lib/utils'
+import { createUndoneSequence } from './sequence-fixture'
 import { alphChainId, ContractInfo, dustAmount, GuardianSet, randomContractAddress } from './wormhole-fixture'
 
 const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
@@ -69,8 +70,11 @@ export class SubmitTransferFee {
 
 export async function createGovernance(client: CliqueClient): Promise<ContractInfo> {
     const address = randomContractAddress()
+    const undoneSequenceInfo = await createUndoneSequence(client, address)
     const governanceContract = await Contract.from(client, 'governance.ral', {
-        distance: 64,
+        undoneSequenceCodeHash: undoneSequenceInfo.contract.codeHash,
+        listMaxSize: 256,
+        distance: 256,
     })
     const initFields = [
         alphChainId,
@@ -79,7 +83,7 @@ export async function createGovernance(client: CliqueClient): Promise<ContractIn
         0,
         0,
         0,
-        '',
+        undoneSequenceInfo.address,
         messageFee,
         Array(Array(19).fill('00'), initGuardianSet.guardianSetAddresses(19)),
         [0, initGuardianSet.index],
@@ -91,5 +95,5 @@ export async function createGovernance(client: CliqueClient): Promise<ContractIn
         {alphAmount: dustAmount},
         address
     )
-    return new ContractInfo(governanceContract, contractState, [], address)
+    return new ContractInfo(governanceContract, contractState, undoneSequenceInfo.states(), address)
 }

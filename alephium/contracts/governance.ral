@@ -7,13 +7,13 @@ TxContract Governance(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec,
+    mut undoneSequenceId: ByteVec,
     mut messageFee: U256,
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut guardianSetSizes: [U256; 2],
     mut previousGuardianSetExpirationTime: U256
-) extends Sequence(next, next1, next2, undone) {
+) extends Sequence(next, next1, next2, undoneSequenceId) {
 
     event WormholeMessage(sender: ByteVec, sequence: U256, data: ByteVec, consistencyLevel: U256)
 

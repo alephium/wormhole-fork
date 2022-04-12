@@ -183,6 +183,10 @@ export function toRecipientId(address: string): string {
     return toHex(bytes.slice(1))
 }
 
+export function randomContractId(): string {
+    return toContractId(randomContractAddress())
+}
+
 export function randomContractAddress(): string {
     const prefix = Buffer.from([0x03])
     const bytes = Buffer.concat([prefix, randomBytes(32)])

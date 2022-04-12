@@ -96,7 +96,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testToken = await createTestToken(client, decimals, symbol, name)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
@@ -124,7 +124,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -191,7 +191,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -260,7 +260,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const remoteTokenId = toHex(randomBytes(32))
         const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
@@ -295,7 +295,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -364,7 +364,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -434,7 +434,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const tokenBridgeInfo = await createTokenBridge(client)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
