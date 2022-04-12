@@ -1,6 +1,4 @@
-import "serde.ral"
-
-TxContract TokenWrapperFactory() extends Serde() {
+TxContract TokenWrapperFactory() {
     pub payable fn createWrapper(
         tokenBridgeId: ByteVec,
         localChainId: U256,
@@ -14,16 +12,17 @@ TxContract TokenWrapperFactory() extends Serde() {
         createContractAlphAmount: U256
     ) -> () {
         let contractCode = #{{ tokenWrapperBinCode }}
-        let encodedState = byteVec!(9i) ++ // state size
-                           encodeByteVec(tokenBridgeId) ++
-                           encodeByteVec(callerContractId!()) ++
-                           encodeU256(localChainId) ++
-                           encodeU256(remoteChainId) ++
-                           encodeByteVec(tokenContractId) ++
-                           encodeBool(isLocalToken) ++
-                           encodeU256(tokenDecimals) ++
-                           encodeByteVec(tokenSymbol) ++
-                           encodeByteVec(tokenName)
+        let encodedState = encode!(
+            tokenBridgeId,
+            callerContractId!(),
+            localChainId,
+            remoteChainId,
+            tokenContractId,
+            isLocalToken,
+            tokenDecimals,
+            tokenSymbol,
+            tokenName
+        )
 
         approveAlph!(payer, createContractAlphAmount)
         assert!(remoteChainId != localChainId)

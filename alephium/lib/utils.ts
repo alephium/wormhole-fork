@@ -1,4 +1,3 @@
-import { BuildScriptTx, Script, Signer, SubmissionResult } from 'alephium-js'
 import { randomBytes } from 'crypto'
 
 export function toHex(bytes: Uint8Array): string {

@@ -1,9 +1,9 @@
-import "token.ral"
+import "test_token.ral"
 
 TxScript Main {
     pub payable fn main() -> () {
         approveAlph!(@{{ sender }}, {{ amount }})
-        let token = Token(#{{ tokenAddress }})
+        let token = TestToken(#{{ tokenAddress }})
         token.buy(@{{ sender }}, {{ amount }})
     }
 }

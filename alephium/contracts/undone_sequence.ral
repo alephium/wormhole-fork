@@ -1,10 +1,18 @@
 TxContract UndoneSequence(
+    owner: ByteVec,
     mut undone: ByteVec
 ) {
     event SequenceRemoved(seq: U256)
 
-    // TODO: make these functions as private
-    pub fn add(seq: U256) -> () {
+    pub fn getOwner() -> ByteVec {
+        return owner
+    }
+
+    pub fn getUndoneList() -> ByteVec {
+        return undone
+    }
+
+    fn add(seq: U256) -> () {
         if (undone == #) {
             undone = u256To8Byte!(seq)
             return
@@ -27,6 +35,7 @@ TxContract UndoneSequence(
     }
 
     pub fn addToUndone(current: U256, bitMap: U256) -> () {
+        assert!(owner == callerContractId!())
         let mut index = 0
         while (index < 256) {
             let value = (bitMap >> index) & 0xff
@@ -38,6 +47,7 @@ TxContract UndoneSequence(
     }
 
     pub fn removeOldUndone(current: U256) -> () {
+        assert!(owner == callerContractId!())
         if (undone == #) {
             return
         }
@@ -56,6 +66,7 @@ TxContract UndoneSequence(
     }
 
     pub fn trySetDone(seq: U256) -> Bool {
+        assert!(owner == callerContractId!())
         let mut begin = 0i
         let mut end = i256!(size!(undone) / 8) - 1i
         while (begin <= end) {

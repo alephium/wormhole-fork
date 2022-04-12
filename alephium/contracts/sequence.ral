@@ -5,8 +5,21 @@ TxContract Sequence(
     mut next: U256,
     mut next1: U256, // TODO: better name
     mut next2: U256,
-    mut undone: ByteVec
-) extends UndoneSequence(undone) {
+    mut undoneSequenceId: ByteVec
+) {
+    fn initialized() -> Bool {
+        return undoneSequenceId != #
+    }
+
+    pub fn init(contractId: ByteVec) -> () {
+        assert!(!initialized())
+        undoneSequenceId = contractId
+        let undoneSequence = UndoneSequence(contractId)
+        assert!(undoneSequence.getUndoneList() == #)
+        assert!(undoneSequence.getOwner() == selfContractId!())
+        assert!(codeHash!(contractId) == {{ undoneSequenceCodeHash }})
+    }
+
     pub fn getNext() -> U256 {
         return next 
     }
@@ -38,8 +51,10 @@ TxContract Sequence(
     }
 
     fn checkSequence(seq: U256) -> () {
+        assert!(initialized())
+        let undoneSequence = UndoneSequence(undoneSequenceId)
         if (seq < next) {
-            assert!(trySetDone(seq))
+            assert!(undoneSequence.trySetDone(seq))
             return
         }
 
@@ -48,7 +63,7 @@ TxContract Sequence(
         }
 
         assert!(seq < (next + 512))
-        removeOldUndone(seq)
+        undoneSequence.removeOldUndone(seq)
 
         let seqIndex = seq - next
         let pos = seqIndex / 8

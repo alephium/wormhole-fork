@@ -1,5 +1,5 @@
 import "token_bridge.ral"
-import "token.ral"
+import "token_interface.ral"
 import "token_wrapper_factory.ral"
 import "math.ral"
 import "sequence.ral"
@@ -12,8 +12,8 @@ TxContract TokenBridgeForChain(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec
-) extends Sequence(next, next1, next2, undone), Math() {
+    mut undoneSequenceId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId), Math() {
     pub fn getLocalTokenBridgeId() -> (ByteVec) {
         return localTokenBridgeId
     }
@@ -47,7 +47,14 @@ TxContract TokenBridgeForChain(
     }
 
     pub payable fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        let token = Token(tokenId)
+        let token = ERC20Token(tokenId)
+        let symbol = token.symbol()
+        let symbolSize = size!(symbol)
+        assert!(symbolSize <= 32)
+        let name = token.name()
+        let nameSize = size!(name)
+        assert!(nameSize <= 32)
+
         let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
         approveAlph!(payer, createContractAlphAmount)
         tokenWrapperFactory.createWrapper(
@@ -56,9 +63,9 @@ TxContract TokenBridgeForChain(
             remoteChainId,
             tokenId,
             true,
-            token.getDecimals(),
-            token.getSymbol(),
-            token.getName(),
+            token.decimals(),
+            zeros!(32 - symbolSize) ++ symbol,
+            zeros!(32 - nameSize) ++ name,
             payer,
             createContractAlphAmount
         )

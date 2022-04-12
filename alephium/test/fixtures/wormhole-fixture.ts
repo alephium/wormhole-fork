@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { CliqueClient, Contract, ContractState } from 'alephium-js'
+import { CliqueClient, Contract, ContractState } from 'alephium-web3'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -205,11 +205,11 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed'])
+    await expectFailed(func, ['AssertionFailed'])
 }
 
 export async function expectAssertionFailedOrRecoverEthAddressFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
+    await expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
 }
 
 export function toContractId(address: string): string {

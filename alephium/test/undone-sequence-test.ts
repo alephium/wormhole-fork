@@ -1,7 +1,7 @@
-import { CliqueClient, Contract } from 'alephium-js'
+import { CliqueClient, Contract } from 'alephium-web3'
 import { expectAssertionFailed, randomContractAddress } from './fixtures/wormhole-fixture'
 
-describe("test sequence", () => {
+describe("test undone sequence", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
     const contractAddress = randomContractAddress()
 
@@ -15,7 +15,7 @@ describe("test sequence", () => {
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence.ral', {
             distance: 32
         })
-        let testResult = await undoneSequencetTest.test(client, 'add', {
+        let testResult = await undoneSequencetTest.testPrivateMethod(client, 'add', {
             initialFields: [""],
             address: contractAddress,
             testArgs: [1]
@@ -23,7 +23,7 @@ describe("test sequence", () => {
         let undoneList = testResult.contracts[0].fields[0]
         expect(undoneList).toEqual(sequenceToHex(1))
 
-        testResult = await undoneSequencetTest.test(client, 'add', {
+        testResult = await undoneSequencetTest.testPrivateMethod(client, 'add', {
             initialFields: [undoneList],
             address: contractAddress,
             testArgs: [3]
@@ -32,9 +32,9 @@ describe("test sequence", () => {
         expect(undoneList).toEqual(sequenceToHex(1) + sequenceToHex(3))
 
         const invalids = [2, 3]
-        invalids.forEach(seq => {
-            expectAssertionFailed(async () => {
-                await undoneSequencetTest.test(client, 'add', {
+        invalids.forEach(async seq => {
+            await expectAssertionFailed(async () => {
+                await undoneSequencetTest.testPrivateMethod(client, 'add', {
                     initialFields: [undoneList],
                     address: contractAddress,
                     testArgs: [seq]
@@ -49,7 +49,7 @@ describe("test sequence", () => {
         })
 
         const bitMap = BigInt("0xff") << 8n
-        let testResult = await undoneSequencetTest.test(client, 'addToUndone', {
+        let testResult = await undoneSequencetTest.testPrivateMethod(client, 'addToUndone', {
             initialFields: [""],
             address: contractAddress,
             testArgs: [10, bitMap]
@@ -69,7 +69,7 @@ describe("test sequence", () => {
             distance: 32
         })
 
-        let testResult = await undoneSequencetTest.test(client, 'removeOldUndone', {
+        let testResult = await undoneSequencetTest.testPrivateMethod(client, 'removeOldUndone', {
             initialFields: [""],
             address: contractAddress,
             testArgs: [10]
@@ -77,7 +77,7 @@ describe("test sequence", () => {
         expect(testResult.contracts[0].fields).toEqual([""])
 
         const undoneList = sequenceToHex(10) + sequenceToHex(12) + sequenceToHex(20)
-        testResult = await undoneSequencetTest.test(client, 'removeOldUndone', {
+        testResult = await undoneSequencetTest.testPrivateMethod(client, 'removeOldUndone', {
             initialFields: [undoneList],
             address: contractAddress,
             testArgs: [50]
@@ -93,7 +93,7 @@ describe("test sequence", () => {
             distance: 32
         })
 
-        let testResult = await undoneSequencetTest.test(client, 'trySetDone', {
+        let testResult = await undoneSequencetTest.testPrivateMethod(client, 'trySetDone', {
             initialFields: [""],
             address: contractAddress,
             testArgs: [10]
@@ -105,7 +105,7 @@ describe("test sequence", () => {
         const undoneList = undoneSequences.map(seq => sequenceToHex(seq)).join("")
         const faileds = [1, 14, 21, 23, 28, 33]
         faileds.forEach(async seq => {
-            testResult = await undoneSequencetTest.test(client, 'trySetDone', {
+            testResult = await undoneSequencetTest.testPrivateMethod(client, 'trySetDone', {
                 initialFields: [undoneList],
                 address: contractAddress,
                 testArgs: [seq]
@@ -115,7 +115,7 @@ describe("test sequence", () => {
         })
 
         undoneSequences.forEach(async (seq, index) => {
-            testResult = await undoneSequencetTest.test(client, 'trySetDone', {
+            testResult = await undoneSequencetTest.testPrivateMethod(client, 'trySetDone', {
                 initialFields: [undoneList.slice(index * 16)],
                 address: contractAddress,
                 testArgs: [seq]

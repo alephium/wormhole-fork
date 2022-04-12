@@ -1,4 +1,4 @@
-import { CliqueClient, Script, Signer } from "alephium-js";
+import { CliqueClient, Script, Signer } from "alephium-web3";
 import { nonce } from "../lib/utils";
 import { consistencyLevel, messageFee } from "./env";
 

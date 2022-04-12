@@ -1,4 +1,4 @@
-import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, Val } from 'alephium-js'
+import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, Val } from 'alephium-web3'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13

@@ -1,8 +1,7 @@
 import "governance.ral"
 import "sequence.ral"
-import "token.ral"
-import "serde.ral"
 import "token_wrapper.ral"
+import "token_interface.ral"
 
 TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
@@ -11,10 +10,13 @@ TxContract TokenBridge(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec,
+    mut undoneSequenceId: ByteVec,
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
-) extends Sequence(next, next1, next2, undone), Serde() {
+) extends Sequence(next, next1, next2, undoneSequenceId) {
+    // TODO: rename
+    event FailedTransferDone(remoteChainId: U256, seq: U256)
+
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
@@ -65,15 +67,9 @@ TxContract TokenBridge(
         assert!(remoteChainId != localChainId)
 
         let contractCode = #{{ tokenBridgeForChainBinCode }}
-        let mut encodedState = byteVec!(8i) ++  // state size
-                           encodeU256(localChainId) ++
-                           encodeByteVec(selfContractId!()) ++
-                           encodeU256(remoteChainId) ++
-                           encodeByteVec(remoteTokenBridgeId) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeByteVec(#)
+        let mut encodedState = encode!(
+            localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
+        )
 
         approveAlph!(payer, createContractAlphAmount)
         createContract!(contractCode, encodedState)
@@ -82,17 +78,22 @@ TxContract TokenBridge(
     pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(tokenId) == 32)
         assert!(size!(nonce) == 4)
-        let token = Token(tokenId)
-        let symbol = token.getSymbol()
-        assert!(size!(symbol) == 32)
-        let name = token.getName()
-        assert!(size!(name) == 32)
+
+        let token = ERC20Token(tokenId)
+        let symbol = token.symbol()
+        let symbolSize = size!(symbol)
+        assert!(symbolSize <= 32)
+        let name = token.name()
+        let nameSize = size!(name)
+        assert!(nameSize <= 32)
+
         let payload = #02 ++ // payloadId
             tokenId ++
             u256To2Byte!(localChainId) ++
-            u256To1Byte!(token.getDecimals()) ++
-            symbol ++
-            name
+            u256To1Byte!(token.decimals()) ++
+            zeros!(32 - symbolSize) ++ symbol ++
+            zeros!(32 - nameSize) ++ name
+
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
         governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
@@ -117,9 +118,6 @@ TxContract TokenBridge(
         approveAlph!(payer, governance.getMessageFee())
         governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
     }
-
-    // TODO: rename
-    event FailedTransferDone(remoteChainId: U256, seq: U256)
 
     // handle failed transfer message
     pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {

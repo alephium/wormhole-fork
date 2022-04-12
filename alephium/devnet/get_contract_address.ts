@@ -1,5 +1,5 @@
-import { CliqueClient } from "alephium-js"
-import { Confirmed, TxStatus } from "alephium-js/api/alephium"
+import { CliqueClient } from "alephium-web3"
+import { Confirmed, TxStatus } from "alephium-web3/api/alephium"
 
 function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {
     return (txStatus as Confirmed).blockHash !== undefined
