@@ -37,7 +37,12 @@ func (w *Watcher) validateTokenWrapperEvents(
 			maxIndex = event.eventIndex
 		}
 
-		info, err := tokenWrapperInfoGetter(event.event.Fields[0].ToAddress())
+		address := event.event.Fields[0].ToAddress()
+		info, err := tokenWrapperInfoGetter(address)
+		if err == ErrInvalidContract {
+			logger.Error("invalid sender contract for token wrapper events", zap.String("contractAddress", address))
+			continue
+		}
 		if err != nil {
 			logger.Error("failed to get token wrapper info", zap.Error(err))
 			return err
@@ -150,30 +155,34 @@ func (w *Watcher) validateUndoneSequenceEvents(ctx context.Context, logger *zap.
 		assume(len(e.event.Fields) == 2)
 		contractId, err := e.event.Fields[0].ToByte32()
 		if err != nil {
-			logger.Error("invalid contract id for undone sequence event", zap.Error(err), zap.Any("contractId", e.event.Fields[0].Value))
-			return err
+			logger.Error("invalid contract id for undone sequence event, ignore this event", zap.Error(err), zap.Any("contractId", e.event.Fields[0].Value))
+			continue
 		}
 
 		info, err := w.getTokenBridgeForChainInfo(ctx, client, *contractId)
+		if err == ErrInvalidContract {
+			logger.Error("invalid sender contract for undone sequence events", zap.String("contractId", contractId.ToHex()))
+			continue
+		}
 		if err != nil {
 			logger.Error("failed to get token bridge for chain info", zap.Error(err))
 			return err
 		}
+
 		tokenBridgeForChainId, err := w.getTokenBridgeForChain(info.remoteChainId)
 		if err != nil {
-			logger.Error("failed to get token bridge for chain id", zap.Error(err))
-			return err
+			logger.Error("failed to get token bridge for chain id", zap.Error(err), zap.Uint16("remoteChainId", info.remoteChainId))
+			continue
 		}
 
 		if !bytes.Equal(tokenBridgeForChainId[:], info.contractId[:]) {
-			err := fmt.Errorf("invalid token bridge for chain id, expected: %s, have: %s", info.contractId.ToHex(), tokenBridgeForChainId.ToHex())
-			logger.Error(err.Error())
-			return err
+			logger.Error("invalid undone sequence event sender contract", zap.String("expect", tokenBridgeForChainId.ToHex()), zap.String("have", info.contractId.ToHex()))
+			continue
 		}
 		sequence, err := e.event.Fields[1].ToUint64()
 		if err != nil {
 			logger.Error("invalid undone sequence", zap.Error(err), zap.Any("sequence", e.event.Fields[1].Value))
-			return err
+			continue
 		}
 		batch.writeUndoneSequence(info.remoteChainId, sequence)
 	}

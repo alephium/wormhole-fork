@@ -3,10 +3,18 @@ package alephium
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 )
+
+const (
+	TokenBridgeForChainFieldSize = 8
+	TokenWrapperFieldSize        = 9
+)
+
+var ErrInvalidContract error = errors.New("invalid contract")
 
 type Client struct {
 	endpoint string
@@ -149,15 +157,19 @@ func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, address string,
 		return nil, err
 	}
 
+	if len(contractState.Fields) != TokenBridgeForChainFieldSize {
+		return nil, ErrInvalidContract
+	}
+
 	assume(contractState.Address == address)
 	remoteChainId, err := contractState.Fields[2].ToUint16()
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 
 	contractId, err := ToContractId(address)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 	return &tokenBridgeForChainInfo{
 		remoteChainId: remoteChainId,
@@ -181,26 +193,30 @@ func (c *Client) GetTokenWrapperInfo(ctx context.Context, address string, groupI
 		return nil, err
 	}
 
+	if len(contractState.Fields) != TokenWrapperFieldSize {
+		return nil, ErrInvalidContract
+	}
+
 	assume(contractState.Address == address)
 	tokenBridgeForChainId, err := contractState.Fields[1].ToByte32()
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 
 	remoteChainId, err := contractState.Fields[3].ToUint16()
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 
 	tokenContractId, err := contractState.Fields[4].ToByte32()
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 
 	isLocalToken := contractState.Fields[5].ToBool()
 	tokenWrapperId, err := ToContractId(address)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidContract
 	}
 
 	return &tokenWrapperInfo{
