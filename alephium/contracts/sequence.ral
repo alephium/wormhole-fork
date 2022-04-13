@@ -38,8 +38,10 @@ TxContract Sequence(
         if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
             let undoneSequence = UndoneSequence(undoneSequenceId)
             let removed = undoneSequence.addToUndone(next, seq, next1)
-            let eventEmitter = EventEmitter(#{{ eventEmitterId }})
-            eventEmitter.publishUndoneSequenceRemoved(removed)
+            if (removed != #) {
+                let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+                eventEmitter.publishUndoneSequenceRemoved(removed)
+            }
         }
         next = next + 256
         next1 = next2
