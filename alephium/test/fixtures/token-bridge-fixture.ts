@@ -120,8 +120,8 @@ export async function getTokenWrapperContract(client: CliqueClient): Promise<Con
         tokenWrapperFactoryAddress: '',
         tokenWrapperBinCode: '',
         undoneSequenceCodeHash: '',
-        distance: 256,
-        listMaxSize: 256
+        undoneSequenceMaxSize: 256,
+        undoneSequenceMaxDistance: 256
     })
 }
 
@@ -164,8 +164,8 @@ export async function getTokenBridgeForChainContract(
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
         undoneSequenceCodeHash: undoneSequence.codeHash,
-        listMaxSize: 256,
-        distance: 256,
+        undoneSequenceMaxSize: 256,
+        undoneSequenceMaxDistance: 256,
         tokenWrapperBinCode: '',
         tokenBridgeForChainBinCode: ''
     })
@@ -224,8 +224,8 @@ export async function createTokenBridge(client: CliqueClient): Promise<TokenBrid
     )
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', {
         undoneSequenceCodeHash: undoneSequenceInfo.contract.codeHash,
-        listMaxSize: 256,
-        distance: 256,
+        undoneSequenceMaxSize: 256,
+        undoneSequenceMaxDistance: 256,
         tokenBridgeForChainBinCode: tokenBridgeForChainContract.bytecode,
         tokenWrapperCodeHash: tokenWrapper.codeHash,
         tokenWrapperFactoryAddress: '',

@@ -73,8 +73,8 @@ export async function createGovernance(client: CliqueClient): Promise<ContractIn
     const undoneSequenceInfo = await createUndoneSequence(client, address)
     const governanceContract = await Contract.from(client, 'governance.ral', {
         undoneSequenceCodeHash: undoneSequenceInfo.contract.codeHash,
-        listMaxSize: 256,
-        distance: 256,
+        undoneSequenceMaxSize: 256,
+        undoneSequenceMaxDistance: 256,
     })
     const initFields = [
         alphChainId,

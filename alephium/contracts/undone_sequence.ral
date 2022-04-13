@@ -24,7 +24,7 @@ TxContract UndoneSequence(
 
         undone = undone ++ u256To8Byte!(seq)
         length = length + 8
-        if ((length / 8) > {{ listMaxSize }}) {
+        if ((length / 8) > {{ undoneSequenceMaxSize }}) {
             let removed = byteVecSlice!(undone, 0, 8)
             undone = byteVecSlice!(undone, 8, length)
             return removed
@@ -65,7 +65,7 @@ TxContract UndoneSequence(
 
         let mut min = u256From8Byte!(byteVecSlice!(undone, 0, 8))
         let mut removed = #
-        while (current > min + {{ distance }}) {
+        while (current > min + {{ undoneSequenceMaxDistance }}) {
             removed = removed ++ byteVecSlice!(undone, 0, 8)
             undone = byteVecSlice!(undone, 8, size!(undone))
             if undone != # {

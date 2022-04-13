@@ -14,8 +14,8 @@ describe("test undone sequence", () => {
 
     test("add sequence to undone list", async () => {
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence.ral', {
-            listMaxSize: 2,
-            distance: 32
+            undoneSequenceMaxSize: 2,
+            undoneSequenceMaxDistance: 32
         })
         const owner = randomContractId()
         let undoneList = ""
@@ -52,8 +52,8 @@ describe("test undone sequence", () => {
 
     test("add sequences bit map to undone list", async () => {
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence.ral', {
-            listMaxSize: 4,
-            distance: 32
+            undoneSequenceMaxSize: 4,
+            undoneSequenceMaxDistance: 32
         })
         const owner = randomContractId()
         const baseSeq = 100
@@ -70,11 +70,11 @@ describe("test undone sequence", () => {
 
     test("add sequences to undone list", async () => {
         const distance = 16
-        const listMaxSize = 32
-        const undoneSequenceInfo = await createUndoneSequence(client, contractAddress, "", listMaxSize, distance)
+        const maxSize = 32
+        const undoneSequenceInfo = await createUndoneSequence(client, contractAddress, "", maxSize, distance)
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence_test.ral', {
-            listMaxSize: listMaxSize,
-            distance: distance
+            undoneSequenceMaxSize: maxSize,
+            undoneSequenceMaxDistance: distance
         })
 
         const bitMap = BigInt("0xff") << 248n
@@ -99,8 +99,8 @@ describe("test undone sequence", () => {
 
     test("remove old undone sequences", async () => {
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence.ral', {
-            listMaxSize: 2,
-            distance: 32
+            undoneSequenceMaxSize: 2,
+            undoneSequenceMaxDistance: 32
         })
         const owner = randomContractId()
 
@@ -125,8 +125,8 @@ describe("test undone sequence", () => {
     test("try to set done", async () => {
         let undoneSequenceInfo = await createUndoneSequence(client, contractAddress)
         const undoneSequencetTest = await Contract.from(client, 'undone_sequence_test.ral', {
-            listMaxSize: 256,
-            distance: 256
+            undoneSequenceMaxSize: 256,
+            undoneSequenceMaxDistance: 256
         })
 
         let testResult = await undoneSequencetTest.testPublicMethod(client, 'trySetDone_', {
