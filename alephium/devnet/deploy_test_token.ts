@@ -33,14 +33,7 @@ export async function attestToken(
         tokenId: tokenId,
         nonce: nonce,
         consistencyLevel: env.consistencyLevel,
-        tokenBridgeForChainBinCode: "",
-        tokenWrapperFactoryAddress: "",
-        tokenBridgeForChainCodeHash: "",
-        tokenWrapperBinCode: "",
-        tokenWrapperCodeHash: "",
-        undoneSequenceCodeHash: "",
-        undoneSequenceMaxSize: 128,
-        undoneSequenceMaxDistance: 512
+        ...env.commonVars
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const submitResult = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
