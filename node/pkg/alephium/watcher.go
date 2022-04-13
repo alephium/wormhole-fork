@@ -3,6 +3,7 @@ package alephium
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,10 +23,10 @@ type Watcher struct {
 	url    string
 	apiKey string
 
-	governanceContract            string
-	tokenBridgeContract           string
-	tokenWrapperFactoryContract   string
-	undoneSequenceEmitterContract string
+	governanceContractAddress     string
+	eventEmitterId                Byte32
+	tokenBridgeContractId         Byte32
+	tokenWrapperFactoryContractId Byte32
 	chainIndex                    *ChainIndex
 
 	readiness readiness.Component
@@ -33,10 +34,10 @@ type Watcher struct {
 	msgChan  chan *common.MessagePublication
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	tokenBridgeForChainCache     sync.Map
-	remoteTokenWrapperCache      sync.Map
-	localTokenWrapperCache       sync.Map
-	tokenBridgeForChainInfoCache sync.Map
+	tokenBridgeForChainCache sync.Map
+	remoteTokenWrapperCache  sync.Map
+	localTokenWrapperCache   sync.Map
+	remoteChainIdCache       sync.Map
 
 	minConfirmations uint8
 	currentHeight    uint32
@@ -74,10 +75,10 @@ func NewAlephiumWatcher(
 	return &Watcher{
 		url:                           url,
 		apiKey:                        apiKey,
-		governanceContract:            contracts[0],
-		tokenBridgeContract:           contracts[1],
-		tokenWrapperFactoryContract:   contracts[2],
-		undoneSequenceEmitterContract: contracts[3],
+		governanceContractAddress:     contracts[0],
+		eventEmitterId:                toContractId(contracts[1]),
+		tokenBridgeContractId:         toContractId(contracts[2]),
+		tokenWrapperFactoryContractId: toContractId(contracts[3]),
 
 		chainIndex: &ChainIndex{
 			FromGroup: fromGroup,
@@ -88,10 +89,10 @@ func NewAlephiumWatcher(
 		msgChan:   messageEvents,
 		obsvReqC:  obsvReqC,
 
-		tokenBridgeForChainCache:     sync.Map{},
-		remoteTokenWrapperCache:      sync.Map{},
-		localTokenWrapperCache:       sync.Map{},
-		tokenBridgeForChainInfoCache: sync.Map{},
+		tokenBridgeForChainCache: sync.Map{},
+		remoteTokenWrapperCache:  sync.Map{},
+		localTokenWrapperCache:   sync.Map{},
+		remoteChainIdCache:       sync.Map{},
 
 		minConfirmations: uint8(minConfirmations),
 		db:               db,
@@ -104,7 +105,7 @@ func (w *Watcher) ContractServer(logger *zap.Logger, listenAddr string) (supervi
 
 func (w *Watcher) Run(ctx context.Context) error {
 	p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
-		ContractAddress: w.governanceContract,
+		ContractAddress: w.governanceContractAddress,
 	})
 
 	logger := supervisor.Logger(ctx)
@@ -116,21 +117,10 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
-	nextTokenBridgeEventIndex, err := w.fetchTokenBridgeForChainAddresses(ctx, logger, client)
+	eventEmitterAddress := toContractAddress(w.eventEmitterId)
+	nextEventIndex, err := w.fetchEvents(ctx, logger, client, eventEmitterAddress)
 	if err != nil {
-		logger.Error("failed to fetch token bridge for chain addresses", zap.Error(err))
-		return err
-	}
-
-	nextTokenWrapperFactoryIndex, err := w.fetchTokenWrapperAddresses(ctx, logger, client)
-	if err != nil {
-		logger.Error("failed to fetch token wrapper addresses", zap.Error(err))
-		return err
-	}
-
-	nextUndoneSequenceEventIndex, err := w.fetchUndoneSequences(ctx, logger, client)
-	if err != nil {
-		logger.Error("failed to fetch undone sequences", zap.Error(err))
+		logger.Error("failed to fetch events when recovery", zap.Error(err))
 		return err
 	}
 
@@ -139,10 +129,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	go w.handleObsvRequest(ctx, logger, client)
 	go w.fetchHeight(ctx, logger, client, errC)
-	go w.handleTokenBridgeEvents(ctx, logger, client, *nextTokenBridgeEventIndex, errC)
-	go w.handleTokenWrapperFactoryEvents(ctx, logger, client, *nextTokenWrapperFactoryIndex, errC)
-	go w.handleGovernanceEvents(ctx, logger, client, errC)
-	go w.handleUndoneSequenceEvents(ctx, logger, client, *nextUndoneSequenceEventIndex, errC)
+	go w.subscribe(ctx, logger, client, eventEmitterAddress, *nextEventIndex, w.toUnconfirmedEvent, w.handleEvents, errC)
 
 	select {
 	case <-ctx.Done():
@@ -173,6 +160,80 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
+func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents) error {
+	if len(confirmed.events) == 0 {
+		return nil
+	}
+
+	sort.Slice(confirmed.events, func(i, j int) bool {
+		return confirmed.events[i].eventIndex < confirmed.events[j].eventIndex
+	})
+
+	// TODO: batch write to db
+	for _, e := range confirmed.events {
+		var skipIfError bool
+		var validateErr error
+		switch e.event.Index {
+		case WormholeMessageEventIndex:
+			event, err := e.event.toWormholeMessage()
+			if err != nil {
+				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
+				continue
+			}
+			skipIfError, validateErr = w.validateGovernanceMessages(event)
+			if validateErr == nil {
+				w.msgChan <- event.toMessagePublication(e.blockHeader)
+			}
+
+		case TokenBridgeForChainCreatedEventIndex:
+			event, err := e.event.toTokenBridgeForChainCreatedEvent()
+			if err != nil {
+				logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.toString()))
+				continue
+			}
+			skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
+
+		case TokenWrapperCreatedEventIndex:
+			event, err := e.event.toTokenWrapperCreatedEvent()
+			if err != nil {
+				logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.toString()))
+				continue
+			}
+			skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
+
+		case UndoneSequencesRemovedEventIndex:
+			event, err := e.event.toUndoneSequencesRemoved()
+			if err != nil {
+				logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.toString()))
+				continue
+			}
+			skipIfError, validateErr = w.validateUndoneSequencesRemovedEvents(event, w.getRemoteChainId)
+
+		case UndoneSequenceCompletedEventIndex:
+			event, err := e.event.toUndoneSequenceCompleted()
+			if err != nil {
+				logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.toString()))
+				continue
+			}
+			skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
+
+		default:
+			return fmt.Errorf("unknown event index %v", e.event.Index)
+		}
+
+		if validateErr != nil && skipIfError {
+			logger.Error("ignore invalid event", zap.Error(validateErr))
+			continue
+		}
+		if validateErr != nil && !skipIfError {
+			logger.Error("failed to validate event", zap.Error(validateErr))
+			return validateErr
+		}
+	}
+	eventSize := len(confirmed.events)
+	return w.db.updateLastEventIndex(confirmed.events[eventSize-1].eventIndex)
+}
+
 func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
 	// TODO: LRU cache
 	header, err := client.GetBlockHeader(ctx, event.BlockHash)
@@ -180,7 +241,7 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event 
 		return nil, err
 	}
 
-	if event.ContractAddress != w.governanceContract {
+	if event.Index != WormholeMessageEventIndex {
 		return &UnconfirmedEvent{
 			blockHeader:   header,
 			event:         event,
@@ -196,108 +257,6 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event 
 	}, err
 }
 
-func (w *Watcher) updateTokenBridgeForChain(
-	ctx context.Context,
-	logger *zap.Logger,
-	confirmed *ConfirmedEvents,
-	tokenBridgeForChainInfoGetter func(string) (*tokenBridgeForChainInfo, error),
-) error {
-	if len(confirmed.events) == 0 {
-		return nil
-	}
-
-	maxIndex := confirmed.events[0].eventIndex
-	batch := newBatch()
-	for _, event := range confirmed.events {
-		if event.eventIndex > maxIndex {
-			maxIndex = event.eventIndex
-		}
-
-		assume(len(event.event.Fields) == 1)
-		address := event.event.Fields[0].ToAddress()
-		info, err := tokenBridgeForChainInfoGetter(address)
-		if err != nil {
-			logger.Error("failed to get token bridge for chain info", zap.Error(err))
-			return err
-		}
-		w.tokenBridgeForChainCache.Store(info.remoteChainId, &info.contractId)
-		batch.writeTokenBridgeForChain(info.remoteChainId, info.contractId)
-	}
-	batch.updateLastTokenBridgeEventIndex(maxIndex)
-	return w.db.writeBatch(batch)
-}
-
-func (w *Watcher) handleTokenBridgeEvents(
-	ctx context.Context,
-	logger *zap.Logger,
-	client *Client,
-	fromIndex uint64,
-	errC chan<- error,
-) {
-	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
-		return client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
-	}
-
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.updateTokenBridgeForChain(ctx, logger, confirmed, tokenBridgeForChainInfoGetter)
-	}
-
-	w.subscribe(ctx, logger, client, w.tokenBridgeContract, fromIndex, w.toUnconfirmedEvent, handler, errC)
-}
-
-func (w *Watcher) handleTokenWrapperFactoryEvents(
-	ctx context.Context,
-	logger *zap.Logger,
-	client *Client,
-	nextIndex uint64,
-	errC chan<- error,
-) {
-	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
-		return client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
-	}
-
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateTokenWrapperEvents(ctx, logger, confirmed, tokenWrapperInfoGetter)
-	}
-
-	w.subscribe(ctx, logger, client, w.tokenWrapperFactoryContract, nextIndex, w.toUnconfirmedEvent, handler, errC)
-}
-
-func (w *Watcher) handleGovernanceEvents(
-	ctx context.Context,
-	logger *zap.Logger,
-	client *Client,
-	errC chan<- error,
-) error {
-	count, err := client.GetContractEventsCount(ctx, w.governanceContract)
-	if err != nil {
-		logger.Error("failed to get governance contract count", zap.Error(err))
-		errC <- err
-		return err
-	}
-
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateGovernanceEvents(logger, confirmed)
-	}
-
-	w.subscribe(ctx, logger, client, w.governanceContract, *count, w.toUnconfirmedEvent, handler, errC)
-	return nil
-}
-
-func (w *Watcher) handleUndoneSequenceEvents(
-	ctx context.Context,
-	logger *zap.Logger,
-	client *Client,
-	nextIndex uint64,
-	errC chan<- error,
-) {
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateUndoneSequenceEvents(ctx, logger, client, confirmed)
-	}
-
-	w.subscribe(ctx, logger, client, w.undoneSequenceEmitterContract, nextIndex, w.toUnconfirmedEvent, handler, errC)
-}
-
 func (w *Watcher) subscribe(
 	ctx context.Context,
 	logger *zap.Logger,
@@ -305,7 +264,7 @@ func (w *Watcher) subscribe(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
-	handler func(*ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	errC chan<- error,
 ) {
 	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 30*time.Second, errC)
@@ -318,7 +277,7 @@ func (w *Watcher) subscribe_(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
-	handler func(*ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	tickDuration time.Duration,
 	errC chan<- error,
 ) {
@@ -364,7 +323,7 @@ func (w *Watcher) subscribe_(
 		confirmedEvents := &ConfirmedEvents{
 			events: confirmed,
 		}
-		if err := handler(confirmedEvents); err != nil {
+		if err := handler(logger, confirmedEvents); err != nil {
 			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
 			return err
 		}

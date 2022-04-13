@@ -59,13 +59,13 @@ func TestFetchEvents(t *testing.T) {
 	}
 
 	var confirmedEvents *ConfirmedEvents
-	handler := func(confirmed *ConfirmedEvents) error {
+	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 		confirmedEvents = confirmed
 		return nil
 	}
 
 	client := NewClient(server.URL, "", 10)
-	eventIndex, err := watcher.fetchEvents(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
+	eventIndex, err := watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(0))
 
@@ -85,7 +85,7 @@ func TestFetchEvents(t *testing.T) {
 	}
 
 	events = append(events, []*Event{randomEvent(), randomEvent()}...)
-	eventIndex, err = watcher.fetchEvents(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
+	eventIndex, err = watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(2))
 	assert.Equal(t, len(confirmedEvents.events), 1)
@@ -141,16 +141,15 @@ func TestToUnconfirmedEvents(t *testing.T) {
 		}
 	}))
 
-	contractAddress := randomAddress()
 	client := NewClient(server.URL, "", 10)
 	events := []*Event{
 		{
-			BlockHash:       blocks[0].header.Hash,
-			ContractAddress: contractAddress,
+			BlockHash: blocks[0].header.Hash,
+			Index:     TokenWrapperCreatedEventIndex,
 		},
 		{
-			BlockHash:       blocks[1].header.Hash,
-			ContractAddress: contractAddress,
+			BlockHash: blocks[1].header.Hash,
+			Index:     TokenWrapperCreatedEventIndex,
 		},
 	}
 	unconfirmedEvents, err := watcher.toUnconfirmedEvents(context.Background(), client, events)

@@ -17,11 +17,10 @@ var (
 	remoteTokenWrapperPrefix  = []byte("remote-token-wrapper")
 	localTokenWrapperPrefix   = []byte("local-token-wrapper")
 	tokenBridgeForChainPrefix = []byte("token-bridge-for-chain")
+	remoteChainIdPrefix       = []byte("remote-chain-id")
 	undoneSequencePrefix      = []byte("undone-sequence")
 
-	lastTokenBridgeEventIndexKey    = []byte("last-token-bridge-event-index")
-	lastTokenWrapperFactoryIndexKey = []byte("last-token-wrapper-factory-index")
-	lastUndoneSequenceIndexKey      = []byte("last-undone-sequence-index")
+	lastEventIndexKey = []byte("last-event-index")
 )
 
 const (
@@ -126,12 +125,20 @@ func (db *Database) GetRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	return toByte32(value)
 }
 
-func (db *Database) addLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperId Byte32) error {
+func (db *Database) addLocalTokenWrapper(key *LocalTokenWrapperKey, tokenWrapperId Byte32) error {
+	return db.put(key.encode(), tokenWrapperId[:])
+}
+
+func (db *Database) getLocalTokenWrapper(key *LocalTokenWrapperKey) (*Byte32, error) {
+	return db.GetLocalTokenWrapper(key.localTokenId, key.remoteChainId)
+}
+
+func (db *Database) AddLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperId Byte32) error {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,
 		remoteChainId: remoteChainId,
 	}
-	return db.put(key.encode(), tokenWrapperId[:])
+	return db.addLocalTokenWrapper(key, tokenWrapperId)
 }
 
 func (db *Database) GetLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*Byte32, error) {
@@ -146,11 +153,11 @@ func (db *Database) GetLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (
 	return toByte32(value)
 }
 
-func (db *Database) addRemoteChain(chainId uint16, tokenBridgeForChainId Byte32) error {
+func (db *Database) addTokenBridgeForChain(chainId uint16, tokenBridgeForChainId Byte32) error {
 	return db.put(tokenBridgeForChainKey(chainId), tokenBridgeForChainId[:])
 }
 
-func (db *Database) getRemoteChain(chainId uint16) (*Byte32, error) {
+func (db *Database) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
 	value, err := db.get(tokenBridgeForChainKey(chainId))
 	if err != nil {
 		return nil, err
@@ -158,42 +165,30 @@ func (db *Database) getRemoteChain(chainId uint16) (*Byte32, error) {
 	return toByte32(value)
 }
 
-func (db *Database) getLastTokenBridgeEventIndex() (*uint64, error) {
-	bytes, err := db.get(lastTokenBridgeEventIndexKey)
+func (db *Database) addRemoteChainId(tokenBridgeForChainId Byte32, remoteChainId uint16) error {
+	return db.put(remoteChainIdKey(tokenBridgeForChainId), Uint16ToBytes(remoteChainId))
+}
+
+func (db *Database) getRemoteChainId(tokenBridgeForChainId Byte32) (*uint16, error) {
+	value, err := db.get(remoteChainIdKey(tokenBridgeForChainId))
 	if err != nil {
 		return nil, err
 	}
-	index := binary.BigEndian.Uint64(bytes)
-	return &index, nil
+	remoteChainId := binary.BigEndian.Uint16(value)
+	return &remoteChainId, nil
 }
 
-func (db *Database) getLastTokenWrapperFactoryEventIndex() (*uint64, error) {
-	bytes, err := db.get(lastTokenWrapperFactoryIndexKey)
+func (db *Database) updateLastEventIndex(index uint64) error {
+	return db.put(lastEventIndexKey, Uint64ToBytes(index))
+}
+
+func (db *Database) getLastEventIndex() (*uint64, error) {
+	value, err := db.get(lastEventIndexKey)
 	if err != nil {
 		return nil, err
 	}
-	index := binary.BigEndian.Uint64(bytes)
+	index := binary.BigEndian.Uint64(value)
 	return &index, nil
-}
-
-func (db *Database) getLastUndoneSequenceEventIndex() (*uint64, error) {
-	bytes, err := db.get(lastUndoneSequenceIndexKey)
-	if err != nil {
-		return nil, err
-	}
-	index := binary.BigEndian.Uint64(bytes)
-	return &index, nil
-}
-
-func (db *Database) writeBatch(batch *batch) error {
-	return db.Update(func(txn *badger.Txn) error {
-		for i, key := range batch.keys {
-			if err := txn.Set(key, batch.values[i]); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 }
 
 // TODO: store the vaa id
@@ -203,6 +198,22 @@ func (db *Database) SetSequenceExecuting(remoteChainId uint16, sequence uint64) 
 
 func (db *Database) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
 	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceExecuting}, []byte{sequenceExecuted})
+}
+
+func (db *Database) addUndoneSequence(remoteChainId uint16, sequence uint64) error {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	return db.put(key.encode(), []byte{sequenceInit})
+}
+
+func (db *Database) getUndoneSequence(remoteChainId uint16, sequence uint64) ([]byte, error) {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	return db.get(key.encode())
 }
 
 func (db *Database) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
@@ -220,6 +231,14 @@ func (db *Database) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, 
 		return fmt.Errorf("invalid status %v, sequence %d, remoteChainId %d", value, sequence, remoteChainId)
 	}
 	return db.put(keyBytes, updated)
+}
+
+func (db *Database) localTokenWrapperExist(key *LocalTokenWrapperKey) (bool, error) {
+	_, err := db.get(key.encode())
+	if err == badger.ErrKeyNotFound {
+		return false, nil
+	}
+	return err == nil, err
 }
 
 func remoteTokenWrapperKey(tokenId Byte32) []byte {
@@ -242,6 +261,10 @@ func tokenBridgeForChainKey(remoteChainId uint16) []byte {
 	return append(tokenBridgeForChainPrefix, Uint16ToBytes(remoteChainId)...)
 }
 
+func remoteChainIdKey(contractId Byte32) []byte {
+	return append(remoteChainIdPrefix, contractId[:]...)
+}
+
 type UndoneSequenceKey struct {
 	remoteChainId uint16
 	sequence      uint64
@@ -252,77 +275,4 @@ func (k *UndoneSequenceKey) encode() []byte {
 	binary.BigEndian.PutUint16(bytes, k.remoteChainId)
 	binary.BigEndian.PutUint64(bytes[2:], k.sequence)
 	return append(undoneSequencePrefix, bytes...)
-}
-
-type batch struct {
-	keys   [][]byte
-	values [][]byte
-}
-
-func newBatch() *batch {
-	return &batch{
-		keys:   make([][]byte, 0),
-		values: make([][]byte, 0),
-	}
-}
-
-func (b *batch) writeTokenBridgeForChain(chainId uint16, contractId Byte32) {
-	b.keys = append(b.keys, tokenBridgeForChainKey(chainId))
-	b.values = append(b.values, contractId[:])
-}
-
-func (b *batch) writeRemoteTokenWrapper(tokenId Byte32, contractId Byte32) {
-	b.keys = append(b.keys, remoteTokenWrapperKey(tokenId))
-	b.values = append(b.values, contractId[:])
-}
-
-func (b *batch) writeLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, contractId Byte32) {
-	key := &LocalTokenWrapperKey{
-		localTokenId:  tokenId,
-		remoteChainId: remoteChainId,
-	}
-	b.keys = append(b.keys, key.encode())
-	b.values = append(b.values, contractId[:])
-}
-
-func (b *batch) localTokenWrapperExist(key *LocalTokenWrapperKey, db *Database) (bool, error) {
-	keyBytes := key.encode()
-	_, err := db.get(keyBytes)
-	if err == badger.ErrKeyNotFound {
-		for _, k := range b.keys {
-			if bytes.Equal(k, keyBytes) {
-				return true, nil
-			}
-		}
-		return false, nil
-	}
-
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func (b *batch) writeUndoneSequence(remoteChainId uint16, sequence uint64) {
-	key := &UndoneSequenceKey{
-		remoteChainId: remoteChainId,
-		sequence:      sequence,
-	}
-	b.keys = append(b.keys, key.encode())
-	b.values = append(b.values, []byte{sequenceInit})
-}
-
-func (b *batch) updateLastTokenBridgeEventIndex(index uint64) {
-	b.keys = append(b.keys, lastTokenBridgeEventIndexKey)
-	b.values = append(b.values, Uint64ToBytes(index))
-}
-
-func (b *batch) updateLastTokenWrapperFactoryEventIndex(index uint64) {
-	b.keys = append(b.keys, lastTokenWrapperFactoryIndexKey)
-	b.values = append(b.values, Uint64ToBytes(index))
-}
-
-func (b *batch) updateLastUndoneSequenceEventIndex(index uint64) {
-	b.keys = append(b.keys, lastUndoneSequenceIndexKey)
-	b.values = append(b.values, Uint64ToBytes(index))
 }

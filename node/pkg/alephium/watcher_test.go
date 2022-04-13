@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -92,7 +91,7 @@ func TestSubscribeEvents(t *testing.T) {
 	}
 
 	confirmedEvents := make([]*ConfirmedEvents, 0)
-	handler := func(confirmed *ConfirmedEvents) error {
+	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 		confirmedEvents = append(confirmedEvents, confirmed)
 		return nil
 	}
@@ -129,64 +128,4 @@ func TestSubscribeEvents(t *testing.T) {
 	events = append(events, event2)
 	time.Sleep(1 * time.Second)
 	assert.True(t, len(confirmedEvents) == 2)
-}
-
-func TestUpdateTokenBridgeForChain(t *testing.T) {
-	db, err := Open(t.TempDir())
-	assert.Nil(t, err)
-	defer db.Close()
-
-	watcher := &Watcher{
-		chainIndex: &ChainIndex{
-			FromGroup: 0,
-			ToGroup:   0,
-		},
-		db:                       db,
-		tokenBridgeForChainCache: sync.Map{},
-	}
-
-	contractAddresses := []string{
-		randomAddress(), randomAddress(), randomAddress(),
-	}
-	tokenBridgeForChains := make(map[string]*tokenBridgeForChainInfo)
-	var confirmedEvents ConfirmedEvents
-	for i := 0; i < 3; i++ {
-		address := contractAddresses[i]
-		tokenBridgeForChains[address] = &tokenBridgeForChainInfo{
-			remoteChainId: uint16(i),
-			address:       address,
-			contractId:    toContractId(address),
-		}
-
-		confirmedEvents.events = append(confirmedEvents.events, &UnconfirmedEvent{
-			event: &Event{
-				Fields: []*Field{fieldFromAddress(address)},
-			},
-		})
-	}
-	confirmedEvents.events[0].eventIndex = 2
-	confirmedEvents.events[1].eventIndex = 1
-	confirmedEvents.events[2].eventIndex = 3
-
-	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
-		return tokenBridgeForChains[address], nil
-	}
-
-	err = watcher.updateTokenBridgeForChain(context.Background(), zap.NewNop(), &confirmedEvents, tokenBridgeForChainInfoGetter)
-	assert.Nil(t, err)
-
-	eventIndex, err := watcher.db.getLastTokenBridgeEventIndex()
-	assert.Nil(t, err)
-	assert.Equal(t, *eventIndex, uint64(3))
-
-	for i := 0; i < 3; i++ {
-		expectedContractId := toContractId(contractAddresses[i])
-		contractId0, err := watcher.db.getRemoteChain(uint16(i))
-		assert.Nil(t, err)
-		assert.Equal(t, *contractId0, expectedContractId)
-
-		contractId1, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
-		assert.True(t, ok)
-		assert.Equal(t, *contractId1.(*Byte32), expectedContractId)
-	}
 }

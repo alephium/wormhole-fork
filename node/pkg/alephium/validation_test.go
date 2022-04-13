@@ -1,19 +1,16 @@
 package alephium
 
 import (
-	"context"
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"math/rand"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
-	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 func decodeHex(str string) []byte {
@@ -52,9 +49,9 @@ func TestAttestEvent(t *testing.T) {
 		},
 	}
 
-	wormholeMessage, err := WormholeMessageFromEvent(attestTokenEvent)
+	wormholeMessage, err := attestTokenEvent.toWormholeMessage()
 	assert.Nil(t, err)
-	assert.Equal(t, wormholeMessage.emitter.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
+	assert.Equal(t, wormholeMessage.senderId.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
 	assert.Equal(t, wormholeMessage.nonce, uint32(317018585))
 	assert.Equal(t, wormholeMessage.payload, decodeHex("029fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0800000000000000000000000000000000000000000000746573742d746f6b656e00000000000000000000000000000000000000000000746573742d746f6b656e"))
 	assert.Equal(t, wormholeMessage.sequence, uint64(100))
@@ -92,9 +89,9 @@ func TestTransferEvent(t *testing.T) {
 		},
 	}
 
-	wormholeMessage, err := WormholeMessageFromEvent(transferEvent)
+	wormholeMessage, err := transferEvent.toWormholeMessage()
 	assert.Nil(t, err)
-	assert.Equal(t, wormholeMessage.emitter.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
+	assert.Equal(t, wormholeMessage.senderId.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
 	assert.Equal(t, wormholeMessage.nonce, uint32(506497433))
 	assert.Equal(t, wormholeMessage.payload, decodeHex("010000000000000000000000000000000000000000000000004563918244f400009fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0000000000000000000000000d0f183465284cb5cb426902445860456ed59b34000200000000000000000000000000000000000000000000000000005af3107a4000014244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634"))
 	assert.Equal(t, wormholeMessage.sequence, uint64(101))
@@ -113,170 +110,221 @@ func TestTransferEvent(t *testing.T) {
 	assert.True(t, succeed)
 	assert.Equal(t, transferMessage.fee, *fee)
 	assert.True(t, transferMessage.isLocalToken)
-	assert.Equal(t, transferMessage.senderId.ToHex(), "4244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634")
+	assert.Equal(t, transferMessage.tokenWrapperId.ToHex(), "4244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634")
 }
 
-func TestValidateTokenWrapperEvents(t *testing.T) {
+func TestValidateTokenWrapperCreatedEvent(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 	defer db.Close()
 
 	watcher := &Watcher{
-		chainIndex: &ChainIndex{
-			FromGroup: 0,
-			ToGroup:   0,
-		},
-		db:                       db,
-		tokenBridgeForChainCache: sync.Map{},
-		localTokenWrapperCache:   sync.Map{},
-		remoteTokenWrapperCache:  sync.Map{},
+		tokenWrapperFactoryContractId: randomByte32(),
+		db:                            db,
+		localTokenWrapperCache:        sync.Map{},
+		remoteTokenWrapperCache:       sync.Map{},
 	}
-
-	tokenWrapperAddresses := []string{randomAddress(), randomAddress()}
-	toUnconfirmedEvent := func(address string) *UnconfirmedEvent {
-		return &UnconfirmedEvent{
-			event: &Event{
-				Fields: []*Field{fieldFromAddress(address)},
-			},
-		}
-	}
-	var confirmedEvents ConfirmedEvents
-	for _, address := range tokenWrapperAddresses {
-		confirmedEvents.events = append(confirmedEvents.events, toUnconfirmedEvent(address))
-	}
-	confirmedEvents.events[0].eventIndex = 3
-	confirmedEvents.events[1].eventIndex = 2
 
 	remoteChainId := uint16(2)
 	tokenBridgeForChainId := randomByte32()
-	err = db.addRemoteChain(remoteChainId, tokenBridgeForChainId)
+	err = db.addTokenBridgeForChain(remoteChainId, tokenBridgeForChainId)
 	assert.Nil(t, err)
 
 	localTokenId := randomByte32()
+	localTokenWrapperId := randomByte32()
 	remoteTokenId := randomByte32()
+	remoteTokenWrapperId := randomByte32()
 
-	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
-		info := &tokenWrapperInfo{
-			tokenBridgeForChainId: tokenBridgeForChainId,
-			remoteChainId:         remoteChainId,
-		}
-
-		if address == tokenWrapperAddresses[0] {
-			info.isLocalToken = true
-			info.tokenId = localTokenId
-			info.tokenWrapperAddress = tokenWrapperAddresses[0]
-			info.tokenWrapperId = toContractId(tokenWrapperAddresses[0])
-			return info, nil
-		}
-		if address == tokenWrapperAddresses[1] {
-			info.isLocalToken = false
-			info.tokenId = remoteTokenId
-			info.tokenWrapperAddress = tokenWrapperAddresses[1]
-			info.tokenWrapperId = toContractId(tokenWrapperAddresses[1])
-			return info, nil
-		}
-		return nil, nil
-	}
-
-	ctx := context.Background()
-	logger, err := zap.NewProduction()
-	assert.Nil(t, err)
-	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
-	assert.Nil(t, err)
-
-	checkEventIndex := func(expectedIndex uint64) {
-		eventIndex, err := db.getLastTokenWrapperFactoryEventIndex()
-		assert.Nil(t, err)
-		assert.Equal(t, *eventIndex, expectedIndex)
-	}
-
-	checkEventIndex(3)
-
-	// check local token wrapper
-	localTokenWrapperKey := LocalTokenWrapperKey{
-		remoteChainId: remoteChainId,
-		localTokenId:  localTokenId,
-	}
-	contractId, err := db.GetLocalTokenWrapper(localTokenId, remoteChainId)
-	assert.Nil(t, err)
-	assert.Equal(t, *contractId, toContractId(tokenWrapperAddresses[0]))
-	localTokenWrapperId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
-	assert.True(t, ok)
-	assert.Equal(t, *localTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[0]))
-
-	// check remote token wrapper
-	contractId, err = db.GetRemoteTokenWrapper(remoteTokenId)
-	assert.Nil(t, err)
-	assert.Equal(t, *contractId, toContractId(tokenWrapperAddresses[1]))
-	remoteTokenWrapperId, ok := watcher.remoteTokenWrapperCache.Load(remoteTokenId)
-	assert.True(t, ok)
-	assert.Equal(t, *remoteTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[1]))
-
-	// token bridge for chain does not exist
-	invalidTokenWrapperAddress := randomAddress()
-	invalidInfo := &tokenWrapperInfo{
+	skipIfError, err := watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
+		senderId:              watcher.tokenWrapperFactoryContractId,
 		tokenBridgeForChainId: tokenBridgeForChainId,
-		remoteChainId:         remoteChainId + 1,
+		tokenWrapperId:        localTokenWrapperId,
 		isLocalToken:          true,
-		tokenId:               randomByte32(),
-		tokenWrapperAddress:   invalidTokenWrapperAddress,
-		tokenWrapperId:        toContractId(invalidTokenWrapperAddress),
-	}
-	ignoreInvalidEvent := func(info *tokenWrapperInfo, index uint64) {
-		checkEventIndex(index)
-		invalidTokenWrapperKey := LocalTokenWrapperKey{
-			remoteChainId: invalidInfo.remoteChainId,
-			localTokenId:  invalidInfo.tokenId,
-		}
-		_, ok = watcher.localTokenWrapperCache.Load(invalidTokenWrapperKey)
-		assert.False(t, ok)
-	}
-	tokenWrapperInfoGetter = func(address string) (*tokenWrapperInfo, error) {
-		return invalidInfo, err
-	}
-	confirmedEvents = ConfirmedEvents{
-		events: []*UnconfirmedEvent{toUnconfirmedEvent(invalidTokenWrapperAddress)},
-	}
-	confirmedEvents.events[0].eventIndex = 4
-	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+		tokenId:               localTokenId,
+		remoteChainId:         remoteChainId,
+	})
+	assert.False(t, skipIfError)
 	assert.Nil(t, err)
-	ignoreInvalidEvent(invalidInfo, 4)
 
-	// invalid sender contract id
-	invalidInfo.tokenBridgeForChainId = randomByte32()
-	invalidInfo.remoteChainId = remoteChainId
-	confirmedEvents.events[0].eventIndex = 5
-	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
+	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
+		senderId:              watcher.tokenWrapperFactoryContractId,
+		tokenBridgeForChainId: tokenBridgeForChainId,
+		tokenWrapperId:        remoteTokenWrapperId,
+		isLocalToken:          false,
+		tokenId:               remoteTokenId,
+		remoteChainId:         remoteChainId,
+	})
+	assert.False(t, skipIfError)
 	assert.Nil(t, err)
-	ignoreInvalidEvent(invalidInfo, 5)
+
+	// invalid sender contract
+	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
+		senderId:              randomByte32(),
+		tokenBridgeForChainId: tokenBridgeForChainId,
+		tokenWrapperId:        remoteTokenWrapperId,
+		isLocalToken:          false,
+		tokenId:               remoteTokenId,
+		remoteChainId:         remoteChainId,
+	})
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+
+	// invalid token bridge for chain
+	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
+		senderId:              watcher.tokenWrapperFactoryContractId,
+		tokenBridgeForChainId: tokenBridgeForChainId,
+		tokenWrapperId:        remoteTokenWrapperId,
+		isLocalToken:          false,
+		tokenId:               remoteTokenId,
+		remoteChainId:         remoteChainId + 1,
+	})
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
 
 	// local token wrapper already exist
-	invalidInfo.tokenBridgeForChainId = tokenBridgeForChainId
-	invalidInfo.tokenId = localTokenId
-	confirmedEvents.events[0].eventIndex = 6
-	err = watcher.validateTokenWrapperEvents(ctx, logger, &confirmedEvents, tokenWrapperInfoGetter)
-	assert.Nil(t, err)
+	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
+		senderId:              watcher.tokenWrapperFactoryContractId,
+		tokenBridgeForChainId: tokenBridgeForChainId,
+		tokenWrapperId:        randomByte32(),
+		isLocalToken:          true,
+		tokenId:               localTokenId,
+		remoteChainId:         remoteChainId,
+	})
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
 
-	checkEventIndex(6)
-	expectedContractId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
-	assert.True(t, ok)
-	assert.Equal(t, expectedContractId, localTokenWrapperId)
+	checkLocalTokenWrapperId := func(localTokenId Byte32, remoteChainId uint16, expected Byte32) {
+		// check local token wrapper
+		localTokenWrapperKey := LocalTokenWrapperKey{
+			remoteChainId: remoteChainId,
+			localTokenId:  localTokenId,
+		}
+		contractId, err := db.GetLocalTokenWrapper(localTokenId, remoteChainId)
+		assert.Nil(t, err)
+		assert.Equal(t, *contractId, expected)
+		localTokenWrapperId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
+		assert.True(t, ok)
+		assert.Equal(t, *localTokenWrapperId.(*Byte32), expected)
+	}
+
+	// check remote token wrapper
+	checkRemoteTokenWrapperId := func(remoteTokenId Byte32, expected Byte32) {
+		contractId, err := db.GetRemoteTokenWrapper(remoteTokenId)
+		assert.Nil(t, err)
+		assert.Equal(t, *contractId, expected)
+		remoteTokenWrapperId, ok := watcher.remoteTokenWrapperCache.Load(remoteTokenId)
+		assert.True(t, ok)
+		assert.Equal(t, *remoteTokenWrapperId.(*Byte32), expected)
+	}
+
+	checkLocalTokenWrapperId(localTokenId, remoteChainId, localTokenWrapperId)
+	checkRemoteTokenWrapperId(remoteTokenId, remoteTokenWrapperId)
 }
 
-func TestValidateGovernanceEvents(t *testing.T) {
+func TestValidateUndoneSequencesRemovedEvents(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 	defer db.Close()
 
-	logger, err := zap.NewProduction()
+	watcher := &Watcher{db: db}
+	remoteChainId := uint16(2)
+	removedSequences := []uint64{1, 3, 5, 8}
+
+	remoteChainIdGetter := func(tokenBridgeForChainId Byte32) (*uint16, error) {
+		return &remoteChainId, nil
+	}
+
+	var encodedSequences []byte
+	for _, seq := range removedSequences {
+		encodedSequences = append(encodedSequences, Uint64ToBytes(seq)...)
+	}
+
+	skipIfError, err := watcher.validateUndoneSequencesRemovedEvents(&undoneSequencesRemoved{
+		senderId:  randomByte32(),
+		sequences: encodedSequences,
+	}, remoteChainIdGetter)
+	assert.False(t, skipIfError)
 	assert.Nil(t, err)
+	for _, seq := range removedSequences {
+		status, err := watcher.db.getUndoneSequence(remoteChainId, seq)
+		assert.Nil(t, err)
+		assert.Equal(t, status, []byte{sequenceInit})
+	}
+
+	remoteChainIdGetter = func(tokenBridgeForChainId Byte32) (*uint16, error) {
+		return nil, errors.New("error")
+	}
+	invalidSequences := uint64(10)
+	skipIfError, err = watcher.validateUndoneSequencesRemovedEvents(&undoneSequencesRemoved{
+		senderId:  randomByte32(),
+		sequences: Uint64ToBytes(invalidSequences),
+	}, remoteChainIdGetter)
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+}
+
+func TestValidateUndoneSequenceCompletedEvents(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	watcher := &Watcher{
+		db:                    db,
+		tokenBridgeContractId: randomByte32(),
+	}
+	remoteChainId := uint16(2)
+	sequence := uint64(0)
+
+	skipIfError, err := watcher.validateUndoneSequenceCompletedEvents(&undoneSequenceCompleted{
+		senderId:      watcher.tokenBridgeContractId,
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	})
+	assert.False(t, skipIfError)
+	assert.NotNil(t, err)
+
+	err = watcher.db.addUndoneSequence(remoteChainId, sequence)
+	assert.Nil(t, err)
+
+	skipIfError, err = watcher.validateUndoneSequenceCompletedEvents(&undoneSequenceCompleted{
+		senderId:      watcher.tokenBridgeContractId,
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	})
+	assert.False(t, skipIfError)
+	assert.NotNil(t, err)
+
+	err = watcher.db.SetSequenceExecuting(remoteChainId, sequence)
+	assert.Nil(t, err)
+
+	skipIfError, err = watcher.validateUndoneSequenceCompletedEvents(&undoneSequenceCompleted{
+		senderId:      watcher.tokenBridgeContractId,
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	})
+	assert.False(t, skipIfError)
+	assert.Nil(t, err)
+
+	skipIfError, err = watcher.validateUndoneSequenceCompletedEvents(&undoneSequenceCompleted{
+		senderId:      randomByte32(),
+		remoteChainId: remoteChainId,
+		sequence:      sequence + 1,
+	})
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+}
+
+func TestValidateTransferMessages(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
 
 	watcher := &Watcher{
 		db:                      db,
 		localTokenWrapperCache:  sync.Map{},
 		remoteTokenWrapperCache: sync.Map{},
 		msgChan:                 make(chan *common.MessagePublication, 4),
-		tokenBridgeContract:     randomAddress(),
+		tokenBridgeContractId:   randomByte32(),
 	}
 
 	remoteChainId := uint16(2)
@@ -287,102 +335,88 @@ func TestValidateGovernanceEvents(t *testing.T) {
 	remoteTokenWrapperAddress := randomAddress()
 	remoteTokenWrapperId := toContractId(remoteTokenWrapperAddress)
 
-	err = db.addLocalTokenWrapper(localTokenId, remoteChainId, localTokenWrapperId)
+	err = db.AddLocalTokenWrapper(localTokenId, remoteChainId, localTokenWrapperId)
 	assert.Nil(t, err)
 	err = db.addRemoteTokenWrapper(remoteTokenId, remoteTokenWrapperId)
 	assert.Nil(t, err)
 
-	received := func() *common.MessagePublication {
-		timer := time.NewTimer(200 * time.Millisecond)
-		defer timer.Stop()
-
-		select {
-		case msg := <-watcher.msgChan:
-			return msg
-		case <-timer.C:
-			return nil
-		}
+	transferMessage := &TransferMessage{
+		amount:         *big.NewInt(1),
+		tokenId:        localTokenId,
+		tokenChainId:   localChainId,
+		toAddress:      randomByte32(),
+		toChainId:      remoteChainId,
+		fee:            *big.NewInt(1),
+		isLocalToken:   true,
+		tokenWrapperId: localTokenWrapperId,
 	}
-
-	tokenBridgeContractId := toContractId(watcher.tokenBridgeContract)
-	test := func(transferMsg *TransferMessage) {
-		unconfirmedEvent := &UnconfirmedEvent{
-			blockHeader: &BlockHeader{},
-			event: &Event{
-				Fields: []*Field{
-					fieldFromByte32(tokenBridgeContractId),
-					fieldFromBigInt(big.NewInt(1)),
-					fieldFromByteVec(randomBytes(4)),
-					fieldFromByteVec(transferMsg.encode()),
-					fieldFromBigInt(big.NewInt(0)),
-				},
-			},
-		}
-		confirmedEvents := &ConfirmedEvents{events: []*UnconfirmedEvent{unconfirmedEvent}}
-		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
-		assert.Nil(t, err)
-		wormholeMsg, err := WormholeMessageFromEvent(confirmedEvents.events[0].event)
-		assert.Nil(t, err)
-		diff := deep.Equal(*received(), *wormholeMsg.toMessagePublication(&BlockHeader{}))
-		assert.Nil(t, diff)
-
-		confirmedEvents.events[0].event.Fields[0] = fieldFromByte32(randomByte32())
-		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
-		assert.Nil(t, err)
-		assert.Nil(t, received())
-
-		confirmedEvents.events[0].event.Fields[0] = fieldFromByte32(tokenBridgeContractId)
-		transferMsg.senderId = randomByte32()
-		confirmedEvents.events[0].event.Fields[3] = fieldFromByteVec(transferMsg.encode())
-		err = watcher.validateGovernanceEvents(logger, confirmedEvents)
-		assert.Nil(t, err)
-		assert.Nil(t, received())
-	}
-
-	// transfer local token message
-	test(&TransferMessage{
-		amount:       *big.NewInt(10),
-		tokenId:      localTokenId,
-		tokenChainId: localChainId,
-		toAddress:    randomByte32(),
-		toChainId:    remoteChainId,
-		fee:          *big.NewInt(1),
-		isLocalToken: true,
-		senderId:     localTokenWrapperId,
-	})
-
-	// transfer remote token message
-	test(&TransferMessage{
-		amount:       *big.NewInt(10),
-		tokenId:      remoteTokenId,
-		tokenChainId: remoteChainId,
-		toAddress:    randomByte32(),
-		toChainId:    remoteChainId,
-		fee:          *big.NewInt(1),
-		isLocalToken: false,
-		senderId:     remoteTokenWrapperId,
-	})
-
-	// non-transfer message
-	unconfirmedEvent := &UnconfirmedEvent{
-		blockHeader: &BlockHeader{},
-		event: &Event{
-			Fields: []*Field{
-				fieldFromByte32(tokenBridgeContractId),
-				fieldFromBigInt(big.NewInt(1)),
-				fieldFromByteVec(randomBytes(4)),
-				fieldFromByteVec([]byte{100, 10}),
-				fieldFromBigInt(big.NewInt(0)),
-			},
-		},
-	}
-	confirmedEvents := &ConfirmedEvents{events: []*UnconfirmedEvent{unconfirmedEvent}}
-	err = watcher.validateGovernanceEvents(logger, confirmedEvents)
+	skipIfError, err := watcher.validateTransferMessage(transferMessage)
+	assert.False(t, skipIfError)
 	assert.Nil(t, err)
-	wormholeMsg, err := WormholeMessageFromEvent(confirmedEvents.events[0].event)
+
+	transferMessage.tokenWrapperId = randomByte32()
+	skipIfError, err = watcher.validateTransferMessage(transferMessage)
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+
+	transferMessage = &TransferMessage{
+		amount:         *big.NewInt(1),
+		tokenId:        remoteTokenId,
+		tokenChainId:   remoteChainId,
+		toAddress:      randomByte32(),
+		toChainId:      remoteChainId,
+		fee:            *big.NewInt(1),
+		isLocalToken:   false,
+		tokenWrapperId: remoteTokenWrapperId,
+	}
+	skipIfError, err = watcher.validateTransferMessage(transferMessage)
+	assert.False(t, skipIfError)
 	assert.Nil(t, err)
-	diff := deep.Equal(*received(), *wormholeMsg.toMessagePublication(&BlockHeader{}))
-	assert.Nil(t, diff)
+
+	transferMessage.tokenWrapperId = randomByte32()
+	skipIfError, err = watcher.validateTransferMessage(transferMessage)
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+}
+
+func TestValidateTokenBridgeForChainCreatedEvent(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	watcher := &Watcher{
+		tokenBridgeContractId:    randomByte32(),
+		db:                       db,
+		tokenBridgeForChainCache: sync.Map{},
+	}
+
+	remoteChainId := uint16(2)
+	tokenBridgeForChainId := randomByte32()
+	err = db.addTokenBridgeForChain(remoteChainId, tokenBridgeForChainId)
+	assert.Nil(t, err)
+
+	skipIfError, err := watcher.validateTokenBridgeForChainCreatedEvents(&tokenBridgeForChainCreated{
+		senderId:      watcher.tokenBridgeContractId,
+		contractId:    tokenBridgeForChainId,
+		remoteChainId: remoteChainId,
+	})
+	assert.False(t, skipIfError)
+	assert.Nil(t, err)
+
+	skipIfError, err = watcher.validateTokenBridgeForChainCreatedEvents(&tokenBridgeForChainCreated{
+		senderId:      randomByte32(),
+		contractId:    randomByte32(),
+		remoteChainId: remoteChainId,
+	})
+	assert.True(t, skipIfError)
+	assert.NotNil(t, err)
+
+	contractId0, err := watcher.db.getTokenBridgeForChain(remoteChainId)
+	assert.Nil(t, err)
+	assert.Equal(t, *contractId0, tokenBridgeForChainId)
+	contractId1, ok := watcher.tokenBridgeForChainCache.Load(remoteChainId)
+	assert.True(t, ok)
+	assert.Equal(t, *contractId1.(*Byte32), tokenBridgeForChainId)
 }
 
 func randomBytes(length int) []byte {

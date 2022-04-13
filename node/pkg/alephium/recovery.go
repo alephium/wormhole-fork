@@ -12,9 +12,21 @@ func (w *Watcher) fetchEvents(
 	logger *zap.Logger,
 	client *Client,
 	contractAddress string,
+) (*uint64, error) {
+	lastEventIndexGetter := func() (*uint64, error) {
+		return w.db.getLastEventIndex()
+	}
+	return w.fetchEvents_(ctx, logger, client, contractAddress, lastEventIndexGetter, w.toUnconfirmedEvents, w.handleEvents)
+}
+
+func (w *Watcher) fetchEvents_(
+	ctx context.Context,
+	logger *zap.Logger,
+	client *Client,
+	contractAddress string,
 	lastEventIndexGetter func() (*uint64, error),
 	toUnconfirmedEvents func(context.Context, *Client, []*Event) ([]*UnconfirmedEvent, error),
-	handler func(*ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 ) (*uint64, error) {
 	lastEventIndex, err := lastEventIndexGetter()
 	if err == badger.ErrKeyNotFound {
@@ -51,7 +63,7 @@ func (w *Watcher) fetchEvents(
 	confirmed := &ConfirmedEvents{
 		events: unconfirmed,
 	}
-	if err := handler(confirmed); err != nil {
+	if err := handler(logger, confirmed); err != nil {
 		return nil, err
 	}
 	return count, nil
@@ -73,32 +85,4 @@ func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, event
 		}
 	}
 	return unconfirmedEvents, nil
-}
-
-func (w *Watcher) fetchTokenBridgeForChainAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	tokenBridgeForChainInfoGetter := func(address string) (*tokenBridgeForChainInfo, error) {
-		return client.GetTokenBridgeForChainInfo(ctx, address, w.chainIndex.FromGroup)
-	}
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.updateTokenBridgeForChain(ctx, logger, confirmed, tokenBridgeForChainInfoGetter)
-	}
-	return w.fetchEvents(ctx, logger, client, w.tokenBridgeContract, w.db.getLastTokenBridgeEventIndex, w.toUnconfirmedEvents, handler)
-}
-
-func (w *Watcher) fetchTokenWrapperAddresses(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	tokenWrapperInfoGetter := func(address string) (*tokenWrapperInfo, error) {
-		return client.GetTokenWrapperInfo(ctx, address, w.chainIndex.FromGroup)
-	}
-
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateTokenWrapperEvents(ctx, logger, confirmed, tokenWrapperInfoGetter)
-	}
-	return w.fetchEvents(ctx, logger, client, w.tokenWrapperFactoryContract, w.db.getLastTokenWrapperFactoryEventIndex, w.toUnconfirmedEvents, handler)
-}
-
-func (w *Watcher) fetchUndoneSequences(ctx context.Context, logger *zap.Logger, client *Client) (*uint64, error) {
-	handler := func(confirmed *ConfirmedEvents) error {
-		return w.validateUndoneSequenceEvents(ctx, logger, client, confirmed)
-	}
-	return w.fetchEvents(ctx, logger, client, w.undoneSequenceEmitterContract, w.db.getLastUndoneSequenceEventIndex, w.toUnconfirmedEvents, handler)
 }

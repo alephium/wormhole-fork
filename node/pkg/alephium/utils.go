@@ -1,18 +1,32 @@
 package alephium
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"runtime/debug"
+	"time"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/certusone/wormhole/node/pkg/common"
+	"github.com/certusone/wormhole/node/pkg/vaa"
+	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
 const HashLength = 32
+const transferPayloadId byte = 1
+const (
+	WormholeMessageEventIndex            = 0
+	TokenBridgeForChainCreatedEventIndex = 1
+	TokenWrapperCreatedEventIndex        = 2
+	UndoneSequencesRemovedEventIndex     = 3
+	UndoneSequenceCompletedEventIndex    = 4
+)
 
 func assume(cond bool) {
 	if !cond {
@@ -77,6 +91,10 @@ func HexToHash(str string) Hash {
 }
 
 type Byte32 [32]byte
+
+func (b Byte32) equalWith(v Byte32) bool {
+	return bytes.Equal(b[:], v[:])
+}
 
 func (b Byte32) ToHex() string {
 	dst := make([]byte, HashLength*2)
@@ -212,12 +230,249 @@ func Uint64ToBytes(value uint64) []byte {
 	return bytes
 }
 
+type WormholeMessage struct {
+	event            *Event
+	senderId         Byte32
+	nonce            uint32
+	payload          []byte
+	sequence         uint64
+	consistencyLevel uint8
+}
+
+func (w *WormholeMessage) isTransferMessage() bool {
+	return w.payload[0] == transferPayloadId
+}
+
+func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.MessagePublication {
+	second := header.Timestamp / 1000
+	milliSecond := header.Timestamp % 1000
+	ts := time.Unix(int64(second), int64(milliSecond)*int64(time.Millisecond))
+
+	payload := w.payload
+	if w.isTransferMessage() {
+		// remove the last 33 bytes from transfer message payload
+		payload = w.payload[0 : len(w.payload)-33]
+	}
+
+	return &common.MessagePublication{
+		TxHash:           ethCommon.HexToHash(w.event.TxId),
+		Timestamp:        ts,
+		Nonce:            w.nonce,
+		Sequence:         w.sequence,
+		ConsistencyLevel: w.consistencyLevel,
+		EmitterChain:     vaa.ChainIDAlephium,
+		EmitterAddress:   vaa.Address(w.senderId),
+		Payload:          payload,
+	}
+}
+
+// published message from alephium bridge contract
+type TransferMessage struct {
+	amount         big.Int
+	tokenId        Byte32
+	tokenChainId   uint16
+	toAddress      Byte32
+	toChainId      uint16
+	fee            big.Int
+	isLocalToken   bool
+	tokenWrapperId Byte32
+}
+
+func readBigInt(reader *bytes.Reader, num *big.Int) {
+	var byte32 Byte32
+	size, err := reader.Read(byte32[:])
+	assume(size == 32)
+	assume(err == nil)
+	num.SetBytes(byte32[:])
+}
+
+func readUint16(reader *bytes.Reader, num *uint16) {
+	err := binary.Read(reader, binary.BigEndian, num)
+	assume(err == nil)
+}
+
+func readByte32(reader *bytes.Reader, byte32 *Byte32) {
+	size, err := reader.Read(byte32[:])
+	assume(size == 32)
+	assume(err == nil)
+}
+
+func readBool(reader *bytes.Reader) bool {
+	b, err := reader.ReadByte()
+	assume(err == nil)
+	return b == 1
+}
+
+func TransferMessageFromBytes(data []byte) *TransferMessage {
+	assume(data[0] == transferPayloadId)
+	reader := bytes.NewReader(data[1:]) // skip the payloadId
+	var message TransferMessage
+	readBigInt(reader, &message.amount)
+	readByte32(reader, &message.tokenId)
+	readUint16(reader, &message.tokenChainId)
+	readByte32(reader, &message.toAddress)
+	readUint16(reader, &message.toChainId)
+	readBigInt(reader, &message.fee)
+	message.isLocalToken = readBool(reader)
+	readByte32(reader, &message.tokenWrapperId)
+	return &message
+}
+
+type tokenWrapperCreated struct {
+	senderId              Byte32
+	tokenBridgeForChainId Byte32
+	tokenWrapperId        Byte32
+	isLocalToken          bool
+	tokenId               Byte32
+	remoteChainId         uint16
+}
+
+type tokenBridgeForChainCreated struct {
+	senderId      Byte32
+	contractId    Byte32
+	remoteChainId uint16
+}
+
+type undoneSequencesRemoved struct {
+	senderId  Byte32
+	sequences []byte
+}
+
+type undoneSequenceCompleted struct {
+	senderId      Byte32
+	remoteChainId uint16
+	sequence      uint64
+}
+
 type Event struct {
 	BlockHash       string   `json:"blockHash"`
 	ContractAddress string   `json:"contractAddress"`
 	TxId            string   `json:"txId"`
 	Index           int32    `json:"index"`
 	Fields          []*Field `json:"fields"`
+}
+
+func (e *Event) toString() string {
+	data, _ := json.Marshal(e)
+	return string(data)
+}
+
+func (e *Event) toWormholeMessage() (*WormholeMessage, error) {
+	assume(len(e.Fields) == 5)
+	emitter, err := e.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	sequence, err := e.Fields[1].ToUint64()
+	if err != nil {
+		return nil, err
+	}
+	nonceBytes := e.Fields[2].ToByteVec()
+	if len(nonceBytes) != 4 {
+		return nil, fmt.Errorf("invalid nonce size")
+	}
+	nonce := binary.BigEndian.Uint32(nonceBytes)
+	payload := e.Fields[3].ToByteVec()
+	consistencyLevel, err := e.Fields[4].ToUint8()
+	if err != nil {
+		return nil, err
+	}
+	return &WormholeMessage{
+		event:            e,
+		senderId:         *emitter,
+		nonce:            nonce,
+		payload:          payload,
+		sequence:         sequence,
+		consistencyLevel: consistencyLevel,
+	}, nil
+}
+
+func (e *Event) toUndoneSequencesRemoved() (*undoneSequencesRemoved, error) {
+	assume(len(e.Fields) == 2)
+	senderId, err := e.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	sequences := e.Fields[1].ToByteVec()
+	return &undoneSequencesRemoved{
+		senderId:  *senderId,
+		sequences: sequences,
+	}, nil
+}
+
+func (e *Event) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
+	assume(len(e.Fields) == 2)
+	senderId, err := e.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	remoteChainId, err := e.Fields[1].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+	sequence, err := e.Fields[2].ToUint64()
+	if err != nil {
+		return nil, err
+	}
+	return &undoneSequenceCompleted{
+		senderId:      *senderId,
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}, nil
+}
+
+func (e *Event) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated, error) {
+	assume(len(e.Fields) == 3)
+	senderId, err := e.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	contractId, err := e.Fields[1].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	remoteChainId, err := e.Fields[2].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+	return &tokenBridgeForChainCreated{
+		senderId:      *senderId,
+		contractId:    *contractId,
+		remoteChainId: remoteChainId,
+	}, nil
+}
+
+func (e *Event) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
+	assume(len(e.Fields) == 6)
+	senderId, err := e.Fields[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	tokenBridgeForChainId, err := e.Fields[1].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	tokenWrapperId, err := e.Fields[2].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	isLocalToken := e.Fields[3].ToBool()
+	tokenId, err := e.Fields[4].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	remoteChainId, err := e.Fields[5].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+	return &tokenWrapperCreated{
+		senderId:              *senderId,
+		tokenBridgeForChainId: *tokenBridgeForChainId,
+		tokenWrapperId:        *tokenWrapperId,
+		isLocalToken:          isLocalToken,
+		tokenId:               *tokenId,
+		remoteChainId:         remoteChainId,
+	}, nil
 }
 
 func (e *Event) getConsistencyLevel(minConfirmations uint8) (*uint8, error) {

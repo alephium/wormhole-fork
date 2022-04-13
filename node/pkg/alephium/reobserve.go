@@ -11,6 +11,8 @@ import (
 )
 
 func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, client *Client) {
+	eventEmitterAddress := toContractAddress(w.eventEmitterId)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,7 +41,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 
 			currentHeight := atomic.LoadUint32(&w.currentHeight)
 
-			unconfirmedEvents, err := w.getGovernanceEventsByIndex(ctx, client, blockHash, txId, eventIndex)
+			unconfirmedEvents, err := w.getGovernanceEventsByIndex(ctx, client, eventEmitterAddress, blockHash, txId, eventIndex)
 			if err != nil {
 				logger.Info("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
 				continue
@@ -74,7 +76,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 			confirmed := &ConfirmedEvents{
 				events: confirmedEvents,
 			}
-			if err := w.validateGovernanceEvents(logger, confirmed); err != nil {
+			if err := w.handleGovernanceMessages(logger, confirmed); err != nil {
 				logger.Error("failed to reobserve transfer message", zap.Error(err))
 			}
 		}
@@ -84,11 +86,12 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 func (w *Watcher) getGovernanceEventsByIndex(
 	ctx context.Context,
 	client *Client,
+	address string,
 	blockHash string,
 	txId string,
 	eventIndex uint64,
 ) ([]*UnconfirmedEvent, error) {
-	events, err := client.GetContractEventsByIndex(ctx, w.governanceContract, eventIndex, eventIndex)
+	events, err := client.GetContractEventsByIndex(ctx, address, eventIndex, eventIndex)
 	if err != nil {
 		return nil, err
 	}
