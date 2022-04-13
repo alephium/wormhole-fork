@@ -512,6 +512,7 @@ describe("test token bridge", () => {
             id: tokenId, amount: Number(arbiterFee)
         }])
         const tokenWrapperOutput = testResult.txOutputs[2]
+
         expect(tokenWrapperOutput.tokens).toEqual([{
             id: tokenId, amount: initTokenAmount - transferAmount
         }])

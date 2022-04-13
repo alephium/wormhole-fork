@@ -1,5 +1,6 @@
 import "governance.ral"
 import "sequence.ral"
+import "token_wrapper.ral"
 import "token_interface.ral"
 import "token_wrapper.ral"
 import "event_emitter.ral"

@@ -3,10 +3,18 @@ package alephium
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 )
+
+const (
+	TokenBridgeForChainFieldSize = 8
+	TokenWrapperFieldSize        = 9
+)
+
+var ErrInvalidContract error = errors.New("invalid contract")
 
 type Client struct {
 	endpoint string
@@ -97,39 +105,24 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 	return result, err
 }
 
-func (c *Client) GetEventsFromBlocks(ctx context.Context, from, to, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/contract/within-blocks?fromBlock=%s&toBlock=%s&contractAddress=%s", from, to, contractAddress)
+func getEventsURI(contractAddress string, from, to uint64) string {
+	return fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
+}
+
+func (c *Client) GetContractEventsByIndex(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
 	var result Events
-	err := c.get(ctx, path, &result)
+	err := c.get(ctx, getEventsURI(contractAddress, from, to), &result)
 	return &result, err
 }
 
-func (c *Client) GetEventsFromBlock(ctx context.Context, hash string, contractAddress string) (*Events, error) {
-	path := fmt.Sprintf("/events/contract/in-block?block=%s&contractAddress=%s", hash, contractAddress)
-	var result Events
-	err := c.get(ctx, path, &result)
+func eventCountURI(contractAddress string) string {
+	return fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
+}
+
+func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*uint64, error) {
+	var result uint64
+	err := c.get(ctx, eventCountURI(contractAddress), &result)
 	return &result, err
-}
-
-// TODO: reduce the number of request
-func (c *Client) GetContractEventsFromBlockHash(ctx context.Context, hash string, contracts []string) ([]*Event, error) {
-	result := make([]*Event, 0)
-	for _, contract := range contracts {
-		events, err := c.GetEventsFromBlock(ctx, hash, contract)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, events.Events...)
-	}
-	return result, nil
-}
-
-func (c *Client) GetContractEventsFromBlockHeight(ctx context.Context, chainIndex *ChainIndex, height uint32, contracts []string) ([]*Event, error) {
-	hash, err := c.GetHashByHeight(ctx, chainIndex, height)
-	if err != nil {
-		return nil, err
-	}
-	return c.GetContractEventsFromBlockHash(ctx, *hash, contracts)
 }
 
 func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*TxStatus, error) {
@@ -150,28 +143,4 @@ func (c *Client) GetContractState(ctx context.Context, contractAddress string, g
 	var result ContractState
 	err := c.get(ctx, path, &result)
 	return &result, err
-}
-
-func (c *Client) GetTokenBridgeForChainInfo(ctx context.Context, event *Event, groupIndex uint8) (*uint16, *string, error) {
-	assume(len(event.Fields) == 1)
-	tokenBridgeForChainAddress := event.Fields[0].ToAddress()
-	contractState, err := c.GetContractState(ctx, tokenBridgeForChainAddress, groupIndex)
-	if err != nil {
-		return nil, nil, err
-	}
-	assume(contractState.Address == tokenBridgeForChainAddress)
-	remoteChainId, err := contractState.Fields[2].ToUint16()
-	return &remoteChainId, &tokenBridgeForChainAddress, err
-}
-
-func (c *Client) GetTokenWrapperInfo(ctx context.Context, event *Event, groupIndex uint8) (*Byte32, *string, error) {
-	assume(len(event.Fields) == 1)
-	tokenWrapperAddress := event.Fields[0].ToAddress()
-	contractState, err := c.GetContractState(ctx, tokenWrapperAddress, groupIndex)
-	if err != nil {
-		return nil, nil, err
-	}
-	assume(contractState.Address == tokenWrapperAddress)
-	remoteTokenId, err := contractState.Fields[4].ToByte32()
-	return remoteTokenId, &tokenWrapperAddress, err
 }

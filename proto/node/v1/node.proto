@@ -24,10 +24,15 @@ service NodePrivilegedService {
   // An error is returned if more than 1000 gaps are found.
   rpc FindMissingMessages (FindMissingMessagesRequest) returns (FindMissingMessagesResponse);
 
+  rpc ExecuteUndoneSequence (ExecuteUndoneSequenceRequest) returns (ExecuteUndoneSequenceResponse);
+
   // SendObservationRequest broadcasts a signed observation request to the gossip network
   // using the node's guardian key. The network rate limits these requests to one per second.
   // Requests at higher rates will fail silently.
   rpc SendObservationRequest (SendObservationRequestRequest) returns (SendObservationRequestResponse);
+
+  // Get undone sequences and status
+  rpc GetUndoneSequences (UndoneSequenceRequest) returns (UndoneSequenceResponse);
 }
 
 message InjectGovernanceVAARequest {
@@ -146,3 +151,34 @@ message SendObservationRequestRequest {
 }
 
 message SendObservationRequestResponse {}
+
+message UndoneSequenceRequest {
+  uint32 remote_chain_id = 1;
+}
+
+enum UndoneSequenceStatus {
+  INIT = 0;
+  EXECUTING = 1;
+  EXECUTED = 2;
+}
+
+message UndoneSequence {
+  uint64 sequence = 1;
+  UndoneSequenceStatus status = 2;
+}
+
+message UndoneSequenceResponse {
+  repeated UndoneSequence sequences = 1;
+}
+
+message ExecuteUndoneSequenceRequest {
+  uint32 emitter_chain = 1;
+  string emitter_address = 2;
+  uint64 sequence = 3;
+  uint64 gov_sequence = 4;
+  repeated string backfill_nodes = 5;
+}
+
+message ExecuteUndoneSequenceResponse {
+  bytes vaaBody = 1;
+}

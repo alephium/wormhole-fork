@@ -333,6 +333,10 @@ func (v *VAA) HexDigest() string {
 	return hex.EncodeToString(v.SigningMsg().Bytes())
 }
 
+func (v *VAA) SerializeBody() []byte {
+	return v.serializeBody()
+}
+
 func (v *VAA) serializeBody() []byte {
 	buf := new(bytes.Buffer)
 	MustWrite(buf, binary.BigEndian, uint32(v.Timestamp.Unix()))
