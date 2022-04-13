@@ -1,0 +1,15 @@
+import "undone_sequence.ral"
+
+TxContract UndoneSequenceTest(
+    undoneSequenceId: ByteVec
+) {
+    pub fn addToUndone_(seq: U256, current: U256, bitMap: U256) -> ByteVec {
+        let undoneSequence = UndoneSequence(undoneSequenceId)
+        return undoneSequence.addToUndone(seq, current, bitMap)
+    }
+
+    pub fn trySetDone_(seq: U256) -> Bool {
+        let undoneSequence = UndoneSequence(undoneSequenceId)
+        return undoneSequence.trySetDone(seq)
+    }
+}

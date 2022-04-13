@@ -1,4 +1,6 @@
 import "undone_sequence.ral"
+import "init_undone_sequence_interface.ral"
+import "event_emitter.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
 TxContract Sequence(
@@ -6,7 +8,7 @@ TxContract Sequence(
     mut next1: U256, // TODO: better name
     mut next2: U256,
     mut undoneSequenceId: ByteVec
-) {
+) extends InitUndoneSequence {
     fn initialized() -> Bool {
         return undoneSequenceId != #
     }
@@ -17,7 +19,7 @@ TxContract Sequence(
         let undoneSequence = UndoneSequence(contractId)
         assert!(undoneSequence.getUndoneList() == #)
         assert!(undoneSequence.getOwner() == selfContractId!())
-        assert!(codeHash!(contractId) == {{ undoneSequenceCodeHash }})
+        assert!(contractCodeHash!(contractId) == #{{ undoneSequenceCodeHash }})
     }
 
     pub fn getNext() -> U256 {
@@ -32,9 +34,12 @@ TxContract Sequence(
         return next2
     }
 
-    fn compact() -> () {
+    fn compact(seq: U256) -> () {
         if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
-            addToUndone(next, next1)
+            let undoneSequence = UndoneSequence(undoneSequenceId)
+            let removed = undoneSequence.addToUndone(next, seq, next1)
+            let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+            eventEmitter.publishUndoneSequenceRemoved(removed)
         }
         next = next + 256
         next1 = next2
@@ -52,19 +57,17 @@ TxContract Sequence(
 
     fn checkSequence(seq: U256) -> () {
         assert!(initialized())
-        let undoneSequence = UndoneSequence(undoneSequenceId)
         if (seq < next) {
+            let undoneSequence = UndoneSequence(undoneSequenceId)
             assert!(undoneSequence.trySetDone(seq))
             return
         }
 
         if (seq >= (next + 512)) {
-            compact()
+            compact(seq)
         }
 
         assert!(seq < (next + 512))
-        undoneSequence.removeOldUndone(seq)
-
         let seqIndex = seq - next
         let pos = seqIndex / 8
         let offset = seqIndex % 8

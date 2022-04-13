@@ -2,6 +2,8 @@ import "governance.ral"
 import "sequence.ral"
 import "token_wrapper.ral"
 import "token_interface.ral"
+import "token_wrapper.ral"
+import "event_emitter.ral"
 
 TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
@@ -14,9 +16,6 @@ TxContract TokenBridge(
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
 ) extends Sequence(next, next1, next2, undoneSequenceId) {
-    // TODO: rename
-    event FailedTransferDone(remoteChainId: U256, seq: U256)
-
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
@@ -72,7 +71,9 @@ TxContract TokenBridge(
         )
 
         approveAlph!(payer, createContractAlphAmount)
-        createContract!(contractCode, encodedState)
+        let contractId = createContract!(contractCode, encodedState)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
     }
 
     pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
@@ -96,7 +97,9 @@ TxContract TokenBridge(
 
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
-        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+        governance.payMessageFee(payer)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
 
     fn nextSequence() -> (U256) {
@@ -116,21 +119,26 @@ TxContract TokenBridge(
         let payload = data ++ callerContractId!()
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
-        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+        governance.payMessageFee(payer)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
 
-    // handle failed transfer message
+    // handle undone sequence transfer message
     pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
-        let failedSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
+        let undoneSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
         let tokenWrapperId = byteVecSlice!(payload, 41, 73)
         let toAddress = byteVecSlice!(payload, 73, 105)
         let amount = u256From32Byte!(byteVecSlice!(payload, 105, 137))
         let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 137, 169))
         assert!(size!(payload) == 169)
+        approveAlph!(txCaller!(0), 1000000000000)
+
         let tokenWrapper = TokenWrapper(tokenWrapperId)
         tokenWrapper.completeFailedTransfer(toAddress, amount, arbiterFee, arbiter)
-        emit FailedTransferDone(tokenWrapper.getRemoteChainId(), failedSequence)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishUndoneSequenceCompleted(tokenWrapper.getRemoteChainId(), undoneSequence)
     }
 }

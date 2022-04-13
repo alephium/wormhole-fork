@@ -8,3 +8,14 @@ export const payer = '12LgGdbjE6EtnTKw5gdBwV2RRXuXPtzYM7SDZ45YJTRht'
 export const messageFee = BigInt("100000000000000")
 export const consistencyLevel = 0
 export const oneAlph = BigInt("1000000000000000000")
+
+export const commonVars = {
+    eventEmitterId: "",
+    tokenWrapperFactoryAddress: "",
+    tokenWrapperCodeHash: "",
+    tokenWrapperBinCode: "",
+    tokenBridgeForChainBinCode: "",
+    undoneSequenceCodeHash: "",
+    undoneSequenceMaxSize: 128,
+    undoneSequenceMaxDistance: 512
+}

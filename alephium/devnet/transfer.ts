@@ -1,6 +1,6 @@
 import { CliqueClient, Script, Signer } from "alephium-web3";
 import { nonce } from "../lib/utils";
-import { consistencyLevel, messageFee } from "./env";
+import { commonVars, consistencyLevel, messageFee } from "./env";
 
 export async function getToken(
     client: CliqueClient,
@@ -39,11 +39,7 @@ export async function transferLocal(
         arbiterFee: arbiterFee,
         nonce: nonce(),
         consistencyLevel: consistencyLevel,
-        distance: 64,
-        tokenWrapperFactoryAddress: "",
-        tokenWrapperCodeHash: "",
-        tokenWrapperBinCode: "",
-        tokenBridgeForChainBinCode: ""
+        ...commonVars
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

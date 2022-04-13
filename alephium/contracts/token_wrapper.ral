@@ -86,8 +86,8 @@ TxContract TokenWrapper(
     }
 
     fn getTransferAmount(amount: U256, arbiterFee: U256) -> (U256, U256) {
-        let denomalizedAmount = deNormalizeAmount(amount, tokenDecimals)
-        let denomalizedFee = deNormalizeAmount(arbiterFee, tokenDecimals)
+        let denomalizedAmount = deNormalizeAmount(amount, decimals_)
+        let denomalizedFee = deNormalizeAmount(arbiterFee, decimals_)
         assert!(denomalizedAmount > denomalizedFee)
         let transferAmount = denomalizedAmount - denomalizedFee
         return transferAmount, denomalizedFee
@@ -102,7 +102,7 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(txCaller!(0), 1000000000000) // dustAmount
+        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         transferTokenFromSelf!(arbiter, tokenId, transferFee)
     }

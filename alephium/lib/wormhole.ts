@@ -1,4 +1,4 @@
-import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, Val } from 'alephium-web3'
+import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, SubmissionResult, Val } from 'alephium-web3'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13
@@ -26,6 +26,10 @@ export class Wormhole {
     initGuardianSetIndex: number
     initMessageFee: bigint
 
+    private _tokenWrapperContract: any = null
+    private _tokenBridgeForChainContract: any = null 
+    private _undoneSequenceContract: any = null
+
     constructor(
         client: CliqueClient,
         signer: Signer,
@@ -48,27 +52,156 @@ export class Wormhole {
         this.initMessageFee = initMessageFee
     }
 
-    async deployContracts(): Promise<WormholeContracts> {
-        const tokenWrapper = await tokenWrapperContract(this.client)
-        const tokenWrapperFactoryDeployResult = await deployTokenWrapperFactory(
-            this.client, this.signer, tokenWrapper.bytecode
+    private async tokenWrapperContract(): Promise<Contract> {
+        if (this._tokenWrapperContract) {
+            return this._tokenWrapperContract as Contract
+        }
+        const contract = await this.getTokenWrapperContract()
+        this._tokenWrapperContract = contract
+        return contract
+    }
+
+    private async tokenBridgeForChainContract(tokenWrapperFactoryAddress: string): Promise<Contract> {
+        if (this._tokenBridgeForChainContract) {
+            return this._tokenBridgeForChainContract as Contract
+        }
+        const contract = await this.getTokenBridgeForChainContract(tokenWrapperFactoryAddress)
+        this._tokenBridgeForChainContract = contract
+        return contract
+    }
+
+    private async undoneSequenceContract(): Promise<Contract> {
+        if (this._undoneSequenceContract) {
+            return this._undoneSequenceContract as Contract
+        }
+        const contract = await this.getUndoneSequenceContract()
+        this._undoneSequenceContract = contract
+        return contract
+    }
+
+    private async undoneSequenceVariables() {
+        const undoneSequence = await this.undoneSequenceContract()
+        return {
+            undoneSequenceCodeHash: undoneSequence.codeHash,
+            undoneSequenceMaxSize: 128,
+            undoneSequenceMaxDistance: 512
+        }
+    }
+
+    private async tokenBridgeVariables(
+        eventEmitterId: string,
+        tokenWrapperFactoryId: string
+    ) {
+        const tokenWrapper = await this.tokenWrapperContract()
+        const tokenBridgeForChain = await this.tokenBridgeForChainContract(
+            tokenWrapperFactoryId
         )
-        const governanceDeployResult = await deployGovernance(
-            this.client, this.signer, this.governanceChainId, this.governanceContractId,
+        return {
+            eventEmitterId: eventEmitterId,
+            tokenBridgeForChainBinCode: tokenBridgeForChain.bytecode,
+            tokenWrapperCodeHash: tokenWrapper.codeHash,
+            tokenWrapperFactoryAddress: tokenWrapperFactoryId,
+            tokenWrapperBinCode: tokenWrapper.bytecode
+        }
+    }
+
+    async deployContracts(): Promise<WormholeContracts> {
+        const eventEmitter = await this.deployEventEmitter()
+        const tokenWrapperFactoryDeployResult = await this.deployTokenWrapperFactory(eventEmitter.address)
+        const governanceDeployResult = await this.deployGovernance(
+            eventEmitter.address, this.governanceChainId, this.governanceContractId,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
-        const tokenBridgeForChain = await tokenBridgeForChainContract(
-            this.client, tokenWrapperFactoryDeployResult.address, tokenWrapper.codeHash)
-        const tokenBridgeDeployResult = await deployTokenBridge(
-            this.client, this.signer, governanceDeployResult.address,
-            this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId,
-            tokenBridgeForChain.bytecode, tokenWrapper.codeHash
+        const tokenBridgeDeployResult = await this.deployTokenBridge(
+            eventEmitter.address, tokenWrapperFactoryDeployResult.address, governanceDeployResult.address,
+            this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId
         )
         return {
             governance: governanceDeployResult,
             tokenBridge: tokenBridgeDeployResult,
             tokenWrapperFactory: tokenWrapperFactoryDeployResult
         }
+    }
+
+    private async deployEventEmitter(): Promise<DeployResult> {
+        const contract = await Contract.from(this.client, 'event_emitter.ral')
+        return this._deploy(contract)
+    }
+
+    private async deployTokenWrapperFactory(eventEmitterId: string): Promise<DeployResult> {
+        const tokenWrapper = await this.tokenWrapperContract()
+        const variables = {
+            eventEmitterId: eventEmitterId,
+            tokenWrapperBinCode: tokenWrapper.bytecode 
+        }
+        const tokenWrapperFactory = await Contract.from(this.client, 'token_wrapper_factory.ral', variables)
+        return this._deploy(tokenWrapperFactory)
+    }
+
+    private async deployGovernance(
+        eventEmitterId: string,
+        governanceChainId: number,
+        governanceContractId: string,
+        initGuardianSet: string[],
+        initGuardianSetIndex: number,
+        initMessageFee: bigint
+    ): Promise<DeployResult> {
+        const undoneSequenceVars = await this.undoneSequenceVariables()
+        const governance = await Contract.from(this.client, 'governance.ral', {
+            eventEmitterId: eventEmitterId,
+            ...undoneSequenceVars
+        })
+        const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
+        const initGuardianSetSize = initGuardianSet.length
+        if (initGuardianSetSize > 19) {
+            throw Error("init guardian set size larger than 19")
+        }
+
+        const currentGuardianSet = initGuardianSet.concat(Array(19 - initGuardianSetSize).fill(Byte32Zero))
+        const initGuardianSets = Array(previousGuardianSet, currentGuardianSet)
+        const initGuardianIndexes = Array(0, initGuardianSetIndex)
+        const initGuardianSizes = Array(0, initGuardianSet.length)
+        const previousGuardianSetExpirationTime = 0
+        const initFields = [
+            AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee,
+            initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
+        ]
+        const governanceDeployResult = await this._deploy(governance, initFields)
+        const undoneSequenceDeployResult = await this.deployUndoneSequence(governanceDeployResult.address) 
+        await this.innitUndoneSequence(governanceDeployResult.address, undoneSequenceDeployResult.address)
+        return governanceDeployResult
+    }
+
+    private async deployTokenBridge(
+        eventEmitterId: string,
+        tokenWrapperFactoryId: string,
+        governanceAddress: string,
+        governanceChainId: number,
+        governanceContractId: string
+    ): Promise<DeployResult> {
+        const undoneSequenceVars = await this.undoneSequenceVariables()
+        const tokenBridgeVars = await this.tokenBridgeVariables(eventEmitterId, tokenWrapperFactoryId)
+        const variables = {
+            ...tokenBridgeVars,
+            ...undoneSequenceVars
+        }
+        const tokenBridge = await Contract.from(this.client, 'token_bridge.ral', variables)
+        const initFields = [
+            governanceAddress, governanceChainId, governanceContractId,
+            0, 0, 0, '', AlephiumChainId, 0
+        ]
+        const tokenBridgeDeployResult = await this._deploy(tokenBridge, initFields)
+        const undoneSequenceDeployResult = await this.deployUndoneSequence(tokenBridgeDeployResult.address) 
+        await this.innitUndoneSequence(tokenBridgeDeployResult.address, undoneSequenceDeployResult.address)
+        return tokenBridgeDeployResult
+    }
+
+    private emptyTokenBridgeVars = {
+        eventEmitterId: "",
+        tokenBridgeForChainBinCode: "",
+        tokenWrapperCodeHash: "",
+        tokenWrapperFactoryAddress: "",
+        tokenWrapperBinCode: ""
     }
 
     async registerChainToAlph(
@@ -78,20 +211,35 @@ export class Wormhole {
         amount: Number256,
         params?: BuildScriptTx,
     ): Promise<string> {
+        const undoneSequenceVars = await this.undoneSequenceVariables()
         const script = await Script.from(this.client, "register_chain.ral", {
             tokenBridgeAddress: tokenBridgeAddress,
             vaa: vaa,
             payer: payer,
             amount: amount,
-            tokenWrapperFactoryAddress: "",
-            tokenBridgeForChainBinCode: "",
-            tokenWrapperCodeHash: "",
-            tokenWrapperBinCode: '',
-            distance: 64
+            ...this.emptyTokenBridgeVars,
+            ...undoneSequenceVars
         })
         const scriptTx = await script.transactionForDeployment(this.signer, params)
         const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return submitResult.txId
+    }
+
+    async initTokenBridgeForChain(tokenBridgeForChainAddress: string): Promise<SubmissionResult> {
+        const undoneSequenceDeployResult = await this.deployUndoneSequence(tokenBridgeForChainAddress)
+        return this.innitUndoneSequence(tokenBridgeForChainAddress, undoneSequenceDeployResult.address)
+    }
+
+    private async innitUndoneSequence(
+        contractId: string,
+        undoneSequenceId: string
+    ): Promise<SubmissionResult> {
+        const script = await Script.from(this.client, 'init_undone_sequence.ral', {
+            contractId: contractId,
+            undoneSequenceId: undoneSequenceId
+        })
+        const scriptTx = await script.transactionForDeployment(this.signer)
+        return this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
     }
 
     async createWrapperForLocalToken(
@@ -100,123 +248,71 @@ export class Wormhole {
         payer: string,
         alphAmount: bigint
     ): Promise<string> {
+        const undoneSequenceVars = await this.undoneSequenceVariables()
         const script = await Script.from(this.client, 'create_local_wrapper.ral', {
             tokenBridgeForChainAddress: tokenBridgeForChainAddress,
             tokenId: localTokenId,
             payer: payer,
             alphAmount: alphAmount,
-            tokenWrapperFactoryAddress: "",
-            tokenWrapperCodeHash: "",
-            tokenWrapperBinCode: "",
-            tokenBridgeForChainBinCode: "",
-            distance: 64
+            ...this.emptyTokenBridgeVars,
+            ...undoneSequenceVars
         })
         const scriptTx = await script.transactionForDeployment(this.signer)
         const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return result.txId
     }
-}
 
-async function _deploy(
-    signer: Signer,
-    contract: Contract,
-    initFields?: Val[]
-): Promise<DeployResult> {
-    const deployTx = await contract.transactionForDeployment(signer, initFields)
-    const submitResult = await signer.submitTransaction(deployTx.unsignedTx, deployTx.txId)
-    return {
-        groupIndex: deployTx.group,
-        address: deployTx.contractAddress,
-        txId: submitResult.txId
-    }
-}
-
-async function deployGovernance(
-    client: CliqueClient,
-    signer: Signer,
-    governanceChainId: number,
-    governanceContractId: string,
-    initGuardianSet: string[],
-    initGuardianSetIndex: number,
-    initMessageFee: bigint
-): Promise<DeployResult> {
-    const governance = await Contract.from(client, 'governance.ral', { distance: 64 })
-    const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
-    const initGuardianSetSize = initGuardianSet.length
-    if (initGuardianSetSize > 19) {
-        throw Error("init guardian set size larger than 19")
+    private async deployUndoneSequence(owner: string): Promise<DeployResult> {
+        const contract = await this.undoneSequenceContract()
+        return this._deploy(contract, [owner, ''])
     }
 
-    const currentGuardianSet = initGuardianSet.concat(Array(19 - initGuardianSetSize).fill(Byte32Zero))
-    const initGuardianSets = Array(previousGuardianSet, currentGuardianSet)
-    const initGuardianIndexes = Array(0, initGuardianSetIndex)
-    const initGuardianSizes = Array(0, initGuardianSet.length)
-    const previousGuardianSetExpirationTime = 0
-    const initFields = [
-        AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee,
-        initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
-    ]
-    return await _deploy(signer, governance, initFields)
-}
-
-async function deployTokenWrapperFactory(
-    client: CliqueClient,
-    signer: Signer,
-    tokenWrapperBinCode: string
-): Promise<DeployResult> {
-    const variables = {
-        tokenWrapperBinCode: tokenWrapperBinCode
+    private async _deploy(
+        contract: Contract,
+        initFields?: Val[]
+    ): Promise<DeployResult> {
+        const deployTx = await contract.transactionForDeployment(this.signer, initFields)
+        const submitResult = await this.signer.submitTransaction(deployTx.unsignedTx, deployTx.txId)
+        return {
+            groupIndex: deployTx.group,
+            address: deployTx.contractAddress,
+            txId: submitResult.txId
+        }
     }
-    const tokenWrapperFactory = await Contract.from(client, 'token_wrapper_factory.ral', variables)
-    return _deploy(signer, tokenWrapperFactory)
-}
 
-async function deployTokenBridge(
-    client: CliqueClient,
-    signer: Signer,
-    governanceAddress: string,
-    governanceChainId: number,
-    governanceContractId: string,
-    tokenBridgeForChainBinCode: string,
-    tokenWrapperCodeHash: string
-): Promise<DeployResult> {
-    const variables = {
-        tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
-        tokenWrapperCodeHash: tokenWrapperCodeHash,
-        tokenWrapperFactoryAddress: "",
-        tokenWrapperBinCode: '',
-        distance: 64,
+    private async getTokenBridgeForChainContract(
+        tokenWrapperFactoryAddress: string
+    ): Promise<Contract> {
+        const tokenWrapper = await this.tokenWrapperContract()
+        const undoneSequenceVars = await this.undoneSequenceVariables()
+        const variables = {
+            eventEmitterId: "",
+            tokenBridgeForChainBinCode: "",
+            tokenWrapperCodeHash: tokenWrapper.codeHash,
+            tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
+            tokenWrapperBinCode: tokenWrapper.bytecode,
+            ...undoneSequenceVars
+        }
+        return Contract.from(this.client, 'token_bridge_for_chain.ral', variables)
     }
-    const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
-    const initFields = [
-        governanceAddress, governanceChainId, governanceContractId,
-        0, 0, 0, '', AlephiumChainId, 0
-    ]
-    return await _deploy(signer, tokenBridge, initFields)
-}
 
-async function tokenBridgeForChainContract(
-    client: CliqueClient,
-    tokenWrapperFactoryAddress: string,
-    tokenWrapperCodeHash: string
-): Promise<Contract> {
-    const variables = {
-        tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
-        tokenWrapperCodeHash: tokenWrapperCodeHash,
-        distance: 64,
-        tokenWrapperBinCode: "",
-        tokenBridgeForChainBinCode: ""
+    private async getTokenWrapperContract(): Promise<Contract> {
+        const undoneSequenceVars = await this.undoneSequenceVariables()
+        const variables = {
+            ...this.emptyTokenBridgeVars,
+            ...undoneSequenceVars
+        }
+        return Contract.from(this.client, 'token_wrapper.ral', variables)
     }
-    return Contract.from(client, 'token_bridge_for_chain.ral', variables)
-}
 
-async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
-    const variables = {
-        tokenBridgeForChainBinCode: "",
-        tokenWrapperBinCode: "",
-        tokenWrapperCodeHash: "",
-        tokenWrapperFactoryAddress: "",
-        distance: 64
+    private async getUndoneSequenceContract(
+        undoneSequenceMaxSize: number = 128, // 1k
+        undoneSequenceMaxDistance: number = 512
+    ): Promise<Contract> {
+        const variables = {
+            undoneSequenceMaxSize: undoneSequenceMaxSize,
+            undoneSequenceMaxDistance: undoneSequenceMaxDistance
+        }
+        return Contract.from(this.client, 'undone_sequence.ral', variables)
     }
-    return Contract.from(client, 'token_wrapper.ral', variables)
 }
