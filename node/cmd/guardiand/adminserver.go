@@ -517,23 +517,14 @@ func transferFromBytes(data []byte) (*transfer, error) {
 	return &message, nil
 }
 
-func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId uint16) (tokenWrapperId alephium.Byte32, err error) {
-	var tokenWrapperAddress string
+func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId uint16) (*alephium.Byte32, error) {
 	if msg.tokenChainId == uint16(vaa.ChainIDAlephium) {
 		// local token
-		tokenWrapperAddress, err = s.alphDb.GetLocalTokenWrapper(msg.tokenId, remoteChainId)
-		if err != nil {
-			return
-		}
+		return s.alphDb.GetLocalTokenWrapper(msg.tokenId, remoteChainId)
 	} else {
 		// remote token
-		tokenWrapperAddress, err = s.alphDb.GetRemoteTokenWrapper(msg.tokenId)
-		if err != nil {
-			return
-		}
+		return s.alphDb.GetRemoteTokenWrapper(msg.tokenId)
 	}
-	tokenWrapperId, err = alephium.ToContractId(tokenWrapperAddress)
-	return
 }
 
 func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *nodev1.ExecuteUndoneSequenceRequest) (*nodev1.ExecuteUndoneSequenceResponse, error) {
@@ -607,7 +598,7 @@ func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *
 // transfer payload for undone sequence
 func transferPayload(
 	transferMsg *transfer,
-	tokenWrapperId alephium.Byte32,
+	tokenWrapperId *alephium.Byte32,
 	sequence uint64,
 ) []byte {
 	buf := new(bytes.Buffer)

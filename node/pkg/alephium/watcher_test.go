@@ -180,12 +180,13 @@ func TestUpdateTokenBridgeForChain(t *testing.T) {
 	assert.Equal(t, *eventIndex, uint64(3))
 
 	for i := 0; i < 3; i++ {
-		address, err := watcher.db.getRemoteChain(uint16(i))
+		expectedContractId := toContractId(contractAddresses[i])
+		contractId0, err := watcher.db.getRemoteChain(uint16(i))
 		assert.Nil(t, err)
-		assert.Equal(t, address, contractAddresses[i])
+		assert.Equal(t, *contractId0, expectedContractId)
 
-		contractId, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
+		contractId1, ok := watcher.tokenBridgeForChainCache.Load(uint16(i))
 		assert.True(t, ok)
-		assert.Equal(t, *contractId.(*Byte32), toContractId(contractAddresses[i]))
+		assert.Equal(t, *contractId1.(*Byte32), expectedContractId)
 	}
 }

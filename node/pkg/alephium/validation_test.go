@@ -37,9 +37,13 @@ func TestAttestEvent(t *testing.T) {
 				Type:  "U256",
 				Value: "100",
 			},
-			{ // data
+			{ // nonce
 				Type:  "ByteVec",
-				Value: "12e551d9029fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0800000000000000000000000000000000000000000000746573742d746f6b656e00000000000000000000000000000000000000000000746573742d746f6b656e",
+				Value: "12e551d9",
+			},
+			{ // payload
+				Type:  "ByteVec",
+				Value: "029fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0800000000000000000000000000000000000000000000746573742d746f6b656e00000000000000000000000000000000000000000000746573742d746f6b656e",
 			},
 			{ // consistencyLevel
 				Type:  "U256",
@@ -73,9 +77,13 @@ func TestTransferEvent(t *testing.T) {
 				Type:  "U256",
 				Value: "101",
 			},
-			{ // data
+			{ // nonce
 				Type:  "ByteVec",
-				Value: "1e308999010000000000000000000000000000000000000000000000004563918244f400009fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0000000000000000000000000d0f183465284cb5cb426902445860456ed59b34000200000000000000000000000000000000000000000000000000005af3107a4000014244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634",
+				Value: "1e308999",
+			},
+			{ // payload
+				Type:  "ByteVec",
+				Value: "010000000000000000000000000000000000000000000000004563918244f400009fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0000000000000000000000000d0f183465284cb5cb426902445860456ed59b34000200000000000000000000000000000000000000000000000000005af3107a4000014244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634",
 			},
 			{ // consistencyLevel
 				Type:  "U256",
@@ -141,7 +149,7 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 
 	remoteChainId := uint16(2)
 	tokenBridgeForChainId := randomByte32()
-	err = db.addRemoteChain(remoteChainId, toContractAddress(tokenBridgeForChainId))
+	err = db.addRemoteChain(remoteChainId, tokenBridgeForChainId)
 	assert.Nil(t, err)
 
 	localTokenId := randomByte32()
@@ -189,17 +197,17 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 		remoteChainId: remoteChainId,
 		localTokenId:  localTokenId,
 	}
-	localTokenWrapperAddress, err := db.GetLocalTokenWrapper(localTokenId, remoteChainId)
+	contractId, err := db.GetLocalTokenWrapper(localTokenId, remoteChainId)
 	assert.Nil(t, err)
-	assert.Equal(t, localTokenWrapperAddress, tokenWrapperAddresses[0])
+	assert.Equal(t, *contractId, toContractId(tokenWrapperAddresses[0]))
 	localTokenWrapperId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
 	assert.True(t, ok)
 	assert.Equal(t, *localTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[0]))
 
 	// check remote token wrapper
-	remoteTokenWrapperAddress, err := db.GetRemoteTokenWrapper(remoteTokenId)
+	contractId, err = db.GetRemoteTokenWrapper(remoteTokenId)
 	assert.Nil(t, err)
-	assert.Equal(t, remoteTokenWrapperAddress, tokenWrapperAddresses[1])
+	assert.Equal(t, *contractId, toContractId(tokenWrapperAddresses[1]))
 	remoteTokenWrapperId, ok := watcher.remoteTokenWrapperCache.Load(remoteTokenId)
 	assert.True(t, ok)
 	assert.Equal(t, *remoteTokenWrapperId.(*Byte32), toContractId(tokenWrapperAddresses[1]))
@@ -250,9 +258,9 @@ func TestValidateTokenWrapperEvents(t *testing.T) {
 	assert.Nil(t, err)
 
 	checkEventIndex(6)
-	contractId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
+	expectedContractId, ok := watcher.localTokenWrapperCache.Load(localTokenWrapperKey)
 	assert.True(t, ok)
-	assert.Equal(t, contractId, localTokenWrapperId)
+	assert.Equal(t, expectedContractId, localTokenWrapperId)
 }
 
 func TestValidateGovernanceEvents(t *testing.T) {
@@ -274,15 +282,14 @@ func TestValidateGovernanceEvents(t *testing.T) {
 	remoteChainId := uint16(2)
 	localChainId := uint16(3)
 	localTokenId := randomByte32()
-	localTokenWrapperAddress := randomAddress()
-	localTokenWrapperId := toContractId(localTokenWrapperAddress)
+	localTokenWrapperId := randomByte32()
 	remoteTokenId := randomByte32()
 	remoteTokenWrapperAddress := randomAddress()
 	remoteTokenWrapperId := toContractId(remoteTokenWrapperAddress)
 
-	err = db.addLocalTokenWrapper(localTokenId, remoteChainId, localTokenWrapperAddress)
+	err = db.addLocalTokenWrapper(localTokenId, remoteChainId, localTokenWrapperId)
 	assert.Nil(t, err)
-	err = db.addRemoteTokenWrapper(remoteTokenId, remoteTokenWrapperAddress)
+	err = db.addRemoteTokenWrapper(remoteTokenId, remoteTokenWrapperId)
 	assert.Nil(t, err)
 
 	received := func() *common.MessagePublication {

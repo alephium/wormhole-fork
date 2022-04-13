@@ -221,7 +221,7 @@ func (w *Watcher) updateTokenBridgeForChain(
 			return err
 		}
 		w.tokenBridgeForChainCache.Store(info.remoteChainId, &info.contractId)
-		batch.writeTokenBridgeForChain(info.remoteChainId, info.address)
+		batch.writeTokenBridgeForChain(info.remoteChainId, info.contractId)
 	}
 	batch.updateLastTokenBridgeEventIndex(maxIndex)
 	return w.db.writeBatch(batch)

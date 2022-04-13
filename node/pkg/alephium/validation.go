@@ -79,10 +79,10 @@ func (w *Watcher) validateTokenWrapperEvents(
 			}
 
 			w.localTokenWrapperCache.Store(key, &info.tokenWrapperId)
-			batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperAddress)
+			batch.writeLocalTokenWrapper(info.tokenId, info.remoteChainId, info.tokenWrapperId)
 		} else {
 			w.remoteTokenWrapperCache.Store(info.tokenId, &info.tokenWrapperId)
-			batch.writeRemoteTokenWrapper(info.tokenId, info.tokenWrapperAddress)
+			batch.writeRemoteTokenWrapper(info.tokenId, info.tokenWrapperId)
 		}
 	}
 	batch.updateLastTokenWrapperFactoryEventIndex(maxIndex)
@@ -207,32 +207,24 @@ func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
 	if value, ok := w.tokenBridgeForChainCache.Load(chainId); ok {
 		return value.(*Byte32), nil
 	}
-	contractAddress, err := w.db.getRemoteChain(chainId)
+	contractId, err := w.db.getRemoteChain(chainId)
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := ToContractId(contractAddress)
-	if err != nil {
-		return nil, err
-	}
-	w.tokenBridgeForChainCache.Store(chainId, &contractId)
-	return &contractId, nil
+	w.tokenBridgeForChainCache.Store(chainId, contractId)
+	return contractId, nil
 }
 
 func (w *Watcher) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
 	if value, ok := w.remoteTokenWrapperCache.Load(tokenId); ok {
 		return value.(*Byte32), nil
 	}
-	contractAddress, err := w.db.GetRemoteTokenWrapper(tokenId)
+	contractId, err := w.db.GetRemoteTokenWrapper(tokenId)
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := ToContractId(contractAddress)
-	if err != nil {
-		return nil, err
-	}
-	w.remoteTokenWrapperCache.Store(tokenId, &contractId)
-	return &contractId, err
+	w.remoteTokenWrapperCache.Store(tokenId, contractId)
+	return contractId, err
 }
 
 func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*Byte32, error) {
@@ -243,16 +235,12 @@ func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*B
 	if value, ok := w.localTokenWrapperCache.Load(key); ok {
 		return value.(*Byte32), nil
 	}
-	contractAddress, err := w.db.GetLocalTokenWrapper(tokenId, remoteChainId)
+	contractId, err := w.db.GetLocalTokenWrapper(tokenId, remoteChainId)
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := ToContractId(contractAddress)
-	if err != nil {
-		return nil, err
-	}
-	w.localTokenWrapperCache.Store(key, &contractId)
-	return &contractId, err
+	w.localTokenWrapperCache.Store(key, contractId)
+	return contractId, err
 }
 
 type WormholeMessage struct {

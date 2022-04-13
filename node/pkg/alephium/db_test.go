@@ -30,20 +30,20 @@ func randomUint16() uint16 {
 }
 
 type testData struct {
-	chainId              uint16
-	chainContractAddress string
-	tokenId              Byte32
-	tokenWrapperAddress  string
-	lastHeight           uint32
+	chainId               uint16
+	tokenBridgeForChainId Byte32
+	tokenId               Byte32
+	tokenWrapperId        Byte32
+	lastHeight            uint32
 }
 
 func randTestData() *testData {
 	return &testData{
-		chainId:              randomUint16(),
-		chainContractAddress: randomAddress(),
-		tokenId:              randomByte32(),
-		tokenWrapperAddress:  randomAddress(),
-		lastHeight:           rand.Uint32(),
+		chainId:               randomUint16(),
+		tokenBridgeForChainId: randomByte32(),
+		tokenId:               randomByte32(),
+		tokenWrapperId:        randomByte32(),
+		lastHeight:            rand.Uint32(),
 	}
 }
 
@@ -55,19 +55,19 @@ func TestReadWrite(t *testing.T) {
 
 	_, err = db.getRemoteChain(td.chainId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.addRemoteChain(td.chainId, td.chainContractAddress)
+	err = db.addRemoteChain(td.chainId, td.tokenBridgeForChainId)
 	assert.Nil(t, err)
 	chainContractId, err := db.getRemoteChain(td.chainId)
 	assert.Nil(t, err)
-	assert.Equal(t, chainContractId, td.chainContractAddress)
+	assert.Equal(t, *chainContractId, td.tokenBridgeForChainId)
 
 	_, err = db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperAddress)
+	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperId)
 	assert.Nil(t, err)
 	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
-	assert.Equal(t, tokenWrapperId, td.tokenWrapperAddress)
+	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
 }
 
 func TestBatchWrite(t *testing.T) {
@@ -77,19 +77,19 @@ func TestBatchWrite(t *testing.T) {
 	defer db.Close()
 
 	batch := newBatch()
-	batch.writeTokenBridgeForChain(td.chainId, td.chainContractAddress)
-	batch.writeRemoteTokenWrapper(td.tokenId, td.tokenWrapperAddress)
+	batch.writeTokenBridgeForChain(td.chainId, td.tokenBridgeForChainId)
+	batch.writeRemoteTokenWrapper(td.tokenId, td.tokenWrapperId)
 
 	err = db.writeBatch(batch)
 	assert.Nil(t, err)
 
 	chainContractId, err := db.getRemoteChain(td.chainId)
 	assert.Nil(t, err)
-	assert.Equal(t, chainContractId, td.chainContractAddress)
+	assert.Equal(t, *chainContractId, td.tokenBridgeForChainId)
 
 	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
-	assert.Equal(t, tokenWrapperId, td.tokenWrapperAddress)
+	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
 }
 
 func TestGetUndoneSequences(t *testing.T) {
@@ -152,8 +152,8 @@ func TestLocalTokenWrapperExist(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, exist)
 
-	wrapperAddress := randomAddress()
-	batch0.writeLocalTokenWrapper(key.localTokenId, key.remoteChainId, wrapperAddress)
+	contractId := randomByte32()
+	batch0.writeLocalTokenWrapper(key.localTokenId, key.remoteChainId, contractId)
 	exist, err = batch0.localTokenWrapperExist(key, db)
 	assert.Nil(t, err)
 	assert.True(t, exist)
