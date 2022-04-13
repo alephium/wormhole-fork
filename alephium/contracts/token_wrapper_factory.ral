@@ -14,9 +14,10 @@ TxContract TokenWrapperFactory() {
         createContractAlphAmount: U256
     ) -> () {
         let contractCode = #{{ tokenWrapperBinCode }}
+        let tokenBridgeForChainId = callerContractId!()
         let encodedState = encode!(
             tokenBridgeId,
-            callerContractId!(),
+            tokenBridgeForChainId,
             localChainId,
             remoteChainId,
             tokenContractId,
@@ -37,6 +38,6 @@ TxContract TokenWrapperFactory() {
         }
 
         let eventEmitter = EventEmitter(#{{ eventEmitterId }})
-        eventEmitter.publishTokenWrapperCreated(contractId, isLocalToken, tokenContractId, remoteChainId)
+        eventEmitter.publishTokenWrapperCreated(tokenBridgeForChainId, contractId, isLocalToken, tokenContractId, remoteChainId)
     }
 }

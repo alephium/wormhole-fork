@@ -125,6 +125,7 @@ describe("test token bridge", () => {
         expect(event.contractAddress).toEqual(eventEmitter.address)
         expect(event.fields).toEqual([
             toContractId(tokenBridgeInfo.tokenWrapperFactory.address),
+            toContractId(tokenBridgeForChainInfo.address),
             toContractId(tokenWrapperOutput.address),
             true,
             toContractId(testToken.address),
@@ -306,6 +307,7 @@ describe("test token bridge", () => {
         expect(event.contractAddress).toEqual(eventEmitter.address)
         expect(event.fields).toEqual([
             toContractId(tokenBridgeInfo.tokenWrapperFactory.address),
+            toContractId(tokenBridgeForChainInfo.address),
             toContractId(tokenWrapperOutput.address),
             false,
             remoteTokenId,
