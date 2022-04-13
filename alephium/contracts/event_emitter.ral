@@ -1,0 +1,47 @@
+TxContract EventEmitter() {
+    event WormholeMessage(sender: ByteVec, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256)
+    event TokenBridgeForChainCreated(sender: ByteVec, contractId: ByteVec, remoteChainId: U256)
+    event TokenWrapperCreated(sender: ByteVec, contractId: ByteVec, isLocalToken: Bool, tokenId: ByteVec, remoteChainId: U256)
+    event UndoneSequenceRemoved(sender: ByteVec, sequences: ByteVec)
+    event UndoneSequenceCompleted(sender: ByteVec, remoteChainId: U256, sequence: U256)
+
+    pub fn publishWormholeMessage(
+        sequence: U256,
+        nonce: ByteVec,
+        payload: ByteVec,
+        consistencyLevel: U256
+    ) -> () {
+        emit WormholeMessage(callerContractId!(), sequence, nonce, payload, consistencyLevel)
+    }
+
+    pub fn publishTokenBridgeForChainCreated(contractId: ByteVec, remoteChainId: U256) -> () {
+        emit TokenBridgeForChainCreated(
+            callerContractId!(),
+            contractId,
+            remoteChainId
+        )
+    }
+
+    pub fn publishTokenWrapperCreated(
+        contractId: ByteVec,
+        isLocalToken: Bool,
+        tokenId: ByteVec,
+        remoteChainId: U256
+    ) -> () {
+        emit TokenWrapperCreated(
+            callerContractId!(),
+            contractId,
+            isLocalToken,
+            tokenId,
+            remoteChainId
+        )
+    }
+
+    pub fn publishUndoneSequenceRemoved(sequences: ByteVec) -> () {
+        emit UndoneSequenceRemoved(callerContractId!(), sequences)
+    }
+
+    pub fn publishUndoneSequenceCompleted(remoteChainId: U256, sequence: U256) -> () {
+        emit UndoneSequenceCompleted(callerContractId!(), remoteChainId, sequence)
+    }
+}

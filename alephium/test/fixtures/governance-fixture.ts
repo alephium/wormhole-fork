@@ -68,10 +68,14 @@ export class SubmitTransferFee {
     }
 }
 
-export async function createGovernance(client: CliqueClient): Promise<ContractInfo> {
+export async function createGovernance(
+    client: CliqueClient,
+    eventEmitter: ContractInfo
+): Promise<ContractInfo> {
     const address = randomContractAddress()
     const undoneSequenceInfo = await createUndoneSequence(client, address)
     const governanceContract = await Contract.from(client, 'governance.ral', {
+        eventEmitterId: eventEmitter.address,
         undoneSequenceCodeHash: undoneSequenceInfo.contract.codeHash,
         undoneSequenceMaxSize: 256,
         undoneSequenceMaxDistance: 256,
@@ -95,5 +99,5 @@ export async function createGovernance(client: CliqueClient): Promise<ContractIn
         {alphAmount: dustAmount},
         address
     )
-    return new ContractInfo(governanceContract, contractState, undoneSequenceInfo.states(), address)
+    return new ContractInfo(governanceContract, contractState, [undoneSequenceInfo.selfState, eventEmitter.selfState], address)
 }

@@ -94,7 +94,7 @@ describe("test undone sequence", () => {
         for (let seq = 0; seq < 248 - distance; seq++) {
             removed += sequenceToHex(seq)
         }
-        expect(testResult.events[0].fields).toEqual([removed])
+        expect(testResult.returns).toEqual([removed])
     })
 
     test("remove old undone sequences", async () => {

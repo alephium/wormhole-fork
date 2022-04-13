@@ -1,6 +1,6 @@
 import { Asset, CliqueClient, InputAsset, TestContractResult } from 'alephium-web3'
 import { toHex } from '../lib/utils'
-import { alphChainId, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
+import { alphChainId, createEventEmitter, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { createGovernance, governanceChainId, governanceContractAddress, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
@@ -9,7 +9,8 @@ describe("test governance", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
 
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {
-        const governanceInfo = await createGovernance(client)
+        const eventEmitter = await createEventEmitter(client)
+        const governanceInfo = await createGovernance(client, eventEmitter)
         const contract = governanceInfo.contract
         return await contract.testPublicMethod(client, method, {
             initialFields: governanceInfo.selfState.fields,
@@ -26,7 +27,7 @@ describe("test governance", () => {
         const vaaBody = new VAABody(updateGuardianSet.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'updateGuardianSet')
-        const governanceState = testResult.contracts[1]
+        const governanceState = testResult.contracts[2]
         expect(governanceState.fields[8]).toEqual(Array(
             initGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase()),
             updateGuardianSet.newGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase())
@@ -71,7 +72,7 @@ describe("test governance", () => {
         const vaaBody = new VAABody(setMessageFee.encode(alphChainId), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'setMessageFee')
-        const governanceState = testResult.contracts[1]
+        const governanceState = testResult.contracts[2]
         expect(governanceState.fields[7]).toEqual(Number(setMessageFee.newMessageFee))
     })
 
@@ -97,7 +98,7 @@ describe("test governance", () => {
         expect(BigInt(assetOutput.alphAmount)).toEqual(amount)
 
         const contractOutput = testResult.txOutputs[1]
-        const governanceState = testResult.contracts[1]
+        const governanceState = testResult.contracts[2]
         expect(contractOutput.type).toEqual("ContractOutput")
         expect(contractOutput.address).toEqual(governanceState.address)
         expect(contractOutput.alphAmount).toEqual(BigInt(asset.alphAmount) - amount)

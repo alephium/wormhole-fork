@@ -1,3 +1,5 @@
+import "event_emitter.ral"
+
 TxContract TokenWrapperFactory() {
     pub payable fn createWrapper(
         tokenBridgeId: ByteVec,
@@ -26,11 +28,15 @@ TxContract TokenWrapperFactory() {
 
         approveAlph!(payer, createContractAlphAmount)
         assert!(remoteChainId != localChainId)
+        let mut contractId = #
         if (isLocalToken) {
-            createContract!(contractCode, encodedState)
+            contractId = createContract!(contractCode, encodedState)
         } else {
             let maxAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-            createContractWithToken!(contractCode, encodedState, maxAmount)
+            contractId = createContractWithToken!(contractCode, encodedState, maxAmount)
         }
+
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishTokenWrapperCreated(contractId, isLocalToken, tokenContractId, remoteChainId)
     }
 }

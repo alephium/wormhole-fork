@@ -30,6 +30,7 @@ export async function createUndoneSequence(
 
 export async function createSequence(
     client: CliqueClient,
+    eventEmitter: ContractInfo,
     next: number,
     next1: bigint,
     next2: bigint,
@@ -40,10 +41,11 @@ export async function createSequence(
     const address = randomContractAddress()
     const undoneSequence = await createUndoneSequence(client, address, undoneSequenceList, undoneSequenceMaxSize, undoneSequenceMaxDistance)
     const contract = await Contract.from(client, 'sequence.ral', {
+        eventEmitterId: eventEmitter.address,
         undoneSequenceCodeHash: undoneSequence.contract.codeHash,
         undoneSequenceMaxSize: undoneSequenceMaxSize,
         undoneSequenceMaxDistance: undoneSequenceMaxDistance
     })
     const state = contract.toState([next, next1, next2, undoneSequence.address], {alphAmount: dustAmount}, address)
-    return new ContractInfo(contract, state, undoneSequence.states(), address)
+    return new ContractInfo(contract, state, [undoneSequence.selfState, eventEmitter.selfState], address)
 }

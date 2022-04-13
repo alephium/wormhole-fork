@@ -2,8 +2,6 @@ TxContract UndoneSequence(
     owner: ByteVec,
     mut undone: ByteVec
 ) {
-    event SequencesRemoved(seqs: ByteVec)
-
     pub fn getOwner() -> ByteVec {
         return owner
     }
@@ -44,7 +42,7 @@ TxContract UndoneSequence(
         return removed
     }
 
-    pub fn addToUndone(seq: U256, current: U256, bitMap: U256) -> () {
+    pub fn addToUndone(seq: U256, current: U256, bitMap: U256) -> ByteVec {
         assert!(owner == callerContractId!())
         let mut index = 0
         let mut removed = #
@@ -55,7 +53,7 @@ TxContract UndoneSequence(
             }
             index = index + 8
         }
-        emit SequencesRemoved(removed ++ removeOldUndone(current))
+        return removed ++ removeOldUndone(current)
     }
 
     fn removeOldUndone(current: U256) -> ByteVec {

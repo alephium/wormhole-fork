@@ -10,6 +10,7 @@ export const consistencyLevel = 0
 export const oneAlph = BigInt("1000000000000000000")
 
 export const commonVars = {
+    eventEmitterId: "",
     tokenWrapperFactoryAddress: "",
     tokenWrapperCodeHash: "",
     tokenWrapperBinCode: "",

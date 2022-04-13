@@ -88,27 +88,32 @@ export class Wormhole {
         }
     }
 
-    private async tokenBridgeVariables(tokenWrapperFactoryAddress: string) {
+    private async tokenBridgeVariables(
+        eventEmitterId: string,
+        tokenWrapperFactoryId: string
+    ) {
         const tokenWrapper = await this.tokenWrapperContract()
         const tokenBridgeForChain = await this.tokenBridgeForChainContract(
-            tokenWrapperFactoryAddress
+            tokenWrapperFactoryId
         )
         return {
+            eventEmitterId: eventEmitterId,
             tokenBridgeForChainBinCode: tokenBridgeForChain.bytecode,
             tokenWrapperCodeHash: tokenWrapper.codeHash,
-            tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
+            tokenWrapperFactoryAddress: tokenWrapperFactoryId,
             tokenWrapperBinCode: tokenWrapper.bytecode
         }
     }
 
     async deployContracts(): Promise<WormholeContracts> {
-        const tokenWrapperFactoryDeployResult = await this.deployTokenWrapperFactory()
+        const eventEmitter = await this.deployEventEmitter()
+        const tokenWrapperFactoryDeployResult = await this.deployTokenWrapperFactory(eventEmitter.address)
         const governanceDeployResult = await this.deployGovernance(
-            this.governanceChainId, this.governanceContractId,
+            eventEmitter.address, this.governanceChainId, this.governanceContractId,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            tokenWrapperFactoryDeployResult.address, governanceDeployResult.address,
+            eventEmitter.address, tokenWrapperFactoryDeployResult.address, governanceDeployResult.address,
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId
         )
         return {
@@ -118,9 +123,15 @@ export class Wormhole {
         }
     }
 
-    private async deployTokenWrapperFactory(): Promise<DeployResult> {
+    private async deployEventEmitter(): Promise<DeployResult> {
+        const contract = await Contract.from(this.client, 'event_emitter.ral')
+        return this._deploy(contract)
+    }
+
+    private async deployTokenWrapperFactory(eventEmitterId: string): Promise<DeployResult> {
         const tokenWrapper = await this.tokenWrapperContract()
         const variables = {
+            eventEmitterId: eventEmitterId,
             tokenWrapperBinCode: tokenWrapper.bytecode 
         }
         const tokenWrapperFactory = await Contract.from(this.client, 'token_wrapper_factory.ral', variables)
@@ -128,6 +139,7 @@ export class Wormhole {
     }
 
     private async deployGovernance(
+        eventEmitterId: string,
         governanceChainId: number,
         governanceContractId: string,
         initGuardianSet: string[],
@@ -135,7 +147,10 @@ export class Wormhole {
         initMessageFee: bigint
     ): Promise<DeployResult> {
         const undoneSequenceVars = await this.undoneSequenceVariables()
-        const governance = await Contract.from(this.client, 'governance.ral', undoneSequenceVars)
+        const governance = await Contract.from(this.client, 'governance.ral', {
+            eventEmitterId: eventEmitterId,
+            ...undoneSequenceVars
+        })
         const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
         const initGuardianSetSize = initGuardianSet.length
         if (initGuardianSetSize > 19) {
@@ -158,13 +173,14 @@ export class Wormhole {
     }
 
     private async deployTokenBridge(
-        tokenWrapperFactoryAddress: string,
+        eventEmitterId: string,
+        tokenWrapperFactoryId: string,
         governanceAddress: string,
         governanceChainId: number,
         governanceContractId: string
     ): Promise<DeployResult> {
         const undoneSequenceVars = await this.undoneSequenceVariables()
-        const tokenBridgeVars = await this.tokenBridgeVariables(tokenWrapperFactoryAddress)
+        const tokenBridgeVars = await this.tokenBridgeVariables(eventEmitterId, tokenWrapperFactoryId)
         const variables = {
             ...tokenBridgeVars,
             ...undoneSequenceVars
@@ -181,6 +197,7 @@ export class Wormhole {
     }
 
     private emptyTokenBridgeVars = {
+        eventEmitterId: "",
         tokenBridgeForChainBinCode: "",
         tokenWrapperCodeHash: "",
         tokenWrapperFactoryAddress: "",
@@ -269,6 +286,7 @@ export class Wormhole {
         const tokenWrapper = await this.tokenWrapperContract()
         const undoneSequenceVars = await this.undoneSequenceVariables()
         const variables = {
+            eventEmitterId: "",
             tokenBridgeForChainBinCode: "",
             tokenWrapperCodeHash: tokenWrapper.codeHash,
             tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,

@@ -35,6 +35,16 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
     const bridgeForBsc = await getCreatedContractAddress(wormhole.client, txId)
     console.log("register bsc tx id: " + txId + ', contractAddress: ' + bridgeForBsc)
 
+    // 010101000100
+    // 05
+    // 14
+    // 4020
+    // d0e4a440ce55fd1282dfe6e992912b1379c3c8982d1f3cb14e4cdfb64156fe82
+    // 1700
+    // 144020
+    // 759715538d4c91820c4716f73f827f2373ecd94756f643ebd474dd4e5fb2edfa
+    // 1600
+    // 0101
     await wormhole.initTokenBridgeForChain(bridgeForEth)
     await wormhole.initTokenBridgeForChain(bridgeForTerra)
     await wormhole.initTokenBridgeForChain(bridgeForSolana)
