@@ -1,4 +1,4 @@
-import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, Val } from 'alephium-web3'
+import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, SubmissionResult, Val } from 'alephium-web3'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13
@@ -87,11 +87,18 @@ export class Wormhole {
             tokenBridgeForChainBinCode: "",
             tokenWrapperCodeHash: "",
             tokenWrapperBinCode: '',
-            distance: 64
+            undoneSequenceCodeHash: "",
+            undoneSequenceMaxSize: 128,
+            undoneSequenceMaxDistance: 512
         })
         const scriptTx = await script.transactionForDeployment(this.signer, params)
         const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return submitResult.txId
+    }
+
+    async initTokenBridgeForChain(tokenBridgeForChainAddress: string): Promise<SubmissionResult> {
+        const undoneSequenceDeployResult = await deployUndoneSequence(this.client, this.signer, tokenBridgeForChainAddress)
+        return innitUndoneSequence(this.client, this.signer, tokenBridgeForChainAddress, undoneSequenceDeployResult.address)
     }
 
     async createWrapperForLocalToken(
@@ -109,7 +116,9 @@ export class Wormhole {
             tokenWrapperCodeHash: "",
             tokenWrapperBinCode: "",
             tokenBridgeForChainBinCode: "",
-            distance: 64
+            undoneSequenceCodeHash: "",
+            undoneSequenceMaxSize: 128,
+            undoneSequenceMaxDistance: 512
         })
         const scriptTx = await script.transactionForDeployment(this.signer)
         const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
@@ -131,6 +140,19 @@ async function _deploy(
     }
 }
 
+async function deployUndoneSequence(
+    client: CliqueClient,
+    signer: Signer,
+    owner: string,
+    undoneSequenceMaxSize: number = 128, // 1k
+    undoneSequenceMaxDistance: number = 512
+): Promise<DeployResult> {
+    const contract = await undoneSequenceContract(
+        client, undoneSequenceMaxSize, undoneSequenceMaxDistance
+    )
+    return _deploy(signer, contract, [owner, ''])
+}
+
 async function deployGovernance(
     client: CliqueClient,
     signer: Signer,
@@ -140,7 +162,12 @@ async function deployGovernance(
     initGuardianSetIndex: number,
     initMessageFee: bigint
 ): Promise<DeployResult> {
-    const governance = await Contract.from(client, 'governance.ral', { distance: 64 })
+    const undoneSequence = await undoneSequenceContract(client)
+    const governance = await Contract.from(client, 'governance.ral', {
+        undoneSequenceCodeHash: undoneSequence.codeHash,
+        undoneSequenceMaxSize: 128,
+        undoneSequenceMaxDistance: 512
+    })
     const previousGuardianSet = Array<string>(19).fill(Byte32Zero)
     const initGuardianSetSize = initGuardianSet.length
     if (initGuardianSetSize > 19) {
@@ -156,7 +183,24 @@ async function deployGovernance(
         AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee,
         initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
     ]
-    return await _deploy(signer, governance, initFields)
+    const governanceDeployResult = await _deploy(signer, governance, initFields)
+    const undoneSequenceDeployResult = await deployUndoneSequence(client, signer, governanceDeployResult.address) 
+    await innitUndoneSequence(client, signer, governanceDeployResult.address, undoneSequenceDeployResult.address)
+    return governanceDeployResult
+}
+
+async function innitUndoneSequence(
+    client: CliqueClient,
+    signer: Signer,
+    contractId: string,
+    undoneSequenceId: string
+): Promise<SubmissionResult> {
+    const script = await Script.from(client, 'init_undone_sequence.ral', {
+        contractId: contractId,
+        undoneSequenceId: undoneSequenceId
+    })
+    const scriptTx = await script.transactionForDeployment(signer)
+    return signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
 }
 
 async function deployTokenWrapperFactory(
@@ -180,19 +224,25 @@ async function deployTokenBridge(
     tokenBridgeForChainBinCode: string,
     tokenWrapperCodeHash: string
 ): Promise<DeployResult> {
+    const undoneSequence = await undoneSequenceContract(client)
     const variables = {
         tokenBridgeForChainBinCode: tokenBridgeForChainBinCode,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
         tokenWrapperFactoryAddress: "",
         tokenWrapperBinCode: '',
-        distance: 64,
+        undoneSequenceCodeHash: undoneSequence.codeHash,
+        undoneSequenceMaxSize: 128,
+        undoneSequenceMaxDistance: 512
     }
     const tokenBridge = await Contract.from(client, 'token_bridge.ral', variables)
     const initFields = [
         governanceAddress, governanceChainId, governanceContractId,
         0, 0, 0, '', AlephiumChainId, 0
     ]
-    return await _deploy(signer, tokenBridge, initFields)
+    const tokenBridgeDeployResult = await _deploy(signer, tokenBridge, initFields)
+    const undoneSequenceDeployResult = await deployUndoneSequence(client, signer, tokenBridgeDeployResult.address) 
+    await innitUndoneSequence(client, signer, tokenBridgeDeployResult.address, undoneSequenceDeployResult.address)
+    return tokenBridgeDeployResult
 }
 
 async function tokenBridgeForChainContract(
@@ -200,12 +250,15 @@ async function tokenBridgeForChainContract(
     tokenWrapperFactoryAddress: string,
     tokenWrapperCodeHash: string
 ): Promise<Contract> {
+    const undoneSequence = await undoneSequenceContract(client)
     const variables = {
         tokenWrapperFactoryAddress: tokenWrapperFactoryAddress,
         tokenWrapperCodeHash: tokenWrapperCodeHash,
-        distance: 64,
         tokenWrapperBinCode: "",
-        tokenBridgeForChainBinCode: ""
+        tokenBridgeForChainBinCode: "",
+        undoneSequenceCodeHash: undoneSequence.codeHash,
+        undoneSequenceMaxSize: 128,
+        undoneSequenceMaxDistance: 512
     }
     return Contract.from(client, 'token_bridge_for_chain.ral', variables)
 }
@@ -216,7 +269,21 @@ async function tokenWrapperContract(client: CliqueClient): Promise<Contract> {
         tokenWrapperBinCode: "",
         tokenWrapperCodeHash: "",
         tokenWrapperFactoryAddress: "",
-        distance: 64
+        undoneSequenceCodeHash: "",
+        undoneSequenceMaxSize: 128,
+        undoneSequenceMaxDistance: 512
     }
     return Contract.from(client, 'token_wrapper.ral', variables)
+}
+
+async function undoneSequenceContract(
+    client: CliqueClient,
+    undoneSequenceMaxSize: number = 128, // 1k
+    undoneSequenceMaxDistance: number = 512
+): Promise<Contract> {
+    const variables = {
+        undoneSequenceMaxSize: undoneSequenceMaxSize,
+        undoneSequenceMaxDistance: undoneSequenceMaxDistance
+    }
+    return Contract.from(client, 'undone_sequence.ral', variables)
 }

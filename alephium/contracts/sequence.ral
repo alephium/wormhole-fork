@@ -1,4 +1,5 @@
 import "undone_sequence.ral"
+import "init_undone_sequence_interface.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
 TxContract Sequence(
@@ -6,7 +7,7 @@ TxContract Sequence(
     mut next1: U256, // TODO: better name
     mut next2: U256,
     mut undoneSequenceId: ByteVec
-) {
+) extends InitUndoneSequence {
     fn initialized() -> Bool {
         return undoneSequenceId != #
     }

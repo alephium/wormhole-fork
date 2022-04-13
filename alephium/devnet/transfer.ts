@@ -39,11 +39,13 @@ export async function transferLocal(
         arbiterFee: arbiterFee,
         nonce: nonce(),
         consistencyLevel: consistencyLevel,
-        distance: 64,
         tokenWrapperFactoryAddress: "",
         tokenWrapperCodeHash: "",
         tokenWrapperBinCode: "",
-        tokenBridgeForChainBinCode: ""
+        tokenBridgeForChainBinCode: "",
+        undoneSequenceCodeHash: "",
+        undoneSequenceMaxSize: 128,
+        undoneSequenceMaxDistance: 512
     })
     const scriptTx = await script.transactionForDeployment(signer)
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
