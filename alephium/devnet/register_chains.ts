@@ -1,3 +1,4 @@
+import { binToHex, contractIdFromAddress } from 'alephium-web3'
 import { Wormhole } from '../lib/wormhole'
 import * as env from './env'
 import { getCreatedContractAddress } from './get_contract_address'
@@ -9,7 +10,7 @@ export interface RemoteChains {
     bsc: string
 }
 
-export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: string): Promise<RemoteChains> {
+export async function registerChains(wormhole: Wormhole, tokenBridgeId: string): Promise<RemoteChains> {
     const payer = "12LgGdbjE6EtnTKw5gdBwV2RRXuXPtzYM7SDZ45YJTRht"
     const vaas = [
         // ETH, sequence = 0
@@ -22,38 +23,32 @@ export async function registerChains(wormhole: Wormhole, tokenBridgeAddress: str
         '01000000000100f2766a939e1cde40d3a39218c4eaac273469f3e05edb7e55c0897eb7d565432550cbbec75013abfa30a3160d3915ffa7b6232c7062ea5fd8db62ba6bff6928691c000000010000000100010000000000000000000000000000000000000000000000000000000000000004000000000000000300000000000000000000000000000000000000000000546f6b656e42726964676501000000040000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16'
     ]
 
-    var txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[0], payer, env.dustAmount)
+    var txId = await wormhole.registerChainToAlph(tokenBridgeId, vaas[0], payer, env.dustAmount)
     const bridgeForEth = await getCreatedContractAddress(wormhole.client, txId)
     console.log("register eth tx id: " + txId + ', contract address: ' + bridgeForEth)
-    txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[1], payer, env.dustAmount)
+    txId = await wormhole.registerChainToAlph(tokenBridgeId, vaas[1], payer, env.dustAmount)
     const bridgeForTerra = await getCreatedContractAddress(wormhole.client, txId)
     console.log("register terra tx id: " + txId + ', contract address: ' + bridgeForTerra)
-    txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[2], payer, env.dustAmount)
+    txId = await wormhole.registerChainToAlph(tokenBridgeId, vaas[2], payer, env.dustAmount)
     const bridgeForSolana = await getCreatedContractAddress(wormhole.client, txId)
     console.log("register solana tx id: " + txId + ', contract address: ' + bridgeForSolana)
-    txId = await wormhole.registerChainToAlph(tokenBridgeAddress, vaas[3], payer, env.dustAmount)
+    txId = await wormhole.registerChainToAlph(tokenBridgeId, vaas[3], payer, env.dustAmount)
     const bridgeForBsc = await getCreatedContractAddress(wormhole.client, txId)
     console.log("register bsc tx id: " + txId + ', contractAddress: ' + bridgeForBsc)
 
-    // 010101000100
-    // 05
-    // 14
-    // 4020
-    // d0e4a440ce55fd1282dfe6e992912b1379c3c8982d1f3cb14e4cdfb64156fe82
-    // 1700
-    // 144020
-    // 759715538d4c91820c4716f73f827f2373ecd94756f643ebd474dd4e5fb2edfa
-    // 1600
-    // 0101
-    await wormhole.initTokenBridgeForChain(bridgeForEth)
-    await wormhole.initTokenBridgeForChain(bridgeForTerra)
-    await wormhole.initTokenBridgeForChain(bridgeForSolana)
-    await wormhole.initTokenBridgeForChain(bridgeForBsc)
+    const bridgeForEthId = binToHex(contractIdFromAddress(bridgeForEth))
+    await wormhole.initTokenBridgeForChain(bridgeForEthId)
+    const bridgeForTerraId = binToHex(contractIdFromAddress(bridgeForTerra))
+    await wormhole.initTokenBridgeForChain(bridgeForTerraId)
+    const bridgeForSolanaId = binToHex(contractIdFromAddress(bridgeForSolana))
+    await wormhole.initTokenBridgeForChain(bridgeForSolanaId)
+    const bridgeForBscId = binToHex(contractIdFromAddress(bridgeForBsc))
+    await wormhole.initTokenBridgeForChain(bridgeForBscId)
 
     return {
-        eth: bridgeForEth,
-        terra: bridgeForTerra,
-        solana: bridgeForSolana,
-        bsc: bridgeForBsc
+        eth: bridgeForEthId,
+        terra: bridgeForTerraId,
+        solana: bridgeForSolanaId,
+        bsc: bridgeForBscId
     }
 }

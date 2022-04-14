@@ -3,7 +3,8 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { CliqueClient, Contract, ContractState, signatureDecode } from 'alephium-web3'
+import { CliqueClient, Contract, ContractState } from 'alephium-web3'
+import * as blake from 'blakejs'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -19,30 +20,27 @@ export class ContractInfo {
     selfState: ContractState
     dependencies: ContractState[]
     address: string
+    bytecode: string
+    codeHash: string
+    templateVariables?: any
 
     states(): ContractState[] {
         return [this.selfState].concat(this.dependencies)
     }
 
-    constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string) {
+    constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string, templateVariables?: any) {
         this.contract = contract
         this.selfState = selfState 
         this.dependencies = dependencies
         this.address = address
+        this.bytecode = selfState.bytecode
+        this.codeHash = Buffer.from(blake.blake2b(Buffer.from(selfState.bytecode, 'hex'), undefined, 32)).toString('hex')
+        this.templateVariables = templateVariables
     }
 }
 
-export async function createSerde(client: CliqueClient): Promise<ContractInfo> {
-    const serdeContract = await Contract.from(client, 'serde.ral')
-    const address = randomContractAddress()
-    const contractState = serdeContract.toState(
-        [], {alphAmount: dustAmount}, address
-    )
-    return new ContractInfo(serdeContract, contractState, [], address)
-}
-
 export async function createMath(client: CliqueClient): Promise<ContractInfo> {
-    const mathContract = await Contract.from(client, 'math.ral')
+    const mathContract = await Contract.fromSource(client, 'math.ral')
     const address = randomContractAddress()
     const contractState = mathContract.toState(
         [], {alphAmount: dustAmount}, address
@@ -51,7 +49,7 @@ export async function createMath(client: CliqueClient): Promise<ContractInfo> {
 }
 
 export async function createEventEmitter(client: CliqueClient): Promise<ContractInfo> {
-    const eventEmitterContract = await Contract.from(client, 'event_emitter.ral')
+    const eventEmitterContract = await Contract.fromSource(client, 'event_emitter.ral')
     const address = randomContractAddress()
     const contractState = eventEmitterContract.toState(
         [], {alphAmount: dustAmount}, address

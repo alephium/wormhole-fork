@@ -1,10 +1,9 @@
 import "token_bridge.ral"
 
-TxScript Main {
+TxScript Main<payer: Address, tokenBridgeId: ByteVec, tokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256> {
     pub payable fn main() -> () {
-        let payer = @{{ payer }}
-        approveAlph!(payer, {{ messageFee }})
-        let tokenBridge = TokenBridge(#{{ tokenBridgeAddress }})
-        tokenBridge.attestToken(payer, #{{ tokenId }}, #{{ nonce }}, {{ consistencyLevel }})
+        approveAlph!(payer, messageFee)
+        let tokenBridge = TokenBridge(tokenBridgeId)
+        tokenBridge.attestToken(payer, tokenId, nonce, consistencyLevel)
     }
 }

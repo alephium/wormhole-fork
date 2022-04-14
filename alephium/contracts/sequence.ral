@@ -3,7 +3,7 @@ import "init_undone_sequence_interface.ral"
 import "event_emitter.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
-TxContract Sequence(
+TxContract Sequence<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
     mut next: U256,
     mut next1: U256, // TODO: better name
     mut next2: U256,
@@ -19,7 +19,7 @@ TxContract Sequence(
         let undoneSequence = UndoneSequence(contractId)
         assert!(undoneSequence.getUndoneList() == #)
         assert!(undoneSequence.getOwner() == selfContractId!())
-        assert!(contractCodeHash!(contractId) == #{{ undoneSequenceCodeHash }})
+        assert!(contractCodeHash!(contractId) == undoneSequenceCodeHash)
     }
 
     pub fn getNext() -> U256 {
@@ -39,7 +39,7 @@ TxContract Sequence(
             let undoneSequence = UndoneSequence(undoneSequenceId)
             let removed = undoneSequence.addToUndone(next, seq, next1)
             if (removed != #) {
-                let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+                let eventEmitter = EventEmitter(eventEmitterId)
                 eventEmitter.publishUndoneSequenceRemoved(removed)
             }
         }

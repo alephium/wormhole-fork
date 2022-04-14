@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "@types/elliptic": "^6.4.14",
-    "alephium-web3": "^0.1.2",
+    "alephium-web3": "^0.2.8",
+    "blakejs": "^1.2.1",
     "bs58": "^5.0.0",
     "web3": "^1.7.1"
   },

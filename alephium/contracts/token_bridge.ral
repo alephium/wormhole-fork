@@ -5,7 +5,12 @@ import "token_interface.ral"
 import "token_wrapper.ral"
 import "event_emitter.ral"
 
-TxContract TokenBridge(
+TxContract TokenBridge<
+    tokenBridgeForChainByteCode: ByteVec,
+    tokenWrapperCodeHash: ByteVec,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+>(
     governanceId: ByteVec, // governance contract id
     governanceChainId: U256,
     governanceContractId: ByteVec,
@@ -65,14 +70,13 @@ TxContract TokenBridge(
         let (remoteChainId, remoteTokenBridgeId) = parseRegisterChain(vaa)
         assert!(remoteChainId != localChainId)
 
-        let contractCode = #{{ tokenBridgeForChainBinCode }}
         let mut encodedState = encode!(
             localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
         )
 
         approveAlph!(payer, createContractAlphAmount)
-        let contractId = createContract!(contractCode, encodedState)
-        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        let contractId = createContract!(tokenBridgeForChainByteCode, encodedState)
+        let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
     }
 
@@ -98,7 +102,7 @@ TxContract TokenBridge(
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
         governance.payMessageFee(payer)
-        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
 
@@ -114,13 +118,13 @@ TxContract TokenBridge(
         nonce: ByteVec,
         consistencyLevel: U256
     ) -> () {
-        assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
+        assert!(callerCodeHash!() == tokenWrapperCodeHash)
 
         let payload = data ++ callerContractId!()
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
         governance.payMessageFee(payer)
-        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
 
@@ -138,7 +142,7 @@ TxContract TokenBridge(
 
         let tokenWrapper = TokenWrapper(tokenWrapperId)
         tokenWrapper.completeFailedTransfer(toAddress, amount, arbiterFee, arbiter)
-        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishUndoneSequenceCompleted(tokenWrapper.getRemoteChainId(), undoneSequence)
     }
 }

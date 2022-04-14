@@ -1,4 +1,4 @@
-import { CliqueClient, Signer } from 'alephium-web3'
+import { binToHex, CliqueClient, contractIdFromAddress, Signer } from 'alephium-web3'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import * as env from './env'
@@ -50,11 +50,11 @@ async function deploy() {
 
     const contracts = await wormhole.deployContracts()
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
-    const remoteChains = await registerChains(wormhole, contracts.tokenBridge.address)
+    const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
     const testTokenId = await deployTestToken(client, signer)
     await attestToken(
-        client, signer, contracts.tokenBridge.address, nonce(), testTokenId
+        client, signer, contracts.tokenBridge.contractId, nonce(), testTokenId
     )
 
     const tokenAmount = env.oneAlph * 10n
@@ -63,7 +63,8 @@ async function deploy() {
 
     const createWrapperTxId = await wormhole.createWrapperForLocalToken(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
     const tokenWrapper = await getCreatedContractAddress(client, createWrapperTxId)
-    console.log('local token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapper)
+    const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
+    console.log('local token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapperId)
     // transfer to eth
     const transferAmount = env.oneAlph * 5n
     const arbiterFee = env.messageFee
@@ -72,7 +73,7 @@ async function deploy() {
     const transferTxId = await transferLocal(
         client,
         signer,
-        tokenWrapper,
+        tokenWrapperId,
         testTokenId,
         env.payer,
         receiver.padStart(64, '0'),

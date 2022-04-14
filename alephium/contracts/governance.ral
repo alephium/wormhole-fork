@@ -1,6 +1,6 @@
 import "sequence.ral"
 
-TxContract Governance(
+TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
     chainId: U256,
     governanceChainId: U256,
     governanceContract: ByteVec,

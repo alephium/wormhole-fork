@@ -42,7 +42,7 @@ describe("test token bridge", () => {
             testArgs: [payer, testToken.address, nonceHex, 0],
             inputAssets: [inputAsset],
             existingContracts: tokenBridgeInfo.dependencies.concat(testToken.states())
-        })
+        }, tokenBridgeInfo.templateVariables)
         const governanceOutput = testResult.txOutputs[0]
         expect(governanceOutput.address).toEqual(tokenBridgeInfo.governance.address)
         expect(governanceOutput.alphAmount).toEqual(Number(dustAmount + messageFee))
@@ -81,7 +81,7 @@ describe("test token bridge", () => {
             testArgs: [toHex(vaa.encode()), payer, dustAmount],
             inputAssets: [inputAsset],
             existingContracts: tokenBridgeInfo.dependencies
-        })
+        }, tokenBridgeInfo.templateVariables)
 
         expect(testResult.events.length).toEqual(2)
         const event = testResult.events[1] as ContractEvent
@@ -103,7 +103,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testToken = await createTestToken(client, decimals, symbol, name)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
@@ -113,7 +113,7 @@ describe("test token bridge", () => {
             testArgs: [testToken.address, payer, dustAmount],
             inputAssets: [inputAsset],
             existingContracts: tokenBridgeForChainInfo.dependencies.concat(testToken.states())
-        })
+        }, tokenBridgeForChainInfo.templateVariables)
 
         const tokenWrapperOutput = testResult.txOutputs[0]
         expect(tokenWrapperOutput.alphAmount).toEqual(Number(dustAmount))
@@ -139,7 +139,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -208,7 +208,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -278,7 +278,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const remoteTokenId = toHex(randomBytes(32))
         const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
@@ -291,7 +291,7 @@ describe("test token bridge", () => {
             testArgs: [toHex(vaa.encode()), payer, dustAmount],
             inputAssets: [inputAsset],
             existingContracts: tokenBridgeForChainInfo.dependencies
-        })
+        }, tokenBridgeForChainInfo.templateVariables)
 
         const tokenWrapperOutput = testResult.txOutputs[0]
         expect(tokenWrapperOutput.alphAmount).toEqual(Number(dustAmount))
@@ -321,7 +321,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -392,7 +392,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -463,7 +463,7 @@ describe("test token bridge", () => {
         const eventEmitter = await createEventEmitter(client)
         const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -500,7 +500,7 @@ describe("test token bridge", () => {
             initialAsset: initAsset,
             inputAssets: [inputAsset, arbiterInputAsset],
             existingContracts: tokenBridgeInfo.dependencies.concat(tokenWrapperState)
-        })
+        }, tokenBridgeInfo.templateVariables)
 
         const output0 = testResult.txOutputs[0]
         expect(output0.alphAmount).toEqual(Number(dustAmount))

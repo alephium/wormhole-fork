@@ -1,6 +1,6 @@
 import "event_emitter.ral"
 
-TxContract TokenWrapperFactory() {
+TxContract TokenWrapperFactory<tokenWrapperByteCode: ByteVec, eventEmitterId: ByteVec>() {
     pub payable fn createWrapper(
         tokenBridgeId: ByteVec,
         localChainId: U256,
@@ -13,7 +13,7 @@ TxContract TokenWrapperFactory() {
         payer: Address,
         createContractAlphAmount: U256
     ) -> () {
-        let contractCode = #{{ tokenWrapperBinCode }}
+        let contractCode = tokenWrapperByteCode
         let tokenBridgeForChainId = callerContractId!()
         let encodedState = encode!(
             tokenBridgeId,
@@ -37,7 +37,7 @@ TxContract TokenWrapperFactory() {
             contractId = createContractWithToken!(contractCode, encodedState, maxAmount)
         }
 
-        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishTokenWrapperCreated(tokenBridgeForChainId, contractId, isLocalToken, tokenContractId, remoteChainId)
     }
 }
