@@ -1,8 +1,8 @@
-import { Asset, CliqueClient, ContractEvent, InputAsset } from 'alephium-js'
+import { Asset, CliqueClient, ContractEvent, InputAsset, Output } from 'alephium-web3'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
-import { alphChainId, dustAmount, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody } from './fixtures/wormhole-fixture'
+import { AttestToken, CompleteFailedTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
+import { alphChainId, createEventEmitter, dustAmount, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 
 describe("test token bridge", () => {
@@ -15,17 +15,28 @@ describe("test token bridge", () => {
             alphAmount: oneAlph * 4n
         }
     }
+    const gasPrice = BigInt("100000000000")
+    const maxGas = BigInt("625000")
+    const gasFee = gasPrice * maxGas
+
+    function checkTxCallerBalance(output: Output, spent: bigint) {
+        const remain = inputAsset.asset.alphAmount as bigint - gasFee - spent
+        expect(output.address).toEqual(payer)
+        expect(output.alphAmount).toEqual(remain)
+        expect(output.tokens).toEqual([])
+    }
 
     const decimals = 8
     const symbol = toHex(randomBytes(32))
     const name = toHex(randomBytes(32))
 
     it('should attest token', async () => {
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridge = tokenBridgeInfo.contract
         const testToken = await createTestToken(client, decimals, symbol, name)
         const nonceHex = nonce()
-        const testResult = await tokenBridge.test(client, 'attestToken', {
+        const testResult = await tokenBridge.testPublicMethod(client, 'attestToken', {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: [payer, testToken.address, nonceHex, 0],
@@ -49,19 +60,22 @@ describe("test token bridge", () => {
         expect(events[0].fields).toEqual([
             toContractId(tokenBridgeInfo.address),
             0,
-            nonceHex + toHex(message.encode()),
+            nonceHex,
+            toHex(message.encode()),
             0
         ])
     })
 
     it('should register chain', async () => {
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridge = tokenBridgeInfo.contract
         const remoteTokenBridgeId = toHex(randomBytes(32))
+        const remoteChainId = alphChainId + 1
         const registerChain = new RegisterChain(alphChainId, alphChainId + 1, remoteTokenBridgeId)
         const vaaBody = new VAABody(registerChain.encode(), governanceChainId, governanceContractAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const testResult = await tokenBridge.test(client, 'registerChain', {
+        const testResult = await tokenBridge.testPublicMethod(client, 'registerChain', {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), payer, dustAmount],
@@ -69,28 +83,31 @@ describe("test token bridge", () => {
             existingContracts: tokenBridgeInfo.dependencies
         })
 
-        expect(testResult.events.length).toEqual(1)
-        const event = testResult.events[0] as ContractEvent
-        expect(event.fields.length).toEqual(1)
-        expect(event.name).toEqual("ContractCreated")
-        expect(event.contractAddress).toEqual(tokenBridgeInfo.address)
-        const tokenBridgeForChainAddress = event.fields[0] as string
-
+        expect(testResult.events.length).toEqual(2)
+        const event = testResult.events[1] as ContractEvent
+        expect(event.fields.length).toEqual(3)
+        expect(event.name).toEqual("TokenBridgeForChainCreated")
+        expect(event.contractAddress).toEqual(eventEmitter.address)
+        const senderId = event.fields[0] as string
+        expect(toContractId(tokenBridgeInfo.address)).toEqual(senderId)
+        const tokenBridgeForChainId = event.fields[1] as string
         const output = testResult.txOutputs[0]
-        expect(output.address).toEqual(tokenBridgeForChainAddress)
+        expect(toContractId(output.address)).toEqual(tokenBridgeForChainId)
         expect(output.alphAmount).toEqual(Number(dustAmount))
+        expect(event.fields[2] as number).toEqual(remoteChainId)
     })
 
     it('should create token wrapper for local token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testToken = await createTestToken(client, decimals, symbol, name)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForLocalToken', {
+        const testResult = await tokenBridgeForChain.testPublicMethod(client, 'createWrapperForLocalToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,
             testArgs: [testToken.address, payer, dustAmount],
@@ -102,19 +119,27 @@ describe("test token bridge", () => {
         expect(tokenWrapperOutput.alphAmount).toEqual(Number(dustAmount))
         expect(tokenWrapperOutput.tokens).toEqual([])
 
-        expect(testResult.events.length).toEqual(1)
-        const event = testResult.events[0] as ContractEvent
-        expect(event.name).toEqual('ContractCreated')
-        expect(event.contractAddress).toEqual(tokenBridgeInfo.tokenWrapperFactory.address)
-        expect(event.fields).toEqual([tokenWrapperOutput.address])
+        expect(testResult.events.length).toEqual(2)
+        const event = testResult.events[1] as ContractEvent
+        expect(event.name).toEqual('TokenWrapperCreated')
+        expect(event.contractAddress).toEqual(eventEmitter.address)
+        expect(event.fields).toEqual([
+            toContractId(tokenBridgeInfo.tokenWrapperFactory.address),
+            toContractId(tokenBridgeForChainInfo.address),
+            toContractId(tokenWrapperOutput.address),
+            true,
+            toContractId(testToken.address),
+            remoteChainId
+        ])
     })
 
     it('should transfer local token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -136,7 +161,7 @@ describe("test token bridge", () => {
             }
         }
         const tokenWrapper = tokenWrapperInfo.contract
-        const testResult = await tokenWrapper.test(client, 'transfer', {
+        const testResult = await tokenWrapper.testPublicMethod(client, 'transfer', {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: [fromAddress, toAddress, transferAmount, arbiterFee, nonceHex, 0],
@@ -171,7 +196,8 @@ describe("test token bridge", () => {
         expect(event.fields).toEqual([
             toContractId(tokenBridgeInfo.address),
             0,
-            nonceHex + toHex(transferMessage.encode()) + toHex(postfix),
+            nonceHex,
+            toHex(transferMessage.encode()) + toHex(postfix),
             0
         ])
     })
@@ -179,9 +205,10 @@ describe("test token bridge", () => {
     it('should complete local token transfer', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const testTokenInfo = await createTestToken(client, decimals, symbol, name)
         const tokenWrapperInfo = await createWrapper(
@@ -209,7 +236,7 @@ describe("test token bridge", () => {
             asset: {alphAmount: dustAmount}
         }
         const tokenWrapper = tokenWrapperInfo.contract
-        const testResult = await tokenWrapper.test(client, 'completeTransfer', {
+        const testResult = await tokenWrapper.testPublicMethod(client, 'completeTransfer', {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), arbiter],
@@ -236,26 +263,29 @@ describe("test token bridge", () => {
 
         const contractOutput = testResult.txOutputs[2]
         expect(contractOutput.address).toEqual(tokenWrapperInfo.address)
-        expect(contractOutput.alphAmount).toEqual((initAsset.alphAmount as bigint) - dustAmount)
+        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount)
         expect(contractOutput.tokens).toEqual([{
             id: toContractId(testTokenInfo.address),
             amount: initTokenAmount - transferAmount
         }])
+
+        checkTxCallerBalance(testResult.txOutputs[3], dustAmount)
     })
 
     it('should create token wrapper for remote token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const remoteTokenId = toHex(randomBytes(32))
         const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
         const vaaBody = new VAABody(attestToken.encode(), remoteChainId, remoteTokenBridgeId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
-        const testResult = await tokenBridgeForChain.test(client, 'createWrapperForRemoteToken', {
+        const testResult = await tokenBridgeForChain.testPublicMethod(client, 'createWrapperForRemoteToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), payer, dustAmount],
@@ -271,19 +301,27 @@ describe("test token bridge", () => {
             amount: u256Max
         }])
 
-        expect(testResult.events.length).toEqual(1)
-        const event = testResult.events[0] as ContractEvent
-        expect(event.name).toEqual('ContractCreated')
-        expect(event.contractAddress).toEqual(tokenBridgeInfo.tokenWrapperFactory.address)
-        expect(event.fields).toEqual([tokenWrapperOutput.address])
+        expect(testResult.events.length).toEqual(2)
+        const event = testResult.events[1] as ContractEvent
+        expect(event.name).toEqual('TokenWrapperCreated')
+        expect(event.contractAddress).toEqual(eventEmitter.address)
+        expect(event.fields).toEqual([
+            toContractId(tokenBridgeInfo.tokenWrapperFactory.address),
+            toContractId(tokenBridgeForChainInfo.address),
+            toContractId(tokenWrapperOutput.address),
+            false,
+            remoteTokenId,
+            remoteChainId
+        ])
     })
 
-    it('should transfer wrapped token', async () => {
+    it('should transfer remote token', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -306,7 +344,7 @@ describe("test token bridge", () => {
                 }]
             }
         }
-        const testResult = await tokenWrapperContract.test(client, 'transfer', {
+        const testResult = await tokenWrapperContract.testPublicMethod(client, 'transfer', {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: [fromAddress, toAddress, transferAmount, arbiterFee, nonceHex, 0],
@@ -342,17 +380,19 @@ describe("test token bridge", () => {
         expect(event.fields).toEqual([
             toContractId(tokenBridgeInfo.address),
             0,
-            nonceHex + toHex(transfer.encode()) + toHex(postfix),
+            nonceHex,
+            toHex(transfer.encode()) + toHex(postfix),
             0
         ])
     })
 
-    it('should complete wrapped token transfer', async () => {
+    it('should complete remote token transfer', async () => {
         const remoteChainId = alphChainId + 1
         const remoteTokenBridgeId = toHex(randomBytes(32))
-        const tokenBridgeInfo = await createTokenBridge(client)
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const wrappedTokenId = toHex(randomBytes(32))
         const tokenWrapperInfo = await createWrapper(
@@ -381,7 +421,7 @@ describe("test token bridge", () => {
             asset: {alphAmount: dustAmount}
         }
         const tokenWrapper = tokenWrapperInfo.contract
-        const testResult = await tokenWrapper.test(client, 'completeTransfer', {
+        const testResult = await tokenWrapper.testPublicMethod(client, 'completeTransfer', {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: [toHex(vaa.encode()), arbiter],
@@ -408,10 +448,79 @@ describe("test token bridge", () => {
 
         const contractOutput = testResult.txOutputs[2]
         expect(contractOutput.address).toEqual(tokenWrapperInfo.address)
-        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount as bigint - dustAmount)
+        expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount)
         expect(contractOutput.tokens).toEqual([{
             id: toContractId(tokenWrapperInfo.address),
             amount: initTokenAmount - transferAmount
         }])
+
+        checkTxCallerBalance(testResult.txOutputs[3], dustAmount)
+    })
+
+    it('should complete undone sequence transfer', async () => {
+        const remoteChainId = alphChainId + 1
+        const remoteTokenBridgeId = toHex(randomBytes(32))
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
+        const tokenBridgeForChainInfo = await createTokenBridgeForChain(
+            client, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+        )
+        const wrappedTokenId = toHex(randomBytes(32))
+        const tokenWrapperInfo = await createWrapper(
+            wrappedTokenId, false, decimals, symbol, name,
+            tokenBridgeInfo, tokenBridgeForChainInfo
+        )
+        const tokenId = toContractId(tokenWrapperInfo.address)
+        const toAddress = randomAssetAddress()
+        const transferAmount = oneAlph
+        const arbiterFee = messageFee
+        const failedSequence = 10
+        const transfer = new CompleteFailedTransfer(
+            tokenId, failedSequence, toRecipientId(toAddress), transferAmount, arbiterFee
+        )
+        const vaaBody = new VAABody(transfer.encode(), governanceChainId, governanceContractAddress, 0)
+        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+        const initTokenAmount = transferAmount * 2n
+        const initAsset: Asset = { alphAmount: oneAlph }
+        const arbiter = randomAssetAddress()
+        const arbiterInputAsset: InputAsset = {
+            address: arbiter,
+            asset: {alphAmount: dustAmount}
+        }
+        const tokenBridge = tokenBridgeInfo.contract
+        const tokenWrapperState = tokenWrapperInfo.contract.toState(
+            tokenWrapperInfo.selfState.fields,
+            {alphAmount: oneAlph, tokens: [{id: tokenId, amount: initTokenAmount}]},
+            tokenWrapperInfo.address
+        )
+        const testResult = await tokenBridge.testPublicMethod(client, 'completeTransfer', {
+            address: tokenBridgeInfo.address,
+            initialFields: tokenBridgeInfo.selfState.fields,
+            testArgs: [toHex(vaa.encode()), arbiter],
+            initialAsset: initAsset,
+            inputAssets: [inputAsset, arbiterInputAsset],
+            existingContracts: tokenBridgeInfo.dependencies.concat(tokenWrapperState)
+        })
+
+        const output0 = testResult.txOutputs[0]
+        expect(output0.alphAmount).toEqual(Number(dustAmount))
+        expect(output0.tokens).toEqual([{
+            id: tokenId, amount: transferAmount - arbiterFee
+        }])
+        const output1 = testResult.txOutputs[1]
+        expect(output1.tokens).toEqual([{
+            id: tokenId, amount: Number(arbiterFee)
+        }])
+        const tokenWrapperOutput = testResult.txOutputs[2]
+
+        expect(tokenWrapperOutput.tokens).toEqual([{
+            id: tokenId, amount: initTokenAmount - transferAmount
+        }])
+        checkTxCallerBalance(testResult.txOutputs[4], dustAmount)
+
+        expect(testResult.events.length).toEqual(1)
+        const event = testResult.events[0] as ContractEvent
+        expect(event.fields).toEqual([toContractId(tokenBridgeInfo.address), remoteChainId, failedSequence])
+        expect(event.contractAddress).toEqual(eventEmitter.address)
     })
 })

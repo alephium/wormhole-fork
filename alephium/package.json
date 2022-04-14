@@ -26,14 +26,16 @@
     "node": ">=14.0.0",
     "npm": ">=7.0.0"
   },
+  "dependencies": {
+    "@types/elliptic": "^6.4.14",
+    "alephium-web3": "^0.1.2",
+    "bs58": "^5.0.0",
+    "web3": "^1.7.1"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
-    "ts-jest": "^27.1.3"
-  },
-  "dependencies": {
-    "@types/elliptic": "^6.4.14",
-    "bs58": "^5.0.0",
-    "web3": "^1.7.1"
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.6.3"
   }
 }

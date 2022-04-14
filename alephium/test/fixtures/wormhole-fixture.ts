@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { CliqueClient, Contract, ContractState } from 'alephium-js'
+import { CliqueClient, Contract, ContractState, signatureDecode } from 'alephium-web3'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -48,6 +48,15 @@ export async function createMath(client: CliqueClient): Promise<ContractInfo> {
         [], {alphAmount: dustAmount}, address
     )
     return new ContractInfo(mathContract, contractState, [], address)
+}
+
+export async function createEventEmitter(client: CliqueClient): Promise<ContractInfo> {
+    const eventEmitterContract = await Contract.from(client, 'event_emitter.ral')
+    const address = randomContractAddress()
+    const contractState = eventEmitterContract.toState(
+        [], {alphAmount: dustAmount}, address
+    )
+    return new ContractInfo(eventEmitterContract, contractState, [], address)
 }
 
 export class GuardianSet {
@@ -183,6 +192,10 @@ export function toRecipientId(address: string): string {
     return toHex(bytes.slice(1))
 }
 
+export function randomContractId(): string {
+    return toContractId(randomContractAddress())
+}
+
 export function randomContractAddress(): string {
     const prefix = Buffer.from([0x03])
     const bytes = Buffer.concat([prefix, randomBytes(32)])
@@ -205,11 +218,11 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed'])
+    await expectFailed(func, ['AssertionFailed'])
 }
 
 export async function expectAssertionFailedOrRecoverEthAddressFailed<T>(func: () => Promise<T>) {
-    expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
+    await expectFailed(func, ['AssertionFailed', 'FailedInRecoverEthAddress'])
 }
 
 export function toContractId(address: string): string {

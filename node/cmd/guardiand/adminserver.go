@@ -1,12 +1,23 @@
 package guardiand
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
+	"math/rand"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/db"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
@@ -15,12 +26,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math"
-	"math/rand"
-	"net"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
@@ -31,6 +36,7 @@ import (
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
 	db           *db.Database
+	alphDb       *alephium.Database
 	injectC      chan<- *vaa.VAA
 	obsvReqSendC chan *gossipv1.ObservationRequest
 	logger       *zap.Logger
@@ -340,7 +346,16 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	}, nil
 }
 
-func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- *vaa.VAA, signedInC chan *gossipv1.SignedVAAWithQuorum, obsvReqSendC chan *gossipv1.ObservationRequest, db *db.Database, gst *common.GuardianSetState) (supervisor.Runnable, error) {
+func adminServiceRunnable(
+	logger *zap.Logger,
+	socketPath string,
+	injectC chan<- *vaa.VAA,
+	signedInC chan *gossipv1.SignedVAAWithQuorum,
+	obsvReqSendC chan *gossipv1.ObservationRequest,
+	db *db.Database,
+	alphDb *alephium.Database,
+	gst *common.GuardianSetState,
+) (supervisor.Runnable, error) {
 	// Delete existing UNIX socket, if present.
 	fi, err := os.Stat(socketPath)
 	if err == nil {
@@ -376,6 +391,7 @@ func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- 
 		injectC:      injectC,
 		obsvReqSendC: obsvReqSendC,
 		db:           db,
+		alphDb:       alphDb,
 		logger:       logger.Named("adminservice"),
 		signedInC:    signedInC,
 	}
@@ -392,4 +408,206 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	s.obsvReqSendC <- req.ObservationRequest
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
+}
+
+func (s *nodePrivilegedService) GetUndoneSequences(ctx context.Context, req *nodev1.UndoneSequenceRequest) (*nodev1.UndoneSequenceResponse, error) {
+	sequences, err := s.alphDb.GetUndoneSequences(uint16(req.RemoteChainId))
+	if err != nil {
+		return nil, err
+	}
+	return &nodev1.UndoneSequenceResponse{
+		Sequences: sequences,
+	}, nil
+}
+
+func (s *nodePrivilegedService) tryToGetVAA(vaaId *db.VAAID) ([]byte, error) {
+	maxTimes := 15
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	times := 0
+	for {
+		select {
+		case <-ticker.C:
+			times += 1
+			if times > maxTimes {
+				return nil, errors.New("failed to get vaa after fetched from remote guardian")
+			}
+
+			vaaBytes, err := s.db.GetSignedVAABytes(*vaaId)
+			if err == nil {
+				return vaaBytes, nil
+			}
+
+			if err == db.ErrVAANotFound {
+				continue
+			}
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+}
+
+type transfer struct {
+	amount       big.Int
+	tokenId      alephium.Byte32
+	tokenChainId uint16
+	toAddress    alephium.Byte32
+	toChainId    uint16
+	fee          big.Int
+}
+
+func readBigInt(reader *bytes.Reader, num *big.Int) error {
+	bs := make([]byte, 32)
+	size, err := reader.Read(bs)
+	if err != nil {
+		return err
+	}
+	if size != 32 {
+		return errors.New("read bigint EOF")
+	}
+	num.SetBytes(bs)
+	return nil
+}
+
+func readUint16(reader *bytes.Reader, num *uint16) error {
+	return binary.Read(reader, binary.BigEndian, num)
+}
+
+func readByte32(reader *bytes.Reader, byte32 *alephium.Byte32) error {
+	size, err := reader.Read(byte32[:])
+	if err != nil {
+		return err
+	}
+	if size != 32 {
+		return errors.New("read byte32 EOF")
+	}
+	return nil
+}
+
+func transferFromBytes(data []byte) (*transfer, error) {
+	if data[0] != byte(1) {
+		return nil, errors.New("invalid payload id, expect transfer vaa")
+	}
+
+	reader := bytes.NewReader(data[1:]) // skip the payloadId
+	var message transfer
+	var err error
+
+	if err = readBigInt(reader, &message.amount); err != nil {
+		return nil, err
+	}
+	if err = readByte32(reader, &message.tokenId); err != nil {
+		return nil, err
+	}
+	if err = readUint16(reader, &message.tokenChainId); err != nil {
+		return nil, err
+	}
+	if err = readByte32(reader, &message.toAddress); err != nil {
+		return nil, err
+	}
+	if err = readUint16(reader, &message.toChainId); err != nil {
+		return nil, err
+	}
+	if err = readBigInt(reader, &message.fee); err != nil {
+		return nil, err
+	}
+	return &message, nil
+}
+
+func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId uint16) (*alephium.Byte32, error) {
+	if msg.tokenChainId == uint16(vaa.ChainIDAlephium) {
+		// local token
+		return s.alphDb.GetLocalTokenWrapper(msg.tokenId, remoteChainId)
+	} else {
+		// remote token
+		return s.alphDb.GetRemoteTokenWrapper(msg.tokenId)
+	}
+}
+
+func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *nodev1.ExecuteUndoneSequenceRequest) (*nodev1.ExecuteUndoneSequenceResponse, error) {
+	address, err := vaa.StringToAddress(req.EmitterAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid emitter address, error: %v", err)
+	}
+
+	emitterChain := vaa.ChainID(req.EmitterChain)
+	vaaId := db.VAAID{
+		EmitterChain:   emitterChain,
+		EmitterAddress: address,
+		Sequence:       req.Sequence,
+	}
+	vaaBytes, err := s.db.GetSignedVAABytes(vaaId)
+	if err != nil && err != db.ErrVAANotFound {
+		return nil, fmt.Errorf("failed to get vaa from local storage, error: %v", err)
+	}
+
+	if err == db.ErrVAANotFound {
+		client := &http.Client{}
+		succeed, err := s.fetchMissing(ctx, req.BackfillNodes, client, emitterChain, req.EmitterAddress, req.Sequence)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch vaa from remote guardians, error: %v", err)
+		}
+
+		if !succeed {
+			return nil, fmt.Errorf("failed to fetch vaa from remote guardians, try other guardians")
+		}
+
+		vaaBytes, err = s.tryToGetVAA(&vaaId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	transferVAA, err := vaa.Unmarshal(vaaBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal vaa, error: %v", err)
+	}
+
+	transferMsg, err := transferFromBytes(transferVAA.Payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode transfer message, error: %v", err)
+	}
+
+	tokenWrapperId, err := s.getTokenWrapperId(transferMsg, uint16(req.EmitterChain))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token wrapper id, error: %v", err)
+	}
+
+	vaaBody := &vaa.VAA{
+		Timestamp:        time.Now(),
+		Nonce:            rand.Uint32(),
+		Sequence:         req.GovSequence,
+		ConsistencyLevel: transferVAA.ConsistencyLevel,
+		EmitterChain:     vaa.GovernanceChain,
+		EmitterAddress:   vaa.GovernanceEmitter,
+		Payload:          transferPayload(transferMsg, tokenWrapperId, req.Sequence),
+	}
+	// TODO: save the vaa id
+	if err := s.alphDb.SetSequenceExecuting(uint16(emitterChain), req.Sequence); err != nil {
+		return nil, fmt.Errorf("failed to update undone sequence status, error: %v", err)
+	}
+	return &nodev1.ExecuteUndoneSequenceResponse{
+		VaaBody: vaaBody.SerializeBody(),
+	}, nil
+}
+
+// TODO: better name
+// transfer payload for undone sequence
+func transferPayload(
+	transferMsg *transfer,
+	tokenWrapperId *alephium.Byte32,
+	sequence uint64,
+) []byte {
+	buf := new(bytes.Buffer)
+	buf.Write(vaa.TokenBridgeModule)
+	buf.WriteByte(3) // action id
+	binary.Write(buf, binary.BigEndian, sequence)
+	buf.Write(tokenWrapperId[:])
+	buf.Write(transferMsg.toAddress[:])
+	buf.Write(transferMsg.amount.FillBytes(make([]byte, 32)))
+	buf.Write(transferMsg.fee.FillBytes(make([]byte, 32)))
+	return buf.Bytes()
 }

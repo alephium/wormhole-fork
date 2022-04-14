@@ -1,5 +1,6 @@
 import "token_bridge.ral"
 import "token_bridge_for_chain.ral"
+import "token_interface.ral"
 import "math.ral"
 
 TxContract TokenWrapper(
@@ -9,15 +10,39 @@ TxContract TokenWrapper(
     remoteChainId: U256,
     tokenContractId: ByteVec,
     isLocalToken: Bool,
-    tokenDecimals: U256,
-    symbol: ByteVec,
-    name: ByteVec
-) extends Math() {
+    decimals_: U256,
+    symbol_: ByteVec,
+    name_: ByteVec
+) extends Math(), ERC20Token {
+    pub fn name() -> ByteVec {
+        return name_
+    }
+
+    pub fn symbol() -> ByteVec {
+        return symbol_
+    }
+
+    pub fn decimals() -> U256 {
+        return decimals_
+    }
+
+    pub fn totalSupply() -> U256 {
+        if (isLocalToken) {
+            let token = ERC20Token(tokenContractId)
+            return token.totalSupply()
+        }
+        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    }
+
     fn getTokenId() -> ByteVec {
         if (isLocalToken) {
             return tokenContractId
         }
         return selfContractId!()
+    }
+
+    pub fn getRemoteChainId() -> U256 {
+        return remoteChainId
     }
 
     fn getTokenChainId() -> U256 {
@@ -38,11 +63,11 @@ TxContract TokenWrapper(
         assert!(size!(toAddress) == 32)
         assert!(size!(nonce) == 4)
 
-        let normalizedAmount = normalizeAmount(amount, tokenDecimals)
-        let normalizedFee = normalizeAmount(arbiterFee, tokenDecimals)
+        let normalizedAmount = normalizeAmount(amount, decimals_)
+        let normalizedFee = normalizeAmount(arbiterFee, decimals_)
         assert!(normalizedFee < normalizedAmount)
 
-        let transferAmount = deNormalizeAmount(normalizedAmount, tokenDecimals)
+        let transferAmount = deNormalizeAmount(normalizedAmount, decimals_)
         transferTokenToSelf!(fromAddress, getTokenId(), transferAmount)
 
         let tokenChainId = getTokenChainId()
@@ -60,25 +85,35 @@ TxContract TokenWrapper(
         tokenBridge.publishTransfer(fromAddress, payload, nonce, consistencyLevel)
     }
 
+    fn getTransferAmount(amount: U256, arbiterFee: U256) -> (U256, U256) {
+        let denomalizedAmount = deNormalizeAmount(amount, decimals_)
+        let denomalizedFee = deNormalizeAmount(arbiterFee, decimals_)
+        assert!(denomalizedAmount > denomalizedFee)
+        let transferAmount = denomalizedAmount - denomalizedFee
+        return transferAmount, denomalizedFee
+    }
+
     pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        let (msgTokenId, msgTokenChainId, recipientAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
+        let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
         assert!(msgTokenId == tokenContractId)
         assert!(msgTokenChainId == getTokenChainId())
 
-        let denomalizedAmount = deNormalizeAmount(amount, tokenDecimals)
-        let denomalizedFee = deNormalizeAmount(arbiterFee, tokenDecimals)
-        assert!(denomalizedAmount > denomalizedFee)
-
-        let transferAmount = denomalizedAmount - denomalizedFee
-        let recipient = byteVecToAddress!(#00 ++ recipientAddress)
+        let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlphFromSelf!(recipient, 1000000000000) // dustAmount
+        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, denomalizedFee)
+        transferTokenFromSelf!(arbiter, tokenId, transferFee)
     }
 
-    pub payable fn deposit(from: Address, amount: U256) -> () {
-        transferAlphToSelf!(from, amount)
+    pub payable fn completeFailedTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
+        assert!(callerContractId!() == tokenBridgeId)
+        let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        let tokenId = getTokenId()
+        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
+        transferTokenFromSelf!(recipient, tokenId, transferAmount)
+        transferTokenFromSelf!(arbiter, tokenId, transferFee)
     }
 }

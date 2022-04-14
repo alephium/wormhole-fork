@@ -1,0 +1,4 @@
+Interface InitUndoneSequence {
+    fn initialized() -> Bool
+    pub fn init(contractId: ByteVec) -> ()
+}

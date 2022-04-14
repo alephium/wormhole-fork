@@ -1,7 +1,9 @@
 import "governance.ral"
 import "sequence.ral"
-import "token.ral"
-import "serde.ral"
+import "token_wrapper.ral"
+import "token_interface.ral"
+import "token_wrapper.ral"
+import "event_emitter.ral"
 
 TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
@@ -10,10 +12,10 @@ TxContract TokenBridge(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undone: ByteVec,
+    mut undoneSequenceId: ByteVec,
     localChainId: U256,
     mut sequence: U256     // the sequence of next message published by self
-) extends Sequence(next, next1, next2, undone), Serde() {
+) extends Sequence(next, next1, next2, undoneSequenceId) {
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
@@ -64,37 +66,40 @@ TxContract TokenBridge(
         assert!(remoteChainId != localChainId)
 
         let contractCode = #{{ tokenBridgeForChainBinCode }}
-        let mut encodedState = byteVec!(8i) ++  // state size
-                           encodeU256(localChainId) ++
-                           encodeByteVec(selfContractId!()) ++
-                           encodeU256(remoteChainId) ++
-                           encodeByteVec(remoteTokenBridgeId) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeU256(0) ++
-                           encodeByteVec(#)
+        let mut encodedState = encode!(
+            localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
+        )
 
         approveAlph!(payer, createContractAlphAmount)
-        createContract!(contractCode, encodedState)
+        let contractId = createContract!(contractCode, encodedState)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
     }
 
     pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(tokenId) == 32)
         assert!(size!(nonce) == 4)
-        let token = Token(tokenId)
-        let symbol = token.getSymbol()
-        assert!(size!(symbol) == 32)
-        let name = token.getName()
-        assert!(size!(name) == 32)
+
+        let token = ERC20Token(tokenId)
+        let symbol = token.symbol()
+        let symbolSize = size!(symbol)
+        assert!(symbolSize <= 32)
+        let name = token.name()
+        let nameSize = size!(name)
+        assert!(nameSize <= 32)
+
         let payload = #02 ++ // payloadId
             tokenId ++
             u256To2Byte!(localChainId) ++
-            u256To1Byte!(token.getDecimals()) ++
-            symbol ++
-            name
+            u256To1Byte!(token.decimals()) ++
+            zeros!(32 - symbolSize) ++ symbol ++
+            zeros!(32 - nameSize) ++ name
+
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
-        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+        governance.payMessageFee(payer)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
 
     fn nextSequence() -> (U256) {
@@ -114,6 +119,26 @@ TxContract TokenBridge(
         let payload = data ++ callerContractId!()
         let governance = Governance(governanceId)
         approveAlph!(payer, governance.getMessageFee())
-        governance.publishMessage(payer, nextSequence(), nonce, payload, consistencyLevel)
+        governance.payMessageFee(payer)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
+    }
+
+    // handle undone sequence transfer message
+    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+        let payload = verifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #03)
+        let undoneSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
+        let tokenWrapperId = byteVecSlice!(payload, 41, 73)
+        let toAddress = byteVecSlice!(payload, 73, 105)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 105, 137))
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 137, 169))
+        assert!(size!(payload) == 169)
+        approveAlph!(txCaller!(0), 1000000000000)
+
+        let tokenWrapper = TokenWrapper(tokenWrapperId)
+        tokenWrapper.completeFailedTransfer(toAddress, amount, arbiterFee, arbiter)
+        let eventEmitter = EventEmitter(#{{ eventEmitterId }})
+        eventEmitter.publishUndoneSequenceCompleted(tokenWrapper.getRemoteChainId(), undoneSequence)
     }
 }

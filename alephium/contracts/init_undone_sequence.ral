@@ -1,0 +1,8 @@
+import "init_undone_sequence_interface.ral"
+
+TxScript Main {
+    pub payable fn main() -> () {
+        let impl = InitUndoneSequence(#{{ contractId }})
+        impl.init(#{{ undoneSequenceId }})
+    }
+}

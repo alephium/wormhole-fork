@@ -7,9 +7,15 @@ option go_package = "github.com/certusone/wormhole/node/pkg/proto/alephium/v1;al
 import "google/api/annotations.proto";
 
 service ContractService {
-    rpc GetTokenWrapperAddress (GetTokenWrapperAddressRequest) returns (GetTokenWrapperAddressResponse) {
+    rpc GetRemoteTokenWrapperAddress (GetRemoteTokenWrapperAddressRequest) returns (GetTokenWrapperAddressResponse) {
         option (google.api.http) = {
-            get: "/v1/alph/token_wrapper/{token_id}"
+            get: "/v1/alph/remote_token_wrapper/{token_id}"
+        };
+    }
+
+    rpc GetLocalTokenWrapperAddress (GetLocalTokenWrapperAddressRequest) returns (GetTokenWrapperAddressResponse) {
+        option (google.api.http) = {
+            get: "/v1/alph/local_token_wrapper/{token_id}/{chain_id}"
         };
     }
 
@@ -20,9 +26,16 @@ service ContractService {
     }
 }
 
-message GetTokenWrapperAddressRequest {
-    // token id hex string
+message GetRemoteTokenWrapperAddressRequest {
+    // remote token id hex string
     string token_id = 1;
+}
+
+message GetLocalTokenWrapperAddressRequest {
+    // local token address(base58 encoded)
+    string token_id = 1;
+    // remote chain id
+    uint32 chain_id = 2;
 }
 
 message GetTokenWrapperAddressResponse {
