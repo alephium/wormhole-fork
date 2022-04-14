@@ -160,21 +160,27 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
-func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents) error {
+func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, skipWormholeMessage bool) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
 
+	// TODO: improve this
 	sort.Slice(confirmed.events, func(i, j int) bool {
 		return confirmed.events[i].eventIndex < confirmed.events[j].eventIndex
 	})
 
 	// TODO: batch write to db
 	for _, e := range confirmed.events {
+		logger.Debug("new confirmed event received", zap.String("event", e.event.toString()))
+
 		var skipIfError bool
 		var validateErr error
 		switch e.event.Index {
 		case WormholeMessageEventIndex:
+			if skipWormholeMessage {
+				continue
+			}
 			event, err := e.event.toWormholeMessage()
 			if err != nil {
 				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
@@ -264,7 +270,7 @@ func (w *Watcher) subscribe(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 	errC chan<- error,
 ) {
 	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 30*time.Second, errC)
@@ -277,7 +283,7 @@ func (w *Watcher) subscribe_(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 	tickDuration time.Duration,
 	errC chan<- error,
 ) {
@@ -323,7 +329,7 @@ func (w *Watcher) subscribe_(
 		confirmedEvents := &ConfirmedEvents{
 			events: confirmed,
 		}
-		if err := handler(logger, confirmedEvents); err != nil {
+		if err := handler(logger, confirmedEvents, false); err != nil {
 			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
 			return err
 		}

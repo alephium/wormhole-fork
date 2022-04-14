@@ -26,7 +26,7 @@ func (w *Watcher) fetchEvents_(
 	contractAddress string,
 	lastEventIndexGetter func() (*uint64, error),
 	toUnconfirmedEvents func(context.Context, *Client, []*Event) ([]*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents) error,
+	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 ) (*uint64, error) {
 	lastEventIndex, err := lastEventIndexGetter()
 	if err == badger.ErrKeyNotFound {
@@ -63,7 +63,7 @@ func (w *Watcher) fetchEvents_(
 	confirmed := &ConfirmedEvents{
 		events: unconfirmed,
 	}
-	if err := handler(logger, confirmed); err != nil {
+	if err := handler(logger, confirmed, true); err != nil {
 		return nil, err
 	}
 	return count, nil

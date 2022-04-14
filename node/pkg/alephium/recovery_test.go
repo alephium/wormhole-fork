@@ -59,7 +59,7 @@ func TestFetchEvents(t *testing.T) {
 	}
 
 	var confirmedEvents *ConfirmedEvents
-	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents) error {
+	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents, b bool) error {
 		confirmedEvents = confirmed
 		return nil
 	}

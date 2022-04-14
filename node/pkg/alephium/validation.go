@@ -3,11 +3,9 @@ package alephium
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/dgraph-io/badger/v3"
-	"go.uber.org/zap"
 	// We should not rely on ETH, but some data structures of wormhole use ETH hash
 )
 
@@ -116,32 +114,6 @@ func (w *Watcher) validateGovernanceMessages(event *WormholeMessage) (bool, erro
 	}
 	transferMsg := TransferMessageFromBytes(event.payload)
 	return w.validateTransferMessage(transferMsg)
-}
-
-func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed *ConfirmedEvents) error {
-	for _, e := range confirmed.events {
-		wormholeMsg, err := e.event.toWormholeMessage()
-		if err != nil {
-			logger.Error("invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
-			return err
-		}
-		logger.Debug(
-			"receive event from alephium contract",
-			zap.String("emitter", wormholeMsg.senderId.ToHex()),
-			zap.String("payload", hex.EncodeToString(wormholeMsg.payload)),
-		)
-		skipIfError, err := w.validateGovernanceMessages(wormholeMsg)
-		if err != nil && skipIfError {
-			logger.Error("ignore invalid governance message", zap.Error(err))
-			continue
-		}
-		if err != nil && !skipIfError {
-			logger.Error("failed to validate governance message", zap.Error(err))
-			return err
-		}
-		w.msgChan <- wormholeMsg.toMessagePublication(e.blockHeader)
-	}
-	return nil
 }
 
 func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) (bool, error) {

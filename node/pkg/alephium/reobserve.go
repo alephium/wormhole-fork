@@ -83,6 +83,27 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 	}
 }
 
+func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed *ConfirmedEvents) error {
+	for _, e := range confirmed.events {
+		wormholeMsg, err := e.event.toWormholeMessage()
+		if err != nil {
+			logger.Error("invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
+			return err
+		}
+		skipIfError, err := w.validateGovernanceMessages(wormholeMsg)
+		if err != nil && skipIfError {
+			logger.Error("ignore invalid governance message", zap.Error(err))
+			continue
+		}
+		if err != nil && !skipIfError {
+			logger.Error("failed to validate governance message", zap.Error(err))
+			return err
+		}
+		w.msgChan <- wormholeMsg.toMessagePublication(e.blockHeader)
+	}
+	return nil
+}
+
 func (w *Watcher) getGovernanceEventsByIndex(
 	ctx context.Context,
 	client *Client,
