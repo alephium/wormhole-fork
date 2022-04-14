@@ -193,30 +193,6 @@ func (db *Database) getLastEventIndex() (*uint64, error) {
 
 // TODO: store the vaa id
 func (db *Database) SetSequenceExecuting(remoteChainId uint16, sequence uint64) error {
-	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceInit}, []byte{sequenceExecuting})
-}
-
-func (db *Database) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
-	return db.checkAndUpdateStatus(remoteChainId, sequence, []byte{sequenceExecuting}, []byte{sequenceExecuted})
-}
-
-func (db *Database) addUndoneSequence(remoteChainId uint16, sequence uint64) error {
-	key := &UndoneSequenceKey{
-		remoteChainId: remoteChainId,
-		sequence:      sequence,
-	}
-	return db.put(key.encode(), []byte{sequenceInit})
-}
-
-func (db *Database) getUndoneSequence(remoteChainId uint16, sequence uint64) ([]byte, error) {
-	key := &UndoneSequenceKey{
-		remoteChainId: remoteChainId,
-		sequence:      sequence,
-	}
-	return db.get(key.encode())
-}
-
-func (db *Database) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, expected []byte, updated []byte) error {
 	key := &UndoneSequenceKey{
 		remoteChainId: remoteChainId,
 		sequence:      sequence,
@@ -227,10 +203,48 @@ func (db *Database) checkAndUpdateStatus(remoteChainId uint16, sequence uint64, 
 		return err
 	}
 
-	if !bytes.Equal(value, expected) {
-		return fmt.Errorf("invalid status %v, sequence %d, remoteChainId %d", value, sequence, remoteChainId)
+	if !bytes.Equal(value, []byte{sequenceInit}) {
+		return fmt.Errorf("failed to set sequence executing, status %v, sequence %d, remoteChainId %d", value, sequence, remoteChainId)
 	}
-	return db.put(keyBytes, updated)
+	return db.put(keyBytes, []byte{sequenceExecuting})
+}
+
+func (db *Database) setSequenceExecuted(remoteChainId uint16, sequence uint64) error {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	keyBytes := key.encode()
+	// we need to make sure the sequence exist
+	_, err := db.get(keyBytes)
+	if err != nil {
+		return err
+	}
+	return db.put(keyBytes, []byte{sequenceExecuted})
+}
+
+func (db *Database) addUndoneSequence(remoteChainId uint16, sequence uint64) error {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	keyBytes := key.encode()
+	_, err := db.get(keyBytes)
+	if err == badger.ErrKeyNotFound {
+		return db.put(key.encode(), []byte{sequenceInit})
+	}
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("sequence %v from remote chain %v already exist", sequence, remoteChainId)
+}
+
+func (db *Database) getUndoneSequence(remoteChainId uint16, sequence uint64) ([]byte, error) {
+	key := &UndoneSequenceKey{
+		remoteChainId: remoteChainId,
+		sequence:      sequence,
+	}
+	return db.get(key.encode())
 }
 
 func (db *Database) localTokenWrapperExist(key *LocalTokenWrapperKey) (bool, error) {

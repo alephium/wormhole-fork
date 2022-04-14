@@ -61,6 +61,14 @@ func TestReadWrite(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, *chainContractId, td.tokenBridgeForChainId)
 
+	_, err = db.getRemoteChainId(td.tokenBridgeForChainId)
+	assert.Equal(t, err, badger.ErrKeyNotFound)
+	err = db.addRemoteChainId(td.tokenBridgeForChainId, td.chainId)
+	assert.Nil(t, err)
+	remoteChainId, err := db.getRemoteChainId(td.tokenBridgeForChainId)
+	assert.Nil(t, err)
+	assert.Equal(t, *remoteChainId, td.chainId)
+
 	_, err = db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
 	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperId)
@@ -68,6 +76,47 @@ func TestReadWrite(t *testing.T) {
 	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Nil(t, err)
 	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
+
+	_, err = db.GetLocalTokenWrapper(td.tokenId, td.chainId)
+	assert.Equal(t, err, badger.ErrKeyNotFound)
+	err = db.AddLocalTokenWrapper(td.tokenId, td.chainId, td.tokenWrapperId)
+	assert.Nil(t, err)
+	tokenWrapperId, err = db.GetLocalTokenWrapper(td.tokenId, td.chainId)
+	assert.Nil(t, err)
+	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
+}
+
+func TestUpdateUndoneSequenceStatus(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	sequence := uint64(10)
+	remoteChainId := uint16(2)
+	err = db.addUndoneSequence(remoteChainId, sequence)
+	assert.Nil(t, err)
+
+	err = db.addUndoneSequence(remoteChainId, sequence)
+	assert.Equal(t, err.Error(), "sequence 10 from remote chain 2 already exist")
+
+	err = db.SetSequenceExecuting(remoteChainId, sequence)
+	assert.Nil(t, err)
+	status, err := db.getUndoneSequence(remoteChainId, sequence)
+	assert.Nil(t, err)
+	assert.Equal(t, status, []byte{sequenceExecuting})
+
+	err = db.SetSequenceExecuting(remoteChainId, sequence)
+	assert.Equal(t, err.Error(), "failed to set sequence executing, status [1], sequence 10, remoteChainId 2")
+	err = db.SetSequenceExecuting(remoteChainId, sequence+1)
+	assert.Equal(t, err, badger.ErrKeyNotFound)
+
+	err = db.setSequenceExecuted(remoteChainId, sequence)
+	assert.Nil(t, err)
+	err = db.setSequenceExecuted(remoteChainId, sequence+1)
+	assert.Equal(t, err, badger.ErrKeyNotFound)
+
+	err = db.SetSequenceExecuting(remoteChainId, sequence)
+	assert.Equal(t, err.Error(), "failed to set sequence executing, status [2], sequence 10, remoteChainId 2")
 }
 
 func TestGetUndoneSequences(t *testing.T) {

@@ -292,10 +292,10 @@ func TestValidateUndoneSequenceCompletedEvents(t *testing.T) {
 		sequence:      sequence,
 	})
 	assert.False(t, skipIfError)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 
 	err = watcher.db.SetSequenceExecuting(remoteChainId, sequence)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 
 	skipIfError, err = watcher.validateUndoneSequenceCompletedEvents(&undoneSequenceCompleted{
 		senderId:      watcher.tokenBridgeContractId,
