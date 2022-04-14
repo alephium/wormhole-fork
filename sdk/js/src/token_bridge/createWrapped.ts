@@ -1,38 +1,47 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, Signer } from "alephium-js";
+import { BuildScriptTx, Signer } from "alephium-web3";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import { createLocalTokenWrapperCode, createRemoteTokenWrapperCode } from "../alephium/token_bridge";
+import { createLocalTokenWrapperScript, createRemoteTokenWrapperScript } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
-import { toHex } from "../utils/hex";
 import { executeScript } from "./utils";
 
 export async function createRemoteTokenWrapperOnAlph(
   signer: Signer,
-  tokenBridgeForChainAddress: string,
+  tokenBridgeForChainId: string,
   signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint,
   params?: BuildScriptTx
 ) {
-  const vaaHex = toHex(signedVAA)
-  const bytecode = createRemoteTokenWrapperCode(tokenBridgeForChainAddress, vaaHex, payer, alphAmount)
-  return executeScript(signer, bytecode, params)
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
+  const script = await createRemoteTokenWrapperScript()
+  return executeScript(signer, script, {
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    vaa: vaaHex,
+    alphAmount: alphAmount
+  }, params)
 }
 
 export async function createLocalTokenWrapperOnAlph(
   signer: Signer,
-  tokenBridgeForChainAddress: string,
+  tokenBridgeForChainId: string,
   localTokenId: string,
   payer: string,
   alphAmount: bigint,
   params?: BuildScriptTx
 ) {
-  const bytecode = createLocalTokenWrapperCode(tokenBridgeForChainAddress, localTokenId, payer, alphAmount)
-  return executeScript(signer, bytecode, params)
+  const script = await createLocalTokenWrapperScript()
+  return executeScript(signer, script, {
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    tokenId: localTokenId,
+    alphAmount: alphAmount
+  }, params)
 }
 
 export async function createWrappedOnEth(
