@@ -17,14 +17,6 @@ type contractService struct {
 	db *Database
 }
 
-func (c *contractService) getTokenBridgeForChain(chainId uint16) (string, error) {
-	contractId, err := c.db.getTokenBridgeForChain(chainId)
-	if err != nil {
-		return "", err
-	}
-	return ToContractAddress(*contractId), nil
-}
-
 func (c *contractService) GetRemoteTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetRemoteTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
 	bytes, err := hex.DecodeString(req.TokenId)
 	if err != nil {

@@ -129,10 +129,6 @@ func (db *Database) addLocalTokenWrapper(key *LocalTokenWrapperKey, tokenWrapper
 	return db.put(key.encode(), tokenWrapperId[:])
 }
 
-func (db *Database) getLocalTokenWrapper(key *LocalTokenWrapperKey) (*Byte32, error) {
-	return db.GetLocalTokenWrapper(key.localTokenId, key.remoteChainId)
-}
-
 func (db *Database) AddLocalTokenWrapper(tokenId Byte32, remoteChainId uint16, tokenWrapperId Byte32) error {
 	key := &LocalTokenWrapperKey{
 		localTokenId:  tokenId,

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"math/big"
-	"math/rand"
 	"sync"
 	"testing"
 
@@ -417,12 +416,4 @@ func TestValidateTokenBridgeForChainCreatedEvent(t *testing.T) {
 	contractId1, ok := watcher.tokenBridgeForChainCache.Load(remoteChainId)
 	assert.True(t, ok)
 	assert.Equal(t, *contractId1.(*Byte32), tokenBridgeForChainId)
-}
-
-func randomBytes(length int) []byte {
-	data := make([]byte, length)
-	size, err := rand.Read(data)
-	assume(size == length)
-	assume(err == nil)
-	return data
 }

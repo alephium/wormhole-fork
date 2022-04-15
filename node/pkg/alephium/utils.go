@@ -123,13 +123,6 @@ func (f *Field) ToBool() bool {
 	return f.Value.(bool)
 }
 
-func fieldFromBool(value bool) *Field {
-	return &Field{
-		Type:  "Bool",
-		Value: value,
-	}
-}
-
 func (f *Field) toBigInt() *big.Int {
 	num, succeed := new(big.Int).SetString(f.Value.(string), 10)
 	assume(succeed)
@@ -161,17 +154,6 @@ func (f *Field) ToByteVec() []byte {
 	return HexToBytes(f.Value.(string))
 }
 
-func fieldFromByteVec(data []byte) *Field {
-	return &Field{
-		Type:  "ByteVec",
-		Value: hex.EncodeToString(data),
-	}
-}
-
-func fieldFromByte32(byte32 Byte32) *Field {
-	return fieldFromByteVec(byte32[:])
-}
-
 func (f *Field) ToByte32() (*Byte32, error) {
 	bytes := f.ToByteVec()
 	if len(bytes) != 32 {
@@ -185,13 +167,6 @@ func (f *Field) ToByte32() (*Byte32, error) {
 func (f *Field) ToAddress() string {
 	assume(f.Type == "Address")
 	return f.Value.(string)
-}
-
-func fieldFromAddress(address string) *Field {
-	return &Field{
-		Type:  "Address",
-		Value: address,
-	}
 }
 
 func (f *Field) ToUint64() (uint64, error) {
