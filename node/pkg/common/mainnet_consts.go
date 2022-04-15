@@ -22,6 +22,7 @@ var PublicRPCEndpoints = []string{
 // Wormhole is not permissioned - anyone can use it. Adding contracts to this list is
 // entirely optional and at the core team's discretion.
 //
+// TODO: Add alephium emitter
 var KnownEmitters = []struct {
 	ChainID vaa.ChainID
 	Emitter string
@@ -39,4 +40,5 @@ var KnownEmitters = []struct {
 	{vaa.ChainIDAvalanche, "000000000000000000000000f7b6737ca9c4e08ae573f75a97b73d7a813f5de5"}, // 6 Avalanche NFT Bridge
 	{vaa.ChainIDOasis, "0000000000000000000000005848c791e09901b40a9ef749f2a6735b418d7564"},     // 7 Oasis Token Bridge
 	{vaa.ChainIDOasis, "00000000000000000000000004952d522ff217f40b5ef3cbf659eca7b952a6c1"},     // 7 Oasis NFT Bridge
+	{vaa.ChainIDAlephium, "0000000000000000000000000000000000000000000000000000000000000000"},  // Alephium Token Bridge
 }

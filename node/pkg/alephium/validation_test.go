@@ -49,12 +49,12 @@ func TestAttestEvent(t *testing.T) {
 		},
 	}
 
-	wormholeMessage, err := attestTokenEvent.toWormholeMessage()
+	wormholeMessage, err := attestTokenEvent.ToWormholeMessage()
 	assert.Nil(t, err)
 	assert.Equal(t, wormholeMessage.senderId.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
 	assert.Equal(t, wormholeMessage.nonce, uint32(317018585))
 	assert.Equal(t, wormholeMessage.payload, decodeHex("029fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0800000000000000000000000000000000000000000000746573742d746f6b656e00000000000000000000000000000000000000000000746573742d746f6b656e"))
-	assert.Equal(t, wormholeMessage.sequence, uint64(100))
+	assert.Equal(t, wormholeMessage.Sequence, uint64(100))
 	assert.Equal(t, wormholeMessage.consistencyLevel, uint8(0))
 	assert.False(t, wormholeMessage.isTransferMessage())
 }
@@ -89,12 +89,12 @@ func TestTransferEvent(t *testing.T) {
 		},
 	}
 
-	wormholeMessage, err := transferEvent.toWormholeMessage()
+	wormholeMessage, err := transferEvent.ToWormholeMessage()
 	assert.Nil(t, err)
 	assert.Equal(t, wormholeMessage.senderId.ToHex(), "deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07")
 	assert.Equal(t, wormholeMessage.nonce, uint32(506497433))
 	assert.Equal(t, wormholeMessage.payload, decodeHex("010000000000000000000000000000000000000000000000004563918244f400009fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab000d0000000000000000000000000d0f183465284cb5cb426902445860456ed59b34000200000000000000000000000000000000000000000000000000005af3107a4000014244dbdc1b82dd39336865f969c8d02f75642aed3ae2718dcb3256ceca8b7634"))
-	assert.Equal(t, wormholeMessage.sequence, uint64(101))
+	assert.Equal(t, wormholeMessage.Sequence, uint64(101))
 	assert.Equal(t, wormholeMessage.consistencyLevel, uint8(1))
 	assert.True(t, wormholeMessage.isTransferMessage())
 

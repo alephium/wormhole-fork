@@ -11,7 +11,7 @@ import (
 )
 
 func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, client *Client) {
-	eventEmitterAddress := toContractAddress(w.eventEmitterId)
+	eventEmitterAddress := ToContractAddress(w.eventEmitterId)
 
 	for {
 		select {
@@ -85,9 +85,9 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 
 func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 	for _, e := range confirmed.events {
-		wormholeMsg, err := e.event.toWormholeMessage()
+		wormholeMsg, err := e.event.ToWormholeMessage()
 		if err != nil {
-			logger.Error("invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
+			logger.Error("invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
 			return err
 		}
 		skipIfError, err := w.validateGovernanceMessages(wormholeMsg)

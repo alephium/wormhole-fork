@@ -22,7 +22,7 @@ func (c *contractService) getTokenBridgeForChain(chainId uint16) (string, error)
 	if err != nil {
 		return "", err
 	}
-	return toContractAddress(*contractId), nil
+	return ToContractAddress(*contractId), nil
 }
 
 func (c *contractService) GetRemoteTokenWrapperAddress(ctx context.Context, req *alephiumv1.GetRemoteTokenWrapperAddressRequest) (*alephiumv1.GetTokenWrapperAddressResponse, error) {
@@ -41,7 +41,7 @@ func (c *contractService) GetRemoteTokenWrapperAddress(ctx context.Context, req 
 		return nil, err
 	}
 	return &alephiumv1.GetTokenWrapperAddressResponse{
-		TokenWrapperAddress: toContractAddress(*contractId),
+		TokenWrapperAddress: ToContractAddress(*contractId),
 	}, nil
 }
 
@@ -55,7 +55,7 @@ func (c *contractService) GetLocalTokenWrapperAddress(ctx context.Context, req *
 		return nil, err
 	}
 	return &alephiumv1.GetTokenWrapperAddressResponse{
-		TokenWrapperAddress: toContractAddress(*contractId),
+		TokenWrapperAddress: ToContractAddress(*contractId),
 	}, nil
 }
 
@@ -68,7 +68,7 @@ func (c *contractService) GetTokenBridgeForChainAddress(ctx context.Context, req
 		return nil, err
 	}
 	return &alephiumv1.GetTokenBridgeForChainAddressResponse{
-		TokenBridgeForChainAddress: toContractAddress(*contractId),
+		TokenBridgeForChainAddress: ToContractAddress(*contractId),
 	}, nil
 }
 

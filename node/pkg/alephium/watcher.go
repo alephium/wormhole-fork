@@ -117,7 +117,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
-	eventEmitterAddress := toContractAddress(w.eventEmitterId)
+	eventEmitterAddress := ToContractAddress(w.eventEmitterId)
 	nextEventIndex, err := w.fetchEvents(ctx, logger, client, eventEmitterAddress)
 	if err != nil {
 		logger.Error("failed to fetch events when recovery", zap.Error(err))
@@ -172,7 +172,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 
 	// TODO: batch write to db
 	for _, e := range confirmed.events {
-		logger.Debug("new confirmed event received", zap.String("event", e.event.toString()))
+		logger.Debug("new confirmed event received", zap.String("event", e.event.ToString()))
 
 		var skipIfError bool
 		var validateErr error
@@ -181,9 +181,9 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 			if skipWormholeMessage {
 				continue
 			}
-			event, err := e.event.toWormholeMessage()
+			event, err := e.event.ToWormholeMessage()
 			if err != nil {
-				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.toString()))
+				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
 				continue
 			}
 			skipIfError, validateErr = w.validateGovernanceMessages(event)
@@ -194,7 +194,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		case TokenBridgeForChainCreatedEventIndex:
 			event, err := e.event.toTokenBridgeForChainCreatedEvent()
 			if err != nil {
-				logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.toString()))
+				logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.ToString()))
 				continue
 			}
 			skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
@@ -202,7 +202,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		case TokenWrapperCreatedEventIndex:
 			event, err := e.event.toTokenWrapperCreatedEvent()
 			if err != nil {
-				logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.toString()))
+				logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.ToString()))
 				continue
 			}
 			skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
@@ -210,7 +210,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		case UndoneSequencesRemovedEventIndex:
 			event, err := e.event.toUndoneSequencesRemoved()
 			if err != nil {
-				logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.toString()))
+				logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.ToString()))
 				continue
 			}
 			skipIfError, validateErr = w.validateUndoneSequencesRemovedEvents(event, w.getRemoteChainId)
@@ -218,7 +218,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		case UndoneSequenceCompletedEventIndex:
 			event, err := e.event.toUndoneSequenceCompleted()
 			if err != nil {
-				logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.toString()))
+				logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.ToString()))
 				continue
 			}
 			skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
