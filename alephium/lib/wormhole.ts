@@ -108,7 +108,6 @@ export class Wormhole {
     async deployContracts(): Promise<WormholeContracts> {
         const eventEmitter = await this.deployEventEmitter()
         const tokenWrapperFactoryDeployResult = await this.deployTokenWrapperFactory(eventEmitter.contractId)
-        console.log(tokenWrapperFactoryDeployResult.contractId)
         const governanceDeployResult = await this.deployGovernance(
             eventEmitter.contractId, this.governanceChainId, this.governanceContractId,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
