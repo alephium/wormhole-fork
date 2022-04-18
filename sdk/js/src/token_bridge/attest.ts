@@ -1,4 +1,4 @@
-import { Signer, BuildScriptTx } from 'alephium-js'
+import { Signer, BuildScriptTx } from 'alephium-web3'
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, PayableOverrides } from "ethers";
@@ -7,13 +7,12 @@ import { Bridge__factory } from "../ethers-contracts";
 import { getBridgeFeeIx, ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
 import { createNonce } from "../utils/createNonce";
-import { attestTokenCode } from '../alephium/token_bridge';
+import { attestTokenScript } from '../alephium/token_bridge';
 import { executeScript } from './utils';
-import { toHex } from '../utils/hex';
 
 export async function attestFromAlph(
   signer: Signer,
-  tokenBridgeAddress: string,
+  tokenBridgeId: string,
   tokenId: string,
   payer: string,
   messageFee: bigint,
@@ -21,10 +20,17 @@ export async function attestFromAlph(
   consistencyLevel?: number,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : toHex(createNonce())
+  const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const bytecode = attestTokenCode(tokenBridgeAddress, tokenId, payer, messageFee, nonceHex, cl)
-  return executeScript(signer, bytecode, params)
+  const script = await attestTokenScript()
+  return executeScript(signer, script, {
+    payer: payer,
+    tokenBridgeId: tokenBridgeId,
+    tokenId: tokenId,
+    messageFee: messageFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  }, params)
 }
 
 export async function attestFromEth(

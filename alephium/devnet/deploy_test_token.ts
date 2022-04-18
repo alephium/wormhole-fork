@@ -12,30 +12,29 @@ export async function deployTestToken(client: CliqueClient, signer: Signer): Pro
         tokenSupply // supply
     ]
 
-    const token = await Contract.from(client, 'test_token.ral')
+    const token = await Contract.fromSource(client, 'test_token.ral')
     const deployTx = await token.transactionForDeployment(signer, initFields, tokenSupply.toString())
     const submitResult = await signer.submitTransaction(deployTx.unsignedTx, deployTx.txId)
-    console.log('deploy token txId: ' + submitResult.txId + ', token contract address: ' + deployTx.contractAddress)
-    return deployTx.contractAddress
+    console.log('deploy token txId: ' + submitResult.txId + ', token contract id: ' + deployTx.contractId)
+    return deployTx.contractId
 }
 
 export async function attestToken(
     client: CliqueClient,
     signer: Signer,
-    tokenBridgeAddress: string,
+    tokenBridgeId: string,
     nonce: string,
     tokenId: string
 ): Promise<string> {
-    const script = await Script.from(client, 'attest_token.ral', {
+    const script = await Script.fromSource(client, 'attest_token.ral')
+    const scriptTx = await script.transactionForDeployment(signer, {
         payer: env.payer,
         messageFee: env.messageFee,
-        tokenBridgeAddress: tokenBridgeAddress,
+        tokenBridgeId: tokenBridgeId,
         tokenId: tokenId,
         nonce: nonce,
-        consistencyLevel: env.consistencyLevel,
-        ...env.commonVars
+        consistencyLevel: env.consistencyLevel
     })
-    const scriptTx = await script.transactionForDeployment(signer)
     const submitResult = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
     console.log('attest token txId: ' + submitResult.txId)
     return submitResult.txId

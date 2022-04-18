@@ -58,7 +58,7 @@ func TestField(t *testing.T) {
 
 func TestContractConversion(t *testing.T) {
 	bytes := randomByte32()
-	address := toContractAddress(bytes)
+	address := ToContractAddress(bytes)
 	id := toContractId(address)
 	assert.Equal(t, bytes, id)
 }

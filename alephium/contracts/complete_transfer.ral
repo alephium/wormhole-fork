@@ -1,8 +1,8 @@
 import "token_wrapper.ral"
 
-TxScript Main {
+TxScript Main<tokenWrapperId: ByteVec, vaa: ByteVec, arbiter: Address> {
     pub payable fn main() -> () {
-        let tokenWrapper = TokenWrapper(#{{ tokenWrapperAddress }})
-        tokenWrapper.completeTransfer(#{{ vaa }}, @{{ arbiter }})
+        let tokenWrapper = TokenWrapper(tokenWrapperId)
+        tokenWrapper.completeTransfer(vaa, arbiter)
     }
 }

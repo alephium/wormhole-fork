@@ -1,0 +1,15 @@
+{
+  "sourceCodeSha256": "effe7f5dfe51c1f8af2c91fd511e798a0aee41ace35c7c4c0a2b27e9400b0203",
+  "compiled": {
+    "type": "TemplateScriptByteCode",
+    "templateByteCode": "01010100010006{tokenWrapperId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}1600010c"
+  },
+  "functions": [
+    {
+      "name": "main",
+      "signature": "pub payable main()->()",
+      "argTypes": [],
+      "returnTypes": []
+    }
+  ]
+}

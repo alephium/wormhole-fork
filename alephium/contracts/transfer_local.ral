@@ -1,19 +1,26 @@
 import "token_wrapper.ral"
 
-TxScript Main {
+TxScript Main<
+    sender: Address,
+    tokenWrapperId: ByteVec,
+    localTokenId: ByteVec,
+    toAddress: ByteVec,
+    tokenAmount: U256,
+    messageFee: U256,
+    arbiterFee: U256,
+    nonce: ByteVec,
+    consistencyLevel: U256> {
     pub payable fn main() -> () {
-        let sender = @{{ sender }}
-        let tokenAmount = {{ tokenAmount }}
-        approveAlph!(sender, {{ messageFee }})
-        approveToken!(sender, #{{ tokenId }}, tokenAmount)
-        let tokenWrapper = TokenWrapper(#{{ tokenWrapperAddress }})
+        approveAlph!(sender, messageFee)
+        approveToken!(sender, localTokenId, tokenAmount)
+        let tokenWrapper = TokenWrapper(tokenWrapperId)
         tokenWrapper.transfer(
             sender,
-            #{{ toAddress }},
+            toAddress,
             tokenAmount,
-            {{ arbiterFee }},
-            #{{ nonce }},
-            {{ consistencyLevel }}
+            arbiterFee,
+            nonce,
+            consistencyLevel
         )
     }
 }

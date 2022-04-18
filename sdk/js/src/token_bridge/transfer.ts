@@ -7,10 +7,10 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, Signer } from "alephium-js";
+import { BuildScriptTx, Signer } from "alephium-web3";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
-import { transferLocalTokenCode, transferRemoteTokenCode } from "../alephium/token_bridge";
+import { transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
 import {
   Bridge__factory,
   TokenImplementation__factory,
@@ -18,14 +18,13 @@ import {
 import { getBridgeFeeIx, ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
 import { ChainId, CHAIN_ID_SOLANA, createNonce, WSOL_ADDRESS } from "../utils";
-import { toHex } from "../utils/hex";
 import { executeScript } from "./utils";
 
 export async function transferLocalTokenFromAlph(
   signer: Signer,
-  tokenWrapperAddress: string,
+  tokenWrapperId: string,
   sender: string,
-  tokenId: string,
+  localTokenId: string,
   toAddress: string,
   tokenAmount: bigint,
   messageFee: bigint,
@@ -34,18 +33,25 @@ export async function transferLocalTokenFromAlph(
   consistencyLevel?: number,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : toHex(createNonce())
+  const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const bytecode = transferLocalTokenCode(
-    tokenWrapperAddress, sender, tokenId, toAddress,
-    tokenAmount, messageFee, arbiterFee, nonceHex, cl
-  )
-  return executeScript(signer, bytecode, params)
+  const script = await transferLocalTokenScript()
+  return executeScript(signer, script, {
+    sender: sender,
+    tokenWrapperId: tokenWrapperId,
+    localTokenId: localTokenId,
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  }, params)
 }
 
 export async function transferRemoteTokenFromAlph(
   signer: Signer,
-  tokenWrapperAddress: string,
+  tokenWrapperId: string,
   sender: string,
   toAddress: string,
   tokenAmount: bigint,
@@ -55,13 +61,19 @@ export async function transferRemoteTokenFromAlph(
   consistencyLevel?: number,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : toHex(createNonce())
+  const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const bytecode = transferRemoteTokenCode(
-    tokenWrapperAddress, sender, toAddress, tokenAmount,
-    messageFee, arbiterFee, nonceHex, cl
-  )
-  return executeScript(signer, bytecode, params)
+  const script = await transferRemoteTokenScript()
+  return executeScript(signer, script, {
+    sender: sender,
+    tokenWrapperId: tokenWrapperId,
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  }, params)
 }
 
 export async function getAllowanceEth(

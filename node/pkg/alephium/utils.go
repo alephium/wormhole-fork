@@ -46,7 +46,7 @@ func ToContractId(address string) (Byte32, error) {
 	return byte32, nil
 }
 
-func toContractAddress(id Byte32) string {
+func ToContractAddress(id Byte32) string {
 	bytes := []byte{0x03}
 	bytes = append(bytes, id[:]...)
 	return base58.Encode(bytes)
@@ -123,13 +123,6 @@ func (f *Field) ToBool() bool {
 	return f.Value.(bool)
 }
 
-func fieldFromBool(value bool) *Field {
-	return &Field{
-		Type:  "Bool",
-		Value: value,
-	}
-}
-
 func (f *Field) toBigInt() *big.Int {
 	num, succeed := new(big.Int).SetString(f.Value.(string), 10)
 	assume(succeed)
@@ -161,17 +154,6 @@ func (f *Field) ToByteVec() []byte {
 	return HexToBytes(f.Value.(string))
 }
 
-func fieldFromByteVec(data []byte) *Field {
-	return &Field{
-		Type:  "ByteVec",
-		Value: hex.EncodeToString(data),
-	}
-}
-
-func fieldFromByte32(byte32 Byte32) *Field {
-	return fieldFromByteVec(byte32[:])
-}
-
 func (f *Field) ToByte32() (*Byte32, error) {
 	bytes := f.ToByteVec()
 	if len(bytes) != 32 {
@@ -185,13 +167,6 @@ func (f *Field) ToByte32() (*Byte32, error) {
 func (f *Field) ToAddress() string {
 	assume(f.Type == "Address")
 	return f.Value.(string)
-}
-
-func fieldFromAddress(address string) *Field {
-	return &Field{
-		Type:  "Address",
-		Value: address,
-	}
 }
 
 func (f *Field) ToUint64() (uint64, error) {
@@ -235,7 +210,7 @@ type WormholeMessage struct {
 	senderId         Byte32
 	nonce            uint32
 	payload          []byte
-	sequence         uint64
+	Sequence         uint64
 	consistencyLevel uint8
 }
 
@@ -258,7 +233,7 @@ func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.Mess
 		TxHash:           ethCommon.HexToHash(w.event.TxId),
 		Timestamp:        ts,
 		Nonce:            w.nonce,
-		Sequence:         w.sequence,
+		Sequence:         w.Sequence,
 		ConsistencyLevel: w.consistencyLevel,
 		EmitterChain:     vaa.ChainIDAlephium,
 		EmitterAddress:   vaa.Address(w.senderId),
@@ -352,12 +327,12 @@ type Event struct {
 	Fields          []*Field `json:"fields"`
 }
 
-func (e *Event) toString() string {
+func (e *Event) ToString() string {
 	data, _ := json.Marshal(e)
 	return string(data)
 }
 
-func (e *Event) toWormholeMessage() (*WormholeMessage, error) {
+func (e *Event) ToWormholeMessage() (*WormholeMessage, error) {
 	assume(len(e.Fields) == 5)
 	emitter, err := e.Fields[0].ToByte32()
 	if err != nil {
@@ -382,7 +357,7 @@ func (e *Event) toWormholeMessage() (*WormholeMessage, error) {
 		senderId:         *emitter,
 		nonce:            nonce,
 		payload:          payload,
-		sequence:         sequence,
+		Sequence:         sequence,
 		consistencyLevel: consistencyLevel,
 	}, nil
 }

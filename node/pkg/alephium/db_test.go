@@ -19,7 +19,7 @@ func randomByte32() Byte32 {
 }
 
 func randomAddress() string {
-	bytes := make([]byte, 0)
+	var bytes []byte
 	byte32 := randomByte32()
 	bytes = append([]byte{3}, byte32[:]...)
 	return base58.Encode(bytes)

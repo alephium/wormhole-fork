@@ -4,7 +4,12 @@ import "token_wrapper_factory.ral"
 import "math.ral"
 import "sequence.ral"
 
-TxContract TokenBridgeForChain(
+TxContract TokenBridgeForChain<
+    tokenWrapperFactoryId: ByteVec,
+    tokenWrapperCodeHash: ByteVec,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+>(
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
     remoteChainId: U256,
@@ -55,7 +60,7 @@ TxContract TokenBridgeForChain(
         let nameSize = size!(name)
         assert!(nameSize <= 32)
 
-        let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
+        let tokenWrapperFactory = TokenWrapperFactory(tokenWrapperFactoryId)
         approveAlph!(payer, createContractAlphAmount)
         tokenWrapperFactory.createWrapper(
             localTokenBridgeId,
@@ -73,7 +78,7 @@ TxContract TokenBridgeForChain(
 
     pub payable fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (tokenContractId, decimals, symbol, name) = parseAttestToken(vaa)
-        let tokenWrapperFactory = TokenWrapperFactory(#{{ tokenWrapperFactoryAddress }})
+        let tokenWrapperFactory = TokenWrapperFactory(tokenWrapperFactoryId)
         approveAlph!(payer, createContractAlphAmount)
         tokenWrapperFactory.createWrapper(
             localTokenBridgeId,
@@ -90,7 +95,7 @@ TxContract TokenBridgeForChain(
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
-        assert!(callerCodeHash!() == #{{ tokenWrapperCodeHash }})
+        assert!(callerCodeHash!() == tokenWrapperCodeHash)
         let payload = verifyVAA(vaa)
         assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))

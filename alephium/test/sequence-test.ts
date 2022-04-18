@@ -1,6 +1,6 @@
-import { CliqueClient } from 'alephium-web3'
-import { createSequence } from './fixtures/sequence-fixture'
-import { createEventEmitter, expectAssertionFailed, toContractId } from './fixtures/wormhole-fixture'
+import { CliqueClient, Contract } from 'alephium-web3'
+import { createSequence, createUndoneSequence } from './fixtures/sequence-fixture'
+import { createEventEmitter, expectAssertionFailed, randomContractAddress, randomContractId, toContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
@@ -12,6 +12,36 @@ describe("test sequence", () => {
         return buffer.toString('hex')
     }
 
+    test("should init undone sequence", async () => {
+        const eventEmitter = await createEventEmitter(client)
+        const sequenceAddress = randomContractAddress()
+        const undoneSequence = await createUndoneSequence(client, sequenceAddress)
+        const sequence = await Contract.fromSource(client, 'sequence.ral')
+        const templateVariables = {
+            undoneSequenceCodeHash: undoneSequence.codeHash,
+            eventEmitterId: eventEmitter.selfState.contractId
+        }
+        const testResult = await sequence.testPublicMethod(client, 'init', {
+            initialFields: [0, 0, 0, ""],
+            address: sequenceAddress,
+            testArgs: [undoneSequence.selfState.contractId],
+            existingContracts: [undoneSequence.selfState]
+        }, templateVariables)
+        const undoneSequenceOutput = testResult.contracts[0]
+        expect(undoneSequenceOutput.fields).toEqual([toContractId(sequenceAddress), ''])
+        const sequenceOutput = testResult.contracts[1]
+        expect(sequenceOutput.fields).toEqual([0, 0, 0, undoneSequence.selfState.contractId])
+
+        await expectAssertionFailed(async () => {
+            await sequence.testPublicMethod(client, 'init', {
+                initialFields: [0, 0, 0, undoneSequence.selfState.contractId],
+                address: sequenceAddress,
+                testArgs: [randomContractId()],
+                existingContracts: [undoneSequence.selfState]
+            }, templateVariables)
+        })
+    })
+
     test("should execute correctly", async () => {
         const eventEmitter = await createEventEmitter(client)
         const sequenceInfo = await createSequence(client, eventEmitter, 0, 0n, 0n)
@@ -21,7 +51,7 @@ describe("test sequence", () => {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: [seq]
-            })
+            }, sequenceInfo.templateVariables)
             // won't load undone sequence contract in normal case
             expect(testResult.contracts.length).toEqual(1)
             expect(testResult.contracts[0].fields[0]).toEqual(0)
@@ -36,7 +66,7 @@ describe("test sequence", () => {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: [seq]
-            })
+            }, sequenceInfo.templateVariables)
             // won't load undone sequence contract in normal case
             expect(testResult.contracts.length).toEqual(1)
             expect(testResult.contracts[0].fields[0]).toEqual(0)
@@ -57,7 +87,7 @@ describe("test sequence", () => {
                 address: sequenceInfo.address,
                 testArgs: [1024],
                 existingContracts: sequenceInfo.dependencies
-            })
+            }, sequenceInfo.templateVariables)
         })
     })
 
@@ -74,7 +104,7 @@ describe("test sequence", () => {
             address: sequenceInfo.address,
             testArgs: [currentSeq],
             existingContracts: sequenceInfo.dependencies
-        })
+        }, sequenceInfo.templateVariables)
         let undoneList = ""
         for (let seq = 248 - 1; seq >= 248 - 50; seq--) {
             undoneList = sequenceToHex(seq) + undoneList
@@ -104,7 +134,7 @@ describe("test sequence", () => {
             address: sequenceInfo.address,
             testArgs: [12],
             existingContracts: sequenceInfo.dependencies
-        })
+        }, sequenceInfo.templateVariables)
         expect(testResult.contracts[0].fields[1]).toEqual(sequenceToHex(15))
         expect(testResult.contracts[2].fields[0]).toEqual(256)
         expect(testResult.contracts[2].fields[1]).toEqual(0)
@@ -117,7 +147,7 @@ describe("test sequence", () => {
                 address: sequenceInfo.address,
                 testArgs: [14],
                 existingContracts: sequenceInfo.dependencies
-            })
+            }, sequenceInfo.templateVariables)
         })
     })
 
@@ -129,7 +159,7 @@ describe("test sequence", () => {
             initialFields: sequenceInfo.selfState.fields,
             address: sequenceInfo.address,
             testArgs: [1025]
-        })
+        }, sequenceInfo.templateVariables)
         expect(testResult.contracts.length).toEqual(1)
         expect(testResult.contracts[0].fields[0]).toEqual(512 + 256)
         expect(testResult.contracts[0].fields[1]).toEqual(allExecuted)
@@ -148,7 +178,7 @@ describe("test sequence", () => {
                     address: sequenceInfo.address,
                     testArgs: [seq],
                     existingContracts: sequenceInfo.dependencies
-                })
+                }, sequenceInfo.templateVariables)
             })
         }
 
@@ -159,7 +189,7 @@ describe("test sequence", () => {
                     address: sequenceInfo.address,
                     testArgs: [seq],
                     existingContracts: sequenceInfo.dependencies
-                })
+                }, sequenceInfo.templateVariables)
             })
         }
 
@@ -170,7 +200,7 @@ describe("test sequence", () => {
                     address: sequenceInfo.address,
                     testArgs: [seq],
                     existingContracts: sequenceInfo.dependencies
-                })
+                }, sequenceInfo.templateVariables)
             })
         }
     }, 180000)

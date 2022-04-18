@@ -1,0 +1,15 @@
+{
+  "sourceCodeSha256": "4c35173a147308cd095f96d56d5a37fe47b60c0ce312ac007e5fb25e3a21ddc5",
+  "compiled": {
+    "type": "TemplateScriptByteCode",
+    "templateByteCode": "01010100010011{sender:Address}{messageFee:U256}a2{sender:Address}{localTokenId:ByteVec}{tokenAmount:U256}a3{tokenWrapperId:ByteVec}1700{sender:Address}{toAddress:ByteVec}{tokenAmount:U256}{arbiterFee:U256}{nonce:ByteVec}{consistencyLevel:U256}1600010a"
+  },
+  "functions": [
+    {
+      "name": "main",
+      "signature": "pub payable main()->()",
+      "argTypes": [],
+      "returnTypes": []
+    }
+  ]
+}

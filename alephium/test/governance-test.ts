@@ -19,7 +19,7 @@ describe("test governance", () => {
             testArgs: [toHex(vaa.encode())],
             initialAsset: initialAsset,
             inputAssets: inputAssets
-        })
+        }, governanceInfo.templateVariables)
     }
 
     test('should update guardian set', async () => {

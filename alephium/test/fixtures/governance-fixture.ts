@@ -74,12 +74,7 @@ export async function createGovernance(
 ): Promise<ContractInfo> {
     const address = randomContractAddress()
     const undoneSequenceInfo = await createUndoneSequence(client, address)
-    const governanceContract = await Contract.from(client, 'governance.ral', {
-        eventEmitterId: eventEmitter.address,
-        undoneSequenceCodeHash: undoneSequenceInfo.contract.codeHash,
-        undoneSequenceMaxSize: 256,
-        undoneSequenceMaxDistance: 256,
-    })
+    const governanceContract = await Contract.fromSource(client, 'governance.ral')
     const initFields = [
         alphChainId,
         governanceChainId,
@@ -94,10 +89,21 @@ export async function createGovernance(
         [0, initGuardianSet.size()],
         0
     ]
+    const templateVariables = {
+        undoneSequenceCodeHash: undoneSequenceInfo.codeHash,
+        eventEmitterId: eventEmitter.selfState.contractId
+    }
     const contractState = governanceContract.toState(
         initFields,
         {alphAmount: dustAmount},
-        address
+        address,
+        templateVariables
     )
-    return new ContractInfo(governanceContract, contractState, [undoneSequenceInfo.selfState, eventEmitter.selfState], address)
+    return new ContractInfo(
+        governanceContract,
+        contractState,
+        [undoneSequenceInfo.selfState, eventEmitter.selfState],
+        address,
+        templateVariables
+    )
 }
