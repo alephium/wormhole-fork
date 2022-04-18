@@ -34,9 +34,9 @@ export class Wormhole {
     initGuardianSetIndex: number
     initMessageFee: bigint
 
-    private _tokenWrapperInfo: any = null
-    private _tokenBridgeForChainInfo: any = null
-    private _undoneSequenceInfo: any = null
+    private _tokenWrapperInfo: ContractInfo | undefined = undefined
+    private _tokenBridgeForChainInfo: ContractInfo | undefined = undefined
+    private _undoneSequenceInfo: ContractInfo | undefined = undefined
 
     constructor(
         client: CliqueClient,
@@ -71,7 +71,7 @@ export class Wormhole {
     }
 
     private async tokenWrapperInfo(): Promise<ContractInfo> {
-        if (this._tokenWrapperInfo) {
+        if (typeof this._tokenWrapperInfo !== 'undefined') {
             return this._tokenWrapperInfo as ContractInfo
         }
         const contract = await Contract.fromSource(this.client, 'token_wrapper.ral')
@@ -81,7 +81,7 @@ export class Wormhole {
     }
 
     private async tokenBridgeForChainInfo(templateVariables: any): Promise<ContractInfo> {
-        if (this._tokenBridgeForChainInfo) {
+        if (typeof this._tokenBridgeForChainInfo !== 'undefined') {
             return this._tokenBridgeForChainInfo as ContractInfo
         }
         const contract = await Contract.fromSource(this.client, 'token_bridge_for_chain.ral')
@@ -91,7 +91,7 @@ export class Wormhole {
     }
 
     private async undoneSequenceInfo(): Promise<ContractInfo> {
-        if (this._undoneSequenceInfo) {
+        if (typeof this._undoneSequenceInfo !== 'undefined') {
             return this._undoneSequenceInfo as ContractInfo
         }
         const contract = await Contract.fromSource(this.client, 'undone_sequence.ral')
@@ -101,7 +101,7 @@ export class Wormhole {
     }
 
     private undoneSequenceTemplateVariables = {
-        undoneSequenceMaxSize: 128, // 1k
+        undoneSequenceMaxSize: 128, // the maximum size of the contract state is 1k
         undoneSequenceMaxDistance: 512
     }
 
