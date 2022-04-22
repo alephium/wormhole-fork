@@ -410,12 +410,12 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	return &nodev1.SendObservationRequestResponse{}, nil
 }
 
-func (s *nodePrivilegedService) GetUndoneSequences(ctx context.Context, req *nodev1.UndoneSequenceRequest) (*nodev1.UndoneSequenceResponse, error) {
+func (s *nodePrivilegedService) GetUndoneSequences(ctx context.Context, req *nodev1.GetUndoneSequencesRequest) (*nodev1.GetUndoneSequencesResponse, error) {
 	sequences, err := s.alphDb.GetUndoneSequences(uint16(req.RemoteChainId))
 	if err != nil {
 		return nil, err
 	}
-	return &nodev1.UndoneSequenceResponse{
+	return &nodev1.GetUndoneSequencesResponse{
 		Sequences: sequences,
 	}, nil
 }

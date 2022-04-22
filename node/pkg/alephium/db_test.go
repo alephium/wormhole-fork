@@ -106,7 +106,7 @@ func TestUpdateUndoneSequenceStatus(t *testing.T) {
 	assert.Equal(t, status, []byte{sequenceExecuting})
 
 	err = db.SetSequenceExecuting(remoteChainId, sequence)
-	assert.Equal(t, err.Error(), "failed to set sequence executing, status [1], sequence 10, remoteChainId 2")
+	assert.Equal(t, err.Error(), "failed to set sequence executing, status [2], sequence 10, remoteChainId 2")
 	err = db.SetSequenceExecuting(remoteChainId, sequence+1)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
 
@@ -116,7 +116,7 @@ func TestUpdateUndoneSequenceStatus(t *testing.T) {
 	assert.Equal(t, err, badger.ErrKeyNotFound)
 
 	err = db.SetSequenceExecuting(remoteChainId, sequence)
-	assert.Equal(t, err.Error(), "failed to set sequence executing, status [2], sequence 10, remoteChainId 2")
+	assert.Equal(t, err.Error(), "failed to set sequence executing, status [3], sequence 10, remoteChainId 2")
 }
 
 func TestGetUndoneSequences(t *testing.T) {

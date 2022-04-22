@@ -249,7 +249,7 @@ func runListUndoneSequences(cmd *cobra.Command, args []string) {
 		log.Fatalf("failed to get admin client: %v", err)
 	}
 
-	request := &nodev1.UndoneSequenceRequest{
+	request := &nodev1.GetUndoneSequencesRequest{
 		RemoteChainId: uint32(chainId),
 	}
 	resp, err := c.GetUndoneSequences(ctx, request)

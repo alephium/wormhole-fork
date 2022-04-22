@@ -24,19 +24,19 @@ var (
 )
 
 const (
-	sequenceInit      byte = 0
-	sequenceExecuting byte = 1
-	sequenceExecuted  byte = 2
+	sequenceInit      byte = 1
+	sequenceExecuting byte = 2
+	sequenceExecuted  byte = 3
 )
 
 func toProtoStatus(status byte) nodev1.UndoneSequenceStatus {
 	switch status {
 	case sequenceInit:
-		return nodev1.UndoneSequenceStatus_INIT
+		return nodev1.UndoneSequenceStatus_UNDONE_SEQUENCE_STATUS_INIT
 	case sequenceExecuting:
-		return nodev1.UndoneSequenceStatus_EXECUTING
+		return nodev1.UndoneSequenceStatus_UNDONE_SEQUENCE_STATUS_EXECUTING
 	case sequenceExecuted:
-		return nodev1.UndoneSequenceStatus_EXECUTED
+		return nodev1.UndoneSequenceStatus_UNDONE_SEQUENCE_STATUS_EXECUTED
 	}
 	panic("invalid undone sequence status")
 }

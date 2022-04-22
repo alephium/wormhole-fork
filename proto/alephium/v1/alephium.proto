@@ -7,46 +7,51 @@ option go_package = "github.com/certusone/wormhole/node/pkg/proto/alephium/v1;al
 import "google/api/annotations.proto";
 
 service ContractService {
-    rpc GetRemoteTokenWrapperAddress (GetRemoteTokenWrapperAddressRequest) returns (GetTokenWrapperAddressResponse) {
+    rpc GetRemoteTokenWrapperId (GetRemoteTokenWrapperIdRequest) returns (GetRemoteTokenWrapperIdResponse) {
         option (google.api.http) = {
             get: "/v1/alph/remote_token_wrapper/{token_id}"
         };
     }
 
-    rpc GetLocalTokenWrapperAddress (GetLocalTokenWrapperAddressRequest) returns (GetTokenWrapperAddressResponse) {
+    rpc GetLocalTokenWrapperId (GetLocalTokenWrapperIdRequest) returns (GetLocalTokenWrapperIdResponse) {
         option (google.api.http) = {
             get: "/v1/alph/local_token_wrapper/{token_id}/{chain_id}"
         };
     }
 
-    rpc GetTokenBridgeForChainAddress (GetTokenBridgeForChainAddressRequest) returns (GetTokenBridgeForChainAddressResponse) {
+    rpc GetTokenBridgeForChainId (GetTokenBridgeForChainIdRequest) returns (GetTokenBridgeForChainIdResponse) {
         option (google.api.http) = {
             get: "/v1/alph/token_bridge_for_chain/{chain_id}"
         };
     }
 }
 
-message GetRemoteTokenWrapperAddressRequest {
+message GetRemoteTokenWrapperIdRequest {
     // remote token id hex string
     string token_id = 1;
 }
 
-message GetLocalTokenWrapperAddressRequest {
-    // local token address(base58 encoded)
+message GetLocalTokenWrapperIdRequest {
+    // local token id hex string
     string token_id = 1;
     // remote chain id
     uint32 chain_id = 2;
 }
 
-message GetTokenWrapperAddressResponse {
-    // token wrapper contract address
-    string token_wrapper_address = 1;
+message GetLocalTokenWrapperIdResponse {
+    // token wrapper contract id 
+    bytes token_wrapper_id = 1;
 }
 
-message GetTokenBridgeForChainAddressRequest {
+message GetRemoteTokenWrapperIdResponse {
+    // token wrapper contract id 
+    bytes token_wrapper_id = 1;
+}
+
+message GetTokenBridgeForChainIdRequest {
     uint32 chain_id = 1;
 }
 
-message GetTokenBridgeForChainAddressResponse {
-    string token_bridge_for_chain_address = 1;
+message GetTokenBridgeForChainIdResponse {
+    bytes token_bridge_for_chain_id = 1;
 }

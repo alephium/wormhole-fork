@@ -32,7 +32,7 @@ service NodePrivilegedService {
   rpc SendObservationRequest (SendObservationRequestRequest) returns (SendObservationRequestResponse);
 
   // Get undone sequences and status
-  rpc GetUndoneSequences (UndoneSequenceRequest) returns (UndoneSequenceResponse);
+  rpc GetUndoneSequences (GetUndoneSequencesRequest) returns (GetUndoneSequencesResponse);
 }
 
 message InjectGovernanceVAARequest {
@@ -152,14 +152,15 @@ message SendObservationRequestRequest {
 
 message SendObservationRequestResponse {}
 
-message UndoneSequenceRequest {
+message GetUndoneSequencesRequest {
   uint32 remote_chain_id = 1;
 }
 
 enum UndoneSequenceStatus {
-  INIT = 0;
-  EXECUTING = 1;
-  EXECUTED = 2;
+  UNDONE_SEQUENCE_STATUS_UNSPECIFIED = 0;
+  UNDONE_SEQUENCE_STATUS_INIT = 1;
+  UNDONE_SEQUENCE_STATUS_EXECUTING = 2;
+  UNDONE_SEQUENCE_STATUS_EXECUTED = 3;
 }
 
 message UndoneSequence {
@@ -167,7 +168,7 @@ message UndoneSequence {
   UndoneSequenceStatus status = 2;
 }
 
-message UndoneSequenceResponse {
+message GetUndoneSequencesResponse {
   repeated UndoneSequence sequences = 1;
 }
 
@@ -180,5 +181,5 @@ message ExecuteUndoneSequenceRequest {
 }
 
 message ExecuteUndoneSequenceResponse {
-  bytes vaaBody = 1;
+  bytes vaa_body = 1;
 }
