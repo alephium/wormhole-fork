@@ -1,5 +1,6 @@
 import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, SubmissionResult, Val } from 'alephium-web3'
 import * as blake from 'blakejs'
+import { waitTxConfirmed } from './utils'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13
@@ -9,6 +10,7 @@ export interface DeployResult {
     contractAddress: string,
     contractId: string,
     txId: string,
+    blockHash: string
 }
 
 interface ContractInfo {
@@ -268,11 +270,13 @@ export class Wormhole {
     ): Promise<DeployResult> {
         const deployTx = await contract.transactionForDeployment(this.signer, initFields, undefined, templateVariables)
         const submitResult = await this.signer.submitTransaction(deployTx.unsignedTx, deployTx.txId)
+        const confirmed = await waitTxConfirmed(this.client, submitResult.txId)
         return {
             groupIndex: deployTx.group,
             contractAddress: deployTx.contractAddress,
             contractId: deployTx.contractId,
-            txId: submitResult.txId
+            txId: submitResult.txId,
+            blockHash: confirmed.blockHash
         }
     }
 }
