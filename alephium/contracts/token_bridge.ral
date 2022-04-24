@@ -40,13 +40,9 @@ TxContract TokenBridge<
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
     }
 
-    pub fn parseAndVerify(vaa: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
-        let governance = Governance(governanceId)
-        return governance.parseAndVerifyVAA(vaa)
-    }
-
     fn verifyGovernanceVAA(vaa: ByteVec) -> (ByteVec) {
-        let (emitterChainId, emitterAddress, msgSequence, payload) = parseAndVerify(vaa)
+        let governance = Governance(governanceId)
+        let (emitterChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
         assert!(emitterChainId == governanceChainId)
         assert!(emitterAddress == governanceContractId)
         checkSequence(msgSequence)
@@ -71,7 +67,7 @@ TxContract TokenBridge<
         assert!(remoteChainId != localChainId)
 
         let mut encodedState = encode!(
-            localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
+            governanceId, localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
         )
 
         approveAlph!(payer, createContractAlphAmount)

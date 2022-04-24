@@ -257,7 +257,7 @@ export async function createTokenBridgeForChain(
         eventEmitterId: eventEmitter.selfState.contractId
     }
     const state = tokenBridgeForChain.toState(
-        [alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, 0, 0, undoneSequenceInfo.address],
+        [tokenBridgeInfo.governance.address, alphChainId, tokenBridgeInfo.address, remoteChainId, remoteTokenBridgeId, 0, 0, 0, undoneSequenceInfo.address],
         {alphAmount: dustAmount},
         address,
         templateVariables

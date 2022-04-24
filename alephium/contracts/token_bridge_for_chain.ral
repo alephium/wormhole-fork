@@ -10,6 +10,7 @@ TxContract TokenBridgeForChain<
     undoneSequenceCodeHash: ByteVec,
     eventEmitterId: ByteVec
 >(
+    governanceId: ByteVec,
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
     remoteChainId: U256,
@@ -29,8 +30,8 @@ TxContract TokenBridgeForChain<
 
     // return payload
     fn verifyVAA(vaa: ByteVec) -> (ByteVec) {
-        let tokenBridge = TokenBridge(localTokenBridgeId)
-        let (emitterChainId, emitterAddress, msgSequence, payload) = tokenBridge.parseAndVerify(vaa)
+        let governance = Governance(governanceId)
+        let (emitterChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
         assert!(emitterChainId == remoteChainId)
         assert!(emitterAddress == remoteTokenBridgeId)
         checkSequence(msgSequence)
