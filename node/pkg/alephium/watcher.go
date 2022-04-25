@@ -3,7 +3,6 @@ package alephium
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -48,12 +47,17 @@ type Watcher struct {
 type UnconfirmedEvent struct {
 	blockHeader   *BlockHeader
 	event         *Event
-	eventIndex    uint64
 	confirmations uint8
 }
 
+type UnconfirmedEvents struct {
+	eventIndex uint64
+	events     []*UnconfirmedEvent
+}
+
 type ConfirmedEvents struct {
-	events []*UnconfirmedEvent
+	eventIndex uint64
+	events     []*UnconfirmedEvent
 }
 
 func NewAlephiumWatcher(
@@ -165,11 +169,6 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		return nil
 	}
 
-	// TODO: improve this
-	sort.Slice(confirmed.events, func(i, j int) bool {
-		return confirmed.events[i].eventIndex < confirmed.events[j].eventIndex
-	})
-
 	// TODO: batch write to db
 	for _, e := range confirmed.events {
 		logger.Debug("new confirmed event received", zap.String("event", e.event.ToString()))
@@ -236,8 +235,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 			return validateErr
 		}
 	}
-	eventSize := len(confirmed.events)
-	return w.db.updateLastEventIndex(confirmed.events[eventSize-1].eventIndex)
+	return w.db.updateLastEventIndex(confirmed.eventIndex)
 }
 
 func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
@@ -287,7 +285,7 @@ func (w *Watcher) subscribe_(
 	tickDuration time.Duration,
 	errC chan<- error,
 ) {
-	unconfirmedEvents := map[uint64]*UnconfirmedEvent{}
+	pendingEvents := map[string]*UnconfirmedEvents{}
 	nextIndex := fromIndex
 	lastHeight := atomic.LoadUint32(&w.currentHeight)
 
@@ -300,38 +298,49 @@ func (w *Watcher) subscribe_(
 			return nil
 		}
 
-		confirmed := make([]*UnconfirmedEvent, 0)
-		for eventIndex, unconfirmed := range unconfirmedEvents {
-			if unconfirmed.blockHeader.Height+uint32(unconfirmed.confirmations) > height {
-				continue
-			}
-
-			isCanonical, err := client.IsBlockInMainChain(ctx, unconfirmed.event.BlockHash)
+		for blockHash, unconfirmedEvents := range pendingEvents {
+			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
 			if err != nil {
 				logger.Error("failed to check mainchain block", zap.Error(err))
 				return err
 			}
-
 			if !isCanonical {
 				// it's safe to update map in range loop
-				delete(unconfirmedEvents, eventIndex)
+				delete(pendingEvents, blockHash)
 				continue
 			}
 
-			confirmed = append(confirmed, unconfirmed)
-			delete(unconfirmedEvents, eventIndex)
-		}
+			confirmed := make([]*UnconfirmedEvent, 0)
+			remain := make([]*UnconfirmedEvent, 0)
+			for _, event := range unconfirmedEvents.events {
+				if event.blockHeader.Height+uint32(event.confirmations) > height {
+					remain = append(confirmed, event)
+					continue
+				}
+				confirmed = append(confirmed, event)
+			}
 
-		if len(confirmed) == 0 {
-			return nil
-		}
+			if len(confirmed) == 0 {
+				continue
+			}
 
-		confirmedEvents := &ConfirmedEvents{
-			events: confirmed,
-		}
-		if err := handler(logger, confirmedEvents, false); err != nil {
-			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
-			return err
+			if len(remain) == 0 {
+				delete(pendingEvents, blockHash)
+			} else {
+				pendingEvents[blockHash] = &UnconfirmedEvents{
+					events:     remain,
+					eventIndex: unconfirmedEvents.eventIndex,
+				}
+			}
+
+			confirmedEvents := &ConfirmedEvents{
+				events:     confirmed,
+				eventIndex: unconfirmedEvents.eventIndex,
+			}
+			if err := handler(logger, confirmedEvents, false); err != nil {
+				logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
+				return err
+			}
 		}
 		return nil
 	}
@@ -349,7 +358,7 @@ func (w *Watcher) subscribe_(
 				return
 			}
 
-			if *count <= nextIndex {
+			if *count == nextIndex {
 				if err := process(); err != nil {
 					errC <- err
 					return
@@ -357,24 +366,31 @@ func (w *Watcher) subscribe_(
 				continue
 			}
 
-			to := (*count - 1)
-			events, err := client.GetContractEventsByIndex(ctx, contractAddress, nextIndex, to)
+			events, err := client.GetContractEventsByRange(ctx, contractAddress, nextIndex, *count)
 			if err != nil {
-				logger.Error("failed to get contract events", zap.Uint64("from", nextIndex), zap.Uint64("to", to), zap.Error(err))
+				logger.Error("failed to get contract events", zap.Uint64("from", nextIndex), zap.Uint64("to", *count), zap.Error(err))
 				errC <- err
 				return
 			}
 
-			assume(len(events.Events) == int(to-nextIndex+1))
-			for i, event := range events.Events {
+			eventIndex := nextIndex
+			for _, event := range events.Events {
 				unconfirmed, err := toUnconfirmed(ctx, client, event)
 				if err != nil {
 					logger.Error("failed to convert to unconfirmed event", zap.Error(err))
 					errC <- err
 					return
 				}
-				unconfirmed.eventIndex = nextIndex + uint64(i)
-				unconfirmedEvents[unconfirmed.eventIndex] = unconfirmed
+				blockHash := unconfirmed.event.BlockHash
+				if lst, ok := pendingEvents[blockHash]; ok {
+					lst.events = append(lst.events, unconfirmed)
+				} else {
+					pendingEvents[blockHash] = &UnconfirmedEvents{
+						events:     []*UnconfirmedEvent{unconfirmed},
+						eventIndex: eventIndex,
+					}
+					eventIndex += 1
+				}
 			}
 
 			nextIndex = *count

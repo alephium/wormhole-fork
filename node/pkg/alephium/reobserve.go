@@ -112,7 +112,7 @@ func (w *Watcher) getGovernanceEventsByIndex(
 	txId string,
 	eventIndex uint64,
 ) ([]*UnconfirmedEvent, error) {
-	events, err := client.GetContractEventsByIndex(ctx, address, eventIndex, eventIndex)
+	events, err := client.GetContractEventsByRange(ctx, address, eventIndex, eventIndex+1)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +125,9 @@ func (w *Watcher) getGovernanceEventsByIndex(
 	unconfirmedEvents := make([]*UnconfirmedEvent, len(events.Events))
 	for _, event := range events.Events {
 		if event.TxId != txId {
+			continue
+		}
+		if event.Index != WormholeMessageEventIndex {
 			continue
 		}
 		confirmations, err := event.getConsistencyLevel(w.minConfirmations)

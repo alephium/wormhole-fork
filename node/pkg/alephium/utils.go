@@ -467,6 +467,7 @@ type Events struct {
 	ChainFrom uint8    `json:"chainFrom"`
 	ChainTo   uint8    `json:"chainTo"`
 	Events    []*Event `json:"events"`
+	NextCount uint64   `json:"nextCount"`
 }
 
 type BlockHeader struct {

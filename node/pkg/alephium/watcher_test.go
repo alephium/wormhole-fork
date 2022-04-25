@@ -56,7 +56,7 @@ func TestSubscribeEvents(t *testing.T) {
 			json.NewEncoder(w).Encode(&Events{
 				ChainFrom: 0,
 				ChainTo:   0,
-				Events:    events[from : to+1],
+				Events:    events[from:to],
 			})
 			return
 		}
@@ -107,6 +107,7 @@ func TestSubscribeEvents(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	assert.True(t, len(confirmedEvents) == 1)
 	assert.True(t, len(confirmedEvents[0].events) == 1)
+	assert.Equal(t, confirmedEvents[0].eventIndex, uint64(0))
 	diff := deep.Equal(confirmedEvents[0].events[0].event, event0)
 	assert.Nil(t, diff)
 
@@ -120,6 +121,7 @@ func TestSubscribeEvents(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	assert.True(t, len(confirmedEvents) == 2)
 	assert.True(t, len(confirmedEvents[1].events) == 1)
+	assert.Equal(t, confirmedEvents[1].eventIndex, uint64(1))
 	diff = deep.Equal(confirmedEvents[1].events[0].event, event1)
 	assert.Nil(t, diff)
 

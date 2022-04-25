@@ -104,7 +104,8 @@ func main() {
 		log.Fatalf("Event count is 0")
 	}
 
-	toIndex := *eventCount - 1
+	// request events in reverse order
+	toIndex := *eventCount
 	for {
 		if remain == 0 {
 			break
@@ -114,12 +115,19 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByIndex(ctx, alphEmitterAddress, fromIndex, toIndex)
+		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex)
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
 
-		for i, event := range events.Events {
+		eventCountOffset := 0
+		blockHash := ""
+		for _, event := range events.Events {
+			if event.BlockHash != blockHash {
+				blockHash = event.BlockHash
+				eventCountOffset += 1
+			}
+
 			if event.Index != alephium.WormholeMessageEventIndex {
 				continue
 			}
@@ -135,7 +143,7 @@ func main() {
 			missingMessages[wormholeMsg.Sequence] = false
 			remain -= 1
 
-			eventIndex := fromIndex + uint64(i)
+			eventIndex := fromIndex + uint64(eventCountOffset-1)
 			encoded := make([]byte, 40) // 32 bytes txId + 8 bytes eventIndex
 			txId := alephium.HexToFixedSizeBytes(event.TxId, 32)
 			copy(encoded, txId)
@@ -158,7 +166,7 @@ func main() {
 		if fromIndex == 0 {
 			break
 		}
-		toIndex = fromIndex - 1
+		toIndex = fromIndex
 	}
 
 	if remain == 0 {

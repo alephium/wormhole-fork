@@ -46,22 +46,30 @@ func (w *Watcher) fetchEvents_(
 	}
 
 	from := *lastEventIndex + 1
-	to := *count - 1
-	assume(from <= to)
-	events, err := client.GetContractEventsByIndex(ctx, contractAddress, from, to)
-	if err != nil {
-		logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.Uint64("to", to), zap.String("contractAddress", contractAddress))
-		return nil, err
-	}
+	allEvents := make([]*UnconfirmedEvent, 0)
+	for {
+		events, err := client.GetContractEvents(ctx, contractAddress, from)
+		if err != nil {
+			logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.Uint64("to", *count), zap.String("contractAddress", contractAddress))
+			return nil, err
+		}
 
-	unconfirmed, err := toUnconfirmedEvents(ctx, client, events.Events)
-	if err != nil {
-		logger.Error("failed to fetch unconfirmed events", zap.Error(err))
-		return nil, err
+		if len(events.Events) == 0 {
+			break
+		}
+
+		// TODO: wait for confirmed???
+		unconfirmedEvents, err := toUnconfirmedEvents(ctx, client, events.Events)
+		if err != nil {
+			logger.Error("failed to fetch unconfirmed events", zap.Error(err))
+			return nil, err
+		}
+		allEvents = append(allEvents, unconfirmedEvents...)
+		from = events.NextCount
 	}
-	// TODO: wait for confirmed???
 	confirmed := &ConfirmedEvents{
-		events: unconfirmed,
+		events:     allEvents,
+		eventIndex: *count - 1,
 	}
 	if err := handler(logger, confirmed, true); err != nil {
 		return nil, err

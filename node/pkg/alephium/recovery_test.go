@@ -21,6 +21,7 @@ func TestFetchEvents(t *testing.T) {
 	logger, err := zap.NewProduction()
 	assert.Nil(t, err)
 
+	batchSize := 1
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.RequestURI == eventCountURI(contractAddress) {
 			w.Header().Set("Content-Type", "application/json")
@@ -33,13 +34,20 @@ func TestFetchEvents(t *testing.T) {
 			query := r.URL.Query()
 			from, err := strconv.Atoi(query["start"][0])
 			assert.Nil(t, err)
-			to, err := strconv.Atoi(query["end"][0])
-			assert.Nil(t, err)
-			json.NewEncoder(w).Encode(&Events{
+			to := uint64(from + batchSize)
+			event := &Events{
 				ChainFrom: 0,
 				ChainTo:   0,
-				Events:    events[from : to+1],
-			})
+			}
+			if len(events) < int(to) {
+				event.Events = events[from:]
+				event.NextCount = uint64(len(events))
+			} else {
+				event.Events = events[from:to]
+				event.NextCount = to
+			}
+
+			json.NewEncoder(w).Encode(event)
 			return
 		}
 	}))
@@ -68,6 +76,7 @@ func TestFetchEvents(t *testing.T) {
 	eventIndex, err := watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(0))
+	assert.Nil(t, confirmedEvents)
 
 	lastEventIndexGetter = func() (*uint64, error) {
 		nextIndex := uint64(0)
