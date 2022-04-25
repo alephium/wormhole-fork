@@ -126,7 +126,7 @@ func TestValidateTokenWrapperCreatedEvent(t *testing.T) {
 
 	remoteChainId := uint16(2)
 	tokenBridgeForChainId := randomByte32()
-	err = db.addTokenBridgeForChain(remoteChainId, tokenBridgeForChainId)
+	err = db.addRemoteChain(tokenBridgeForChainId, remoteChainId)
 	assert.Nil(t, err)
 
 	localTokenId := randomByte32()
@@ -391,7 +391,7 @@ func TestValidateTokenBridgeForChainCreatedEvent(t *testing.T) {
 
 	remoteChainId := uint16(2)
 	tokenBridgeForChainId := randomByte32()
-	err = db.addTokenBridgeForChain(remoteChainId, tokenBridgeForChainId)
+	err = db.addRemoteChain(tokenBridgeForChainId, remoteChainId)
 	assert.Nil(t, err)
 
 	skipIfError, err := watcher.validateTokenBridgeForChainCreatedEvents(&tokenBridgeForChainCreated{

@@ -53,22 +53,6 @@ func TestReadWrite(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
-	_, err = db.getTokenBridgeForChain(td.chainId)
-	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.addTokenBridgeForChain(td.chainId, td.tokenBridgeForChainId)
-	assert.Nil(t, err)
-	chainContractId, err := db.getTokenBridgeForChain(td.chainId)
-	assert.Nil(t, err)
-	assert.Equal(t, *chainContractId, td.tokenBridgeForChainId)
-
-	_, err = db.getRemoteChainId(td.tokenBridgeForChainId)
-	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.addRemoteChainId(td.tokenBridgeForChainId, td.chainId)
-	assert.Nil(t, err)
-	remoteChainId, err := db.getRemoteChainId(td.tokenBridgeForChainId)
-	assert.Nil(t, err)
-	assert.Equal(t, *remoteChainId, td.chainId)
-
 	_, err = db.GetRemoteTokenWrapper(td.tokenId)
 	assert.Equal(t, err, badger.ErrKeyNotFound)
 	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperId)
@@ -162,4 +146,22 @@ func TestGetUndoneSequences(t *testing.T) {
 		assert.Equal(t, result1[i].Sequence, sequences0[i].Sequence)
 		assert.Equal(t, result1[i].Status, sequences0[i].Status)
 	}
+}
+
+func TestAddRemoteChain(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+	defer db.Close()
+
+	remoteChainId := uint16(100)
+	contractId := randomByte32()
+	err = db.addRemoteChain(contractId, remoteChainId)
+	assert.Nil(t, err)
+	chainContractId, err := db.getTokenBridgeForChain(remoteChainId)
+	assert.Nil(t, err)
+	assert.Equal(t, *chainContractId, contractId)
+
+	chainId, err := db.getRemoteChainId(contractId)
+	assert.Nil(t, err)
+	assert.Equal(t, *chainId, remoteChainId)
 }

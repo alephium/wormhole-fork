@@ -149,8 +149,17 @@ func (db *Database) GetLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (
 	return toByte32(value)
 }
 
-func (db *Database) addTokenBridgeForChain(chainId uint16, tokenBridgeForChainId Byte32) error {
-	return db.put(tokenBridgeForChainKey(chainId), tokenBridgeForChainId[:])
+func (db *Database) addRemoteChain(tokenBridgeForChainId Byte32, remoteChainId uint16) error {
+	batch := db.NewWriteBatch()
+	defer batch.Cancel()
+
+	if err := batch.Set(tokenBridgeForChainKey(remoteChainId), tokenBridgeForChainId[:]); err != nil {
+		return err
+	}
+	if err := batch.Set(remoteChainIdKey(tokenBridgeForChainId), Uint16ToBytes(remoteChainId)); err != nil {
+		return err
+	}
+	return batch.Flush()
 }
 
 func (db *Database) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
@@ -159,10 +168,6 @@ func (db *Database) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
 		return nil, err
 	}
 	return toByte32(value)
-}
-
-func (db *Database) addRemoteChainId(tokenBridgeForChainId Byte32, remoteChainId uint16) error {
-	return db.put(remoteChainIdKey(tokenBridgeForChainId), Uint16ToBytes(remoteChainId))
 }
 
 func (db *Database) getRemoteChainId(tokenBridgeForChainId Byte32) (*uint16, error) {

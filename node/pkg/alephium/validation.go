@@ -13,11 +13,8 @@ func (w *Watcher) validateTokenBridgeForChainCreatedEvents(event *tokenBridgeFor
 	if !event.senderId.equalWith(w.tokenBridgeContractId) {
 		return true, fmt.Errorf("invalid sender for token bridge for chain created event, expected %v, have %v", w.tokenBridgeContractId.ToHex(), event.senderId.ToHex())
 	}
-	if err := w.db.addTokenBridgeForChain(event.remoteChainId, event.contractId); err != nil {
-		return false, fmt.Errorf("failed to persist token bridge for chain to db, err %v", err)
-	}
-	if err := w.db.addRemoteChainId(event.contractId, event.remoteChainId); err != nil {
-		return false, fmt.Errorf("failed to persist remote chain id to db, err %v", err)
+	if err := w.db.addRemoteChain(event.contractId, event.remoteChainId); err != nil {
+		return false, fmt.Errorf("failed to persist remote chain to db, err %v", err)
 	}
 	w.tokenBridgeForChainCache.Store(event.remoteChainId, &event.contractId)
 	w.remoteChainIdCache.Store(event.contractId, &event.remoteChainId)
