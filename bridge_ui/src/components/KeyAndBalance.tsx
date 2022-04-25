@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -29,6 +30,11 @@ function KeyAndBalance({ chainId }: { chainId: ChainId }) {
         <TerraWalletKey />
       </>
     );
+  }
+  if (chainId === CHAIN_ID_ALEPHIUM) {
+    return (
+      <></>
+    )
   }
   return null;
 }

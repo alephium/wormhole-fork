@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -12,6 +13,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
+  ALEPHIUM_HOST,
   getDefaultNativeCurrencySymbol,
   SOLANA_HOST,
   TERRA_HOST,
@@ -20,6 +22,7 @@ import { getMultipleAccountsRPC } from "../utils/solana";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import useIsWalletReady from "./useIsWalletReady";
 import { LCDClient } from "@terra-money/terra.js";
+import { CliqueClient } from "alephium-web3";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -39,6 +42,7 @@ const SOLANA_THRESHOLD_LAMPORTS: bigint = BigInt(300000);
 const ETHEREUM_THRESHOLD_WEI: bigint = BigInt(35000000000000000);
 const TERRA_THRESHOLD_ULUNA: bigint = BigInt(100000);
 const TERRA_THRESHOLD_UUSD: bigint = BigInt(10000000);
+const ALEPHIUM_THRESHOLD: bigint = BigInt(1000000000000);
 
 const isSufficientBalance = (
   chainId: ChainId,
@@ -53,6 +57,9 @@ const isSufficientBalance = (
   }
   if (isEVMChain(chainId)) {
     return balance > ETHEREUM_THRESHOLD_WEI;
+  }
+  if (CHAIN_ID_ALEPHIUM === chainId) {
+    return balance > ALEPHIUM_THRESHOLD;
   }
   if (terraFeeDenom === "uluna") {
     return balance > TERRA_THRESHOLD_ULUNA;
@@ -129,6 +136,21 @@ const getBalancesTerra = async (walletAddress: string) => {
       return Promise.reject();
     });
 };
+
+const getBalancesAlephium = async (walletAddress: string) => {
+  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+  return client
+    .addresses
+    .getAddressesAddressBalance(walletAddress)
+    .then((response) => {
+      const total = BigInt(response.data.balance)
+      const locked = BigInt(response.data.lockedBalance)
+      return total - locked
+    })
+    .catch((e) => {
+      return Promise.reject("failed to get alephium balance, err: " + e);
+    })
+}
 
 const toBalanceString = (balance: bigint | undefined, chainId: ChainId) => {
   if (!chainId || balance === undefined) {
@@ -207,6 +229,20 @@ export default function useTransactionFees(chainId: ChainId) {
           setError("Cannot load wallet balance");
         }
       );
+    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress) {
+      loadStart();
+      getBalancesAlephium(walletAddress).then(
+        (result) => {
+          const adjustedresult =
+              result === undefined || result === null ? BigInt(0) : result;
+          setIsLoading(false);
+          setBalance(adjustedresult);
+        },
+        (error) => {
+          setIsLoading(false);
+          setError("Cannot load wallet balance");
+        }
+      )
     }
   }, [provider, walletAddress, isReady, chainId, loadStart]);
 

@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
@@ -995,6 +996,9 @@ function useGetAvailableTokens(nft: boolean = false) {
   //At present, we don't have any mechanism for doing this.
   useEffect(() => {}, []);
 
+  //Alephium account load
+  useEffect(() => {}, [])
+
   const ethAccounts = useMemo(() => {
     const output = { ...tokenAccounts };
     output.data = output.data?.slice() || [];
@@ -1032,6 +1036,10 @@ function useGetAvailableTokens(nft: boolean = false) {
         resetAccounts: resetSourceAccounts,
       }
     : lookupChain === CHAIN_ID_TERRA
+    ? {
+        resetAccounts: resetSourceAccounts,
+      }
+    : lookupChain === CHAIN_ID_ALEPHIUM
     ? {
         resetAccounts: resetSourceAccounts,
       }

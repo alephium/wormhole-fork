@@ -1,10 +1,12 @@
 import {
+  attestFromAlph,
   attestFromEth,
   attestFromSolana,
   attestFromTerra,
   ChainId,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  CHAIN_ID_ALEPHIUM,
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
@@ -25,6 +27,7 @@ import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
@@ -40,7 +43,10 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
+import { getAlphConfirmedTxInfo } from "../utils/alephium";
 import {
+  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+  alphMessageFee,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   SOLANA_HOST,
@@ -203,6 +209,47 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  wallet: AlephiumWallet,
+  localTokenId: string
+) {
+  dispatch(setIsSending(true));
+  try {
+    const result = await attestFromAlph(
+      wallet.signer,
+      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      localTokenId,
+      wallet.address,
+      alphMessageFee
+    );
+    const txInfo = await getAlphConfirmedTxInfo(wallet.signer.client, result.txId)
+    dispatch(setAttestTx({ id: result.txId, block: txInfo.blockHeight }));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+    enqueueSnackbar(null, {
+      content: <Alert severity="info">Fetching VAA</Alert>,
+    });
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      txInfo.sequence().toString()
+    );
+    dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+    });
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsSending(false));
+  }
+}
+
 export function useHandleAttest() {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -216,6 +263,7 @@ export function useHandleAttest() {
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const alephiumWallet = useAlephiumWallet();
   const disabled = !isTargetComplete || isSending || isSendComplete;
   const handleAttestClick = useCallback(() => {
     if (isEVMChain(sourceChain) && !!signer) {
@@ -224,7 +272,8 @@ export function useHandleAttest() {
       solana(dispatch, enqueueSnackbar, solPK, sourceAsset, solanaWallet);
     } else if (sourceChain === CHAIN_ID_TERRA && !!terraWallet) {
       terra(dispatch, enqueueSnackbar, terraWallet, sourceAsset, terraFeeDenom);
-    } else {
+    } else if (sourceChain === CHAIN_ID_ALEPHIUM && !!alephiumWallet) {
+      alephium(dispatch, enqueueSnackbar, alephiumWallet, sourceAsset)
     }
   }, [
     dispatch,
@@ -234,6 +283,7 @@ export function useHandleAttest() {
     solanaWallet,
     solPK,
     terraWallet,
+    alephiumWallet,
     sourceAsset,
     terraFeeDenom,
   ]);

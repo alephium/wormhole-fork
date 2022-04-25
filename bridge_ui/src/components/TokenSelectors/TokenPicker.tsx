@@ -21,7 +21,7 @@ import { InfoOutlined, Launch } from "@material-ui/icons";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import { Alert } from "@material-ui/lab";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -364,11 +364,15 @@ export default function TokenPicker({
           (option: NFTParsedTokenAccount) => featuredMarkets?.[option.mintKey]
         )
         .map(
-          (option) =>
-            ({
+          (option) => {
+            const fromMarkets = marketsData?.tokens?.[chainId]?.[option.mintKey]
+            return ({
               ...option,
+              symbol: fromMarkets?.symbol,
+              logo: fromMarkets?.logo,
               markets: featuredMarkets[option.mintKey].markets,
             } as MarketParsedTokenAccount)
+          }
         );
       return [
         ...ownedMarketTokens,
@@ -394,7 +398,7 @@ export default function TokenPicker({
       ].filter(searchFilter);
     }
     return [];
-  }, [nft, marketChainTokens, featuredMarkets, options, searchFilter]);
+  }, [chainId, nft, marketsData, marketChainTokens, featuredMarkets, options, searchFilter]);
 
   const nonFeaturedOptions = useMemo(() => {
     return options.filter(

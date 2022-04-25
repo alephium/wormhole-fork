@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getOriginalAssetEth,
@@ -30,6 +31,8 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   SOLANA_HOST,
@@ -37,6 +40,8 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
 } from "../utils/consts";
+import { CliqueClient, groupOfAddress, tokenIdFromAddress } from "alephium-web3";
+import { ValByteVec, ValU256 } from 'alephium-web3/api/alephium';
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -51,6 +56,31 @@ const makeStateSafe = (
   ...info,
   assetAddress: uint8ArrayToHex(info.assetAddress),
 });
+
+async function getAlephiumTokenInfo(tokenAddress: string): Promise<StateSafeWormholeWrappedInfo> {
+  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+  return client
+    .contracts
+    .getContractsAddressState(tokenAddress, {group: groupOfAddress(tokenAddress)})
+    .then(response => {
+      if (response.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
+        const originalAsset = (response.data.fields[4] as ValByteVec).value
+        return {
+          isWrapped: true,
+          chainId: parseInt((response.data.fields[3] as ValU256).value) as ChainId,
+          assetAddress: originalAsset,
+          tokenId: originalAsset
+        }
+      } else {
+        return {
+          isWrapped: false,
+          chainId: CHAIN_ID_ALEPHIUM,
+          assetAddress: tokenAddress,
+          tokenId: uint8ArrayToHex(tokenIdFromAddress(tokenAddress))
+        }
+      }
+    })
+}
 
 // Check if the tokens in the configured source chain/address are wrapped
 // tokens. Wrapped tokens are tokens that are non-native, I.E, are locked up on
@@ -131,6 +161,14 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           );
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
+          }
+        } catch (e) {}
+      }
+      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset) {
+        try {
+          const wrappedInfo = await getAlephiumTokenInfo(sourceAsset)
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
           }
         } catch (e) {}
       }

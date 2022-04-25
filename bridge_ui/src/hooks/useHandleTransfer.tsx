@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
@@ -16,7 +17,10 @@ import {
   transferFromTerra,
   transferNativeSol,
   uint8ArrayToHex,
+  transferRemoteTokenFromAlph,
+  transferLocalTokenFromAlph,
 } from "@certusone/wormhole-sdk";
+import { SubmissionResult } from "alephium-web3";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
@@ -50,6 +54,9 @@ import {
   setTransferTx,
 } from "../store/transferSlice";
 import {
+  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+  alphArbiterFee,
+  alphMessageFee,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   SOLANA_HOST,
@@ -62,6 +69,12 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
+import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import {
+  getAlphConfirmedTxInfo,
+  getLocalTokenWrapperIdWithRetry,
+} from "../utils/alephium";
+import { tokenIdFromAddress } from "alephium-web3";
 
 async function evm(
   dispatch: any,
@@ -209,6 +222,71 @@ async function solana(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  wallet: AlephiumWallet,
+  tokenAddress: string,
+  isLocalToken: boolean,
+  amount: string,
+  decimals: number,
+  targetChain: ChainId,
+  targetAddress: Uint8Array,
+) {
+  dispatch(setIsSending(true))
+  try {
+    const amountParsed = parseUnits(amount, decimals).toBigInt()
+    const tokenId = uint8ArrayToHex(tokenIdFromAddress(tokenAddress))
+    let result: SubmissionResult
+    if (isLocalToken) {
+      const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
+      result = await transferLocalTokenFromAlph(
+        wallet.signer,
+        tokenWrapperId,
+        wallet.address,
+        tokenId,
+        uint8ArrayToHex(targetAddress),
+        amountParsed,
+        alphMessageFee,
+        alphArbiterFee
+      )
+    } else {
+      result = await transferRemoteTokenFromAlph(
+        wallet.signer,
+        tokenId,
+        wallet.address,
+        uint8ArrayToHex(targetAddress),
+        amountParsed,
+        alphMessageFee,
+        alphArbiterFee
+      )
+    }
+    const txInfo = await getAlphConfirmedTxInfo(wallet.signer.client, result.txId)
+    dispatch(setTransferTx({ id: result.txId, block: txInfo.blockHeight }));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+    enqueueSnackbar(null, {
+      content: <Alert severity="info">Fetching VAA</Alert>,
+    });
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      txInfo.sequence().toString()
+    );
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+    });
+    dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsSending(false));
+  }
+}
+
 async function terra(
   dispatch: any,
   enqueueSnackbar: any,
@@ -289,6 +367,7 @@ export function useHandleTransfer() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
+  const alephiumWallet = useAlephiumWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
@@ -360,7 +439,24 @@ export function useHandleTransfer() {
         targetAddress,
         terraFeeDenom
       );
-    } else {
+    } else if (
+      sourceChain === CHAIN_ID_ALEPHIUM &&
+      !!alephiumWallet &&
+      !!sourceAsset &&
+      decimals !== undefined &&
+      !!targetAddress
+    ) {
+      alephium(
+        dispatch,
+        enqueueSnackbar,
+        alephiumWallet,
+        sourceAsset,
+        originChain === CHAIN_ID_ALEPHIUM,
+        amount,
+        decimals,
+        targetChain,
+        targetAddress
+      )
     }
   }, [
     dispatch,
@@ -370,6 +466,7 @@ export function useHandleTransfer() {
     solanaWallet,
     solPK,
     terraWallet,
+    alephiumWallet,
     sourceTokenPublicKey,
     sourceAsset,
     amount,

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.2.0",
+    "@certusone/wormhole-sdk": "file:../sdk/js",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
@@ -26,6 +26,7 @@
     "@solana/wallet-base": "^0.0.1",
     "@solana/web3.js": "^1.24.1",
     "@terra-money/wallet-provider": "^3.8.0",
+    "alephium-web3": "^0.3.0",
     "axios": "^0.21.1",
     "bech32": "^1.1.4",
     "bn.js": "^5.1.3",

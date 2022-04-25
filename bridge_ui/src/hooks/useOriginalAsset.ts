@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getOriginalAssetEth,
@@ -9,6 +10,7 @@ import {
   isEVMChain,
   uint8ArrayToHex,
   uint8ArrayToNative,
+  WormholeWrappedInfo,
 } from "@certusone/wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
@@ -26,6 +28,8 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   SOLANA_HOST,
@@ -35,12 +39,37 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
+import { CliqueClient, groupOfAddress, tokenIdFromAddress } from "alephium-web3";
+import { ValU256, ValByteVec } from "alephium-web3/api/api-alephium"
 
 export type OriginalAssetInfo = {
   originChain: ChainId | null;
   originAddress: string | null;
   originTokenId: string | null;
 };
+
+async function getAlephiumTokenInfo(tokenAddress: string): Promise<WormholeWrappedInfo> {
+  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+  return client
+    .contracts
+    .getContractsAddressState(tokenAddress, {group: groupOfAddress(tokenAddress)})
+    .then(response => {
+      if (response.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
+        const originalAsset = Buffer.from((response.data.fields[4] as ValByteVec).value, 'hex')
+        return {
+          isWrapped: true,
+          chainId: parseInt((response.data.fields[3] as ValU256).value) as ChainId,
+          assetAddress: originalAsset,
+        }
+      } else {
+        return {
+          isWrapped: false,
+          chainId: CHAIN_ID_ALEPHIUM,
+          assetAddress: tokenIdFromAddress(tokenAddress),
+        }
+      }
+    })
+}
 
 export async function getOriginalAssetToken(
   foreignChain: ChainId,
@@ -66,6 +95,8 @@ export async function getOriginalAssetToken(
     } else if (foreignChain === CHAIN_ID_TERRA) {
       const lcd = new LCDClient(TERRA_HOST);
       promise = await getOriginalAssetTerra(lcd, foreignNativeStringAddress);
+    } else if (foreignChain === CHAIN_ID_ALEPHIUM) {
+      promise = await getAlephiumTokenInfo(foreignNativeStringAddress);
     }
   } catch (e) {
     promise = Promise.reject("Invalid foreign arguments.");

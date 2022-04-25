@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
@@ -21,6 +22,10 @@ import oasisIcon from "../icons/oasis-network-rose-logo.svg";
 import polygonIcon from "../icons/polygon.svg";
 import solanaIcon from "../icons/solana.svg";
 import terraIcon from "../icons/terra.svg";
+import alephiumIcon from "../icons/alephium.svg";
+
+export const alphMessageFee = BigInt("0")
+export const alphArbiterFee = BigInt("0")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =
@@ -33,6 +38,11 @@ export interface ChainInfo {
   id: ChainId;
   name: string;
   logo: string;
+}
+const alephiumChainInfo: ChainInfo = {
+  id: CHAIN_ID_ALEPHIUM,
+  name: "Alephium",
+  logo: alephiumIcon
 }
 export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
@@ -77,6 +87,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ]
     : CLUSTER === "testnet"
     ? [
@@ -125,6 +136,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ]
     : [
         {
@@ -147,6 +159,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ];
 export const BETA_CHAINS: ChainId[] = CLUSTER === "mainnet" ? [] : [];
 export const CHAINS_WITH_NFT_SUPPORT = CHAINS.filter(
@@ -274,6 +287,14 @@ export const TERRA_HOST =
         chainID: "columbus-5",
         name: "localterra",
       };
+
+export const ALEPHIUM_HOST =
+  CLUSTER === "mainnet"
+    ? "http://127.0.0.1:12973"
+    : CLUSTER === "testnet"
+    ? "http://127.0.0.1:12973"
+    : "http://127.0.0.1:22973"
+
 export const ETH_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
@@ -459,6 +480,31 @@ export const TERRA_TOKEN_BRIDGE_ADDRESS =
     ? "terra1pseddrv0yfsn76u4zxrjmtf45kdlmalswdv39a"
     : "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4";
 
+export const ALEPHIUM_BRIDGE_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : "0000000000000000000000000000000000000000000000000000000000000000";
+export const ALEPHIUM_EVENT_EMITTER =
+  CLUSTER === "mainnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : "0000000000000000000000000000000000000000000000000000000000000000";
+export const ALEPHIUM_TOKEN_BRIDGE_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : "0000000000000000000000000000000000000000000000000000000000000000";
+export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH =
+  CLUSTER === "mainnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : "0000000000000000000000000000000000000000000000000000000000000000";
+
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_BRIDGE_ADDRESS
@@ -478,6 +524,8 @@ export const getBridgeAddressForChain = (chainId: ChainId) =>
     ? OASIS_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_FANTOM
     ? FANTOM_BRIDGE_ADDRESS
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? ALEPHIUM_BRIDGE_ADDRESS
     : "";
 export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
@@ -516,6 +564,8 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
     ? OASIS_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_FANTOM
     ? FANTOM_TOKEN_BRIDGE_ADDRESS
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? ALEPHIUM_TOKEN_BRIDGE_ADDRESS
     : "";
 
 export const COVALENT_API_KEY = process.env.REACT_APP_COVALENT_API_KEY

@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
@@ -42,7 +43,10 @@ import useIsWalletReady from "../hooks/useIsWalletReady";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
+import { getAlphConfirmedTxInfo } from "../utils/alephium";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
@@ -61,6 +65,7 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
+import { CliqueClient } from "alephium-web3";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -149,6 +154,25 @@ async function terra(tx: string, enqueueSnackbar: any) {
       emitterAddress,
       sequence,
       WORMHOLE_RPC_HOSTS.length
+    );
+    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    return { vaa: null, error: parseError(e) };
+  }
+}
+
+async function alephium(txId: string, enqueueSnackbar: any) {
+  try {
+    const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+    const txInfo = await getAlphConfirmedTxInfo(client, txId);
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      txInfo.sequence().toString()
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
   } catch (e) {
@@ -270,6 +294,21 @@ export default function Recovery() {
         setRecoverySourceTxIsLoading(true);
         (async () => {
           const { vaa, error } = await terra(recoverySourceTx, enqueueSnackbar);
+          if (!cancelled) {
+            setRecoverySourceTxIsLoading(false);
+            if (vaa) {
+              setRecoverySignedVAA(vaa);
+            }
+            if (error) {
+              setRecoverySourceTxError(error);
+            }
+          }
+        })();
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+        setRecoverySourceTxError("");
+        setRecoverySourceTxIsLoading(true);
+        (async () => {
+          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {

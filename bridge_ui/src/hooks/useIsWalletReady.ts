@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -7,6 +8,7 @@ import {
 import { hexlify, hexStripZeros } from "@ethersproject/bytes";
 import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useCallback, useMemo } from "react";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
@@ -36,6 +38,7 @@ function useIsWalletReady(
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
+  const alephiumWallet = useAlephiumWallet();
   const hasTerraWallet = !!terraWallet;
   const {
     provider,
@@ -60,6 +63,14 @@ function useIsWalletReady(
   }, [provider, correctEvmNetwork, chainId]);
 
   return useMemo(() => {
+    if (chainId === CHAIN_ID_ALEPHIUM) {
+      return createWalletStatus(
+        true,
+        undefined,
+        forceNetworkSwitch,
+        alephiumWallet.address
+      );
+    }
     if (
       chainId === CHAIN_ID_TERRA &&
       hasTerraWallet &&
@@ -120,6 +131,7 @@ function useIsWalletReady(
     provider,
     signerAddress,
     terraWallet,
+    alephiumWallet,
   ]);
 }
 

@@ -1,9 +1,11 @@
 import {
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
   isNativeDenom,
   TokenImplementation__factory,
+  uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
@@ -11,6 +13,7 @@ import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { formatUnits } from "ethers/lib/utils";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
@@ -18,10 +21,11 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetParsedTokenAccount } from "../store/transferSlice";
-import { getEvmChainId, SOLANA_HOST, TERRA_HOST } from "../utils/consts";
+import { ALEPHIUM_HOST, getEvmChainId, SOLANA_HOST, TERRA_HOST } from "../utils/consts";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
+import { CliqueClient, tokenIdFromAddress } from "alephium-web3";
 
 function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
@@ -41,6 +45,7 @@ function useGetTargetParsedTokenAccounts() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
+  const alephiumWallet = useAlephiumWallet();
   const {
     provider,
     signerAddress,
@@ -56,6 +61,45 @@ function useGetTargetParsedTokenAccounts() {
     }
     let cancelled = false;
 
+    if (targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet) {
+      const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+      const tokenId = uint8ArrayToHex(tokenIdFromAddress(targetAsset))
+      client
+        .addresses
+        .getAddressesAddressUtxos(alephiumWallet.address)
+        .then((response) => {
+          let now = Date.now();
+          let balance = BigInt(0);
+          response.data.utxos.forEach(utxo => {
+            if (now > utxo.lockTime) {
+              utxo.tokens.filter(t => t.id === tokenId).forEach(t =>
+                balance = balance + BigInt(t.amount)
+              )
+            }
+          });
+
+          // TODO: get token decimals
+          const decimals = 8
+          const uiAmount = formatUnits(balance, decimals)
+          dispatch(
+            setTargetParsedTokenAccount(
+              createParsedTokenAccount(
+                alephiumWallet.address,
+                targetAsset,
+                balance.toString(),
+                decimals,
+                parseFloat(uiAmount),
+                uiAmount
+              )
+            )
+          )
+        })
+        .catch(() => {
+          if (!cancelled) {
+            // TODO: error state
+          }
+        })
+    }
     if (targetChain === CHAIN_ID_TERRA && terraWallet) {
       const lcd = new LCDClient(TERRA_HOST);
       if (isNativeDenom(targetAsset)) {
@@ -214,6 +258,7 @@ function useGetTargetParsedTokenAccounts() {
     solanaWallet,
     solPK,
     terraWallet,
+    alephiumWallet,
     hasCorrectEvmNetwork,
     hasResolvedMetadata,
     symbol,

@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import BackgroundImage from "./components/BackgroundImage";
+import { AlephiumWalletProvider } from "./contexts/AlephiumWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
 import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
@@ -25,10 +26,12 @@ ReactDOM.render(
               <SolanaWalletProvider>
                 <EthereumProviderProvider>
                   <TerraWalletProvider>
-                    <HashRouter>
-                      <BackgroundImage />
-                      <App />
-                    </HashRouter>
+                    <AlephiumWalletProvider>
+                      <HashRouter>
+                        <BackgroundImage />
+                        <App />
+                      </HashRouter>
+                    </AlephiumWalletProvider>
                   </TerraWalletProvider>
                 </EthereumProviderProvider>
               </SolanaWalletProvider>

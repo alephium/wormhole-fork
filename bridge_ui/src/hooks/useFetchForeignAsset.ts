@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getForeignAssetEth,
   getForeignAssetSolana,
@@ -23,6 +24,7 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
+import { getRemoteTokenWrapperIdWithRetry } from "../utils/alephium";
 
 export type ForeignAssetInfo = {
   doesExist: boolean;
@@ -107,6 +109,10 @@ function useFetchForeignAsset(
               originChain,
               hexToUint8Array(originAssetHex)
             )
+        : foreignChain === CHAIN_ID_ALEPHIUM
+        ? () => {
+          return getRemoteTokenWrapperIdWithRetry(originAssetHex)
+        }
         : foreignChain === CHAIN_ID_TERRA
         ? () => {
             const lcd = new LCDClient(TERRA_HOST);
