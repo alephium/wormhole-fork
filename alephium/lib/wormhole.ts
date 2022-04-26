@@ -22,7 +22,8 @@ interface ContractInfo {
 export interface WormholeContracts {
     governance: DeployResult,
     tokenBridge: DeployResult,
-    tokenWrapperFactory:DeployResult 
+    tokenWrapperFactory: DeployResult
+    eventEmitter: DeployResult
 }
 
 export class Wormhole {
@@ -121,7 +122,8 @@ export class Wormhole {
         return {
             governance: governanceDeployResult,
             tokenBridge: tokenBridgeDeployResult,
-            tokenWrapperFactory: tokenWrapperFactoryDeployResult
+            tokenWrapperFactory: tokenWrapperFactoryDeployResult,
+            eventEmitter: eventEmitter
         }
     }
 

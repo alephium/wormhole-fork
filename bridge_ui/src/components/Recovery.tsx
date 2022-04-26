@@ -46,7 +46,7 @@ import { setRecoveryVaa } from "../store/transferSlice";
 import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
   ALEPHIUM_HOST,
-  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
@@ -171,7 +171,7 @@ async function alephium(txId: string, enqueueSnackbar: any) {
     const txInfo = await getAlphTxInfoByTxId(client, txId);
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
       txInfo.sequence()
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };

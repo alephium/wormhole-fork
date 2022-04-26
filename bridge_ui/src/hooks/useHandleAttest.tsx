@@ -45,7 +45,7 @@ import {
 } from "../store/selectors";
 import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import {
-  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphMessageFee,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
@@ -221,7 +221,7 @@ async function alephium(
       wallet.signer.client, async () => {
         const result = await attestFromAlph(
           wallet.signer,
-          ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
           localTokenId,
           wallet.address,
           alphMessageFee
@@ -238,7 +238,7 @@ async function alephium(
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
       txInfo.sequence()
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));

@@ -54,7 +54,7 @@ import {
   setTransferTx,
 } from "../store/transferSlice";
 import {
-  ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphArbiterFee,
   alphMessageFee,
   getBridgeAddressForChain,
@@ -275,7 +275,7 @@ async function alephium(
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
       txInfo.sequence()
     );
     enqueueSnackbar(null, {
