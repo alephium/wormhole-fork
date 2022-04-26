@@ -504,6 +504,18 @@ export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH =
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : "0000000000000000000000000000000000000000000000000000000000000000";
+export const ALEPHIUM_GROUP_INDEX =
+  CLUSTER === "mainnet"
+    ? 0
+    : CLUSTER === "testnet"
+    ? 0
+    : 3;
+export const ALEPHIUM_CONFIRMATIONS =
+  CLUSTER === "mainnet"
+    ? 10
+    : CLUSTER === "testnet"
+    ? 10
+    : 1;
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

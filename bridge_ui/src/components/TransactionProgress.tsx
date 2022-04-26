@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
@@ -8,10 +9,11 @@ import {
 } from "@certusone/wormhole-sdk";
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
 import { Connection } from "@solana/web3.js";
+import { CliqueClient } from "alephium-web3";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_CONFIRMATIONS, ALEPHIUM_GROUP_INDEX, ALEPHIUM_HOST, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -69,6 +71,29 @@ export default function TransactionProgress({
         connection.removeSlotChangeListener(sub);
       };
     }
+    if (chainId === CHAIN_ID_ALEPHIUM) {
+      let cancelled = false;
+      const client = new CliqueClient({baseUrl: ALEPHIUM_HOST});
+      (async () => {
+        while (!cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+          try {
+            const chainInfo = await client.blockflow.getBlockflowChainInfo({
+              fromGroup: ALEPHIUM_GROUP_INDEX,
+              toGroup: ALEPHIUM_GROUP_INDEX
+            });
+            if (!cancelled) {
+              setCurrentBlock(chainInfo.data.currentHeight);
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
   }, [isSendComplete, chainId, provider, tx]);
   const blockDiff =
     tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
@@ -81,6 +106,8 @@ export default function TransactionProgress({
       ? 32
       : isEVMChain(chainId)
       ? 15
+      : chainId === CHAIN_ID_ALEPHIUM
+      ? ALEPHIUM_CONFIRMATIONS
       : 1;
   if (
     !isSendComplete &&
