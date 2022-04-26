@@ -2,9 +2,8 @@ import { binToHex, CliqueClient, contractIdFromAddress, Signer } from 'alephium-
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import * as env from './env'
-import { attestToken, deployTestToken } from './deploy_test_token'
-import { nonce } from '../lib/utils'
-import { getToken, transferLocal } from './transfer'
+import { deployTestToken } from './deploy_test_token'
+import { getToken } from './transfer'
 import { getCreatedContractAddress } from './get_contract_address'
 
 if (process.argv.length < 3) {
@@ -45,6 +44,18 @@ async function createWallet() {
     console.log('create test wallet succeed')
 }
 
+async function createTokenWrapper(
+    wormhole: Wormhole,
+    localTokenId: string,
+    tokenBridgeForChainId: string,
+    remoteChain: string
+) {
+    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, env.payer, env.dustAmount)
+    let tokenWrapper = await getCreatedContractAddress(client, txId)
+    const tokenWrapperForEth = binToHex(contractIdFromAddress(tokenWrapper))
+    console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperForEth)
+}
+
 async function deploy() {
     await createWallet()
 
@@ -53,34 +64,15 @@ async function deploy() {
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
     const testTokenId = await deployTestToken(client, signer)
-    await attestToken(
-        client, signer, contracts.tokenBridge.contractId, nonce(), testTokenId
-    )
+    console.log("local token id: " + testTokenId)
 
     const tokenAmount = env.oneAlph * 10n
     const getTokenTxId = await getToken(client, signer, testTokenId, env.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
-    const createWrapperTxId = await wormhole.createWrapperForLocalToken(remoteChains.eth, testTokenId, env.payer, env.oneAlph)
-    const tokenWrapper = await getCreatedContractAddress(client, createWrapperTxId)
-    const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
-    console.log('local token id: ' + testTokenId + ', token wrapper id: ' + tokenWrapperId)
-    // transfer to eth
-    const transferAmount = env.oneAlph * 5n
-    const arbiterFee = env.messageFee
-    // privateKey: 89dd2124dd1366f30bc5edfa9025f56e1aaa56d0a7786181df43aa8ee2520c9d
-    const receiver = '0d0F183465284CB5cb426902445860456ed59b34'
-    const transferTxId = await transferLocal(
-        client,
-        signer,
-        tokenWrapperId,
-        testTokenId,
-        env.payer,
-        receiver.padStart(64, '0'),
-        transferAmount,
-        arbiterFee
-    )
-    console.log('transfer local token txId: ' + transferTxId)
+    await createTokenWrapper(wormhole, testTokenId, remoteChains.eth, "eth")
+    await createTokenWrapper(wormhole, testTokenId, remoteChains.terra, "terra")
+    await createTokenWrapper(wormhole, testTokenId, remoteChains.bsc, "bsc")
 }
 
 deploy()

@@ -268,6 +268,12 @@ docker_build(
   dockerfile = "./alephium/Dockerfile"
 )
 
+docker_build(
+    ref = "alephium-contracts",
+    context = "./alephium",
+    dockerfile = "./alephium/Dockerfile.contracts"
+)
+
 k8s_yaml_with_ns("devnet/alph-devnet.yaml")
 
 k8s_resource(

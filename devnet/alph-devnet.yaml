@@ -51,4 +51,18 @@ spec:
             tcpSocket:
               port: 12973
 #            initialDelaySeconds: 20
+        - name: alph-contracts
+          image: alephium-contracts
+          command:
+            - /bin/sh
+            - -c
+            - "sh /alephium/deploy.sh && touch /alephium/success && sleep infinity"
+          readinessProbe:
+            exec:
+              command:
+                - test
+                - -e
+                - "/alephium/success"
+            initialDelaySeconds: 5
+            periodSeconds: 5
 
