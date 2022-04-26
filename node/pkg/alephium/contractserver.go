@@ -10,6 +10,7 @@ import (
 	alephiumv1 "github.com/certusone/wormhole/node/pkg/proto/alephium/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type contractService struct {
@@ -64,15 +65,15 @@ func (c *contractService) GetTokenBridgeForChainId(ctx context.Context, req *ale
 	}, nil
 }
 
-func contractServiceRunnable(db *Database, listenAddr string, logger *zap.Logger) (supervisor.Runnable, error) {
+func contractServiceRunnable(db *Database, listenAddr string, logger *zap.Logger) (supervisor.Runnable, *grpc.Server, error) {
 	l, err := net.Listen("tcp", listenAddr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	service := &contractService{
 		db: db,
 	}
 	grpcServer := common.NewInstrumentedGRPCServer(logger)
 	alephiumv1.RegisterContractServiceServer(grpcServer, service)
-	return supervisor.GRPCServer(grpcServer, l, false), nil
+	return supervisor.GRPCServer(grpcServer, l, false), grpcServer, nil
 }

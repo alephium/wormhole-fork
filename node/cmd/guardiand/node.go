@@ -28,7 +28,9 @@ import (
 	"github.com/certusone/wormhole/node/pkg/devnet"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	"github.com/certusone/wormhole/node/pkg/processor"
+	alephiumv1 "github.com/certusone/wormhole/node/pkg/proto/alephium/v1"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
+	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
 	"github.com/certusone/wormhole/node/pkg/readiness"
 	"github.com/certusone/wormhole/node/pkg/reporter"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
@@ -100,6 +102,7 @@ var (
 	alphRPC               *string
 	alphApiKey            *string
 	alphContractServerRPC *string
+	alphContractWebServer *string
 	alphContractIds       *[]string
 	alphGroupIndex        *uint8
 	alphMinConfirmations  *uint8
@@ -190,6 +193,7 @@ func init() {
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphContractServerRPC = NodeCmd.Flags().String("alphContractServerRpc", "", "Listen address for alephium contract server gRPC interface (required)")
+	alphContractWebServer = NodeCmd.Flags().String("alphContractWebServer", "", "Listen address for alephium contract server REST interface")
 	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
 	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
@@ -732,8 +736,8 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to create admin service socket", zap.Error(err))
 	}
 
-	publicwebService, err := publicwebServiceRunnable(logger, *publicWeb, *adminSocketPath, publicrpcServer,
-		*tlsHostname, *tlsProdEnv, path.Join(*dataDir, "autocert"))
+	publicwebService, err := publicwebServiceRunnable(logger, *publicWeb, *publicRPC, publicrpcServer,
+		*tlsHostname, *tlsProdEnv, path.Join(*dataDir, "autocert"), publicrpcv1.RegisterPublicRPCServiceHandler)
 	if err != nil {
 		log.Fatal("failed to create publicrpc service socket", zap.Error(err))
 	}
@@ -816,13 +820,22 @@ func runNode(cmd *cobra.Command, args []string) {
 				return err
 			}
 
-			contractServer, err := alphWatcher.ContractServer(logger, *alphContractServerRPC)
+			contractServer, contractGrpcServer, err := alphWatcher.ContractServer(logger, *alphContractServerRPC)
 			if err != nil {
 				logger.Error("failed to create alephium contract server", zap.Error(err))
 				return err
 			}
+			contractWebServer, err := publicwebServiceRunnable(logger, *alphContractWebServer, *alphContractServerRPC, contractGrpcServer,
+				*tlsHostname, *tlsProdEnv, path.Join(*dataDir, "autocert"), alephiumv1.RegisterContractServiceHandler)
+			if err != nil {
+				log.Fatal("failed to create alephium contract web server socket", zap.Error(err))
+			}
 			if err := supervisor.Run(ctx, "alph-contract-server", contractServer); err != nil {
 				logger.Error("failed to run alephium contract server", zap.Error(err))
+				return err
+			}
+			if err := supervisor.Run(ctx, "alph-contract-web-server", contractWebServer); err != nil {
+				logger.Error("failed to run alephium contract web server")
 				return err
 			}
 			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {

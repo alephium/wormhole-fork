@@ -203,7 +203,8 @@ k8s_resource(
         port_forward(7070, name = "Public gRPC [:7070]", host = webHost),
         port_forward(7071, name = "Public REST [:7071]", host = webHost),
         port_forward(2345, name = "Debugger [:2345]", host = webHost),
-        port_forward(31102, name = "Alph contract server [:31102]", host = webHost)
+        port_forward(31102, name = "Alph contract grpc server [:31102]", host = webHost),
+        port_forward(31103, name = "Alph contract rest server [:31103]", host = webHost),
     ],
     labels = ["guardian"],
     trigger_mode = trigger_mode,

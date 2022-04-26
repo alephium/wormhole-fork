@@ -17,7 +17,10 @@ spec:
       name: public-rest
       protocol: TCP
     - port: 31102
-      name: alph-server
+      name: alph-grpc
+      protocol: TCP
+    - port: 31103
+      name: alph-rest
       protocol: TCP
   clusterIP: None
   selector:
@@ -108,6 +111,8 @@ spec:
             - http://alph-devnet:12973
             - --alphContractServerRpc
             - "[::]:31102"
+            - --alphContractWebServer
+            - "[::]:31103"
             - --alphContractIds
             - "23MARNtX1SpQ9YrSKtnkMbpGonpPYSJ8R1MKC7vXn1PGg,27qwq9utLRWJ4mmTbsDYfXeUhkGiRJbAiLsCPdPrqDgWB,zWY1GmNf5iC5eGu4Fhz8ywmbU8zDEwGGNTGnVTaMLcf6"
             - --alphGroupIndex
@@ -153,5 +158,8 @@ spec:
               name: debugger
               protocol: TCP
             - containerPort: 31102
-              name: alph-server
+              name: alph-grpc
+              protocol: TCP
+            - containerPort: 31103
+              name: alph-rest
               protocol: TCP

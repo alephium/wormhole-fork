@@ -14,6 +14,7 @@ import (
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 const MaxForkHeight = uint32(100)
@@ -103,7 +104,7 @@ func NewAlephiumWatcher(
 	}, nil
 }
 
-func (w *Watcher) ContractServer(logger *zap.Logger, listenAddr string) (supervisor.Runnable, error) {
+func (w *Watcher) ContractServer(logger *zap.Logger, listenAddr string) (supervisor.Runnable, *grpc.Server, error) {
 	return contractServiceRunnable(w.db, listenAddr, logger)
 }
 

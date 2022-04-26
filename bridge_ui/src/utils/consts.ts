@@ -212,6 +212,12 @@ export const WORMHOLE_RPC_HOSTS =
     : CLUSTER === "testnet"
     ? ["https://wormhole-v2-testnet-api.certus.one"]
     : ["http://localhost:7071"];
+export const WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST =
+  CLUSTER === "mainnet"
+    ? ""
+    : CLUSTER === "testnet"
+    ? ""
+    : "http://localhost:31103"
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1337;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
