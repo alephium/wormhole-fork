@@ -3,6 +3,7 @@ package alephium
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -57,8 +58,7 @@ type UnconfirmedEvents struct {
 }
 
 type ConfirmedEvents struct {
-	eventIndex uint64
-	events     []*UnconfirmedEvent
+	events []*UnconfirmedEvents
 }
 
 func NewAlephiumWatcher(
@@ -170,73 +170,84 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 		return nil
 	}
 
+	sort.Slice(confirmed.events, func(i, j int) bool {
+		return confirmed.events[i].eventIndex < confirmed.events[j].eventIndex
+	})
+
 	// TODO: batch write to db
-	for _, e := range confirmed.events {
-		logger.Debug("new confirmed event received", zap.String("event", e.event.ToString()))
+	for _, events := range confirmed.events {
+		for _, e := range events.events {
+			logger.Debug("new confirmed event received", zap.String("event", e.event.ToString()))
 
-		var skipIfError bool
-		var validateErr error
-		switch e.event.EventIndex {
-		case WormholeMessageEventIndex:
-			if skipWormholeMessage {
+			var skipIfError bool
+			var validateErr error
+			switch e.event.EventIndex {
+			case WormholeMessageEventIndex:
+				if skipWormholeMessage {
+					continue
+				}
+				event, err := e.event.ToWormholeMessage()
+				if err != nil {
+					logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
+					continue
+				}
+				skipIfError, validateErr = w.validateGovernanceMessages(event)
+				if validateErr == nil {
+					w.msgChan <- event.toMessagePublication(e.blockHeader)
+				}
+
+			case TokenBridgeForChainCreatedEventIndex:
+				event, err := e.event.toTokenBridgeForChainCreatedEvent()
+				if err != nil {
+					logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.ToString()))
+					continue
+				}
+				skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
+
+			case TokenWrapperCreatedEventIndex:
+				event, err := e.event.toTokenWrapperCreatedEvent()
+				if err != nil {
+					logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.ToString()))
+					continue
+				}
+				skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
+
+			case UndoneSequencesRemovedEventIndex:
+				event, err := e.event.toUndoneSequencesRemoved()
+				if err != nil {
+					logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.ToString()))
+					continue
+				}
+				skipIfError, validateErr = w.validateUndoneSequencesRemovedEvents(event, w.getRemoteChainId)
+
+			case UndoneSequenceCompletedEventIndex:
+				event, err := e.event.toUndoneSequenceCompleted()
+				if err != nil {
+					logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.ToString()))
+					continue
+				}
+				skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
+
+			default:
+				return fmt.Errorf("unknown event index %v", e.event.EventIndex)
+			}
+
+			if validateErr != nil && skipIfError {
+				logger.Error("ignore invalid event", zap.Error(validateErr))
 				continue
 			}
-			event, err := e.event.ToWormholeMessage()
-			if err != nil {
-				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
-				continue
+			if validateErr != nil && !skipIfError {
+				logger.Error("failed to validate event", zap.Error(validateErr))
+				return validateErr
 			}
-			skipIfError, validateErr = w.validateGovernanceMessages(event)
-			if validateErr == nil {
-				w.msgChan <- event.toMessagePublication(e.blockHeader)
-			}
-
-		case TokenBridgeForChainCreatedEventIndex:
-			event, err := e.event.toTokenBridgeForChainCreatedEvent()
-			if err != nil {
-				logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.ToString()))
-				continue
-			}
-			skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
-
-		case TokenWrapperCreatedEventIndex:
-			event, err := e.event.toTokenWrapperCreatedEvent()
-			if err != nil {
-				logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.ToString()))
-				continue
-			}
-			skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
-
-		case UndoneSequencesRemovedEventIndex:
-			event, err := e.event.toUndoneSequencesRemoved()
-			if err != nil {
-				logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.ToString()))
-				continue
-			}
-			skipIfError, validateErr = w.validateUndoneSequencesRemovedEvents(event, w.getRemoteChainId)
-
-		case UndoneSequenceCompletedEventIndex:
-			event, err := e.event.toUndoneSequenceCompleted()
-			if err != nil {
-				logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.ToString()))
-				continue
-			}
-			skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
-
-		default:
-			return fmt.Errorf("unknown event index %v", e.event.EventIndex)
 		}
 
-		if validateErr != nil && skipIfError {
-			logger.Error("ignore invalid event", zap.Error(validateErr))
-			continue
-		}
-		if validateErr != nil && !skipIfError {
-			logger.Error("failed to validate event", zap.Error(validateErr))
-			return validateErr
+		if err := w.db.updateLastEventIndex(events.eventIndex); err != nil {
+			logger.Error("failed to save last event index", zap.Error(err))
+			return err
 		}
 	}
-	return w.db.updateLastEventIndex(confirmed.eventIndex)
+	return nil
 }
 
 func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
@@ -299,6 +310,7 @@ func (w *Watcher) subscribe_(
 			return nil
 		}
 
+		confirmedEvents := make([]*UnconfirmedEvents, 0)
 		for blockHash, unconfirmedEvents := range pendingEvents {
 			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
 			if err != nil {
@@ -334,14 +346,18 @@ func (w *Watcher) subscribe_(
 				}
 			}
 
-			confirmedEvents := &ConfirmedEvents{
+			confirmedEvents = append(confirmedEvents, &UnconfirmedEvents{
 				events:     confirmed,
 				eventIndex: unconfirmedEvents.eventIndex,
-			}
-			if err := handler(logger, confirmedEvents, false); err != nil {
-				logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
-				return err
-			}
+			})
+		}
+		if len(confirmedEvents) == 0 {
+			return nil
+		}
+		confirmed := &ConfirmedEvents{confirmedEvents}
+		if err := handler(logger, confirmed, false); err != nil {
+			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
+			return err
 		}
 		return nil
 	}

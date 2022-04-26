@@ -73,18 +73,15 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 
-			confirmed := &ConfirmedEvents{
-				events: confirmedEvents,
-			}
-			if err := w.handleGovernanceMessages(logger, confirmed); err != nil {
+			if err := w.handleGovernanceMessages(logger, confirmedEvents); err != nil {
 				logger.Error("failed to reobserve transfer message", zap.Error(err))
 			}
 		}
 	}
 }
 
-func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed *ConfirmedEvents) error {
-	for _, e := range confirmed.events {
+func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed []*UnconfirmedEvent) error {
+	for _, e := range confirmed {
 		wormholeMsg, err := e.event.ToWormholeMessage()
 		if err != nil {
 			logger.Error("invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))

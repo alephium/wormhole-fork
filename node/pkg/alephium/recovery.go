@@ -67,10 +67,12 @@ func (w *Watcher) fetchEvents_(
 		allEvents = append(allEvents, unconfirmedEvents...)
 		from = events.NextStart
 	}
-	confirmed := &ConfirmedEvents{
-		events:     allEvents,
-		eventIndex: *count - 1,
-	}
+	confirmed := &ConfirmedEvents{[]*UnconfirmedEvents{
+		{
+			eventIndex: *count - 1,
+			events:     allEvents,
+		},
+	}}
 	if err := handler(logger, confirmed, true); err != nil {
 		return nil, err
 	}

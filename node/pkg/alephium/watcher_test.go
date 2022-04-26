@@ -90,9 +90,9 @@ func TestSubscribeEvents(t *testing.T) {
 		}, nil
 	}
 
-	confirmedEvents := make([]*ConfirmedEvents, 0)
+	confirmedEvents := make([]*UnconfirmedEvents, 0)
 	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents, b bool) error {
-		confirmedEvents = append(confirmedEvents, confirmed)
+		confirmedEvents = append(confirmedEvents, confirmed.events...)
 		return nil
 	}
 

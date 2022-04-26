@@ -98,7 +98,7 @@ func TestFetchEvents(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(2))
 	assert.Equal(t, len(confirmedEvents.events), 1)
-	assert.Equal(t, confirmedEvents.events[0].event, events[1])
+	assert.Equal(t, confirmedEvents.events[0].events[0].event, events[1])
 }
 
 func TestToUnconfirmedEvents(t *testing.T) {
