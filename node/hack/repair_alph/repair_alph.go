@@ -128,7 +128,7 @@ func main() {
 				eventCountOffset += 1
 			}
 
-			if event.Index != alephium.WormholeMessageEventIndex {
+			if event.EventIndex != alephium.WormholeMessageEventIndex {
 				continue
 			}
 

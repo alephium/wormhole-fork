@@ -23,7 +23,7 @@ func TestAttestEvent(t *testing.T) {
 		BlockHash:       randomByte32().ToHex(),
 		ContractAddress: "y9dvJcZAQUjgx3hL5ZGwvT488cpdpy7N6TDSK7Vk8TWs",
 		TxId:            randomByte32().ToHex(),
-		Index:           0,
+		EventIndex:      0,
 		Fields: []*Field{
 			{ // sender
 				Type:  "ByteVec",
@@ -63,7 +63,7 @@ func TestTransferEvent(t *testing.T) {
 		BlockHash:       randomByte32().ToHex(),
 		ContractAddress: "y9dvJcZAQUjgx3hL5ZGwvT488cpdpy7N6TDSK7Vk8TWs",
 		TxId:            randomByte32().ToHex(),
-		Index:           0,
+		EventIndex:      0,
 		Fields: []*Field{
 			{ // sender
 				Type:  "ByteVec",

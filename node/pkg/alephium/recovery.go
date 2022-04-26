@@ -65,7 +65,7 @@ func (w *Watcher) fetchEvents_(
 			return nil, err
 		}
 		allEvents = append(allEvents, unconfirmedEvents...)
-		from = events.NextCount
+		from = events.NextStart
 	}
 	confirmed := &ConfirmedEvents{
 		events:     allEvents,

@@ -175,7 +175,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 
 		var skipIfError bool
 		var validateErr error
-		switch e.event.Index {
+		switch e.event.EventIndex {
 		case WormholeMessageEventIndex:
 			if skipWormholeMessage {
 				continue
@@ -223,7 +223,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 			skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
 
 		default:
-			return fmt.Errorf("unknown event index %v", e.event.Index)
+			return fmt.Errorf("unknown event index %v", e.event.EventIndex)
 		}
 
 		if validateErr != nil && skipIfError {
@@ -245,7 +245,7 @@ func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event 
 		return nil, err
 	}
 
-	if event.Index != WormholeMessageEventIndex {
+	if event.EventIndex != WormholeMessageEventIndex {
 		return &UnconfirmedEvent{
 			blockHeader:   header,
 			event:         event,

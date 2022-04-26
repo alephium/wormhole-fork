@@ -127,7 +127,7 @@ func (w *Watcher) getGovernanceEventsByIndex(
 		if event.TxId != txId {
 			continue
 		}
-		if event.Index != WormholeMessageEventIndex {
+		if event.EventIndex != WormholeMessageEventIndex {
 			continue
 		}
 		confirmations, err := event.getConsistencyLevel(w.minConfirmations)

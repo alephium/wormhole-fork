@@ -26,7 +26,7 @@ func TestSubscribeEvents(t *testing.T) {
 			BlockHash:       randomByte32().ToHex(),
 			ContractAddress: contractAddress,
 			TxId:            randomByte32().ToHex(),
-			Index:           0,
+			EventIndex:      0,
 			Fields:          []*Field{fieldFromBigInt(big.NewInt(int64(confirmations)))},
 		}
 	}

@@ -323,7 +323,7 @@ type Event struct {
 	BlockHash       string   `json:"blockHash"`
 	ContractAddress string   `json:"contractAddress"`
 	TxId            string   `json:"txId"`
-	Index           int32    `json:"index"`
+	EventIndex      int32    `json:"eventIndex"`
 	Fields          []*Field `json:"fields"`
 }
 
@@ -467,7 +467,7 @@ type Events struct {
 	ChainFrom uint8    `json:"chainFrom"`
 	ChainTo   uint8    `json:"chainTo"`
 	Events    []*Event `json:"events"`
-	NextCount uint64   `json:"nextCount"`
+	NextStart uint64   `json:"nextStart"`
 }
 
 type BlockHeader struct {

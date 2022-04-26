@@ -41,10 +41,10 @@ func TestFetchEvents(t *testing.T) {
 			}
 			if len(events) < int(to) {
 				event.Events = events[from:]
-				event.NextCount = uint64(len(events))
+				event.NextStart = uint64(len(events))
 			} else {
 				event.Events = events[from:to]
-				event.NextCount = to
+				event.NextStart = to
 			}
 
 			json.NewEncoder(w).Encode(event)
@@ -88,7 +88,7 @@ func TestFetchEvents(t *testing.T) {
 			BlockHash:       randomByte32().ToHex(),
 			ContractAddress: contractAddress,
 			TxId:            randomByte32().ToHex(),
-			Index:           0,
+			EventIndex:      0,
 			Fields:          []*Field{},
 		}
 	}
@@ -153,12 +153,12 @@ func TestToUnconfirmedEvents(t *testing.T) {
 	client := NewClient(server.URL, "", 10)
 	events := []*Event{
 		{
-			BlockHash: blocks[0].header.Hash,
-			Index:     TokenWrapperCreatedEventIndex,
+			BlockHash:  blocks[0].header.Hash,
+			EventIndex: TokenWrapperCreatedEventIndex,
 		},
 		{
-			BlockHash: blocks[1].header.Hash,
-			Index:     TokenWrapperCreatedEventIndex,
+			BlockHash:  blocks[1].header.Hash,
+			EventIndex: TokenWrapperCreatedEventIndex,
 		},
 	}
 	unconfirmedEvents, err := watcher.toUnconfirmedEvents(context.Background(), client, events)
