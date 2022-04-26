@@ -43,7 +43,7 @@ import useIsWalletReady from "../hooks/useIsWalletReady";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
-import { getAlphConfirmedTxInfo } from "../utils/alephium";
+import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
   ALEPHIUM_HOST,
   ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
@@ -168,11 +168,11 @@ async function terra(tx: string, enqueueSnackbar: any) {
 async function alephium(txId: string, enqueueSnackbar: any) {
   try {
     const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-    const txInfo = await getAlphConfirmedTxInfo(client, txId);
+    const txInfo = await getAlphTxInfoByTxId(client, txId);
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
-      txInfo.sequence().toString()
+      txInfo.sequence()
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
   } catch (e) {

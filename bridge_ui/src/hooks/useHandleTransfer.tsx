@@ -71,8 +71,8 @@ import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import {
-  getAlphConfirmedTxInfo,
   getLocalTokenWrapperIdWithRetry,
+  waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
 import { tokenIdFromAddress } from "alephium-web3";
 
@@ -237,32 +237,36 @@ async function alephium(
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const tokenId = uint8ArrayToHex(tokenIdFromAddress(tokenAddress))
-    let result: SubmissionResult
-    if (isLocalToken) {
-      const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
-      result = await transferLocalTokenFromAlph(
-        wallet.signer,
-        tokenWrapperId,
-        wallet.address,
-        tokenId,
-        uint8ArrayToHex(targetAddress),
-        amountParsed,
-        alphMessageFee,
-        alphArbiterFee
-      )
-    } else {
-      result = await transferRemoteTokenFromAlph(
-        wallet.signer,
-        tokenId,
-        wallet.address,
-        uint8ArrayToHex(targetAddress),
-        amountParsed,
-        alphMessageFee,
-        alphArbiterFee
-      )
-    }
-    const txInfo = await getAlphConfirmedTxInfo(wallet.signer.client, result.txId)
-    dispatch(setTransferTx({ id: result.txId, block: txInfo.blockHeight }));
+    const txInfo = await waitTxConfirmedAndGetTxInfo(
+      wallet.signer.client, async () => {
+        let result: SubmissionResult
+        if (isLocalToken) {
+          const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
+          result = await transferLocalTokenFromAlph(
+            wallet.signer,
+            tokenWrapperId,
+            wallet.address,
+            tokenId,
+            uint8ArrayToHex(targetAddress),
+            amountParsed,
+            alphMessageFee,
+            alphArbiterFee
+          )
+        } else {
+          result = await transferRemoteTokenFromAlph(
+            wallet.signer,
+            tokenId,
+            wallet.address,
+            uint8ArrayToHex(targetAddress),
+            amountParsed,
+            alphMessageFee,
+            alphArbiterFee
+          )
+        }
+        return result.txId
+      }
+    )
+    dispatch(setTransferTx({ id: txInfo.txId, block: txInfo.blockHeight }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -272,7 +276,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
-      txInfo.sequence().toString()
+      txInfo.sequence()
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Fetched Signed VAA</Alert>,

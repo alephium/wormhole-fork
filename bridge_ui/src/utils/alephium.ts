@@ -3,41 +3,76 @@ import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapper
 import { CliqueClient } from 'alephium-web3';
 import { TxStatus, Confirmed, Event, ValU256 } from 'alephium-web3/api/alephium';
 
+const WormholeMessageEventIndex = 0
+
 export class AlphTxInfo {
     blockHash: string
     blockHeight: number
+    txId: string
     event: Event
 
     constructor(blockHash: string, blockHeight: number, event: Event) {
         this.blockHash = blockHash
         this.blockHeight = blockHeight
+        this.txId = event.txId
         this.event = event
     }
 
-    sequence(): number {
-        return parseInt((this.event.fields[1] as ValU256).value)
+    sequence(): string {
+        if (this.event.eventIndex !== WormholeMessageEventIndex) {
+            throw Error("try to get sequence from invalid event, event index: " + this.event.eventIndex)
+        }
+        return (this.event.fields[1] as ValU256).value
     }
 }
 
-/*
-async function getTxInfo(client: CliqueClient, txId: string, eventCount: number): Promise<AlphTxInfo> {
-    const currentEventCount = await client.events.eventCount(ALEPHIUM_EVENT_EMITTER)
-    const events = await client.events.getEvent(ALEPHIUM_EVENT_EMITTER, eventCount, currentEventCount - 1)
-    const event = events.find(event => event.txId == txId)
-    if (event) {
-        return new AlphTxInfo(event.blockHash, event.blockHeight, event)
-    }
-    return Promise.reject("failed to get events for tx: " + txId)
-}
-*/
-
-export async function getAlphConfirmedTxInfo(client: CliqueClient, txId: string): Promise<AlphTxInfo> {
+export async function waitTxConfirmed(client: CliqueClient, txId: string): Promise<Confirmed> {
     const txStatus = await client.transactions.getTransactionsStatus({txId: txId})
     if (isConfirmed(txStatus)) {
-        // return getTxInfo
+        return txStatus as Confirmed
     }
     await new Promise(r => setTimeout(r, 10000))
-    return getAlphConfirmedTxInfo(client, txId)
+    return waitTxConfirmed(client, txId)
+}
+
+export async function waitTxConfirmedAndGetTxInfo(client: CliqueClient, func: () => Promise<string>): Promise<AlphTxInfo> {
+    const startCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
+    const txId = await func()
+    const confirmed = await waitTxConfirmed(client, txId)
+    const endCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
+    const events = await client.events.getEventsContract({
+        start: startCount.data,
+        end: endCount.data,
+        contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS
+    })
+    const event = events.data.events.find(event => event.txId === txId)
+    if (event !== undefined) {
+        const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
+        return new AlphTxInfo(event.blockHash, blockHeader.data.height, event)
+    }
+    return Promise.reject("failed to get event for tx: " + txId)
+}
+
+export async function getAlphTxInfoByTxId(client: CliqueClient, txId: string): Promise<AlphTxInfo> {
+    const batchSize = 100
+    const confirmed = await waitTxConfirmed(client, txId)
+    const currentEventCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
+    let end = currentEventCount.data
+    while (end > 0) {
+        const start = (end >= batchSize) ? (end - batchSize) : 0
+        const events = await client.events.getEventsContract({
+            start: start,
+            end: end,
+            contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS
+        })
+        const event = events.data.events.find(event => event.txId === txId)
+        if (event !== undefined) {
+            const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
+            return new AlphTxInfo(event.blockHash, blockHeader.data.height, event)
+        }
+        end = start
+    }
+    return Promise.reject("failed to get event for tx: " + txId)
 }
 
 function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {

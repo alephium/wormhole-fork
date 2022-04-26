@@ -43,7 +43,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { getAlphConfirmedTxInfo } from "../utils/alephium";
+import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import {
   ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
   alphMessageFee,
@@ -217,15 +217,19 @@ async function alephium(
 ) {
   dispatch(setIsSending(true));
   try {
-    const result = await attestFromAlph(
-      wallet.signer,
-      ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
-      localTokenId,
-      wallet.address,
-      alphMessageFee
+    const txInfo = await waitTxConfirmedAndGetTxInfo(
+      wallet.signer.client, async () => {
+        const result = await attestFromAlph(
+          wallet.signer,
+          ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
+          localTokenId,
+          wallet.address,
+          alphMessageFee
+        );
+        return result.txId;
+      }
     );
-    const txInfo = await getAlphConfirmedTxInfo(wallet.signer.client, result.txId)
-    dispatch(setAttestTx({ id: result.txId, block: txInfo.blockHeight }));
+    dispatch(setAttestTx({ id: txInfo.txId, block: txInfo.blockHeight }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -235,7 +239,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_ADDRESS,
-      txInfo.sequence().toString()
+      txInfo.sequence()
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {

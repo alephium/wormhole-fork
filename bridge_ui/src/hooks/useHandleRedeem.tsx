@@ -44,10 +44,10 @@ import { signSendAndConfirm } from "../utils/solana";
 import { Alert } from "@material-ui/lab";
 import { postWithFees } from "../utils/terra";
 import {
-  getAlphConfirmedTxInfo,
   getRedeemInfo,
   getLocalTokenWrapperIdWithRetry,
-  getRemoteTokenWrapperIdWithRetry
+  getRemoteTokenWrapperIdWithRetry,
+  waitTxConfirmed
 } from "../utils/alephium";
 import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
@@ -188,9 +188,10 @@ async function alephium(
       tokenWrapperId = await getRemoteTokenWrapperIdWithRetry(redeemInfo.tokenId)
     }
     const result = await redeemOnAlph(wallet.signer, tokenWrapperId, signedVAA, wallet.address)
-    const txInfo = await getAlphConfirmedTxInfo(wallet.signer.client, result.txId)
+    const confirmedTx = await waitTxConfirmed(wallet.signer.client, result.txId)
+    const blockHeader = await wallet.signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
-      setRedeemTx({ id: result.txId, block: txInfo.blockHeight })
+      setRedeemTx({ id: result.txId, block: blockHeader.data.height })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
