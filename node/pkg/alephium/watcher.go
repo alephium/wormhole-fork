@@ -73,7 +73,7 @@ func NewAlephiumWatcher(
 	obsvReqC chan *gossipv1.ObservationRequest,
 	db *Database,
 ) (*Watcher, error) {
-	if len(contracts) != 3 {
+	if len(contracts) != 4 {
 		return nil, fmt.Errorf("invalid contract ids")
 	}
 

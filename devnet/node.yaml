@@ -114,7 +114,7 @@ spec:
             - --alphContractWebServer
             - "[::]:31103"
             - --alphContractIds
-            - "23MARNtX1SpQ9YrSKtnkMbpGonpPYSJ8R1MKC7vXn1PGg,27qwq9utLRWJ4mmTbsDYfXeUhkGiRJbAiLsCPdPrqDgWB,zWY1GmNf5iC5eGu4Fhz8ywmbU8zDEwGGNTGnVTaMLcf6"
+            - "21sDAjFB1GPBRZ2aQ3wDFMKteMHyu8r4wLJMzSinEgTt8,27UaEYsi6n9hqc1FCjYJEoBzEvHWaKFZYrHifRhWod1vf,23h4ontynnVySmcC1XhUzinjfaFvSDXdShGe4TsYKCEGC,xipnWoQbtuDB7YLGkFCewqzH6NtEPuUVmZm4DcZeSE4R"
             - --alphGroupIndex
             - "3"
             - --alphMinConfirmations

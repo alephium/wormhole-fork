@@ -27,7 +27,7 @@ const wormhole = new Wormhole(
 )
 
 async function createWallet() {
-    const testWallet = 'alephium-js-test-only-wallet'
+    const testWallet = 'alephium-web3-test-only-wallet'
     const wallets = await client.wallets.getWallets()
     const exists = wallets.data.some(status => status.walletName == testWallet)
     if (exists) {
