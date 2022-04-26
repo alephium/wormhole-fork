@@ -18,18 +18,22 @@ type contractService struct {
 	db *Database
 }
 
+func tokenIdFromHex(id string) (*Byte32, error) {
+	bytes, err := hex.DecodeString(id)
+	if err != nil || len(bytes) != 32 {
+		return nil, fmt.Errorf("invalid token id %s", id)
+	}
+	var tokenId Byte32
+	copy(tokenId[:], bytes)
+	return &tokenId, nil
+}
+
 func (c *contractService) GetRemoteTokenWrapperId(ctx context.Context, req *alephiumv1.GetRemoteTokenWrapperIdRequest) (*alephiumv1.GetRemoteTokenWrapperIdResponse, error) {
-	bytes, err := hex.DecodeString(req.TokenId)
+	tokenId, err := tokenIdFromHex(req.TokenId)
 	if err != nil {
 		return nil, err
 	}
-	if len(bytes) != 32 {
-		return nil, fmt.Errorf("invalid token id")
-	}
-
-	var byte32 Byte32
-	copy(byte32[:], bytes)
-	contractId, err := c.db.GetRemoteTokenWrapper(byte32)
+	contractId, err := c.db.GetRemoteTokenWrapper(*tokenId)
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +43,11 @@ func (c *contractService) GetRemoteTokenWrapperId(ctx context.Context, req *alep
 }
 
 func (c *contractService) GetLocalTokenWrapperId(ctx context.Context, req *alephiumv1.GetLocalTokenWrapperIdRequest) (*alephiumv1.GetLocalTokenWrapperIdResponse, error) {
-	tokenId, err := ToContractId(req.TokenId)
+	tokenId, err := tokenIdFromHex(req.TokenId)
 	if err != nil {
-		return nil, fmt.Errorf("invalid local token address %s", req.TokenId)
+		return nil, err
 	}
-	contractId, err := c.db.GetLocalTokenWrapper(tokenId, uint16(req.ChainId))
+	contractId, err := c.db.GetLocalTokenWrapper(*tokenId, uint16(req.ChainId))
 	if err != nil {
 		return nil, err
 	}
