@@ -16,12 +16,12 @@ export async function attestFromAlph(
   tokenId: string,
   payer: string,
   messageFee: bigint,
-  nonce?: string,
   consistencyLevel?: number,
+  nonce?: string,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : createNonce().toString('hex')
-  const cl = consistencyLevel ? consistencyLevel : 10
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = attestTokenScript()
   return executeScript(signer, script, {
     payer: payer,

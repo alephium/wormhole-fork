@@ -283,7 +283,7 @@ func (w *Watcher) subscribe(
 	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 	errC chan<- error,
 ) {
-	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 30*time.Second, errC)
+	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 10*time.Second, errC)
 }
 
 func (w *Watcher) subscribe_(
@@ -374,6 +374,7 @@ func (w *Watcher) subscribe_(
 				errC <- err
 				return
 			}
+			logger.Info("alephium contract event count", zap.Uint64("count", *count), zap.Uint64("nextIndex", nextIndex))
 
 			if *count == nextIndex {
 				if err := process(); err != nil {

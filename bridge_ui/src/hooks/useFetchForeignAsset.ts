@@ -110,9 +110,7 @@ function useFetchForeignAsset(
               hexToUint8Array(originAssetHex)
             )
         : foreignChain === CHAIN_ID_ALEPHIUM
-        ? () => {
-          return getRemoteTokenWrapperIdWithRetry(originAssetHex)
-        }
+        ? () => getRemoteTokenWrapperIdWithRetry(originAssetHex).catch(_ => null)
         : foreignChain === CHAIN_ID_TERRA
         ? () => {
             const lcd = new LCDClient(TERRA_HOST);

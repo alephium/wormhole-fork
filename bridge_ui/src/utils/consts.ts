@@ -24,8 +24,9 @@ import solanaIcon from "../icons/solana.svg";
 import terraIcon from "../icons/terra.svg";
 import alephiumIcon from "../icons/alephium.svg";
 
-export const alphMessageFee = BigInt("0")
-export const alphArbiterFee = BigInt("0")
+export const alphMessageFee = BigInt("100000000000000")
+export const alphArbiterFee = BigInt("100000000000000")
+export const alphDustAmount = BigInt("1000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =
@@ -510,7 +511,7 @@ export const ALEPHIUM_CONFIRMATIONS =
     ? 10
     : CLUSTER === "testnet"
     ? 10
-    : 1;
+    : 0;
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

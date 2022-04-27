@@ -1,5 +1,5 @@
 import { ALEPHIUM_EVENT_EMITTER_ADDRESS, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
-import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId } from '@certusone/wormhole-sdk';
+import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId } from '@certusone/wormhole-sdk';
 import { CliqueClient } from 'alephium-web3';
 import { TxStatus, Confirmed, Event, ValU256 } from 'alephium-web3/api/alephium';
 
@@ -28,8 +28,8 @@ export class AlphTxInfo {
 
 export async function waitTxConfirmed(client: CliqueClient, txId: string): Promise<Confirmed> {
     const txStatus = await client.transactions.getTransactionsStatus({txId: txId})
-    if (isConfirmed(txStatus)) {
-        return txStatus as Confirmed
+    if (isConfirmed(txStatus.data)) {
+        return txStatus.data as Confirmed
     }
     await new Promise(r => setTimeout(r, 10000))
     return waitTxConfirmed(client, txId)
@@ -102,6 +102,7 @@ export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
     }
 }
 
+// TODO: replicated hosts
 async function retry<T>(func: (host: string) => Promise<T>, retryAttempts?: number): Promise<T> {
   let result;
   let attempts = 0;
@@ -111,8 +112,12 @@ async function retry<T>(func: (host: string) => Promise<T>, retryAttempts?: numb
     try {
       result = await func(WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST);
     } catch (e) {
-      if (retryAttempts !== undefined && attempts > retryAttempts) {
-        throw e;
+      console.log("request error: " + e)
+      if (typeof retryAttempts === "undefined") {
+          throw e
+      }
+      if (attempts > retryAttempts) {
+          throw e
       }
     }
   }
@@ -142,4 +147,16 @@ export async function getRemoteTokenWrapperIdWithRetry(
     }
     const response = await retry(func, retryAttempts)
     return uint8ArrayToHex(response.tokenWrapperId)
+}
+
+export async function getTokenBridgeForChainIdWithRetry(
+    remoteChainId: ChainId,
+    retryAttempts?: number,
+    extraGrpcOpts?: {}
+): Promise<string> {
+    const func = async (host: string) => {
+        return getTokenBridgeForChainId(host, remoteChainId, extraGrpcOpts)
+    }
+    const response = await retry(func, retryAttempts)
+    return uint8ArrayToHex(response.tokenBridgeForChainId)
 }

@@ -45,6 +45,7 @@ import {
 } from "../store/selectors";
 import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import {
+  ALEPHIUM_CONFIRMATIONS,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphMessageFee,
   getBridgeAddressForChain,
@@ -224,7 +225,8 @@ async function alephium(
           ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
           localTokenId,
           wallet.address,
-          alphMessageFee
+          alphMessageFee,
+          ALEPHIUM_CONFIRMATIONS
         );
         return result.txId;
       }

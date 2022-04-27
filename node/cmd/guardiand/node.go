@@ -196,7 +196,7 @@ func init() {
 	alphContractWebServer = NodeCmd.Flags().String("alphContractWebServer", "", "Listen address for alephium contract server REST interface")
 	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
 	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
-	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
+	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 0, "The min confirmations for alephium tx")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 

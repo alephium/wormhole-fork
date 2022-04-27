@@ -29,12 +29,12 @@ export async function transferLocalTokenFromAlph(
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  nonce?: string,
   consistencyLevel?: number,
+  nonce?: string,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : createNonce().toString('hex')
-  const cl = consistencyLevel ? consistencyLevel : 10
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferLocalTokenScript()
   return executeScript(signer, script, {
     sender: sender,
@@ -57,12 +57,12 @@ export async function transferRemoteTokenFromAlph(
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  nonce?: string,
   consistencyLevel?: number,
+  nonce?: string,
   params?: BuildScriptTx
 ) {
-  const nonceHex = nonce ? nonce : createNonce().toString('hex')
-  const cl = consistencyLevel ? consistencyLevel : 10
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferRemoteTokenScript()
   return executeScript(signer, script, {
     sender: sender,
