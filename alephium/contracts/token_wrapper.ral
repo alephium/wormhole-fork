@@ -104,7 +104,9 @@ TxContract TokenWrapper(
         let tokenId = getTokenId()
         transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        if (transferFee > 0) {
+            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        }
     }
 
     pub payable fn completeFailedTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
@@ -114,6 +116,8 @@ TxContract TokenWrapper(
         let tokenId = getTokenId()
         transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        if (transferFee > 0) {
+            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        }
     }
 }

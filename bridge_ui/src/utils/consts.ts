@@ -25,7 +25,7 @@ import terraIcon from "../icons/terra.svg";
 import alephiumIcon from "../icons/alephium.svg";
 
 export const alphMessageFee = BigInt("100000000000000")
-export const alphArbiterFee = BigInt("100000000000000")
+export const alphArbiterFee = BigInt("0")
 export const alphDustAmount = BigInt("1000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
@@ -486,7 +486,7 @@ export const ALEPHIUM_BRIDGE_ADDRESS =
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "000000000000000000000000000000000000000000000"
-    : "21sDAjFB1GPBRZ2aQ3wDFMKteMHyu8r4wLJMzSinEgTt8";
+    : "zZrnZhsiLbkTPP6wSgofmDWAiBiPQXwwxLaxutPiGhZV";
 export const ALEPHIUM_EVENT_EMITTER_ADDRESS =
   CLUSTER === "mainnet"
     ? "000000000000000000000000000000000000000000000"
@@ -498,8 +498,8 @@ export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
-    : "85c0c0933952c1409d786fe6f811266a20403beebe763bafd96b391d257bd1fd";
-export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "3d3c22f7f4495aa6084336a66e44fd3addc9385b7f55c17c9331eaad4b229fc5";
+    : "bacf353868a9b9dbca71b1688c65c05752c0bfbf629fd1bee5473274fad37a2d";
+export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "69f7dcf01503efbef68c67815fa47c054dbd0a0aeeb17a2d4e77a309bafb35e5";
 export const ALEPHIUM_GROUP_INDEX =
   CLUSTER === "mainnet"
     ? 0

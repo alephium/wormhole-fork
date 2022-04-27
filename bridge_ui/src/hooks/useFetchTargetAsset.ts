@@ -6,7 +6,6 @@ import {
   getForeignAssetEth,
   getForeignAssetSolana,
   getForeignAssetTerra,
-  toAlphContractAddress,
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
@@ -251,9 +250,10 @@ function useFetchTargetAsset(nft?: boolean) {
         try {
           const remoteTokenWrapperId = await getRemoteTokenWrapperIdWithRetry(originAsset)
           if (!cancelled) {
-            const tokenAddress = toAlphContractAddress(remoteTokenWrapperId)
-            setTargetAsset(
-              receiveDataWrapper({ doesExist: true, address: tokenAddress })
+            dispatch(
+              setTargetAsset(
+                receiveDataWrapper({ doesExist: !!remoteTokenWrapperId, address: remoteTokenWrapperId })
+              )
             )
             setArgs()
           }
@@ -261,7 +261,7 @@ function useFetchTargetAsset(nft?: boolean) {
           if (!cancelled) {
             dispatch(
               setTargetAsset(
-                errorDataWrapper("Failed to get token wrapper contract id")
+                errorDataWrapper("Failed to get token wrapper contract id " + e)
               )
             )
           }

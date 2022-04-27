@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, toAlphContractAddress } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM } from "@certusone/wormhole-sdk";
 import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
@@ -54,13 +54,12 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
         });
 
         setTokenAccounts(Array.from(tokenAmounts).map(([tokenId, amount]) => {
-          const tokenAddress = toAlphContractAddress(tokenId)
           // TODO: get token decimals
           const decimals = 8
           const uiAmount = formatUnits(amount, decimals)
           return createParsedTokenAccount(
             wallet.address,
-            tokenAddress,
+            tokenId,
             amount.toString(),
             decimals,
             parseFloat(uiAmount),

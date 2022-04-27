@@ -5,7 +5,6 @@ import {
   isEVMChain,
   isNativeDenom,
   TokenImplementation__factory,
-  uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
@@ -25,7 +24,7 @@ import { ALEPHIUM_HOST, getEvmChainId, SOLANA_HOST, TERRA_HOST } from "../utils/
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
-import { CliqueClient, tokenIdFromAddress } from "alephium-web3";
+import { CliqueClient } from "alephium-web3";
 
 function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
@@ -63,7 +62,6 @@ function useGetTargetParsedTokenAccounts() {
 
     if (targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet) {
       const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-      const tokenId = uint8ArrayToHex(tokenIdFromAddress(targetAsset))
       client
         .addresses
         .getAddressesAddressUtxos(alephiumWallet.address)
@@ -72,7 +70,7 @@ function useGetTargetParsedTokenAccounts() {
           let balance = BigInt(0);
           response.data.utxos.forEach(utxo => {
             if (now > utxo.lockTime) {
-              utxo.tokens.filter(t => t.id === tokenId).forEach(t =>
+              utxo.tokens.filter(t => t.id === targetAsset).forEach(t =>
                 balance = balance + BigInt(t.amount)
               )
             }

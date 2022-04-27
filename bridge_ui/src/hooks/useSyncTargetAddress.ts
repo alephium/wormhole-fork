@@ -1,5 +1,6 @@
 import {
   canonicalAddress,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -15,6 +16,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { setTargetAddressHex as setNFTTargetAddressHex } from "../store/nftSlice";
@@ -26,6 +28,7 @@ import {
   selectTransferTargetParsedTokenAccount,
 } from "../store/selectors";
 import { setTargetAddressHex as setTransferTargetAddressHex } from "../store/transferSlice";
+import * as base58 from 'bs58';
 
 function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   const dispatch = useDispatch();
@@ -43,6 +46,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   );
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
   const terraWallet = useConnectedWallet();
+  const alephiumWallet = useAlephiumWallet();
   const setTargetAddressHex = nft
     ? setNFTTargetAddressHex
     : setTransferTargetAddressHex;
@@ -106,6 +110,8 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
             )
           )
         );
+      } else if(targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet && alephiumWallet.address) {
+        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alephiumWallet.address).slice(1))))
       } else {
         dispatch(setTargetAddressHex(undefined));
       }
@@ -122,6 +128,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     targetAsset,
     targetTokenAccountPublicKey,
     terraWallet,
+    alephiumWallet,
     nft,
     setTargetAddressHex,
   ]);

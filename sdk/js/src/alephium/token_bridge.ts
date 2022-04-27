@@ -1,7 +1,7 @@
 import { Script } from 'alephium-web3'
 
 const createLocalTokenWrapper = JSON.parse(`{
-  "sourceCodeSha256": "bb77b2435369a463cb4f032104e9b4df16d609dcb3c92a8db224d80a8b0616f0",
+  "sourceCodeSha256": "78f5b5a98efd3d173b6bf727716b118674a948205dde04b11095ff2111f8453e",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "0101010001000a{payer:Address}{alphAmount:U256}a2{tokenBridgeForChainId:ByteVec}1700{tokenId:ByteVec}{payer:Address}{alphAmount:U256}1600010c"
@@ -20,7 +20,7 @@ export function createLocalTokenWrapperScript(): Script {
 }
 
 const createRemoteTokenWrapper = JSON.parse(`{
-  "sourceCodeSha256": "8f1be1a691851c5b730315e50719acbe96dee6bd9fea5f4d89fbd870e3f2761c",
+  "sourceCodeSha256": "f4b9a71c9160be7696ddefb2bb01a4a3e06f13f9a9019382dae38f208e734eb5",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "0101010001000a{payer:Address}{alphAmount:U256}a2{tokenBridgeForChainId:ByteVec}1700{vaa:ByteVec}{payer:Address}{alphAmount:U256}1600010d"
@@ -39,7 +39,7 @@ export function createRemoteTokenWrapperScript(): Script {
 }
 
 const transferLocalToken = JSON.parse(`{
-  "sourceCodeSha256": "9db25452601528c907edefb356b8db27f3f1637270ea26738e7e58fd35e1ee63",
+  "sourceCodeSha256": "f63cba7e367f15061658d39665b3ad48075ec9f1350d18a4987651fcec4b651c",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "01010100010011{sender:Address}{messageFee:U256}a2{sender:Address}{localTokenId:ByteVec}{tokenAmount:U256}a3{tokenWrapperId:ByteVec}1700{sender:Address}{toAddress:ByteVec}{tokenAmount:U256}{arbiterFee:U256}{nonce:ByteVec}{consistencyLevel:U256}1600010a"
@@ -58,7 +58,7 @@ export function transferLocalTokenScript(): Script {
 }
 
 const transferRemoteToken = JSON.parse(`{
-  "sourceCodeSha256": "89f74063b86a0ad4e83244d2a017326e76d90aed340807e179d8ee25cb86e8e8",
+  "sourceCodeSha256": "134db6b934b26f373b12543247bc54690a1e9daf2180020c251d913fbd9aa916",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "01010100010011{sender:Address}{messageFee:U256}a2{sender:Address}{tokenWrapperId:ByteVec}{tokenAmount:U256}a3{tokenWrapperId:ByteVec}1700{sender:Address}{toAddress:ByteVec}{tokenAmount:U256}{arbiterFee:U256}{nonce:ByteVec}{consistencyLevel:U256}1600010a"
@@ -77,10 +77,10 @@ export function transferRemoteTokenScript(): Script {
 }
 
 const completeTransfer = JSON.parse(`{
-  "sourceCodeSha256": "829db38059abd54c8c689282d1dc250772fcd01b916fac75c532eaa320fe20a8",
+  "sourceCodeSha256": "e27e6b4a37ba29633ed911bf97338366972d2e40d7e7ce6df442d001af323505",
   "compiled": {
     "type": "TemplateScriptByteCode",
-    "templateByteCode": "01010100010006{tokenWrapperId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}1600010c"
+    "templateByteCode": "0101010001000a0c5913c1e8d4a51000a2{tokenWrapperId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}1600010c"
   },
   "functions": [
     {
@@ -96,7 +96,7 @@ export function completeTransferScript(): Script {
 }
 
 const attestToken = JSON.parse(`{
-  "sourceCodeSha256": "95b63ac6296f8471a9b9314b254fda0001397597d9216496b08224ce82c28583",
+  "sourceCodeSha256": "baffdf05d9f0409132cebd40ea2acf3c3265f6c27e06eddd4158abe3cebd5569",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "0101010001000b{payer:Address}{messageFee:U256}a2{tokenBridgeId:ByteVec}1700{payer:Address}{tokenId:ByteVec}{nonce:ByteVec}{consistencyLevel:U256}1600010f"
@@ -115,10 +115,10 @@ export function attestTokenScript(): Script {
 }
 
 const completeUndoneSequence = JSON.parse(`{
-  "sourceCodeSha256": "1e161e9c2e6d7b5378f497e27e6921b83f6bd331053010e902069ce54099591b",
+  "sourceCodeSha256": "386f239be22309c2826d1e51e8919730ceb384e636f0b1b25e14d7f87d964ae1",
   "compiled": {
     "type": "TemplateScriptByteCode",
-    "templateByteCode": "01010100010006{tokenBridgeId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}16000112"
+    "templateByteCode": "0101010001000a0c5913c1e8d4a51000a2{tokenBridgeId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}16000112"
   },
   "functions": [
     {

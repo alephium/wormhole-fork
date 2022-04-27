@@ -89,12 +89,12 @@ export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
     const length = signedVAA.length
     const remoteChainIdOffset = length - 176
     const remoteChainIdBytes = signedVAA.slice(remoteChainIdOffset, remoteChainIdOffset + 2)
-    const remoteChainId = Buffer.from(remoteChainIdBytes).readUInt16BE()
+    const remoteChainId = Buffer.from(remoteChainIdBytes).readUInt16BE(0)
     const tokenIdOffset = length - 100
     const tokenId = signedVAA.slice(tokenIdOffset, tokenIdOffset + 32)
     const tokenChainIdOffset = length - 68
     const tokenChainIdBytes = signedVAA.slice(tokenChainIdOffset, tokenChainIdOffset + 2)
-    const tokenChainId = Buffer.from(tokenChainIdBytes).readUInt16BE()
+    const tokenChainId = Buffer.from(tokenChainIdBytes).readUInt16BE(0)
     return {
         remoteChainId: remoteChainId as ChainId,
         tokenId: uint8ArrayToHex(tokenId),

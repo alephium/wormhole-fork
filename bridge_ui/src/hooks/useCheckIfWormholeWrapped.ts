@@ -7,6 +7,7 @@ import {
   getOriginalAssetSol,
   getOriginalAssetTerra,
   isEVMChain,
+  toAlphContractAddress,
   uint8ArrayToHex,
   WormholeWrappedInfo,
 } from "@certusone/wormhole-sdk";
@@ -31,6 +32,7 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
+  ALEPHIUM_GROUP_INDEX,
   ALEPHIUM_HOST,
   ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
@@ -40,7 +42,7 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
 } from "../utils/consts";
-import { CliqueClient, groupOfAddress, tokenIdFromAddress } from "alephium-web3";
+import { CliqueClient } from "alephium-web3";
 import { ValByteVec, ValU256 } from 'alephium-web3/api/alephium';
 
 export interface StateSafeWormholeWrappedInfo {
@@ -57,11 +59,12 @@ const makeStateSafe = (
   assetAddress: uint8ArrayToHex(info.assetAddress),
 });
 
-async function getAlephiumTokenInfo(tokenAddress: string): Promise<StateSafeWormholeWrappedInfo> {
+async function getAlephiumTokenInfo(tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
+  const tokenAddress = toAlphContractAddress(tokenId)
   const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
   return client
     .contracts
-    .getContractsAddressState(tokenAddress, {group: groupOfAddress(tokenAddress)})
+    .getContractsAddressState(tokenAddress, {group: ALEPHIUM_GROUP_INDEX})
     .then(response => {
       if (response.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
         const originalAsset = (response.data.fields[4] as ValByteVec).value
@@ -75,8 +78,8 @@ async function getAlephiumTokenInfo(tokenAddress: string): Promise<StateSafeWorm
         return {
           isWrapped: false,
           chainId: CHAIN_ID_ALEPHIUM,
-          assetAddress: tokenAddress,
-          tokenId: uint8ArrayToHex(tokenIdFromAddress(tokenAddress))
+          assetAddress: tokenId,
+          tokenId: tokenId
         }
       }
     })
@@ -170,7 +173,9 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
           }
-        } catch (e) {}
+        } catch (e) {
+          console.log("get alephium token info failed, error: " + JSON.stringify(e))
+        }
       }
     })();
     return () => {

@@ -54,6 +54,7 @@ import {
   setTransferTx,
 } from "../store/transferSlice";
 import {
+  ALEPHIUM_CONFIRMATIONS,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphArbiterFee,
   alphMessageFee,
@@ -74,7 +75,6 @@ import {
   getLocalTokenWrapperIdWithRetry,
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
-import { tokenIdFromAddress } from "alephium-web3";
 
 async function evm(
   dispatch: any,
@@ -226,7 +226,7 @@ async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
   wallet: AlephiumWallet,
-  tokenAddress: string,
+  tokenId: string,
   isLocalToken: boolean,
   amount: string,
   decimals: number,
@@ -236,7 +236,6 @@ async function alephium(
   dispatch(setIsSending(true))
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
-    const tokenId = uint8ArrayToHex(tokenIdFromAddress(tokenAddress))
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       wallet.signer.client, async () => {
         let result: SubmissionResult
@@ -250,7 +249,8 @@ async function alephium(
             uint8ArrayToHex(targetAddress),
             amountParsed,
             alphMessageFee,
-            alphArbiterFee
+            alphArbiterFee,
+            ALEPHIUM_CONFIRMATIONS
           )
         } else {
           result = await transferRemoteTokenFromAlph(
@@ -260,7 +260,8 @@ async function alephium(
             uint8ArrayToHex(targetAddress),
             amountParsed,
             alphMessageFee,
-            alphArbiterFee
+            alphArbiterFee,
+            ALEPHIUM_CONFIRMATIONS
           )
         }
         return result.txId
