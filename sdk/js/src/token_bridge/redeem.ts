@@ -32,7 +32,7 @@ export async function redeemOnAlph(
   params?: BuildScriptTx
 ) {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = await completeTransferScript()
+  const script = completeTransferScript()
   return executeScript(signer, script, {
     tokenWrapperId: tokenWrapperId,
     vaa: vaaHex,
@@ -48,7 +48,7 @@ export async function completeUndoneSequence(
   params?: BuildScriptTx
 ) {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = await completeUndoneSequenceScript()
+  const script = completeUndoneSequenceScript()
   return executeScript(signer, script, {
     tokenBridgeId: tokenBridgeId,
     vaa: vaaHex,

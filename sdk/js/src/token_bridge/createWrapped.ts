@@ -18,7 +18,7 @@ export async function createRemoteTokenWrapperOnAlph(
   params?: BuildScriptTx
 ) {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = await createRemoteTokenWrapperScript()
+  const script = createRemoteTokenWrapperScript()
   return executeScript(signer, script, {
     payer: payer,
     tokenBridgeForChainId: tokenBridgeForChainId,
@@ -35,7 +35,7 @@ export async function createLocalTokenWrapperOnAlph(
   alphAmount: bigint,
   params?: BuildScriptTx
 ) {
-  const script = await createLocalTokenWrapperScript()
+  const script = createLocalTokenWrapperScript()
   return executeScript(signer, script, {
     payer: payer,
     tokenBridgeForChainId: tokenBridgeForChainId,

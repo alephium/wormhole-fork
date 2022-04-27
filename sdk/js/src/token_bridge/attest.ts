@@ -22,7 +22,7 @@ export async function attestFromAlph(
 ) {
   const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const script = await attestTokenScript()
+  const script = attestTokenScript()
   return executeScript(signer, script, {
     payer: payer,
     tokenBridgeId: tokenBridgeId,

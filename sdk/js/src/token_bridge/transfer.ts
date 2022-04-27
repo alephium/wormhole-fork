@@ -35,7 +35,7 @@ export async function transferLocalTokenFromAlph(
 ) {
   const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const script = await transferLocalTokenScript()
+  const script = transferLocalTokenScript()
   return executeScript(signer, script, {
     sender: sender,
     tokenWrapperId: tokenWrapperId,
@@ -63,7 +63,7 @@ export async function transferRemoteTokenFromAlph(
 ) {
   const nonceHex = nonce ? nonce : createNonce().toString('hex')
   const cl = consistencyLevel ? consistencyLevel : 10
-  const script = await transferRemoteTokenScript()
+  const script = transferRemoteTokenScript()
   return executeScript(signer, script, {
     sender: sender,
     tokenWrapperId: tokenWrapperId,
