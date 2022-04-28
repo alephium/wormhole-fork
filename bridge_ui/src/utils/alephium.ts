@@ -1,7 +1,7 @@
-import { ALEPHIUM_EVENT_EMITTER_ADDRESS, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
-import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId } from '@certusone/wormhole-sdk';
+import { ALEPHIUM_EVENT_EMITTER_ADDRESS, ALEPHIUM_TOKEN_WRAPPER_CODE_HASH, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
+import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId, toAlphContractAddress } from '@certusone/wormhole-sdk';
 import { CliqueClient } from 'alephium-web3';
-import { TxStatus, Confirmed, Event, ValU256 } from 'alephium-web3/api/alephium';
+import { TxStatus, Confirmed, Event, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
 
 const WormholeMessageEventIndex = 0
 
@@ -159,4 +159,33 @@ export async function getTokenBridgeForChainIdWithRetry(
     }
     const response = await retry(func, retryAttempts)
     return uint8ArrayToHex(response.tokenBridgeForChainId)
+}
+
+export class TokenInfo {
+    decimals: number
+    symbol: string
+    name: string
+
+    constructor(decimals: number, symbol: string, name: string) {
+        this.decimals = decimals
+        this.symbol = symbol
+        this.name = name
+    }
+}
+
+export async function getAlephiumTokenInfo(client: CliqueClient, tokenId: string): Promise<TokenInfo> {
+    const tokenAddress = toAlphContractAddress(tokenId)
+    const group = await client.addresses.getAddressesAddressGroup(tokenAddress)
+    const state = await client.contracts.getContractsAddressState(tokenAddress, {group: group.data.group})
+    if (state.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
+        const decimals = parseInt((state.data.fields[6] as ValU256).value)
+        const symbol = (state.data.fields[7] as ValByteVec).value
+        const name = (state.data.fields[8] as ValByteVec).value
+        return new TokenInfo(decimals, symbol, name)
+    } else {
+        const decimals = parseInt((state.data.fields[2] as ValU256).value)
+        const symbol = (state.data.fields[0] as ValByteVec).value
+        const name = (state.data.fields[1] as ValByteVec).value
+        return new TokenInfo(decimals, symbol, name)
+    }
 }

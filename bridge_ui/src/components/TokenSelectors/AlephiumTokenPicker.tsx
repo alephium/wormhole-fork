@@ -8,6 +8,7 @@ import { ALEPHIUM_HOST } from "../../utils/consts";
 import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
+import { getAlephiumTokenInfo } from "../../utils/alephium";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -16,6 +17,36 @@ type AlephiumTokenPickerProps = {
   disabled: boolean;
   resetAccounts: (() => void) | undefined;
 };
+
+async function getAlephiumTokenAccounts(address: string): Promise<ParsedTokenAccount[]> {
+  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+  const utxos = await client.addresses.getAddressesAddressUtxos(address)
+  const now = Date.now()
+  let tokenAmounts = new Map<string, bigint>()
+  utxos.data.utxos.forEach(utxo => {
+    if (now > utxo.lockTime) {
+      utxo.tokens.forEach(token => {
+        const amount = tokenAmounts.get(token.id)
+        if (amount) {
+          tokenAmounts.set(token.id, amount + BigInt(token.amount))
+        } else {
+          tokenAmounts.set(token.id, BigInt(token.amount))
+        }
+      })
+    }
+  });
+
+  let tokenAccounts = []
+  for (let [tokenId, amount] of tokenAmounts) {
+    const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
+    const uiAmount = formatUnits(amount, tokenInfo.decimals)
+    const tokenAccount = createParsedTokenAccount(
+      address, tokenId, amount.toString(), tokenInfo.decimals, parseFloat(uiAmount), uiAmount
+    )
+    tokenAccounts.push(tokenAccount)
+  }
+  return tokenAccounts
+}
 
 function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,42 +64,13 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
   useEffect(() => {
     setRefresh(false)
     setIsLoading(true)
-    const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-    client
-      .addresses
-      .getAddressesAddressUtxos(wallet.address)
-      .then((response) => {
-        let now = Date.now();
-        let tokenAmounts = new Map<string, bigint>();
-        response.data.utxos.forEach(utxo => {
-          if (now > utxo.lockTime) {
-            utxo.tokens.forEach(token => {
-              const amount = tokenAmounts.get(token.id)
-              if (amount) {
-                tokenAmounts.set(token.id, amount + BigInt(token.amount))
-              } else {
-                tokenAmounts.set(token.id, BigInt(token.amount))
-              }
-            })
-          }
-        });
-
-        setTokenAccounts(Array.from(tokenAmounts).map(([tokenId, amount]) => {
-          // TODO: get token decimals
-          const decimals = 8
-          const uiAmount = formatUnits(amount, decimals)
-          return createParsedTokenAccount(
-            wallet.address,
-            tokenId,
-            amount.toString(),
-            decimals,
-            parseFloat(uiAmount),
-            uiAmount
-          )
-        }))
+    getAlephiumTokenAccounts(wallet.address)
+      .then((tokenAccounts) => {
+        setTokenAccounts(tokenAccounts)
         setIsLoading(false)
       })
       .catch((e) => {
+        console.log("failed to load alephium token accounts, error: " + e)
         setIsLoading(false)
         setTokenAccounts([])
       })

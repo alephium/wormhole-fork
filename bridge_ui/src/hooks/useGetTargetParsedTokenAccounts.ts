@@ -19,12 +19,38 @@ import {
   selectTransferTargetAsset,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { setTargetParsedTokenAccount } from "../store/transferSlice";
+import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
 import { ALEPHIUM_HOST, getEvmChainId, SOLANA_HOST, TERRA_HOST } from "../utils/consts";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
 import { CliqueClient } from "alephium-web3";
+import { getAlephiumTokenInfo } from "../utils/alephium";
+
+async function getAlephiumTargetAsset(address: string, targetAsset: string): Promise<ParsedTokenAccount> {
+  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+  const utxos = await client.addresses.getAddressesAddressUtxos(address)
+  const now = Date.now()
+  let balance = BigInt(0)
+  utxos.data.utxos.forEach(utxo => {
+    if (now > utxo.lockTime) {
+      utxo.tokens.filter(t => t.id === targetAsset).forEach(t =>
+        balance = balance + BigInt(t.amount)
+      )
+    }
+  });
+
+  const tokenInfo = await getAlephiumTokenInfo(client, targetAsset)
+  const uiAmount = formatUnits(balance, tokenInfo.decimals)
+  return createParsedTokenAccount(
+    address,
+    targetAsset,
+    balance.toString(),
+    tokenInfo.decimals,
+    parseFloat(uiAmount),
+    uiAmount
+  )
+}
 
 function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
@@ -61,37 +87,8 @@ function useGetTargetParsedTokenAccounts() {
     let cancelled = false;
 
     if (targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet) {
-      const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-      client
-        .addresses
-        .getAddressesAddressUtxos(alephiumWallet.address)
-        .then((response) => {
-          let now = Date.now();
-          let balance = BigInt(0);
-          response.data.utxos.forEach(utxo => {
-            if (now > utxo.lockTime) {
-              utxo.tokens.filter(t => t.id === targetAsset).forEach(t =>
-                balance = balance + BigInt(t.amount)
-              )
-            }
-          });
-
-          // TODO: get token decimals
-          const decimals = 8
-          const uiAmount = formatUnits(balance, decimals)
-          dispatch(
-            setTargetParsedTokenAccount(
-              createParsedTokenAccount(
-                alephiumWallet.address,
-                targetAsset,
-                balance.toString(),
-                decimals,
-                parseFloat(uiAmount),
-                uiAmount
-              )
-            )
-          )
-        })
+      getAlephiumTargetAsset(alephiumWallet.address, targetAsset)
+        .then((target) => dispatch(setTargetParsedTokenAccount(target)))
         .catch(() => {
           if (!cancelled) {
             // TODO: error state
