@@ -1,8 +1,8 @@
 {
-  "sourceCodeSha256": "4a3cdf376449e1018bb6fea3cbe1a847d11a8f0268df721c38581a4839e8c7e0",
+  "sourceCodeSha256": "baffdf05d9f0409132cebd40ea2acf3c3265f6c27e06eddd4158abe3cebd5569",
   "compiled": {
     "type": "TemplateScriptByteCode",
-    "templateByteCode": "0101010001000b{payer:Address}{messageFee:U256}a2{tokenBridgeId:ByteVec}1700{payer:Address}{tokenId:ByteVec}{nonce:ByteVec}{consistencyLevel:U256}16000110"
+    "templateByteCode": "0101010001000b{payer:Address}{messageFee:U256}a2{tokenBridgeId:ByteVec}1700{payer:Address}{tokenId:ByteVec}{nonce:ByteVec}{consistencyLevel:U256}1600010f"
   },
   "functions": [
     {

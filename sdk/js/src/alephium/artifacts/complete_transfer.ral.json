@@ -1,8 +1,8 @@
 {
-  "sourceCodeSha256": "effe7f5dfe51c1f8af2c91fd511e798a0aee41ace35c7c4c0a2b27e9400b0203",
+  "sourceCodeSha256": "e27e6b4a37ba29633ed911bf97338366972d2e40d7e7ce6df442d001af323505",
   "compiled": {
     "type": "TemplateScriptByteCode",
-    "templateByteCode": "01010100010006{tokenWrapperId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}1600010c"
+    "templateByteCode": "0101010001000a0c5913c1e8d4a51000a2{tokenWrapperId:ByteVec}1700{vaa:ByteVec}{arbiter:Address}1600010c"
   },
   "functions": [
     {
