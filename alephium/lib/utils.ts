@@ -13,7 +13,7 @@ export function nonce(): string {
     return toHex(bytes)
 }
 
-export function zeroPad(value: string, length: number) {
+export function zeroPad(value: string, length: number): string {
     const expectedLength = 2 * length
     if (value.length < expectedLength) {
         const prefix = Array(expectedLength - value.length).fill('0').join("")

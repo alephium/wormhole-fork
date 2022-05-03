@@ -88,6 +88,31 @@ TxContract TokenBridge(
         eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
     }
 
+    pub fn upgradeContract(vaa: ByteVec) -> () {
+        let payload = verifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #02)
+        let chainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(chainId == localChainId)
+        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
+        let mut offset = 37 + contractCodeLength
+        let newContractCode = byteVecSlice!(payload, 37, offset)
+        let payloadLength = size!(payload)
+        if (payloadLength == offset) {
+            migrate!(newContractCode)
+        } else {
+            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
+            offset = offset + 32
+            let currentEncodedState = u256To32Byte!(next) ++ u256To32Byte!(next1) ++ u256To32Byte!(next2) ++ u256To32Byte!(sequence)
+            assert!(prevStateHash == blake2b!(currentEncodedState))
+            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+            offset = offset + 2
+            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
+            offset = offset + stateLength
+            assert!(payloadLength == offset)
+            migrateWithState!(newContractCode, newContractState)
+        }
+    }
+
     pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(tokenId) == 32)
         assert!(size!(nonce) == 4)

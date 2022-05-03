@@ -179,6 +179,37 @@ export class VAA {
     }
 }
 
+export class ContractUpgrade {
+    contractCode: string
+    prevStateHash?: string
+    state?: string
+
+    constructor(contractCode: string, prevStateHash?: string, state?: string) {
+        this.contractCode = contractCode
+        this.prevStateHash = prevStateHash
+        this.state = state
+    }
+
+    encode(module: string, action: number, chainId: number) {
+        const contractCodeLength = this.contractCode.length / 2
+        const buffer0 = Buffer.allocUnsafe(32 + 1 + 2 + 2 + contractCodeLength)
+        buffer0.write(module, 0, 'hex')
+        buffer0.writeUint8(action, 32)
+        buffer0.writeUint16BE(chainId, 33)
+        buffer0.writeUint16BE(contractCodeLength, 35)
+        buffer0.write(this.contractCode, 37, 'hex')
+        if (this.state !== undefined) {
+            const stateLength = this.state.length / 2
+            const buffer1 = Buffer.allocUnsafe(32 + 2 + stateLength)
+            buffer1.write(this.prevStateHash as string, 0, 'hex')
+            buffer1.writeUint16BE(stateLength, 32)
+            buffer1.write(this.state, 34, 'hex')
+            return Buffer.concat([buffer0, buffer1])
+        }
+        return buffer0
+    }
+}
+
 export function randomAssetAddress(): string {
     const prefix = Buffer.from([0x00])
     const bytes = Buffer.concat([prefix, randomBytes(32)])
@@ -198,6 +229,10 @@ export function randomContractAddress(): string {
     const prefix = Buffer.from([0x03])
     const bytes = Buffer.concat([prefix, randomBytes(32)])
     return base58.encode(bytes)
+}
+
+export function encodeU256(value: bigint): Uint8Array {
+    return Buffer.from(zeroPad(value.toString(16), 32), 'hex')
 }
 
 interface Failed {

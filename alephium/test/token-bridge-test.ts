@@ -1,9 +1,10 @@
-import { Asset, CliqueClient, ContractEvent, InputAsset, Output } from 'alephium-web3'
+import { Asset, CliqueClient, ContractEvent, InputAsset, Output, TestContractResult } from 'alephium-web3'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, CompleteFailedTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, Transfer } from './fixtures/token-bridge-fixture'
-import { alphChainId, createEventEmitter, dustAmount, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody } from './fixtures/wormhole-fixture'
+import { AttestToken, CompleteFailedTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
+import { alphChainId, ContractUpgrade, createEventEmitter, dustAmount, encodeU256, expectAssertionFailed, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
+import * as blake from 'blakejs'
 
 describe("test token bridge", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
@@ -520,5 +521,61 @@ describe("test token bridge", () => {
         const event = testResult.events[0] as ContractEvent
         expect(event.fields).toEqual([toContractId(tokenBridgeInfo.address), remoteChainId, failedSequence])
         expect(event.contractAddress).toEqual(eventEmitter.address)
+    })
+
+    it('should test upgrade contract', async () => {
+        const eventEmitter = await createEventEmitter(client)
+        const tokenBridgeInfo = await createTokenBridge(client, eventEmitter)
+        const tokenBridge = tokenBridgeInfo.contract
+
+        async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
+            const vaaBody = new VAABody(contractUpgrade.encode(tokenBridgeModule, 2, alphChainId), governanceChainId, governanceContractAddress, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            return tokenBridge.testPublicMethod(client, 'upgradeContract', {
+                address: tokenBridgeInfo.address,
+                initialFields: tokenBridgeInfo.selfState.fields,
+                testArgs: [toHex(vaa.encode())],
+                initialAsset: {alphAmount: oneAlph},
+                existingContracts: tokenBridgeInfo.dependencies,
+            }, tokenBridgeInfo.templateVariables)
+        }
+
+        {
+            const newContractCode = "090106010000000000"
+            const contractUpgrade = new ContractUpgrade(newContractCode)
+            const testResult = await upgrade(contractUpgrade)
+            const newContract = testResult.contracts[testResult.contracts.length-1]
+            expect(newContract.address).toEqual(tokenBridgeInfo.address)
+            expect(newContract.bytecode).toEqual(newContractCode)
+        }
+
+        {
+            await expectAssertionFailed(async () => {
+                const newContractCode = "000106010000000000"
+                const prevStateHash = randomBytes(32).toString('hex')
+                const newState = "00"
+                const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+                await upgrade(contractUpgrade)
+            })
+        }
+
+        {
+            const newContractCode = "000106010000000000"
+            const next = tokenBridgeInfo.selfState.fields[3] as bigint
+            const next1 = tokenBridgeInfo.selfState.fields[4] as bigint
+            const next2 = tokenBridgeInfo.selfState.fields[5] as bigint
+            const sequence = tokenBridgeInfo.selfState.fields[8] as bigint
+            const prevEncodedState = Buffer.concat([
+                encodeU256(next), encodeU256(BigInt(next1) + 1n), encodeU256(next2), encodeU256(sequence)
+            ])
+            const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
+            const newState = "00"
+            const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+            const testResult = await upgrade(contractUpgrade)
+            const newContract = testResult.contracts[testResult.contracts.length-1]
+            expect(newContract.address).toEqual(tokenBridgeInfo.address)
+            expect(newContract.bytecode).toEqual(newContractCode)
+            expect(newContract.fields).toEqual([])
+        }
     })
 })

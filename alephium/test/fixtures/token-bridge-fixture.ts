@@ -5,7 +5,7 @@ import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 import * as blake from 'blakejs'
 
-const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
+export const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
 
 export class AttestToken {
     tokenId: string

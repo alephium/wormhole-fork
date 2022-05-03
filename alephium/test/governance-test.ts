@@ -1,9 +1,10 @@
-import { Asset, CliqueClient, InputAsset, TestContractResult } from 'alephium-web3'
+import { Asset, CliqueClient, InputAsset, TestContractResult, Val } from 'alephium-web3'
 import { toHex } from '../lib/utils'
-import { alphChainId, createEventEmitter, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
+import { alphChainId, ContractUpgrade, createEventEmitter, encodeU256, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
-import { createGovernance, governanceChainId, governanceContractAddress, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
+import { createGovernance, governanceChainId, governanceContractAddress, governanceModule, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
+import * as blake from 'blakejs'
 
 describe("test governance", () => {
     const client = new CliqueClient({baseUrl: `http://127.0.0.1:22973`})
@@ -102,5 +103,62 @@ describe("test governance", () => {
         expect(contractOutput.type).toEqual("ContractOutput")
         expect(contractOutput.address).toEqual(governanceState.address)
         expect(contractOutput.alphAmount).toEqual(BigInt(asset.alphAmount) - amount)
+    })
+
+    it('should test upgrade contract', async () => {
+        const eventEmitter = await createEventEmitter(client)
+        const governanceInfo = await createGovernance(client, eventEmitter)
+        const contract = governanceInfo.contract
+        async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
+            const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1, alphChainId), governanceChainId, governanceContractAddress, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            return await contract.testPublicMethod(client, 'upgradeContract', {
+                initialFields: governanceInfo.selfState.fields,
+                address: governanceInfo.address,
+                existingContracts: governanceInfo.dependencies,
+                testArgs: [toHex(vaa.encode())],
+            }, governanceInfo.templateVariables)
+        }
+
+        {
+            const newContractCode = "40330106010000000000"
+            const contractUpgrade = new ContractUpgrade(newContractCode)
+            const testResult = await upgrade(contractUpgrade)
+            const newContract = testResult.contracts[testResult.contracts.length-1]
+            expect(newContract.address).toEqual(governanceInfo.address)
+            expect(newContract.bytecode).toEqual(newContractCode)
+        }
+
+        {
+            await expectAssertionFailed(async () => {
+                const newContractCode = "000106010000000000"
+                const prevStateHash = randomBytes(32).toString('hex')
+                const newState = "00"
+                const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+                await upgrade(contractUpgrade)
+            })
+        }
+
+        {
+            const next = governanceInfo.selfState.fields[3] as bigint
+            const next1 = governanceInfo.selfState.fields[4] as bigint
+            const next2 = governanceInfo.selfState.fields[5] as bigint
+            const guardianSetIndexes = governanceInfo.selfState.fields[9] as Val[]
+            const guardianSetIndex0 = guardianSetIndexes[0] as bigint
+            const guardianSetIndex1 = guardianSetIndexes[1] as bigint
+            const prevEncodedState = Buffer.concat([
+                encodeU256(next), encodeU256(BigInt(next1) + 1n), encodeU256(next2),
+                encodeU256(guardianSetIndex0), encodeU256(guardianSetIndex1)
+            ])
+            const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
+            const newContractCode = "000106010000000000"
+            const newState = "00"
+            const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+            const testResult = await upgrade(contractUpgrade)
+            const newContract = testResult.contracts[testResult.contracts.length-1]
+            expect(newContract.address).toEqual(governanceInfo.address)
+            expect(newContract.bytecode).toEqual(newContractCode)
+            expect(newContract.fields).toEqual([])
+        }
     })
 })
