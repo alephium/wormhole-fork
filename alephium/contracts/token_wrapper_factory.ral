@@ -15,7 +15,7 @@ TxContract TokenWrapperFactory<tokenWrapperByteCode: ByteVec, eventEmitterId: By
     ) -> () {
         let contractCode = tokenWrapperByteCode
         let tokenBridgeForChainId = callerContractId!()
-        let encodedState = encode!(
+        let encodedState = encodeToByteVec!(
             tokenBridgeId,
             tokenBridgeForChainId,
             localChainId,

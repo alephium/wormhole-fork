@@ -66,7 +66,7 @@ TxContract TokenBridge<
         let (remoteChainId, remoteTokenBridgeId) = parseRegisterChain(vaa)
         assert!(remoteChainId != localChainId)
 
-        let mut encodedState = encode!(
+        let mut encodedState = encodeToByteVec!(
             governanceId, localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
         )
 
