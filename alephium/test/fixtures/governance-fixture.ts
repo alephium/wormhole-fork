@@ -3,7 +3,7 @@ import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 import { alphChainId, ContractInfo, dustAmount, GuardianSet, randomContractAddress } from './wormhole-fixture'
 
-const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
+export const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
 export const initGuardianSet = GuardianSet.random(12, 0)
 export const governanceChainId = 0
 export const governanceContractAddress = '0000000000000000000000000000000000000000000000000000000000000004'
