@@ -291,10 +291,10 @@ export const TERRA_HOST =
 
 export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
-    ? "http://127.0.0.1:12973"
+    ? "http://localhost:12973"
     : CLUSTER === "testnet"
-    ? "http://127.0.0.1:12973"
-    : "http://127.0.0.1:12973"
+    ? "http://localhost:12973"
+    : "http://localhost:12973"
 
 export const ETH_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
