@@ -45,7 +45,6 @@ const useTotalTransactedAmount = (): DataWrapper<number> => {
 
   const output = useMemo(() => {
     const emittersThatMatter = [
-      `ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5`, //SOLANA TOKEN
       `0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585`, //ETH token
       `0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2`, //terra
       `000000000000000000000000b6f6d86a8f9879a9c87f643768d9efc38c1da6e7`, //bsc

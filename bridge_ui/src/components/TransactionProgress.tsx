@@ -4,16 +4,14 @@ import {
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
-  CHAIN_ID_SOLANA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
-import { Connection } from "@solana/web3.js";
 import { CliqueClient } from "alephium-web3";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { ALEPHIUM_CONFIRMATIONS, ALEPHIUM_GROUP_INDEX, ALEPHIUM_HOST, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_CONFIRMATIONS, ALEPHIUM_GROUP_INDEX, ALEPHIUM_HOST, CHAINS_BY_ID } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -58,19 +56,6 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-    if (chainId === CHAIN_ID_SOLANA) {
-      let cancelled = false;
-      const connection = new Connection(SOLANA_HOST, "confirmed");
-      const sub = connection.onSlotChange((slotInfo) => {
-        if (!cancelled) {
-          setCurrentBlock(slotInfo.slot);
-        }
-      });
-      return () => {
-        cancelled = true;
-        connection.removeSlotChangeListener(sub);
-      };
-    }
     if (chainId === CHAIN_ID_ALEPHIUM) {
       let cancelled = false;
       const client = new CliqueClient({baseUrl: ALEPHIUM_HOST});
@@ -102,8 +87,6 @@ export default function TransactionProgress({
       ? 512 // minimum confirmations enforced by guardians
       : chainId === CHAIN_ID_FANTOM || chainId === CHAIN_ID_OASIS
       ? 1 // these chains only require 1 conf
-      : chainId === CHAIN_ID_SOLANA
-      ? 32
       : isEVMChain(chainId)
       ? 15
       : chainId === CHAIN_ID_ALEPHIUM
@@ -111,7 +94,7 @@ export default function TransactionProgress({
       : 1;
   if (
     !isSendComplete &&
-    (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
+    isEVMChain(chainId) &&
     blockDiff !== undefined
   ) {
     return (

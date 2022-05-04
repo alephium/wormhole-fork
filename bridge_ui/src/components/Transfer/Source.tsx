@@ -1,7 +1,6 @@
 import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
-  CHAIN_ID_SOLANA,
 } from "@certusone/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
 import { Button, makeStyles, Typography } from "@material-ui/core";
@@ -31,7 +30,6 @@ import {
   BSC_MIGRATION_ASSET_MAP,
   CHAINS,
   ETH_MIGRATION_ASSET_MAP,
-  MIGRATION_ASSET_MAP,
 } from "../../utils/consts";
 import ButtonWithLoader from "../ButtonWithLoader";
 import ChainSelect from "../ChainSelect";
@@ -39,7 +37,6 @@ import ChainSelectArrow from "../ChainSelectArrow";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
 import NumberTextField from "../NumberTextField";
-import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import { TokenSelector } from "../TokenSelectors/SourceTokenSelector";
 import SourceAssetWarning from "./SourceAssetWarning";
@@ -82,10 +79,6 @@ function Source() {
     selectTransferSourceParsedTokenAccount
   );
   const hasParsedTokenAccount = !!parsedTokenAccount;
-  const isSolanaMigration =
-    sourceChain === CHAIN_ID_SOLANA &&
-    !!parsedTokenAccount &&
-    !!MIGRATION_ASSET_MAP.get(parsedTokenAccount.mintKey);
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
     !!parsedTokenAccount &&
@@ -94,8 +87,7 @@ function Source() {
     sourceChain === CHAIN_ID_BSC &&
     !!parsedTokenAccount &&
     !!BSC_MIGRATION_ASSET_MAP.get(getAddress(parsedTokenAccount.mintKey));
-  const isMigrationAsset =
-    isSolanaMigration || isEthereumMigration || isBscMigration;
+  const isMigrationAsset = isEthereumMigration || isBscMigration;
   const uiAmountString = useSelector(selectTransferSourceBalanceString);
   const amount = useSelector(selectTransferAmount);
   const error = useSelector(selectTransferSourceError);
@@ -103,11 +95,7 @@ function Source() {
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
   const { isReady, statusMessage } = useIsWalletReady(sourceChain);
   const handleMigrationClick = useCallback(() => {
-    if (sourceChain === CHAIN_ID_SOLANA) {
-      history.push(
-        `/migrate/Solana/${parsedTokenAccount?.mintKey}/${parsedTokenAccount?.publicKey}`
-      );
-    } else if (sourceChain === CHAIN_ID_ETH) {
+    if (sourceChain === CHAIN_ID_ETH) {
       history.push(`/migrate/Ethereum/${parsedTokenAccount?.mintKey}`);
     } else if (sourceChain === CHAIN_ID_BSC) {
       history.push(`/migrate/BinanceSmartChain/${parsedTokenAccount?.mintKey}`);
@@ -211,7 +199,6 @@ function Source() {
       ) : (
         <>
           <LowBalanceWarning chainId={sourceChain} />
-          {sourceChain === CHAIN_ID_SOLANA && <SolanaTPSWarning />}
           <SourceAssetWarning
             sourceChain={sourceChain}
             sourceAsset={parsedTokenAccount?.mintKey}

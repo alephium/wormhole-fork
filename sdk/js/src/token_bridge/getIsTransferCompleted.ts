@@ -1,8 +1,6 @@
 import { ethers } from "ethers";
 import { Bridge__factory } from "../ethers-contracts";
 import { getSignedVAAHash } from "../bridge";
-import { importCoreWasm } from "../solana/wasm";
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import axios from "axios";
 import { redeemOnTerra } from ".";
@@ -54,18 +52,4 @@ export async function getIsTransferCompletedTerra(
     return e.response.data.message.includes("VaaAlreadyExecuted");
   }
   return false;
-}
-
-export async function getIsTransferCompletedSolana(
-  tokenBridgeAddress: string,
-  signedVAA: Uint8Array,
-  connection: Connection
-) {
-  const { claim_address } = await importCoreWasm();
-  const claimAddress = await claim_address(tokenBridgeAddress, signedVAA);
-  const claimInfo = await connection.getAccountInfo(
-    new PublicKey(claimAddress),
-    "confirmed"
-  );
-  return !!claimInfo;
 }

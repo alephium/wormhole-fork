@@ -1,10 +1,8 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getOriginalAssetEth,
-  getOriginalAssetSol,
   getOriginalAssetTerra,
   isEVMChain,
   toAlphContractAddress,
@@ -13,9 +11,7 @@ import {
 } from "@certusone/wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
-  getOriginalAssetSol as getOriginalAssetSolNFT,
 } from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
-import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,9 +33,6 @@ import {
   ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
 } from "../utils/consts";
 import { CliqueClient } from "alephium-web3";
@@ -134,27 +127,6 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
         if (!cancelled) {
           dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
         }
-      }
-      if (sourceChain === CHAIN_ID_SOLANA && sourceAsset) {
-        try {
-          const connection = new Connection(SOLANA_HOST, "confirmed");
-          const wrappedInfo = makeStateSafe(
-            await (nft
-              ? getOriginalAssetSolNFT(
-                  connection,
-                  SOL_NFT_BRIDGE_ADDRESS,
-                  sourceAsset
-                )
-              : getOriginalAssetSol(
-                  connection,
-                  SOL_TOKEN_BRIDGE_ADDRESS,
-                  sourceAsset
-                ))
-          );
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
-          }
-        } catch (e) {}
       }
       if (sourceChain === CHAIN_ID_TERRA && sourceAsset) {
         try {

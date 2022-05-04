@@ -39,7 +39,6 @@ config.define_string("webHost", False, "Public hostname for port forwards")
 
 # Components
 config.define_bool("algorand", False, "Enable Algorand component")
-config.define_bool("solana", False, "Enable Solana component")
 config.define_bool("explorer", False, "Enable explorer component")
 config.define_bool("bridge_ui", False, "Enable bridge UI component")
 config.define_bool("e2e", False, "Enable E2E testing stack")
@@ -54,7 +53,6 @@ gcpProject = cfg.get("gcpProject", "local-dev")
 bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
 algorand = cfg.get("algorand", False)
-solana = cfg.get("solana", False)
 ci = cfg.get("ci", False)
 explorer = cfg.get("explorer", ci)
 bridge_ui = cfg.get("bridge_ui", ci)
@@ -109,20 +107,6 @@ if algorand:
         cmd = "tilt docker build -- --target teal-export -f Dockerfile.teal -o type=local,dest=. .",
         env = {"DOCKER_BUILDKIT": "1"},
         labels = ["algorand"],
-        allow_parallel = True,
-        trigger_mode = trigger_mode,
-    )
-
-# wasm
-
-if solana:
-    local_resource(
-        name = "wasm-gen",
-        deps = ["solana"],
-        dir = "solana",
-        cmd = "tilt docker build -- -f Dockerfile.wasm -o type=local,dest=.. .",
-        env = {"DOCKER_BUILDKIT": "1"},
-        labels = ["solana"],
         allow_parallel = True,
         trigger_mode = trigger_mode,
     )
@@ -192,8 +176,6 @@ def build_node_yaml():
 k8s_yaml_with_ns(build_node_yaml())
 
 guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-devnet"]
-if solana:
-    guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
 
 k8s_resource(
     "guardian",
@@ -223,41 +205,6 @@ k8s_resource(
     labels = ["guardian"],
     trigger_mode = trigger_mode,
 )
-
-if solana:
-    # solana client cli (used for devnet setup)
-
-    docker_build(
-        ref = "bridge-client",
-        context = ".",
-        only = ["./proto", "./solana", "./clients"],
-        dockerfile = "Dockerfile.client",
-        # Ignore target folders from local (non-container) development.
-        ignore = ["./solana/*/target"],
-    )
-
-    # solana smart contract
-
-    docker_build(
-        ref = "solana-contract",
-        context = "solana",
-        dockerfile = "solana/Dockerfile",
-    )
-
-    # solana local devnet
-
-    k8s_yaml_with_ns("devnet/solana-devnet.yaml")
-
-    k8s_resource(
-        "solana-devnet",
-        port_forwards = [
-            port_forward(8899, name = "Solana RPC [:8899]", host = webHost),
-            port_forward(8900, name = "Solana WS [:8900]", host = webHost),
-            port_forward(9000, name = "Solana PubSub [:9000]", host = webHost),
-        ],
-        labels = ["solana"],
-        trigger_mode = trigger_mode,
-    )
 
 # alephium devnet
 
@@ -375,7 +322,7 @@ if ci_tests:
 
     k8s_resource(
         "ci-tests",
-        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "solana-devnet", "spy", "guardian"],
+        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "spy", "guardian"],
         labels = ["ci"],
         trigger_mode = trigger_mode,
     )

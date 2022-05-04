@@ -1,20 +1,19 @@
 import {
   ChainId,
+  CHAIN_ID_ETH,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
-  getEmitterAddressSolana,
   getEmitterAddressTerra,
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
   parseNFTPayload,
   parseSequenceFromLogEth,
-  parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   parseTransferPayload,
   uint8ArrayToHex,
+  VAA
 } from "@certusone/wormhole-sdk";
 import {
   Accordion,
@@ -31,7 +30,6 @@ import {
 } from "@material-ui/core";
 import { ExpandMore } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
-import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
@@ -53,9 +51,6 @@ import {
   getBridgeAddressForChain,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_RPC_HOSTS,
@@ -97,33 +92,6 @@ async function evm(
     );
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
-      emitterAddress,
-      sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
-
-async function solana(tx: string, enqueueSnackbar: any, nft: boolean) {
-  try {
-    const connection = new Connection(SOLANA_HOST, "confirmed");
-    const info = await connection.getTransaction(tx);
-    if (!info) {
-      throw new Error("An error occurred while fetching the transaction info");
-    }
-    const sequence = parseSequenceFromLogSolana(info);
-    const emitterAddress = await getEmitterAddressSolana(
-      nft ? SOL_NFT_BRIDGE_ADDRESS : SOL_TOKEN_BRIDGE_ADDRESS
-    );
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      CHAIN_ID_SOLANA,
       emitterAddress,
       sequence.toString(),
       WORMHOLE_RPC_HOSTS.length
@@ -193,7 +161,7 @@ export default function Recovery() {
   const [type, setType] = useState("Token");
   const isNFT = type === "NFT";
   const [recoverySourceChain, setRecoverySourceChain] =
-    useState(CHAIN_ID_SOLANA);
+    useState(CHAIN_ID_ETH);
   const [recoverySourceTx, setRecoverySourceTx] = useState("");
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] =
     useState(false);
@@ -205,13 +173,13 @@ export default function Recovery() {
     isEVMChain(recoverySourceChain) && !isReady ? statusMessage : "";
   const parsedPayload = useMemo(() => {
     try {
-      return recoveryParsedVAA?.payload
+      return recoveryParsedVAA?.body.payload
         ? isNFT
           ? parseNFTPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(new Uint8Array(recoveryParsedVAA.body.payload))
             )
           : parseTransferPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(new Uint8Array(recoveryParsedVAA.body.payload))
             )
         : null;
     } catch (e) {
@@ -258,25 +226,6 @@ export default function Recovery() {
             recoverySourceTx,
             enqueueSnackbar,
             recoverySourceChain,
-            isNFT
-          );
-          if (!cancelled) {
-            setRecoverySourceTxIsLoading(false);
-            if (vaa) {
-              setRecoverySignedVAA(vaa);
-            }
-            if (error) {
-              setRecoverySourceTxError(error);
-            }
-          }
-        })();
-      } else if (recoverySourceChain === CHAIN_ID_SOLANA) {
-        setRecoverySourceTxError("");
-        setRecoverySourceTxIsLoading(true);
-        (async () => {
-          const { vaa, error } = await solana(
-            recoverySourceTx,
-            enqueueSnackbar,
             isNFT
           );
           if (!cancelled) {
@@ -336,7 +285,7 @@ export default function Recovery() {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
-        ? CHAIN_ID_SOLANA
+        ? CHAIN_ID_ETH
         : prevChain
     );
     setType(event.target.value);
@@ -356,10 +305,7 @@ export default function Recovery() {
     if (recoverySignedVAA) {
       (async () => {
         try {
-          const { parse_vaa } = await import(
-            "@certusone/wormhole-sdk/lib/esm/solana/core/bridge"
-          );
-          const parsedVAA = parse_vaa(hexToUint8Array(recoverySignedVAA));
+          const parsedVAA = VAA.from(hexToUint8Array(recoverySignedVAA));
           if (!cancelled) {
             setRecoveryParsedVAA(parsedVAA);
           }
@@ -519,7 +465,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Emitter Chain"
                   disabled
-                  value={recoveryParsedVAA?.emitter_chain || ""}
+                  value={recoveryParsedVAA?.body.emitterChainId || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -530,8 +476,8 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       hexToNativeString(
-                        recoveryParsedVAA.emitter_address,
-                        recoveryParsedVAA.emitter_chain
+                        recoveryParsedVAA.body.emitterAddress,
+                        recoveryParsedVAA.body.emitterChainId
                       )) ||
                     ""
                   }
@@ -542,7 +488,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Sequence"
                   disabled
-                  value={recoveryParsedVAA?.sequence || ""}
+                  value={recoveryParsedVAA?.body.sequence.toString() || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -553,7 +499,7 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       new Date(
-                        recoveryParsedVAA.timestamp * 1000
+                        recoveryParsedVAA.body.timestamp * 1000
                       ).toLocaleString()) ||
                     ""
                   }

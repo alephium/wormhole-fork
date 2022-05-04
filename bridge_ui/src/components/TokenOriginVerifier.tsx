@@ -1,6 +1,6 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ETH,
   CHAIN_ID_TERRA,
   isEVMChain,
   nativeToHexString,
@@ -146,10 +146,12 @@ function SecondaryAssetInformation({
       <RegisterNowButtonCore
         originChain={originAssetInfo?.originChain || undefined}
         originAsset={
-          nativeToHexString(
-            originAssetInfo?.originAddress || undefined,
-            originAssetInfo?.originChain || CHAIN_ID_SOLANA // this should exist
-          ) || undefined
+          originAssetInfo?.originChain
+            ? nativeToHexString(
+                originAssetInfo?.originAddress || undefined,
+                originAssetInfo.originChain // this should exist
+              ) || undefined
+            : undefined
         }
         targetChain={chainId}
       />
@@ -179,7 +181,7 @@ export default function TokenOriginVerifier() {
   const classes = useStyles();
   const isBeta = useBetaContext();
 
-  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_SOLANA);
+  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_ETH);
   const [primaryLookupAsset, setPrimaryLookupAsset] = useState("");
 
   const [secondaryLookupChain, setSecondaryLookupChain] =
@@ -204,7 +206,7 @@ export default function TokenOriginVerifier() {
       setPrimaryLookupChain(e.target.value);
       if (secondaryLookupChain === e.target.value) {
         setSecondaryLookupChain(
-          e.target.value === CHAIN_ID_SOLANA ? CHAIN_ID_TERRA : CHAIN_ID_SOLANA
+          e.target.value === CHAIN_ID_ETH ? CHAIN_ID_TERRA : CHAIN_ID_ETH
         );
       }
       setPrimaryLookupAsset("");
