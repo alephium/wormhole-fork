@@ -7,7 +7,6 @@ import {
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isNativeDenom,
 } from "@certusone/wormhole-sdk";
@@ -19,7 +18,7 @@ import { ReactChild } from "react";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";
-import { shortenAddress } from "../utils/solana";
+import { shortenAddress } from "../utils/ethereum";
 import { formatNativeDenom } from "../utils/terra";
 
 const useStyles = makeStyles((theme) => ({
@@ -125,14 +124,6 @@ export default function SmartAddress({
     ? `https://${
         CLUSTER === "testnet" ? "testnet." : ""
       }ftmscan.com/address/${useableAddress}`
-    : chainId === CHAIN_ID_SOLANA
-    ? `https://explorer.solana.com/address/${useableAddress}${
-        CLUSTER === "testnet"
-          ? "?cluster=devnet"
-          : CLUSTER === "devnet"
-          ? "?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899"
-          : ""
-      }`
     : chainId === CHAIN_ID_TERRA
     ? `https://finder.terra.money/${
         CLUSTER === "devnet"

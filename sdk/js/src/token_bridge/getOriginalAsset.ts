@@ -1,11 +1,9 @@
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { TokenImplementation__factory } from "../ethers-contracts";
-import { importTokenWasm } from "../solana/wasm";
 import { buildNativeId, canonicalAddress, isNativeDenom } from "../terra";
-import { ChainId, CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "../utils";
+import { ChainId, CHAIN_ID_TERRA } from "../utils";
 import { getIsWrappedAssetEth } from "./getIsWrappedAsset";
 
 export interface WormholeWrappedInfo {
@@ -85,52 +83,5 @@ export async function getOriginalAssetTerra(
     isWrapped: false,
     chainId: CHAIN_ID_TERRA,
     assetAddress: zeroPad(canonicalAddress(wrappedAddress), 32),
-  };
-}
-
-/**
- * Returns a origin chain and asset address on {originChain} for a provided Wormhole wrapped address
- * @param connection
- * @param tokenBridgeAddress
- * @param mintAddress
- * @returns
- */
-export async function getOriginalAssetSol(
-  connection: Connection,
-  tokenBridgeAddress: string,
-  mintAddress: string
-): Promise<WormholeWrappedInfo> {
-  if (mintAddress) {
-    // TODO: share some of this with getIsWrappedAssetSol, like a getWrappedMetaAccountAddress or something
-    const { parse_wrapped_meta, wrapped_meta_address } =
-      await importTokenWasm();
-    const wrappedMetaAddress = wrapped_meta_address(
-      tokenBridgeAddress,
-      new PublicKey(mintAddress).toBytes()
-    );
-    const wrappedMetaAddressPK = new PublicKey(wrappedMetaAddress);
-    const wrappedMetaAccountInfo = await connection.getAccountInfo(
-      wrappedMetaAddressPK
-    );
-    if (wrappedMetaAccountInfo) {
-      const parsed = parse_wrapped_meta(wrappedMetaAccountInfo.data);
-      return {
-        isWrapped: true,
-        chainId: parsed.chain,
-        assetAddress: parsed.token_address,
-      };
-    }
-  }
-  try {
-    return {
-      isWrapped: false,
-      chainId: CHAIN_ID_SOLANA,
-      assetAddress: new PublicKey(mintAddress).toBytes(),
-    };
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_SOLANA,
-    assetAddress: new Uint8Array(32),
   };
 }

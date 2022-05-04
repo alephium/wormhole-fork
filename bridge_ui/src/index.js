@@ -9,7 +9,6 @@ import BackgroundImage from "./components/BackgroundImage";
 import { AlephiumWalletProvider } from "./contexts/AlephiumWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
-import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
 import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
@@ -23,18 +22,16 @@ ReactDOM.render(
         <ErrorBoundary>
           <SnackbarProvider maxSnack={3}>
             <BetaContextProvider>
-              <SolanaWalletProvider>
-                <EthereumProviderProvider>
-                  <TerraWalletProvider>
-                    <AlephiumWalletProvider>
-                      <HashRouter>
-                        <BackgroundImage />
-                        <App />
-                      </HashRouter>
-                    </AlephiumWalletProvider>
-                  </TerraWalletProvider>
-                </EthereumProviderProvider>
-              </SolanaWalletProvider>
+              <EthereumProviderProvider>
+                <TerraWalletProvider>
+                  <AlephiumWalletProvider>
+                    <HashRouter>
+                      <BackgroundImage />
+                      <App />
+                    </HashRouter>
+                  </AlephiumWalletProvider>
+                </TerraWalletProvider>
+              </EthereumProviderProvider>
             </BetaContextProvider>
           </SnackbarProvider>
         </ErrorBoundary>

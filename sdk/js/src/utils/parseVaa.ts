@@ -58,6 +58,134 @@ export const parseTransferPayload = (arr: Buffer) => ({
   targetChain: arr.readUInt16BE(99) as ChainId,
 });
 
+class Reader {
+  private offset: number
+  private data: Buffer
+
+  constructor(data: Uint8Array) {
+    this.offset = 0
+    this.data = Buffer.from(data)
+  }
+
+  readUint8(): number {
+    const value = this.data.readUInt8(this.offset)
+    this.offset += 1
+    return value
+  }
+
+  readUint16BE(): number {
+    const value = this.data.readUInt16BE(this.offset)
+    this.offset += 2
+    return value
+  }
+
+  readUint32BE(): number {
+    const value = this.data.readUInt32BE(this.offset)
+    this.offset += 4
+    return value
+  }
+
+  readUint64BE(): bigint {
+    const value = this.data.readBigUInt64BE(this.offset)
+    this.offset += 8
+    return value
+  }
+
+  readBytes(length: number): Uint8Array {
+    const end = this.offset + length
+    const value = this.data.slice(this.offset, end)
+    this.offset = end
+    return value
+  }
+
+  remain(): Uint8Array {
+    return this.data.slice(this.offset)
+  }
+}
+
+export class Signature {
+  index: number
+  sig: Uint8Array
+
+  constructor(index: number, sig: Uint8Array) {
+    this.index = index
+    this.sig = sig
+  }
+}
+
+export class VAA {
+  version: number
+  guardianSetIndex: number
+  signatures: Signature[]
+  body: VAABody
+
+  static from(data: Uint8Array): VAA {
+    const reader = new Reader(data)
+    const version = reader.readUint8()
+    const guardianSetIndex = reader.readUint32BE()
+    const signatureSize = reader.readUint8()
+    const signatures = Array.from(Array(signatureSize).keys()).map(_ => {
+      const sig = reader.readBytes(66)
+      const index = sig[0] as number
+      return new Signature(index, sig.slice(1))
+    })
+    const body = VAABody.from(reader.remain())
+    return new VAA(version, guardianSetIndex, signatures, body)
+  }
+
+  constructor(version: number, guardianSetIndex: number, signatures: Signature[], body: VAABody) {
+    this.version = version
+    this.guardianSetIndex = guardianSetIndex
+    this.signatures = signatures
+    this.body = body
+  }
+}
+
+export class VAABody {
+  timestamp: number
+  nonce: number
+  emitterChainId: ChainId
+  emitterAddress: Uint8Array
+  sequence: bigint
+  consistencyLevel: number
+  payload: Uint8Array
+
+  static from(data: Uint8Array): VAABody {
+    const reader = new Reader(data)
+    const timestamp = reader.readUint32BE()
+    const nonce = reader.readUint32BE()
+    const emitterChainId = reader.readUint16BE() as ChainId
+    const emitterAddress = reader.readBytes(32)
+    const sequence = reader.readUint64BE()
+    const consistencyLevel = reader.readUint8()
+    const payload = reader.remain()
+    return new VAABody(timestamp, nonce, emitterChainId, emitterAddress, sequence, consistencyLevel, payload)
+  }
+
+  constructor(timestamp: number, nonce: number, emitterChainId: ChainId, emitterAddress: Uint8Array, sequence: bigint, consistencyLevel: number, payload: Uint8Array) {
+    this.timestamp = timestamp
+    this.nonce = nonce
+    this.emitterChainId = emitterChainId
+    this.emitterAddress = emitterAddress
+    this.sequence = sequence
+    this.consistencyLevel = consistencyLevel
+    this.payload = payload
+  }
+
+  encode(): Uint8Array {
+    const length = 51 + this.payload.length
+    const buffer = Buffer.allocUnsafe(length)
+    buffer.writeUInt32BE(this.timestamp, 0)
+    buffer.writeUInt32BE(this.nonce, 4)
+    buffer.writeUInt16BE(this.emitterChainId, 8)
+    buffer.fill(this.emitterAddress, 10, 42)
+    buffer.writeBigUInt64BE(this.sequence, 42)
+    buffer.writeUInt8(this.consistencyLevel, 50)
+    buffer.fill(this.payload, 51, length)
+    return buffer
+  }
+}
+
 //This returns a corrected amount, which accounts for the difference between the VAA
 //decimals, and the decimals of the asset.
 // const normalizeVaaAmount = (

@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA, isEVMChain } from "@certusone/wormhole-sdk";
+import { isEVMChain } from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { RootState } from ".";
@@ -76,12 +76,6 @@ export const selectNFTSourceError = (state: RootState): string | undefined => {
   if (!state.nft.sourceParsedTokenAccount) {
     return "Select an NFT";
   }
-  if (
-    state.nft.sourceChain === CHAIN_ID_SOLANA &&
-    !state.nft.sourceParsedTokenAccount.publicKey
-  ) {
-    return "Token account unavailable";
-  }
   if (!state.nft.sourceParsedTokenAccount.uiAmountString) {
     return "Token amount unavailable";
   }
@@ -131,15 +125,6 @@ export const selectNFTTargetError = (state: RootState) => {
   }
   if (state.nft.sourceChain === state.nft.targetChain) {
     return "Select a different target and source";
-  }
-  if (
-    state.nft.targetChain === CHAIN_ID_SOLANA &&
-    !selectNFTTargetAsset(state)
-  ) {
-    // target asset is only required for solana
-    // in the cases of new transfers, target asset will not exist and be created on redeem
-    // Solana requires the derived address to derive the associated token account which is the target on the vaa
-    return UNREGISTERED_ERROR_MESSAGE;
   }
   if (!state.nft.targetAddressHex) {
     return "Target account unavailable";
@@ -216,12 +201,6 @@ export const selectTransferSourceError = (
   if (!state.transfer.amount) {
     return "Enter an amount";
   }
-  if (
-    state.transfer.sourceChain === CHAIN_ID_SOLANA &&
-    !state.transfer.sourceParsedTokenAccount.publicKey
-  ) {
-    return "Token account unavailable";
-  }
   if (!state.transfer.sourceParsedTokenAccount.uiAmountString) {
     return "Token amount unavailable";
   }
@@ -295,10 +274,6 @@ export const selectTransferShouldLockFields = (state: RootState) =>
   selectTransferIsSending(state) || selectTransferIsSendComplete(state);
 export const selectTransferIsRecovery = (state: RootState) =>
   state.transfer.isRecovery;
-
-export const selectSolanaTokenMap = (state: RootState) => {
-  return state.tokens.solanaTokenMap;
-};
 
 export const selectTerraTokenMap = (state: RootState) => {
   return state.tokens.terraTokenMap;

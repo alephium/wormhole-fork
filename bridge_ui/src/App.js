@@ -1,7 +1,6 @@
 import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
-  CHAIN_ID_SOLANA,
 } from "@certusone/wormhole-sdk";
 import {
   AppBar,
@@ -31,7 +30,6 @@ import Footer from "./components/Footer";
 import HeaderText from "./components/HeaderText";
 import Migration from "./components/Migration";
 import EvmQuickMigrate from "./components/Migration/EvmQuickMigrate";
-import SolanaQuickMigrate from "./components/Migration/SolanaQuickMigrate";
 import NFT from "./components/NFT";
 import NFTOriginVerifier from "./components/NFTOriginVerifier";
 import Recovery from "./components/Recovery";
@@ -280,9 +278,6 @@ function App() {
           <Route exact path="/register">
             <Attest />
           </Route>
-          <Route exact path="/migrate/Solana/:legacyAsset/:fromTokenAccount">
-            <Migration chainId={CHAIN_ID_SOLANA} />
-          </Route>
           <Route exact path="/migrate/Ethereum/:legacyAsset/">
             <Migration chainId={CHAIN_ID_ETH} />
           </Route>
@@ -294,9 +289,6 @@ function App() {
           </Route>
           <Route exact path="/migrate/BinanceSmartChain/">
             <EvmQuickMigrate chainId={CHAIN_ID_BSC} />
-          </Route>
-          <Route exact path="/migrate/Solana/">
-            <SolanaQuickMigrate />
           </Route>
           <Route exact path="/stats">
             <Stats />

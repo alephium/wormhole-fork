@@ -1,4 +1,3 @@
-import { CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import {
@@ -6,7 +5,6 @@ import {
   selectTransferIsRedeeming,
   selectTransferIsSending,
   selectTransferRedeemTx,
-  selectTransferTargetChain,
   selectTransferTransferTx,
 } from "../../store/selectors";
 
@@ -26,7 +24,6 @@ export default function WaitingForWalletMessage() {
   const isApproving = useSelector(selectTransferIsApproving);
   const isSending = useSelector(selectTransferIsSending);
   const transferTx = useSelector(selectTransferTransferTx);
-  const targetChain = useSelector(selectTransferTargetChain);
   const isRedeeming = useSelector(selectTransferIsRedeeming);
   const redeemTx = useSelector(selectTransferRedeemTx);
   const showWarning =
@@ -34,9 +31,6 @@ export default function WaitingForWalletMessage() {
   return showWarning ? (
     <Typography className={classes.message} variant="body2">
       {WAITING_FOR_WALLET_AND_CONF}{" "}
-      {targetChain === CHAIN_ID_SOLANA && isRedeeming
-        ? "Note: there will be several transactions"
-        : null}
     </Typography>
   ) : null;
 }

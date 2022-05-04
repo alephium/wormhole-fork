@@ -1,8 +1,6 @@
 import { ethers } from "ethers";
 import { NFTBridge__factory } from "../ethers-contracts";
 import { getSignedVAAHash } from "../bridge";
-import { importCoreWasm } from "../solana/wasm";
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import axios from "axios";
 import { redeemOnTerra } from ".";
@@ -49,23 +47,9 @@ export async function getIsTransferCompletedTerra(
         gasPrices,
       }
     );
-  } catch (e) {
+  } catch (e: any) {
     // redeemed if the VAA was already executed
     return e.response.data.message.includes("VaaAlreadyExecuted");
   }
   return false;
-}
-
-export async function getIsTransferCompletedSolana(
-  nftBridgeAddress: string,
-  signedVAA: Uint8Array,
-  connection: Connection
-) {
-  const { claim_address } = await importCoreWasm();
-  const claimAddress = await claim_address(nftBridgeAddress, signedVAA);
-  const claimInfo = await connection.getAccountInfo(
-    new PublicKey(claimAddress),
-    "confirmed"
-  );
-  return !!claimInfo;
 }
