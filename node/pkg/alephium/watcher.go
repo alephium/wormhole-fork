@@ -80,8 +80,8 @@ func NewAlephiumWatcher(
 	return &Watcher{
 		url:                           url,
 		apiKey:                        apiKey,
-		governanceContractAddress:     contracts[0],
-		eventEmitterId:                toContractId(contracts[1]),
+		eventEmitterId:                toContractId(contracts[0]),
+		governanceContractAddress:     contracts[1],
 		tokenBridgeContractId:         toContractId(contracts[2]),
 		tokenWrapperFactoryContractId: toContractId(contracts[3]),
 

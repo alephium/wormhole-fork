@@ -20,10 +20,10 @@ interface ContractInfo {
 }
 
 export interface WormholeContracts {
-    governance: DeployResult,
-    tokenBridge: DeployResult,
-    tokenWrapperFactory: DeployResult
     eventEmitter: DeployResult
+    governance: DeployResult
+    tokenBridge: DeployResult
+    tokenWrapperFactory: DeployResult
 }
 
 export class Wormhole {
@@ -120,10 +120,10 @@ export class Wormhole {
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId
         )
         return {
+            eventEmitter: eventEmitter,
             governance: governanceDeployResult,
             tokenBridge: tokenBridgeDeployResult,
-            tokenWrapperFactory: tokenWrapperFactoryDeployResult,
-            eventEmitter: eventEmitter
+            tokenWrapperFactory: tokenWrapperFactoryDeployResult
         }
     }
 
