@@ -48,13 +48,10 @@ TxContract Sequence<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         next2 = 0
     }
 
-    fn setExecuted(pos: U256, offset: U256, current: U256) -> U256 {
-        let shift = pos * 8
-        let value = (current >> shift) & 0xff
+    fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
-        assert!(value & flag == 0)
-        let executed = value | flag
-        return current | (executed << shift)
+        assert!(current & flag == 0)
+        return current | flag
     }
 
     fn checkSequence(seq: U256) -> () {
@@ -70,13 +67,11 @@ TxContract Sequence<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         }
 
         assert!(seq < (next + 512))
-        let seqIndex = seq - next
-        let pos = seqIndex / 8
-        let offset = seqIndex % 8
-        if (pos < 32) {
-            next1 = setExecuted(pos, offset, next1)
+        let offset = seq - next
+        if (offset < 256) {
+            next1 = setExecuted(offset, next1)
         } else {
-            next2 = setExecuted(pos - 32, offset, next2)
+            next2 = setExecuted(offset - 256, next2)
         }
     }
 }
