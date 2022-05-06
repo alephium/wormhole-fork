@@ -182,7 +182,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-      txInfo.sequence()
+      txInfo.sequence
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Fetched Signed VAA</Alert>,

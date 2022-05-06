@@ -140,7 +140,7 @@ async function alephium(txId: string, enqueueSnackbar: any) {
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-      txInfo.sequence()
+      txInfo.sequence
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
   } catch (e) {

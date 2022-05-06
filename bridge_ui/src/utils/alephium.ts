@@ -1,28 +1,19 @@
-import { ALEPHIUM_EVENT_EMITTER_ADDRESS, ALEPHIUM_TOKEN_WRAPPER_CODE_HASH, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
+import { ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, ALEPHIUM_TOKEN_WRAPPER_CODE_HASH, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
 import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId, toAlphContractAddress } from '@certusone/wormhole-sdk';
 import { CliqueClient } from 'alephium-web3';
-import { TxStatus, Confirmed, Event, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
-
-const WormholeMessageEventIndex = 0
+import { TxStatus, Confirmed, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
 
 export class AlphTxInfo {
     blockHash: string
     blockHeight: number
     txId: string
-    event: Event
+    sequence: string
 
-    constructor(blockHash: string, blockHeight: number, event: Event) {
+    constructor(blockHash: string, blockHeight: number, txId: string, sequence: string) {
         this.blockHash = blockHash
         this.blockHeight = blockHeight
-        this.txId = event.txId
-        this.event = event
-    }
-
-    sequence(): string {
-        if (this.event.eventIndex !== WormholeMessageEventIndex) {
-            throw Error("try to get sequence from invalid event, event index: " + this.event.eventIndex)
-        }
-        return (this.event.fields[1] as ValU256).value
+        this.txId = txId
+        this.sequence = sequence
     }
 }
 
@@ -35,44 +26,43 @@ export async function waitTxConfirmed(client: CliqueClient, txId: string): Promi
     return waitTxConfirmed(client, txId)
 }
 
+async function parseSequenceFromLog(client: CliqueClient, txId: string, blockHash: string): Promise<AlphTxInfo> {
+    const events = await client.events.getEventsTxScript({txId: txId})
+    const event = events.data.events.find(event => event.txId === txId)
+    if (typeof event === 'undefined') {
+        return Promise.reject("failed to get event for tx: " + txId)
+    }
+    const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(blockHash)
+    if (event.eventIndex !== 0) {
+        return Promise.reject("invalid event index: " + event.eventIndex)
+    }
+    if (event.fields && event.fields.length !== 5) {
+        return Promise.reject("invalid event, wormhole message has 5 fields")
+    }
+    const sender = event.fields[0]
+    if (sender.type !== 'ByteVec') {
+        return Promise.reject("invalid sender, expect ByteVec type, have: " + sender.type)
+    }
+    const senderContractId = (sender as ValByteVec).value
+    if (senderContractId !== ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID) {
+        return Promise.reject("invalid sender, expect token bridge contract id, have: " + senderContractId)
+    }
+    const field = event.fields[1]
+    if (field.type !== 'U256') {
+        return Promise.reject("invalid event, expect U256 type, have: " + field.type)
+    }
+    return new AlphTxInfo(event.blockHash, blockHeader.data.height, txId, (field as ValU256).value)
+}
+
 export async function waitTxConfirmedAndGetTxInfo(client: CliqueClient, func: () => Promise<string>): Promise<AlphTxInfo> {
-    const startCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
     const txId = await func()
     const confirmed = await waitTxConfirmed(client, txId)
-    const endCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
-    const events = await client.events.getEventsContract({
-        start: startCount.data,
-        end: endCount.data,
-        contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS
-    })
-    const event = events.data.events.find(event => event.txId === txId)
-    if (event !== undefined) {
-        const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
-        return new AlphTxInfo(event.blockHash, blockHeader.data.height, event)
-    }
-    return Promise.reject("failed to get event for tx: " + txId)
+    return parseSequenceFromLog(client, txId, confirmed.blockHash)
 }
 
 export async function getAlphTxInfoByTxId(client: CliqueClient, txId: string): Promise<AlphTxInfo> {
-    const batchSize = 100
     const confirmed = await waitTxConfirmed(client, txId)
-    const currentEventCount = await client.events.getEventsContractCurrentCount({contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS})
-    let end = currentEventCount.data
-    while (end > 0) {
-        const start = (end >= batchSize) ? (end - batchSize) : 0
-        const events = await client.events.getEventsContract({
-            start: start,
-            end: end,
-            contractAddress: ALEPHIUM_EVENT_EMITTER_ADDRESS
-        })
-        const event = events.data.events.find(event => event.txId === txId)
-        if (event !== undefined) {
-            const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
-            return new AlphTxInfo(event.blockHash, blockHeader.data.height, event)
-        }
-        end = start
-    }
-    return Promise.reject("failed to get event for tx: " + txId)
+    return parseSequenceFromLog(client, txId, confirmed.blockHash)
 }
 
 function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {

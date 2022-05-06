@@ -178,7 +178,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-      txInfo.sequence()
+      txInfo.sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
