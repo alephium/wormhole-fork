@@ -85,8 +85,10 @@ class Reader {
     return value
   }
 
-  readUint64BE(): bigint {
-    const value = this.data.readBigUInt64BE(this.offset)
+  readUint64BE(): number {
+    const msb = this.data.readUInt32BE(this.offset)
+    const lsb = this.data.readUInt32BE(this.offset + 4)
+    const value = msb * (2 ** 32) + lsb
     this.offset += 8
     return value
   }
@@ -117,6 +119,7 @@ export class VAA {
   version: number
   guardianSetIndex: number
   signatures: Signature[]
+  encodedBody: Uint8Array
   body: VAABody
 
   static from(data: Uint8Array): VAA {
@@ -129,14 +132,16 @@ export class VAA {
       const index = sig[0] as number
       return new Signature(index, sig.slice(1))
     })
-    const body = VAABody.from(reader.remain())
-    return new VAA(version, guardianSetIndex, signatures, body)
+    const encodedBody = reader.remain()
+    const body = VAABody.from(encodedBody)
+    return new VAA(version, guardianSetIndex, signatures, encodedBody, body)
   }
 
-  constructor(version: number, guardianSetIndex: number, signatures: Signature[], body: VAABody) {
+  constructor(version: number, guardianSetIndex: number, signatures: Signature[], encodedBody: Uint8Array, body: VAABody) {
     this.version = version
     this.guardianSetIndex = guardianSetIndex
     this.signatures = signatures
+    this.encodedBody = encodedBody
     this.body = body
   }
 }
@@ -146,7 +151,7 @@ export class VAABody {
   nonce: number
   emitterChainId: ChainId
   emitterAddress: Uint8Array
-  sequence: bigint
+  sequence: number
   consistencyLevel: number
   payload: Uint8Array
 
@@ -162,7 +167,7 @@ export class VAABody {
     return new VAABody(timestamp, nonce, emitterChainId, emitterAddress, sequence, consistencyLevel, payload)
   }
 
-  constructor(timestamp: number, nonce: number, emitterChainId: ChainId, emitterAddress: Uint8Array, sequence: bigint, consistencyLevel: number, payload: Uint8Array) {
+  constructor(timestamp: number, nonce: number, emitterChainId: ChainId, emitterAddress: Uint8Array, sequence: number, consistencyLevel: number, payload: Uint8Array) {
     this.timestamp = timestamp
     this.nonce = nonce
     this.emitterChainId = emitterChainId
@@ -170,19 +175,6 @@ export class VAABody {
     this.sequence = sequence
     this.consistencyLevel = consistencyLevel
     this.payload = payload
-  }
-
-  encode(): Uint8Array {
-    const length = 51 + this.payload.length
-    const buffer = Buffer.allocUnsafe(length)
-    buffer.writeUInt32BE(this.timestamp, 0)
-    buffer.writeUInt32BE(this.nonce, 4)
-    buffer.writeUInt16BE(this.emitterChainId, 8)
-    buffer.fill(this.emitterAddress, 10, 42)
-    buffer.writeBigUInt64BE(this.sequence, 42)
-    buffer.writeUInt8(this.consistencyLevel, 50)
-    buffer.fill(this.payload, 51, length)
-    return buffer
   }
 }
 
