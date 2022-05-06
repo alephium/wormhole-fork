@@ -5,6 +5,44 @@ import { LCDClient } from "@terra-money/terra.js";
 import axios from "axios";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
+import { toAlphContractAddress, VAA } from "../utils";
+import { CliqueClient } from "alephium-web3";
+import { ValU256 } from "alephium-web3/api/alephium";
+
+const bigInt512 = BigInt(512)
+const bigInt256 = BigInt(256)
+const bigInt1 = BigInt(1)
+
+export async function getIsTransferCompletedAlph(
+  client: CliqueClient,
+  tokenBridgeForChainId: string,
+  groupIndex: number,
+  signedVAA: Uint8Array
+) {
+  const tokenBridgeForChainAddress = toAlphContractAddress(tokenBridgeForChainId)
+  const contractState = await client.contracts.getContractsAddressState(tokenBridgeForChainAddress, {group: groupIndex})
+  const fields = contractState.data.fields
+  const next = BigInt((fields[5] as ValU256).value)
+  const next1 = BigInt((fields[6] as ValU256).value)
+  const next2 = BigInt((fields[7] as ValU256).value)
+  const sequence = BigInt(VAA.from(signedVAA).body.sequence)
+
+  if (sequence < next) {
+    // TODO: check undone sequence list
+    return true
+  }
+
+  let distance = sequence - next
+  if (distance >= bigInt512) {
+    return false
+  }
+  if (distance < bigInt256) {
+    return ((next1 >> distance) & bigInt1) === bigInt1
+  }
+
+  distance = distance - bigInt256
+  return ((next2 >> distance) & bigInt1) === bigInt1
+}
 
 export async function getIsTransferCompletedEth(
   tokenBridgeAddress: string,

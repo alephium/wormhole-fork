@@ -1,7 +1,9 @@
 import {
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getIsTransferCompletedEth,
   getIsTransferCompletedTerra,
+  getIsTransferCompletedAlph,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { useEffect, useState } from "react";
@@ -9,10 +11,13 @@ import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   selectTransferIsRecovery,
+  selectTransferOriginChain,
   selectTransferTargetAddressHex,
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
+  ALEPHIUM_GROUP_INDEX,
+  ALEPHIUM_HOST,
   getEvmChainId,
   getTokenBridgeAddressForChain,
   TERRA_GAS_PRICES_URL,
@@ -21,6 +26,8 @@ import {
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { LCDClient } from "@terra-money/terra.js";
 import useIsWalletReady from "./useIsWalletReady";
+import { CliqueClient } from "alephium-web3";
+import { getTokenBridgeForChainIdWithRetry } from "../utils/alephium";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -35,6 +42,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
   const isRecovery = useSelector(selectTransferIsRecovery);
   const targetAddress = useSelector(selectTransferTargetAddressHex);
   const targetChain = useSelector(selectTransferTargetChain);
+  const sourceChain = useSelector(selectTransferOriginChain)
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();
@@ -87,6 +95,30 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             setIsLoading(false);
           }
         })();
+      } else if (targetChain === CHAIN_ID_ALEPHIUM) {
+        setIsLoading(true);
+        (async () => {
+          try {
+            if (typeof sourceChain === 'undefined') {
+              throw Error("transfer source chain is undefined")
+            }
+
+            const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+            const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+            transferCompleted = await getIsTransferCompletedAlph(
+              client,
+              tokenBridgeForChainId,
+              ALEPHIUM_GROUP_INDEX,
+              signedVAA
+            )
+          } catch (error) {
+            console.log("failed to check alph transfer completed, err: " + error)
+          }
+          if (!cancelled) {
+            setIsTransferCompleted(transferCompleted)
+            setIsLoading(false)
+          }
+        })()
       }
     }
     return () => {
@@ -96,6 +128,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
     shouldFire,
     hasCorrectEvmNetwork,
     targetChain,
+    sourceChain,
     targetAddress,
     signedVAA,
     isReady,
