@@ -5,6 +5,7 @@ import * as env from './env'
 import { deployTestToken } from './deploy_test_token'
 import { getToken } from './transfer'
 import { getCreatedContractAddress } from './get_contract_address'
+import { mine } from './mine'
 
 if (process.argv.length < 3) {
     throw Error('invalid args, expect rpc port arg')
@@ -73,6 +74,9 @@ async function deploy() {
     await createTokenWrapper(wormhole, testTokenId, remoteChains.eth, "eth")
     await createTokenWrapper(wormhole, testTokenId, remoteChains.terra, "terra")
     await createTokenWrapper(wormhole, testTokenId, remoteChains.bsc, "bsc")
+
+    // start auto mining, used for check confirmations
+    mine(client)
 }
 
 deploy()
