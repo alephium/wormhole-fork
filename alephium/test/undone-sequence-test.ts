@@ -14,16 +14,16 @@ describe("test undone sequence", () => {
 
     test("add sequence to undone list", async () => {
         const owner = randomContractId()
-        const undoneSequenceInfo = await createUndoneSequence(client, owner, "", 2, 32)
+        const undoneSequenceInfo = await createUndoneSequence(client, owner)
         const undoneSequence = undoneSequenceInfo.contract
         let undoneList = ""
         let sequences = [1, 3, 4, 5]
         for (let index = 0; index < 4; index++) {
             let testResult = await undoneSequence.testPrivateMethod(client, 'add', {
-                initialFields: [owner, undoneList],
+                initialFields: [owner, undoneList, 2, 32],
                 address: contractAddress,
                 testArgs: [sequences[index]]
-            }, undoneSequenceInfo.templateVariables)
+            })
             let state = testResult.contracts[0].fields[1]
             if (index >= 2) {
                 let removedIndex = index - 2
@@ -40,25 +40,25 @@ describe("test undone sequence", () => {
         for (let index = 0; index < 2; index++) {
             await expectAssertionFailed(async () => {
                 await undoneSequence.testPrivateMethod(client, 'add', {
-                    initialFields: [owner, undoneList],
+                    initialFields: [owner, undoneList, 2, 32],
                     address: contractAddress,
                     testArgs: [invalids[index]]
-                }, undoneSequenceInfo.templateVariables)
+                })
             })
         }
     })
 
     test("add sequences bit map to undone list", async () => {
         const owner = randomContractId()
-        const undoneSequenceInfo = await createUndoneSequence(client, owner, "", 4, 32)
+        const undoneSequenceInfo = await createUndoneSequence(client, owner)
         const undoneSequence = undoneSequenceInfo.contract
         const baseSeq = 100
         const bitMap = 0x0c // 00001100
         let testResult = await undoneSequence.testPrivateMethod(client, 'addSequences', {
-            initialFields: [owner, ""],
+            initialFields: [owner, "", 4, 32],
             address: contractAddress,
             testArgs: [baseSeq, bitMap]
-        }, undoneSequenceInfo.templateVariables)
+        })
         let state = testResult.contracts[0].fields[1]
         expect(state).toEqual([104, 105, 106, 107].map(seq => sequenceToHex(seq)).join(""))
         expect(testResult.returns).toEqual([sequenceToHex(100) + sequenceToHex(101)])
@@ -92,22 +92,22 @@ describe("test undone sequence", () => {
 
     test("remove old undone sequences", async () => {
         const owner = randomContractId()
-        const undoneSequenceInfo = await createUndoneSequence(client, owner, "", 2, 32)
+        const undoneSequenceInfo = await createUndoneSequence(client, owner)
         const undoneSequence = undoneSequenceInfo.contract
         let testResult = await undoneSequence.testPrivateMethod(client, 'removeOldUndone', {
-            initialFields: [owner, ""],
+            initialFields: [owner, "", 2, 32],
             address: contractAddress,
             testArgs: [10]
-        }, undoneSequenceInfo.templateVariables)
+        })
         expect(testResult.contracts[0].fields[1]).toEqual("")
         expect(testResult.returns).toEqual([""])
 
         const undoneList = sequenceToHex(10) + sequenceToHex(12) + sequenceToHex(20)
         testResult = await undoneSequence.testPrivateMethod(client, 'removeOldUndone', {
-            initialFields: [owner, undoneList],
+            initialFields: [owner, undoneList, 2, 32],
             address: contractAddress,
             testArgs: [50]
-        }, undoneSequenceInfo.templateVariables)
+        })
         expect(testResult.contracts[0].fields[1]).toEqual(sequenceToHex(20))
         expect(testResult.returns).toEqual([sequenceToHex(10) + sequenceToHex(12)])
     })

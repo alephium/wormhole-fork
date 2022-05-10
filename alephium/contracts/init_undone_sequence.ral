@@ -1,6 +1,6 @@
 import "init_undone_sequence_interface.ral"
 
-TxScript Main<contractId: ByteVec, undoneSequenceId: ByteVec> {
+TxScript Main(contractId: ByteVec, undoneSequenceId: ByteVec) {
     pub payable fn main() -> () {
         let impl = InitUndoneSequence(contractId)
         impl.init(undoneSequenceId)

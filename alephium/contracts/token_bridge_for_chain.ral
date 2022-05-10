@@ -1,15 +1,9 @@
-import "token_bridge.ral"
+import "governance.ral"
 import "token_interface.ral"
-import "token_wrapper_factory.ral"
 import "math.ral"
 import "sequence.ral"
 
-TxContract TokenBridgeForChain<
-    tokenWrapperFactoryId: ByteVec,
-    tokenWrapperCodeHash: ByteVec,
-    undoneSequenceCodeHash: ByteVec,
-    eventEmitterId: ByteVec
->(
+TxContract TokenBridgeForChain(
     governanceId: ByteVec,
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
@@ -18,8 +12,12 @@ TxContract TokenBridgeForChain<
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    mut undoneSequenceId: ByteVec
-) extends Sequence(next, next1, next2, undoneSequenceId) {
+    mut undoneSequenceId: ByteVec,
+    tokenWrapperTemplateId: ByteVec, // used for create contract by copyCreateContract
+    tokenWrapperCodeHash: ByteVec,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId, undoneSequenceCodeHash, eventEmitterId) {
     pub fn getLocalTokenBridgeId() -> (ByteVec) {
         return localTokenBridgeId
     }
@@ -61,38 +59,41 @@ TxContract TokenBridgeForChain<
         let nameSize = size!(name)
         assert!(nameSize <= 32)
 
-        let tokenWrapperFactory = TokenWrapperFactory(tokenWrapperFactoryId)
         approveAlph!(payer, createContractAlphAmount)
-        tokenWrapperFactory.createWrapper(
+        let encodedState = encodeToByteVec!(
             localTokenBridgeId,
+            selfContractId!(),
             localChainId,
             remoteChainId,
             tokenId,
             true,
             token.decimals(),
             zeros!(32 - symbolSize) ++ symbol,
-            zeros!(32 - nameSize) ++ name,
-            payer,
-            createContractAlphAmount
+            zeros!(32 - nameSize) ++ name
         )
+        let contractId = copyCreateContract!(tokenWrapperTemplateId, encodedState)
+        let eventEmitter = EventEmitter(eventEmitterId)
+        eventEmitter.publishTokenWrapperCreated(contractId, true, tokenId, remoteChainId)
     }
 
     pub payable fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        let (tokenContractId, decimals, symbol, name) = parseAttestToken(vaa)
-        let tokenWrapperFactory = TokenWrapperFactory(tokenWrapperFactoryId)
+        let (tokenId, decimals, symbol, name) = parseAttestToken(vaa)
         approveAlph!(payer, createContractAlphAmount)
-        tokenWrapperFactory.createWrapper(
+        let encodedState = encodeToByteVec!(
             localTokenBridgeId,
+            selfContractId!(),
             localChainId,
             remoteChainId,
-            tokenContractId,
+            tokenId,
             false,
             decimals,
             symbol,
-            name,
-            payer,
-            createContractAlphAmount
+            name
         )
+        let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        let contractId = copyCreateContractWithToken!(tokenWrapperTemplateId, encodedState, tokenAmount)
+        let eventEmitter = EventEmitter(eventEmitterId)
+        eventEmitter.publishTokenWrapperCreated(contractId, false, tokenId, remoteChainId)
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {

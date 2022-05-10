@@ -20,22 +20,22 @@ export class ContractInfo {
     selfState: ContractState
     dependencies: ContractState[]
     address: string
+    contractId: string
     bytecode: string
     codeHash: string
-    templateVariables?: any
 
     states(): ContractState[] {
         return [this.selfState].concat(this.dependencies)
     }
 
-    constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string, templateVariables?: any) {
+    constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string) {
         this.contract = contract
         this.selfState = selfState 
         this.dependencies = dependencies
         this.address = address
+        this.contractId = selfState.contractId
         this.bytecode = selfState.bytecode
         this.codeHash = Buffer.from(blake.blake2b(Buffer.from(selfState.bytecode, 'hex'), undefined, 32)).toString('hex')
-        this.templateVariables = templateVariables
     }
 }
 

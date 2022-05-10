@@ -24,11 +24,10 @@ type Watcher struct {
 	url    string
 	apiKey string
 
-	governanceContractAddress     string
-	eventEmitterId                Byte32
-	tokenBridgeContractId         Byte32
-	tokenWrapperFactoryContractId Byte32
-	chainIndex                    *ChainIndex
+	governanceContractAddress string
+	eventEmitterId            Byte32
+	tokenBridgeContractId     Byte32
+	chainIndex                *ChainIndex
 
 	readiness readiness.Component
 
@@ -73,17 +72,16 @@ func NewAlephiumWatcher(
 	obsvReqC chan *gossipv1.ObservationRequest,
 	db *Database,
 ) (*Watcher, error) {
-	if len(contracts) != 4 {
+	if len(contracts) != 3 {
 		return nil, fmt.Errorf("invalid contract ids")
 	}
 
 	return &Watcher{
-		url:                           url,
-		apiKey:                        apiKey,
-		eventEmitterId:                toContractId(contracts[0]),
-		governanceContractAddress:     contracts[1],
-		tokenBridgeContractId:         toContractId(contracts[2]),
-		tokenWrapperFactoryContractId: toContractId(contracts[3]),
+		url:                       url,
+		apiKey:                    apiKey,
+		eventEmitterId:            toContractId(contracts[0]),
+		governanceContractAddress: contracts[1],
+		tokenBridgeContractId:     toContractId(contracts[2]),
 
 		chainIndex: &ChainIndex{
 			FromGroup: fromGroup,

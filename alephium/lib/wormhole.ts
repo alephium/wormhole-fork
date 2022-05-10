@@ -1,9 +1,12 @@
-import { BuildScriptTx, CliqueClient, Contract, Number256, Script, Signer, SubmissionResult, Val } from 'alephium-web3'
+import { CliqueClient, Contract, Number256, Script, SingleAddressSigner, SubmissionResult, Val } from 'alephium-web3'
 import * as blake from 'blakejs'
 import { waitTxConfirmed } from './utils'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
 const AlephiumChainId = 13
+
+const undoneSequenceMaxSize = 128 // the maximum size of the contract state is 1k
+const undoneSequenceMaxDistance = 512
 
 export interface DeployResult {
     groupIndex: number,
@@ -20,15 +23,15 @@ interface ContractInfo {
 }
 
 export interface WormholeContracts {
+    tokenWrapperCodeHash: string
     eventEmitter: DeployResult
     governance: DeployResult
     tokenBridge: DeployResult
-    tokenWrapperFactory: DeployResult
 }
 
 export class Wormhole {
     client: CliqueClient
-    signer: Signer
+    signer: SingleAddressSigner
     governanceChainId: number
     governanceContractId: string
     tokenBridgeGovernanceChainId: number
@@ -43,7 +46,7 @@ export class Wormhole {
 
     constructor(
         client: CliqueClient,
-        signer: Signer,
+        signer: SingleAddressSigner,
         governanceChainId: number,
         governanceContractId: string,
         tokenBridgeGovernanceChainId: number,
@@ -63,8 +66,8 @@ export class Wormhole {
         this.initMessageFee = initMessageFee
     }
 
-    private contractInfo(contract: Contract, templateVariables?: any): ContractInfo {
-        const bytecode = contract.buildByteCode(templateVariables)
+    private contractInfo(contract: Contract): ContractInfo {
+        const bytecode = contract.buildByteCode()
         const codeHash = Buffer.from(blake.blake2b(Buffer.from(bytecode, 'hex'), undefined, 32)).toString('hex')
         return {
             contract: contract,
@@ -83,12 +86,12 @@ export class Wormhole {
         return info
     }
 
-    private async tokenBridgeForChainInfo(templateVariables: any): Promise<ContractInfo> {
+    private async tokenBridgeForChainInfo(): Promise<ContractInfo> {
         if (typeof this._tokenBridgeForChainInfo !== 'undefined') {
             return this._tokenBridgeForChainInfo as ContractInfo
         }
         const contract = await Contract.fromSource(this.client, 'token_bridge_for_chain.ral')
-        const info = this.contractInfo(contract, templateVariables)
+        const info = this.contractInfo(contract)
         this._tokenBridgeForChainInfo = info
         return info
     }
@@ -98,32 +101,28 @@ export class Wormhole {
             return this._undoneSequenceInfo as ContractInfo
         }
         const contract = await Contract.fromSource(this.client, 'undone_sequence.ral')
-        const info = this.contractInfo(contract, this.undoneSequenceTemplateVariables)
+        const info = this.contractInfo(contract)
         this._undoneSequenceInfo = info
         return info
     }
 
-    private undoneSequenceTemplateVariables = {
-        undoneSequenceMaxSize: 128, // the maximum size of the contract state is 1k
-        undoneSequenceMaxDistance: 512
-    }
-
     async deployContracts(): Promise<WormholeContracts> {
         const eventEmitter = await this.deployEventEmitter()
-        const tokenWrapperFactoryDeployResult = await this.deployTokenWrapperFactory(eventEmitter.contractId)
+        const undoneSequence = await this.undoneSequenceInfo()
         const governanceDeployResult = await this.deployGovernance(
-            eventEmitter.contractId, this.governanceChainId, this.governanceContractId,
+            undoneSequence.codeHash, eventEmitter.contractId, this.governanceChainId, this.governanceContractId,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            eventEmitter.contractId, tokenWrapperFactoryDeployResult.contractId, governanceDeployResult.contractId,
+            undoneSequence.codeHash, eventEmitter.contractId,  governanceDeployResult.contractId,
             this.tokenBridgeGovernanceChainId, this.tokenBridgeGovernanceContractId
         )
+        const tokenWrapper = await this.tokenWrapperInfo()
         return {
+            tokenWrapperCodeHash: tokenWrapper.codeHash,
             eventEmitter: eventEmitter,
             governance: governanceDeployResult,
             tokenBridge: tokenBridgeDeployResult,
-            tokenWrapperFactory: tokenWrapperFactoryDeployResult
         }
     }
 
@@ -132,16 +131,8 @@ export class Wormhole {
         return this._deploy(contract)
     }
 
-    private async deployTokenWrapperFactory(eventEmitterId: string): Promise<DeployResult> {
-        const tokenWrapper = await this.tokenWrapperInfo()
-        const tokenWrapperFactory = await Contract.fromSource(this.client, 'token_wrapper_factory.ral')
-        return this._deploy(tokenWrapperFactory, undefined, {
-            eventEmitterId: eventEmitterId,
-            tokenWrapperByteCode: tokenWrapper.bytecode
-        })
-    }
-
     private async deployGovernance(
+        undoneSequenceCodeHash: string,
         eventEmitterId: string,
         governanceChainId: number,
         governanceContractId: string,
@@ -162,47 +153,40 @@ export class Wormhole {
         const initGuardianSizes = Array(0, initGuardianSet.length)
         const previousGuardianSetExpirationTime = 0
         const initFields = [
-            AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee,
-            initGuardianSets, initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime
+            AlephiumChainId, governanceChainId, governanceContractId, 0, 0, 0, '', initMessageFee, initGuardianSets,
+            initGuardianIndexes, initGuardianSizes, previousGuardianSetExpirationTime, undoneSequenceCodeHash, eventEmitterId
         ]
-        const undoneSequence = await this.undoneSequenceInfo()
-        const governanceDeployResult = await this._deploy(governance, initFields, {
-            undoneSequenceCodeHash: undoneSequence.codeHash,
-            eventEmitterId: eventEmitterId
-        })
+        const governanceDeployResult = await this._deploy(governance, initFields)
         const undoneSequenceDeployResult = await this.deployUndoneSequence(governanceDeployResult.contractId)
         await this.innitUndoneSequence(governanceDeployResult.contractId, undoneSequenceDeployResult.contractId)
         return governanceDeployResult
     }
 
     private async deployTokenBridge(
+        undoneSequenceCodeHash: string,
         eventEmitterId: string,
-        tokenWrapperFactoryId: string,
         governanceId: string,
         governanceChainId: number,
         governanceContractId: string
     ): Promise<DeployResult> {
-        const undoneSequence = await this.undoneSequenceInfo()
         const tokenWrapper = await this.tokenWrapperInfo()
-        const sequenceTemplateVariables = {
-            undoneSequenceCodeHash: undoneSequence.codeHash,
-            eventEmitterId: eventEmitterId
-        }
-        const tokenBridgeForChain = await this.tokenBridgeForChainInfo({
-            tokenWrapperFactoryId: tokenWrapperFactoryId,
-            tokenWrapperCodeHash: tokenWrapper.codeHash,
-            ...sequenceTemplateVariables
-        })
+        const dummyChainId: number = 0xffffffff
+        const tokenWrapperInitFields = ["", "", dummyChainId, dummyChainId, "", true, 0, "", ""]
+        const tokenWrapperDeployResult = await this._deploy(tokenWrapper.contract, tokenWrapperInitFields)
+
+        const tokenBridgeForChain = await this.tokenBridgeForChainInfo()
+        const tokenBridgeForChainInitFields = [
+            "", dummyChainId, "", dummyChainId, "", 0, 0, 0, "", "", "", "", ""
+        ]
+        const tokenBridgeForChainDeployResult = await this._deploy(tokenBridgeForChain.contract, tokenBridgeForChainInitFields)
+
         const tokenBridge = await Contract.fromSource(this.client, 'token_bridge.ral')
         const initFields = [
-            governanceId, governanceChainId, governanceContractId,
-            0, 0, 0, '', AlephiumChainId, 0
+            governanceId, governanceChainId, governanceContractId, 0, 0, 0, '', AlephiumChainId, 0,
+            tokenWrapperDeployResult.contractId, tokenBridgeForChainDeployResult.contractId,
+            tokenWrapper.codeHash, undoneSequenceCodeHash, eventEmitterId
         ]
-        const tokenBridgeDeployResult = await this._deploy(tokenBridge, initFields, {
-            tokenBridgeForChainByteCode: tokenBridgeForChain.bytecode,
-            tokenWrapperCodeHash: tokenWrapper.codeHash,
-            ...sequenceTemplateVariables
-        })
+        const tokenBridgeDeployResult = await this._deploy(tokenBridge, initFields)
         const undoneSequenceDeployResult = await this.deployUndoneSequence(tokenBridgeDeployResult.contractId)
         await this.innitUndoneSequence(tokenBridgeDeployResult.contractId, undoneSequenceDeployResult.contractId)
         return tokenBridgeDeployResult
@@ -212,16 +196,17 @@ export class Wormhole {
         tokenBridgeId: string,
         vaa: string,
         payer: string,
-        alphAmount: Number256,
-        params?: BuildScriptTx,
+        alphAmount: Number256
     ): Promise<string> {
         const script = await Script.fromSource(this.client, "register_chain.ral")
         const scriptTx = await script.transactionForDeployment(this.signer, {
-            payer: payer,
-            tokenBridgeId: tokenBridgeId,
-            vaa: vaa,
-            alphAmount: alphAmount
-        }, params)
+            templateVariables: {
+                payer: payer,
+                tokenBridgeId: tokenBridgeId,
+                vaa: vaa,
+                alphAmount: alphAmount
+            }
+        })
         const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return submitResult.txId
     }
@@ -237,8 +222,10 @@ export class Wormhole {
     ): Promise<SubmissionResult> {
         const script = await Script.fromSource(this.client, 'init_undone_sequence.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
-            contractId: contractId,
-            undoneSequenceId: undoneSequenceId
+            templateVariables: {
+                contractId: contractId,
+                undoneSequenceId: undoneSequenceId
+            }
         })
         return this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
     }
@@ -251,10 +238,12 @@ export class Wormhole {
     ): Promise<string> {
         const script = await Script.fromSource(this.client, 'create_local_wrapper.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
-            tokenBridgeForChainId: tokenBridgeForChainId,
-            tokenId: localTokenId,
-            payer: payer,
-            alphAmount: alphAmount,
+            templateVariables: {
+                tokenBridgeForChainId: tokenBridgeForChainId,
+                tokenId: localTokenId,
+                payer: payer,
+                alphAmount: alphAmount
+            }
         })
         const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return result.txId
@@ -262,15 +251,13 @@ export class Wormhole {
 
     private async deployUndoneSequence(owner: string): Promise<DeployResult> {
         const info = await this.undoneSequenceInfo()
-        return this._deploy(info.contract, [owner, ''], this.undoneSequenceTemplateVariables)
+        return this._deploy(info.contract, [owner, '', undoneSequenceMaxSize, undoneSequenceMaxDistance])
     }
 
-    private async _deploy(
-        contract: Contract,
-        initFields?: Val[],
-        templateVariables?: any
-    ): Promise<DeployResult> {
-        const deployTx = await contract.transactionForDeployment(this.signer, initFields, undefined, templateVariables)
+    private async _deploy(contract: Contract, initFields?: Val[]): Promise<DeployResult> {
+        const deployTx = await contract.transactionForDeployment(this.signer, {
+            initialFields: initFields
+        })
         const submitResult = await this.signer.submitTransaction(deployTx.unsignedTx, deployTx.txId)
         const confirmed = await waitTxConfirmed(this.client, submitResult.txId)
         return {

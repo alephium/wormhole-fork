@@ -82,28 +82,24 @@ export async function createGovernance(
         0,
         0,
         0,
-        undoneSequenceInfo.address,
+        undoneSequenceInfo.contractId,
         messageFee,
         Array(Array(19).fill('00'), initGuardianSet.guardianSetAddresses(19)),
         [0, initGuardianSet.index],
         [0, initGuardianSet.size()],
-        0
+        0,
+        undoneSequenceInfo.codeHash,
+        eventEmitter.selfState.contractId,
     ]
-    const templateVariables = {
-        undoneSequenceCodeHash: undoneSequenceInfo.codeHash,
-        eventEmitterId: eventEmitter.selfState.contractId
-    }
     const contractState = governanceContract.toState(
         initFields,
         {alphAmount: dustAmount},
-        address,
-        templateVariables
+        address
     )
     return new ContractInfo(
         governanceContract,
         contractState,
         [undoneSequenceInfo.selfState, eventEmitter.selfState],
-        address,
-        templateVariables
+        address
     )
 }

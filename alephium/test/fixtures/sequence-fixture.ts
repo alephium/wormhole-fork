@@ -10,12 +10,12 @@ export async function createUndoneSequence(
 ): Promise<ContractInfo> {
     const contract = await Contract.fromSource(client, 'undone_sequence.ral')
     const address = randomContractAddress()
-    const templateVariables = {
-        undoneSequenceMaxSize: undoneSequenceMaxSize,
-        undoneSequenceMaxDistance: undoneSequenceMaxDistance
-    }
-    const state = contract.toState([owner, undoneSequenceList], {alphAmount: dustAmount}, address, templateVariables)
-    return new ContractInfo(contract, state, [], address, templateVariables)
+    const state = contract.toState(
+        [owner, undoneSequenceList, undoneSequenceMaxSize, undoneSequenceMaxDistance],
+        {alphAmount: dustAmount},
+        address
+    )
+    return new ContractInfo(contract, state, [], address)
 }
 
 export async function createSequence(
@@ -37,21 +37,15 @@ export async function createSequence(
         undoneSequenceMaxDistance
     )
     const contract = await Contract.fromSource(client, 'sequence.ral')
-    const templateVariables = {
-        undoneSequenceCodeHash: undoneSequence.codeHash,
-        eventEmitterId: eventEmitter.selfState.contractId
-    }
     const state = contract.toState(
-        [next, next1, next2, undoneSequence.address],
+        [next, next1, next2, undoneSequence.contractId, undoneSequence.codeHash, eventEmitter.contractId],
         {alphAmount: dustAmount},
-        address,
-        templateVariables
+        address
     )
     return new ContractInfo(
         contract,
         state,
         [undoneSequence.selfState, eventEmitter.selfState],
-        address,
-        templateVariables
+        address
     )
 }

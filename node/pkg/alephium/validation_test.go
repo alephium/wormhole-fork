@@ -118,10 +118,9 @@ func TestValidateTokenWrapperCreatedEvent(t *testing.T) {
 	defer db.Close()
 
 	watcher := &Watcher{
-		tokenWrapperFactoryContractId: randomByte32(),
-		db:                            db,
-		localTokenWrapperCache:        sync.Map{},
-		remoteTokenWrapperCache:       sync.Map{},
+		db:                      db,
+		localTokenWrapperCache:  sync.Map{},
+		remoteTokenWrapperCache: sync.Map{},
 	}
 
 	remoteChainId := uint16(2)
@@ -135,59 +134,43 @@ func TestValidateTokenWrapperCreatedEvent(t *testing.T) {
 	remoteTokenWrapperId := randomByte32()
 
 	skipIfError, err := watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
-		senderId:              watcher.tokenWrapperFactoryContractId,
-		tokenBridgeForChainId: tokenBridgeForChainId,
-		tokenWrapperId:        localTokenWrapperId,
-		isLocalToken:          true,
-		tokenId:               localTokenId,
-		remoteChainId:         remoteChainId,
+		senderId:       tokenBridgeForChainId,
+		tokenWrapperId: localTokenWrapperId,
+		isLocalToken:   true,
+		tokenId:        localTokenId,
+		remoteChainId:  remoteChainId,
 	})
 	assert.False(t, skipIfError)
 	assert.Nil(t, err)
 
 	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
-		senderId:              watcher.tokenWrapperFactoryContractId,
-		tokenBridgeForChainId: tokenBridgeForChainId,
-		tokenWrapperId:        remoteTokenWrapperId,
-		isLocalToken:          false,
-		tokenId:               remoteTokenId,
-		remoteChainId:         remoteChainId,
+		senderId:       tokenBridgeForChainId,
+		tokenWrapperId: remoteTokenWrapperId,
+		isLocalToken:   false,
+		tokenId:        remoteTokenId,
+		remoteChainId:  remoteChainId,
 	})
 	assert.False(t, skipIfError)
 	assert.Nil(t, err)
-
-	// invalid sender contract
-	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
-		senderId:              randomByte32(),
-		tokenBridgeForChainId: tokenBridgeForChainId,
-		tokenWrapperId:        remoteTokenWrapperId,
-		isLocalToken:          false,
-		tokenId:               remoteTokenId,
-		remoteChainId:         remoteChainId,
-	})
-	assert.True(t, skipIfError)
-	assert.NotNil(t, err)
 
 	// invalid token bridge for chain
 	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
-		senderId:              watcher.tokenWrapperFactoryContractId,
-		tokenBridgeForChainId: tokenBridgeForChainId,
-		tokenWrapperId:        remoteTokenWrapperId,
-		isLocalToken:          false,
-		tokenId:               remoteTokenId,
-		remoteChainId:         remoteChainId + 1,
+		senderId:       tokenBridgeForChainId,
+		tokenWrapperId: remoteTokenWrapperId,
+		isLocalToken:   false,
+		tokenId:        remoteTokenId,
+		remoteChainId:  remoteChainId + 1,
 	})
 	assert.True(t, skipIfError)
 	assert.NotNil(t, err)
 
 	// local token wrapper already exist
 	skipIfError, err = watcher.validateTokenWrapperCreatedEvent(&tokenWrapperCreated{
-		senderId:              watcher.tokenWrapperFactoryContractId,
-		tokenBridgeForChainId: tokenBridgeForChainId,
-		tokenWrapperId:        randomByte32(),
-		isLocalToken:          true,
-		tokenId:               localTokenId,
-		remoteChainId:         remoteChainId,
+		senderId:       tokenBridgeForChainId,
+		tokenWrapperId: randomByte32(),
+		isLocalToken:   true,
+		tokenId:        localTokenId,
+		remoteChainId:  remoteChainId,
 	})
 	assert.True(t, skipIfError)
 	assert.NotNil(t, err)

@@ -3,11 +3,13 @@ import "init_undone_sequence_interface.ral"
 import "event_emitter.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
-TxContract Sequence<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
+TxContract Sequence(
     mut next: U256,
     mut next1: U256, // TODO: better name
     mut next2: U256,
-    mut undoneSequenceId: ByteVec
+    mut undoneSequenceId: ByteVec,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
 ) extends InitUndoneSequence {
     fn initialized() -> Bool {
         return undoneSequenceId != #

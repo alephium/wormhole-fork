@@ -52,11 +52,6 @@ func (w *Watcher) validateUndoneSequenceCompletedEvents(event *undoneSequenceCom
 
 // return skipIfError, error
 func (w *Watcher) validateTokenWrapperCreatedEvent(event *tokenWrapperCreated) (bool, error) {
-	if !event.senderId.equalWith(w.tokenWrapperFactoryContractId) {
-		err := fmt.Errorf("invalid sender for token wrapper created event, expected %s, have %s", w.tokenWrapperFactoryContractId.ToHex(), event.senderId.ToHex())
-		return true, err
-	}
-
 	contractId, err := w.getTokenBridgeForChain(event.remoteChainId)
 	if err == badger.ErrKeyNotFound {
 		err := fmt.Errorf("token bridge for chain does not exist: %v", event.remoteChainId)
@@ -66,10 +61,10 @@ func (w *Watcher) validateTokenWrapperCreatedEvent(event *tokenWrapperCreated) (
 		err := fmt.Errorf("failed to get token bridge for chain contract, err %v, remoteChainId %v", err, event.remoteChainId)
 		return false, err
 	}
-	if !bytes.Equal(event.tokenBridgeForChainId[:], contractId[:]) {
+	if !bytes.Equal(event.senderId[:], contractId[:]) {
 		err := fmt.Errorf(
 			"ignore invalid token wrapper created event, expected %s, have %s",
-			event.tokenBridgeForChainId.ToHex(),
+			event.senderId.ToHex(),
 			contractId.ToHex(),
 		)
 		return true, err

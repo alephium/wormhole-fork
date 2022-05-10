@@ -1,6 +1,6 @@
 import "sequence.ral"
 
-TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
+TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceContract: ByteVec,
@@ -12,8 +12,10 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut guardianSetSizes: [U256; 2],
-    mut previousGuardianSetExpirationTime: U256
-) extends Sequence(next, next1, next2, undoneSequenceId) {
+    mut previousGuardianSetExpirationTime: U256,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId, undoneSequenceCodeHash, eventEmitterId) {
     pub fn getChainId() -> (U256) {
         return chainId
     }

@@ -1,6 +1,8 @@
-TxContract UndoneSequence<undoneSequenceMaxSize: U256, undoneSequenceMaxDistance: U256>(
+TxContract UndoneSequence(
     owner: ByteVec,
-    mut undone: ByteVec
+    mut undone: ByteVec,
+    undoneSequenceMaxSize: U256,
+    undoneSequenceMaxDistance: U256
 ) {
     pub fn getOwner() -> ByteVec {
         return owner

@@ -1,6 +1,6 @@
 import "token_bridge_for_chain.ral"
 
-TxScript Main<payer: Address, tokenBridgeForChainId: ByteVec, tokenId: ByteVec, alphAmount: U256> {
+TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, tokenId: ByteVec, alphAmount: U256) {
     pub payable fn main() -> () {
         approveAlph!(payer, alphAmount)
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)

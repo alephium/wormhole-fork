@@ -5,12 +5,7 @@ import "token_interface.ral"
 import "token_wrapper.ral"
 import "event_emitter.ral"
 
-TxContract TokenBridge<
-    tokenBridgeForChainByteCode: ByteVec,
-    tokenWrapperCodeHash: ByteVec,
-    undoneSequenceCodeHash: ByteVec,
-    eventEmitterId: ByteVec
->(
+TxContract TokenBridge(
     governanceId: ByteVec, // governance contract id
     governanceChainId: U256,
     governanceContractId: ByteVec,
@@ -19,8 +14,13 @@ TxContract TokenBridge<
     mut next2: U256,
     mut undoneSequenceId: ByteVec,
     localChainId: U256,
-    mut sequence: U256     // the sequence of next message published by self
-) extends Sequence(next, next1, next2, undoneSequenceId) {
+    mut sequence: U256,     // the sequence of next message published by self
+    tokenWrapperTemplateId: ByteVec,         // used for create contract by copyCreateContract
+    tokenBridgeForChainTemplateId: ByteVec,  // used for create contract by copyCreateContract
+    tokenWrapperCodeHash: ByteVec,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId, undoneSequenceCodeHash, eventEmitterId) {
     pub fn getGovernanceId() -> (ByteVec) {
         return governanceId
     }
@@ -67,11 +67,23 @@ TxContract TokenBridge<
         assert!(remoteChainId != localChainId)
 
         let mut encodedState = encodeToByteVec!(
-            governanceId, localChainId, selfContractId!(), remoteChainId, remoteTokenBridgeId, 0, 0, 0, #
+            governanceId,
+            localChainId,
+            selfContractId!(),
+            remoteChainId,
+            remoteTokenBridgeId,
+            0,
+            0,
+            0,
+            #,
+            tokenWrapperTemplateId,
+            tokenWrapperCodeHash,
+            undoneSequenceCodeHash,
+            eventEmitterId
         )
 
         approveAlph!(payer, createContractAlphAmount)
-        let contractId = createContract!(tokenBridgeForChainByteCode, encodedState)
+        let contractId = copyCreateContract!(tokenBridgeForChainTemplateId, encodedState)
         let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
     }

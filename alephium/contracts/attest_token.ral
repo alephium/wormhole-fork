@@ -1,6 +1,6 @@
 import "token_bridge.ral"
 
-TxScript Main<payer: Address, tokenBridgeId: ByteVec, tokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256> {
+TxScript Main(payer: Address, tokenBridgeId: ByteVec, tokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
     pub payable fn main() -> () {
         approveAlph!(payer, messageFee)
         let tokenBridge = TokenBridge(tokenBridgeId)

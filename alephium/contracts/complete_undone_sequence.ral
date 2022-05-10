@@ -1,6 +1,6 @@
 import "token_bridge.ral"
 
-TxScript Main<tokenBridgeId: ByteVec, vaa: ByteVec, arbiter: Address> {
+TxScript Main(tokenBridgeId: ByteVec, vaa: ByteVec, arbiter: Address) {
     pub payable fn main() -> () {
         approveAlph!(txCaller!(0), 1000000000000) // dustAmount
         let tokenBridge = TokenBridge(tokenBridgeId)

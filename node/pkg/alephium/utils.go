@@ -294,12 +294,11 @@ func TransferMessageFromBytes(data []byte) *TransferMessage {
 }
 
 type tokenWrapperCreated struct {
-	senderId              Byte32
-	tokenBridgeForChainId Byte32
-	tokenWrapperId        Byte32
-	isLocalToken          bool
-	tokenId               Byte32
-	remoteChainId         uint16
+	senderId       Byte32
+	tokenWrapperId Byte32
+	isLocalToken   bool
+	tokenId        Byte32
+	remoteChainId  uint16
 }
 
 type tokenBridgeForChainCreated struct {
@@ -418,35 +417,30 @@ func (e *Event) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated
 }
 
 func (e *Event) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
-	assume(len(e.Fields) == 6)
+	assume(len(e.Fields) == 5)
 	senderId, err := e.Fields[0].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	tokenBridgeForChainId, err := e.Fields[1].ToByte32()
+	tokenWrapperId, err := e.Fields[1].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	tokenWrapperId, err := e.Fields[2].ToByte32()
+	isLocalToken := e.Fields[2].ToBool()
+	tokenId, err := e.Fields[3].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	isLocalToken := e.Fields[3].ToBool()
-	tokenId, err := e.Fields[4].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	remoteChainId, err := e.Fields[5].ToUint16()
+	remoteChainId, err := e.Fields[4].ToUint16()
 	if err != nil {
 		return nil, err
 	}
 	return &tokenWrapperCreated{
-		senderId:              *senderId,
-		tokenBridgeForChainId: *tokenBridgeForChainId,
-		tokenWrapperId:        *tokenWrapperId,
-		isLocalToken:          isLocalToken,
-		tokenId:               *tokenId,
-		remoteChainId:         remoteChainId,
+		senderId:       *senderId,
+		tokenWrapperId: *tokenWrapperId,
+		isLocalToken:   isLocalToken,
+		tokenId:        *tokenId,
+		remoteChainId:  remoteChainId,
 	}, nil
 }
 

@@ -1,6 +1,6 @@
 import "token_wrapper.ral"
 
-TxScript Main<
+TxScript Main(
     sender: Address,
     tokenWrapperId: ByteVec,
     localTokenId: ByteVec,
@@ -9,7 +9,8 @@ TxScript Main<
     messageFee: U256,
     arbiterFee: U256,
     nonce: ByteVec,
-    consistencyLevel: U256> {
+    consistencyLevel: U256
+) {
     pub payable fn main() -> () {
         approveAlph!(sender, messageFee)
         approveToken!(sender, localTokenId, tokenAmount)

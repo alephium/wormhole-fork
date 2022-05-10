@@ -1,9 +1,8 @@
-import { binToHex, CliqueClient, contractIdFromAddress, Signer } from 'alephium-web3'
+import { binToHex, CliqueClient, contractIdFromAddress, NodeSigner, Script, SingleAddressSigner } from 'alephium-web3'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import * as env from './env'
 import { deployTestToken } from './deploy_test_token'
-import { getToken } from './transfer'
 import { getCreatedContractAddress } from './get_contract_address'
 import { mine } from './mine'
 
@@ -13,18 +12,6 @@ if (process.argv.length < 3) {
 
 const port = process.argv[2]
 const client = new CliqueClient({baseUrl: `http://127.0.0.1:${port}`})
-const signer = Signer.testSigner(client)
-const wormhole = new Wormhole(
-    client,
-    signer,
-    env.governanceChainId,
-    env.governanceContractAddress,
-    env.governanceChainId,
-    env.governanceContractAddress,
-    env.initGuardianSet,
-    env.initGuardianIndex,
-    env.messageFee
-)
 
 async function createWallet() {
     const testWallet = 'alephium-web3-test-only-wallet'
@@ -53,12 +40,44 @@ async function createTokenWrapper(
 ) {
     let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, env.payer, env.dustAmount)
     let tokenWrapper = await getCreatedContractAddress(client, txId)
-    const tokenWrapperForEth = binToHex(contractIdFromAddress(tokenWrapper))
-    console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperForEth)
+    const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
+    console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperId)
+}
+
+async function getToken(
+    client: CliqueClient,
+    signer: SingleAddressSigner,
+    tokenId: string,
+    from: string,
+    amount: bigint
+): Promise<string> {
+    const script = await Script.fromSource(client, 'get_token.ral')
+    const scriptTx = await script.transactionForDeployment(signer, {
+        templateVariables: {
+            sender: from,
+            amount: amount,
+            tokenId: tokenId
+        }
+    })
+    const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
+    return result.txId
 }
 
 async function deploy() {
     await createWallet()
+
+    const signer = await NodeSigner.testSigner(client)
+    const wormhole = new Wormhole(
+        client,
+        signer,
+        env.governanceChainId,
+        env.governanceContractAddress,
+        env.governanceChainId,
+        env.governanceContractAddress,
+        env.initGuardianSet,
+        env.initGuardianIndex,
+        env.messageFee
+    )
 
     const contracts = await wormhole.deployContracts()
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
