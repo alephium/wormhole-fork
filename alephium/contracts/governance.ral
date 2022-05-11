@@ -144,7 +144,9 @@ TxContract Governance(
         }
         let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
         assert!(guardianIndex > lastGuardianIndex)
-        assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
+        let recId = u256From1Byte!(byteVecSlice!(signature, 65, 66)) + 27
+        let newSignature = byteVecSlice!(signature, 1, 65) ++ u256To1Byte!(recId)
+        assert!(key == ethEcRecover!(hash, newSignature))
         return guardianIndex
     }
 
