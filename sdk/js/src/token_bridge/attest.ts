@@ -1,4 +1,4 @@
-import { Signer, BuildScriptTx } from 'alephium-web3'
+import { BuildScriptTx, SingleAddressSigner } from 'alephium-web3'
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
@@ -8,7 +8,7 @@ import { attestTokenScript } from '../alephium/token_bridge';
 import { executeScript } from './utils';
 
 export async function attestFromAlph(
-  signer: Signer,
+  signer: SingleAddressSigner,
   tokenBridgeId: string,
   tokenId: string,
   payer: string,
@@ -20,14 +20,17 @@ export async function attestFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = attestTokenScript()
-  return executeScript(signer, script, {
-    payer: payer,
-    tokenBridgeId: tokenBridgeId,
-    tokenId: tokenId,
-    messageFee: messageFee,
-    nonce: nonceHex,
-    consistencyLevel: cl
-  }, params)
+  const scriptParams = typeof params === 'undefined' ? {
+    templateVariables: {
+      payer: payer,
+      tokenBridgeId: tokenBridgeId,
+      tokenId: tokenId,
+      messageFee: messageFee,
+      nonce: nonceHex,
+      consistencyLevel: cl
+    }
+  } : params
+  return executeScript(signer, script, scriptParams)
 }
 
 export async function attestFromEth(

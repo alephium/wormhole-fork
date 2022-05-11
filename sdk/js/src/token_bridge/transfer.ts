@@ -1,5 +1,5 @@
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, Signer } from "alephium-web3";
+import { BuildScriptTx, SingleAddressSigner } from "alephium-web3";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import { transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
@@ -11,7 +11,7 @@ import { ChainId, createNonce } from "../utils";
 import { executeScript } from "./utils";
 
 export async function transferLocalTokenFromAlph(
-  signer: Signer,
+  signer: SingleAddressSigner,
   tokenWrapperId: string,
   sender: string,
   localTokenId: string,
@@ -26,21 +26,24 @@ export async function transferLocalTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferLocalTokenScript()
-  return executeScript(signer, script, {
-    sender: sender,
-    tokenWrapperId: tokenWrapperId,
-    localTokenId: localTokenId,
-    toAddress: toAddress,
-    tokenAmount: tokenAmount,
-    messageFee: messageFee,
-    arbiterFee: arbiterFee,
-    nonce: nonceHex,
-    consistencyLevel: cl
-  }, params)
+  const scriptParams = typeof params === 'undefined' ? {
+    templateVariables: {
+      sender: sender,
+      tokenWrapperId: tokenWrapperId,
+      localTokenId: localTokenId,
+      toAddress: toAddress,
+      tokenAmount: tokenAmount,
+      messageFee: messageFee,
+      arbiterFee: arbiterFee,
+      nonce: nonceHex,
+      consistencyLevel: cl
+    }
+  } : params
+  return executeScript(signer, script, scriptParams)
 }
 
 export async function transferRemoteTokenFromAlph(
-  signer: Signer,
+  signer: SingleAddressSigner,
   tokenWrapperId: string,
   sender: string,
   toAddress: string,
@@ -54,16 +57,19 @@ export async function transferRemoteTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferRemoteTokenScript()
-  return executeScript(signer, script, {
-    sender: sender,
-    tokenWrapperId: tokenWrapperId,
-    toAddress: toAddress,
-    tokenAmount: tokenAmount,
-    messageFee: messageFee,
-    arbiterFee: arbiterFee,
-    nonce: nonceHex,
-    consistencyLevel: cl
-  }, params)
+  const scriptParams = typeof params === 'undefined' ? {
+    templateVariables: {
+      sender: sender,
+      tokenWrapperId: tokenWrapperId,
+      toAddress: toAddress,
+      tokenAmount: tokenAmount,
+      messageFee: messageFee,
+      arbiterFee: arbiterFee,
+      nonce: nonceHex,
+      consistencyLevel: cl
+    }
+  } : params
+  return executeScript(signer, script, scriptParams)
 }
 
 export async function getAllowanceEth(

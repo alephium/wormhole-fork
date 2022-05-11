@@ -1,5 +1,5 @@
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, Signer } from "alephium-web3";
+import { BuildScriptTx, Signer, SingleAddressSigner } from "alephium-web3";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { createLocalTokenWrapperScript, createRemoteTokenWrapperScript } from "../alephium/token_bridge";
@@ -7,7 +7,7 @@ import { Bridge__factory } from "../ethers-contracts";
 import { executeScript } from "./utils";
 
 export async function createRemoteTokenWrapperOnAlph(
-  signer: Signer,
+  signer: SingleAddressSigner,
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array,
   payer: string,
@@ -16,16 +16,19 @@ export async function createRemoteTokenWrapperOnAlph(
 ) {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = createRemoteTokenWrapperScript()
-  return executeScript(signer, script, {
-    payer: payer,
-    tokenBridgeForChainId: tokenBridgeForChainId,
-    vaa: vaaHex,
-    alphAmount: alphAmount
-  }, params)
+  const scriptParams = typeof params === 'undefined' ? {
+    templateVariables: {
+      payer: payer,
+      tokenBridgeForChainId: tokenBridgeForChainId,
+      vaa: vaaHex,
+      alphAmount: alphAmount
+    }
+  } : params
+  return executeScript(signer, script, scriptParams)
 }
 
 export async function createLocalTokenWrapperOnAlph(
-  signer: Signer,
+  signer: SingleAddressSigner,
   tokenBridgeForChainId: string,
   localTokenId: string,
   payer: string,
@@ -33,12 +36,15 @@ export async function createLocalTokenWrapperOnAlph(
   params?: BuildScriptTx
 ) {
   const script = createLocalTokenWrapperScript()
-  return executeScript(signer, script, {
-    payer: payer,
-    tokenBridgeForChainId: tokenBridgeForChainId,
-    tokenId: localTokenId,
-    alphAmount: alphAmount
-  }, params)
+  const scriptParams = typeof params === 'undefined' ? {
+    templateVariables: {
+      payer: payer,
+      tokenBridgeForChainId: tokenBridgeForChainId,
+      tokenId: localTokenId,
+      alphAmount: alphAmount
+    }
+  } : params
+  return executeScript(signer, script, scriptParams)
 }
 
 export async function createWrappedOnEth(

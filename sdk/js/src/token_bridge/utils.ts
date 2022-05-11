@@ -1,11 +1,10 @@
-import { Signer, Script, BuildScriptTx, SubmissionResult } from 'alephium-web3'
+import { Script, BuildScriptTx, SubmissionResult, SingleAddressSigner } from 'alephium-web3'
 
 export async function executeScript(
-  signer: Signer,
+  signer: SingleAddressSigner,
   script: Script,
-  templateVariables?: any,
-  params?: BuildScriptTx
+  params: BuildScriptTx
 ): Promise<SubmissionResult> {
-  const scriptTx = await script.transactionForDeployment(signer, templateVariables, params)
+  const scriptTx = await script.transactionForDeployment(signer, params)
   return signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
 }
