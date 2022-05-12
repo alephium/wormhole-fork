@@ -23,7 +23,7 @@ async function createWallet() {
     }
 
     const password = 'alph'
-    const mnemonic = 'vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault vault'
+    const mnemonic = 'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava'
     await client.wallets.putWallets({
         walletName: testWallet,
         mnemonic: mnemonic,

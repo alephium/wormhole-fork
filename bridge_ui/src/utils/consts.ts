@@ -437,26 +437,26 @@ export const ALEPHIUM_BRIDGE_ADDRESS =
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "000000000000000000000000000000000000000000000"
-    : "23kmcRDpK6LACdG4XdwztAKdP9KaiYByVNNbPeb7HHy3c";
+    : "234PUBfa6rX24Dmj8vbK92mv8a5AUrMhCGkTSwWTwb45m";
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
-    : "685a6fea3a94e63614c8dd8596a8ecb706153a397620b4c0e0c4a7b5d0a7778d";
+    : "bbec56f023153a4c7992ecdfe28c445c950fb797efd65b45365364af8ea3bb45";
 export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "69f7dcf01503efbef68c67815fa47c054dbd0a0aeeb17a2d4e77a309bafb35e5";
-export const ALEPHIUM_GROUP_INDEX =
-  CLUSTER === "mainnet"
-    ? 0
-    : CLUSTER === "testnet"
-    ? 0
-    : 3;
 export const ALEPHIUM_CONFIRMATIONS =
   CLUSTER === "mainnet"
     ? 10
     : CLUSTER === "testnet"
     ? 10
     : 0;
+export const ALEPHIUM_NETWORK_ID =
+  CLUSTER === "mainnet"
+    ? 0
+    : CLUSTER === "testnet"
+    ? 1
+    : 4;
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_ETH

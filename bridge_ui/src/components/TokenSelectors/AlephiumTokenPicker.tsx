@@ -52,7 +52,7 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
   const [isLoading, setIsLoading] = useState(true);
   const [tokenAccounts, setTokenAccounts] = useState<ParsedTokenAccount[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const wallet = useAlephiumWallet()
+  const { signer } = useAlephiumWallet()
   useEffect(() => {
     if (refreshRef) {
       refreshRef.current = () => {
@@ -64,17 +64,22 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
   useEffect(() => {
     setRefresh(false)
     setIsLoading(true)
-    getAlephiumTokenAccounts(wallet.address)
-      .then((tokenAccounts) => {
-        setTokenAccounts(tokenAccounts)
-        setIsLoading(false)
-      })
-      .catch((e) => {
-        console.log("failed to load alephium token accounts, error: " + e)
-        setIsLoading(false)
-        setTokenAccounts([])
-      })
-    }, [wallet, refresh])
+    if (typeof signer === 'undefined') {
+      setIsLoading(false)
+      setTokenAccounts([])
+    } else {
+      getAlephiumTokenAccounts(signer.account.address)
+        .then((tokenAccounts) => {
+          setTokenAccounts(tokenAccounts)
+          setIsLoading(false)
+        })
+        .catch((e) => {
+          console.log("failed to load alephium token accounts, error: " + e)
+          setIsLoading(false)
+          setTokenAccounts([])
+        })
+      }
+    }, [signer, refresh])
     const value = useMemo(() => ({isLoading, tokenAccounts}), [isLoading, tokenAccounts])
     return value
 }

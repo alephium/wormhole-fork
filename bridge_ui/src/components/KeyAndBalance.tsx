@@ -4,6 +4,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
+import AlephiumWalletKey from "./AlephiumWalletKey";
 import EthereumSignerKey from "./EthereumSignerKey";
 import TerraWalletKey from "./TerraWalletKey";
 
@@ -24,7 +25,9 @@ function KeyAndBalance({ chainId }: { chainId: ChainId }) {
   }
   if (chainId === CHAIN_ID_ALEPHIUM) {
     return (
-      <></>
+      <>
+        <AlephiumWalletKey />
+      </>
     )
   }
   return null;

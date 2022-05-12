@@ -85,7 +85,7 @@ export async function getIsTransferCompletedTerra(
         gasPrices,
       }
     );
-  } catch (e) {
+  } catch (e: any) {
     // redeemed if the VAA was already executed
     return e.response.data.message.includes("VaaAlreadyExecuted");
   }

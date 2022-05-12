@@ -3,10 +3,10 @@ import * as elliptic from 'elliptic'
 import { zeroPad } from "../lib/utils"
 import { dustAmount } from "./env"
 
-const fromPublicKey = '0200ca8d57bae864ac717e4a2ebd6103f4c01f7dc6cbdf4d5f0b123f615794cdeb'
-const toAddress = '14LQpKXvywkLQVrDAAZiLUYMe8epgCBUb3nh1ufwNVTh3'
+const fromPublicKey = '03034a46d0028a725e27fd24b9142eef856f2ce01d590732744bde0d7553638cd6'
+const toAddress = '199QZVT8bLkYNZ7d2xoHbip29yD18tdeHDPjB7cyx9ofi'
 const ec = new elliptic.ec('secp256k1')
-const fromPrivateKey = ec.keyFromPrivate('75fd47c46e4ce23f88283303e2b8ae4b6238a7162c45aa04d78848ba314a70ee')
+const fromPrivateKey = ec.keyFromPrivate('71d640c34b25eedd8acd60be136012f77059836c095fbd02a7cb86a124cbbdae')
 
 function sign(txId: string): string {
     const sig = fromPrivateKey.sign(txId, {canonical: true})

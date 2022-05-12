@@ -35,9 +35,10 @@ import {
   getRedeemInfo,
   getLocalTokenWrapperIdWithRetry,
   getRemoteTokenWrapperIdWithRetry,
-  waitTxConfirmed
+  waitTxConfirmed,
+  submitAlphScriptTx
 } from "../utils/alephium";
-import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
 async function evm(
   dispatch: any,
@@ -111,7 +112,7 @@ async function terra(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  wallet: AlephiumWallet,
+  signer: AlephiumWalletSigner,
   signedVAA: Uint8Array
 ) {
   dispatch(setIsRedeeming(true));
@@ -123,9 +124,10 @@ async function alephium(
     } else {
       tokenWrapperId = await getRemoteTokenWrapperIdWithRetry(redeemInfo.tokenId)
     }
-    const result = await redeemOnAlph(wallet.signer, tokenWrapperId, signedVAA, wallet.address)
-    const confirmedTx = await waitTxConfirmed(wallet.signer.client, result.txId)
-    const blockHeader = await wallet.signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const bytecode = redeemOnAlph(tokenWrapperId, signedVAA, signer.account.address)
+    const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.client, result.txId)
+    const blockHeader = await signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
       setRedeemTx({ id: result.txId, block: blockHeader.data.height })
     );
@@ -147,7 +149,7 @@ export function useHandleRedeem() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const signedVAA = useTransferSignedVAA();
   const isRedeeming = useSelector(selectTransferIsRedeeming);
   const handleRedeemClick = useCallback(() => {
@@ -155,8 +157,8 @@ export function useHandleRedeem() {
       evm(dispatch, enqueueSnackbar, signer, signedVAA, false, targetChain);
     } else if (targetChain === CHAIN_ID_TERRA && !!terraWallet && signedVAA) {
       terra(dispatch, enqueueSnackbar, terraWallet, signedVAA, terraFeeDenom);
-    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alephiumWallet && signedVAA) {
-      alephium(dispatch, enqueueSnackbar, alephiumWallet, signedVAA)
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && signedVAA) {
+      alephium(dispatch, enqueueSnackbar, alphSigner, signedVAA)
     }
   }, [
     dispatch,
@@ -166,7 +168,7 @@ export function useHandleRedeem() {
     signedVAA,
     terraWallet,
     terraFeeDenom,
-    alephiumWallet
+    alphSigner
   ]);
 
   const handleRedeemNativeClick = useCallback(() => {

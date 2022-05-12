@@ -14,7 +14,6 @@ import {
   transferRemoteTokenFromAlph,
   transferLocalTokenFromAlph,
 } from "@certusone/wormhole-sdk";
-import { SubmissionResult } from "alephium-web3";
 import { Alert } from "@material-ui/lab";
 import {
   ConnectedWallet,
@@ -56,9 +55,10 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
-import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import {
   getLocalTokenWrapperIdWithRetry,
+  submitAlphScriptTx,
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
 
@@ -130,7 +130,7 @@ async function evm(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  wallet: AlephiumWallet,
+  signer: AlephiumWalletSigner,
   tokenId: string,
   isLocalToken: boolean,
   amount: string,
@@ -142,14 +142,13 @@ async function alephium(
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const txInfo = await waitTxConfirmedAndGetTxInfo(
-      wallet.signer.client, async () => {
-        let result: SubmissionResult
+      signer.client, async () => {
+        let bytecode: string 
         if (isLocalToken) {
           const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
-          result = await transferLocalTokenFromAlph(
-            wallet.signer,
+          bytecode = transferLocalTokenFromAlph(
             tokenWrapperId,
-            wallet.address,
+            signer.account.address,
             tokenId,
             uint8ArrayToHex(targetAddress),
             amountParsed,
@@ -158,10 +157,9 @@ async function alephium(
             ALEPHIUM_CONFIRMATIONS
           )
         } else {
-          result = await transferRemoteTokenFromAlph(
-            wallet.signer,
+          bytecode = transferRemoteTokenFromAlph(
             tokenId,
-            wallet.address,
+            signer.account.address,
             uint8ArrayToHex(targetAddress),
             amountParsed,
             alphMessageFee,
@@ -169,6 +167,7 @@ async function alephium(
             ALEPHIUM_CONFIRMATIONS
           )
         }
+        const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
         return result.txId
       }
     )
@@ -274,7 +273,7 @@ export function useHandleTransfer() {
   const isSendComplete = useSelector(selectTransferIsSendComplete);
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
@@ -323,7 +322,7 @@ export function useHandleTransfer() {
       );
     } else if (
       sourceChain === CHAIN_ID_ALEPHIUM &&
-      !!alephiumWallet &&
+      !!alphSigner &&
       !!sourceAsset &&
       decimals !== undefined &&
       !!targetAddress
@@ -331,7 +330,7 @@ export function useHandleTransfer() {
       alephium(
         dispatch,
         enqueueSnackbar,
-        alephiumWallet,
+        alphSigner,
         sourceAsset,
         originChain === CHAIN_ID_ALEPHIUM,
         amount,
@@ -346,7 +345,7 @@ export function useHandleTransfer() {
     sourceChain,
     signer,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
     sourceAsset,
     amount,
     decimals,

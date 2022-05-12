@@ -34,7 +34,7 @@ function useIsWalletReady(
 } {
   const autoSwitch = enableNetworkAutoswitch;
   const terraWallet = useConnectedWallet();
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const hasTerraWallet = !!terraWallet;
   const {
     provider,
@@ -59,12 +59,12 @@ function useIsWalletReady(
   }, [provider, correctEvmNetwork, chainId]);
 
   return useMemo(() => {
-    if (chainId === CHAIN_ID_ALEPHIUM) {
+    if (chainId === CHAIN_ID_ALEPHIUM && alphSigner?.account.address) {
       return createWalletStatus(
         true,
         undefined,
         forceNetworkSwitch,
-        alephiumWallet.address
+        alphSigner.account.address
       );
     }
     if (
@@ -118,7 +118,7 @@ function useIsWalletReady(
     provider,
     signerAddress,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
   ]);
 }
 

@@ -7,11 +7,11 @@ import {
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
-import { CliqueClient } from "alephium-web3";
 import { useEffect, useState } from "react";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { ALEPHIUM_CONFIRMATIONS, ALEPHIUM_GROUP_INDEX, ALEPHIUM_HOST, CHAINS_BY_ID } from "../utils/consts";
+import { ALEPHIUM_CONFIRMATIONS, CHAINS_BY_ID } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,6 +34,7 @@ export default function TransactionProgress({
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
+  const { signer: alphSigner } = useAlephiumWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
   useEffect(() => {
     if (isSendComplete || !tx) return;
@@ -56,16 +57,15 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-    if (chainId === CHAIN_ID_ALEPHIUM) {
+    if (chainId === CHAIN_ID_ALEPHIUM && !!alphSigner) {
       let cancelled = false;
-      const client = new CliqueClient({baseUrl: ALEPHIUM_HOST});
       (async () => {
         while (!cancelled) {
           await new Promise((resolve) => setTimeout(resolve, 10000));
           try {
-            const chainInfo = await client.blockflow.getBlockflowChainInfo({
-              fromGroup: ALEPHIUM_GROUP_INDEX,
-              toGroup: ALEPHIUM_GROUP_INDEX
+            const chainInfo = await alphSigner.client.blockflow.getBlockflowChainInfo({
+              fromGroup: alphSigner.account.group,
+              toGroup: alphSigner.account.group
             });
             if (!cancelled) {
               setCurrentBlock(chainInfo.data.currentHeight);
@@ -79,7 +79,7 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-  }, [isSendComplete, chainId, provider, tx]);
+  }, [isSendComplete, chainId, provider, alphSigner, tx]);
   const blockDiff =
     tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
   const expectedBlocks =

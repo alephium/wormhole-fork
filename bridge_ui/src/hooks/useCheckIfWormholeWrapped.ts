@@ -28,15 +28,13 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
-  ALEPHIUM_GROUP_INDEX,
-  ALEPHIUM_HOST,
   ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   TERRA_HOST,
 } from "../utils/consts";
-import { CliqueClient } from "alephium-web3";
 import { ValByteVec, ValU256 } from 'alephium-web3/api/alephium';
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -52,12 +50,11 @@ const makeStateSafe = (
   assetAddress: uint8ArrayToHex(info.assetAddress),
 });
 
-async function getAlephiumTokenInfo(tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
+async function getAlephiumTokenInfo(signer: AlephiumWalletSigner, tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
   const tokenAddress = toAlphContractAddress(tokenId)
-  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-  return client
+  return signer.client
     .contracts
-    .getContractsAddressState(tokenAddress, {group: ALEPHIUM_GROUP_INDEX})
+    .getContractsAddressState(tokenAddress, {group: signer.account.group})
     .then(response => {
       if (response.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
         const originalAsset = (response.data.fields[4] as ValByteVec).value
@@ -100,6 +97,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
   const isRecovery = useSelector(
     nft ? selectNFTIsRecovery : selectTransferIsRecovery
   );
+  const { signer: alphSigner } = useAlephiumWallet()
   useEffect(() => {
     if (isRecovery) {
       return;
@@ -139,9 +137,9 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {}
       }
-      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset) {
+      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphSigner) {
         try {
-          const wrappedInfo = await getAlephiumTokenInfo(sourceAsset)
+          const wrappedInfo = await getAlephiumTokenInfo(alphSigner, sourceAsset)
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
           }
@@ -159,6 +157,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     sourceChain,
     sourceAsset,
     provider,
+    alphSigner,
     nft,
     setSourceWormholeWrappedInfo,
     tokenId,

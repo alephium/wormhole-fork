@@ -1,5 +1,5 @@
 {
-  "sourceCodeSha256": "7344a7def0aefe8d5e9c397c15a154999df0f16596f46bbd784909187757e716",
+  "sourceCodeSha256": "ca66882cd03f1b5a74c8879096579599c1e0173610a711052d62164d0dabcf75",
   "compiled": {
     "type": "TemplateScriptByteCode",
     "templateByteCode": "0101010001000b{payer:Address}{messageFee:U256}a2{tokenBridgeId:ByteVec}1700{payer:Address}{tokenId:ByteVec}{nonce:ByteVec}{consistencyLevel:U256}1600010f"

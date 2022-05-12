@@ -1,7 +1,8 @@
 import { ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, ALEPHIUM_TOKEN_WRAPPER_CODE_HASH, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
 import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId, toAlphContractAddress } from '@certusone/wormhole-sdk';
-import { CliqueClient } from 'alephium-web3';
+import { CliqueClient, SignScriptTxParams } from 'alephium-web3';
 import { TxStatus, Confirmed, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
+import WalletConnectProvider from "alephium-walletconnect-provider";
 
 export class AlphTxInfo {
     blockHash: string
@@ -178,4 +179,17 @@ export async function getAlephiumTokenInfo(client: CliqueClient, tokenId: string
         const name = (state.data.fields[1] as ValByteVec).value
         return new TokenInfo(decimals, symbol, name)
     }
+}
+
+export async function submitAlphScriptTx(
+  provider: WalletConnectProvider,
+  fromAddress: string,
+  bytecode: string
+) {
+  const params: SignScriptTxParams = {
+    signerAddress: fromAddress,
+    bytecode: bytecode,
+    submitTx: true
+  }
+  return provider.signScriptTx(params)
 }

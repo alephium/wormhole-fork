@@ -36,7 +36,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   );
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
   const terraWallet = useConnectedWallet();
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const setTargetAddressHex = nft
     ? setNFTTargetAddressHex
     : setTransferTargetAddressHex;
@@ -60,8 +60,8 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
             )
           )
         );
-      } else if(targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet && alephiumWallet.address) {
-        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alephiumWallet.address).slice(1))))
+      } else if(targetChain === CHAIN_ID_ALEPHIUM && alphSigner) {
+        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphSigner.account.address).slice(1))))
       } else {
         dispatch(setTargetAddressHex(undefined));
       }
@@ -75,7 +75,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     targetAsset,
     targetTokenAccountPublicKey,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
     nft,
     setTargetAddressHex,
   ]);

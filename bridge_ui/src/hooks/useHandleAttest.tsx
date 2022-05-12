@@ -21,7 +21,7 @@ import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   setAttestTx,
@@ -36,7 +36,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { submitAlphScriptTx, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import {
   ALEPHIUM_CONFIRMATIONS,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
@@ -150,21 +150,21 @@ async function terra(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  wallet: AlephiumWallet,
+  signer: AlephiumWalletSigner,
   localTokenId: string
 ) {
   dispatch(setIsSending(true));
   try {
     const txInfo = await waitTxConfirmedAndGetTxInfo(
-      wallet.signer.client, async () => {
-        const result = await attestFromAlph(
-          wallet.signer,
+      signer.client, async () => {
+        const bytecode = attestFromAlph(
           ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
           localTokenId,
-          wallet.address,
+          signer.account.address,
           alphMessageFee,
           ALEPHIUM_CONFIRMATIONS
         );
+        const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
         return result.txId;
       }
     );
@@ -204,15 +204,15 @@ export function useHandleAttest() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const disabled = !isTargetComplete || isSending || isSendComplete;
   const handleAttestClick = useCallback(() => {
     if (isEVMChain(sourceChain) && !!signer) {
       evm(dispatch, enqueueSnackbar, signer, sourceAsset, sourceChain);
     } else if (sourceChain === CHAIN_ID_TERRA && !!terraWallet) {
       terra(dispatch, enqueueSnackbar, terraWallet, sourceAsset, terraFeeDenom);
-    } else if (sourceChain === CHAIN_ID_ALEPHIUM && !!alephiumWallet) {
-      alephium(dispatch, enqueueSnackbar, alephiumWallet, sourceAsset)
+    } else if (sourceChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+      alephium(dispatch, enqueueSnackbar, alphSigner, sourceAsset)
     }
   }, [
     dispatch,
@@ -220,7 +220,7 @@ export function useHandleAttest() {
     sourceChain,
     signer,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
     sourceAsset,
     terraFeeDenom,
   ]);

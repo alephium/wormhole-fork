@@ -108,9 +108,9 @@ spec:
             - --alphContractWebServer
             - "[::]:31103"
             - --alphContractIds
-            - "uyy15aCwycBi4jf29xxH6WAjxjx9g65qM21hTHQNntqs,23kmcRDpK6LACdG4XdwztAKdP9KaiYByVNNbPeb7HHy3c,21iJVjzJo3C76rPbCew65NtW9VWPS9k7WBDQuJk61vtjv"
+            - "vk3rBe9YNNDNVJgPYhhY734pyyiQKE1iynpK7uRPGQHy,234PUBfa6rX24Dmj8vbK92mv8a5AUrMhCGkTSwWTwb45m,27LXNY4qKavHS1GWW8hsvqcGFkoUPDopTVRyDR1H6oCKe"
             - --alphGroupIndex
-            - "3"
+            - "0"
             - --alphMinConfirmations
             - "0"
             - --unsafeDevMode

@@ -1,6 +1,5 @@
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, SingleAddressSigner } from "alephium-web3";
-import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
+import { ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import { transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
 import {
@@ -8,10 +7,8 @@ import {
   TokenImplementation__factory,
 } from "../ethers-contracts";
 import { ChainId, createNonce } from "../utils";
-import { executeScript } from "./utils";
 
-export async function transferLocalTokenFromAlph(
-  signer: SingleAddressSigner,
+export function transferLocalTokenFromAlph(
   tokenWrapperId: string,
   sender: string,
   localTokenId: string,
@@ -20,30 +17,25 @@ export async function transferLocalTokenFromAlph(
   messageFee: bigint,
   arbiterFee: bigint,
   consistencyLevel?: number,
-  nonce?: string,
-  params?: BuildScriptTx
-) {
+  nonce?: string
+): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferLocalTokenScript()
-  const scriptParams = typeof params === 'undefined' ? {
-    templateVariables: {
-      sender: sender,
-      tokenWrapperId: tokenWrapperId,
-      localTokenId: localTokenId,
-      toAddress: toAddress,
-      tokenAmount: tokenAmount,
-      messageFee: messageFee,
-      arbiterFee: arbiterFee,
-      nonce: nonceHex,
-      consistencyLevel: cl
-    }
-  } : params
-  return executeScript(signer, script, scriptParams)
+  return script.buildByteCode({
+    sender: sender,
+    tokenWrapperId: tokenWrapperId,
+    localTokenId: localTokenId,
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  })
 }
 
-export async function transferRemoteTokenFromAlph(
-  signer: SingleAddressSigner,
+export function transferRemoteTokenFromAlph(
   tokenWrapperId: string,
   sender: string,
   toAddress: string,
@@ -51,25 +43,21 @@ export async function transferRemoteTokenFromAlph(
   messageFee: bigint,
   arbiterFee: bigint,
   consistencyLevel?: number,
-  nonce?: string,
-  params?: BuildScriptTx
-) {
+  nonce?: string
+): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferRemoteTokenScript()
-  const scriptParams = typeof params === 'undefined' ? {
-    templateVariables: {
-      sender: sender,
-      tokenWrapperId: tokenWrapperId,
-      toAddress: toAddress,
-      tokenAmount: tokenAmount,
-      messageFee: messageFee,
-      arbiterFee: arbiterFee,
-      nonce: nonceHex,
-      consistencyLevel: cl
-    }
-  } : params
-  return executeScript(signer, script, scriptParams)
+  return script.buildByteCode({
+    sender: sender,
+    tokenWrapperId: tokenWrapperId,
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  })
 }
 
 export async function getAllowanceEth(

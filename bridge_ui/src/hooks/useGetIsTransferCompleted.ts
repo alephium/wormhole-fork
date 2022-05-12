@@ -16,8 +16,6 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
-  ALEPHIUM_GROUP_INDEX,
-  ALEPHIUM_HOST,
   getEvmChainId,
   getTokenBridgeAddressForChain,
   TERRA_GAS_PRICES_URL,
@@ -26,8 +24,8 @@ import {
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { LCDClient } from "@terra-money/terra.js";
 import useIsWalletReady from "./useIsWalletReady";
-import { CliqueClient } from "alephium-web3";
 import { getTokenBridgeForChainIdWithRetry } from "../utils/alephium";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -46,6 +44,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();
+  const { signer: alphSigner } = useAlephiumWallet()
   const signedVAA = useTransferSignedVAA();
 
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
@@ -95,7 +94,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             setIsLoading(false);
           }
         })();
-      } else if (targetChain === CHAIN_ID_ALEPHIUM) {
+      } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
         setIsLoading(true);
         (async () => {
           try {
@@ -104,11 +103,10 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             }
 
             const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
-            const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
             transferCompleted = await getIsTransferCompletedAlph(
-              client,
+              alphSigner.client,
               tokenBridgeForChainId,
-              ALEPHIUM_GROUP_INDEX,
+              alphSigner.account.group,
               signedVAA
             )
           } catch (error) {
@@ -133,6 +131,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
     signedVAA,
     isReady,
     provider,
+    alphSigner
   ]);
 
   return { isTransferCompletedLoading: isLoading, isTransferCompleted };

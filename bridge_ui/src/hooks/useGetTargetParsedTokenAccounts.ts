@@ -65,7 +65,7 @@ function useGetTargetParsedTokenAccounts() {
   const logo =
     (targetAsset && metadata.data?.get(targetAsset)?.logo) || undefined;
   const terraWallet = useConnectedWallet();
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const {
     provider,
     signerAddress,
@@ -81,8 +81,8 @@ function useGetTargetParsedTokenAccounts() {
     }
     let cancelled = false;
 
-    if (targetChain === CHAIN_ID_ALEPHIUM && alephiumWallet) {
-      getAlephiumTargetAsset(alephiumWallet.address, targetAsset)
+    if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+      getAlephiumTargetAsset(alphSigner.account.address, targetAsset)
         .then((target) => dispatch(setTargetParsedTokenAccount(target)))
         .catch(() => {
           if (!cancelled) {
@@ -206,7 +206,7 @@ function useGetTargetParsedTokenAccounts() {
     provider,
     signerAddress,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
     hasCorrectEvmNetwork,
     hasResolvedMetadata,
     symbol,

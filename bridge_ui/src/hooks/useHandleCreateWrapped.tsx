@@ -34,8 +34,8 @@ import {
 import parseError from "../utils/parseError";
 import { Alert } from "@material-ui/lab";
 import { postWithFees } from "../utils/terra";
-import { AlephiumWallet, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { getTokenBridgeForChainIdWithRetry, waitTxConfirmed } from "../utils/alephium";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { getTokenBridgeForChainIdWithRetry, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
 
 async function evm(
   dispatch: any,
@@ -117,7 +117,7 @@ async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
   sourceChain: ChainId,
-  wallet: AlephiumWallet,
+  signer: AlephiumWalletSigner,
   signedVAA: Uint8Array,
   shouldUpdate: boolean
 ) {
@@ -127,15 +127,15 @@ async function alephium(
       throw Error("alephium: does not support update")
     }
     const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
-    const result = await createRemoteTokenWrapperOnAlph(
-      wallet.signer,
+    const bytecode = createRemoteTokenWrapperOnAlph(
       tokenBridgeForChainId,
       signedVAA,
-      wallet.address,
+      signer.account.address,
       alphDustAmount
     )
-    const confirmedTx = await waitTxConfirmed(wallet.signer.client, result.txId)
-    const blockHeader = await wallet.signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.client, result.txId)
+    const blockHeader = await signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
       setCreateTx({ id: result.txId, block: blockHeader.data.height })
     );
@@ -160,7 +160,7 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const alephiumWallet = useAlephiumWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const handleCreateClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && !!signedVAA) {
       evm(
@@ -180,12 +180,12 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
         shouldUpdate,
         terraFeeDenom
       );
-    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alephiumWallet && !!signedVAA) {
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && !!signedVAA) {
       alephium(
         dispatch,
         enqueueSnackbar,
         sourceChain,
-        alephiumWallet,
+        alphSigner,
         signedVAA,
         shouldUpdate
       )
@@ -203,7 +203,7 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
     sourceChain,
     targetChain,
     terraWallet,
-    alephiumWallet,
+    alphSigner,
     signedVAA,
     signer,
     shouldUpdate,

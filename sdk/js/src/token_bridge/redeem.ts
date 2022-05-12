@@ -1,47 +1,35 @@
 import { MsgExecuteContract } from "@terra-money/terra.js";
-import { BuildScriptTx, SingleAddressSigner } from "alephium-web3";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { completeTransferScript, completeUndoneSequenceScript } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
-import { executeScript } from "./utils";
 
-export async function redeemOnAlph(
-  signer: SingleAddressSigner,
+export function redeemOnAlph(
   tokenWrapperId: string,
   signedVAA: Uint8Array,
-  arbiterAddress: string,
-  params?: BuildScriptTx
-) {
+  arbiterAddress: string
+): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
-  const scriptParams = typeof params === 'undefined' ? {
-    templateVariables: {
-      tokenWrapperId: tokenWrapperId,
-      vaa: vaaHex,
-      arbiter: arbiterAddress
-    }
-  } : params
-  return executeScript(signer, script, scriptParams)
+  return script.buildByteCode({
+    tokenWrapperId: tokenWrapperId,
+    vaa: vaaHex,
+    arbiter: arbiterAddress
+  })
 }
 
-export async function completeUndoneSequence(
-  signer: SingleAddressSigner,
+export function completeUndoneSequence(
   tokenBridgeId: string,
   signedVAA: Uint8Array,
   arbiterAddress: string,
-  params?: BuildScriptTx
-) {
+): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeUndoneSequenceScript()
-  const scriptParams = typeof params === 'undefined' ? {
-    templateVariables: {
-      tokenBridgeId: tokenBridgeId,
-      vaa: vaaHex,
-      arbiter: arbiterAddress
-    }
-  } : params
-  return executeScript(signer, script, scriptParams)
+  return script.buildByteCode({
+    tokenBridgeId: tokenBridgeId,
+    vaa: vaaHex,
+    arbiter: arbiterAddress
+  })
 }
 
 export async function redeemOnEth(
