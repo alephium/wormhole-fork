@@ -233,6 +233,38 @@ k8s_resource(
   trigger_mode = trigger_mode,
 )
 
+k8s_yaml_with_ns("devnet/alph-postgres.yaml")
+
+k8s_resource(
+    "alph-postgres",
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
+)
+
+k8s_yaml_with_ns("devnet/alph-explorer-backend.yaml")
+
+k8s_resource(
+    "alph-explorer-backend",
+    port_forwards = [
+        port_forward(9090, container_port = 9090, name = "Alephium explorer backend [:9090]", host = webHost)
+    ],
+    resource_deps = ["alph-devnet", "alph-postgres"],
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
+)
+
+k8s_yaml_with_ns("devnet/alph-explorer-frontend.yaml")
+
+k8s_resource(
+    "alph-explorer-frontend",
+    port_forwards = [
+        port_forward(30000, container_port = 3000, name = "Alephium explorer [:30000]", host = webHost)
+    ],
+    resource_deps = ["alph-explorer-backend"],
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
+)
+
 # eth devnet
 
 docker_build(

@@ -6,7 +6,7 @@ metadata:
   labels:
     app: alph-devnet
 spec:
-  clusterIP: None
+  type: ClusterIP
   selector:
     app: alph-devnet
   ports:
@@ -36,10 +36,6 @@ spec:
       containers:
         - name: alph-devnet
           image: alephium
-          command:
-            - /bin/sh
-            - -c
-            - java -jar /alephium.jar
           ports:
             - containerPort: 12973
               name: alph-rest
@@ -65,4 +61,3 @@ spec:
                 - "/alephium/success"
             initialDelaySeconds: 5
             periodSeconds: 5
-

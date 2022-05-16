@@ -15,3 +15,5 @@ VOLUME /alephium-home/.alephium
 VOLUME /alephium-home/.alephium-wallets
 
 USER nobody
+
+ENTRYPOINT ["java", "-jar", "/alephium.jar"]
