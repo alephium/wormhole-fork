@@ -39,7 +39,7 @@ spec:
             - name: EXPLORER_PORT
               value: "9090"
             - name: BLOCKFLOW_HOST
-              value: "alph-devnet"
+              value: "alph-full-node"
             - name: BLOCKFLOW_PORT
               value: "12973"
             - name: BLOCKFLOW_NETWORK_ID

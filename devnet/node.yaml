@@ -102,7 +102,7 @@ spec:
             - --algorandContract
             - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
             - --alphRPC
-            - http://alph-devnet:12973
+            - http://alph-full-node:12973
             - --alphContractServerRpc
             - "[::]:31102"
             - --alphContractWebServer

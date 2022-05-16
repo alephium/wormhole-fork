@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: alph-devnet
+  name: alph-full-node
   labels:
-    app: alph-devnet
+    app: alph-full-node
 spec:
   type: ClusterIP
   selector:
-    app: alph-devnet
+    app: alph-full-node
   ports:
   - name: alph-rest
     port: 12973
@@ -20,21 +20,21 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: alph-devnet
+  name: alph-full-node
 spec:
   selector:
     matchLabels:
-      app: alph-devnet
-  serviceName: alph-devnet
+      app: alph-full-node
+  serviceName: alph-full-node
   template:
     metadata:
       labels:
-        app: alph-devnet
+        app: alph-full-node
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 0
       containers:
-        - name: alph-devnet
+        - name: alph-full-node
           image: alephium
           ports:
             - containerPort: 12973

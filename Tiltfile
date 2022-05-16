@@ -175,7 +175,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-devnet"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-full-node"]
 
 k8s_resource(
     "guardian",
@@ -221,10 +221,10 @@ docker_build(
     dockerfile = "./alephium/Dockerfile.contracts"
 )
 
-k8s_yaml_with_ns("devnet/alph-devnet.yaml")
+k8s_yaml_with_ns("devnet/alph-full-node.yaml")
 
 k8s_resource(
-  "alph-devnet",
+  "alph-full-node",
   port_forwards = [
     port_forward(12973, name = "Alephium REST [:12973]", host = webHost),
     # port_forward(10973, name = "Alephium Mining [:10973]", host = webHost),
@@ -248,7 +248,7 @@ k8s_resource(
     port_forwards = [
         port_forward(9090, container_port = 9090, name = "Alephium explorer backend [:9090]", host = webHost)
     ],
-    resource_deps = ["alph-devnet", "alph-postgres"],
+    resource_deps = ["alph-full-node", "alph-postgres"],
     labels = ["alephium"],
     trigger_mode = trigger_mode
 )
