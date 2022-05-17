@@ -48,8 +48,9 @@ spec:
       terminationGracePeriodSeconds: 0
       volumes:
         # mount shared between containers for runtime state
-        - name: node-rundir
-          emptyDir: {}
+        - name: node-data
+          persistentVolumeClaim:
+            claimName: guardian-node-pvc
         - name: node-keysdir
           secret:
             secretName: node-bigtable-key
@@ -61,8 +62,8 @@ spec:
         - name: guardiand
           image: guardiand-image
           volumeMounts:
-            - mountPath: /run/node
-              name: node-rundir
+            - mountPath: /run/node/
+              name: node-data
             - mountPath: /tmp/mounted-keys
               name: node-keysdir
           env:
@@ -115,7 +116,7 @@ spec:
             - "0"
             - --unsafeDevMode
             - --guardianKey
-            - /tmp/bridge.key
+            - /run/node/bridge.key
             - --publicRPC
             - "[::]:7070"
             - --publicWeb
@@ -123,7 +124,7 @@ spec:
             - --adminSocket
             - /tmp/admin.sock
             - --dataDir
-            - /tmp/data
+            - /run/node/data
             - --logLevel=debug
           securityContext:
             capabilities:
@@ -157,3 +158,15 @@ spec:
             - containerPort: 31103
               name: alph-rest
               protocol: TCP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: guardian-node-pvc
+spec:
+  storageClassName: wormhole-devnet-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

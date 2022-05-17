@@ -46,9 +46,16 @@ spec:
         app: eth-devnet
     spec:
       terminationGracePeriodSeconds: 1
+      volumes:
+        - name: eth-full-node
+          persistentVolumeClaim:
+            claimName: eth-full-node-pvc
       containers:
         - name: ganache
           image: eth-node
+          volumeMounts:
+            - mountPath: /eth-full-node/
+              name: eth-full-node
           command:
             - npx
             - ganache-cli
@@ -56,6 +63,7 @@ spec:
             - --deterministic
             - --time="1970-01-01T00:00:00+00:00"
             - --host=0.0.0.0
+            - --db=/eth-full-node/
           ports:
             - containerPort: 8545
               name: rpc
@@ -134,3 +142,15 @@ spec:
             - /bin/sh
             - -c
             - "npx truffle exec mine.js"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eth-full-node-pvc
+spec:
+  storageClassName: wormhole-devnet-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
