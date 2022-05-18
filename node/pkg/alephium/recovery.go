@@ -76,6 +76,7 @@ func (w *Watcher) fetchEvents_(
 	if err := handler(logger, confirmed, true); err != nil {
 		return nil, err
 	}
+	logger.Info("alph watcher recovery completed, fetch events from", zap.Uint64("from", *count))
 	return count, nil
 }
 

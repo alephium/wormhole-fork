@@ -157,6 +157,12 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 				errC <- err
 				return
 			}
+			logger.Info(
+				"alephium block height",
+				zap.Uint32("height", height),
+				zap.Uint8("fromGroup", w.chainIndex.FromGroup),
+				zap.Uint8("toGroup", w.chainIndex.ToGroup),
+			)
 
 			atomic.StoreUint32(&w.currentHeight, height)
 		}
