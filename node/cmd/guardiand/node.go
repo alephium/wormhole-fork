@@ -17,7 +17,6 @@ import (
 	"github.com/certusone/wormhole/node/pkg/ethereum"
 	"github.com/certusone/wormhole/node/pkg/notify/discord"
 	"github.com/certusone/wormhole/node/pkg/telemetry"
-	"github.com/certusone/wormhole/node/pkg/terra"
 	"github.com/certusone/wormhole/node/pkg/version"
 	"go.uber.org/zap/zapcore"
 
@@ -86,10 +85,6 @@ var (
 
 	acalaRPC      *string
 	acalaContract *string
-
-	terraWS       *string
-	terraLCD      *string
-	terraContract *string
 
 	algorandRPC      *string
 	algorandToken    *string
@@ -173,10 +168,6 @@ func init() {
 
 	acalaRPC = NodeCmd.Flags().String("acalaRPC", "", "Acala RPC URL")
 	acalaContract = NodeCmd.Flags().String("acalaContract", "", "Acala contract address")
-
-	terraWS = NodeCmd.Flags().String("terraWS", "", "Path to terrad root for websocket connection")
-	terraLCD = NodeCmd.Flags().String("terraLCD", "", "Path to LCD service root for http calls")
-	terraContract = NodeCmd.Flags().String("terraContract", "", "Wormhole contract address on Terra blockchain")
 
 	algorandRPC = NodeCmd.Flags().String("algorandRPC", "", "Algorand RPC URL")
 	algorandToken = NodeCmd.Flags().String("algorandToken", "", "Algorand access token")
@@ -294,7 +285,6 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
-	readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *unsafeDevMode {
 		// readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
 		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
@@ -444,16 +434,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Please specify --nodeName")
 	}
 
-	if *terraWS == "" {
-		logger.Fatal("Please specify --terraWS")
-	}
-	if *terraLCD == "" {
-		logger.Fatal("Please specify --terraLCD")
-	}
-	if *terraContract == "" {
-		logger.Fatal("Please specify --terraContract")
-	}
-
 	if *unsafeDevMode {
 		if *algorandRPC == "" {
 			logger.Fatal("Please specify --algorandRPC")
@@ -600,7 +580,6 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Observation request channel for each chain supporting observation requests.
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDTerra] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDPolygon] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDAvalanche] = make(chan *gossipv1.ObservationRequest)
@@ -770,13 +749,6 @@ func runNode(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		// Start Terra watcher only if configured
-		logger.Info("Starting Terra watcher")
-		if err := supervisor.Run(ctx, "terrawatch",
-			terra.NewWatcher(*terraWS, *terraLCD, *terraContract, lockC, setC, chainObsvReqC[vaa.ChainIDTerra]).Run); err != nil {
-			return err
-		}
-
 		if *unsafeDevMode {
 			/*
 				if err := supervisor.Run(ctx, "algorandwatch",
@@ -831,8 +803,6 @@ func runNode(cmd *cobra.Command, args []string) {
 			*unsafeDevMode,
 			*devNumGuardians,
 			*ethRPC,
-			*terraLCD,
-			*terraContract,
 			attestationEvents,
 			notifier,
 		)

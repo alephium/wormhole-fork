@@ -175,7 +175,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-full-node"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node"]
 
 k8s_resource(
     "guardian",
@@ -354,7 +354,7 @@ if ci_tests:
 
     k8s_resource(
         "ci-tests",
-        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "spy", "guardian"],
+        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "spy", "guardian"],
         labels = ["ci"],
         trigger_mode = trigger_mode,
     )
@@ -456,43 +456,3 @@ if explorer:
         labels = ["explorer"],
         trigger_mode = trigger_mode,
     )
-
-# terra devnet
-
-docker_build(
-    ref = "terra-image",
-    context = "./terra/devnet",
-    dockerfile = "terra/devnet/Dockerfile",
-)
-
-docker_build(
-    ref = "terra-contracts",
-    context = "./terra",
-    dockerfile = "./terra/Dockerfile",
-)
-
-k8s_yaml_with_ns("devnet/terra-devnet.yaml")
-
-k8s_resource(
-    "terra-terrad",
-    port_forwards = [
-        port_forward(26657, name = "Terra RPC [:26657]", host = webHost),
-        port_forward(1317, name = "Terra LCD [:1317]", host = webHost),
-    ],
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)
-
-k8s_resource(
-    "terra-postgres",
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)
-
-k8s_resource(
-    "terra-fcd",
-    resource_deps = ["terra-terrad", "terra-postgres"],
-    port_forwards = [port_forward(3060, name = "Terra FCD [:3060]", host = webHost)],
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)
