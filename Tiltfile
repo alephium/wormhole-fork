@@ -296,14 +296,14 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
-k8s_resource(
-    "eth-devnet2",
-    port_forwards = [
-        port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
-    ],
-    labels = ["evm"],
-    trigger_mode = trigger_mode,
-)
+# k8s_resource(
+#     "eth-devnet2",
+#     port_forwards = [
+#         port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
+#     ],
+#     labels = ["evm"],
+#     trigger_mode = trigger_mode,
+# )
 
 if bridge_ui:
     entrypoint = "npm run build && /app/node_modules/.bin/serve -s build -n"
@@ -360,25 +360,25 @@ if ci_tests:
     )
 
 # algorand
-if algorand:
-    k8s_yaml_with_ns("devnet/algorand.yaml")
-
-    docker_build(
-        ref = "algorand",
-        context = "third_party/algorand",
-        dockerfile = "third_party/algorand/Dockerfile",
-    )
-
-    k8s_resource(
-        "algorand",
-        resource_deps = ["teal-gen"],
-        port_forwards = [
-            port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
-            port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
-        ],
-        labels = ["algorand"],
-        trigger_mode = trigger_mode,
-    )
+# if algorand:
+#     k8s_yaml_with_ns("devnet/algorand.yaml")
+# 
+#     docker_build(
+#         ref = "algorand",
+#         context = "third_party/algorand",
+#         dockerfile = "third_party/algorand/Dockerfile",
+#     )
+# 
+#     k8s_resource(
+#         "algorand",
+#         resource_deps = ["teal-gen"],
+#         port_forwards = [
+#             port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
+#             port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
+#         ],
+#         labels = ["algorand"],
+#         trigger_mode = trigger_mode,
+#     )
 
 # e2e
 if e2e:
