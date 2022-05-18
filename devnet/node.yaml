@@ -164,7 +164,6 @@ kind: PersistentVolumeClaim
 metadata:
   name: guardian-node-pvc
 spec:
-  storageClassName: wormhole-devnet-storage
   accessModes:
     - ReadWriteOnce
   resources:

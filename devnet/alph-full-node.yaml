@@ -37,12 +37,22 @@ spec:
         - name: alph-full-node
           persistentVolumeClaim:
             claimName: alph-full-node-pvc
+        - name: alph-configs
+          configMap:
+            name: alph-configs
       containers:
         - name: alph-full-node
           image: alephium
+          env:
+            - name: ALEPHIUM_HOME
+              value: /alephium-home/.alephium
           volumeMounts:
-            - mountPath: /alephium-home/
+            - mountPath: /alephium-home/.alephium
               name: alph-full-node
+              subPath: .alephium
+            - mountPath: /alephium-home/.alephium/user.conf
+              name: alph-configs
+              subPath: user.conf
           ports:
             - containerPort: 12973
               name: alph-rest
@@ -74,9 +84,51 @@ kind: PersistentVolumeClaim
 metadata:
   name: alph-full-node-pvc
 spec:
-  storageClassName: wormhole-devnet-storage
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alph-configs
+data:
+  user.conf: |
+    alephium.genesis.allocations = [
+      {
+        address = "1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH",
+        amount = 1000000000000000000000000,
+        lock-duration = 0 seconds
+      },
+      {
+        address = "16VPvbF1ShQsj8TappJWtoW6gRM1AEQXYqwo5rQ7BiAy3",
+        amount = 1000000000000000000000000,
+        lock-duration = 0 seconds
+      }
+    ]
+    alephium.consensus.num-zeros-at-least-in-hash = 0
+
+    alephium.wallet.secret-dir = "/alephium-home/.alephium/wallets"
+    alephium.network.network-id = 4
+    alephium.discovery.bootstrap = []
+    alephium.wallet.locking-timeout = 99999 minutes
+    alephium.mempool.auto-mine-for-dev = true
+    alephium.node.event-log.enabled = true
+
+    alephium.api.network-interface = "0.0.0.0"
+    alephium.api.api-key-enabled = false
+    // alephium.api.api-key = "0e9afae96a96ac75720addc97231b3a1cdd9c331b2e23cfcc1f781cdd068d8c3"
+
+    alephium.mining.api-interface = "0.0.0.0"
+    alephium.network.bind-address  = "0.0.0.0:9973"
+    alephium.network.internal-address  = "alph-full-node:9973"
+    alephium.network.coordinator-address  = "alph-full-node:9973"
+    // arbitrary mining addresses
+    alephium.mining.miner-addresses = [
+      "1FsroWmeJPBhcPiUr37pWXdojRBe6jdey9uukEXk1TheA",
+      "1CQvSXsmM5BMFKguKDPpNUfw1idiut8UifLtT8748JdHc",
+      "193maApeJWrz9GFwWCfa982ccLARVE9Y1WgKSJaUs7UAx",
+      "16fZKYPCZJv2TP3FArA9FLUQceTS9U8xVnSjxFG9MBKyY"
+    ]

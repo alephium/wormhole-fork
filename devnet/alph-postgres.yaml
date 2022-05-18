@@ -30,16 +30,9 @@ spec:
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 0
-      volumes:
-        - name: alph-postgres
-          persistentVolumeClaim:
-            claimName: alph-postgres-pvc
       containers:
         - name: alph-postgres
           image: postgres:latest
-          volumeMounts:
-            - mountPath: /data/
-              name: alph-postgres
           env:
             - name: POSTGRES_USER
               value: "postgres"
@@ -58,15 +51,3 @@ spec:
               command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "$(POSTGRES_DB)", "-q"]
             initialDelaySeconds: 5
             timeoutSeconds: 2
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: alph-postgres-pvc
-spec:
-  storageClassName: wormhole-devnet-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi

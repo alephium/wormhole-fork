@@ -147,8 +147,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: eth-full-node-pvc
+  namespace: wormhole
 spec:
-  storageClassName: wormhole-devnet-storage
   accessModes:
     - ReadWriteOnce
   resources:
