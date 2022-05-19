@@ -14,20 +14,18 @@ const port = process.argv[2]
 const client = new CliqueClient({baseUrl: `http://127.0.0.1:${port}`})
 
 async function createWallet() {
-    const testWallet = 'alephium-web3-test-only-wallet'
     const wallets = await client.wallets.getWallets()
-    const exists = wallets.data.some(status => status.walletName == testWallet)
+    const exists = wallets.data.some(status => status.walletName == env.testWalletName)
     if (exists) {
         console.log('test wallet already exists')
+        await client.wallets.postWalletsWalletNameUnlock(env.testWalletName, { password: env.testWalletPassword })
         return
     }
 
-    const password = 'alph'
-    const mnemonic = 'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava'
     await client.wallets.putWallets({
-        walletName: testWallet,
-        mnemonic: mnemonic,
-        password: password
+        walletName: env.testWalletName,
+        mnemonic: env.testWalletMnemonic,
+        password: env.testWalletPassword
     })
     console.log('create test wallet succeed')
 }
