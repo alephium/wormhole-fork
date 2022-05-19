@@ -165,6 +165,12 @@ func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, guardianSetIn
 	return v, nil
 }
 
+func tokenBridgeUndoneTransfer(req *nodev1.TokenBridgeUndoneTransfer, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+	v := vaa.CreateGovernanceVAA(nonce, sequence, guardianSetIndex, req.Payload)
+	v.ConsistencyLevel = uint8(req.ConsistencyLevel)
+	return v, nil
+}
+
 func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *nodev1.InjectGovernanceVAARequest) (*nodev1.InjectGovernanceVAAResponse, error) {
 	s.logger.Info("governance VAA injected via admin socket", zap.String("request", req.String()))
 
@@ -185,6 +191,8 @@ func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *no
 			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, req.CurrentSetIndex, message.Nonce, message.Sequence)
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
 			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, req.CurrentSetIndex, message.Nonce, message.Sequence)
+		case *nodev1.GovernanceMessage_UndoneTransfer:
+			v, err = tokenBridgeUndoneTransfer(payload.UndoneTransfer, req.CurrentSetIndex, message.Nonce, message.Sequence)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}
