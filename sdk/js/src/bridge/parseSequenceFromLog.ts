@@ -1,6 +1,35 @@
 import { TxInfo } from "@terra-money/terra.js";
 import { ContractReceipt } from "ethers";
 import { Implementation__factory } from "../ethers-contracts";
+import { ValByteVec, ValU256 } from 'alephium-web3/api/api-alephium'
+import { CliqueClient } from 'alephium-web3'
+
+export async function parseSequenceFromLogAlph(client: CliqueClient, txId: string, bridgeId: string): Promise<string> {
+  const events = await client.events.getEventsTxScript({txId: txId})
+  const event = events.data.events.find(event => event.txId === txId)
+  if (typeof event === 'undefined') {
+      return Promise.reject("failed to get event for tx: " + txId)
+  }
+  if (event.eventIndex !== 0) {
+      return Promise.reject("invalid event index: " + event.eventIndex)
+  }
+  if (event.fields && event.fields.length !== 5) {
+      return Promise.reject("invalid event, wormhole message has 5 fields")
+  }
+  const sender = event.fields[0]
+  if (sender.type !== 'ByteVec') {
+      return Promise.reject("invalid sender, expect ByteVec type, have: " + sender.type)
+  }
+  const senderContractId = (sender as ValByteVec).value
+  if (senderContractId !== bridgeId) {
+      return Promise.reject("invalid sender, expect token bridge contract id, have: " + senderContractId)
+  }
+  const field = event.fields[1]
+  if (field.type !== 'U256') {
+      return Promise.reject("invalid event, expect U256 type, have: " + field.type)
+  }
+  return (field as ValU256).value
+}
 
 export function parseSequenceFromLogEth(
   receipt: ContractReceipt,

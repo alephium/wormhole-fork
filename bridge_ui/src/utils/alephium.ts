@@ -1,5 +1,17 @@
-import { ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, ALEPHIUM_TOKEN_WRAPPER_CODE_HASH, WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST } from "./consts";
-import { ChainId, uint8ArrayToHex, getLocalTokenWrapperId, getRemoteTokenWrapperId, getTokenBridgeForChainId, toAlphContractAddress } from '@certusone/wormhole-sdk';
+import {
+    ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+    ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
+    WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST
+} from "./consts";
+import {
+    ChainId,
+    uint8ArrayToHex,
+    getLocalTokenWrapperId,
+    getRemoteTokenWrapperId,
+    getTokenBridgeForChainId,
+    toAlphContractAddress,
+    parseSequenceFromLogAlph
+} from '@certusone/wormhole-sdk';
 import { CliqueClient, SignScriptTxParams } from 'alephium-web3';
 import { TxStatus, Confirmed, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
 import WalletConnectProvider from "alephium-walletconnect-provider";
@@ -27,43 +39,21 @@ export async function waitTxConfirmed(client: CliqueClient, txId: string): Promi
     return waitTxConfirmed(client, txId)
 }
 
-async function parseSequenceFromLog(client: CliqueClient, txId: string, blockHash: string): Promise<AlphTxInfo> {
-    const events = await client.events.getEventsTxScript({txId: txId})
-    const event = events.data.events.find(event => event.txId === txId)
-    if (typeof event === 'undefined') {
-        return Promise.reject("failed to get event for tx: " + txId)
-    }
+async function getTxInfo(client: CliqueClient, txId: string, blockHash: string): Promise<AlphTxInfo> {
+    const sequence = await parseSequenceFromLogAlph(client, txId, ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID)
     const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(blockHash)
-    if (event.eventIndex !== 0) {
-        return Promise.reject("invalid event index: " + event.eventIndex)
-    }
-    if (event.fields && event.fields.length !== 5) {
-        return Promise.reject("invalid event, wormhole message has 5 fields")
-    }
-    const sender = event.fields[0]
-    if (sender.type !== 'ByteVec') {
-        return Promise.reject("invalid sender, expect ByteVec type, have: " + sender.type)
-    }
-    const senderContractId = (sender as ValByteVec).value
-    if (senderContractId !== ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID) {
-        return Promise.reject("invalid sender, expect token bridge contract id, have: " + senderContractId)
-    }
-    const field = event.fields[1]
-    if (field.type !== 'U256') {
-        return Promise.reject("invalid event, expect U256 type, have: " + field.type)
-    }
-    return new AlphTxInfo(event.blockHash, blockHeader.data.height, txId, (field as ValU256).value)
+    return new AlphTxInfo(blockHash, blockHeader.data.height, txId, sequence)
 }
 
 export async function waitTxConfirmedAndGetTxInfo(client: CliqueClient, func: () => Promise<string>): Promise<AlphTxInfo> {
     const txId = await func()
     const confirmed = await waitTxConfirmed(client, txId)
-    return parseSequenceFromLog(client, txId, confirmed.blockHash)
+    return getTxInfo(client, txId, confirmed.blockHash)
 }
 
 export async function getAlphTxInfoByTxId(client: CliqueClient, txId: string): Promise<AlphTxInfo> {
     const confirmed = await waitTxConfirmed(client, txId)
-    return parseSequenceFromLog(client, txId, confirmed.blockHash)
+    return getTxInfo(client, txId, confirmed.blockHash)
 }
 
 function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {
