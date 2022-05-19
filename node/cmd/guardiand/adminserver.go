@@ -527,7 +527,7 @@ func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId u
 	}
 }
 
-func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *nodev1.ExecuteUndoneSequenceRequest) (*nodev1.ExecuteUndoneSequenceResponse, error) {
+func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Context, req *nodev1.GenUndoneTransferGovernanceMsgRequest) (*nodev1.GenUndoneTransferGovernanceMsgResponse, error) {
 	address, err := vaa.StringToAddress(req.EmitterAddress)
 	if err != nil {
 		return nil, fmt.Errorf("invalid emitter address, error: %v", err)
@@ -576,21 +576,22 @@ func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *
 		return nil, fmt.Errorf("failed to get token wrapper id, error: %v", err)
 	}
 
-	vaaBody := &vaa.VAA{
-		Timestamp:        time.Now(),
-		Nonce:            rand.Uint32(),
-		Sequence:         req.GovSequence,
-		ConsistencyLevel: transferVAA.ConsistencyLevel,
-		EmitterChain:     vaa.GovernanceChain,
-		EmitterAddress:   vaa.GovernanceEmitter,
-		Payload:          transferPayload(transferMsg, tokenWrapperId, req.Sequence),
-	}
 	// TODO: save the vaa id
 	if err := s.alphDb.SetSequenceExecuting(uint16(emitterChain), req.Sequence); err != nil {
 		return nil, fmt.Errorf("failed to update undone sequence status, error: %v", err)
 	}
-	return &nodev1.ExecuteUndoneSequenceResponse{
-		VaaBody: vaaBody.SerializeBody(),
+	payload := &nodev1.GovernanceMessage_UndoneTransfer{
+		UndoneTransfer: &nodev1.TokenBridgeUndoneTransfer{
+			ConsistencyLevel: uint32(transferVAA.ConsistencyLevel),
+			Payload:          transferPayload(transferMsg, tokenWrapperId, req.Sequence),
+		},
+	}
+	return &nodev1.GenUndoneTransferGovernanceMsgResponse{
+		Msg: &nodev1.GovernanceMessage{
+			Sequence: req.GovSequence,
+			Nonce:    rand.Uint32(),
+			Payload:  payload,
+		},
 	}, nil
 }
 

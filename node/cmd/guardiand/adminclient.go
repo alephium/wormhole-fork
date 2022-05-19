@@ -44,7 +44,7 @@ func init() {
 
 	AdminClientInjectGuardianSetUpdateCmd.Flags().AddFlagSet(pf)
 	AdminClientFindMissingMessagesCmd.Flags().AddFlagSet(pf)
-	AdminClientExecuteUndoneSequenceCmd.Flags().AddFlagSet(pf)
+	AdminClientGenUndoneTransferGovernanceMsgCmd.Flags().AddFlagSet(pf)
 	AdminClientListUndoneSequenceCmd.Flags().AddFlagSet(pf)
 	AdminClientListNodes.Flags().AddFlagSet(pf)
 	DumpVAAByMessageID.Flags().AddFlagSet(pf)
@@ -52,7 +52,7 @@ func init() {
 
 	AdminCmd.AddCommand(AdminClientInjectGuardianSetUpdateCmd)
 	AdminCmd.AddCommand(AdminClientFindMissingMessagesCmd)
-	AdminCmd.AddCommand(AdminClientExecuteUndoneSequenceCmd)
+	AdminCmd.AddCommand(AdminClientGenUndoneTransferGovernanceMsgCmd)
 	AdminCmd.AddCommand(AdminClientListUndoneSequenceCmd)
 	AdminCmd.AddCommand(AdminClientGovernanceVAAVerifyCmd)
 	AdminCmd.AddCommand(AdminClientListNodes)
@@ -86,11 +86,11 @@ var AdminClientListUndoneSequenceCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 }
 
-var AdminClientExecuteUndoneSequenceCmd = &cobra.Command{
-	Use:   "execute-undone-sequence [CHAIN_ID] [EMITTER_ADDRESS] [SEQUENCE] [GOV_SEQUENCE]",
-	Short: "Execute undone sequence and get the governance vaa",
-	Run:   runExecuteUndoneSequence,
-	Args:  cobra.ExactArgs(4),
+var AdminClientGenUndoneTransferGovernanceMsgCmd = &cobra.Command{
+	Use:   "gen-undone-transfer-governance-msg [CHAIN_ID] [EMITTER_ADDRESS] [SEQUENCE] [GOV_SEQUENCE] [FILE_PATH]",
+	Short: "Generate governance message for undone transfer and save it to `FILE_PATH`",
+	Run:   runGenUndoneTransferGovernanceMsg,
+	Args:  cobra.ExactArgs(5),
 }
 
 var DumpVAAByMessageID = &cobra.Command{
@@ -196,12 +196,15 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 		emitterAddress, resp.FirstSequence, resp.LastSequence, len(resp.MissingMessages))
 }
 
-func runExecuteUndoneSequence(cmd *cobra.Command, args []string) {
+func runGenUndoneTransferGovernanceMsg(cmd *cobra.Command, args []string) {
 	chainId, err := strconv.Atoi(args[0])
 	if err != nil {
 		log.Fatalf("invalid chain id: %v", err)
 	}
 	emitterAddress := args[1]
+	if len(emitterAddress) != 64 {
+		log.Fatalf("invalid emitter address")
+	}
 	sequence, err := strconv.ParseUint(args[2], 10, 64)
 	if err != nil {
 		log.Fatalf("invalid sequence: %v", err)
@@ -220,18 +223,29 @@ func runExecuteUndoneSequence(cmd *cobra.Command, args []string) {
 		log.Fatalf("failed to get admin client: %v", err)
 	}
 
-	request := &nodev1.ExecuteUndoneSequenceRequest{
+	request := &nodev1.GenUndoneTransferGovernanceMsgRequest{
 		EmitterChain:   uint32(chainId),
 		EmitterAddress: emitterAddress,
 		Sequence:       sequence,
 		GovSequence:    govSequence,
 		BackfillNodes:  common.PublicRPCEndpoints,
 	}
-	resp, err := c.ExecuteUndoneSequence(ctx, request)
+	resp, err := c.GenUndoneTransferGovernanceMsg(ctx, request)
 	if err != nil {
-		log.Fatalf("failed to run ExecuteUndoneSequence rpc, error: %v", err)
+		log.Fatalf("failed to run GenUndoneTransferGovernanceMsg rpc, error: %v", err)
 	}
-	log.Printf("vaa body: %v", resp.VaaBody)
+
+	injectRequest := &nodev1.InjectGovernanceVAARequest{
+		CurrentSetIndex: 0, // NOTE: Wormhole hasn't changed the guardian set since its launch
+		Messages:        []*nodev1.GovernanceMessage{resp.Msg},
+	}
+	data, err := prototext.Marshal(injectRequest)
+	if err != nil {
+		log.Fatalf("failed to serialize the generated governance msg, err: %v", err)
+	}
+	if err := ioutil.WriteFile(args[4], data, 0644); err != nil {
+		log.Fatalf("failed to save the generated msg, err: %v", err)
+	}
 }
 
 func runListUndoneSequences(cmd *cobra.Command, args []string) {
