@@ -2,7 +2,6 @@ package alephium
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"sync/atomic"
 
@@ -19,9 +18,8 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 			return
 		case req := <-w.obsvReqC:
 			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
-			assume(len(req.TxHash) == 40) // txId + eventIndex
+			assume(len(req.TxHash) == 32)
 			txId := hex.EncodeToString(req.TxHash[0:32])
-			eventIndex := binary.BigEndian.Uint64(req.TxHash[32:])
 			txStatus, err := client.GetTransactionStatus(ctx, txId)
 			if err != nil {
 				logger.Error("failed to get transaction status", zap.String("txId", txId), zap.Error(err))
@@ -41,7 +39,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 
 			currentHeight := atomic.LoadUint32(&w.currentHeight)
 
-			unconfirmedEvents, err := w.getGovernanceEventsByIndex(ctx, client, eventEmitterAddress, blockHash, txId, eventIndex)
+			unconfirmedEvents, err := w.getGovernanceEventsByTxId(ctx, client, eventEmitterAddress, blockHash, txId)
 			if err != nil {
 				logger.Info("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
 				continue
@@ -50,7 +48,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 			confirmedEvents := make([]*UnconfirmedEvent, 0)
 			for _, event := range unconfirmedEvents {
 				if event.blockHeader.Height+uint32(event.confirmations) <= currentHeight {
-					logger.Info("re-boserve event",
+					logger.Info("re-observed event",
 						zap.String("txId", txId),
 						zap.String("blockHash", blockHash),
 						zap.Uint32("blockHeight", event.blockHeader.Height),
@@ -101,15 +99,14 @@ func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed []*Unco
 	return nil
 }
 
-func (w *Watcher) getGovernanceEventsByIndex(
+func (w *Watcher) getGovernanceEventsByTxId(
 	ctx context.Context,
 	client *Client,
 	address string,
 	blockHash string,
 	txId string,
-	eventIndex uint64,
 ) ([]*UnconfirmedEvent, error) {
-	events, err := client.GetContractEventsByRange(ctx, address, eventIndex, eventIndex+1)
+	events, err := client.GetEventsByTxId(ctx, txId)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +116,7 @@ func (w *Watcher) getGovernanceEventsByIndex(
 		return nil, err
 	}
 
-	unconfirmedEvents := make([]*UnconfirmedEvent, len(events.Events))
+	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
 	for _, event := range events.Events {
 		if event.TxId != txId {
 			continue

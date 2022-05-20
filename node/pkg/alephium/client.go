@@ -119,6 +119,13 @@ func (c *Client) GetContractEvents(ctx context.Context, contractAddress string, 
 	return &result, err
 }
 
+func (c *Client) GetEventsByTxId(ctx context.Context, txId string) (*Events, error) {
+	var result Events
+	path := fmt.Sprintf("/events/tx-script?txId=%s", txId)
+	err := c.get(ctx, path, &result)
+	return &result, err
+}
+
 func eventCountURI(contractAddress string) string {
 	return fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
 }
