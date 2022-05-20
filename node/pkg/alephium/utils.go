@@ -375,7 +375,7 @@ func (e *Event) toUndoneSequencesRemoved() (*undoneSequencesRemoved, error) {
 }
 
 func (e *Event) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
-	assume(len(e.Fields) == 2)
+	assume(len(e.Fields) == 3)
 	senderId, err := e.Fields[0].ToByte32()
 	if err != nil {
 		return nil, err
