@@ -11,7 +11,8 @@ import {
   redeemOnEth as redeemTokenOnEth,
   ChainId,
   transferLocalTokenFromAlph,
-  transferRemoteTokenFromAlph
+  transferRemoteTokenFromAlph,
+  completeUndoneSequence
 } from '@certusone/wormhole-sdk'
 import { Signer } from 'alephium-web3'
 import { ethers } from 'ethers'
@@ -146,4 +147,18 @@ async function redeemOnEth(provider: ethers.providers.Provider, signedVAA: Uint8
   const signer = new ethers.Wallet(ethAccountPrivateKey, provider)
   const redeemReceipt = await redeemTokenOnEth(ethTokenBridgeAddress, signer, signedVAA)
   console.log("redeem on eth tx confirmed, tx id: " + redeemReceipt.transactionHash)
+}
+
+// complete undone transfer
+async function completeUndoneTransfer(signer: Signer, sequence: number) {
+  const response = await tryToGetSignedVAA(env.governanceChainId, env.governanceContractAddress, sequence.toString())
+  console.log("undone transfer governance vaa: " + Buffer.from(response.vaaBytes).toString('hex'))
+  const bytecode = completeUndoneSequence(alphBridgeContractId, response.vaaBytes, alphAccountAddress)
+  const tx = await signer.signScriptTx({
+    signerAddress: alphAccountAddress,
+    bytecode: bytecode,
+    submitTx: true
+  })
+  const confirmed = await waitTxConfirmed(signer.client, tx.txId)
+  console.log("complete undone transfer tx confirmed, tx id: " + tx.txId + ', block hash: ' + confirmed.blockHash)
 }
