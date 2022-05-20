@@ -33,6 +33,8 @@ import (
 	"github.com/certusone/wormhole/node/pkg/vaa"
 )
 
+const undoneTransferNonce uint32 = 0
+
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
 	db           *db.Database
@@ -166,9 +168,10 @@ func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, guardianSetIn
 }
 
 func tokenBridgeUndoneTransfer(req *nodev1.TokenBridgeUndoneTransfer, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
-	v := vaa.CreateGovernanceVAA(nonce, sequence, guardianSetIndex, req.Payload)
-	v.ConsistencyLevel = uint8(req.ConsistencyLevel)
-	return v, nil
+	if nonce != undoneTransferNonce {
+		return nil, fmt.Errorf("invalid nonce for undone transfer message")
+	}
+	return vaa.CreateGovernanceVAA(nonce, sequence, guardianSetIndex, req.Payload), nil
 }
 
 func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *nodev1.InjectGovernanceVAARequest) (*nodev1.InjectGovernanceVAAResponse, error) {
@@ -590,14 +593,13 @@ func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Conte
 	}
 	payload := &nodev1.GovernanceMessage_UndoneTransfer{
 		UndoneTransfer: &nodev1.TokenBridgeUndoneTransfer{
-			ConsistencyLevel: uint32(transferVAA.ConsistencyLevel),
-			Payload:          transferPayload(transferMsg, tokenWrapperId, req.Sequence),
+			Payload: transferPayload(transferMsg, tokenWrapperId, req.Sequence),
 		},
 	}
 	return &nodev1.GenUndoneTransferGovernanceMsgResponse{
 		Msg: &nodev1.GovernanceMessage{
 			Sequence: req.GovSequence,
-			Nonce:    rand.Uint32(),
+			Nonce:    undoneTransferNonce, // we need to ensure all guardians have same vaa body
 			Payload:  payload,
 		},
 	}, nil

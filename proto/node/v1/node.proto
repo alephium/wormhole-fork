@@ -130,8 +130,7 @@ message BridgeUpgradeContract {
 }
 
 message TokenBridgeUndoneTransfer {
-  uint32 consistency_level = 1;
-  bytes payload = 2;
+  bytes payload = 1;
 }
 
 message FindMissingMessagesRequest {
