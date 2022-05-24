@@ -28,7 +28,7 @@ module.exports = function(callback) {
     const fn = async () => {
         while (true) {
             console.log(await advanceBlock());
-            await sleep(5000);
+            await sleep(1000);
         }
     }
 
