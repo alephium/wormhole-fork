@@ -31,6 +31,8 @@ And wait for all pods to start.
 Because we haven't released the sdk yet, we need to start bridge ui outside k8s cluster, build sdk first:
 
 ```sh
+cd ethereum
+npm install && npm run build
 cd sdk/js
 npm install && npm run build
 ```
