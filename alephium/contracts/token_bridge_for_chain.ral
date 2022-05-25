@@ -67,9 +67,9 @@ TxContract TokenBridgeForChain(
             remoteChainId,
             tokenId,
             true,
-            token.decimals(),
             zeros!(32 - symbolSize) ++ symbol,
-            zeros!(32 - nameSize) ++ name
+            zeros!(32 - nameSize) ++ name,
+            token.decimals()
         )
         let contractId = copyCreateContract!(tokenWrapperTemplateId, encodedState)
         let eventEmitter = EventEmitter(eventEmitterId)
@@ -86,9 +86,9 @@ TxContract TokenBridgeForChain(
             remoteChainId,
             tokenId,
             false,
-            decimals,
             symbol,
-            name
+            name,
+            decimals
         )
         let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
         let contractId = copyCreateContractWithToken!(tokenWrapperTemplateId, encodedState, tokenAmount)

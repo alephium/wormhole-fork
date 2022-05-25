@@ -1,4 +1,4 @@
-import { CliqueClient } from "alephium-web3"
+import { NodeProvider } from "alephium-web3"
 import * as elliptic from 'elliptic'
 import { zeroPad } from "../lib/utils"
 import { dustAmount } from "./env"
@@ -13,7 +13,7 @@ function sign(txId: string): string {
     return zeroPad(sig.r.toString(16), 32) + zeroPad(sig.s.toString(16), 32)
 }
 
-export async function mine(client: CliqueClient) {
+export async function mine(provider: NodeProvider) {
     const txData = {
         fromPublicKey: fromPublicKey,
         destinations: [{
@@ -21,14 +21,14 @@ export async function mine(client: CliqueClient) {
             alphAmount: dustAmount.toString(),
         }]
     }
-    const tx = await client.transactions.postTransactionsBuild(txData)
-    const signature = sign(tx.data.txId)
+    const tx = await provider.transactions.postTransactionsBuild(txData)
+    const signature = sign(tx.txId)
     const signedTx = {
-        unsignedTx: tx.data.unsignedTx,
+        unsignedTx: tx.unsignedTx,
         signature: signature
     }
-    const submitResult = await client.transactions.postTransactionsSubmit(signedTx)
-    console.log("tx submitted, tx id: " + submitResult.data.txId)
+    const submitResult = await provider.transactions.postTransactionsSubmit(signedTx)
+    console.log("tx submitted, tx id: " + submitResult.txId)
     await new Promise(resolve => setTimeout(resolve, 5000))
-    mine(client)
+    mine(provider)
 }

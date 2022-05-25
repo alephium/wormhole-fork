@@ -1,25 +1,27 @@
-import { CliqueClient, Contract } from "alephium-web3";
-import { ContractInfo, dustAmount, randomContractAddress } from "./wormhole-fixture";
+import { NodeProvider, Contract, Asset } from "alephium-web3";
+import { ContractInfo, initAsset, randomContractAddress } from "./wormhole-fixture";
 
 export async function createUndoneSequence(
-    client: CliqueClient,
+    provider: NodeProvider,
     owner: string,
     undoneSequenceList: string = "",
     undoneSequenceMaxSize: number = 256,
     undoneSequenceMaxDistance: number = 256
 ): Promise<ContractInfo> {
-    const contract = await Contract.fromSource(client, 'undone_sequence.ral')
+    const contract = await Contract.fromSource(provider, 'undone_sequence.ral')
     const address = randomContractAddress()
-    const state = contract.toState(
-        [owner, undoneSequenceList, undoneSequenceMaxSize, undoneSequenceMaxDistance],
-        {alphAmount: dustAmount},
-        address
-    )
+    const initFields = {
+        "owner": owner,
+        "undone": undoneSequenceList,
+        "undoneSequenceMaxSize": undoneSequenceMaxSize,
+        "undoneSequenceMaxDistance": undoneSequenceMaxDistance
+    }
+    const state = contract.toState(initFields, initAsset, address)
     return new ContractInfo(contract, state, [], address)
 }
 
 export async function createSequence(
-    client: CliqueClient,
+    provider: NodeProvider,
     eventEmitter: ContractInfo,
     next: number,
     next1: bigint,
@@ -30,18 +32,22 @@ export async function createSequence(
 ): Promise<ContractInfo> {
     const address = randomContractAddress()
     const undoneSequence = await createUndoneSequence(
-        client,
+        provider,
         address,
         undoneSequenceList,
         undoneSequenceMaxSize,
         undoneSequenceMaxDistance
     )
-    const contract = await Contract.fromSource(client, 'sequence.ral')
-    const state = contract.toState(
-        [next, next1, next2, undoneSequence.contractId, undoneSequence.codeHash, eventEmitter.contractId],
-        {alphAmount: dustAmount},
-        address
-    )
+    const contract = await Contract.fromSource(provider, 'sequence.ral')
+    const initField = {
+        'next': next,
+        'next1': next1,
+        'next2': next2,
+        'undoneSequenceId': undoneSequence.contractId,
+        'undoneSequenceCodeHash': undoneSequence.codeHash,
+        'eventEmitterId': eventEmitter.contractId
+    }
+    const state = contract.toState(initField, initAsset, address)
     return new ContractInfo(
         contract,
         state,

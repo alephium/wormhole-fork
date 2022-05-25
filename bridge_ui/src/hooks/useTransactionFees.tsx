@@ -18,7 +18,7 @@ import {
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import useIsWalletReady from "./useIsWalletReady";
 import { LCDClient } from "@terra-money/terra.js";
-import { CliqueClient } from "alephium-web3";
+import { NodeProvider } from "alephium-web3";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -113,13 +113,13 @@ const getBalancesTerra = async (walletAddress: string) => {
 };
 
 const getBalancesAlephium = async (walletAddress: string) => {
-  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-  return client
+  const provider = new NodeProvider(ALEPHIUM_HOST)
+  return provider
     .addresses
     .getAddressesAddressBalance(walletAddress)
     .then((response) => {
-      const total = BigInt(response.data.balance)
-      const locked = BigInt(response.data.lockedBalance)
+      const total = BigInt(response.balance)
+      const locked = BigInt(response.lockedBalance)
       return total - locked
     })
     .catch((e) => {

@@ -11,10 +11,10 @@ spec:
     app: alph-full-node
   ports:
   - name: alph-rest
-    port: 12973
+    port: 22973
     targetPort: alph-rest
 #  - name: alph-mining
-#    port: 10973
+#    port: 20973
 #    targetPort: alph-mining
 ---
 apiVersion: apps/v1
@@ -54,30 +54,21 @@ spec:
               name: alph-configs
               subPath: user.conf
           ports:
-            - containerPort: 12973
+            - containerPort: 22973
               name: alph-rest
               protocol: TCP
-#            - containerPort: 10973
+#            - containerPort: 20973
 #              name: alph-mining
 #              protocol: TCP
           readinessProbe:
             tcpSocket:
-              port: 12973
-#            initialDelaySeconds: 20
+              port: 22973
         - name: alph-contracts
           image: alephium-contracts
           command:
             - /bin/sh
             - -c
-            - "sh /alephium/deploy.sh && touch /alephium/success && sleep infinity"
-          readinessProbe:
-            exec:
-              command:
-                - test
-                - -e
-                - "/alephium/success"
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            - "sh /alephium/deploy.sh"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -110,21 +101,26 @@ data:
     ]
     alephium.consensus.num-zeros-at-least-in-hash = 0
 
-    alephium.wallet.secret-dir = "/alephium-home/.alephium/wallets"
+    alephium.wallet.secret-dir = "/alephium-home/.alephium-wallet"
     alephium.network.network-id = 4
     alephium.discovery.bootstrap = []
     alephium.wallet.locking-timeout = 99999 minutes
     alephium.mempool.auto-mine-for-dev = true
     alephium.node.event-log.enabled = true
+    alephium.node.event-log.index-by-tx-id = true
 
     alephium.api.network-interface = "0.0.0.0"
     alephium.api.api-key-enabled = false
     // alephium.api.api-key = "0e9afae96a96ac75720addc97231b3a1cdd9c331b2e23cfcc1f781cdd068d8c3"
 
+    alephium.network.rest-port = 22973
+    alephium.network.ws-port = 21973
+    alephium.network.miner-api-port = 20973
+    alephium.network.bind-address  = "0.0.0.0:19973"
+    alephium.network.internal-address  = "alph-full-node:19973"
+    alephium.network.coordinator-address  = "alph-full-node:19973"
+
     alephium.mining.api-interface = "0.0.0.0"
-    alephium.network.bind-address  = "0.0.0.0:9973"
-    alephium.network.internal-address  = "alph-full-node:9973"
-    alephium.network.coordinator-address  = "alph-full-node:9973"
     // arbitrary mining addresses
     alephium.mining.miner-addresses = [
       "1FsroWmeJPBhcPiUr37pWXdojRBe6jdey9uukEXk1TheA",

@@ -3,15 +3,18 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, toHex, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { CliqueClient, Contract, ContractState } from 'alephium-web3'
+import { NodeProvider, Contract, ContractState, Asset } from 'alephium-web3'
 import * as blake from 'blakejs'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
 export const web3Utils = web3.utils
 
-export const alphChainId = 13
+export const CHAIN_ID_ALEPHIUM = 13
 export const dustAmount = BigInt("1000000000000")
+export const initAsset: Asset = {
+    alphAmount: dustAmount
+}
 export const oneAlph = BigInt("1000000000000000000")
 export const u256Max = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
@@ -35,24 +38,24 @@ export class ContractInfo {
         this.address = address
         this.contractId = selfState.contractId
         this.bytecode = selfState.bytecode
-        this.codeHash = Buffer.from(blake.blake2b(Buffer.from(selfState.bytecode, 'hex'), undefined, 32)).toString('hex')
+        this.codeHash = selfState.codeHash
     }
 }
 
-export async function createMath(client: CliqueClient): Promise<ContractInfo> {
-    const mathContract = await Contract.fromSource(client, 'math.ral')
+export async function createMath(provider: NodeProvider): Promise<ContractInfo> {
+    const mathContract = await Contract.fromSource(provider, 'math.ral')
     const address = randomContractAddress()
     const contractState = mathContract.toState(
-        [], {alphAmount: dustAmount}, address
+        {}, {alphAmount: dustAmount}, address
     )
     return new ContractInfo(mathContract, contractState, [], address)
 }
 
-export async function createEventEmitter(client: CliqueClient): Promise<ContractInfo> {
-    const eventEmitterContract = await Contract.fromSource(client, 'event_emitter.ral')
+export async function createEventEmitter(provider: NodeProvider): Promise<ContractInfo> {
+    const eventEmitterContract = await Contract.fromSource(provider, 'event_emitter.ral')
     const address = randomContractAddress()
     const contractState = eventEmitterContract.toState(
-        [], {alphAmount: dustAmount}, address
+        {}, {alphAmount: dustAmount}, address
     )
     return new ContractInfo(eventEmitterContract, contractState, [], address)
 }
@@ -76,7 +79,7 @@ export class GuardianSet {
     }
 
     guardianSetAddresses(size: number): string[] {
-        return this.addresses().map(addr => addr.slice(2)).concat(Array(size - this.size()).fill('00'))
+        return this.addresses().map(addr => addr.slice(2)).concat(Array(size - this.size()).fill(''))
     }
 
     size(): number {
@@ -102,7 +105,7 @@ export class GuardianSet {
             const signature = [
                 zeroPad(sig.r.toString(16), 32),
                 zeroPad(sig.s.toString(16), 32),
-                zeroPad((sig.recoveryParam as number + 27).toString(16), 1)
+                zeroPad((sig.recoveryParam as number).toString(16), 1)
             ].join("")
             const buffer = Buffer.allocUnsafe(66)
             buffer.writeUint8(keyIndex, 0)
@@ -261,4 +264,17 @@ export async function expectAssertionFailedOrRecoverEthAddressFailed<T>(func: ()
 export function toContractId(address: string): string {
     const bytes = base58.decode(address)
     return toHex(bytes.slice(1))
+}
+
+export function loadContract(code: string): Contract {
+    const contract = new Contract(
+        randomBytes(32).toString('hex'),
+         code,
+         Buffer.from(blake.blake2b(Buffer.from(code, 'hex'), undefined, 32)).toString('hex'),
+         {signature: '', names: [], types: []},
+         [],
+         []
+    )
+    const json = JSON.parse(contract.toString())
+    return Contract.fromJson(json)
 }

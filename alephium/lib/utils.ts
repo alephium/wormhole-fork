@@ -1,5 +1,4 @@
-import { CliqueClient } from 'alephium-web3'
-import { Confirmed, TxStatus } from 'alephium-web3/api/alephium'
+import { NodeProvider, node } from 'alephium-web3'
 import { randomBytes } from 'crypto'
 
 export function toHex(bytes: Uint8Array): string {
@@ -22,15 +21,15 @@ export function zeroPad(value: string, length: number): string {
     return value
 }
 
-function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {
-    return (txStatus as Confirmed).blockHash !== undefined
+function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+    return (txStatus as node.Confirmed).blockHash !== undefined
 }
 
-export async function waitTxConfirmed(client: CliqueClient, txId: string): Promise<Confirmed> {
-    const status = await client.transactions.getTransactionsStatus({txId: txId})
-    if (!isConfirmed(status.data)) {
+export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
+    const status = await provider.transactions.getTransactionsStatus({txId: txId})
+    if (!isConfirmed(status)) {
         await new Promise(r => setTimeout(r, 10000))
-        return waitTxConfirmed(client, txId)
+        return waitTxConfirmed(provider, txId)
     }
-    return status.data as Confirmed;
+    return status as node.Confirmed;
 }

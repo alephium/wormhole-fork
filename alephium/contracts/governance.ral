@@ -64,7 +64,7 @@ TxContract Governance(
         let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
         assert!(signatureSize <= 19)
         let mut index = 6
-        let mut signatures = [#00; 19]
+        let mut signatures = [#; 19]
         loop(0, 19, 1,
             // 1 byte `guardianIndex` and 65 bytes signature
             if (? == u256From1Byte!(byteVecSlice!(data, index, index + 1))) {
@@ -107,7 +107,7 @@ TxContract Governance(
                 guardianSets[1][?] = byteVecSlice!(payload, index, index + 20)
                 index = index + 20
             } else {
-                guardianSets[1][?] = #00
+                guardianSets[1][?] = #
             }
         )
         assert!(size!(payload) == index)
@@ -166,7 +166,7 @@ TxContract Governance(
     }
 
     fn verifySignature(lastGuardianIndex: I256, signature: ByteVec, key: ByteVec, hash: ByteVec) -> I256 {
-        if (signature == #00) {
+        if (signature == #) {
             return lastGuardianIndex
         }
         let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
@@ -184,9 +184,8 @@ TxContract Governance(
         signatureSize: U256
     ) -> () {
         let (keys, expirationTime, guardianSize) = getGuardiansInfo(guardianSetIndex)
-        if (guardianSetIndex != guardianSetIndexes[1] && blockTimeStamp!() > expirationTime) {
-            assert!(false)
-        }
+        assert!((guardianSetIndex == guardianSetIndexes[1]) || (blockTimeStamp!() <= expirationTime))
+
         // check signature quorum size
         assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
 
@@ -201,6 +200,7 @@ TxContract Governance(
         if (guardianSetIndex == guardianSetIndexes[0]) {
             return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
         }
-        return [#00; 19], 0, 0
+        assert!(false) // invalid guardian set index
+        return [#; 19], 0, 0
     }
 }

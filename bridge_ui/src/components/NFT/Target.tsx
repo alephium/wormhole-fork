@@ -59,7 +59,7 @@ function Target() {
   const { statusMessage } = useIsWalletReady(targetChain);
   useSyncTargetAddress(!shouldLockFields, true);
   const handleTargetChange = useCallback(
-    (event) => {
+    (event: any) => {
       dispatch(setTargetChain(event.target.value));
     },
     [dispatch]

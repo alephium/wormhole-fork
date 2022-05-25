@@ -105,29 +105,32 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (bool, err
 	return result, err
 }
 
-func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress string, from, to uint64) (*Events, error) {
-	var result Events
-	path := fmt.Sprintf("/events/contract?start=%d&end=%d&contractAddress=%s", from, to, contractAddress)
+func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress string, from, to uint64, group uint8) (*ContractEvents, error) {
+	var result ContractEvents
+	path := fmt.Sprintf("/events/contract/%s?start=%d&end=%d&group=%d", contractAddress, from, to, group)
 	err := c.get(ctx, path, &result)
 	return &result, err
 }
 
-func (c *Client) GetContractEvents(ctx context.Context, contractAddress string, from uint64) (*Events, error) {
-	var result Events
-	path := fmt.Sprintf("/events/contract?start=%d&contractAddress=%s", from, contractAddress)
+func (c *Client) GetContractEvents(ctx context.Context, contractAddress string, from uint64, group uint8) (*ContractEvents, error) {
+	var result ContractEvents
+	path := fmt.Sprintf("/events/contract/%s?start=%d&group=%d", contractAddress, from, group)
 	err := c.get(ctx, path, &result)
 	return &result, err
 }
 
-func (c *Client) GetEventsByTxId(ctx context.Context, txId string) (*Events, error) {
-	var result Events
-	path := fmt.Sprintf("/events/tx-script?txId=%s", txId)
+func (c *Client) GetEventsByTxId(ctx context.Context, txId string) (*ContractEventsByTxId, error) {
+	var result ContractEventsByTxId
+	path := fmt.Sprintf("/events/tx-id/%s", txId)
 	err := c.get(ctx, path, &result)
+	for _, event := range result.Events {
+		event.TxId = txId
+	}
 	return &result, err
 }
 
 func eventCountURI(contractAddress string) string {
-	return fmt.Sprintf("/events/contract/current-count?contractAddress=%s", contractAddress)
+	return fmt.Sprintf("/events/contract/%s/current-count", contractAddress)
 }
 
 func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*uint64, error) {

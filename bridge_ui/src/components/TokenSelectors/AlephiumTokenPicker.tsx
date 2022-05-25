@@ -3,8 +3,7 @@ import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } f
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
-import { CliqueClient } from "alephium-web3";
-import { ALEPHIUM_HOST } from "../../utils/consts";
+import { NodeProvider } from "alephium-web3";
 import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
@@ -18,12 +17,11 @@ type AlephiumTokenPickerProps = {
   resetAccounts: (() => void) | undefined;
 };
 
-async function getAlephiumTokenAccounts(address: string): Promise<ParsedTokenAccount[]> {
-  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+async function getAlephiumTokenAccounts(address: string, client: NodeProvider): Promise<ParsedTokenAccount[]> {
   const utxos = await client.addresses.getAddressesAddressUtxos(address)
   const now = Date.now()
   let tokenAmounts = new Map<string, bigint>()
-  utxos.data.utxos.forEach(utxo => {
+  utxos.utxos.forEach(utxo => {
     if (now > utxo.lockTime) {
       utxo.tokens.forEach(token => {
         const amount = tokenAmounts.get(token.id)
@@ -68,7 +66,7 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
       setIsLoading(false)
       setTokenAccounts([])
     } else {
-      getAlephiumTokenAccounts(signer.account.address)
+      getAlephiumTokenAccounts(signer.account.address, signer.nodeProvider)
         .then((tokenAccounts) => {
           setTokenAccounts(tokenAccounts)
           setIsLoading(false)

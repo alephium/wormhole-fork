@@ -15,9 +15,14 @@ import (
 )
 
 func TestFetchEvents(t *testing.T) {
-	events := make([]*Event, 0)
+	events := make([]*ContractEvent, 0)
 	contractAddress := randomAddress()
-	watcher := &Watcher{}
+	watcher := &Watcher{
+		chainIndex: &ChainIndex{
+			FromGroup: 0,
+			ToGroup:   0,
+		},
+	}
 	logger, err := zap.NewProduction()
 	assert.Nil(t, err)
 
@@ -29,16 +34,13 @@ func TestFetchEvents(t *testing.T) {
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/events/contract?start=") {
+		if strings.HasPrefix(r.RequestURI, "/events/contract/") {
 			w.Header().Set("Content-Type", "application/json")
 			query := r.URL.Query()
 			from, err := strconv.Atoi(query["start"][0])
 			assert.Nil(t, err)
 			to := uint64(from + batchSize)
-			event := &Events{
-				ChainFrom: 0,
-				ChainTo:   0,
-			}
+			event := &ContractEvents{}
 			if len(events) < int(to) {
 				event.Events = events[from:]
 				event.NextStart = uint64(len(events))
@@ -56,7 +58,7 @@ func TestFetchEvents(t *testing.T) {
 		return nil, badger.ErrKeyNotFound
 	}
 
-	toUnconfirmedEvents := func(ctx context.Context, client *Client, events []*Event) ([]*UnconfirmedEvent, error) {
+	toUnconfirmedEvents := func(ctx context.Context, client *Client, events []*ContractEvent) ([]*UnconfirmedEvent, error) {
 		unconfirmed := make([]*UnconfirmedEvent, len(events))
 		for i, event := range events {
 			unconfirmed[i] = &UnconfirmedEvent{
@@ -83,17 +85,16 @@ func TestFetchEvents(t *testing.T) {
 		return &nextIndex, nil
 	}
 
-	randomEvent := func() *Event {
-		return &Event{
-			BlockHash:       randomByte32().ToHex(),
-			ContractAddress: contractAddress,
-			TxId:            randomByte32().ToHex(),
-			EventIndex:      0,
-			Fields:          []*Field{},
+	randomEvent := func() *ContractEvent {
+		return &ContractEvent{
+			BlockHash:  randomByte32().ToHex(),
+			TxId:       randomByte32().ToHex(),
+			EventIndex: 0,
+			Fields:     []*Field{},
 		}
 	}
 
-	events = append(events, []*Event{randomEvent(), randomEvent()}...)
+	events = append(events, []*ContractEvent{randomEvent(), randomEvent()}...)
 	eventIndex, err = watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(2))
@@ -151,7 +152,7 @@ func TestToUnconfirmedEvents(t *testing.T) {
 	}))
 
 	client := NewClient(server.URL, "", 10)
-	events := []*Event{
+	events := []*ContractEvent{
 		{
 			BlockHash:  blocks[0].header.Hash,
 			EventIndex: TokenWrapperCreatedEventIndex,

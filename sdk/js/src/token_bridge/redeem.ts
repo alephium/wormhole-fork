@@ -11,7 +11,7 @@ export function redeemOnAlph(
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     tokenWrapperId: tokenWrapperId,
     vaa: vaaHex,
     arbiter: arbiterAddress
@@ -25,7 +25,7 @@ export function completeUndoneSequence(
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeUndoneSequenceScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
     vaa: vaaHex,
     arbiter: arbiterAddress

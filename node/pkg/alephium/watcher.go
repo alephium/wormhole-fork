@@ -47,7 +47,7 @@ type Watcher struct {
 
 type UnconfirmedEvent struct {
 	blockHeader   *BlockHeader
-	event         *Event
+	event         Event
 	confirmations uint8
 }
 
@@ -185,7 +185,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 
 			var skipIfError bool
 			var validateErr error
-			switch e.event.EventIndex {
+			switch e.event.eventIndex() {
 			case WormholeMessageEventIndex:
 				if skipWormholeMessage {
 					continue
@@ -201,7 +201,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				}
 
 			case TokenBridgeForChainCreatedEventIndex:
-				event, err := e.event.toTokenBridgeForChainCreatedEvent()
+				event, err := e.event.fields().toTokenBridgeForChainCreatedEvent()
 				if err != nil {
 					logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.ToString()))
 					continue
@@ -209,7 +209,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
 
 			case TokenWrapperCreatedEventIndex:
-				event, err := e.event.toTokenWrapperCreatedEvent()
+				event, err := e.event.fields().toTokenWrapperCreatedEvent()
 				if err != nil {
 					logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.ToString()))
 					continue
@@ -217,7 +217,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
 
 			case UndoneSequencesRemovedEventIndex:
-				event, err := e.event.toUndoneSequencesRemoved()
+				event, err := e.event.fields().toUndoneSequencesRemoved()
 				if err != nil {
 					logger.Error("ignore invalid undone sequences removed event", zap.Error(err), zap.String("event", e.event.ToString()))
 					continue
@@ -225,7 +225,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				skipIfError, validateErr = w.validateUndoneSequencesRemovedEvents(event, w.getRemoteChainId)
 
 			case UndoneSequenceCompletedEventIndex:
-				event, err := e.event.toUndoneSequenceCompleted()
+				event, err := e.event.fields().toUndoneSequenceCompleted()
 				if err != nil {
 					logger.Error("ignore invalid undone sequence completed event", zap.Error(err), zap.String("event", e.event.ToString()))
 					continue
@@ -233,7 +233,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				skipIfError, validateErr = w.validateUndoneSequenceCompletedEvents(event)
 
 			default:
-				return fmt.Errorf("unknown event index %v", e.event.EventIndex)
+				return fmt.Errorf("unknown event index %v", e.event.eventIndex())
 			}
 
 			if validateErr != nil && skipIfError {
@@ -254,7 +254,7 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 	return nil
 }
 
-func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
+func (w *Watcher) toUnconfirmedEvent(ctx context.Context, client *Client, event *ContractEvent) (*UnconfirmedEvent, error) {
 	// TODO: LRU cache
 	header, err := client.GetBlockHeader(ctx, event.BlockHash)
 	if err != nil {
@@ -283,7 +283,7 @@ func (w *Watcher) subscribe(
 	client *Client,
 	contractAddress string,
 	fromIndex uint64,
-	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
+	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
 	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 	errC chan<- error,
 ) {
@@ -296,7 +296,7 @@ func (w *Watcher) subscribe_(
 	client *Client,
 	contractAddress string,
 	fromIndex uint64,
-	toUnconfirmed func(context.Context, *Client, *Event) (*UnconfirmedEvent, error),
+	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
 	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 	tickDuration time.Duration,
 	errC chan<- error,
@@ -388,7 +388,7 @@ func (w *Watcher) subscribe_(
 				continue
 			}
 
-			events, err := client.GetContractEventsByRange(ctx, contractAddress, nextIndex, *count)
+			events, err := client.GetContractEventsByRange(ctx, contractAddress, nextIndex, *count, w.chainIndex.FromGroup)
 			if err != nil {
 				logger.Error("failed to get contract events", zap.Uint64("from", nextIndex), zap.Uint64("to", *count), zap.Error(err))
 				errC <- err
@@ -403,7 +403,7 @@ func (w *Watcher) subscribe_(
 					errC <- err
 					return
 				}
-				blockHash := unconfirmed.event.BlockHash
+				blockHash := unconfirmed.event.blockHash()
 				if lst, ok := pendingEvents[blockHash]; ok {
 					lst.events = append(lst.events, unconfirmed)
 				} else {

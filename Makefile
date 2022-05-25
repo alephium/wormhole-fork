@@ -31,6 +31,10 @@ generate: dirs
 .PHONY: node
 node: $(BIN)/guardiand
 
+.PHONY: guardian-test
+guardian-test:
+	cd node && go test ./...
+
 .PHONY: $(BIN)/guardiand
 $(BIN)/guardiand: dirs generate
 	cd node && go build -ldflags "-X github.com/certusone/wormhole/node/pkg/version.version=${VERSION}" \

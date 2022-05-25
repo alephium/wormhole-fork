@@ -32,13 +32,13 @@ function Source() {
   const isSourceComplete = useSelector(selectAttestIsSourceComplete);
   const shouldLockFields = useSelector(selectAttestShouldLockFields);
   const handleSourceChange = useCallback(
-    (event) => {
+    (event: any) => {
       dispatch(setSourceChain(event.target.value));
     },
     [dispatch]
   );
   const handleAssetChange = useCallback(
-    (event) => {
+    (event: any) => {
       dispatch(setSourceAsset(event.target.value));
     },
     [dispatch]

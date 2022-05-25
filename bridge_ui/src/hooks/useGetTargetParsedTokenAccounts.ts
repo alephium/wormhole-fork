@@ -17,19 +17,18 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
-import { ALEPHIUM_HOST, getEvmChainId, TERRA_HOST } from "../utils/consts";
+import { getEvmChainId, TERRA_HOST } from "../utils/consts";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
-import { CliqueClient } from "alephium-web3";
+import { NodeProvider } from "alephium-web3";
 import { getAlephiumTokenInfo } from "../utils/alephium";
 
-async function getAlephiumTargetAsset(address: string, targetAsset: string): Promise<ParsedTokenAccount> {
-  const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-  const utxos = await client.addresses.getAddressesAddressUtxos(address)
+async function getAlephiumTargetAsset(address: string, targetAsset: string, provider: NodeProvider): Promise<ParsedTokenAccount> {
+  const utxos = await provider.addresses.getAddressesAddressUtxos(address)
   const now = Date.now()
   let balance = BigInt(0)
-  utxos.data.utxos.forEach(utxo => {
+  utxos.utxos.forEach(utxo => {
     if (now > utxo.lockTime) {
       utxo.tokens.filter(t => t.id === targetAsset).forEach(t =>
         balance = balance + BigInt(t.amount)
@@ -37,7 +36,7 @@ async function getAlephiumTargetAsset(address: string, targetAsset: string): Pro
     }
   });
 
-  const tokenInfo = await getAlephiumTokenInfo(client, targetAsset)
+  const tokenInfo = await getAlephiumTokenInfo(provider, targetAsset)
   const uiAmount = formatUnits(balance, tokenInfo.decimals)
   return createParsedTokenAccount(
     address,
@@ -82,7 +81,7 @@ function useGetTargetParsedTokenAccounts() {
     let cancelled = false;
 
     if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
-      getAlephiumTargetAsset(alphSigner.account.address, targetAsset)
+      getAlephiumTargetAsset(alphSigner.account.address, targetAsset, alphSigner.nodeProvider)
         .then((target) => dispatch(setTargetParsedTokenAccount(target)))
         .catch(() => {
           if (!cancelled) {

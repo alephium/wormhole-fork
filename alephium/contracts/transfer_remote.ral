@@ -10,17 +10,15 @@ TxScript Main(
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
-    pub payable fn main() -> () {
-        approveAlph!(sender, messageFee)
-        approveToken!(sender, tokenWrapperId, tokenAmount)
-        let tokenWrapper = TokenWrapper(tokenWrapperId)
-        tokenWrapper.transfer(
-            sender,
-            toAddress,
-            tokenAmount,
-            arbiterFee,
-            nonce,
-            consistencyLevel
-        )
-    }
+    approveAlph!(sender, messageFee)
+    approveToken!(sender, tokenWrapperId, tokenAmount)
+    let tokenWrapper = TokenWrapper(tokenWrapperId)
+    tokenWrapper.transfer(
+        sender,
+        toAddress,
+        tokenAmount,
+        arbiterFee,
+        nonce,
+        consistencyLevel
+    )
 }

@@ -1,12 +1,12 @@
-import { CliqueClient, Contract } from 'alephium-web3'
+import { NodeProvider, Contract } from 'alephium-web3'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
-import { alphChainId, ContractInfo, dustAmount, GuardianSet, randomContractAddress } from './wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'
 
 export const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
 export const initGuardianSet = GuardianSet.random(12, 0)
 export const governanceChainId = 0
-export const governanceContractAddress = '0000000000000000000000000000000000000000000000000000000000000004'
+export const governanceContractId = '0000000000000000000000000000000000000000000000000000000000000004'
 export const messageFee = BigInt("100000000000000")
 
 export class UpdateGuardianSet {
@@ -69,33 +69,29 @@ export class SubmitTransferFee {
 }
 
 export async function createGovernance(
-    client: CliqueClient,
+    provider: NodeProvider,
     eventEmitter: ContractInfo
 ): Promise<ContractInfo> {
     const address = randomContractAddress()
-    const undoneSequenceInfo = await createUndoneSequence(client, address)
-    const governanceContract = await Contract.fromSource(client, 'governance.ral')
-    const initFields = [
-        alphChainId,
-        governanceChainId,
-        governanceContractAddress,
-        0,
-        0,
-        0,
-        undoneSequenceInfo.contractId,
-        messageFee,
-        Array(Array(19).fill('00'), initGuardianSet.guardianSetAddresses(19)),
-        [0, initGuardianSet.index],
-        [0, initGuardianSet.size()],
-        0,
-        undoneSequenceInfo.codeHash,
-        eventEmitter.selfState.contractId,
-    ]
-    const contractState = governanceContract.toState(
-        initFields,
-        {alphAmount: dustAmount},
-        address
-    )
+    const undoneSequenceInfo = await createUndoneSequence(provider, address)
+    const governanceContract = await Contract.fromSource(provider, 'governance.ral')
+    const initFields = {
+        'chainId': CHAIN_ID_ALEPHIUM,
+        'governanceChainId': governanceChainId,
+        'governanceContract': governanceContractId,
+        'next': 0,
+        'next1': 0,
+        'next2': 0,
+        'undoneSequenceId': undoneSequenceInfo.contractId,
+        'messageFee': messageFee,
+        'guardianSets': Array(Array(19).fill(''), initGuardianSet.guardianSetAddresses(19)),
+        'guardianSetIndexes': [0, initGuardianSet.index],
+        'guardianSetSizes': [0, initGuardianSet.size()],
+        'previousGuardianSetExpirationTime': 0,
+        'undoneSequenceCodeHash': undoneSequenceInfo.codeHash,
+        'eventEmitterId': eventEmitter.selfState.contractId
+    }
+    const contractState = governanceContract.toState(initFields, initAsset, address)
     return new ContractInfo(
         governanceContract,
         contractState,

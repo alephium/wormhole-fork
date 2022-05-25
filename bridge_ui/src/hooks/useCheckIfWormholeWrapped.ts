@@ -5,7 +5,6 @@ import {
   getOriginalAssetEth,
   getOriginalAssetTerra,
   isEVMChain,
-  toAlphContractAddress,
   uint8ArrayToHex,
   WormholeWrappedInfo,
 } from "@certusone/wormhole-sdk";
@@ -28,13 +27,13 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
-  ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   TERRA_HOST,
 } from "../utils/consts";
-import { ValByteVec, ValU256 } from 'alephium-web3/api/alephium';
-import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { NodeProvider } from 'alephium-web3'
+import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -50,29 +49,24 @@ const makeStateSafe = (
   assetAddress: uint8ArrayToHex(info.assetAddress),
 });
 
-async function getAlephiumTokenInfo(signer: AlephiumWalletSigner, tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
-  const tokenAddress = toAlphContractAddress(tokenId)
-  return signer.client
-    .contracts
-    .getContractsAddressState(tokenAddress, {group: signer.account.group})
-    .then(response => {
-      if (response.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
-        const originalAsset = (response.data.fields[4] as ValByteVec).value
-        return {
-          isWrapped: true,
-          chainId: parseInt((response.data.fields[3] as ValU256).value) as ChainId,
-          assetAddress: originalAsset,
-          tokenId: originalAsset
-        }
-      } else {
-        return {
-          isWrapped: false,
-          chainId: CHAIN_ID_ALEPHIUM,
-          assetAddress: tokenId,
-          tokenId: tokenId
-        }
-      }
-    })
+async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
+  const tokenInfo = await getAlephiumTokenWrappedInfo(tokenId, provider)
+  if (tokenInfo.isWrapped) {
+    const originalAsset = uint8ArrayToHex(tokenInfo.assetAddress)
+    return {
+      isWrapped: true,
+      chainId: tokenInfo.chainId,
+      assetAddress: originalAsset,
+      tokenId: originalAsset
+    }
+  } else {
+    return {
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: tokenId,
+      tokenId: tokenId
+    }
+  }
 }
 
 // Check if the tokens in the configured source chain/address are wrapped
@@ -139,7 +133,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
       }
       if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphSigner) {
         try {
-          const wrappedInfo = await getAlephiumTokenInfo(alphSigner, sourceAsset)
+          const wrappedInfo = await getAlephiumTokenInfo(alphSigner.nodeProvider, sourceAsset)
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
           }

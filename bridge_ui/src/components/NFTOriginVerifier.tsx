@@ -83,13 +83,13 @@ export default function NFTOriginVerifier() {
     WormholeWrappedNFTInfo | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const handleChainChange = useCallback((event) => {
+  const handleChainChange = useCallback((event: any) => {
     setLookupChain(event.target.value);
   }, []);
-  const handleAssetChange = useCallback((event) => {
+  const handleAssetChange = useCallback((event: any) => {
     setLookupAsset(event.target.value);
   }, []);
-  const handleTokenIdChange = useCallback((event) => {
+  const handleTokenIdChange = useCallback((event: any) => {
     setLookupTokenId(event.target.value);
   }, []);
   useEffect(() => {

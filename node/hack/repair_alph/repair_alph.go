@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	alphRPC  = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
-	apiKey   = flag.String("apiKey", "", "Alephium RPC api key")
-	adminRPC = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	alphRPC    = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
+	apiKey     = flag.String("apiKey", "", "Alephium RPC api key")
+	adminRPC   = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	groupIndex = flag.Uint("group", 0, "Contract group index")
 )
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.NodePrivilegedServiceClient, error) {
@@ -114,7 +115,7 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex)
+		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex, uint8(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}

@@ -1,8 +1,8 @@
 # Wait for node to start
-while ! /bin/netcat -z localhost 12973; do
+while ! /bin/netcat -z localhost 22973; do
   sleep 1
 done
 
 cd /alephium
-npm run compile
-node dist/devnet/deploy.js 12973
+npm run build
+node dist/devnet/deploy.js

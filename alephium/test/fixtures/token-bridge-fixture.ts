@@ -1,9 +1,8 @@
-import { CliqueClient, Contract, ContractState } from 'alephium-web3'
-import { createGovernance, governanceChainId, governanceContractAddress } from './governance-fixture'
-import { alphChainId, ContractInfo, dustAmount, randomContractAddress, randomContractId, toContractId } from './wormhole-fixture'
+import { NodeProvider, Contract, ContractState } from 'alephium-web3'
+import { createGovernance, governanceChainId, governanceContractId } from './governance-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, dustAmount, initAsset, randomContractAddress, toContractId } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
-import * as blake from 'blakejs'
 
 export const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
 
@@ -114,21 +113,25 @@ export class Transfer {
     }
 }
 
-export async function getTokenWrapperContract(client: CliqueClient): Promise<Contract> {
-    return await Contract.fromSource(client, 'token_wrapper.ral')
+export async function getTokenWrapperContract(provider: NodeProvider): Promise<Contract> {
+    return await Contract.fromSource(provider, 'token_wrapper.ral')
 }
 
 export async function createTestToken(
-    client: CliqueClient,
+    provider: NodeProvider,
     decimals: number,
     symbol: string,
     name: string,
     supply?: bigint
 ): Promise<ContractInfo> {
-    const token = await Contract.fromSource(client, 'test_token.ral')
+    const token = await Contract.fromSource(provider, 'test_token.ral')
     const address = randomContractAddress()
-    const tokenSupply = supply ? supply : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-    const initFields = [symbol, name, decimals, tokenSupply]
+    const initFields = {
+        "symbol_": symbol,
+        "name_": name,
+        "decimals_": decimals,
+        "totalSupply_": supply ? supply : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+    }
     const state = token.toState(initFields, {alphAmount: dustAmount}, address)
     return new ContractInfo(token, state, [], address)
 }
@@ -173,50 +176,75 @@ export class TokenBridgeForChainInfo extends ContractInfo {
     }
 }
 
-async function createTemplateTokenWrapper(client: CliqueClient): Promise<ContractInfo> {
-    const tokenWrapper = await Contract.fromSource(client, 'token_wrapper.ral')
+async function createTemplateTokenWrapper(provider: NodeProvider): Promise<ContractInfo> {
+    const tokenWrapper = await Contract.fromSource(provider, 'token_wrapper.ral')
     const address = randomContractAddress()
-    const state = tokenWrapper.toState(
-        ["", "", 0, 0, "", true, 0, "", ""],
-        {alphAmount: dustAmount},
-        address
-    )
+    const initFields = {
+        'tokenBridgeId': '',
+        'tokenBridgeForChainId': '',
+        'localChainId': 0,
+        'remoteChainId': 0,
+        'tokenContractId': '',
+        'isLocalToken': true,
+        'symbol_': '',
+        'name_': '',
+        'decimals_': 0
+    }
+    const state = tokenWrapper.toState(initFields, initAsset, address)
     return new ContractInfo(tokenWrapper, state, [], address)
 }
 
-async function createTemplateTokenBridgeForChain(client: CliqueClient): Promise<ContractInfo> {
-    const tokenBridgeForChain = await Contract.fromSource(client, 'token_bridge_for_chain.ral')
+async function createTemplateTokenBridgeForChain(provider: NodeProvider): Promise<ContractInfo> {
+    const tokenBridgeForChain = await Contract.fromSource(provider, 'token_bridge_for_chain.ral')
     const address = randomContractAddress()
-    const state = tokenBridgeForChain.toState(
-        ["", 0, "", 0, "", 0, 0, 0, "", "", "", "", ""],
-        {alphAmount: dustAmount},
-        address
-    )
+    const initFields = {
+        'governanceId': '',
+        'localChainId': 0,
+        'localTokenBridgeId': '',
+        'remoteChainId': 0,
+        'remoteTokenBridgeId': '',
+        'next': 0,
+        'next1': 0,
+        'next2': 0,
+        'undoneSequenceId': '',
+        'tokenWrapperTemplateId': '',
+        'tokenWrapperCodeHash': '',
+        'undoneSequenceCodeHash': '',
+        'eventEmitterId':'' 
+    }
+    const state = tokenBridgeForChain.toState(initFields, initAsset, address)
     return new ContractInfo(tokenBridgeForChain, state, [], address)
 }
 
 export async function createTokenBridge(
-    client: CliqueClient,
+    provider: NodeProvider,
     eventEmitter: ContractInfo
 ): Promise<TokenBridgeInfo> {
-    const governance = await createGovernance(client, eventEmitter)
-    const tokenWrapper = await createTemplateTokenWrapper(client)
-    const tokenBridgeForChain = await createTemplateTokenBridgeForChain(client)
+    const governance = await createGovernance(provider, eventEmitter)
+    const tokenWrapper = await createTemplateTokenWrapper(provider)
+    const tokenBridgeForChain = await createTemplateTokenBridgeForChain(provider)
 
     const tokenBridgeAddress = randomContractAddress()
     const tokenBridgeId = toContractId(tokenBridgeAddress)
-    const undoneSequence = await createUndoneSequence(client, tokenBridgeId)
-    const tokenBridge = await Contract.fromSource(client, 'token_bridge.ral')
-    const initFields = [
-        governance.contractId, governanceChainId, governanceContractAddress, 0, 0, 0,
-        undoneSequence.contractId, alphChainId, 0, tokenWrapper.contractId, tokenBridgeForChain.contractId,
-        tokenWrapper.codeHash, undoneSequence.codeHash, eventEmitter.contractId
-    ]
-    const state = tokenBridge.toState(
-        initFields,
-        {alphAmount: dustAmount},
-        tokenBridgeAddress
-    )
+    const undoneSequence = await createUndoneSequence(provider, tokenBridgeId)
+    const tokenBridge = await Contract.fromSource(provider, 'token_bridge.ral')
+    const initFields = {
+        'governanceId': governance.contractId,
+        'governanceChainId': governanceChainId,
+        'governanceContractId': governanceContractId,
+        'next': 0,
+        'next1': 0,
+        'next2': 0,
+        'undoneSequenceId': undoneSequence.contractId,
+        'localChainId': CHAIN_ID_ALEPHIUM,
+        'sequence': 0,
+        'tokenWrapperTemplateId': tokenWrapper.contractId,
+        'tokenBridgeForChainTemplateId': tokenBridgeForChain.contractId,
+        'tokenWrapperCodeHash': tokenWrapper.codeHash,
+        'undoneSequenceCodeHash': undoneSequence.codeHash,
+        'eventEmitterId': eventEmitter.contractId
+    }
+    const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
     const deps = Array.prototype.concat(
         eventEmitter.states(),
         governance.states(),
@@ -231,26 +259,32 @@ export async function createTokenBridge(
 }
 
 export async function createTokenBridgeForChain(
-    client: CliqueClient,
+    provider: NodeProvider,
     eventEmitter: ContractInfo,
     tokenBridge: TokenBridgeInfo,
     remoteChainId: number,
     remoteTokenBridgeId: string
 ): Promise<TokenBridgeForChainInfo> {
     const address = randomContractAddress()
-    const undoneSequence = await createUndoneSequence(client, address)
-    const tokenWrapper = await createTemplateTokenWrapper(client)
-    const tokenBridgeForChainContract = await Contract.fromSource(client, "token_bridge_for_chain.ral")
-    const initFields = [
-        tokenBridge.governance.contractId, alphChainId, tokenBridge.contractId,
-        remoteChainId, remoteTokenBridgeId, 0, 0, 0, undoneSequence.contractId,
-        tokenWrapper.contractId, tokenWrapper.codeHash, undoneSequence.codeHash, eventEmitter.contractId
-    ]
-    const state = tokenBridgeForChainContract.toState(
-        initFields,
-        {alphAmount: dustAmount},
-        address
-    )
+    const undoneSequence = await createUndoneSequence(provider, address)
+    const tokenWrapper = await createTemplateTokenWrapper(provider)
+    const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge_for_chain.ral")
+    const initFields = {
+        'governanceId': tokenBridge.governance.contractId,
+        'localChainId': CHAIN_ID_ALEPHIUM,
+        'localTokenBridgeId': tokenBridge.contractId,
+        'remoteChainId': remoteChainId,
+        'remoteTokenBridgeId': remoteTokenBridgeId,
+        'next': 0,
+        'next1': 0,
+        'next2': 0,
+        'undoneSequenceId': undoneSequence.contractId,
+        'tokenWrapperTemplateId': tokenWrapper.contractId,
+        'tokenWrapperCodeHash': tokenWrapper.codeHash,
+        'undoneSequenceCodeHash': undoneSequence.codeHash,
+        'eventEmitterId': eventEmitter.contractId
+    }
+    const state = tokenBridgeForChainContract.toState(initFields, initAsset, address)
     const deps = Array.prototype.concat(
         tokenBridge.states(),
         tokenWrapper.states(),
@@ -270,11 +304,17 @@ export async function createWrapper(
 ): Promise<ContractInfo> {
     const tokenWrapperContract = tokenBridgeInfo.tokenWrapperContract
     const address = randomContractAddress()
-    const state = tokenWrapperContract.toState(
-        [tokenBridgeInfo.contractId, tokenBridgeForChainInfo.contractId, alphChainId,
-        tokenBridgeForChainInfo.remoteChainId, tokenId, isLocalToken, decimals, symbol, name],
-        {alphAmount: dustAmount},
-        address
-    )
+    const initFields = {
+        'tokenBridgeId': tokenBridgeInfo.contractId,
+        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
+        'localChainId': CHAIN_ID_ALEPHIUM,
+        'remoteChainId': tokenBridgeForChainInfo.remoteChainId,
+        'tokenContractId': tokenId,
+        'isLocalToken': isLocalToken,
+        'symbol_': symbol,
+        'name_': name,
+        'decimals_': decimals
+    }
+    const state = tokenWrapperContract.toState(initFields, initAsset, address)
     return new ContractInfo(tokenWrapperContract, state, tokenBridgeForChainInfo.states(), address)
 }

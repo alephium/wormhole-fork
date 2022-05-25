@@ -32,7 +32,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: alph-explorer-backend
-          image: alephium/explorer-backend:latest
+          image: alephium/explorer-backend:1.7.0-leman0
           env:
             - name: EXPLORER_HOST
               value: "0.0.0.0"
@@ -41,7 +41,7 @@ spec:
             - name: BLOCKFLOW_HOST
               value: "alph-full-node"
             - name: BLOCKFLOW_PORT
-              value: "12973"
+              value: "22973"
             - name: BLOCKFLOW_NETWORK_ID
               value: "4"
             - name: DB_NAME

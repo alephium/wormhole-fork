@@ -226,8 +226,8 @@ k8s_yaml_with_ns("devnet/alph-full-node.yaml")
 k8s_resource(
   "alph-full-node",
   port_forwards = [
-    port_forward(12973, name = "Alephium REST [:12973]", host = webHost),
-    # port_forward(10973, name = "Alephium Mining [:10973]", host = webHost),
+    port_forward(22973, name = "Alephium REST [:22973]", host = webHost),
+    # port_forward(20973, name = "Alephium Mining [:20973]", host = webHost),
   ],
   labels = ["alephium"],
   trigger_mode = trigger_mode,

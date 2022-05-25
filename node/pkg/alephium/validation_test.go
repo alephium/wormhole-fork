@@ -19,11 +19,10 @@ func decodeHex(str string) []byte {
 }
 
 func TestAttestEvent(t *testing.T) {
-	attestTokenEvent := &Event{
-		BlockHash:       randomByte32().ToHex(),
-		ContractAddress: "y9dvJcZAQUjgx3hL5ZGwvT488cpdpy7N6TDSK7Vk8TWs",
-		TxId:            randomByte32().ToHex(),
-		EventIndex:      0,
+	attestTokenEvent := &ContractEvent{
+		BlockHash:  randomByte32().ToHex(),
+		TxId:       randomByte32().ToHex(),
+		EventIndex: 0,
 		Fields: []*Field{
 			{ // sender
 				Type:  "ByteVec",
@@ -59,11 +58,10 @@ func TestAttestEvent(t *testing.T) {
 }
 
 func TestTransferEvent(t *testing.T) {
-	transferEvent := &Event{
-		BlockHash:       randomByte32().ToHex(),
-		ContractAddress: "y9dvJcZAQUjgx3hL5ZGwvT488cpdpy7N6TDSK7Vk8TWs",
-		TxId:            randomByte32().ToHex(),
-		EventIndex:      0,
+	transferEvent := &ContractEvent{
+		BlockHash:  randomByte32().ToHex(),
+		TxId:       randomByte32().ToHex(),
+		EventIndex: 0,
 		Fields: []*Field{
 			{ // sender
 				Type:  "ByteVec",

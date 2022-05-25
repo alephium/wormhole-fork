@@ -156,7 +156,7 @@ async function alephium(
   dispatch(setIsSending(true));
   try {
     const txInfo = await waitTxConfirmedAndGetTxInfo(
-      signer.client, async () => {
+      signer.nodeProvider, async () => {
         const bytecode = attestFromAlph(
           ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
           localTokenId,
@@ -164,7 +164,7 @@ async function alephium(
           alphMessageFee,
           ALEPHIUM_CONFIRMATIONS
         );
-        const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
         return result.txId;
       }
     );

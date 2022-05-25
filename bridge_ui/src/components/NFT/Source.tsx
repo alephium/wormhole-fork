@@ -38,7 +38,7 @@ function Source() {
   const shouldLockFields = useSelector(selectNFTShouldLockFields);
   const { isReady, statusMessage } = useIsWalletReady(sourceChain);
   const handleSourceChange = useCallback(
-    (event) => {
+    (event: any) => {
       dispatch(setSourceChain(event.target.value));
     },
     [dispatch]

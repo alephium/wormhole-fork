@@ -16,7 +16,7 @@ export function attestFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = attestTokenScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     payer: payer,
     tokenBridgeId: tokenBridgeId,
     tokenId: tokenId,

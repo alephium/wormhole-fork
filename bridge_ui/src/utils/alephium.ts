@@ -1,4 +1,5 @@
 import {
+    ALEPHIUM_EVENT_EMITTER_ADDRESS,
     ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
     ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
     WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST
@@ -10,11 +11,14 @@ import {
     getRemoteTokenWrapperId,
     getTokenBridgeForChainId,
     toAlphContractAddress,
-    parseSequenceFromLogAlph
+    parseSequenceFromLogAlph,
+    CHAIN_ID_ALEPHIUM,
+    WormholeWrappedInfo
 } from '@certusone/wormhole-sdk';
-import { CliqueClient, SignScriptTxParams } from 'alephium-web3';
-import { TxStatus, Confirmed, ValU256, ValByteVec } from 'alephium-web3/api/alephium';
+import { NodeProvider, node } from 'alephium-web3';
 import WalletConnectProvider from "alephium-walletconnect-provider";
+
+const WormholeMessageEventIndex = 0
 
 export class AlphTxInfo {
     blockHash: string
@@ -30,34 +34,50 @@ export class AlphTxInfo {
     }
 }
 
-export async function waitTxConfirmed(client: CliqueClient, txId: string): Promise<Confirmed> {
-    const txStatus = await client.transactions.getTransactionsStatus({txId: txId})
-    if (isConfirmed(txStatus.data)) {
-        return txStatus.data as Confirmed
+export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
+    const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
+    if (isConfirmed(txStatus)) {
+        return txStatus as node.Confirmed
     }
     await new Promise(r => setTimeout(r, 10000))
-    return waitTxConfirmed(client, txId)
+    return waitTxConfirmed(provider, txId)
 }
 
-async function getTxInfo(client: CliqueClient, txId: string, blockHash: string): Promise<AlphTxInfo> {
-    const sequence = await parseSequenceFromLogAlph(client, txId, ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID)
-    const blockHeader = await client.blockflow.getBlockflowHeadersBlockHash(blockHash)
-    return new AlphTxInfo(blockHash, blockHeader.data.height, txId, sequence)
+async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string): Promise<AlphTxInfo> {
+    const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(blockHash)
+    const events = await provider.events.getEventsTxIdTxid(txId, {group: blockHeader.chainFrom})
+    const event = events.events.find((event) => event.contractAddress === ALEPHIUM_EVENT_EMITTER_ADDRESS)
+    if (typeof event === 'undefined') {
+        return Promise.reject('failed to get event for tx: ' + txId)
+    }
+    if (event.eventIndex !== WormholeMessageEventIndex) {
+        return Promise.reject("invalid event index: " + event.eventIndex)
+    }
+    const sender = event.fields[0]
+    if (sender.type !== 'ByteVec') {
+        return Promise.reject("invalid sender, expect ByteVec type, have: " + sender.type)
+    }
+    const senderContractId = (sender as node.ValByteVec).value
+    if (senderContractId !== ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID) {
+        return Promise.reject("invalid sender, expect token bridge contract id, have: " + senderContractId)
+    }
+    const sequence = parseSequenceFromLogAlph(event)
+    return new AlphTxInfo(blockHash, blockHeader.height, txId, sequence)
 }
 
-export async function waitTxConfirmedAndGetTxInfo(client: CliqueClient, func: () => Promise<string>): Promise<AlphTxInfo> {
+export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
     const txId = await func()
-    const confirmed = await waitTxConfirmed(client, txId)
-    return getTxInfo(client, txId, confirmed.blockHash)
+    const confirmed = await waitTxConfirmed(provider, txId)
+    return getTxInfo(provider, txId, confirmed.blockHash)
 }
 
-export async function getAlphTxInfoByTxId(client: CliqueClient, txId: string): Promise<AlphTxInfo> {
-    const confirmed = await waitTxConfirmed(client, txId)
-    return getTxInfo(client, txId, confirmed.blockHash)
+export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
+    const confirmed = await waitTxConfirmed(provider, txId)
+    return getTxInfo(provider, txId, confirmed.blockHash)
 }
 
-function isConfirmed(txStatus: TxStatus): txStatus is Confirmed {
-    return (txStatus as Confirmed).blockHash !== undefined
+function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+    return (txStatus as node.Confirmed).blockHash !== undefined
 }
 
 export interface RedeemInfo {
@@ -154,19 +174,19 @@ export class TokenInfo {
     }
 }
 
-export async function getAlephiumTokenInfo(client: CliqueClient, tokenId: string): Promise<TokenInfo> {
+export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
     const tokenAddress = toAlphContractAddress(tokenId)
-    const group = await client.addresses.getAddressesAddressGroup(tokenAddress)
-    const state = await client.contracts.getContractsAddressState(tokenAddress, {group: group.data.group})
-    if (state.data.artifactId === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
-        const decimals = parseInt((state.data.fields[6] as ValU256).value)
-        const symbol = (state.data.fields[7] as ValByteVec).value
-        const name = (state.data.fields[8] as ValByteVec).value
+    const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
+    const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
+    if (state.codeHash === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
+        const symbol = (state.fields[6] as node.ValByteVec).value
+        const name = (state.fields[7] as node.ValByteVec).value
+        const decimals = parseInt((state.fields[8] as node.ValU256).value)
         return new TokenInfo(decimals, symbol, name)
     } else {
-        const decimals = parseInt((state.data.fields[2] as ValU256).value)
-        const symbol = (state.data.fields[0] as ValByteVec).value
-        const name = (state.data.fields[1] as ValByteVec).value
+        const symbol = (state.fields[0] as node.ValByteVec).value
+        const name = (state.fields[1] as node.ValByteVec).value
+        const decimals = parseInt((state.fields[2] as node.ValU256).value)
         return new TokenInfo(decimals, symbol, name)
     }
 }
@@ -176,10 +196,34 @@ export async function submitAlphScriptTx(
   fromAddress: string,
   bytecode: string
 ) {
-  const params: SignScriptTxParams = {
+  return provider.signExecuteScriptTx({
     signerAddress: fromAddress,
     bytecode: bytecode,
     submitTx: true
-  }
-  return provider.signScriptTx(params)
+  })
 }
+
+export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
+  const tokenAddress = toAlphContractAddress(tokenId)
+  const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
+  return provider
+    .contracts
+    .getContractsAddressState(tokenAddress, {group: group.group})
+    .then(response => {
+      if (response.codeHash === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
+        const originalAsset = Buffer.from((response.fields[4] as node.ValByteVec).value, 'hex')
+        return {
+          isWrapped: true,
+          chainId: parseInt((response.fields[3] as node.ValU256).value) as ChainId,
+          assetAddress: originalAsset,
+        }
+      } else {
+        return {
+          isWrapped: false,
+          chainId: CHAIN_ID_ALEPHIUM,
+          assetAddress: Buffer.from(tokenId, 'hex'),
+        }
+      }
+    })
+}
+

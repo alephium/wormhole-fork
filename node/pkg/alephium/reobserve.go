@@ -118,9 +118,6 @@ func (w *Watcher) getGovernanceEventsByTxId(
 
 	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
 	for _, event := range events.Events {
-		if event.TxId != txId {
-			continue
-		}
 		if event.EventIndex != WormholeMessageEventIndex {
 			continue
 		}

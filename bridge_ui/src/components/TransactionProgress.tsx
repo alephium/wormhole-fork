@@ -63,12 +63,12 @@ export default function TransactionProgress({
         while (!cancelled) {
           await new Promise((resolve) => setTimeout(resolve, 10000));
           try {
-            const chainInfo = await alphSigner.client.blockflow.getBlockflowChainInfo({
+            const chainInfo = await alphSigner.nodeProvider.blockflow.getBlockflowChainInfo({
               fromGroup: alphSigner.account.group,
               toGroup: alphSigner.account.group
             });
             if (!cancelled) {
-              setCurrentBlock(chainInfo.data.currentHeight);
+              setCurrentBlock(chainInfo.currentHeight);
             }
           } catch (e) {
             console.error(e)

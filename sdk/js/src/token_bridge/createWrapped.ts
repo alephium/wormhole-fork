@@ -12,7 +12,7 @@ export function createRemoteTokenWrapperOnAlph(
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = createRemoteTokenWrapperScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     payer: payer,
     tokenBridgeForChainId: tokenBridgeForChainId,
     vaa: vaaHex,
@@ -27,7 +27,7 @@ export function createLocalTokenWrapperOnAlph(
   alphAmount: bigint
 ): string {
   const script = createLocalTokenWrapperScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     payer: payer,
     tokenBridgeForChainId: tokenBridgeForChainId,
     tokenId: localTokenId,

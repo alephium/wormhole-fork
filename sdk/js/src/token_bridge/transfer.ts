@@ -22,7 +22,7 @@ export function transferLocalTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferLocalTokenScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     sender: sender,
     tokenWrapperId: tokenWrapperId,
     localTokenId: localTokenId,
@@ -48,7 +48,7 @@ export function transferRemoteTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferRemoteTokenScript()
-  return script.buildByteCode({
+  return script.buildByteCodeToDeploy({
     sender: sender,
     tokenWrapperId: tokenWrapperId,
     toAddress: toAddress,

@@ -206,7 +206,7 @@ func Uint64ToBytes(value uint64) []byte {
 }
 
 type WormholeMessage struct {
-	event            *Event
+	txId             string
 	senderId         Byte32
 	nonce            uint32
 	payload          []byte
@@ -230,7 +230,7 @@ func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.Mess
 	}
 
 	return &common.MessagePublication{
-		TxHash:           ethCommon.HexToHash(w.event.TxId),
+		TxHash:           ethCommon.HexToHash(w.txId),
 		Timestamp:        ts,
 		Nonce:            w.nonce,
 		Sequence:         w.Sequence,
@@ -318,41 +318,30 @@ type undoneSequenceCompleted struct {
 	sequence      uint64
 }
 
-type Event struct {
-	BlockHash       string   `json:"blockHash"`
-	ContractAddress string   `json:"contractAddress"`
-	TxId            string   `json:"txId"`
-	EventIndex      int32    `json:"eventIndex"`
-	Fields          []*Field `json:"fields"`
-}
+type Fields []*Field
 
-func (e *Event) ToString() string {
-	data, _ := json.Marshal(e)
-	return string(data)
-}
-
-func (e *Event) ToWormholeMessage() (*WormholeMessage, error) {
-	assume(len(e.Fields) == 5)
-	emitter, err := e.Fields[0].ToByte32()
+func (f Fields) toWormholeMessage(txId string) (*WormholeMessage, error) {
+	assume(len(f) == 5)
+	emitter, err := f[0].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	sequence, err := e.Fields[1].ToUint64()
+	sequence, err := f[1].ToUint64()
 	if err != nil {
 		return nil, err
 	}
-	nonceBytes := e.Fields[2].ToByteVec()
+	nonceBytes := f[2].ToByteVec()
 	if len(nonceBytes) != 4 {
 		return nil, fmt.Errorf("invalid nonce size")
 	}
 	nonce := binary.BigEndian.Uint32(nonceBytes)
-	payload := e.Fields[3].ToByteVec()
-	consistencyLevel, err := e.Fields[4].ToUint8()
+	payload := f[3].ToByteVec()
+	consistencyLevel, err := f[4].ToUint8()
 	if err != nil {
 		return nil, err
 	}
 	return &WormholeMessage{
-		event:            e,
+		txId:             txId,
 		senderId:         *emitter,
 		nonce:            nonce,
 		payload:          payload,
@@ -361,30 +350,30 @@ func (e *Event) ToWormholeMessage() (*WormholeMessage, error) {
 	}, nil
 }
 
-func (e *Event) toUndoneSequencesRemoved() (*undoneSequencesRemoved, error) {
-	assume(len(e.Fields) == 2)
-	senderId, err := e.Fields[0].ToByte32()
+func (f Fields) toUndoneSequencesRemoved() (*undoneSequencesRemoved, error) {
+	assume(len(f) == 2)
+	senderId, err := f[0].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	sequences := e.Fields[1].ToByteVec()
+	sequences := f[1].ToByteVec()
 	return &undoneSequencesRemoved{
 		senderId:  *senderId,
 		sequences: sequences,
 	}, nil
 }
 
-func (e *Event) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
-	assume(len(e.Fields) == 3)
-	senderId, err := e.Fields[0].ToByte32()
+func (f Fields) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
+	assume(len(f) == 3)
+	senderId, err := f[0].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	remoteChainId, err := e.Fields[1].ToUint16()
+	remoteChainId, err := f[1].ToUint16()
 	if err != nil {
 		return nil, err
 	}
-	sequence, err := e.Fields[2].ToUint64()
+	sequence, err := f[2].ToUint64()
 	if err != nil {
 		return nil, err
 	}
@@ -395,43 +384,22 @@ func (e *Event) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
 	}, nil
 }
 
-func (e *Event) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated, error) {
-	assume(len(e.Fields) == 3)
-	senderId, err := e.Fields[0].ToByte32()
+func (f Fields) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
+	assume(len(f) == 5)
+	senderId, err := f[0].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	contractId, err := e.Fields[1].ToByte32()
+	tokenWrapperId, err := f[1].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	remoteChainId, err := e.Fields[2].ToUint16()
+	isLocalToken := f[2].ToBool()
+	tokenId, err := f[3].ToByte32()
 	if err != nil {
 		return nil, err
 	}
-	return &tokenBridgeForChainCreated{
-		senderId:      *senderId,
-		contractId:    *contractId,
-		remoteChainId: remoteChainId,
-	}, nil
-}
-
-func (e *Event) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
-	assume(len(e.Fields) == 5)
-	senderId, err := e.Fields[0].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	tokenWrapperId, err := e.Fields[1].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	isLocalToken := e.Fields[2].ToBool()
-	tokenId, err := e.Fields[3].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	remoteChainId, err := e.Fields[4].ToUint16()
+	remoteChainId, err := f[4].ToUint16()
 	if err != nil {
 		return nil, err
 	}
@@ -444,24 +412,138 @@ func (e *Event) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
 	}, nil
 }
 
-func (e *Event) getConsistencyLevel(minConfirmations uint8) (*uint8, error) {
+func (f Fields) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated, error) {
+	assume(len(f) == 3)
+	senderId, err := f[0].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	contractId, err := f[1].ToByte32()
+	if err != nil {
+		return nil, err
+	}
+	remoteChainId, err := f[2].ToUint16()
+	if err != nil {
+		return nil, err
+	}
+	return &tokenBridgeForChainCreated{
+		senderId:      *senderId,
+		contractId:    *contractId,
+		remoteChainId: remoteChainId,
+	}, nil
+}
+
+type Event interface {
+	blockHash() string
+	txId() string
+	eventIndex() int32
+	fields() Fields
+	getConsistencyLevel(uint8) (*uint8, error)
+
+	ToString() string
+	ToWormholeMessage() (*WormholeMessage, error)
+}
+
+type ContractEvent struct {
+	BlockHash  string `json:"blockHash"`
+	TxId       string `json:"txId"`
+	EventIndex int32  `json:"eventIndex"`
+	Fields     Fields `json:"fields"`
+}
+
+func (e *ContractEvent) blockHash() string {
+	return e.BlockHash
+}
+
+func (e *ContractEvent) txId() string {
+	return e.TxId
+}
+
+func (e *ContractEvent) eventIndex() int32 {
+	return e.EventIndex
+}
+
+func (e *ContractEvent) fields() Fields {
+	return e.Fields
+}
+
+func (e *ContractEvent) getConsistencyLevel(minConfirmations uint8) (*uint8, error) {
 	consistencyLevel, err := e.Fields[len(e.Fields)-1].ToUint8()
 	if err != nil {
 		return nil, err
 	}
 
-	confirmations := consistencyLevel
-	if confirmations < minConfirmations {
-		confirmations = minConfirmations
-	}
+	confirmations := getConsistencyLevel(minConfirmations, consistencyLevel)
 	return &confirmations, nil
 }
 
-type Events struct {
-	ChainFrom uint8    `json:"chainFrom"`
-	ChainTo   uint8    `json:"chainTo"`
-	Events    []*Event `json:"events"`
-	NextStart uint64   `json:"nextStart"`
+func (e *ContractEvent) ToString() string {
+	data, _ := json.Marshal(e)
+	return string(data)
+}
+
+func (e *ContractEvent) ToWormholeMessage() (*WormholeMessage, error) {
+	return e.Fields.toWormholeMessage(e.TxId)
+}
+
+func getConsistencyLevel(minConfirmations, consistencyLevel uint8) uint8 {
+	if consistencyLevel < minConfirmations {
+		return minConfirmations
+	}
+	return consistencyLevel
+}
+
+type ContractEvents struct {
+	Events    []*ContractEvent `json:"events"`
+	NextStart uint64           `json:"nextStart"`
+}
+
+type ContractEventByTxId struct {
+	TxId            string `json:"-"`
+	BlockHash       string `json:"blockHash"`
+	ContractAddress string `json:"contractAddress"`
+	EventIndex      int32  `json:"eventIndex"`
+	Fields          Fields `json:"fields"`
+}
+
+func (e *ContractEventByTxId) blockHash() string {
+	return e.BlockHash
+}
+
+func (e *ContractEventByTxId) txId() string {
+	return e.TxId
+}
+
+func (e *ContractEventByTxId) eventIndex() int32 {
+	return e.EventIndex
+}
+
+func (e *ContractEventByTxId) fields() Fields {
+	return e.Fields
+}
+
+func (e *ContractEventByTxId) getConsistencyLevel(minConfirmations uint8) (*uint8, error) {
+	consistencyLevel, err := e.Fields[len(e.Fields)-1].ToUint8()
+	if err != nil {
+		return nil, err
+	}
+
+	confirmations := getConsistencyLevel(minConfirmations, consistencyLevel)
+	return &confirmations, nil
+}
+
+func (e *ContractEventByTxId) ToString() string {
+	data, _ := json.Marshal(e)
+	return string(data)
+}
+
+func (e *ContractEventByTxId) ToWormholeMessage() (*WormholeMessage, error) {
+	return e.Fields.toWormholeMessage(e.TxId)
+}
+
+type ContractEventsByTxId struct {
+	Events    []*ContractEventByTxId `json:"events"`
+	NextStart uint64                 `json:"nextStart"`
 }
 
 type BlockHeader struct {

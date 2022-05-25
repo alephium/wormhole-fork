@@ -25,7 +25,7 @@ func (w *Watcher) fetchEvents_(
 	client *Client,
 	contractAddress string,
 	lastEventIndexGetter func() (*uint64, error),
-	toUnconfirmedEvents func(context.Context, *Client, []*Event) ([]*UnconfirmedEvent, error),
+	toUnconfirmedEvents func(context.Context, *Client, []*ContractEvent) ([]*UnconfirmedEvent, error),
 	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
 ) (*uint64, error) {
 	lastEventIndex, err := lastEventIndexGetter()
@@ -48,7 +48,7 @@ func (w *Watcher) fetchEvents_(
 	from := *lastEventIndex + 1
 	allEvents := make([]*UnconfirmedEvent, 0)
 	for {
-		events, err := client.GetContractEvents(ctx, contractAddress, from)
+		events, err := client.GetContractEvents(ctx, contractAddress, from, w.chainIndex.FromGroup)
 		if err != nil {
 			logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.Uint64("to", *count), zap.String("contractAddress", contractAddress))
 			return nil, err
@@ -80,7 +80,7 @@ func (w *Watcher) fetchEvents_(
 	return count, nil
 }
 
-func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*Event) ([]*UnconfirmedEvent, error) {
+func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*ContractEvent) ([]*UnconfirmedEvent, error) {
 	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
 	for _, event := range events {
 		unconfirmed, err := w.toUnconfirmedEvent(ctx, client, event)

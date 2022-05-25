@@ -1,9 +1,7 @@
 import "token_bridge_for_chain.ral"
 
 TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, vaa: ByteVec, alphAmount: U256) {
-    pub payable fn main() -> () {
-        approveAlph!(payer, alphAmount)
-        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        tokenBridgeForChain.createWrapperForRemoteToken(vaa, payer, alphAmount)
-    }
+    approveAlph!(payer, alphAmount)
+    let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+    tokenBridgeForChain.createWrapperForRemoteToken(vaa, payer, alphAmount)
 }

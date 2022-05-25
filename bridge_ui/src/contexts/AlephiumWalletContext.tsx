@@ -2,19 +2,19 @@ import WalletConnectClient, { CLIENT_EVENTS } from '@walletconnect/client'
 import { PairingTypes } from '@walletconnect/types'
 import WalletConnectProvider from 'alephium-walletconnect-provider'
 import QRCodeModal from "@walletconnect/legacy-modal"
-import { CliqueClient, Account } from 'alephium-web3'
+import { NodeProvider, Account } from 'alephium-web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'
 import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID } from '../utils/consts'
 
 export class AlephiumWalletSigner {
-  provider: WalletConnectProvider
+  walletProvider: WalletConnectProvider
   account: Account
-  client: CliqueClient
+  nodeProvider: NodeProvider
 
-  constructor(provider: WalletConnectProvider, account: Account) {
-    this.provider = provider
+  constructor(walletProvider: WalletConnectProvider, account: Account) {
+    this.walletProvider = walletProvider
     this.account = account
-    this.client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
+    this.nodeProvider = new NodeProvider(ALEPHIUM_HOST)
   }
 }
 

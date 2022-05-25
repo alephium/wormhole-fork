@@ -142,7 +142,7 @@ async function alephium(
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const txInfo = await waitTxConfirmedAndGetTxInfo(
-      signer.client, async () => {
+      signer.nodeProvider, async () => {
         let bytecode: string 
         if (isLocalToken) {
           const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
@@ -167,7 +167,7 @@ async function alephium(
             ALEPHIUM_CONFIRMATIONS
           )
         }
-        const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
         return result.txId
       }
     )

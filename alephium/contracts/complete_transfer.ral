@@ -1,9 +1,7 @@
 import "token_wrapper.ral"
 
 TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec, arbiter: Address) {
-    pub payable fn main() -> () {
-        approveAlph!(txCaller!(0), 1000000000000) // dustAmount
-        let tokenWrapper = TokenWrapper(tokenWrapperId)
-        tokenWrapper.completeTransfer(vaa, arbiter)
-    }
+    approveAlph!(txCaller!(0), 1000000000000) // dustAmount
+    let tokenWrapper = TokenWrapper(tokenWrapperId)
+    tokenWrapper.completeTransfer(vaa, arbiter)
 }

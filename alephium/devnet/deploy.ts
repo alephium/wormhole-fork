@@ -1,4 +1,5 @@
-import { binToHex, CliqueClient, contractIdFromAddress, NodeSigner, Script, SingleAddressSigner } from 'alephium-web3'
+import { binToHex, NodeProvider, contractIdFromAddress, Script, NodeWallet } from 'alephium-web3'
+import { testWallet } from 'alephium-web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import * as env from './env'
@@ -6,23 +7,18 @@ import { deployTestToken } from './deploy_test_token'
 import { getCreatedContractAddress } from './get_contract_address'
 import { mine } from './mine'
 
-if (process.argv.length < 3) {
-    throw Error('invalid args, expect rpc port arg')
-}
-
-const port = process.argv[2]
-const client = new CliqueClient({baseUrl: `http://127.0.0.1:${port}`})
+const provider = new NodeProvider("http://localhost:22973")
 
 async function createWallet() {
-    const wallets = await client.wallets.getWallets()
-    const exists = wallets.data.some(status => status.walletName == env.testWalletName)
+    const wallets = await provider.wallets.getWallets()
+    const exists = wallets.some(status => status.walletName == env.testWalletName)
     if (exists) {
         console.log('test wallet already exists')
-        await client.wallets.postWalletsWalletNameUnlock(env.testWalletName, { password: env.testWalletPassword })
+        await provider.wallets.postWalletsWalletNameUnlock(env.testWalletName, { password: env.testWalletPassword })
         return
     }
 
-    await client.wallets.putWallets({
+    await provider.wallets.putWallets({
         walletName: env.testWalletName,
         mnemonic: env.testWalletMnemonic,
         password: env.testWalletPassword
@@ -37,21 +33,21 @@ async function createTokenWrapper(
     remoteChain: string
 ) {
     let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, env.payer, env.dustAmount)
-    let tokenWrapper = await getCreatedContractAddress(client, txId)
+    let tokenWrapper = await getCreatedContractAddress(provider, txId)
     const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
     console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperId)
 }
 
 async function getToken(
-    client: CliqueClient,
-    signer: SingleAddressSigner,
+    provider: NodeProvider,
+    signer: NodeWallet,
     tokenId: string,
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await Script.fromSource(client, 'get_token.ral')
+    const script = await Script.fromSource(provider, 'get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
-        templateVariables: {
+        initialFields: {
             sender: from,
             amount: amount,
             tokenId: tokenId
@@ -64,9 +60,9 @@ async function getToken(
 async function deploy() {
     await createWallet()
 
-    const signer = await NodeSigner.testSigner(client)
+    const signer = await testWallet(provider)
     const wormhole = new Wormhole(
-        client,
+        provider,
         signer,
         env.governanceChainId,
         env.governanceContractAddress,
@@ -81,19 +77,18 @@ async function deploy() {
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
-    const testTokenId = await deployTestToken(client, signer)
+    const testTokenId = await deployTestToken(provider, signer)
     console.log("local token id: " + testTokenId)
 
     const tokenAmount = env.oneAlph * 10n
-    const getTokenTxId = await getToken(client, signer, testTokenId, env.payer, tokenAmount)
+    const getTokenTxId = await getToken(provider, signer, testTokenId, env.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
     await createTokenWrapper(wormhole, testTokenId, remoteChains.eth, "eth")
-    await createTokenWrapper(wormhole, testTokenId, remoteChains.terra, "terra")
     await createTokenWrapper(wormhole, testTokenId, remoteChains.bsc, "bsc")
 
     // start auto mining, used for check confirmations
-    mine(client)
+    mine(provider)
 }
 
 deploy()

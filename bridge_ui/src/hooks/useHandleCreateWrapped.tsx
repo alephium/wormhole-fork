@@ -133,11 +133,11 @@ async function alephium(
       signer.account.address,
       alphDustAmount
     )
-    const result = await submitAlphScriptTx(signer.provider, signer.account.address, bytecode)
-    const confirmedTx = await waitTxConfirmed(signer.client, result.txId)
-    const blockHeader = await signer.client.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
+    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
-      setCreateTx({ id: result.txId, block: blockHeader.data.height })
+      setCreateTx({ id: result.txId, block: blockHeader.height })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,

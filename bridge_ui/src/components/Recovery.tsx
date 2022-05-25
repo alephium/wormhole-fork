@@ -60,7 +60,7 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
-import { CliqueClient } from "alephium-web3";
+import { NodeProvider } from "alephium-web3";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -135,8 +135,8 @@ async function terra(tx: string, enqueueSnackbar: any) {
 
 async function alephium(txId: string, enqueueSnackbar: any) {
   try {
-    const client = new CliqueClient({baseUrl: ALEPHIUM_HOST})
-    const txInfo = await getAlphTxInfoByTxId(client, txId);
+    const provider = new NodeProvider(ALEPHIUM_HOST)
+    const txInfo = await getAlphTxInfoByTxId(provider, txId);
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
@@ -281,7 +281,7 @@ export default function Recovery() {
     isNFT,
     isReady,
   ]);
-  const handleTypeChange = useCallback((event) => {
+  const handleTypeChange = useCallback((event: any) => {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
@@ -290,14 +290,14 @@ export default function Recovery() {
     );
     setType(event.target.value);
   }, []);
-  const handleSourceChainChange = useCallback((event) => {
+  const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
   }, []);
-  const handleSourceTxChange = useCallback((event) => {
+  const handleSourceTxChange = useCallback((event: any) => {
     setRecoverySourceTx(event.target.value.trim());
   }, []);
-  const handleSignedVAAChange = useCallback((event) => {
+  const handleSignedVAAChange = useCallback((event: any) => {
     setRecoverySignedVAA(event.target.value.trim());
   }, []);
   useEffect(() => {

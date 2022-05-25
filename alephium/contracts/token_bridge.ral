@@ -162,7 +162,7 @@ TxContract TokenBridge(
     }
 
     // handle undone sequence transfer message
-    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+    pub payable fn completeUndoneTransfer(vaa: ByteVec, arbiter: Address) -> () {
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
         let undoneSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
@@ -174,7 +174,7 @@ TxContract TokenBridge(
         approveAlph!(txCaller!(0), 1000000000000)
 
         let tokenWrapper = TokenWrapper(tokenWrapperId)
-        tokenWrapper.completeFailedTransfer(toAddress, amount, arbiterFee, arbiter)
+        tokenWrapper.completeUndoneTransfer(toAddress, amount, arbiterFee, arbiter)
         let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishUndoneSequenceCompleted(tokenWrapper.getRemoteChainId(), undoneSequence)
     }

@@ -104,7 +104,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
 
             const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
             transferCompleted = await getIsTransferCompletedAlph(
-              alphSigner.client,
+              alphSigner.nodeProvider,
               tokenBridgeForChainId,
               alphSigner.account.group,
               signedVAA
