@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
@@ -17,9 +16,10 @@ import (
 )
 
 var (
-	alphRPC  = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
-	apiKey   = flag.String("apiKey", "", "Alephium RPC api key")
-	adminRPC = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	alphRPC    = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
+	apiKey     = flag.String("apiKey", "", "Alephium RPC api key")
+	adminRPC   = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	groupIndex = flag.Uint("group", 0, "Contract group index")
 )
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.NodePrivilegedServiceClient, error) {
@@ -115,19 +115,12 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex)
+		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex, uint8(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
 
-		eventCountOffset := 0
-		blockHash := ""
 		for _, event := range events.Events {
-			if event.BlockHash != blockHash {
-				blockHash = event.BlockHash
-				eventCountOffset += 1
-			}
-
 			if event.EventIndex != alephium.WormholeMessageEventIndex {
 				continue
 			}
@@ -143,18 +136,12 @@ func main() {
 			missingMessages[wormholeMsg.Sequence] = false
 			remain -= 1
 
-			eventIndex := fromIndex + uint64(eventCountOffset-1)
-			encoded := make([]byte, 40) // 32 bytes txId + 8 bytes eventIndex
-			txId := alephium.HexToFixedSizeBytes(event.TxId, 32)
-			copy(encoded, txId)
-			binary.BigEndian.PutUint64(encoded[32:], eventIndex)
-
 			_, err = admin.SendObservationRequest(
 				ctx,
 				&nodev1.SendObservationRequestRequest{
 					ObservationRequest: &gossipv1.ObservationRequest{
 						ChainId: uint32(vaa.ChainIDTerra),
-						TxHash:  encoded,
+						TxHash:  alephium.HexToFixedSizeBytes(event.TxId, 32),
 					},
 				},
 			)

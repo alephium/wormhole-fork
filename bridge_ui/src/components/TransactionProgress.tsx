@@ -1,17 +1,17 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
-  CHAIN_ID_SOLANA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
-import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_CONFIRMATIONS, CHAINS_BY_ID } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,6 +34,7 @@ export default function TransactionProgress({
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
+  const { signer: alphSigner } = useAlephiumWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
   useEffect(() => {
     if (isSendComplete || !tx) return;
@@ -56,20 +57,29 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-    if (chainId === CHAIN_ID_SOLANA) {
+    if (chainId === CHAIN_ID_ALEPHIUM && !!alphSigner) {
       let cancelled = false;
-      const connection = new Connection(SOLANA_HOST, "confirmed");
-      const sub = connection.onSlotChange((slotInfo) => {
-        if (!cancelled) {
-          setCurrentBlock(slotInfo.slot);
+      (async () => {
+        while (!cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+          try {
+            const chainInfo = await alphSigner.nodeProvider.blockflow.getBlockflowChainInfo({
+              fromGroup: alphSigner.account.group,
+              toGroup: alphSigner.account.group
+            });
+            if (!cancelled) {
+              setCurrentBlock(chainInfo.currentHeight);
+            }
+          } catch (e) {
+            console.error(e)
+          }
         }
-      });
+      })();
       return () => {
         cancelled = true;
-        connection.removeSlotChangeListener(sub);
       };
     }
-  }, [isSendComplete, chainId, provider, tx]);
+  }, [isSendComplete, chainId, provider, alphSigner, tx]);
   const blockDiff =
     tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
   const expectedBlocks =
@@ -77,14 +87,14 @@ export default function TransactionProgress({
       ? 512 // minimum confirmations enforced by guardians
       : chainId === CHAIN_ID_FANTOM || chainId === CHAIN_ID_OASIS
       ? 1 // these chains only require 1 conf
-      : chainId === CHAIN_ID_SOLANA
-      ? 32
       : isEVMChain(chainId)
       ? 15
+      : chainId === CHAIN_ID_ALEPHIUM
+      ? ALEPHIUM_CONFIRMATIONS
       : 1;
   if (
     !isSendComplete &&
-    (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
+    isEVMChain(chainId) &&
     blockDiff !== undefined
   ) {
     return (

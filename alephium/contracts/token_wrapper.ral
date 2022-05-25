@@ -10,9 +10,9 @@ TxContract TokenWrapper(
     remoteChainId: U256,
     tokenContractId: ByteVec,
     isLocalToken: Bool,
-    decimals_: U256,
     symbol_: ByteVec,
-    name_: ByteVec
+    name_: ByteVec,
+    decimals_: U256
 ) extends Math(), ERC20Token {
     pub fn name() -> ByteVec {
         return name_
@@ -104,16 +104,20 @@ TxContract TokenWrapper(
         let tokenId = getTokenId()
         transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        if (transferFee > 0) {
+            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        }
     }
 
-    pub payable fn completeFailedTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
+    pub payable fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
         assert!(callerContractId!() == tokenBridgeId)
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
         transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
-        transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        if (transferFee > 0) {
+            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+        }
     }
 }

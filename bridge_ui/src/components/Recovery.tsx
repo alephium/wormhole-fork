@@ -1,19 +1,19 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ETH,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
-  getEmitterAddressSolana,
   getEmitterAddressTerra,
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
   parseNFTPayload,
   parseSequenceFromLogEth,
-  parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   parseTransferPayload,
   uint8ArrayToHex,
+  VAA
 } from "@certusone/wormhole-sdk";
 import {
   Accordion,
@@ -30,7 +30,6 @@ import {
 } from "@material-ui/core";
 import { ExpandMore } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
-import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
@@ -42,16 +41,16 @@ import useIsWalletReady from "../hooks/useIsWalletReady";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
+import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
   getBridgeAddressForChain,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_RPC_HOSTS,
@@ -61,6 +60,7 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
+import { NodeProvider } from "alephium-web3";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -106,33 +106,6 @@ async function evm(
   }
 }
 
-async function solana(tx: string, enqueueSnackbar: any, nft: boolean) {
-  try {
-    const connection = new Connection(SOLANA_HOST, "confirmed");
-    const info = await connection.getTransaction(tx);
-    if (!info) {
-      throw new Error("An error occurred while fetching the transaction info");
-    }
-    const sequence = parseSequenceFromLogSolana(info);
-    const emitterAddress = await getEmitterAddressSolana(
-      nft ? SOL_NFT_BRIDGE_ADDRESS : SOL_TOKEN_BRIDGE_ADDRESS
-    );
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      CHAIN_ID_SOLANA,
-      emitterAddress,
-      sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
-
 async function terra(tx: string, enqueueSnackbar: any) {
   try {
     const lcd = new LCDClient(TERRA_HOST);
@@ -160,6 +133,25 @@ async function terra(tx: string, enqueueSnackbar: any) {
   }
 }
 
+async function alephium(txId: string, enqueueSnackbar: any) {
+  try {
+    const provider = new NodeProvider(ALEPHIUM_HOST)
+    const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      txInfo.sequence
+    );
+    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    return { vaa: null, error: parseError(e) };
+  }
+}
+
 export default function Recovery() {
   const classes = useStyles();
   const { push } = useHistory();
@@ -169,7 +161,7 @@ export default function Recovery() {
   const [type, setType] = useState("Token");
   const isNFT = type === "NFT";
   const [recoverySourceChain, setRecoverySourceChain] =
-    useState(CHAIN_ID_SOLANA);
+    useState(CHAIN_ID_ETH);
   const [recoverySourceTx, setRecoverySourceTx] = useState("");
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] =
     useState(false);
@@ -181,13 +173,13 @@ export default function Recovery() {
     isEVMChain(recoverySourceChain) && !isReady ? statusMessage : "";
   const parsedPayload = useMemo(() => {
     try {
-      return recoveryParsedVAA?.payload
+      return recoveryParsedVAA?.body.payload
         ? isNFT
           ? parseNFTPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(new Uint8Array(recoveryParsedVAA.body.payload))
             )
           : parseTransferPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(new Uint8Array(recoveryParsedVAA.body.payload))
             )
         : null;
     } catch (e) {
@@ -246,15 +238,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_SOLANA) {
+      } else if (recoverySourceChain === CHAIN_ID_TERRA) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async () => {
-          const { vaa, error } = await solana(
-            recoverySourceTx,
-            enqueueSnackbar,
-            isNFT
-          );
+          const { vaa, error } = await terra(recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
@@ -265,11 +253,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_TERRA) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async () => {
-          const { vaa, error } = await terra(recoverySourceTx, enqueueSnackbar);
+          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
@@ -293,23 +281,23 @@ export default function Recovery() {
     isNFT,
     isReady,
   ]);
-  const handleTypeChange = useCallback((event) => {
+  const handleTypeChange = useCallback((event: any) => {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
-        ? CHAIN_ID_SOLANA
+        ? CHAIN_ID_ETH
         : prevChain
     );
     setType(event.target.value);
   }, []);
-  const handleSourceChainChange = useCallback((event) => {
+  const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
   }, []);
-  const handleSourceTxChange = useCallback((event) => {
+  const handleSourceTxChange = useCallback((event: any) => {
     setRecoverySourceTx(event.target.value.trim());
   }, []);
-  const handleSignedVAAChange = useCallback((event) => {
+  const handleSignedVAAChange = useCallback((event: any) => {
     setRecoverySignedVAA(event.target.value.trim());
   }, []);
   useEffect(() => {
@@ -317,10 +305,7 @@ export default function Recovery() {
     if (recoverySignedVAA) {
       (async () => {
         try {
-          const { parse_vaa } = await import(
-            "@certusone/wormhole-sdk/lib/esm/solana/core/bridge"
-          );
-          const parsedVAA = parse_vaa(hexToUint8Array(recoverySignedVAA));
+          const parsedVAA = VAA.from(hexToUint8Array(recoverySignedVAA));
           if (!cancelled) {
             setRecoveryParsedVAA(parsedVAA);
           }
@@ -480,7 +465,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Emitter Chain"
                   disabled
-                  value={recoveryParsedVAA?.emitter_chain || ""}
+                  value={recoveryParsedVAA?.body.emitterChainId || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -491,8 +476,8 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       hexToNativeString(
-                        recoveryParsedVAA.emitter_address,
-                        recoveryParsedVAA.emitter_chain
+                        recoveryParsedVAA.body.emitterAddress,
+                        recoveryParsedVAA.body.emitterChainId
                       )) ||
                     ""
                   }
@@ -503,7 +488,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Sequence"
                   disabled
-                  value={recoveryParsedVAA?.sequence || ""}
+                  value={recoveryParsedVAA?.body.sequence.toString() || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -514,7 +499,7 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       new Date(
-                        recoveryParsedVAA.timestamp * 1000
+                        recoveryParsedVAA.body.timestamp * 1000
                       ).toLocaleString()) ||
                     ""
                   }

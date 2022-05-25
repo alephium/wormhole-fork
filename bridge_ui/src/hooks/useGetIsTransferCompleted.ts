@@ -1,30 +1,31 @@
 import {
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getIsTransferCompletedEth,
-  getIsTransferCompletedSolana,
   getIsTransferCompletedTerra,
+  getIsTransferCompletedAlph,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
-import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   selectTransferIsRecovery,
+  selectTransferOriginChain,
   selectTransferTargetAddressHex,
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
   getEvmChainId,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
   TERRA_GAS_PRICES_URL,
   TERRA_HOST,
 } from "../utils/consts";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { LCDClient } from "@terra-money/terra.js";
 import useIsWalletReady from "./useIsWalletReady";
+import { getTokenBridgeForChainIdWithRetry } from "../utils/alephium";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -39,9 +40,11 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
   const isRecovery = useSelector(selectTransferIsRecovery);
   const targetAddress = useSelector(selectTransferTargetAddressHex);
   const targetChain = useSelector(selectTransferTargetChain);
+  const sourceChain = useSelector(selectTransferOriginChain)
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();
+  const { signer: alphSigner } = useAlephiumWallet()
   const signedVAA = useTransferSignedVAA();
 
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
@@ -72,24 +75,6 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             setIsLoading(false);
           }
         })();
-      } else if (targetChain === CHAIN_ID_SOLANA) {
-        setIsLoading(true);
-        (async () => {
-          try {
-            const connection = new Connection(SOLANA_HOST, "confirmed");
-            transferCompleted = await getIsTransferCompletedSolana(
-              getTokenBridgeAddressForChain(targetChain),
-              signedVAA,
-              connection
-            );
-          } catch (error) {
-            console.error(error);
-          }
-          if (!cancelled) {
-            setIsTransferCompleted(transferCompleted);
-            setIsLoading(false);
-          }
-        })();
       } else if (targetChain === CHAIN_ID_TERRA) {
         setIsLoading(true);
         (async () => {
@@ -109,6 +94,29 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             setIsLoading(false);
           }
         })();
+      } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+        setIsLoading(true);
+        (async () => {
+          try {
+            if (typeof sourceChain === 'undefined') {
+              throw Error("transfer source chain is undefined")
+            }
+
+            const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+            transferCompleted = await getIsTransferCompletedAlph(
+              alphSigner.nodeProvider,
+              tokenBridgeForChainId,
+              alphSigner.account.group,
+              signedVAA
+            )
+          } catch (error) {
+            console.log("failed to check alph transfer completed, err: " + error)
+          }
+          if (!cancelled) {
+            setIsTransferCompleted(transferCompleted)
+            setIsLoading(false)
+          }
+        })()
       }
     }
     return () => {
@@ -118,10 +126,12 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
     shouldFire,
     hasCorrectEvmNetwork,
     targetChain,
+    sourceChain,
     targetAddress,
     signedVAA,
     isReady,
     provider,
+    alphSigner
   ]);
 
   return { isTransferCompletedLoading: isLoading, isTransferCompleted };

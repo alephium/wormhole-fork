@@ -1,44 +1,36 @@
 import { Script } from 'alephium-web3'
-import { promises } from 'fs'
+import { default as createLocalTokenWrapper } from './artifacts/create_local_wrapper.ral.json'
+import { default as createRemoteTokenWrapper } from './artifacts/create_remote_wrapper.ral.json'
+import { default as transferLocalToken } from './artifacts/transfer_local.ral.json'
+import { default as transferRemoteToken } from './artifacts/transfer_remote.ral.json'
+import { default as completeTransfer } from './artifacts/complete_transfer.ral.json'
+import { default as attestToken } from './artifacts/attest_token.ral.json'
+import { default as completeUndoneSequence } from './artifacts/complete_undone_sequence.ral.json'
 
-const artifactsPath = `${__dirname}/artifacts`
-
-async function readJson(file: string) {
-    const content = await promises.readFile(file)
-    return JSON.parse(content.toString())
+export function createLocalTokenWrapperScript(): Script {
+    return Script.fromJson(createLocalTokenWrapper)
 }
 
-export async function createLocalTokenWrapperScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/create_local_wrapper.ral.json`)
-    return Script.fromJson(json)
+export function createRemoteTokenWrapperScript(): Script {
+    return Script.fromJson(createRemoteTokenWrapper)
 }
 
-export async function createRemoteTokenWrapperScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/create_remote_wrapper.ral.json`)
-    return Script.fromJson(json)
+export function transferLocalTokenScript(): Script {
+    return Script.fromJson(transferLocalToken)
 }
 
-export async function transferLocalTokenScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/transfer_local.ral.json`)
-    return Script.fromJson(json)
+export function transferRemoteTokenScript(): Script {
+    return Script.fromJson(transferRemoteToken)
 }
 
-export async function transferRemoteTokenScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/transfer_remote.ral.json`)
-    return Script.fromJson(json)
+export function completeTransferScript(): Script {
+    return Script.fromJson(completeTransfer)
 }
 
-export async function completeTransferScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/complete_transfer.ral.json`)
-    return Script.fromJson(json)
+export function attestTokenScript(): Script {
+    return Script.fromJson(attestToken)
 }
 
-export async function attestTokenScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/attest_token.ral.json`)
-    return Script.fromJson(json)
-}
-
-export async function completeUndoneSequenceScript(): Promise<Script> {
-    const json = await readJson(`${artifactsPath}/complete_undone_sequence.ral.json`)
-    return Script.fromJson(json)
+export function completeUndoneSequenceScript(): Script {
+    return Script.fromJson(completeUndoneSequence)
 }

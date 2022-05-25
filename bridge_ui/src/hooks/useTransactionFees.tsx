@@ -1,6 +1,6 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
@@ -8,18 +8,17 @@ import { Provider } from "@ethersproject/abstract-provider";
 import { formatUnits } from "@ethersproject/units";
 import { Typography } from "@material-ui/core";
 import { LocalGasStation } from "@material-ui/icons";
-import { Connection, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
+  ALEPHIUM_HOST,
   getDefaultNativeCurrencySymbol,
-  SOLANA_HOST,
   TERRA_HOST,
 } from "../utils/consts";
-import { getMultipleAccountsRPC } from "../utils/solana";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import useIsWalletReady from "./useIsWalletReady";
 import { LCDClient } from "@terra-money/terra.js";
+import { NodeProvider } from "alephium-web3";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -35,10 +34,10 @@ export type MethodType = "nft" | "createWrapped" | "transfer";
 //As such, for the moment it is best to just check for a reasonable 'low balance' threshold.
 //Still it would be good to calculate a reasonable value at runtime based off current gas prices,
 //rather than a hardcoded value.
-const SOLANA_THRESHOLD_LAMPORTS: bigint = BigInt(300000);
 const ETHEREUM_THRESHOLD_WEI: bigint = BigInt(35000000000000000);
 const TERRA_THRESHOLD_ULUNA: bigint = BigInt(100000);
 const TERRA_THRESHOLD_UUSD: bigint = BigInt(10000000);
+const ALEPHIUM_THRESHOLD: bigint = BigInt(1000000000000);
 
 const isSufficientBalance = (
   chainId: ChainId,
@@ -48,11 +47,11 @@ const isSufficientBalance = (
   if (balance === undefined || !chainId) {
     return true;
   }
-  if (CHAIN_ID_SOLANA === chainId) {
-    return balance > SOLANA_THRESHOLD_LAMPORTS;
-  }
   if (isEVMChain(chainId)) {
     return balance > ETHEREUM_THRESHOLD_WEI;
+  }
+  if (CHAIN_ID_ALEPHIUM === chainId) {
+    return balance > ALEPHIUM_THRESHOLD;
   }
   if (terraFeeDenom === "uluna") {
     return balance > TERRA_THRESHOLD_ULUNA;
@@ -79,23 +78,6 @@ const isSufficientBalanceTerra = (balances: TerraBalance[]) => {
     }
     return false;
   });
-};
-
-//TODO move to more generic location
-const getBalanceSolana = async (walletAddress: string) => {
-  const connection = new Connection(SOLANA_HOST);
-  return getMultipleAccountsRPC(connection, [
-    new PublicKey(walletAddress),
-  ]).then(
-    (results) => {
-      if (results.length && results[0]) {
-        return BigInt(results[0].lamports);
-      }
-    },
-    (error) => {
-      return BigInt(0);
-    }
-  );
 };
 
 const getBalanceEvm = async (walletAddress: string, provider: Provider) => {
@@ -130,14 +112,27 @@ const getBalancesTerra = async (walletAddress: string) => {
     });
 };
 
+const getBalancesAlephium = async (walletAddress: string) => {
+  const provider = new NodeProvider(ALEPHIUM_HOST)
+  return provider
+    .addresses
+    .getAddressesAddressBalance(walletAddress)
+    .then((response) => {
+      const total = BigInt(response.balance)
+      const locked = BigInt(response.lockedBalance)
+      return total - locked
+    })
+    .catch((e) => {
+      return Promise.reject("failed to get alephium balance, err: " + e);
+    })
+}
+
 const toBalanceString = (balance: bigint | undefined, chainId: ChainId) => {
   if (!chainId || balance === undefined) {
     return "";
   }
   if (isEVMChain(chainId)) {
     return formatUnits(balance, 18); //wei decimals
-  } else if (chainId === CHAIN_ID_SOLANA) {
-    return formatUnits(balance, 9); //lamports to sol decmals
   } else if (chainId === CHAIN_ID_TERRA) {
     return formatUnits(balance, NATIVE_TERRA_DECIMALS);
   }
@@ -158,21 +153,7 @@ export default function useTransactionFees(chainId: ChainId) {
   }, []);
 
   useEffect(() => {
-    if (chainId === CHAIN_ID_SOLANA && isReady && walletAddress) {
-      loadStart();
-      getBalanceSolana(walletAddress).then(
-        (result) => {
-          const adjustedresult =
-            result === undefined || result === null ? BigInt(0) : result;
-          setIsLoading(false);
-          setBalance(adjustedresult);
-        },
-        (error) => {
-          setIsLoading(false);
-          setError("Cannot load wallet balance");
-        }
-      );
-    } else if (isEVMChain(chainId) && isReady && walletAddress) {
+    if (isEVMChain(chainId) && isReady && walletAddress) {
       if (provider) {
         loadStart();
         getBalanceEvm(walletAddress, provider).then(
@@ -207,6 +188,20 @@ export default function useTransactionFees(chainId: ChainId) {
           setError("Cannot load wallet balance");
         }
       );
+    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress) {
+      loadStart();
+      getBalancesAlephium(walletAddress).then(
+        (result) => {
+          const adjustedresult =
+              result === undefined || result === null ? BigInt(0) : result;
+          setIsLoading(false);
+          setBalance(adjustedresult);
+        },
+        (error) => {
+          setIsLoading(false);
+          setError("Cannot load wallet balance");
+        }
+      )
     }
   }, [provider, walletAddress, isReady, chainId, loadStart]);
 

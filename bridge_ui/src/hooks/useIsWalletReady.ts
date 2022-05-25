@@ -1,14 +1,14 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { hexlify, hexStripZeros } from "@ethersproject/bytes";
 import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useCallback, useMemo } from "react";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
 
 const createWalletStatus = (
@@ -33,9 +33,8 @@ function useIsWalletReady(
   forceNetworkSwitch: () => void;
 } {
   const autoSwitch = enableNetworkAutoswitch;
-  const solanaWallet = useSolanaWallet();
-  const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
+  const { signer: alphSigner } = useAlephiumWallet();
   const hasTerraWallet = !!terraWallet;
   const {
     provider,
@@ -60,6 +59,14 @@ function useIsWalletReady(
   }, [provider, correctEvmNetwork, chainId]);
 
   return useMemo(() => {
+    if (chainId === CHAIN_ID_ALEPHIUM && alphSigner?.account.address) {
+      return createWalletStatus(
+        true,
+        undefined,
+        forceNetworkSwitch,
+        alphSigner.account.address
+      );
+    }
     if (
       chainId === CHAIN_ID_TERRA &&
       hasTerraWallet &&
@@ -71,14 +78,6 @@ function useIsWalletReady(
         undefined,
         forceNetworkSwitch,
         terraWallet.walletAddress
-      );
-    }
-    if (chainId === CHAIN_ID_SOLANA && solPK) {
-      return createWalletStatus(
-        true,
-        undefined,
-        forceNetworkSwitch,
-        solPK.toString()
       );
     }
     if (isEVMChain(chainId) && hasEthInfo && signerAddress) {
@@ -113,13 +112,13 @@ function useIsWalletReady(
     autoSwitch,
     forceNetworkSwitch,
     hasTerraWallet,
-    solPK,
     hasEthInfo,
     correctEvmNetwork,
     hasCorrectEvmNetwork,
     provider,
     signerAddress,
     terraWallet,
+    alphSigner,
   ]);
 }
 

@@ -1,6 +1,6 @@
 import "sequence.ral"
 
-TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
+TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceContract: ByteVec,
@@ -12,8 +12,10 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
     mut guardianSets: [[ByteVec; 19]; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut guardianSetSizes: [U256; 2],
-    mut previousGuardianSetExpirationTime: U256
-) extends Sequence(next, next1, next2, undoneSequenceId) {
+    mut previousGuardianSetExpirationTime: U256,
+    undoneSequenceCodeHash: ByteVec,
+    eventEmitterId: ByteVec
+) extends Sequence(next, next1, next2, undoneSequenceId, undoneSequenceCodeHash, eventEmitterId) {
     pub fn getChainId() -> (U256) {
         return chainId
     }
@@ -21,8 +23,6 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
-
-    // TODO: contract upgrade
 
     pub payable fn payMessageFee(payer: Address) -> () {
         transferAlphToSelf!(payer, messageFee)
@@ -64,7 +64,7 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
         assert!(signatureSize <= 19)
         let mut index = 6
-        let mut signatures = [#00; 19]
+        let mut signatures = [#; 19]
         loop(0, 19, 1,
             // 1 byte `guardianIndex` and 65 bytes signature
             if (? == u256From1Byte!(byteVecSlice!(data, index, index + 1))) {
@@ -107,7 +107,7 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
                 guardianSets[1][?] = byteVecSlice!(payload, index, index + 20)
                 index = index + 20
             } else {
-                guardianSets[1][?] = #00
+                guardianSets[1][?] = #
             }
         )
         assert!(size!(payload) == index)
@@ -136,13 +136,44 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
     }
 
+    pub fn upgradeContract(vaa: ByteVec) -> () {
+        let payload = verifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #01)
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(vaaChainId == chainId)
+        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
+        let mut offset = 37 + contractCodeLength
+        let newContractCode = byteVecSlice!(payload, 37, offset)
+        let payloadLength = size!(payload)
+        if (payloadLength == offset) {
+            migrate!(newContractCode)
+        } else {
+            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
+            offset = offset + 32
+            let currentEncodedState = u256To32Byte!(next)
+                ++ u256To32Byte!(next1)
+                ++ u256To32Byte!(next2)
+                ++ u256To32Byte!(guardianSetIndexes[0])
+                ++ u256To32Byte!(guardianSetIndexes[1])
+            assert!(prevStateHash == blake2b!(currentEncodedState))
+            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+            offset = offset + 2
+            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
+            offset = offset + stateLength
+            assert!(payloadLength == offset)
+            migrateWithState!(newContractCode, newContractState)
+        }
+    }
+
     fn verifySignature(lastGuardianIndex: I256, signature: ByteVec, key: ByteVec, hash: ByteVec) -> I256 {
-        if (signature == #00) {
+        if (signature == #) {
             return lastGuardianIndex
         }
         let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
         assert!(guardianIndex > lastGuardianIndex)
-        assert!(key == ethEcRecover!(hash, byteVecSlice!(signature, 1, 66)))
+        let recId = u256From1Byte!(byteVecSlice!(signature, 65, 66)) + 27
+        let newSignature = byteVecSlice!(signature, 1, 65) ++ u256To1Byte!(recId)
+        assert!(key == ethEcRecover!(hash, newSignature))
         return guardianIndex
     }
 
@@ -153,9 +184,8 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         signatureSize: U256
     ) -> () {
         let (keys, expirationTime, guardianSize) = getGuardiansInfo(guardianSetIndex)
-        if (guardianSetIndex != guardianSetIndexes[1] && blockTimeStamp!() > expirationTime) {
-            assert!(false)
-        }
+        assert!((guardianSetIndex == guardianSetIndexes[1]) || (blockTimeStamp!() <= expirationTime))
+
         // check signature quorum size
         assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
 
@@ -170,6 +200,7 @@ TxContract Governance<undoneSequenceCodeHash: ByteVec, eventEmitterId: ByteVec>(
         if (guardianSetIndex == guardianSetIndexes[0]) {
             return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
         }
-        return [#00; 19], 0, 0
+        assert!(false) // invalid guardian set index
+        return [#; 19], 0, 0
     }
 }

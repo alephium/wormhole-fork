@@ -1,6 +1,6 @@
 //import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
@@ -24,9 +24,9 @@ import {
   setSourceParsedTokenAccount as setTransferSourceParsedTokenAccount,
   setSourceWalletAddress as setTransferSourceWalletAddress,
 } from "../../store/transferSlice";
+import AlephiumTokenPicker from "./AlephiumTokenPicker";
 import EvmTokenPicker from "./EvmTokenPicker";
 import RefreshButtonWrapper from "./RefreshButtonWrapper";
-import SolanaTokenPicker from "./SolanaTokenPicker";
 import TerraTokenPicker from "./TerraTokenPicker";
 
 type TokenSelectorProps = {
@@ -86,16 +86,6 @@ export const TokenSelector = (props: TokenSelectorProps) => {
     <RefreshButtonWrapper callback={resetAccountWrapper}>
       <Typography>{fatalError}</Typography>
     </RefreshButtonWrapper>
-  ) : lookupChain === CHAIN_ID_SOLANA ? (
-    <SolanaTokenPicker
-      value={sourceParsedTokenAccount || null}
-      onChange={handleOnChange}
-      disabled={disabled}
-      accounts={maps?.tokenAccounts}
-      mintAccounts={maps?.mintAccounts}
-      resetAccounts={maps?.resetAccounts}
-      nft={nft}
-    />
   ) : isEVMChain(lookupChain) ? (
     <EvmTokenPicker
       value={sourceParsedTokenAccount || null}
@@ -108,6 +98,14 @@ export const TokenSelector = (props: TokenSelectorProps) => {
     />
   ) : lookupChain === CHAIN_ID_TERRA ? (
     <TerraTokenPicker
+      value={sourceParsedTokenAccount || null}
+      disabled={disabled}
+      onChange={handleOnChange}
+      resetAccounts={maps?.resetAccounts}
+      tokenAccounts={maps?.tokenAccounts}
+    />
+  ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
+    <AlephiumTokenPicker
       value={sourceParsedTokenAccount || null}
       disabled={disabled}
       onChange={handleOnChange}

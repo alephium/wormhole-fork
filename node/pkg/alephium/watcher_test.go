@@ -21,13 +21,12 @@ func TestSubscribeEvents(t *testing.T) {
 	contractAddress := randomAddress()
 	eventCount := uint64(0)
 
-	randomEvent := func(confirmations uint8) *Event {
-		return &Event{
-			BlockHash:       randomByte32().ToHex(),
-			ContractAddress: contractAddress,
-			TxId:            randomByte32().ToHex(),
-			EventIndex:      0,
-			Fields:          []*Field{fieldFromBigInt(big.NewInt(int64(confirmations)))},
+	randomEvent := func(confirmations uint8) *ContractEvent {
+		return &ContractEvent{
+			BlockHash:  randomByte32().ToHex(),
+			TxId:       randomByte32().ToHex(),
+			EventIndex: 0,
+			Fields:     []*Field{fieldFromBigInt(big.NewInt(int64(confirmations)))},
 		}
 	}
 
@@ -36,7 +35,7 @@ func TestSubscribeEvents(t *testing.T) {
 	// event from orphan block
 	event2 := randomEvent(0)
 
-	events := make([]*Event, 0)
+	events := make([]*ContractEvent, 0)
 	isCanonicalBlock := uint32(1)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,17 +45,15 @@ func TestSubscribeEvents(t *testing.T) {
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/events/contract?start=") {
+		if strings.HasPrefix(r.RequestURI, "/events/contract/") {
 			w.Header().Set("Content-Type", "application/json")
 			query := r.URL.Query()
 			from, err := strconv.Atoi(query["start"][0])
 			assert.Nil(t, err)
 			to, err := strconv.Atoi(query["end"][0])
 			assert.Nil(t, err)
-			json.NewEncoder(w).Encode(&Events{
-				ChainFrom: 0,
-				ChainTo:   0,
-				Events:    events[from:to],
+			json.NewEncoder(w).Encode(&ContractEvents{
+				Events: events[from:to],
 			})
 			return
 		}
@@ -75,10 +72,14 @@ func TestSubscribeEvents(t *testing.T) {
 	client := NewClient(server.URL, "", 10)
 	errC := make(chan error)
 	watcher := &Watcher{
+		chainIndex: &ChainIndex{
+			FromGroup: 0,
+			ToGroup:   0,
+		},
 		currentHeight: 0,
 	}
 
-	toUnconfirmed := func(ctx context.Context, client *Client, event *Event) (*UnconfirmedEvent, error) {
+	toUnconfirmed := func(ctx context.Context, client *Client, event *ContractEvent) (*UnconfirmedEvent, error) {
 		confirmations, err := event.Fields[0].ToUint8()
 		assert.Nil(t, err)
 		return &UnconfirmedEvent{

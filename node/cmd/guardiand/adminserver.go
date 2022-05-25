@@ -33,6 +33,8 @@ import (
 	"github.com/certusone/wormhole/node/pkg/vaa"
 )
 
+const undoneTransferNonce uint32 = 0
+
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
 	db           *db.Database
@@ -165,6 +167,13 @@ func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, guardianSetIn
 	return v, nil
 }
 
+func tokenBridgeUndoneTransfer(req *nodev1.TokenBridgeUndoneTransfer, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+	if nonce != undoneTransferNonce {
+		return nil, fmt.Errorf("invalid nonce for undone transfer message")
+	}
+	return vaa.CreateGovernanceVAA(nonce, sequence, guardianSetIndex, req.Payload), nil
+}
+
 func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *nodev1.InjectGovernanceVAARequest) (*nodev1.InjectGovernanceVAAResponse, error) {
 	s.logger.Info("governance VAA injected via admin socket", zap.String("request", req.String()))
 
@@ -185,6 +194,8 @@ func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *no
 			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, req.CurrentSetIndex, message.Nonce, message.Sequence)
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
 			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, req.CurrentSetIndex, message.Nonce, message.Sequence)
+		case *nodev1.GovernanceMessage_UndoneTransfer:
+			v, err = tokenBridgeUndoneTransfer(payload.UndoneTransfer, req.CurrentSetIndex, message.Nonce, message.Sequence)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}
@@ -527,7 +538,7 @@ func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId u
 	}
 }
 
-func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *nodev1.ExecuteUndoneSequenceRequest) (*nodev1.ExecuteUndoneSequenceResponse, error) {
+func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Context, req *nodev1.GenUndoneTransferGovernanceMsgRequest) (*nodev1.GenUndoneTransferGovernanceMsgResponse, error) {
 	address, err := vaa.StringToAddress(req.EmitterAddress)
 	if err != nil {
 		return nil, fmt.Errorf("invalid emitter address, error: %v", err)
@@ -576,21 +587,21 @@ func (s *nodePrivilegedService) ExecuteUndoneSequence(ctx context.Context, req *
 		return nil, fmt.Errorf("failed to get token wrapper id, error: %v", err)
 	}
 
-	vaaBody := &vaa.VAA{
-		Timestamp:        time.Now(),
-		Nonce:            rand.Uint32(),
-		Sequence:         req.GovSequence,
-		ConsistencyLevel: transferVAA.ConsistencyLevel,
-		EmitterChain:     vaa.GovernanceChain,
-		EmitterAddress:   vaa.GovernanceEmitter,
-		Payload:          transferPayload(transferMsg, tokenWrapperId, req.Sequence),
-	}
 	// TODO: save the vaa id
 	if err := s.alphDb.SetSequenceExecuting(uint16(emitterChain), req.Sequence); err != nil {
 		return nil, fmt.Errorf("failed to update undone sequence status, error: %v", err)
 	}
-	return &nodev1.ExecuteUndoneSequenceResponse{
-		VaaBody: vaaBody.SerializeBody(),
+	payload := &nodev1.GovernanceMessage_UndoneTransfer{
+		UndoneTransfer: &nodev1.TokenBridgeUndoneTransfer{
+			Payload: transferPayload(transferMsg, tokenWrapperId, req.Sequence),
+		},
+	}
+	return &nodev1.GenUndoneTransferGovernanceMsgResponse{
+		Msg: &nodev1.GovernanceMessage{
+			Sequence: req.GovSequence,
+			Nonce:    undoneTransferNonce, // we need to ensure all guardians have same vaa body
+			Payload:  payload,
+		},
 	}, nil
 }
 

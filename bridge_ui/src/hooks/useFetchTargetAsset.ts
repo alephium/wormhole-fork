@@ -1,9 +1,8 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getForeignAssetEth,
-  getForeignAssetSolana,
   getForeignAssetTerra,
   hexToNativeString,
   hexToUint8Array,
@@ -11,11 +10,7 @@ import {
 } from "@certusone/wormhole-sdk";
 import {
   getForeignAssetEth as getForeignAssetEthNFT,
-  getForeignAssetSol as getForeignAssetSolNFT,
 } from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
-import { BigNumber } from "@ethersproject/bignumber";
-import { arrayify } from "@ethersproject/bytes";
-import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
@@ -39,13 +34,11 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
+import { getRemoteTokenWrapperIdWithRetry } from "../utils/alephium";
 import {
   getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
@@ -114,6 +107,10 @@ function useFetchTargetAsset(nft?: boolean) {
     }
     setLastSuccessfulArgs(null);
     if (isSourceAssetWormholeWrapped && originChain === targetChain) {
+      // true && true => normal case
+      // true && false ??? do we need to raise an error when this happen?
+      // false && true =>  it should never happen
+      // false && false => normal case
       dispatch(
         setTargetAsset(
           receiveDataWrapper({
@@ -172,43 +169,6 @@ function useFetchTargetAsset(nft?: boolean) {
           }
         }
       }
-      if (targetChain === CHAIN_ID_SOLANA && originChain && originAsset) {
-        dispatch(setTargetAsset(fetchDataWrapper()));
-        try {
-          const connection = new Connection(SOLANA_HOST, "confirmed");
-          const asset = await (nft
-            ? getForeignAssetSolNFT(
-                SOL_NFT_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset),
-                arrayify(BigNumber.from(tokenId || "0"))
-              )
-            : getForeignAssetSolana(
-                connection,
-                SOL_TOKEN_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset)
-              ));
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                receiveDataWrapper({ doesExist: !!asset, address: asset })
-              )
-            );
-            setArgs();
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                errorDataWrapper(
-                  "Unable to determine existence of wrapped asset"
-                )
-              )
-            );
-          }
-        }
-      }
       if (targetChain === CHAIN_ID_TERRA && originChain && originAsset) {
         dispatch(setTargetAsset(fetchDataWrapper()));
         try {
@@ -236,6 +196,28 @@ function useFetchTargetAsset(nft?: boolean) {
                 )
               )
             );
+          }
+        }
+      }
+      if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
+        dispatch(setTargetAsset(fetchDataWrapper()))
+        try {
+          const remoteTokenWrapperId = await getRemoteTokenWrapperIdWithRetry(originAsset)
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                receiveDataWrapper({ doesExist: !!remoteTokenWrapperId, address: remoteTokenWrapperId })
+              )
+            )
+            setArgs()
+          }
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                errorDataWrapper("Failed to get token wrapper contract id " + e)
+              )
+            )
           }
         }
       }

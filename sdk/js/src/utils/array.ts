@@ -1,10 +1,10 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
-import { PublicKey } from "@solana/web3.js";
 import { hexValue, hexZeroPad, stripZeros } from "ethers/lib/utils";
 import { canonicalAddress, humanAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
   CHAIN_ID_ACALA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
@@ -14,9 +14,16 @@ import {
   CHAIN_ID_KARURA,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "./consts";
+import * as base58 from 'bs58';
+import { tokenIdFromAddress } from "alephium-web3";
+
+export function toAlphContractAddress(contractId: string): string {
+    const prefix = Buffer.from([0x03])
+    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
+    return base58.encode(bytes)
+}
 
 export const isEVMChain = (chainId: ChainId) => {
   return (
@@ -44,8 +51,8 @@ export const hexToNativeString = (h: string | undefined, c: ChainId) => {
   try {
     return !h
       ? undefined
-      : c === CHAIN_ID_SOLANA
-      ? new PublicKey(hexToUint8Array(h)).toString()
+      : c === CHAIN_ID_ALEPHIUM
+      ? toAlphContractAddress(h)
       : isEVMChain(c)
       ? hexZeroPad(hexValue(hexToUint8Array(h)), 20)
       : c === CHAIN_ID_TERRA
@@ -65,10 +72,10 @@ export const nativeToHexString = (
     return null;
   }
 
-  if (isEVMChain(chain)) {
+  if (chain === CHAIN_ID_ALEPHIUM) {
+    return uint8ArrayToHex(tokenIdFromAddress(address));
+  } else if (isEVMChain(chain)) {
     return uint8ArrayToHex(zeroPad(arrayify(address), 32));
-  } else if (chain === CHAIN_ID_SOLANA) {
-    return uint8ArrayToHex(zeroPad(new PublicKey(address).toBytes(), 32));
   } else if (chain === CHAIN_ID_TERRA) {
     if (isNativeDenom(address)) {
       return (

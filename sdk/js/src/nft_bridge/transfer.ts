@@ -1,14 +1,10 @@
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, Overrides } from "ethers";
 import {
   NFTBridge__factory,
   NFTImplementation__factory,
 } from "../ethers-contracts";
-import { getBridgeFeeIx, ixFromRust } from "../solana";
-import { importNftWasm } from "../solana/wasm";
-import { ChainId, CHAIN_ID_SOLANA, createNonce } from "../utils";
+import { ChainId, createNonce } from "../utils";
 
 export async function transferFromEth(
   tokenBridgeAddress: string,
@@ -33,82 +29,6 @@ export async function transferFromEth(
   );
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function transferFromSolana(
-  connection: Connection,
-  bridgeAddress: string,
-  tokenBridgeAddress: string,
-  payerAddress: string,
-  fromAddress: string,
-  mintAddress: string,
-  targetAddress: Uint8Array,
-  targetChain: ChainId,
-  originAddress?: Uint8Array,
-  originChain?: ChainId,
-  originTokenId?: Uint8Array
-): Promise<Transaction> {
-  const nonce = createNonce().readUInt32LE(0);
-  const transferIx = await getBridgeFeeIx(
-    connection,
-    bridgeAddress,
-    payerAddress
-  );
-  const {
-    transfer_native_ix,
-    transfer_wrapped_ix,
-    approval_authority_address,
-  } = await importNftWasm();
-  const approvalIx = Token.createApproveInstruction(
-    TOKEN_PROGRAM_ID,
-    new PublicKey(fromAddress),
-    new PublicKey(approval_authority_address(tokenBridgeAddress)),
-    new PublicKey(payerAddress),
-    [],
-    Number(1)
-  );
-  let messageKey = Keypair.generate();
-  const isSolanaNative =
-    originChain === undefined || originChain === CHAIN_ID_SOLANA;
-  if (!isSolanaNative && !originAddress && !originTokenId) {
-    throw new Error(
-      "originAddress and originTokenId are required when specifying originChain"
-    );
-  }
-  const ix = ixFromRust(
-    isSolanaNative
-      ? transfer_native_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          messageKey.publicKey.toString(),
-          fromAddress,
-          mintAddress,
-          nonce,
-          targetAddress,
-          targetChain
-        )
-      : transfer_wrapped_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          messageKey.publicKey.toString(),
-          fromAddress,
-          payerAddress,
-          originChain as number, // checked by isSolanaNative
-          originAddress as Uint8Array, // checked by throw
-          originTokenId as Uint8Array, // checked by throw
-          nonce,
-          targetAddress,
-          targetChain
-        )
-  );
-  const transaction = new Transaction().add(transferIx, approvalIx, ix);
-  const { blockhash } = await connection.getRecentBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = new PublicKey(payerAddress);
-  transaction.partialSign(messageKey);
-  return transaction;
 }
 
 export async function transferFromTerra(

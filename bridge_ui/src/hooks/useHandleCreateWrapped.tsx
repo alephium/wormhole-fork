@@ -1,18 +1,14 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   createWrappedOnEth,
-  createWrappedOnSolana,
   createWrappedOnTerra,
   updateWrappedOnEth,
   updateWrappedOnTerra,
-  updateWrappedOnSolana,
-  postVaaSolanaWithRetry,
+  createRemoteTokenWrapperOnAlph,
   isEVMChain,
+  CHAIN_ID_ALEPHIUM,
 } from "@certusone/wormhole-sdk";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
 import {
   ConnectedWallet,
   useConnectedWallet,
@@ -22,26 +18,24 @@ import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 import { setCreateTx, setIsCreating } from "../store/attestSlice";
 import {
   selectAttestIsCreating,
+  selectAttestSourceChain,
   selectAttestTargetChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
 import {
+  alphDustAmount,
   getTokenBridgeAddressForChain,
-  MAX_VAA_UPLOAD_RETRIES_SOLANA,
-  SOLANA_HOST,
-  SOL_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import parseError from "../utils/parseError";
-import { signSendAndConfirm } from "../utils/solana";
 import { Alert } from "@material-ui/lab";
 import { postWithFees } from "../utils/terra";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { getTokenBridgeForChainIdWithRetry, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
 
 async function evm(
   dispatch: any,
@@ -67,57 +61,6 @@ async function evm(
     dispatch(
       setCreateTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
-    enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
-    });
-  } catch (e) {
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    dispatch(setIsCreating(false));
-  }
-}
-
-async function solana(
-  dispatch: any,
-  enqueueSnackbar: any,
-  wallet: WalletContextState,
-  payerAddress: string, // TODO: we may not need this since we have wallet
-  signedVAA: Uint8Array,
-  shouldUpdate: boolean
-) {
-  dispatch(setIsCreating(true));
-  try {
-    if (!wallet.signTransaction) {
-      throw new Error("wallet.signTransaction is undefined");
-    }
-    const connection = new Connection(SOLANA_HOST, "confirmed");
-    await postVaaSolanaWithRetry(
-      connection,
-      wallet.signTransaction,
-      SOL_BRIDGE_ADDRESS,
-      payerAddress,
-      Buffer.from(signedVAA),
-      MAX_VAA_UPLOAD_RETRIES_SOLANA
-    );
-    const transaction = shouldUpdate
-      ? await updateWrappedOnSolana(
-          connection,
-          SOL_BRIDGE_ADDRESS,
-          SOL_TOKEN_BRIDGE_ADDRESS,
-          payerAddress,
-          signedVAA
-        )
-      : await createWrappedOnSolana(
-          connection,
-          SOL_BRIDGE_ADDRESS,
-          SOL_TOKEN_BRIDGE_ADDRESS,
-          payerAddress,
-          signedVAA
-        );
-    const txid = await signSendAndConfirm(wallet, connection, transaction);
-    // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
-    dispatch(setCreateTx({ id: txid, block: 1 }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -170,17 +113,54 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  sourceChain: ChainId,
+  signer: AlephiumWalletSigner,
+  signedVAA: Uint8Array,
+  shouldUpdate: boolean
+) {
+  dispatch(setIsCreating(true));
+  try {
+    if (shouldUpdate) {
+      throw Error("alephium: does not support update")
+    }
+    const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+    const bytecode = createRemoteTokenWrapperOnAlph(
+      tokenBridgeForChainId,
+      signedVAA,
+      signer.account.address,
+      alphDustAmount
+    )
+    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
+    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    dispatch(
+      setCreateTx({ id: result.txId, block: blockHeader.height })
+    );
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+  } catch (e) {
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsCreating(false));
+  }
+}
+
 export function useHandleCreateWrapped(shouldUpdate: boolean) {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
+  const sourceChain = useSelector(selectAttestSourceChain);
   const targetChain = useSelector(selectAttestTargetChain);
-  const solanaWallet = useSolanaWallet();
-  const solPK = solanaWallet?.publicKey;
   const signedVAA = useAttestSignedVAA();
   const isCreating = useSelector(selectAttestIsCreating);
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const { signer: alphSigner } = useAlephiumWallet();
   const handleCreateClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && !!signedVAA) {
       evm(
@@ -189,20 +169,6 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
         signer,
         signedVAA,
         targetChain,
-        shouldUpdate
-      );
-    } else if (
-      targetChain === CHAIN_ID_SOLANA &&
-      !!solanaWallet &&
-      !!solPK &&
-      !!signedVAA
-    ) {
-      solana(
-        dispatch,
-        enqueueSnackbar,
-        solanaWallet,
-        solPK.toString(),
-        signedVAA,
         shouldUpdate
       );
     } else if (targetChain === CHAIN_ID_TERRA && !!terraWallet && !!signedVAA) {
@@ -214,6 +180,15 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
         shouldUpdate,
         terraFeeDenom
       );
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && !!signedVAA) {
+      alephium(
+        dispatch,
+        enqueueSnackbar,
+        sourceChain,
+        alphSigner,
+        signedVAA,
+        shouldUpdate
+      )
     } else {
       // enqueueSnackbar(
       //   "Creating wrapped tokens on this chain is not yet supported",
@@ -225,10 +200,10 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
   }, [
     dispatch,
     enqueueSnackbar,
+    sourceChain,
     targetChain,
-    solanaWallet,
-    solPK,
     terraWallet,
+    alphSigner,
     signedVAA,
     signer,
     shouldUpdate,

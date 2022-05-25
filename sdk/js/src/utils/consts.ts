@@ -1,5 +1,4 @@
 export type ChainId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 10001;
-export const CHAIN_ID_SOLANA: ChainId = 1;
 export const CHAIN_ID_ETH: ChainId = 2;
 export const CHAIN_ID_TERRA: ChainId = 3;
 export const CHAIN_ID_BSC: ChainId = 4;

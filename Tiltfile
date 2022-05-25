@@ -39,7 +39,6 @@ config.define_string("webHost", False, "Public hostname for port forwards")
 
 # Components
 config.define_bool("algorand", False, "Enable Algorand component")
-config.define_bool("solana", False, "Enable Solana component")
 config.define_bool("explorer", False, "Enable explorer component")
 config.define_bool("bridge_ui", False, "Enable bridge UI component")
 config.define_bool("e2e", False, "Enable E2E testing stack")
@@ -54,7 +53,6 @@ gcpProject = cfg.get("gcpProject", "local-dev")
 bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
 algorand = cfg.get("algorand", False)
-solana = cfg.get("solana", False)
 ci = cfg.get("ci", False)
 explorer = cfg.get("explorer", ci)
 bridge_ui = cfg.get("bridge_ui", ci)
@@ -109,20 +107,6 @@ if algorand:
         cmd = "tilt docker build -- --target teal-export -f Dockerfile.teal -o type=local,dest=. .",
         env = {"DOCKER_BUILDKIT": "1"},
         labels = ["algorand"],
-        allow_parallel = True,
-        trigger_mode = trigger_mode,
-    )
-
-# wasm
-
-if solana:
-    local_resource(
-        name = "wasm-gen",
-        deps = ["solana"],
-        dir = "solana",
-        cmd = "tilt docker build -- -f Dockerfile.wasm -o type=local,dest=.. .",
-        env = {"DOCKER_BUILDKIT": "1"},
-        labels = ["solana"],
         allow_parallel = True,
         trigger_mode = trigger_mode,
     )
@@ -191,9 +175,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "alph-devnet"]
-if solana:
-    guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node"]
 
 k8s_resource(
     "guardian",
@@ -224,41 +206,6 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
-if solana:
-    # solana client cli (used for devnet setup)
-
-    docker_build(
-        ref = "bridge-client",
-        context = ".",
-        only = ["./proto", "./solana", "./clients"],
-        dockerfile = "Dockerfile.client",
-        # Ignore target folders from local (non-container) development.
-        ignore = ["./solana/*/target"],
-    )
-
-    # solana smart contract
-
-    docker_build(
-        ref = "solana-contract",
-        context = "solana",
-        dockerfile = "solana/Dockerfile",
-    )
-
-    # solana local devnet
-
-    k8s_yaml_with_ns("devnet/solana-devnet.yaml")
-
-    k8s_resource(
-        "solana-devnet",
-        port_forwards = [
-            port_forward(8899, name = "Solana RPC [:8899]", host = webHost),
-            port_forward(8900, name = "Solana WS [:8900]", host = webHost),
-            port_forward(9000, name = "Solana PubSub [:9000]", host = webHost),
-        ],
-        labels = ["solana"],
-        trigger_mode = trigger_mode,
-    )
-
 # alephium devnet
 
 docker_build(
@@ -268,16 +215,54 @@ docker_build(
   dockerfile = "./alephium/Dockerfile"
 )
 
-k8s_yaml_with_ns("devnet/alph-devnet.yaml")
+docker_build(
+    ref = "alephium-contracts",
+    context = "./alephium",
+    dockerfile = "./alephium/Dockerfile.contracts"
+)
+
+k8s_yaml_with_ns("devnet/alph-full-node.yaml")
 
 k8s_resource(
-  "alph-devnet",
+  "alph-full-node",
   port_forwards = [
-    port_forward(12973, name = "Alephium REST [:12973]", host = webHost),
-    # port_forward(10973, name = "Alephium Mining [:10973]", host = webHost),
+    port_forward(22973, name = "Alephium REST [:22973]", host = webHost),
+    # port_forward(20973, name = "Alephium Mining [:20973]", host = webHost),
   ],
   labels = ["alephium"],
   trigger_mode = trigger_mode,
+)
+
+k8s_yaml_with_ns("devnet/alph-postgres.yaml")
+
+k8s_resource(
+    "alph-postgres",
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
+)
+
+k8s_yaml_with_ns("devnet/alph-explorer-backend.yaml")
+
+k8s_resource(
+    "alph-explorer-backend",
+    port_forwards = [
+        port_forward(9090, container_port = 9090, name = "Alephium explorer backend [:9090]", host = webHost)
+    ],
+    resource_deps = ["alph-full-node", "alph-postgres"],
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
+)
+
+k8s_yaml_with_ns("devnet/alph-explorer-frontend.yaml")
+
+k8s_resource(
+    "alph-explorer-frontend",
+    port_forwards = [
+        port_forward(30000, container_port = 3000, name = "Alephium explorer [:30000]", host = webHost)
+    ],
+    resource_deps = ["alph-explorer-backend"],
+    labels = ["alephium"],
+    trigger_mode = trigger_mode
 )
 
 # eth devnet
@@ -311,14 +296,14 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
-k8s_resource(
-    "eth-devnet2",
-    port_forwards = [
-        port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
-    ],
-    labels = ["evm"],
-    trigger_mode = trigger_mode,
-)
+# k8s_resource(
+#     "eth-devnet2",
+#     port_forwards = [
+#         port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
+#     ],
+#     labels = ["evm"],
+#     trigger_mode = trigger_mode,
+# )
 
 if bridge_ui:
     entrypoint = "npm run build && /app/node_modules/.bin/serve -s build -n"
@@ -369,31 +354,31 @@ if ci_tests:
 
     k8s_resource(
         "ci-tests",
-        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "solana-devnet", "spy", "guardian"],
+        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "spy", "guardian"],
         labels = ["ci"],
         trigger_mode = trigger_mode,
     )
 
 # algorand
-if algorand:
-    k8s_yaml_with_ns("devnet/algorand.yaml")
-
-    docker_build(
-        ref = "algorand",
-        context = "third_party/algorand",
-        dockerfile = "third_party/algorand/Dockerfile",
-    )
-
-    k8s_resource(
-        "algorand",
-        resource_deps = ["teal-gen"],
-        port_forwards = [
-            port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
-            port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
-        ],
-        labels = ["algorand"],
-        trigger_mode = trigger_mode,
-    )
+# if algorand:
+#     k8s_yaml_with_ns("devnet/algorand.yaml")
+# 
+#     docker_build(
+#         ref = "algorand",
+#         context = "third_party/algorand",
+#         dockerfile = "third_party/algorand/Dockerfile",
+#     )
+# 
+#     k8s_resource(
+#         "algorand",
+#         resource_deps = ["teal-gen"],
+#         port_forwards = [
+#             port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
+#             port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
+#         ],
+#         labels = ["algorand"],
+#         trigger_mode = trigger_mode,
+#     )
 
 # e2e
 if e2e:
@@ -471,43 +456,3 @@ if explorer:
         labels = ["explorer"],
         trigger_mode = trigger_mode,
     )
-
-# terra devnet
-
-docker_build(
-    ref = "terra-image",
-    context = "./terra/devnet",
-    dockerfile = "terra/devnet/Dockerfile",
-)
-
-docker_build(
-    ref = "terra-contracts",
-    context = "./terra",
-    dockerfile = "./terra/Dockerfile",
-)
-
-k8s_yaml_with_ns("devnet/terra-devnet.yaml")
-
-k8s_resource(
-    "terra-terrad",
-    port_forwards = [
-        port_forward(26657, name = "Terra RPC [:26657]", host = webHost),
-        port_forward(1317, name = "Terra LCD [:1317]", host = webHost),
-    ],
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)
-
-k8s_resource(
-    "terra-postgres",
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)
-
-k8s_resource(
-    "terra-fcd",
-    resource_deps = ["terra-terrad", "terra-postgres"],
-    port_forwards = [port_forward(3060, name = "Terra FCD [:3060]", host = webHost)],
-    labels = ["terra"],
-    trigger_mode = trigger_mode,
-)

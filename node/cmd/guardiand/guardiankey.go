@@ -5,10 +5,11 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/certusone/wormhole/node/pkg/common"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/certusone/wormhole/node/pkg/common"
 
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/cobra"
@@ -94,7 +95,10 @@ func loadGuardianKey(filename string) (*ecdsa.PrivateKey, error) {
 
 // writeGuardianKey serializes a guardian key and writes it to disk.
 func writeGuardianKey(key *ecdsa.PrivateKey, description string, filename string, unsafe bool) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) {
+	if _, err := os.Stat(filename); err == nil { // file exists
+		if unsafe {
+			return nil // skip to write because the key is deterministic in devnet
+		}
 		return errors.New("refusing to override existing key")
 	}
 
