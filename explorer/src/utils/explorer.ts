@@ -131,6 +131,10 @@ const nativeExplorerContractUri = (
       base = "https://snowtrace.io/address/";
     } else if (chainId === chainIDs["oasis"]) {
       base = "https://explorer.oasis.updev.si/address/";
+    } else if (chainId === chainIDs["fantom"]) {
+      base = "https://ftmscan.com/address/";
+    } else if (chainId === chainIDs["aurora"]) {
+      base = "https://aurorascan.dev/address/";
     }
     return `${base}${nativeAddress}`;
   }
@@ -155,6 +159,10 @@ const nativeExplorerTxUri = (
     base = "https://snowtrace.io/tx/";
   } else if (chainId === chainIDs["oasis"]) {
     base = "https://explorer.emerald.oasis.dev/tx/";
+  } else if (chainId === chainIDs["fantom"]) {
+    base = "https://ftmscan.com/tx/";
+  } else if (chainId === chainIDs["aurora"]) {
+    base = "https://aurorascan.dev/tx/";
   }
 
   if (base) {
@@ -163,6 +171,7 @@ const nativeExplorerTxUri = (
   return "";
 };
 
+// define colors to represent chains in charts/graphs
 const chainColors: { [chain: string]: string } = {
   "*": "hsl(183, 100%, 61%)",
   "1": "hsl(297, 100%, 61%)",
@@ -171,7 +180,8 @@ const chainColors: { [chain: string]: string } = {
   "4": "hsl(54, 100%, 61%)",
   "5": "hsl(271, 100%, 61%)",
   "6": "hsl(360, 100%, 61%)",
-  "7": "hsl(204, 100%, 48%",
+  "7": "hsl(204, 100%, 48%)",
+  "10": "hsl(220, 78%, 92%)",
 };
 const chainIdColors = Object.entries(chainColors).reduce<Array<string>>(
   // returns an array of hsl colors, indexed by chainId

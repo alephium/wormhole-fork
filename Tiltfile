@@ -42,6 +42,7 @@ config.define_bool("algorand", False, "Enable Algorand component")
 config.define_bool("solana", False, "Enable Solana component")
 config.define_bool("explorer", False, "Enable explorer component")
 config.define_bool("bridge_ui", False, "Enable bridge UI component")
+config.define_bool("spy_relayer", False, "Enable spy relayer")
 config.define_bool("e2e", False, "Enable E2E testing stack")
 config.define_bool("ci_tests", False, "Enable tests runner component")
 config.define_bool("bridge_ui_hot", False, "Enable hot loading bridge_ui")
@@ -58,6 +59,7 @@ solana = cfg.get("solana", False)
 ci = cfg.get("ci", False)
 explorer = cfg.get("explorer", ci)
 bridge_ui = cfg.get("bridge_ui", ci)
+spy_relayer = cfg.get("spy_relayer", ci)
 e2e = cfg.get("e2e", ci)
 ci_tests = cfg.get("ci_tests", ci)
 guardiand_debug = cfg.get("guardiand_debug", False)
@@ -102,16 +104,14 @@ local_resource(
     trigger_mode = trigger_mode,
 )
 
-if algorand:
-    local_resource(
-        name = "teal-gen",
-        deps = ["staging/algorand/teal"],
-        cmd = "tilt docker build -- --target teal-export -f Dockerfile.teal -o type=local,dest=. .",
-        env = {"DOCKER_BUILDKIT": "1"},
-        labels = ["algorand"],
-        allow_parallel = True,
-        trigger_mode = trigger_mode,
-    )
+local_resource(
+    name = "const-gen",
+    deps = ["scripts", "clients", "ethereum/.env.test"],
+    cmd = 'tilt docker build -- --target const-export -f Dockerfile.const -o type=local,dest=. --build-arg num_guardians=%s .' % (num_guardians),
+    env = {"DOCKER_BUILDKIT": "1"},
+    allow_parallel = True,
+    trigger_mode = trigger_mode,
+)
 
 # wasm
 
@@ -210,6 +210,17 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
+# guardian set update - triggered by "tilt args" changes
+if num_guardians >= 2 and ci == False:
+    local_resource(
+        name = "guardian-set-update",
+        resource_deps = guardian_resource_deps + ["guardian"],
+        deps = ["scripts/send-vaa.sh", "clients/eth"],
+        cmd = './scripts/update-guardian-set.sh %s %s %s' % (num_guardians, webHost, namespace),
+        labels = ["guardian"],
+        trigger_mode = trigger_mode,
+    )
+
 # spy
 k8s_yaml_with_ns("devnet/spy.yaml")
 
@@ -242,6 +253,8 @@ if solana:
         ref = "solana-contract",
         context = "solana",
         dockerfile = "solana/Dockerfile",
+        target = "builder",
+        build_args = {"BRIDGE_ADDRESS": "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"}
     )
 
     # solana local devnet
@@ -255,6 +268,7 @@ if solana:
             port_forward(8900, name = "Solana WS [:8900]", host = webHost),
             port_forward(9000, name = "Solana PubSub [:9000]", host = webHost),
         ],
+        resource_deps = ["const-gen"],
         labels = ["solana"],
         trigger_mode = trigger_mode,
     )
@@ -338,6 +352,71 @@ docker_build(
     ],
 )
 
+if spy_relayer:
+    docker_build(
+        ref = "redis",
+        context = ".",
+        only = ["./third_party"],
+        dockerfile = "third_party/redis/Dockerfile",
+    )
+
+    k8s_yaml_with_ns("devnet/redis.yaml")
+
+    k8s_resource(
+        "redis",
+        port_forwards = [
+            port_forward(6379, name = "Redis Default [:6379]", host = webHost),
+        ],
+        labels = ["spy-relayer"],
+        trigger_mode = trigger_mode,
+    )
+
+    docker_build(
+        ref = "spy-relay-image",
+        context = ".",
+        only = ["./relayer/spy_relayer"],
+        dockerfile = "relayer/spy_relayer/Dockerfile",
+        live_update = []
+    )
+
+    k8s_yaml_with_ns("devnet/spy-listener.yaml")
+
+    k8s_resource(
+        "spy-listener",
+        resource_deps = ["proto-gen", "guardian", "redis"],
+        port_forwards = [
+            port_forward(6062, container_port = 6060, name = "Debug/Status Server [:6062]", host = webHost),
+            port_forward(4201, name = "REST [:4201]", host = webHost),
+            port_forward(8082, name = "Prometheus [:8082]", host = webHost),
+        ],
+        labels = ["spy-relayer"],
+        trigger_mode = trigger_mode,
+    )
+
+    k8s_yaml_with_ns("devnet/spy-relayer.yaml")
+
+    k8s_resource(
+        "spy-relayer",
+        resource_deps = ["proto-gen", "guardian", "redis"],
+        port_forwards = [
+            port_forward(8083, name = "Prometheus [:8083]", host = webHost),
+        ],
+        labels = ["spy-relayer"],
+        trigger_mode = trigger_mode,
+    )
+
+    k8s_yaml_with_ns("devnet/spy-wallet-monitor.yaml")
+
+    k8s_resource(
+        "spy-wallet-monitor",
+        resource_deps = ["proto-gen", "guardian", "redis"],
+        port_forwards = [
+            port_forward(8084, name = "Prometheus [:8084]", host = webHost),
+        ],
+        labels = ["spy-relayer"],
+        trigger_mode = trigger_mode,
+    )
+
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
 
 k8s_resource(
@@ -345,6 +424,7 @@ k8s_resource(
     port_forwards = [
         port_forward(8545, name = "Ganache RPC [:8545]", host = webHost),
     ],
+    resource_deps = ["const-gen"],
     labels = ["evm"],
     trigger_mode = trigger_mode,
 )
@@ -354,6 +434,7 @@ k8s_resource(
 #     port_forwards = [
 #         port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
 #     ],
+#     resource_deps = ["const-gen"],
 #     labels = ["evm"],
 #     trigger_mode = trigger_mode,
 # )
@@ -390,6 +471,17 @@ if bridge_ui:
     )
 
 if ci_tests:
+    local_resource(
+        name = "solana-tests",
+        deps = ["solana"],
+        dir = "solana",
+        cmd = "tilt docker build -- -f Dockerfile --target ci_tests --build-arg BRIDGE_ADDRESS=Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o .",
+        env = {"DOCKER_BUILDKIT": "1"},
+        labels = ["ci"],
+        allow_parallel = True,
+        trigger_mode = trigger_mode,
+    )
+
     docker_build(
         ref = "tests-image",
         context = ".",
@@ -411,27 +503,6 @@ if ci_tests:
         labels = ["ci"],
         trigger_mode = trigger_mode,
     )
-
-# algorand
-# if algorand:
-#     k8s_yaml_with_ns("devnet/algorand.yaml")
-# 
-#     docker_build(
-#         ref = "algorand",
-#         context = "third_party/algorand",
-#         dockerfile = "third_party/algorand/Dockerfile",
-#     )
-# 
-#     k8s_resource(
-#         "algorand",
-#         resource_deps = ["teal-gen"],
-#         port_forwards = [
-#             port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
-#             port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
-#         ],
-#         labels = ["algorand"],
-#         trigger_mode = trigger_mode,
-#     )
 
 # e2e
 if e2e:
@@ -460,7 +531,7 @@ if explorer:
 
     k8s_resource(
         "bigtable-emulator",
-        port_forwards = [port_forward(8086, name = "BigTable clients [:8086]", host = webHost)],
+        port_forwards = [port_forward(8086, name = "BigTable clients [:8086]")],
         labels = ["explorer"],
         trigger_mode = trigger_mode,
     )
@@ -473,16 +544,16 @@ if explorer:
 
     docker_build(
         ref = "cloud-functions",
-        context = "./event_database/cloud_functions",
-        dockerfile = "./event_database/cloud_functions/Dockerfile",
+        context = "./event_database",
+        dockerfile = "./event_database/functions_server/Dockerfile",
         live_update = [
-            sync("./event_database/cloud_functions", "/app"),
+            sync("./event_database/cloud_functions", "/app/cloud_functions"),
         ],
     )
     k8s_resource(
         "cloud-functions",
         resource_deps = ["proto-gen", "bigtable-emulator", "pubsub-emulator"],
-        port_forwards = [port_forward(8090, name = "Cloud Functions [:8090]")],
+        port_forwards = [port_forward(8090, name = "Cloud Functions [:8090]", host = webHost)],
         labels = ["explorer"],
         trigger_mode = trigger_mode,
     )
@@ -507,5 +578,80 @@ if explorer:
             port_forward(8001, name = "Explorer Web UI [:8001]", host = webHost),
         ],
         labels = ["explorer"],
+        trigger_mode = trigger_mode,
+    )
+
+# terra devnet
+
+# docker_build(
+#     ref = "terra-image",
+#     context = "./terra/devnet",
+#     dockerfile = "terra/devnet/Dockerfile",
+# )
+# 
+# docker_build(
+#     ref = "terra-contracts",
+#     context = "./terra",
+#     dockerfile = "./terra/Dockerfile",
+# )
+# 
+# k8s_yaml_with_ns("devnet/terra-devnet.yaml")
+# 
+# k8s_resource(
+#     "terra-terrad",
+#     port_forwards = [
+#         port_forward(26657, name = "Terra RPC [:26657]", host = webHost),
+#         port_forward(1317, name = "Terra LCD [:1317]", host = webHost),
+#     ],
+#     resource_deps = ["const-gen"],
+#     labels = ["terra"],
+#     trigger_mode = trigger_mode,
+# )
+# 
+# k8s_resource(
+#     "terra-postgres",
+#     labels = ["terra"],
+#     trigger_mode = trigger_mode,
+# )
+# 
+# k8s_resource(
+#     "terra-fcd",
+#     resource_deps = ["terra-terrad", "terra-postgres"],
+#     port_forwards = [port_forward(3060, name = "Terra FCD [:3060]", host = webHost)],
+#     labels = ["terra"],
+#     trigger_mode = trigger_mode,
+# )
+
+if algorand:
+    k8s_yaml_with_ns("devnet/algorand-devnet.yaml")
+  
+    docker_build(
+        ref = "algorand-algod",
+        context = "algorand/sandbox-algorand",
+        dockerfile = "algorand/sandbox-algorand/images/algod/Dockerfile"
+    )
+
+    docker_build(
+        ref = "algorand-indexer",
+        context = "algorand/sandbox-algorand",
+        dockerfile = "algorand/sandbox-algorand/images/indexer/Dockerfile"
+    )
+
+    docker_build(
+        ref = "algorand-contracts",
+        context = "algorand",
+        dockerfile = "algorand/Dockerfile",
+        ignore = ["algorand/test/*.*"]
+    )
+
+    k8s_resource(
+        "algorand",
+        port_forwards = [
+            port_forward(4001, name = "Algod [:4001]", host = webHost),
+            port_forward(4002, name = "KMD [:4002]", host = webHost),
+            port_forward(8980, name = "Indexer [:8980]", host = webHost),
+        ],
+        resource_deps = ["const-gen"],
+        labels = ["algorand"],
         trigger_mode = trigger_mode,
     )

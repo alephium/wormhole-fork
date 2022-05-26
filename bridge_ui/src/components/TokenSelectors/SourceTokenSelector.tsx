@@ -1,6 +1,7 @@
 //import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -26,6 +27,7 @@ import {
   setSourceWalletAddress as setTransferSourceWalletAddress,
 } from "../../store/transferSlice";
 import AlephiumTokenPicker from "./AlephiumTokenPicker";
+import AlgoTokenPicker from "./AlgoTokenPicker";
 import EvmTokenPicker from "./EvmTokenPicker";
 import RefreshButtonWrapper from "./RefreshButtonWrapper";
 import SolanaTokenPicker from "./SolanaTokenPicker";
@@ -80,7 +82,7 @@ export const TokenSelector = (props: TokenSelectorProps) => {
 
   //This is only for errors so bad that we shouldn't even mount the component
   const fatalError =
-    isEVMChain(lookupChain) &&
+    !isEVMChain(lookupChain) &&
     lookupChain !== CHAIN_ID_TERRA &&
     maps?.tokenAccounts?.error; //Terra & ETH can proceed because it has advanced mode
 
@@ -118,6 +120,14 @@ export const TokenSelector = (props: TokenSelectorProps) => {
     />
   ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
     <AlephiumTokenPicker
+      value={sourceParsedTokenAccount || null}
+      disabled={disabled}
+      onChange={handleOnChange}
+      resetAccounts={maps?.resetAccounts}
+      tokenAccounts={maps?.tokenAccounts}
+    />
+  ) : lookupChain === CHAIN_ID_ALGORAND ? (
+    <AlgoTokenPicker
       value={sourceParsedTokenAccount || null}
       disabled={disabled}
       onChange={handleOnChange}

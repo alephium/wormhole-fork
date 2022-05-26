@@ -2,7 +2,7 @@ import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Subm
 import { waitTxConfirmed } from './utils'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
-const CHAIN_ID_ALEPHIUM = 13
+const CHAIN_ID_ALEPHIUM = 255
 const undoneSequenceMaxSize = 128 // the maximum size of the contract state is 1k
 const undoneSequenceMaxDistance = 512
 

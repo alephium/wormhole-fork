@@ -8,7 +8,7 @@ use solitaire::*;
 pub const MAX_LEN_GUARDIAN_KEYS: usize = 19;
 pub const CHAIN_ID_SOLANA: u16 = 1;
 
-#[cfg(feature = "no-entrypoint")]
+#[cfg(feature = "instructions")]
 pub mod instructions;
 
 #[cfg(feature = "wasm")]
@@ -85,12 +85,12 @@ pub use vaa::{
 };
 
 solitaire! {
-    Initialize(InitializeData)                  => initialize,
-    PostMessage(PostMessageData)                => post_message,
-    PostVAA(PostVAAData)                        => post_vaa,
-    SetFees(SetFeesData)                        => set_fees,
-    TransferFees(TransferFeesData)              => transfer_fees,
-    UpgradeContract(UpgradeContractData)        => upgrade_contract,
-    UpgradeGuardianSet(UpgradeGuardianSetData)  => upgrade_guardian_set,
-    VerifySignatures(VerifySignaturesData)      => verify_signatures,
+    Initialize         => initialize,
+    PostMessage        => post_message,
+    PostVAA            => post_vaa,
+    SetFees            => set_fees,
+    TransferFees       => transfer_fees,
+    UpgradeContract    => upgrade_contract,
+    UpgradeGuardianSet => upgrade_guardian_set,
+    VerifySignatures   => verify_signatures,
 }

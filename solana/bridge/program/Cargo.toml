@@ -13,8 +13,9 @@ client = ["solitaire/client", "solitaire-client", "no-entrypoint"]
 cpi = ["no-entrypoint"]
 default = []
 wasm = ["no-entrypoint", "wasm-bindgen"]
-no-entrypoint = ["solitaire/no-entrypoint"]
+no-entrypoint = ["instructions", "solitaire/no-entrypoint"]
 trace = ["solitaire/trace"]
+instructions = []
 
 [dependencies]
 borsh = "=0.9.1"
@@ -31,6 +32,6 @@ wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = 
 hex = "*"
 rand = "0.7.3"
 hex-literal = "0.3.1"
-libsecp256k1 = { version = "0.3.5", features = [] }
-solana-client = "=1.9.4"
+libsecp256k1 = { version = "0.6.0", features = [] }
+solana-program-test = "=1.9.4"
 solana-sdk = "=1.9.4"

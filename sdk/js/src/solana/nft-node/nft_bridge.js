@@ -207,21 +207,21 @@ function passArray8ToWasm0(arg, malloc) {
 * @returns {any}
 */
 module.exports.transfer_native_ix = function(program_id, bridge_id, payer, message, from, mint, nonce, target_address, target_chain) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passStringToWasm0(message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ptr4 = passStringToWasm0(from, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len4 = WASM_VECTOR_LEN;
-    var ptr5 = passStringToWasm0(mint, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len5 = WASM_VECTOR_LEN;
-    var ptr6 = passArray8ToWasm0(target_address, wasm.__wbindgen_malloc);
-    var len6 = WASM_VECTOR_LEN;
-    var ret = wasm.transfer_native_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, nonce, ptr6, len6, target_chain);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passStringToWasm0(from, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passStringToWasm0(mint, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArray8ToWasm0(target_address, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ret = wasm.transfer_native_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, nonce, ptr6, len6, target_chain);
     return takeObject(ret);
 };
 
@@ -241,25 +241,25 @@ module.exports.transfer_native_ix = function(program_id, bridge_id, payer, messa
 * @returns {any}
 */
 module.exports.transfer_wrapped_ix = function(program_id, bridge_id, payer, message, from, from_owner, token_chain, token_address, token_id, nonce, target_address, target_chain) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passStringToWasm0(message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ptr4 = passStringToWasm0(from, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len4 = WASM_VECTOR_LEN;
-    var ptr5 = passStringToWasm0(from_owner, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len5 = WASM_VECTOR_LEN;
-    var ptr6 = passArray8ToWasm0(token_address, wasm.__wbindgen_malloc);
-    var len6 = WASM_VECTOR_LEN;
-    var ptr7 = passArray8ToWasm0(token_id, wasm.__wbindgen_malloc);
-    var len7 = WASM_VECTOR_LEN;
-    var ptr8 = passArray8ToWasm0(target_address, wasm.__wbindgen_malloc);
-    var len8 = WASM_VECTOR_LEN;
-    var ret = wasm.transfer_wrapped_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, token_chain, ptr6, len6, ptr7, len7, nonce, ptr8, len8, target_chain);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passStringToWasm0(from, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passStringToWasm0(from_owner, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArray8ToWasm0(token_address, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArray8ToWasm0(token_id, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ptr8 = passArray8ToWasm0(target_address, wasm.__wbindgen_malloc);
+    const len8 = WASM_VECTOR_LEN;
+    const ret = wasm.transfer_wrapped_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, token_chain, ptr6, len6, ptr7, len7, nonce, ptr8, len8, target_chain);
     return takeObject(ret);
 };
 
@@ -272,17 +272,17 @@ module.exports.transfer_wrapped_ix = function(program_id, bridge_id, payer, mess
 * @returns {any}
 */
 module.exports.complete_transfer_native_ix = function(program_id, bridge_id, payer, to_authority, vaa) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passStringToWasm0(to_authority, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
-    var len4 = WASM_VECTOR_LEN;
-    var ret = wasm.complete_transfer_native_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(to_authority, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ret = wasm.complete_transfer_native_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
     return takeObject(ret);
 };
 
@@ -295,17 +295,17 @@ module.exports.complete_transfer_native_ix = function(program_id, bridge_id, pay
 * @returns {any}
 */
 module.exports.complete_transfer_wrapped_ix = function(program_id, bridge_id, payer, to_authority, vaa) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passStringToWasm0(to_authority, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
-    var len4 = WASM_VECTOR_LEN;
-    var ret = wasm.complete_transfer_wrapped_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(to_authority, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ret = wasm.complete_transfer_wrapped_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
     return takeObject(ret);
 };
 
@@ -317,15 +317,15 @@ module.exports.complete_transfer_wrapped_ix = function(program_id, bridge_id, pa
 * @returns {any}
 */
 module.exports.complete_transfer_wrapped_meta_ix = function(program_id, bridge_id, payer, vaa) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ret = wasm.complete_transfer_wrapped_meta_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ret = wasm.complete_transfer_wrapped_meta_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
     return takeObject(ret);
 };
 
@@ -338,17 +338,17 @@ module.exports.complete_transfer_wrapped_meta_ix = function(program_id, bridge_i
 * @returns {any}
 */
 module.exports.upgrade_contract_ix = function(program_id, bridge_id, payer, spill, vaa) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passStringToWasm0(spill, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
-    var len4 = WASM_VECTOR_LEN;
-    var ret = wasm.upgrade_contract_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passStringToWasm0(spill, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ret = wasm.upgrade_contract_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
     return takeObject(ret);
 };
 
@@ -360,15 +360,15 @@ module.exports.upgrade_contract_ix = function(program_id, bridge_id, payer, spil
 * @returns {any}
 */
 module.exports.register_chain_ix = function(program_id, bridge_id, payer, vaa) {
-    var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    var ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len2 = WASM_VECTOR_LEN;
-    var ptr3 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
-    var len3 = WASM_VECTOR_LEN;
-    var ret = wasm.register_chain_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+    const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(bridge_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passStringToWasm0(payer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray8ToWasm0(vaa, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ret = wasm.register_chain_ix(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
     return takeObject(ret);
 };
 
@@ -382,8 +382,8 @@ function getArrayU8FromWasm0(ptr, len) {
 module.exports.emitter_address = function(program_id) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         wasm.emitter_address(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
@@ -402,8 +402,8 @@ module.exports.emitter_address = function(program_id) {
 module.exports.approval_authority_address = function(program_id) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         wasm.approval_authority_address(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
@@ -425,12 +425,12 @@ module.exports.approval_authority_address = function(program_id) {
 module.exports.wrapped_address = function(program_id, token_address, token_chain, token_id) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        var ptr1 = passArray8ToWasm0(token_address, wasm.__wbindgen_malloc);
-        var len1 = WASM_VECTOR_LEN;
-        var ptr2 = passArray8ToWasm0(token_id, wasm.__wbindgen_malloc);
-        var len2 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(token_address, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(token_id, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
         wasm.wrapped_address(retptr, ptr0, len0, ptr1, len1, token_chain, ptr2, len2);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
@@ -450,10 +450,10 @@ module.exports.wrapped_address = function(program_id, token_address, token_chain
 module.exports.wrapped_meta_address = function(program_id, mint_address) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        var ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        var ptr1 = passArray8ToWasm0(mint_address, wasm.__wbindgen_malloc);
-        var len1 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(program_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(mint_address, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
         wasm.wrapped_meta_address(retptr, ptr0, len0, ptr1, len1);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
@@ -472,8 +472,8 @@ module.exports.wrapped_meta_address = function(program_id, mint_address) {
 module.exports.spl_meta_address = function(mint_address) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        var ptr0 = passArray8ToWasm0(mint_address, wasm.__wbindgen_malloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passArray8ToWasm0(mint_address, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
         wasm.spl_meta_address(retptr, ptr0, len0);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
@@ -490,9 +490,9 @@ module.exports.spl_meta_address = function(mint_address) {
 * @returns {any}
 */
 module.exports.parse_wrapped_meta = function(data) {
-    var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ret = wasm.parse_wrapped_meta(ptr0, len0);
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.parse_wrapped_meta(ptr0, len0);
     return takeObject(ret);
 };
 
@@ -501,9 +501,9 @@ module.exports.parse_wrapped_meta = function(data) {
 * @returns {any}
 */
 module.exports.parse_endpoint_registration = function(data) {
-    var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ret = wasm.parse_endpoint_registration(ptr0, len0);
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.parse_endpoint_registration(ptr0, len0);
     return takeObject(ret);
 };
 
@@ -513,6 +513,12 @@ function _assertClass(instance, klass) {
     }
     return instance.ptr;
 }
+/**
+* Initialize Javascript logging and panic handler
+*/
+module.exports.init = function() {
+    wasm.init();
+};
 
 const u32CvtShim = new Uint32Array(2);
 
@@ -535,12 +541,6 @@ function passArrayJsValueToWasm0(array, malloc) {
     WASM_VECTOR_LEN = array.length;
     return ptr;
 }
-/**
-* Initialize Javascript logging and panic handler
-*/
-module.exports.init = function() {
-    wasm.init();
-};
 
 function handleError(f, args) {
     try {
@@ -578,8 +578,19 @@ class Hash {
     * @param {any} value
     */
     constructor(value) {
-        var ret = wasm.hash_constructor(addHeapObject(value));
-        return Hash.__wrap(ret);
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.hash_constructor(retptr, addHeapObject(value));
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return Hash.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
     }
     /**
     * Return the base58 string representation of the hash
@@ -604,7 +615,7 @@ class Hash {
     */
     equals(other) {
         _assertClass(other, Hash);
-        var ret = wasm.hash_equals(this.ptr, other.ptr);
+        const ret = wasm.hash_equals(this.ptr, other.ptr);
         return ret !== 0;
     }
     /**
@@ -734,7 +745,7 @@ class Instructions {
     /**
     */
     constructor() {
-        var ret = wasm.instructions_constructor();
+        const ret = wasm.instructions_constructor();
         return Instructions.__wrap(ret);
     }
     /**
@@ -767,7 +778,7 @@ class Message {
     * The id of a recent ledger entry.
     */
     get recent_blockhash() {
-        var ret = wasm.__wbg_get_message_recent_blockhash(this.ptr);
+        const ret = wasm.__wbg_get_message_recent_blockhash(this.ptr);
         return Hash.__wrap(ret);
     }
     /**
@@ -811,8 +822,19 @@ class Pubkey {
     * @param {any} value
     */
     constructor(value) {
-        var ret = wasm.pubkey_constructor(addHeapObject(value));
-        return Pubkey.__wrap(ret);
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.pubkey_constructor(retptr, addHeapObject(value));
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return Pubkey.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
     }
     /**
     * Return the base58 string representation of the public key
@@ -835,7 +857,7 @@ class Pubkey {
     * @returns {boolean}
     */
     isOnCurve() {
-        var ret = wasm.pubkey_isOnCurve(this.ptr);
+        const ret = wasm.pubkey_isOnCurve(this.ptr);
         return ret !== 0;
     }
     /**
@@ -845,7 +867,7 @@ class Pubkey {
     */
     equals(other) {
         _assertClass(other, Pubkey);
-        var ret = wasm.pubkey_equals(this.ptr, other.ptr);
+        const ret = wasm.pubkey_equals(this.ptr, other.ptr);
         return ret !== 0;
     }
     /**
@@ -873,12 +895,23 @@ class Pubkey {
     * @returns {Pubkey}
     */
     static createWithSeed(base, seed, owner) {
-        _assertClass(base, Pubkey);
-        var ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        _assertClass(owner, Pubkey);
-        var ret = wasm.pubkey_createWithSeed(base.ptr, ptr0, len0, owner.ptr);
-        return Pubkey.__wrap(ret);
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            _assertClass(base, Pubkey);
+            const ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            _assertClass(owner, Pubkey);
+            wasm.pubkey_createWithSeed(retptr, base.ptr, ptr0, len0, owner.ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return Pubkey.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
     }
     /**
     * Derive a program address from seeds and a program id
@@ -887,11 +920,22 @@ class Pubkey {
     * @returns {Pubkey}
     */
     static createProgramAddress(seeds, program_id) {
-        var ptr0 = passArrayJsValueToWasm0(seeds, wasm.__wbindgen_malloc);
-        var len0 = WASM_VECTOR_LEN;
-        _assertClass(program_id, Pubkey);
-        var ret = wasm.pubkey_createProgramAddress(ptr0, len0, program_id.ptr);
-        return Pubkey.__wrap(ret);
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArrayJsValueToWasm0(seeds, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            _assertClass(program_id, Pubkey);
+            wasm.pubkey_createProgramAddress(retptr, ptr0, len0, program_id.ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return Pubkey.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
     }
     /**
     * Find a valid program address
@@ -903,11 +947,22 @@ class Pubkey {
     * @returns {any}
     */
     static findProgramAddress(seeds, program_id) {
-        var ptr0 = passArrayJsValueToWasm0(seeds, wasm.__wbindgen_malloc);
-        var len0 = WASM_VECTOR_LEN;
-        _assertClass(program_id, Pubkey);
-        var ret = wasm.pubkey_findProgramAddress(ptr0, len0, program_id.ptr);
-        return takeObject(ret);
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArrayJsValueToWasm0(seeds, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            _assertClass(program_id, Pubkey);
+            wasm.pubkey_findProgramAddress(retptr, ptr0, len0, program_id.ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return takeObject(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
     }
 }
 module.exports.Pubkey = Pubkey;
@@ -943,7 +998,7 @@ class SystemInstruction {
         const low1 = u32CvtShim[0];
         const high1 = u32CvtShim[1];
         _assertClass(owner, Pubkey);
-        var ret = wasm.systeminstruction_createAccount(from_pubkey.ptr, to_pubkey.ptr, low0, high0, low1, high1, owner.ptr);
+        const ret = wasm.systeminstruction_createAccount(from_pubkey.ptr, to_pubkey.ptr, low0, high0, low1, high1, owner.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -960,8 +1015,8 @@ class SystemInstruction {
         _assertClass(from_pubkey, Pubkey);
         _assertClass(to_pubkey, Pubkey);
         _assertClass(base, Pubkey);
-        var ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         uint64CvtShim[0] = lamports;
         const low1 = u32CvtShim[0];
         const high1 = u32CvtShim[1];
@@ -969,7 +1024,7 @@ class SystemInstruction {
         const low2 = u32CvtShim[0];
         const high2 = u32CvtShim[1];
         _assertClass(owner, Pubkey);
-        var ret = wasm.systeminstruction_createAccountWithSeed(from_pubkey.ptr, to_pubkey.ptr, base.ptr, ptr0, len0, low1, high1, low2, high2, owner.ptr);
+        const ret = wasm.systeminstruction_createAccountWithSeed(from_pubkey.ptr, to_pubkey.ptr, base.ptr, ptr0, len0, low1, high1, low2, high2, owner.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -980,7 +1035,7 @@ class SystemInstruction {
     static assign(pubkey, owner) {
         _assertClass(pubkey, Pubkey);
         _assertClass(owner, Pubkey);
-        var ret = wasm.systeminstruction_assign(pubkey.ptr, owner.ptr);
+        const ret = wasm.systeminstruction_assign(pubkey.ptr, owner.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -993,10 +1048,10 @@ class SystemInstruction {
     static assignWithSeed(pubkey, base, seed, owner) {
         _assertClass(pubkey, Pubkey);
         _assertClass(base, Pubkey);
-        var ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         _assertClass(owner, Pubkey);
-        var ret = wasm.systeminstruction_assignWithSeed(pubkey.ptr, base.ptr, ptr0, len0, owner.ptr);
+        const ret = wasm.systeminstruction_assignWithSeed(pubkey.ptr, base.ptr, ptr0, len0, owner.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1011,7 +1066,7 @@ class SystemInstruction {
         uint64CvtShim[0] = lamports;
         const low0 = u32CvtShim[0];
         const high0 = u32CvtShim[1];
-        var ret = wasm.systeminstruction_transfer(from_pubkey.ptr, to_pubkey.ptr, low0, high0);
+        const ret = wasm.systeminstruction_transfer(from_pubkey.ptr, to_pubkey.ptr, low0, high0);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1026,14 +1081,14 @@ class SystemInstruction {
     static transferWithSeed(from_pubkey, from_base, from_seed, from_owner, to_pubkey, lamports) {
         _assertClass(from_pubkey, Pubkey);
         _assertClass(from_base, Pubkey);
-        var ptr0 = passStringToWasm0(from_seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(from_seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         _assertClass(from_owner, Pubkey);
         _assertClass(to_pubkey, Pubkey);
         uint64CvtShim[0] = lamports;
         const low1 = u32CvtShim[0];
         const high1 = u32CvtShim[1];
-        var ret = wasm.systeminstruction_transferWithSeed(from_pubkey.ptr, from_base.ptr, ptr0, len0, from_owner.ptr, to_pubkey.ptr, low1, high1);
+        const ret = wasm.systeminstruction_transferWithSeed(from_pubkey.ptr, from_base.ptr, ptr0, len0, from_owner.ptr, to_pubkey.ptr, low1, high1);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1046,7 +1101,7 @@ class SystemInstruction {
         uint64CvtShim[0] = space;
         const low0 = u32CvtShim[0];
         const high0 = u32CvtShim[1];
-        var ret = wasm.systeminstruction_allocate(pubkey.ptr, low0, high0);
+        const ret = wasm.systeminstruction_allocate(pubkey.ptr, low0, high0);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1060,13 +1115,13 @@ class SystemInstruction {
     static allocateWithSeed(address, base, seed, space, owner) {
         _assertClass(address, Pubkey);
         _assertClass(base, Pubkey);
-        var ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
+        const ptr0 = passStringToWasm0(seed, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
         uint64CvtShim[0] = space;
         const low1 = u32CvtShim[0];
         const high1 = u32CvtShim[1];
         _assertClass(owner, Pubkey);
-        var ret = wasm.systeminstruction_allocateWithSeed(address.ptr, base.ptr, ptr0, len0, low1, high1, owner.ptr);
+        const ret = wasm.systeminstruction_allocateWithSeed(address.ptr, base.ptr, ptr0, len0, low1, high1, owner.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1083,7 +1138,7 @@ class SystemInstruction {
         uint64CvtShim[0] = lamports;
         const low0 = u32CvtShim[0];
         const high0 = u32CvtShim[1];
-        var ret = wasm.systeminstruction_createNonceAccount(from_pubkey.ptr, nonce_pubkey.ptr, authority.ptr, low0, high0);
+        const ret = wasm.systeminstruction_createNonceAccount(from_pubkey.ptr, nonce_pubkey.ptr, authority.ptr, low0, high0);
         return takeObject(ret);
     }
     /**
@@ -1094,7 +1149,7 @@ class SystemInstruction {
     static advanceNonceAccount(nonce_pubkey, authorized_pubkey) {
         _assertClass(nonce_pubkey, Pubkey);
         _assertClass(authorized_pubkey, Pubkey);
-        var ret = wasm.systeminstruction_advanceNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr);
+        const ret = wasm.systeminstruction_advanceNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1111,7 +1166,7 @@ class SystemInstruction {
         uint64CvtShim[0] = lamports;
         const low0 = u32CvtShim[0];
         const high0 = u32CvtShim[1];
-        var ret = wasm.systeminstruction_withdrawNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr, to_pubkey.ptr, low0, high0);
+        const ret = wasm.systeminstruction_withdrawNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr, to_pubkey.ptr, low0, high0);
         return Instruction.__wrap(ret);
     }
     /**
@@ -1124,19 +1179,19 @@ class SystemInstruction {
         _assertClass(nonce_pubkey, Pubkey);
         _assertClass(authorized_pubkey, Pubkey);
         _assertClass(new_authority, Pubkey);
-        var ret = wasm.systeminstruction_authorizeNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr, new_authority.ptr);
+        const ret = wasm.systeminstruction_authorizeNonceAccount(nonce_pubkey.ptr, authorized_pubkey.ptr, new_authority.ptr);
         return Instruction.__wrap(ret);
     }
 }
 module.exports.SystemInstruction = SystemInstruction;
 
 module.exports.__wbindgen_json_parse = function(arg0, arg1) {
-    var ret = JSON.parse(getStringFromWasm0(arg0, arg1));
+    const ret = JSON.parse(getStringFromWasm0(arg0, arg1));
     return addHeapObject(ret);
 };
 
 module.exports.__wbg_instruction_new = function(arg0) {
-    var ret = Instruction.__wrap(arg0);
+    const ret = Instruction.__wrap(arg0);
     return addHeapObject(ret);
 };
 
@@ -1144,14 +1199,19 @@ module.exports.__wbindgen_object_drop_ref = function(arg0) {
     takeObject(arg0);
 };
 
+module.exports.__wbindgen_string_new = function(arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return addHeapObject(ret);
+};
+
 module.exports.__wbg_pubkey_new = function(arg0) {
-    var ret = Pubkey.__wrap(arg0);
+    const ret = Pubkey.__wrap(arg0);
     return addHeapObject(ret);
 };
 
 module.exports.__wbindgen_string_get = function(arg0, arg1) {
     const obj = getObject(arg1);
-    var ret = typeof(obj) === 'string' ? obj : undefined;
+    const ret = typeof(obj) === 'string' ? obj : undefined;
     var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     var len0 = WASM_VECTOR_LEN;
     getInt32Memory0()[arg0 / 4 + 1] = len0;
@@ -1159,56 +1219,51 @@ module.exports.__wbindgen_string_get = function(arg0, arg1) {
 };
 
 module.exports.__wbindgen_is_undefined = function(arg0) {
-    var ret = getObject(arg0) === undefined;
+    const ret = getObject(arg0) === undefined;
     return ret;
-};
-
-module.exports.__wbindgen_string_new = function(arg0, arg1) {
-    var ret = getStringFromWasm0(arg0, arg1);
-    return addHeapObject(ret);
 };
 
 module.exports.__wbindgen_number_get = function(arg0, arg1) {
     const obj = getObject(arg1);
-    var ret = typeof(obj) === 'number' ? obj : undefined;
+    const ret = typeof(obj) === 'number' ? obj : undefined;
     getFloat64Memory0()[arg0 / 8 + 1] = isLikeNone(ret) ? 0 : ret;
     getInt32Memory0()[arg0 / 4 + 0] = !isLikeNone(ret);
 };
 
 module.exports.__wbindgen_number_new = function(arg0) {
-    var ret = arg0;
+    const ret = arg0;
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_debug_104e10fa490af5d4 = function(arg0) {
+module.exports.__wbg_debug_fda1f49ea6af7a1d = function(arg0) {
     console.debug(getObject(arg0));
 };
 
-module.exports.__wbg_error_009e67eab9c16665 = function(arg0) {
+module.exports.__wbg_error_8ff19d586a987aef = function(arg0) {
     console.error(getObject(arg0));
 };
 
-module.exports.__wbg_info_44b510682aa2cf74 = function(arg0) {
+module.exports.__wbg_info_c8f1b00be4ef10bc = function(arg0) {
     console.info(getObject(arg0));
 };
 
-module.exports.__wbg_log_4989d5b00a0cc297 = function(arg0) {
+module.exports.__wbg_log_e8ba7b992c7ad0eb = function(arg0) {
     console.log(getObject(arg0));
 };
 
-module.exports.__wbg_warn_f9b80af3c73d7193 = function(arg0) {
+module.exports.__wbg_warn_0227db1aa6989248 = function(arg0) {
     console.warn(getObject(arg0));
 };
 
 module.exports.__wbg_new_693216e109162396 = function() {
-    var ret = new Error();
+    const ret = new Error();
     return addHeapObject(ret);
 };
 
 module.exports.__wbg_stack_0ddaca5d1abfb52f = function(arg0, arg1) {
-    var ret = getObject(arg1).stack;
-    var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
+    const ret = getObject(arg1).stack;
+    const ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
     getInt32Memory0()[arg0 / 4 + 1] = len0;
     getInt32Memory0()[arg0 / 4 + 0] = ptr0;
 };
@@ -1221,109 +1276,109 @@ module.exports.__wbg_error_09919627ac0992f5 = function(arg0, arg1) {
     }
 };
 
-module.exports.__wbg_new_949bbc1147195c4e = function() {
-    var ret = new Array();
+module.exports.__wbg_new_94fb1279cf6afea5 = function() {
+    const ret = new Array();
     return addHeapObject(ret);
 };
 
 module.exports.__wbindgen_is_function = function(arg0) {
-    var ret = typeof(getObject(arg0)) === 'function';
+    const ret = typeof(getObject(arg0)) === 'function';
     return ret;
 };
 
 module.exports.__wbindgen_is_object = function(arg0) {
     const val = getObject(arg0);
-    var ret = typeof(val) === 'object' && val !== null;
+    const ret = typeof(val) === 'object' && val !== null;
     return ret;
 };
 
-module.exports.__wbg_next_c4151d46d5fa7097 = function(arg0) {
-    var ret = getObject(arg0).next;
+module.exports.__wbg_next_cabb70b365520721 = function(arg0) {
+    const ret = getObject(arg0).next;
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_next_7720502039b96d00 = function() { return handleError(function (arg0) {
-    var ret = getObject(arg0).next();
+module.exports.__wbg_next_bf3d83fc18df496e = function() { return handleError(function (arg0) {
+    const ret = getObject(arg0).next();
     return addHeapObject(ret);
 }, arguments) };
 
-module.exports.__wbg_done_b06cf0578e89ff68 = function(arg0) {
-    var ret = getObject(arg0).done;
+module.exports.__wbg_done_040f966faa9a72b3 = function(arg0) {
+    const ret = getObject(arg0).done;
     return ret;
 };
 
-module.exports.__wbg_value_e74a542443d92451 = function(arg0) {
-    var ret = getObject(arg0).value;
+module.exports.__wbg_value_419afbd9b9574c4c = function(arg0) {
+    const ret = getObject(arg0).value;
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_iterator_4fc4ce93e6b92958 = function() {
-    var ret = Symbol.iterator;
+module.exports.__wbg_iterator_4832ef1f15b0382b = function() {
+    const ret = Symbol.iterator;
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_get_4d0f21c2f823742e = function() { return handleError(function (arg0, arg1) {
-    var ret = Reflect.get(getObject(arg0), getObject(arg1));
+module.exports.__wbg_get_a9cab131e3152c49 = function() { return handleError(function (arg0, arg1) {
+    const ret = Reflect.get(getObject(arg0), getObject(arg1));
     return addHeapObject(ret);
 }, arguments) };
 
-module.exports.__wbg_call_888d259a5fefc347 = function() { return handleError(function (arg0, arg1) {
-    var ret = getObject(arg0).call(getObject(arg1));
+module.exports.__wbg_call_ae78342adc33730a = function() { return handleError(function (arg0, arg1) {
+    const ret = getObject(arg0).call(getObject(arg1));
     return addHeapObject(ret);
 }, arguments) };
 
-module.exports.__wbg_newwithlength_75ee2b96c288e6bc = function(arg0) {
-    var ret = new Array(arg0 >>> 0);
+module.exports.__wbg_newwithlength_e80fb11cf19c1628 = function(arg0) {
+    const ret = new Array(arg0 >>> 0);
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_set_1820441f7fb79aad = function(arg0, arg1, arg2) {
+module.exports.__wbg_set_561aac756158708c = function(arg0, arg1, arg2) {
     getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
 };
 
-module.exports.__wbg_isArray_eb7ad55f2da67dde = function(arg0) {
-    var ret = Array.isArray(getObject(arg0));
+module.exports.__wbg_isArray_6721f2e508996340 = function(arg0) {
+    const ret = Array.isArray(getObject(arg0));
     return ret;
 };
 
-module.exports.__wbg_push_284486ca27c6aa8b = function(arg0, arg1) {
-    var ret = getObject(arg0).push(getObject(arg1));
+module.exports.__wbg_push_40c6a90f1805aa90 = function(arg0, arg1) {
+    const ret = getObject(arg0).push(getObject(arg1));
     return ret;
 };
 
-module.exports.__wbg_values_364ae56c608e6824 = function(arg0) {
-    var ret = getObject(arg0).values();
+module.exports.__wbg_values_b1b9e8c63dbe01c2 = function(arg0) {
+    const ret = getObject(arg0).values();
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_buffer_397eaa4d72ee94dd = function(arg0) {
-    var ret = getObject(arg0).buffer;
+module.exports.__wbg_buffer_7af23f65f6c64548 = function(arg0) {
+    const ret = getObject(arg0).buffer;
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_new_a7ce447f15ff496f = function(arg0) {
-    var ret = new Uint8Array(getObject(arg0));
+module.exports.__wbg_new_cc9018bd6f283b6f = function(arg0) {
+    const ret = new Uint8Array(getObject(arg0));
     return addHeapObject(ret);
 };
 
-module.exports.__wbg_set_969ad0a60e51d320 = function(arg0, arg1, arg2) {
+module.exports.__wbg_set_f25e869e4565d2a2 = function(arg0, arg1, arg2) {
     getObject(arg0).set(getObject(arg1), arg2 >>> 0);
 };
 
-module.exports.__wbg_length_1eb8fc608a0d4cdb = function(arg0) {
-    var ret = getObject(arg0).length;
+module.exports.__wbg_length_0acb1cf9bbaf8519 = function(arg0) {
+    const ret = getObject(arg0).length;
     return ret;
 };
 
-module.exports.__wbg_instanceof_Uint8Array_08a1f3a179095e76 = function(arg0) {
-    var ret = getObject(arg0) instanceof Uint8Array;
+module.exports.__wbg_instanceof_Uint8Array_edb92795fc0c63b4 = function(arg0) {
+    const ret = getObject(arg0) instanceof Uint8Array;
     return ret;
 };
 
 module.exports.__wbindgen_debug_string = function(arg0, arg1) {
-    var ret = debugString(getObject(arg1));
-    var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
+    const ret = debugString(getObject(arg1));
+    const ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
     getInt32Memory0()[arg0 / 4 + 1] = len0;
     getInt32Memory0()[arg0 / 4 + 0] = ptr0;
 };
@@ -1332,12 +1387,8 @@ module.exports.__wbindgen_throw = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 
-module.exports.__wbindgen_rethrow = function(arg0) {
-    throw takeObject(arg0);
-};
-
 module.exports.__wbindgen_memory = function() {
-    var ret = wasm.memory;
+    const ret = wasm.memory;
     return addHeapObject(ret);
 };
 

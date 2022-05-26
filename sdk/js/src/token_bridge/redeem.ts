@@ -7,9 +7,11 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
+import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { completeTransferScript, completeUndoneSequenceScript } from "../alephium/token_bridge";
+import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importCoreWasm, importTokenWasm } from "../solana/wasm";
@@ -179,7 +181,8 @@ export async function redeemOnSolana(
   bridgeAddress: string,
   tokenBridgeAddress: string,
   payerAddress: string,
-  signedVAA: Uint8Array
+  signedVAA: Uint8Array,
+  feeRecipientAddress?: string
 ) {
   const { parse_vaa } = await importCoreWasm();
   const parsedVAA = parse_vaa(signedVAA);
@@ -196,7 +199,8 @@ export async function redeemOnSolana(
           tokenBridgeAddress,
           bridgeAddress,
           payerAddress,
-          signedVAA
+          signedVAA,
+          feeRecipientAddress
         )
       )
     );
@@ -207,7 +211,8 @@ export async function redeemOnSolana(
           tokenBridgeAddress,
           bridgeAddress,
           payerAddress,
-          signedVAA
+          signedVAA,
+          feeRecipientAddress
         )
       )
     );
@@ -217,4 +222,29 @@ export async function redeemOnSolana(
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
   return transaction;
+}
+
+/**
+ * This basically just submits the VAA to Algorand
+ * @param client AlgodV2 client
+ * @param tokenBridgeId Token bridge ID
+ * @param bridgeId Core bridge ID
+ * @param vaa The VAA to be redeemed
+ * @param acct Sending account
+ * @returns Transaction ID(s)
+ */
+export async function redeemOnAlgorand(
+  client: Algodv2,
+  tokenBridgeId: bigint,
+  bridgeId: bigint,
+  vaa: Uint8Array,
+  senderAddr: string
+): Promise<TransactionSignerPair[]> {
+  return await _submitVAAAlgorand(
+    client,
+    tokenBridgeId,
+    bridgeId,
+    vaa,
+    senderAddr
+  );
 }

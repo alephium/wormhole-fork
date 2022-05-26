@@ -31,6 +31,22 @@ export function transfer_native_ix(program_id: string, bridge_id: string, payer:
 * @param {string} payer
 * @param {string} message
 * @param {string} from
+* @param {string} mint
+* @param {number} nonce
+* @param {BigInt} amount
+* @param {BigInt} fee
+* @param {Uint8Array} target_address
+* @param {number} target_chain
+* @param {Uint8Array} payload
+* @returns {any}
+*/
+export function transfer_native_with_payload_ix(program_id: string, bridge_id: string, payer: string, message: string, from: string, mint: string, nonce: number, amount: BigInt, fee: BigInt, target_address: Uint8Array, target_chain: number, payload: Uint8Array): any;
+/**
+* @param {string} program_id
+* @param {string} bridge_id
+* @param {string} payer
+* @param {string} message
+* @param {string} from
 * @param {string} from_owner
 * @param {number} token_chain
 * @param {Uint8Array} token_address
@@ -42,6 +58,24 @@ export function transfer_native_ix(program_id: string, bridge_id: string, payer:
 * @returns {any}
 */
 export function transfer_wrapped_ix(program_id: string, bridge_id: string, payer: string, message: string, from: string, from_owner: string, token_chain: number, token_address: Uint8Array, nonce: number, amount: BigInt, fee: BigInt, target_address: Uint8Array, target_chain: number): any;
+/**
+* @param {string} program_id
+* @param {string} bridge_id
+* @param {string} payer
+* @param {string} message
+* @param {string} from
+* @param {string} from_owner
+* @param {number} token_chain
+* @param {Uint8Array} token_address
+* @param {number} nonce
+* @param {BigInt} amount
+* @param {BigInt} fee
+* @param {Uint8Array} target_address
+* @param {number} target_chain
+* @param {Uint8Array} payload
+* @returns {any}
+*/
+export function transfer_wrapped_with_payload_ix(program_id: string, bridge_id: string, payer: string, message: string, from: string, from_owner: string, token_chain: number, token_address: Uint8Array, nonce: number, amount: BigInt, fee: BigInt, target_address: Uint8Array, target_chain: number, payload: Uint8Array): any;
 /**
 * @param {string} program_id
 * @param {string} bridge_id

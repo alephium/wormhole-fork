@@ -10,7 +10,7 @@ export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
 export const web3Utils = web3.utils
 
-export const CHAIN_ID_ALEPHIUM = 13
+export const CHAIN_ID_ALEPHIUM = 255
 export const dustAmount = BigInt("1000000000000")
 export const initAsset: Asset = {
     alphAmount: dustAmount

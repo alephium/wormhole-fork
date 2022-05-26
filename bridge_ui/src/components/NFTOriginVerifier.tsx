@@ -1,4 +1,6 @@
 import {
+  ChainId,
+  CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
@@ -6,7 +8,7 @@ import {
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
-  hexToNativeString,
+  hexToNativeAssetString,
   isEVMChain,
   uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
@@ -77,7 +79,7 @@ export default function NFTOriginVerifier() {
   const classes = useStyles();
   const isBeta = useBetaContext();
   const { provider, signerAddress } = useEthereumProvider();
-  const [lookupChain, setLookupChain] = useState(CHAIN_ID_ETH);
+  const [lookupChain, setLookupChain] = useState<ChainId>(CHAIN_ID_ETH);
   const { isReady, statusMessage } = useIsWalletReady(lookupChain);
   const [lookupAsset, setLookupAsset] = useState("");
   const [lookupTokenId, setLookupTokenId] = useState("");
@@ -209,7 +211,7 @@ export default function NFTOriginVerifier() {
     originInfo &&
     originInfo.chainId &&
     originInfo.assetAddress &&
-    hexToNativeString(
+    hexToNativeAssetString(
       uint8ArrayToHex(originInfo.assetAddress),
       originInfo.chainId
     );
@@ -341,6 +343,17 @@ export default function NFTOriginVerifier() {
                     variant="outlined"
                   >
                     View on Snowtrace
+                  </Button>
+                ) : originInfo.chainId === CHAIN_ID_AURORA ? (
+                  <Button
+                    href={`https://aurorascan.dev/token/${readableAddress}?a=${originInfo.tokenId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<Launch />}
+                    className={classes.viewButton}
+                    variant="outlined"
+                  >
+                    View on Explorer
                   </Button>
                 ) : originInfo.chainId === CHAIN_ID_FANTOM ? (
                   <Button

@@ -1,43 +1,32 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import AlephiumWalletKey from "./AlephiumWalletKey";
+import AlgorandWalletKey from "./AlgorandWalletKey";
 import EthereumSignerKey from "./EthereumSignerKey";
 import SolanaWalletKey from "./SolanaWalletKey";
 import TerraWalletKey from "./TerraWalletKey";
 
 function KeyAndBalance({ chainId }: { chainId: ChainId }) {
   if (isEVMChain(chainId)) {
-    return (
-      <>
-        <EthereumSignerKey />
-      </>
-    );
+    return <EthereumSignerKey />;
   }
   if (chainId === CHAIN_ID_SOLANA) {
-    return (
-      <>
-        <SolanaWalletKey />
-      </>
-    );
+    return <SolanaWalletKey />;
   }
   if (chainId === CHAIN_ID_TERRA) {
-    return (
-      <>
-        <TerraWalletKey />
-      </>
-    );
+    return <TerraWalletKey />;
+  }
+  if (chainId === CHAIN_ID_ALGORAND) {
+    return <AlgorandWalletKey />;
   }
   if (chainId === CHAIN_ID_ALEPHIUM) {
-    return (
-      <>
-        <AlephiumWalletKey />
-      </>
-    )
+    return <AlephiumWalletKey />
   }
   return null;
 }

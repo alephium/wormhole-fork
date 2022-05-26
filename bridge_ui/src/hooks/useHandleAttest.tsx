@@ -1,16 +1,21 @@
 import {
   attestFromAlph,
+  attestFromAlgorand,
   attestFromEth,
   attestFromSolana,
   attestFromTerra,
   ChainId,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_KLAYTN,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   CHAIN_ID_ALEPHIUM,
+  getEmitterAddressAlgorand,
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
   isEVMChain,
+  parseSequenceFromLogAlgorand,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
@@ -23,11 +28,13 @@ import {
   ConnectedWallet,
   useConnectedWallet,
 } from "@terra-money/wallet-provider";
+import algosdk from "algosdk";
 import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
@@ -44,10 +51,14 @@ import {
   selectTerraFeeDenom,
 } from "../store/selectors";
 import { submitAlphScriptTx, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_CONFIRMATIONS,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphMessageFee,
+  ALGORAND_BRIDGE_ID,
+  ALGORAND_HOST,
+  ALGORAND_TOKEN_BRIDGE_ID,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   SOLANA_HOST,
@@ -60,6 +71,61 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 
+async function algo(
+  dispatch: any,
+  enqueueSnackbar: any,
+  senderAddr: string,
+  sourceAsset: string
+) {
+  dispatch(setIsSending(true));
+  try {
+    console.log("ALGO", sourceAsset);
+    const algodClient = new algosdk.Algodv2(
+      ALGORAND_HOST.algodToken,
+      ALGORAND_HOST.algodServer,
+      ALGORAND_HOST.algodPort
+    );
+    const txs = await attestFromAlgorand(
+      algodClient,
+      ALGORAND_TOKEN_BRIDGE_ID,
+      ALGORAND_BRIDGE_ID,
+      senderAddr,
+      BigInt(sourceAsset)
+    );
+    const result = await signSendAndConfirmAlgorand(algodClient, txs);
+    const sequence = parseSequenceFromLogAlgorand(result);
+    // TODO: fill these out correctly
+    dispatch(
+      setAttestTx({
+        id: txs[txs.length - 1].tx.txID(),
+        block: result["confirmed-round"],
+      })
+    );
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+    const emitterAddress = getEmitterAddressAlgorand(ALGORAND_TOKEN_BRIDGE_ID);
+    enqueueSnackbar(null, {
+      content: <Alert severity="info">Fetching VAA</Alert>,
+    });
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALGORAND,
+      emitterAddress,
+      sequence
+    );
+    dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+    });
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsSending(false));
+  }
+}
+
 async function evm(
   dispatch: any,
   enqueueSnackbar: any,
@@ -69,10 +135,16 @@ async function evm(
 ) {
   dispatch(setIsSending(true));
   try {
+    // Klaytn requires specifying gasPrice
+    const overrides =
+      chainId === CHAIN_ID_KLAYTN
+        ? { gasPrice: (await signer.getGasPrice()).toString() }
+        : {};
     const receipt = await attestFromEth(
       getTokenBridgeAddressForChain(chainId),
       signer,
-      sourceAsset
+      sourceAsset,
+      overrides
     );
     dispatch(
       setAttestTx({ id: receipt.transactionHash, block: receipt.blockNumber })
@@ -270,6 +342,7 @@ export function useHandleAttest() {
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const { signer: alphSigner } = useAlephiumWallet();
+  const { accounts: algoAccounts } = useAlgorandContext();
   const disabled = !isTargetComplete || isSending || isSendComplete;
   const handleAttestClick = useCallback(() => {
     if (isEVMChain(sourceChain) && !!signer) {
@@ -280,6 +353,9 @@ export function useHandleAttest() {
       terra(dispatch, enqueueSnackbar, terraWallet, sourceAsset, terraFeeDenom);
     } else if (sourceChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
       alephium(dispatch, enqueueSnackbar, alphSigner, sourceAsset)
+    } else if (sourceChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
+      algo(dispatch, enqueueSnackbar, algoAccounts[0].address, sourceAsset);
+    } else {
     }
   }, [
     dispatch,
@@ -292,6 +368,7 @@ export function useHandleAttest() {
     alphSigner,
     sourceAsset,
     terraFeeDenom,
+    algoAccounts,
   ]);
   return useMemo(
     () => ({

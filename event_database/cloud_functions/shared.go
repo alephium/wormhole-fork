@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"math"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -40,10 +39,42 @@ var solanaTokens = map[string]SolanaToken{}
 
 var releaseDay = time.Date(2021, 9, 13, 0, 0, 0, 0, time.UTC)
 
+// token addresses blacklisted from TVL calculation
+var tokensToSkip = map[string]bool{
+	"0x04132bf45511d03a58afd4f1d36a29d229ccc574":   true,
+	"0xa79bd679ce21a2418be9e6f88b2186c9986bbe7d":   true,
+	"0x931c3987040c90b6db09981c7c91ba155d3fa31f":   true,
+	"0x8fb1a59ca2d57b51e5971a85277efe72c4492983":   true,
+	"0xd52d9ba6fcbadb1fe1e3aca52cbb72c4d9bbb4ec":   true,
+	"0x1353c55fd2beebd976d7acc4a7083b0618d94689":   true,
+	"0xf0fbdb8a402ec0fc626db974b8d019c902deb486":   true,
+	"0x1fd4a95f4335cf36cac85730289579c104544328":   true,
+	"0x358aa13c52544eccef6b0add0f801012adad5ee3":   true,
+	"0xbe32b7acd03bcc62f25ebabd169a35e69ef17601":   true,
+	"0x7ffb3d637014488b63fb9858e279385685afc1e2":   true,
+	"0x337dc89ebcc33a337307d58a51888af92cfdc81b":   true,
+	"0x5Cb89Ac06F34f73B1A6b8000CEb0AfBc97d58B6b":   true,
+	"0xd9F0446AedadCf16A12692E02FA26C617FA4D217":   true,
+	"0xD7b41531456b636641F7e867eC77120441D1E1E8":   true,
+	"0x9f607027b69f6e123bc3bd56a686b735fa75f30a":   true,
+	"0x2a35965bbad6fd3964ef815d011c51ab1c546e67":   true,
+	"0x053c070f0923a5b770cc59d7bf74ecff991cd0b8":   true,
+	"0xA18036c8ecb3235087d990c886c242546D1E560f":   true,
+	"0x6B3105826942071E7B6346cbE9867d37Ed7f98Eb":   true,
+	"0x0749902ae8ed9c6a508271bad18f185dba7185d4":   true, // fake WETH on poly
+	"0x4411146b7714f5dc7aa4445fcb44e3ca120c8a1e":   true, // testWETH on poly
+	"0xE389Ac691BD2b0228DAFFfF548fbcE38470373E8":   true, // fake WMATIC on poly
+	"0x7e347498dfef39a88099e3e343140ae17cde260e":   true, // fake wAVAX on bsc
+	"0x685629e5e99e3959254c4d23cd9097fbaef01fb2":   true, // amWeth
+	"terra1vpehfldr2u2m2gw38zaryp4tfw7fe2kw2lryjf": true, //fake btc on terra
+	"0xe9986beb0bcfff418dc4a252904cec370dfb14b8":   true, // fake Dai Stablecoin on bsc
+}
+
 // init runs during cloud function initialization. So, this will only run during an
 // an instance's cold start.
 // https://cloud.google.com/functions/docs/bestpractices/networking#accessing_google_apis
 func init() {
+	defer timeTrack(time.Now(), "init")
 	clientOnce.Do(func() {
 		// Declare a separate err variable to avoid shadowing client.
 		var err error
@@ -57,11 +88,19 @@ func init() {
 			return
 		}
 
-		var pubsubErr error
-		pubsubClient, pubsubErr = pubsub.NewClient(context.Background(), project)
-		if pubsubErr != nil {
-			log.Printf("pubsub.NewClient error: %v", pubsubErr)
-			return
+		// create the topic that will be published to after decoding token transfer payloads
+		tokenTransferDetailsTopic := os.Getenv("PUBSUB_TOKEN_TRANSFER_DETAILS_TOPIC")
+		if tokenTransferDetailsTopic != "" {
+			var pubsubErr error
+			pubsubClient, pubsubErr = pubsub.NewClient(context.Background(), project)
+			if pubsubErr != nil {
+				log.Printf("pubsub.NewClient error: %v", pubsubErr)
+				return
+			}
+			pubSubTokenTransferDetailsTopic = pubsubClient.Topic(tokenTransferDetailsTopic)
+			// fetch the token lists once at start up
+			coinGeckoCoins = fetchCoinGeckoCoins()
+			solanaTokens = fetchSolanaTokenList()
 		}
 	})
 	tbl = client.Open("v2Events")
@@ -77,14 +116,10 @@ func init() {
 		cacheBucket = storageClient.Bucket(cacheBucketName)
 	}
 
-	// create the topic that will be published to after decoding token transfer payloads
-	tokenTransferDetailsTopic := os.Getenv("PUBSUB_TOKEN_TRANSFER_DETAILS_TOPIC")
-	if tokenTransferDetailsTopic != "" {
-		pubSubTokenTransferDetailsTopic = pubsubClient.Topic(tokenTransferDetailsTopic)
-		// fetch the token lists once at start up
+	// ensure blacklisted tokens are lowercase
+	for k := range tokensToSkip {
+		tokensToSkip[strings.ToLower(k)] = true
 	}
-	coinGeckoCoins = fetchCoinGeckoCoins()
-	solanaTokens = fetchSolanaTokenList()
 
 }
 
@@ -216,9 +251,6 @@ type (
 		OriginSymbol       string
 		OriginName         string
 		OriginTokenAddress string
-		// fields below exist on the row, but no need to return them currently.
-		// NotionalUSD        uint64
-		// TokenPriceUSD      uint64
 	}
 	ChainDetails struct {
 		SenderAddress   string
@@ -244,8 +276,14 @@ func chainIdStringToType(chainId string) vaa.ChainID {
 		return vaa.ChainIDOasis
 	case "8":
 		return vaa.ChainIDAlgorand
+	case "9":
+		return vaa.ChainIDAurora
 	case "10":
 		return vaa.ChainIDFantom
+	case "11":
+		return vaa.ChainIDKarura
+	case "12":
+		return vaa.ChainIDAcala
 	case "10001":
 		return vaa.ChainIDEthereumRopsten
 	}
@@ -397,35 +435,13 @@ func makeDetails(row bigtable.Row) *Details {
 		}
 		deets.NFTTransferPayload = nftTransferPayload
 	}
-	// NotionalUSD and TokenPriceUSD are more percise than the string versions returned,
-	// however the precision is not required, so leaving this commented out for now.
-	// if _, ok := row[transferDetailsFam]; ok {
-	// 	for _, item := range row[transferDetailsFam] {
-	// 		switch item.Column {
-	// 		case "TokenTransferDetails:NotionalUSD":
-	// 			reader := bytes.NewReader(item.Value)
-	// 			var notionalUSD uint64
-	// 			if err := binary.Read(reader, binary.BigEndian, &notionalUSD); err != nil {
-	// 				log.Fatalf("failed to read NotionalUSD of row: %v. err %v ", row.Key(), err)
-	// 			}
-	// 			deets.TransferDetails.NotionalUSD = notionalUSD
-
-	// 		case "TokenTransferDetails:TokenPriceUSD":
-	// 			reader := bytes.NewReader(item.Value)
-	// 			var tokenPriceUSD uint64
-	// 			if err := binary.Read(reader, binary.BigEndian, &tokenPriceUSD); err != nil {
-	// 				log.Fatalf("failed to read TokenPriceUSD of row: %v. err %v", row.Key(), err)
-	// 			}
-	// 			deets.TransferDetails.TokenPriceUSD = tokenPriceUSD
-	// 		}
-	// 	}
-	// }
 	if _, ok := row[chainDetailsFam]; ok {
 		chainDetails := &ChainDetails{}
 		for _, item := range row[chainDetailsFam] {
 			switch item.Column {
-			case "ChainDetails:SenderAddress":
-				chainDetails.SenderAddress = string(item.Value)
+			// TEMP - until we have this backfilled/populating for new messages
+			// case "ChainDetails:SenderAddress":
+			// 	chainDetails.SenderAddress = string(item.Value)
 			case "ChainDetails:ReceiverAddress":
 				chainDetails.ReceiverAddress = string(item.Value)
 			}
@@ -457,31 +473,4 @@ func useCache(date string) bool {
 		return false
 	}
 	return true
-}
-
-var mux = newMux()
-
-// Entry is the cloud function entry point
-func Entry(w http.ResponseWriter, r *http.Request) {
-	mux.ServeHTTP(w, r)
-}
-
-func newMux() *http.ServeMux {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/notionaltransferred", NotionalTransferred)
-	mux.HandleFunc("/notionaltransferredto", NotionalTransferredTo)
-	mux.HandleFunc("/notionaltransferredtocumulative", NotionalTransferredToCumulative)
-	mux.HandleFunc("/addressestransferredto", AddressesTransferredTo)
-	mux.HandleFunc("/addressestransferredtocumulative", AddressesTransferredToCumulative)
-	mux.HandleFunc("/totals", Totals)
-	mux.HandleFunc("/nfts", NFTs)
-	mux.HandleFunc("/recent", Recent)
-	mux.HandleFunc("/transaction", Transaction)
-	mux.HandleFunc("/readrow", ReadRow)
-	mux.HandleFunc("/findvalues", FindValues)
-
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
-
-	return mux
 }

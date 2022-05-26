@@ -1,15 +1,22 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ACALA,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_KARURA,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  getEmitterAddressAlgorand,
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
+  hexToNativeAssetString,
   hexToNativeString,
   hexToUint8Array,
+  importCoreWasm,
   isEVMChain,
   parseNFTPayload,
+  parseSequenceFromLogAlgorand,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
@@ -28,18 +35,23 @@ import {
   makeStyles,
   MenuItem,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import { ExpandMore } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
+import algosdk from "algosdk";
+import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory, useLocation } from "react-router";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useAcalaRelayerInfo } from "../hooks/useAcalaRelayerInfo";
 import useIsWalletReady from "../hooks/useIsWalletReady";
+import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
@@ -47,12 +59,15 @@ import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
   ALEPHIUM_HOST,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  ALGORAND_HOST,
+  ALGORAND_TOKEN_BRIDGE_ID,
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
   getBridgeAddressForChain,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  RELAY_URL_EXTENSION,
   SOLANA_HOST,
   SOL_NFT_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
@@ -66,6 +81,7 @@ import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "alephium-web3";
+import RelaySelector from "./RelaySelector";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -75,7 +91,59 @@ const useStyles = makeStyles((theme) => ({
   advancedContainer: {
     padding: theme.spacing(2, 0),
   },
+  relayAlert: {
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    "& > .MuiAlert-message": {
+      width: "100%",
+    },
+  },
 }));
+
+async function algo(tx: string, enqueueSnackbar: any) {
+  try {
+    const algodClient = new algosdk.Algodv2(
+      ALGORAND_HOST.algodToken,
+      ALGORAND_HOST.algodServer,
+      ALGORAND_HOST.algodPort
+    );
+    const pendingInfo = await algodClient
+      .pendingTransactionInformation(tx)
+      .do();
+    let confirmedTxInfo: Record<string, any> | undefined = undefined;
+    // This is the code from waitForConfirmation
+    if (pendingInfo !== undefined) {
+      if (
+        pendingInfo["confirmed-round"] !== null &&
+        pendingInfo["confirmed-round"] > 0
+      ) {
+        //Got the completed Transaction
+        confirmedTxInfo = pendingInfo;
+      }
+    }
+    if (!confirmedTxInfo) {
+      throw new Error("Transaction not found or not confirmed");
+    }
+    const sequence = parseSequenceFromLogAlgorand(confirmedTxInfo);
+    if (!sequence) {
+      throw new Error("Sequence not found");
+    }
+    const emitterAddress = getEmitterAddressAlgorand(ALGORAND_TOKEN_BRIDGE_ID);
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALGORAND,
+      emitterAddress,
+      sequence,
+      WORMHOLE_RPC_HOSTS.length
+    );
+    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    return { vaa: null, error: parseError(e) };
+  }
+}
 
 async function evm(
   provider: ethers.providers.Web3Provider,
@@ -184,6 +252,140 @@ async function alephium(txId: string, enqueueSnackbar: any) {
   }
 }
 
+function RelayerRecovery({
+  parsedPayload,
+  signedVaa,
+  onClick,
+}: {
+  parsedPayload: any;
+  signedVaa: string;
+  onClick: () => void;
+}) {
+  const classes = useStyles();
+  const relayerInfo = useRelayersAvailable(true);
+  const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null);
+  const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+
+  console.log(parsedPayload, relayerInfo, "in recovery relayer");
+
+  const fee =
+    (parsedPayload && parsedPayload.fee && parseInt(parsedPayload.fee)) || null;
+  //This check is probably more sophisticated in the future. Possibly a net call.
+  const isEligible =
+    fee &&
+    fee > 0 &&
+    relayerInfo?.data?.relayers?.length &&
+    relayerInfo?.data?.relayers?.length > 0;
+
+  const handleRelayerChange = useCallback(
+    (relayer: Relayer | null) => {
+      setSelectedRelayer(relayer);
+    },
+    [setSelectedRelayer]
+  );
+
+  const handleGo = useCallback(async () => {
+    console.log("handle go", selectedRelayer, parsedPayload);
+    if (!(selectedRelayer && selectedRelayer.url)) {
+      return;
+    }
+
+    setIsAttemptingToSchedule(true);
+    axios
+      .get(
+        selectedRelayer.url +
+          RELAY_URL_EXTENSION +
+          encodeURIComponent(
+            Buffer.from(hexToUint8Array(signedVaa)).toString("base64")
+          )
+      )
+      .then(
+        () => {
+          setIsAttemptingToSchedule(false);
+          onClick();
+        },
+        (error) => {
+          setIsAttemptingToSchedule(false);
+          enqueueSnackbar(null, {
+            content: (
+              <Alert severity="error">
+                {"Relay request rejected. Error: " + error.message}
+              </Alert>
+            ),
+          });
+        }
+      );
+  }, [selectedRelayer, enqueueSnackbar, onClick, signedVaa, parsedPayload]);
+
+  if (!isEligible) {
+    return null;
+  }
+
+  return (
+    <Alert variant="outlined" severity="info" className={classes.relayAlert}>
+      <Typography>{"This transaction is eligible to be relayed"}</Typography>
+      <RelaySelector
+        selectedValue={selectedRelayer}
+        onChange={handleRelayerChange}
+      />
+      <ButtonWithLoader
+        disabled={!selectedRelayer}
+        onClick={handleGo}
+        showLoader={isAttemptingToSchedule}
+      >
+        Request Relay
+      </ButtonWithLoader>
+    </Alert>
+  );
+}
+
+function AcalaRelayerRecovery({
+  parsedPayload,
+  signedVaa,
+  onClick,
+  isNFT,
+}: {
+  parsedPayload: any;
+  signedVaa: string;
+  onClick: () => void;
+  isNFT: boolean;
+}) {
+  const classes = useStyles();
+  const originChain: ChainId = parsedPayload?.originChain;
+  const originAsset = parsedPayload?.originAddress;
+  const targetChain: ChainId = parsedPayload?.targetChain;
+  const amount =
+    parsedPayload && "amount" in parsedPayload
+      ? parsedPayload.amount.toString()
+      : "";
+  const shouldCheck =
+    parsedPayload &&
+    originChain &&
+    originAsset &&
+    signedVaa &&
+    targetChain &&
+    !isNFT &&
+    (targetChain === CHAIN_ID_ACALA || targetChain === CHAIN_ID_KARURA);
+  const acalaRelayerInfo = useAcalaRelayerInfo(
+    targetChain,
+    amount,
+    hexToNativeAssetString(originAsset, originChain),
+    false
+  );
+  const enabled = shouldCheck && acalaRelayerInfo.data?.shouldRelay;
+
+  return enabled ? (
+    <Alert variant="outlined" severity="info" className={classes.relayAlert}>
+      <Typography>
+        This transaction is eligible to be relayed by{" "}
+        {CHAINS_BY_ID[targetChain].name} &#127881;
+      </Typography>
+      <ButtonWithLoader onClick={onClick}>Request Relay</ButtonWithLoader>
+    </Alert>
+  ) : null;
+}
+
 export default function Recovery() {
   const classes = useStyles();
   const { push } = useHistory();
@@ -193,7 +395,7 @@ export default function Recovery() {
   const [type, setType] = useState("Token");
   const isNFT = type === "NFT";
   const [recoverySourceChain, setRecoverySourceChain] =
-    useState(CHAIN_ID_SOLANA);
+    useState<ChainId>(CHAIN_ID_SOLANA);
   const [recoverySourceTx, setRecoverySourceTx] = useState("");
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] =
     useState(false);
@@ -319,6 +521,21 @@ export default function Recovery() {
             }
           }
         })();
+      } else if (recoverySourceChain === CHAIN_ID_ALGORAND) {
+        setRecoverySourceTxError("");
+        setRecoverySourceTxIsLoading(true);
+        (async () => {
+          const { vaa, error } = await algo(recoverySourceTx, enqueueSnackbar);
+          if (!cancelled) {
+            setRecoverySourceTxIsLoading(false);
+            if (vaa) {
+              setRecoverySignedVAA(vaa);
+            }
+            if (error) {
+              setRecoverySourceTxError(error);
+            }
+          }
+        })();
       }
       return () => {
         cancelled = true;
@@ -356,9 +573,7 @@ export default function Recovery() {
     if (recoverySignedVAA) {
       (async () => {
         try {
-          const { parse_vaa } = await import(
-            "@certusone/wormhole-sdk/lib/esm/solana/core/bridge"
-          );
+          const { parse_vaa } = await importCoreWasm();
           const parsedVAA = parse_vaa(hexToUint8Array(recoverySignedVAA));
           if (!cancelled) {
             setRecoveryParsedVAA(parsedVAA);
@@ -377,50 +592,64 @@ export default function Recovery() {
   }, [recoverySignedVAA]);
   const parsedPayloadTargetChain = parsedPayload?.targetChain;
   const enableRecovery = recoverySignedVAA && parsedPayloadTargetChain;
-  const handleRecoverClick = useCallback(() => {
-    if (enableRecovery && recoverySignedVAA && parsedPayloadTargetChain) {
-      // TODO: make recovery reducer
-      if (isNFT) {
-        dispatch(
-          setRecoveryNFTVaa({
-            vaa: recoverySignedVAA,
-            parsedPayload: {
-              targetChain: parsedPayload.targetChain,
-              targetAddress: parsedPayload.targetAddress,
-              originChain: parsedPayload.originChain,
-              originAddress: parsedPayload.originAddress,
-            },
-          })
-        );
-        push("/nft");
-      } else {
-        dispatch(
-          setRecoveryVaa({
-            vaa: recoverySignedVAA,
-            parsedPayload: {
-              targetChain: parsedPayload.targetChain,
-              targetAddress: parsedPayload.targetAddress,
-              originChain: parsedPayload.originChain,
-              originAddress: parsedPayload.originAddress,
-              amount:
-                "amount" in parsedPayload
-                  ? parsedPayload.amount.toString()
-                  : "",
-            },
-          })
-        );
-        push("/transfer");
+
+  const handleRecoverClickBase = useCallback(
+    (useRelayer: boolean) => {
+      if (enableRecovery && recoverySignedVAA && parsedPayloadTargetChain) {
+        // TODO: make recovery reducer
+        if (isNFT) {
+          dispatch(
+            setRecoveryNFTVaa({
+              vaa: recoverySignedVAA,
+              parsedPayload: {
+                targetChain: parsedPayload.targetChain,
+                targetAddress: parsedPayload.targetAddress,
+                originChain: parsedPayload.originChain,
+                originAddress: parsedPayload.originAddress,
+              },
+            })
+          );
+          push("/nft");
+        } else {
+          dispatch(
+            setRecoveryVaa({
+              vaa: recoverySignedVAA,
+              useRelayer,
+              parsedPayload: {
+                targetChain: parsedPayload.targetChain,
+                targetAddress: parsedPayload.targetAddress,
+                originChain: parsedPayload.originChain,
+                originAddress: parsedPayload.originAddress,
+                amount:
+                  "amount" in parsedPayload
+                    ? parsedPayload.amount.toString()
+                    : "",
+              },
+            })
+          );
+          push("/transfer");
+        }
       }
-    }
-  }, [
-    dispatch,
-    enableRecovery,
-    recoverySignedVAA,
-    parsedPayloadTargetChain,
-    parsedPayload,
-    isNFT,
-    push,
-  ]);
+    },
+    [
+      dispatch,
+      enableRecovery,
+      recoverySignedVAA,
+      parsedPayloadTargetChain,
+      parsedPayload,
+      isNFT,
+      push,
+    ]
+  );
+
+  const handleRecoverClick = useCallback(() => {
+    handleRecoverClickBase(false);
+  }, [handleRecoverClickBase]);
+
+  const handleRecoverWithRelayerClick = useCallback(() => {
+    handleRecoverClickBase(true);
+  }, [handleRecoverClickBase]);
+
   return (
     <Container maxWidth="md">
       <Card className={classes.mainCard}>
@@ -469,6 +698,17 @@ export default function Recovery() {
           helperText={recoverySourceTxError || walletConnectError}
           fullWidth
           margin="normal"
+        />
+        <RelayerRecovery
+          parsedPayload={parsedPayload}
+          signedVaa={recoverySignedVAA}
+          onClick={handleRecoverWithRelayerClick}
+        />
+        <AcalaRelayerRecovery
+          parsedPayload={parsedPayload}
+          signedVaa={recoverySignedVAA}
+          onClick={handleRecoverWithRelayerClick}
+          isNFT={isNFT}
         />
         <ButtonWithLoader
           onClick={handleRecoverClick}
@@ -560,6 +800,14 @@ export default function Recovery() {
                   fullWidth
                   margin="normal"
                 />
+                <TextField
+                  variant="outlined"
+                  label="Guardian Set"
+                  disabled
+                  value={recoveryParsedVAA?.guardian_set_index || ""}
+                  fullWidth
+                  margin="normal"
+                />
                 <Box my={4}>
                   <Divider />
                 </Box>
@@ -577,7 +825,7 @@ export default function Recovery() {
                   disabled
                   value={
                     (parsedPayload &&
-                      hexToNativeString(
+                      hexToNativeAssetString(
                         parsedPayload.originAddress,
                         parsedPayload.originChain
                       )) ||
@@ -621,15 +869,32 @@ export default function Recovery() {
                   margin="normal"
                 />
                 {isNFT ? null : (
-                  <TextField
-                    variant="outlined"
-                    label="Amount"
-                    disabled
-                    // @ts-ignore
-                    value={parsedPayload?.amount.toString() || ""}
-                    fullWidth
-                    margin="normal"
-                  />
+                  <>
+                    <TextField
+                      variant="outlined"
+                      label="Amount"
+                      disabled
+                      value={
+                        parsedPayload && "amount" in parsedPayload
+                          ? parsedPayload.amount.toString()
+                          : ""
+                      }
+                      fullWidth
+                      margin="normal"
+                    />
+                    <TextField
+                      variant="outlined"
+                      label="Relayer Fee"
+                      disabled
+                      value={
+                        parsedPayload && "fee" in parsedPayload
+                          ? parsedPayload.fee.toString()
+                          : ""
+                      }
+                      fullWidth
+                      margin="normal"
+                    />
+                  </>
                 )}
               </div>
             </AccordionDetails>

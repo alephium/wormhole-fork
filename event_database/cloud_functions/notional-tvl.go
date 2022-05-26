@@ -23,6 +23,8 @@ var warmTvlCache = map[string]map[string]map[string]LockedAsset{}
 var muWarmTvlCache sync.RWMutex
 var warmTvlFilePath = "tvl-cache.json"
 
+var notionalTvlResultPath = "notional-tvl.json"
+
 type LockedAsset struct {
 	Symbol      string
 	Name        string
@@ -289,6 +291,143 @@ func tvlForInterval(tbl *bigtable.Table, ctx context.Context, start, end time.Ti
 }
 
 // calculates the value locked
+func ComputeTVL(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers for the preflight request
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "3600")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	// Set CORS headers for the main request.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	getNotionalAmounts := func(ctx context.Context, tokensLocked map[string]map[string]LockedAsset) map[string]map[string]LockedAsset {
+		// create a map of all the coinIds
+		seenCoinIds := map[string]bool{}
+		for _, tokens := range tokensLocked {
+			for _, lockedAsset := range tokens {
+				coinId := lockedAsset.CoinGeckoId
+				if coinId != "*" {
+					seenCoinIds[coinId] = true
+				}
+			}
+		}
+		coinIdSet := []string{}
+		for coinId := range seenCoinIds {
+			coinIdSet = append(coinIdSet, coinId)
+		}
+
+		tokenPrices := fetchTokenPrices(ctx, coinIdSet)
+
+		notionalLocked := map[string]map[string]LockedAsset{}
+
+		// initialize the struct that will hold the total for all chains, all assets
+		notionalLocked["*"] = map[string]LockedAsset{}
+		notionalLocked["*"]["*"] = LockedAsset{
+			Symbol:   "*",
+			Name:     "all",
+			Notional: 0,
+		}
+		for chain, tokens := range tokensLocked {
+			notionalLocked[chain] = map[string]LockedAsset{}
+			notionalLocked[chain]["*"] = LockedAsset{
+				Symbol:  "all",
+				Address: "*",
+			}
+			for address, lockedAsset := range tokens {
+
+				coinId := lockedAsset.CoinGeckoId
+				amount := lockedAsset.Amount
+				if address != "*" {
+					currentPrice := tokenPrices[coinId]
+					notionalVal := amount * currentPrice
+					if notionalVal <= 0 {
+						continue
+					}
+
+					notionalLocked[chain][address] = LockedAsset{
+						Symbol:      lockedAsset.Symbol,
+						Name:        lockedAsset.Name,
+						Address:     lockedAsset.Address,
+						CoinGeckoId: lockedAsset.CoinGeckoId,
+						Amount:      lockedAsset.Amount,
+						Notional:    roundToTwoDecimalPlaces(notionalVal),
+						TokenPrice:  currentPrice,
+					}
+
+					if asset, ok := notionalLocked[chain]["*"]; ok {
+						asset.Notional = asset.Notional + notionalVal
+						notionalLocked[chain]["*"] = asset
+					}
+
+				}
+			}
+
+			// add the chain total to the overall total
+			if all, ok := notionalLocked["*"]["*"]; ok {
+				all.Notional += notionalLocked[chain]["*"].Notional
+				notionalLocked["*"]["*"] = all
+			}
+
+			// round the the amount for chain/*
+			if asset, ok := notionalLocked[chain]["*"]; ok {
+				asset.Notional = roundToTwoDecimalPlaces(asset.Notional)
+				notionalLocked[chain]["*"] = asset
+			}
+		}
+		return notionalLocked
+	}
+
+	var wg sync.WaitGroup
+
+	// delta of last 24 hours
+	last24HourDelta := map[string]map[string]LockedAsset{}
+	wg.Add(1)
+	go func() {
+		last24HourInterval := -time.Duration(24) * time.Hour
+		now := time.Now().UTC()
+		start := now.Add(last24HourInterval)
+		defer wg.Done()
+		transfers := tvlForInterval(tbl, ctx, start, now)
+		last24HourDelta = getNotionalAmounts(ctx, transfers)
+	}()
+
+	// total since release
+	allTimeLocked := map[string]map[string]LockedAsset{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		dailyTotalsAllTime := tvlInInterval(tbl, ctx, releaseDay)
+		transfers := tvlSinceDate(tbl, ctx, dailyTotalsAllTime)
+		allTimeLocked = getNotionalAmounts(ctx, transfers)
+	}()
+
+	wg.Wait()
+
+	result := &tvlResult{
+		Last24HoursChange: last24HourDelta,
+		AllTime:           allTimeLocked,
+	}
+
+	persistInterfaceToJson(ctx, notionalTvlResultPath, &muWarmTvlCache, result)
+
+	jsonBytes, err := json.Marshal(result)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		log.Println(err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+}
+
 func TVL(w http.ResponseWriter, r *http.Request) {
 	// Set CORS headers for the preflight request
 	if r.Method == http.MethodOptions {
@@ -336,118 +475,21 @@ func TVL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	getNotionalAmounts := func(ctx context.Context, tokensLocked map[string]map[string]LockedAsset) map[string]map[string]LockedAsset {
-		// create a map of all the coinIds
-		seenCoinIds := map[string]bool{}
-		for _, tokens := range tokensLocked {
-			for _, lockedAsset := range tokens {
-				coinId := lockedAsset.CoinGeckoId
-				if coinId != "*" {
-					seenCoinIds[coinId] = true
-				}
-			}
-		}
-		coinIdSet := []string{}
-		for coinId := range seenCoinIds {
-			coinIdSet = append(coinIdSet, coinId)
-		}
-
-		tokenPrices := fetchTokenPrices(ctx, coinIdSet)
-
-		notionalLocked := map[string]map[string]LockedAsset{}
-
-		// initialize the struct that will hold the total for all chains, all assets
-		notionalLocked["*"] = map[string]LockedAsset{}
-		notionalLocked["*"]["*"] = LockedAsset{
-			Symbol:   "*",
-			Name:     "all",
-			Notional: 0,
-		}
-		for chain, tokens := range tokensLocked {
-			notionalLocked[chain] = map[string]LockedAsset{}
-			notionalLocked[chain]["*"] = LockedAsset{
-				Symbol:  "all",
-				Address: "*",
-			}
-			for address, lockedAsset := range tokens {
-
-				coinId := lockedAsset.CoinGeckoId
-				amount := lockedAsset.Amount
-				if address != "*" {
-					currentPrice := tokenPrices[coinId]
-					notionalVal := amount * currentPrice
-					if notionalVal <= 0 {
-						log.Printf("skipping token with no value. chain: %v, symbol %v, address %v", chain, lockedAsset.Symbol, lockedAsset.Address)
-						continue
-					}
-
-					notionalLocked[chain][address] = LockedAsset{
-						Symbol:      lockedAsset.Symbol,
-						Name:        lockedAsset.Name,
-						Address:     lockedAsset.Address,
-						CoinGeckoId: lockedAsset.CoinGeckoId,
-						Amount:      lockedAsset.Amount,
-						Notional:    roundToTwoDecimalPlaces(notionalVal),
-						TokenPrice:  currentPrice,
-					}
-
-					if asset, ok := notionalLocked[chain]["*"]; ok {
-						asset.Notional = asset.Notional + notionalVal
-						notionalLocked[chain]["*"] = asset
-					}
-
-				}
-			}
-
-			// add the chain total to the overall total
-			if all, ok := notionalLocked["*"]["*"]; ok {
-				all.Notional += notionalLocked[chain]["*"].Notional
-				notionalLocked["*"]["*"] = all
-			}
-
-			// round the the amount for chain/*
-			if asset, ok := notionalLocked[chain]["*"]; ok {
-				asset.Notional = roundToTwoDecimalPlaces(asset.Notional)
-				notionalLocked[chain]["*"] = asset
-			}
-		}
-		return notionalLocked
-	}
-
-	var wg sync.WaitGroup
+	var cachedResult tvlResult
+	loadJsonToInterface(ctx, notionalTvlResultPath, &muWarmTvlCache, &cachedResult)
 
 	// delta of last 24 hours
-	last24HourDelta := map[string]map[string]LockedAsset{}
+	var last24HourDelta = map[string]map[string]LockedAsset{}
 	if last24Hours != "" {
-		wg.Add(1)
-		go func() {
-			last24HourInterval := -time.Duration(24) * time.Hour
-			now := time.Now().UTC()
-			start := now.Add(last24HourInterval)
-			defer wg.Done()
-			transfers := tvlForInterval(tbl, ctx, start, now)
-			last24HourDelta = getNotionalAmounts(ctx, transfers)
-		}()
+		last24HourDelta = cachedResult.Last24HoursChange
 	}
-
-	// total since release
-	allTimeLocked := map[string]map[string]LockedAsset{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		dailyTotalsAllTime := tvlInInterval(tbl, ctx, releaseDay)
-		transfers := tvlSinceDate(tbl, ctx, dailyTotalsAllTime)
-		allTimeLocked = getNotionalAmounts(ctx, transfers)
-	}()
-
-	wg.Wait()
 
 	result := &tvlResult{
 		Last24HoursChange: last24HourDelta,
-		AllTime:           allTimeLocked,
+		AllTime:           cachedResult.AllTime,
 	}
 
 	jsonBytes, err := json.Marshal(result)

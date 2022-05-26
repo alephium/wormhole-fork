@@ -1,6 +1,7 @@
 import {
   canonicalAddress,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
@@ -17,6 +18,7 @@ import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { setTargetAddressHex as setNFTTargetAddressHex } from "../store/nftSlice";
@@ -29,6 +31,7 @@ import {
 } from "../store/selectors";
 import { setTargetAddressHex as setTransferTargetAddressHex } from "../store/transferSlice";
 import * as base58 from 'bs58';
+import { decodeAddress } from "algosdk";
 
 function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   const dispatch = useDispatch();
@@ -47,6 +50,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
   const terraWallet = useConnectedWallet();
   const { signer: alphSigner } = useAlephiumWallet();
+  const { accounts: algoAccounts } = useAlgorandContext();
   const setTargetAddressHex = nft
     ? setNFTTargetAddressHex
     : setTransferTargetAddressHex;
@@ -112,6 +116,12 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
         );
       } else if(targetChain === CHAIN_ID_ALEPHIUM && alphSigner) {
         dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphSigner.account.address).slice(1))))
+      } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
+        dispatch(
+          setTargetAddressHex(
+            uint8ArrayToHex(decodeAddress(algoAccounts[0].address).publicKey)
+          )
+        );
       } else {
         dispatch(setTargetAddressHex(undefined));
       }
@@ -131,6 +141,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     alphSigner,
     nft,
     setTargetAddressHex,
+    algoAccounts,
   ]);
 }
 

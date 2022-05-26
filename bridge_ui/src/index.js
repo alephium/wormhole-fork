@@ -7,6 +7,7 @@ import { HashRouter } from "react-router-dom";
 import App from "./App";
 import BackgroundImage from "./components/BackgroundImage";
 import { AlephiumWalletProvider } from "./contexts/AlephiumWalletContext";
+import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
 import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
@@ -27,10 +28,12 @@ ReactDOM.render(
                 <EthereumProviderProvider>
                   <TerraWalletProvider>
                     <AlephiumWalletProvider>
-                      <HashRouter>
-                        <BackgroundImage />
-                        <App />
-                      </HashRouter>
+                      <AlgorandContextProvider>
+                        <HashRouter>
+                          <BackgroundImage />
+                          <App />
+                        </HashRouter>
+                      </AlgorandContextProvider>
                     </AlephiumWalletProvider>
                   </TerraWalletProvider>
                 </EthereumProviderProvider>

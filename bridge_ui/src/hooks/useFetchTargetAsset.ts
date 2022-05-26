@@ -1,12 +1,14 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  getForeignAssetAlgorand,
   getForeignAssetEth,
   getForeignAssetSolana,
   getForeignAssetTerra,
-  hexToNativeString,
+  hexToNativeAssetString,
   hexToUint8Array,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
@@ -18,6 +20,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { arrayify } from "@ethersproject/bytes";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
+import algosdk from "algosdk";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,6 +45,8 @@ import {
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
 import { getRemoteTokenWrapperIdWithRetry } from "../utils/alephium";
 import {
+  ALGORAND_HOST,
+  ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
@@ -124,7 +129,7 @@ function useFetchTargetAsset(nft?: boolean) {
         setTargetAsset(
           receiveDataWrapper({
             doesExist: true,
-            address: hexToNativeString(originAsset, originChain) || null,
+            address: hexToNativeAssetString(originAsset, originChain) || null,
           })
         )
       );
@@ -264,6 +269,45 @@ function useFetchTargetAsset(nft?: boolean) {
                 errorDataWrapper("Failed to get token wrapper contract id " + e)
               )
             )
+          }
+        }
+      }
+      if (targetChain === CHAIN_ID_ALGORAND && originChain && originAsset) {
+        dispatch(setTargetAsset(fetchDataWrapper()));
+        try {
+          const algodClient = new algosdk.Algodv2(
+            ALGORAND_HOST.algodToken,
+            ALGORAND_HOST.algodServer,
+            ALGORAND_HOST.algodPort
+          );
+          const asset = await getForeignAssetAlgorand(
+            algodClient,
+            ALGORAND_TOKEN_BRIDGE_ID,
+            originChain,
+            originAsset
+          );
+          console.log("foreign asset algo:", asset);
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                receiveDataWrapper({
+                  doesExist: !!asset,
+                  address: asset === null ? asset : asset.toString(),
+                })
+              )
+            );
+            setArgs();
+          }
+        } catch (e) {
+          console.error(e);
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                errorDataWrapper(
+                  "Unable to determine existence of wrapped asset"
+                )
+              )
+            );
           }
         }
       }

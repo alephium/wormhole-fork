@@ -76,12 +76,12 @@ function PrimaryAssetInfomation({
   const metadata = useMetadata(originChain, tokenArray);
   const nativeContent = (
     <div>
-      <Typography>{`This is not a Wormhole wrapped token.`}</Typography>
+      <Typography>{`This is not a Portal wrapped token.`}</Typography>
     </div>
   );
   const wrapped = (
     <div>
-      <Typography>{`This is wrapped by Wormhole! Here is the original token: `}</Typography>
+      <Typography>{`This is wrapped by Portal! Here is the original token: `}</Typography>
       <div className={classes.flexBox}>
         <Typography>{`Chain: ${CHAINS_BY_ID[originChain].name}`}</Typography>
         <div>
@@ -92,6 +92,7 @@ function PrimaryAssetInfomation({
               chainId={originChain}
               symbol={metadata.data?.get(originAsset)?.symbol}
               tokenName={metadata.data?.get(originAsset)?.tokenName}
+              isAsset
             />
           </Typography>
         </div>
@@ -137,6 +138,7 @@ function SecondaryAssetInformation({
             metadata.data?.get(originAssetInfo.originAddress || "")
               ?.tokenName || undefined
           }
+          isAsset
         />
       </div>
     </div>
@@ -169,6 +171,7 @@ function SecondaryAssetInformation({
             metadata.data?.get(foreignAssetInfo.address || "")?.tokenName ||
             undefined
           }
+          isAsset
         />
       </div>
     </div>
@@ -183,7 +186,7 @@ export default function TokenOriginVerifier() {
   const [primaryLookupAsset, setPrimaryLookupAsset] = useState("");
 
   const [secondaryLookupChain, setSecondaryLookupChain] =
-    useState(CHAIN_ID_TERRA);
+    useState<ChainId>(CHAIN_ID_TERRA);
 
   const primaryLookupChainOptions = useMemo(
     () => (isBeta ? CHAINS.filter((x) => !BETA_CHAINS.includes(x.id)) : CHAINS),

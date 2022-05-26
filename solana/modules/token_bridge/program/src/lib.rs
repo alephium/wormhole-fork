@@ -1,10 +1,9 @@
-
 #![feature(adt_const_params)]
 #![deny(unused_must_use)]
 
 // #![cfg(all(target_arch = "bpf", not(feature = "no-entrypoint")))]
 
-#[cfg(feature = "no-entrypoint")]
+#[cfg(feature = "instructions")]
 pub mod instructions;
 
 #[cfg(feature = "wasm")]
@@ -23,19 +22,27 @@ pub mod types;
 pub use api::{
     attest_token,
     complete_native,
+    complete_native_with_payload,
     complete_wrapped,
+    complete_wrapped_with_payload,
     create_wrapped,
     initialize,
     register_chain,
     transfer_native,
+    transfer_native_with_payload,
     transfer_wrapped,
+    transfer_wrapped_with_payload,
     upgrade_contract,
     AttestToken,
     AttestTokenData,
     CompleteNative,
     CompleteNativeData,
+    CompleteNativeWithPayload,
+    CompleteNativeWithPayloadData,
     CompleteWrapped,
     CompleteWrappedData,
+    CompleteWrappedWithPayload,
+    CompleteWrappedWithPayloadData,
     CreateWrapped,
     CreateWrappedData,
     Initialize,
@@ -44,14 +51,29 @@ pub use api::{
     RegisterChainData,
     TransferNative,
     TransferNativeData,
+    TransferNativeWithPayload,
+    TransferNativeWithPayloadData,
     TransferWrapped,
     TransferWrappedData,
+    TransferWrappedWithPayload,
+    TransferWrappedWithPayloadData,
     UpgradeContract,
     UpgradeContractData,
 };
 
 use solitaire::*;
 use std::error::Error;
+
+// Static list of invalid VAA Message accounts.
+pub(crate) static INVALID_VAAS: &'static [&'static str; 7] = &[
+    "28Tx7c3W8rggVNyUQEAL9Uq6pUng4xJLAeLA6V8nLH1Z",
+    "32YEuzLCvSyHoV6NFpaTXfiAB8sHiAnYcvP2BBeLeGWq",
+    "427N2RrDHYooLvyWCiEiNR4KtGsGFTMuXiGwtuChWRSd",
+    "56Vf4Y2SCxJBf4TSR24fPF8qLHhC8ZuTJvHS6mLGWieD",
+    "7SzK4pmh9fM9SWLTCKmbjQC8EvDgPmtwdaBeTRztkM98",
+    "G2VJNjmQsz6wfVZkTUzYAB8ZzRS2hZbpUd5Cr4DTpz6t",
+    "GvAarWUV8khMLrTRouzBh3xSr8AeLDXxoKNJ6FgxGyg5",
+];
 
 pub enum TokenBridgeError {
     AlreadyExecuted,
@@ -66,6 +88,7 @@ pub enum TokenBridgeError {
     WrongAccountOwner,
     InvalidFee,
     InvalidRecipient,
+    InvalidVAA,
 }
 
 impl From<TokenBridgeError> for SolitaireError {
@@ -75,13 +98,17 @@ impl From<TokenBridgeError> for SolitaireError {
 }
 
 solitaire! {
-    Initialize(InitializeData) => initialize,
-    AttestToken(AttestTokenData) => attest_token,
-    CompleteNative(CompleteNativeData) => complete_native,
-    CompleteWrapped(CompleteWrappedData) => complete_wrapped,
-    TransferWrapped(TransferWrappedData) => transfer_wrapped,
-    TransferNative(TransferNativeData) => transfer_native,
-    RegisterChain(RegisterChainData) => register_chain,
-    CreateWrapped(CreateWrappedData) => create_wrapped,
-    UpgradeContract(UpgradeContractData) => upgrade_contract,
+    Initialize => initialize,
+    AttestToken => attest_token,
+    CompleteNative => complete_native,
+    CompleteWrapped => complete_wrapped,
+    TransferWrapped => transfer_wrapped,
+    TransferNative => transfer_native,
+    RegisterChain => register_chain,
+    CreateWrapped => create_wrapped,
+    UpgradeContract => upgrade_contract,
+    CompleteNativeWithPayload => complete_native_with_payload,
+    CompleteWrappedWithPayload => complete_wrapped_with_payload,
+    TransferWrappedWithPayload => transfer_wrapped_with_payload,
+    TransferNativeWithPayload => transfer_native_with_payload,
 }
