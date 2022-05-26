@@ -1,4 +1,4 @@
-import { isEVMChain } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA, isEVMChain } from "@certusone/wormhole-sdk";
 import { Button, makeStyles } from "@material-ui/core";
 import { VerifiedUser } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
@@ -19,6 +19,7 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
+import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import { TokenSelector } from "../TokenSelectors/SourceTokenSelector";
 
@@ -79,6 +80,11 @@ function Source() {
           Only NFTs which implement ERC-721 are supported.
         </Alert>
       ) : null}
+      {sourceChain === CHAIN_ID_SOLANA ? (
+        <Alert severity="info" variant="outlined">
+          Only NFTs with a supply of 1 are supported.
+        </Alert>
+      ) : null}
       <KeyAndBalance chainId={sourceChain} />
       {isReady || uiAmountString ? (
         <div className={classes.transferField}>
@@ -86,6 +92,7 @@ function Source() {
         </div>
       ) : null}
       <LowBalanceWarning chainId={sourceChain} />
+      {sourceChain === CHAIN_ID_SOLANA && <SolanaTPSWarning />}
       <ButtonWithLoader
         disabled={!isSourceComplete}
         onClick={handleNextClick}

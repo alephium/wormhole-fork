@@ -1,12 +1,15 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_TERRA,
   getForeignAssetEth,
+  getForeignAssetSolana,
   getForeignAssetTerra,
   hexToUint8Array,
   isEVMChain,
   nativeToHexString,
 } from "@certusone/wormhole-sdk";
+import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -15,6 +18,8 @@ import { DataWrapper } from "../store/helpers";
 import {
   getEvmChainId,
   getTokenBridgeAddressForChain,
+  SOLANA_HOST,
+  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
@@ -106,7 +111,8 @@ function useFetchForeignAsset(
             )
         : foreignChain === CHAIN_ID_ALEPHIUM
         ? () => getRemoteTokenWrapperIdWithRetry(originAssetHex).catch(_ => null)
-        : () => {
+        : foreignChain === CHAIN_ID_TERRA
+        ? () => {
             const lcd = new LCDClient(TERRA_HOST);
             return getForeignAssetTerra(
               TERRA_TOKEN_BRIDGE_ADDRESS,
@@ -115,6 +121,15 @@ function useFetchForeignAsset(
               hexToUint8Array(originAssetHex)
             );
           }
+        : () => {
+            const connection = new Connection(SOLANA_HOST, "confirmed");
+            return getForeignAssetSolana(
+              connection,
+              SOL_TOKEN_BRIDGE_ADDRESS,
+              originChain,
+              hexToUint8Array(originAssetHex)
+            );
+          };
 
       getterFunc()
         .then((result) => {

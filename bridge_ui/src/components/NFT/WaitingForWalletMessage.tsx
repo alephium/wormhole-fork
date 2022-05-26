@@ -1,4 +1,4 @@
-import { isEVMChain } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA, isEVMChain } from "@certusone/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import {
@@ -6,6 +6,7 @@ import {
   selectNFTIsSending,
   selectNFTRedeemTx,
   selectNFTSourceChain,
+  selectNFTTargetChain,
   selectNFTTransferTx,
 } from "../../store/selectors";
 import { WAITING_FOR_WALLET_AND_CONF } from "../Transfer/WaitingForWalletMessage";
@@ -23,13 +24,16 @@ export default function WaitingForWalletMessage() {
   const sourceChain = useSelector(selectNFTSourceChain);
   const isSending = useSelector(selectNFTIsSending);
   const transferTx = useSelector(selectNFTTransferTx);
+  const targetChain = useSelector(selectNFTTargetChain);
   const isRedeeming = useSelector(selectNFTIsRedeeming);
   const redeemTx = useSelector(selectNFTRedeemTx);
   const showWarning = (isSending && !transferTx) || (isRedeeming && !redeemTx);
   return showWarning ? (
     <Typography className={classes.message} variant="body2">
       {WAITING_FOR_WALLET_AND_CONF}{" "}
-      {isEVMChain(sourceChain) && isSending
+      {targetChain === CHAIN_ID_SOLANA && isRedeeming
+        ? "Note: there will be several transactions"
+        : isEVMChain(sourceChain) && isSending
         ? "Note: there will be two transactions"
         : null}
     </Typography>

@@ -5,6 +5,7 @@ import {
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@certusone/wormhole-sdk";
 import { makeStyles, Paper, Typography } from "@material-ui/core";
@@ -13,6 +14,8 @@ import { COLORS } from "../../muiTheme";
 import {
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  SOL_CUSTODY_ADDRESS,
+  SOL_NFT_CUSTODY_ADDRESS,
 } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 import MuiReactTable from "./tableComponents/MuiReactTable";
@@ -51,6 +54,12 @@ const CustodyAddresses: React.FC<any> = () => {
         chainId: CHAIN_ID_ETH,
         tokenAddress: getTokenBridgeAddressForChain(CHAIN_ID_ETH),
         nftAddress: getNFTBridgeAddressForChain(CHAIN_ID_ETH),
+      },
+      {
+        chainName: "Solana",
+        chainId: CHAIN_ID_SOLANA,
+        tokenAddress: SOL_CUSTODY_ADDRESS,
+        nftAddress: SOL_NFT_CUSTODY_ADDRESS,
       },
       {
         chainName: "Binance Smart Chain",

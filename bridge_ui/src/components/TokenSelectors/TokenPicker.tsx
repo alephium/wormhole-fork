@@ -27,7 +27,7 @@ import useMarketsMap from "../../hooks/useMarketsMap";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { selectTransferTargetChain } from "../../store/selectors";
 import { AVAILABLE_MARKETS_URL, CHAINS_BY_ID } from "../../utils/consts";
-import { shortenAddress } from "../../utils/ethereum";
+import { shortenAddress } from "../../utils/solana";
 import NFTViewer from "./NFTViewer";
 
 const useStyles = makeStyles((theme) =>

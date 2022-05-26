@@ -1,10 +1,13 @@
 import {
+  CHAIN_ID_SOLANA,
   hexToNativeString,
+  hexToUint8Array,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { makeStyles, TextField, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
-import { ethers } from "ethers";
+import { PublicKey } from "@solana/web3.js";
+import { BigNumber, ethers } from "ethers";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -13,6 +16,8 @@ import { GasEstimateSummary } from "../../hooks/useTransactionFees";
 import { incrementStep, setTargetChain } from "../../store/nftSlice";
 import {
   selectNFTIsTargetComplete,
+  selectNFTOriginAsset,
+  selectNFTOriginChain,
   selectNFTOriginTokenId,
   selectNFTShouldLockFields,
   selectNFTSourceChain,
@@ -26,6 +31,7 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
+import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 
 const useStyles = makeStyles((theme) => ({
@@ -49,8 +55,20 @@ function Target() {
   const targetChain = useSelector(selectNFTTargetChain);
   const targetAddressHex = useSelector(selectNFTTargetAddressHex);
   const targetAsset = useSelector(selectNFTTargetAsset);
+  const originChain = useSelector(selectNFTOriginChain);
+  const originAsset = useSelector(selectNFTOriginAsset);
   const originTokenId = useSelector(selectNFTOriginTokenId);
-  let tokenId = originTokenId;
+  let tokenId;
+  try {
+    tokenId =
+      originChain === CHAIN_ID_SOLANA && originAsset
+        ? BigNumber.from(
+            new PublicKey(hexToUint8Array(originAsset)).toBytes()
+          ).toString()
+        : originTokenId;
+  } catch (e) {
+    tokenId = originTokenId;
+  }
   const readableTargetAddress =
     hexToNativeString(targetAddressHex, targetChain) || "";
   const error = useSelector(selectNFTTargetError);
@@ -119,6 +137,7 @@ function Target() {
         )}
       </Alert>
       <LowBalanceWarning chainId={targetChain} />
+      {targetChain === CHAIN_ID_SOLANA && <SolanaTPSWarning />}
       <ButtonWithLoader
         disabled={!isTargetComplete} //|| !associatedAccountExists}
         onClick={handleNextClick}

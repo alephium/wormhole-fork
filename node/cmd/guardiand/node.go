@@ -58,6 +58,7 @@ var (
 	statusAddr *string
 
 	guardianKeyPath *string
+	solanaContract  *string
 
 	ethRPC      *string
 	ethContract *string
@@ -89,6 +90,9 @@ var (
 	algorandRPC      *string
 	algorandToken    *string
 	algorandContract *string
+
+	solanaWsRPC *string
+	solanaRPC   *string
 
 	alphRPC               *string
 	alphApiKey            *string
@@ -141,6 +145,7 @@ func init() {
 	dataDir = NodeCmd.Flags().String("dataDir", "", "Data directory")
 
 	guardianKeyPath = NodeCmd.Flags().String("guardianKey", "", "Path to guardian key (required)")
+	solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
 	ethContract = NodeCmd.Flags().String("ethContract", "", "Ethereum contract address")
@@ -172,6 +177,9 @@ func init() {
 	algorandRPC = NodeCmd.Flags().String("algorandRPC", "", "Algorand RPC URL")
 	algorandToken = NodeCmd.Flags().String("algorandToken", "", "Algorand access token")
 	algorandContract = NodeCmd.Flags().String("algorandContract", "", "Algorand contract")
+
+	solanaWsRPC = NodeCmd.Flags().String("solanaWS", "", "Solana Websocket URL (required")
+	solanaRPC = NodeCmd.Flags().String("solanaRPC", "", "Solana RPC URL (required")
 
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
@@ -285,6 +293,8 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
+	// readiness.RegisterComponent(common.ReadinessSolanaSyncing)
+	readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *unsafeDevMode {
 		// readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
 		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
@@ -434,6 +444,26 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Please specify --nodeName")
 	}
 
+	if *solanaContract == "" {
+		logger.Fatal("Please specify --solanaContract")
+	}
+	if *solanaWsRPC == "" {
+		logger.Fatal("Please specify --solanaWsUrl")
+	}
+	if *solanaRPC == "" {
+		logger.Fatal("Please specify --solanaUrl")
+	}
+
+	if *terraWS == "" {
+		logger.Fatal("Please specify --terraWS")
+	}
+	if *terraLCD == "" {
+		logger.Fatal("Please specify --terraLCD")
+	}
+	if *terraContract == "" {
+		logger.Fatal("Please specify --terraContract")
+	}
+
 	if *unsafeDevMode {
 		if *algorandRPC == "" {
 			logger.Fatal("Please specify --algorandRPC")
@@ -496,6 +526,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	// fantomContractAddr := eth_common.HexToAddress(*fantomContract)
 	// karuraContractAddr := eth_common.HexToAddress(*karuraContract)
 	// acalaContractAddr := eth_common.HexToAddress(*acalaContract)
+	// solAddress, err := solana_types.PublicKeyFromBase58(*solanaContract)
+	// if err != nil {
+	// 	logger.Fatal("invalid Solana contract address", zap.Error(err))
+	// }
 
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
@@ -579,6 +613,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
 
 	// Observation request channel for each chain supporting observation requests.
+	chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDPolygon] = make(chan *gossipv1.ObservationRequest)
@@ -789,6 +824,18 @@ func runNode(cmd *cobra.Command, args []string) {
 				return err
 			}
 		}
+
+		/*
+			if err := supervisor.Run(ctx, "solwatch-confirmed",
+				solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, nil, rpc.CommitmentConfirmed).Run); err != nil {
+				return err
+			}
+
+			if err := supervisor.Run(ctx, "solwatch-finalized",
+				solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, chainObsvReqC[vaa.ChainIDSolana], rpc.CommitmentFinalized).Run); err != nil {
+				return err
+			}
+		*/
 
 		p := processor.NewProcessor(ctx,
 			db,

@@ -1,6 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
@@ -9,6 +10,7 @@ import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useCallback, useMemo } from "react";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
 
 const createWalletStatus = (
@@ -33,6 +35,8 @@ function useIsWalletReady(
   forceNetworkSwitch: () => void;
 } {
   const autoSwitch = enableNetworkAutoswitch;
+  const solanaWallet = useSolanaWallet();
+  const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
   const { signer: alphSigner } = useAlephiumWallet();
   const hasTerraWallet = !!terraWallet;
@@ -80,6 +84,14 @@ function useIsWalletReady(
         terraWallet.walletAddress
       );
     }
+    if (chainId === CHAIN_ID_SOLANA && solPK) {
+      return createWalletStatus(
+        true,
+        undefined,
+        forceNetworkSwitch,
+        solPK.toString()
+      );
+    }
     if (isEVMChain(chainId) && hasEthInfo && signerAddress) {
       if (hasCorrectEvmNetwork) {
         return createWalletStatus(
@@ -112,6 +124,7 @@ function useIsWalletReady(
     autoSwitch,
     forceNetworkSwitch,
     hasTerraWallet,
+    solPK,
     hasEthInfo,
     correctEvmNetwork,
     hasCorrectEvmNetwork,

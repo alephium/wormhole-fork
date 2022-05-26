@@ -1,4 +1,5 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
+import { PublicKey } from "@solana/web3.js";
 import { hexValue, hexZeroPad, stripZeros } from "ethers/lib/utils";
 import { canonicalAddress, humanAddress, isNativeDenom } from "../terra";
 import {
@@ -14,6 +15,7 @@ import {
   CHAIN_ID_KARURA,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "./consts";
 import * as base58 from 'bs58';
@@ -53,6 +55,8 @@ export const hexToNativeString = (h: string | undefined, c: ChainId) => {
       ? undefined
       : c === CHAIN_ID_ALEPHIUM
       ? toAlphContractAddress(h)
+      : c === CHAIN_ID_SOLANA
+      ? new PublicKey(hexToUint8Array(h)).toString()
       : isEVMChain(c)
       ? hexZeroPad(hexValue(hexToUint8Array(h)), 20)
       : c === CHAIN_ID_TERRA
@@ -76,6 +80,8 @@ export const nativeToHexString = (
     return uint8ArrayToHex(tokenIdFromAddress(address));
   } else if (isEVMChain(chain)) {
     return uint8ArrayToHex(zeroPad(arrayify(address), 32));
+  } else if (chain === CHAIN_ID_SOLANA) {
+    return uint8ArrayToHex(zeroPad(new PublicKey(address).toBytes(), 32));
   } else if (chain === CHAIN_ID_TERRA) {
     if (isNativeDenom(address)) {
       return (

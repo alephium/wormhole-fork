@@ -1,11 +1,14 @@
 import {
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getIsTransferCompletedEth,
+  getIsTransferCompletedSolana,
   getIsTransferCompletedTerra,
   getIsTransferCompletedAlph,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
+import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -18,6 +21,7 @@ import {
 import {
   getEvmChainId,
   getTokenBridgeAddressForChain,
+  SOLANA_HOST,
   TERRA_GAS_PRICES_URL,
   TERRA_HOST,
 } from "../utils/consts";
@@ -66,6 +70,24 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
               getTokenBridgeAddressForChain(targetChain),
               provider,
               signedVAA
+            );
+          } catch (error) {
+            console.error(error);
+          }
+          if (!cancelled) {
+            setIsTransferCompleted(transferCompleted);
+            setIsLoading(false);
+          }
+        })();
+      } else if (targetChain === CHAIN_ID_SOLANA) {
+        setIsLoading(true);
+        (async () => {
+          try {
+            const connection = new Connection(SOLANA_HOST, "confirmed");
+            transferCompleted = await getIsTransferCompletedSolana(
+              getTokenBridgeAddressForChain(targetChain),
+              signedVAA,
+              connection
             );
           } catch (error) {
             console.error(error);

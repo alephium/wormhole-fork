@@ -1,8 +1,10 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getForeignAssetEth,
+  getForeignAssetSolana,
   getForeignAssetTerra,
   hexToNativeString,
   hexToUint8Array,
@@ -10,7 +12,11 @@ import {
 } from "@certusone/wormhole-sdk";
 import {
   getForeignAssetEth as getForeignAssetEthNFT,
+  getForeignAssetSol as getForeignAssetSolNFT,
 } from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
+import { BigNumber } from "@ethersproject/bignumber";
+import { arrayify } from "@ethersproject/bytes";
+import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
@@ -39,6 +45,9 @@ import {
   getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  SOLANA_HOST,
+  SOL_NFT_BRIDGE_ADDRESS,
+  SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
@@ -153,6 +162,43 @@ function useFetchTargetAsset(nft?: boolean) {
                   doesExist: asset !== ethers.constants.AddressZero,
                   address: asset,
                 })
+              )
+            );
+            setArgs();
+          }
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                errorDataWrapper(
+                  "Unable to determine existence of wrapped asset"
+                )
+              )
+            );
+          }
+        }
+      }
+      if (targetChain === CHAIN_ID_SOLANA && originChain && originAsset) {
+        dispatch(setTargetAsset(fetchDataWrapper()));
+        try {
+          const connection = new Connection(SOLANA_HOST, "confirmed");
+          const asset = await (nft
+            ? getForeignAssetSolNFT(
+                SOL_NFT_BRIDGE_ADDRESS,
+                originChain,
+                hexToUint8Array(originAsset),
+                arrayify(BigNumber.from(tokenId || "0"))
+              )
+            : getForeignAssetSolana(
+                connection,
+                SOL_TOKEN_BRIDGE_ADDRESS,
+                originChain,
+                hexToUint8Array(originAsset)
+              ));
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                receiveDataWrapper({ doesExist: !!asset, address: asset })
               )
             );
             setArgs();
