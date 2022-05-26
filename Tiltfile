@@ -191,7 +191,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-devnet"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node"]
 if solana:
     guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
 
@@ -296,6 +296,7 @@ k8s_resource(
     port_forward(22973, name = "Alephium REST [:22973]", host = webHost),
     # port_forward(20973, name = "Alephium Mining [:20973]", host = webHost),
   ],
+  resource_deps = ["const-gen"],
   labels = ["alephium"],
   trigger_mode = trigger_mode,
 )

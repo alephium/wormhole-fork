@@ -2,26 +2,29 @@ import { binToHex, NodeProvider, contractIdFromAddress, Script, NodeWallet } fro
 import { testWallet } from 'alephium-web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
-import * as env from './env'
 import { deployTestToken } from './deploy_test_token'
 import { getCreatedContractAddress } from './get_contract_address'
 import { mine } from './mine'
+import * as consts from './consts'
+import * as dotenv from "dotenv"
+
+dotenv.config({ path: __dirname+'/../../.env' })
 
 const provider = new NodeProvider("http://localhost:22973")
 
 async function createWallet() {
     const wallets = await provider.wallets.getWallets()
-    const exists = wallets.some(status => status.walletName == env.testWalletName)
+    const exists = wallets.some(status => status.walletName == consts.testWalletName)
     if (exists) {
         console.log('test wallet already exists')
-        await provider.wallets.postWalletsWalletNameUnlock(env.testWalletName, { password: env.testWalletPassword })
+        await provider.wallets.postWalletsWalletNameUnlock(consts.testWalletName, { password: consts.testWalletPassword })
         return
     }
 
     await provider.wallets.putWallets({
-        walletName: env.testWalletName,
-        mnemonic: env.testWalletMnemonic,
-        password: env.testWalletPassword
+        walletName: consts.testWalletName,
+        mnemonic: consts.testWalletMnemonic,
+        password: consts.testWalletPassword
     })
     console.log('create test wallet succeed')
 }
@@ -32,7 +35,7 @@ async function createTokenWrapper(
     tokenBridgeForChainId: string,
     remoteChain: string
 ) {
-    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, env.payer, env.dustAmount)
+    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, consts.payer, consts.dustAmount)
     let tokenWrapper = await getCreatedContractAddress(provider, txId)
     const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
     console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperId)
@@ -61,16 +64,18 @@ async function deploy() {
     await createWallet()
 
     const signer = await testWallet(provider)
+    const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
     const wormhole = new Wormhole(
         provider,
         signer,
-        env.governanceChainId,
-        env.governanceContractAddress,
-        env.governanceChainId,
-        env.governanceContractAddress,
-        env.initGuardianSet,
-        env.initGuardianIndex,
-        env.messageFee
+        parseInt(process.env.INIT_CHAIN_ID!),
+        parseInt(process.env.INIT_GOV_CHAIN_ID!),
+        process.env.INIT_GOV_CONTRACT!,
+        parseInt(process.env.BRIDGE_INIT_GOV_CHAIN_ID!),
+        process.env.BRIDGE_INIT_GOV_CONTRACT!,
+        initGuardianSet,
+        0,
+        consts.messageFee
     )
 
     const contracts = await wormhole.deployContracts()
@@ -80,8 +85,8 @@ async function deploy() {
     const testTokenId = await deployTestToken(provider, signer)
     console.log("local token id: " + testTokenId)
 
-    const tokenAmount = env.oneAlph * 10n
-    const getTokenTxId = await getToken(provider, signer, testTokenId, env.payer, tokenAmount)
+    const tokenAmount = consts.oneAlph * 10n
+    const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
     await createTokenWrapper(wormhole, testTokenId, remoteChains.eth, "eth")

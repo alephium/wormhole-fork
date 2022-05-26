@@ -2,7 +2,6 @@ import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Subm
 import { waitTxConfirmed } from './utils'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
-const CHAIN_ID_ALEPHIUM = 255
 const undoneSequenceMaxSize = 128 // the maximum size of the contract state is 1k
 const undoneSequenceMaxDistance = 512
 
@@ -25,6 +24,7 @@ export interface WormholeContracts {
 export class Wormhole {
     provider: NodeProvider
     signer: SignerWithNodeProvider
+    localChainId: number
     governanceChainId: number
     governanceContractId: string
     tokenBridgeGovernanceChainId: number
@@ -40,6 +40,7 @@ export class Wormhole {
     constructor(
         provider: NodeProvider,
         signer: SignerWithNodeProvider,
+        localChainId: number,
         governanceChainId: number,
         governanceContractId: string,
         tokenBridgeGovernanceChainId: number,
@@ -50,6 +51,7 @@ export class Wormhole {
     ) {
         this.provider = provider
         this.signer = signer
+        this.localChainId = localChainId
         this.governanceChainId = governanceChainId
         this.governanceContractId = governanceContractId
         this.tokenBridgeGovernanceChainId = tokenBridgeGovernanceChainId
@@ -129,7 +131,7 @@ export class Wormhole {
 
         const currentGuardianSet = initGuardianSet.concat(Array(19 - initGuardianSetSize).fill(Byte32Zero))
         const initFields = {
-            'chainId': CHAIN_ID_ALEPHIUM,
+            'chainId': this.localChainId,
             'governanceChainId': governanceChainId,
             'governanceContract': governanceContractId,
             'next': 0,
@@ -206,7 +208,7 @@ export class Wormhole {
             'next1': 0,
             'next2': 0,
             'undoneSequenceId': '',
-            'localChainId': CHAIN_ID_ALEPHIUM,
+            'localChainId': this.localChainId,
             'sequence': 0,
             'tokenWrapperTemplateId': tokenWrapperDeployResult.contractId,
             'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
