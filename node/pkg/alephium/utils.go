@@ -436,7 +436,7 @@ func (f Fields) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated
 type Event interface {
 	blockHash() string
 	txId() string
-	eventIndex() int32
+	eventIndex() int
 	fields() Fields
 	getConsistencyLevel(uint8) (*uint8, error)
 
@@ -447,7 +447,7 @@ type Event interface {
 type ContractEvent struct {
 	BlockHash  string `json:"blockHash"`
 	TxId       string `json:"txId"`
-	EventIndex int32  `json:"eventIndex"`
+	EventIndex int    `json:"eventIndex"`
 	Fields     Fields `json:"fields"`
 }
 
@@ -459,7 +459,7 @@ func (e *ContractEvent) txId() string {
 	return e.TxId
 }
 
-func (e *ContractEvent) eventIndex() int32 {
+func (e *ContractEvent) eventIndex() int {
 	return e.EventIndex
 }
 
@@ -502,7 +502,7 @@ type ContractEventByTxId struct {
 	TxId            string `json:"-"`
 	BlockHash       string `json:"blockHash"`
 	ContractAddress string `json:"contractAddress"`
-	EventIndex      int32  `json:"eventIndex"`
+	EventIndex      int    `json:"eventIndex"`
 	Fields          Fields `json:"fields"`
 }
 
@@ -514,7 +514,7 @@ func (e *ContractEventByTxId) txId() string {
 	return e.TxId
 }
 
-func (e *ContractEventByTxId) eventIndex() int32 {
+func (e *ContractEventByTxId) eventIndex() int {
 	return e.EventIndex
 }
 

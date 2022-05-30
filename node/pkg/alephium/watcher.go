@@ -167,7 +167,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
-func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, skipWormholeMessage bool) error {
+func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
@@ -185,9 +185,6 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 			var validateErr error
 			switch e.event.eventIndex() {
 			case WormholeMessageEventIndex:
-				if skipWormholeMessage {
-					continue
-				}
 				event, err := e.event.ToWormholeMessage()
 				if err != nil {
 					logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
@@ -282,7 +279,7 @@ func (w *Watcher) subscribe(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	errC chan<- error,
 ) {
 	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 10*time.Second, errC)
@@ -295,7 +292,7 @@ func (w *Watcher) subscribe_(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	tickDuration time.Duration,
 	errC chan<- error,
 ) {
@@ -357,7 +354,7 @@ func (w *Watcher) subscribe_(
 			return nil
 		}
 		confirmed := &ConfirmedEvents{confirmedEvents}
-		if err := handler(logger, confirmed, false); err != nil {
+		if err := handler(logger, confirmed); err != nil {
 			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
 			return err
 		}

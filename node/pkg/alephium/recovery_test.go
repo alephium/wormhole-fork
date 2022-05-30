@@ -52,30 +52,41 @@ func TestFetchEvents(t *testing.T) {
 			json.NewEncoder(w).Encode(event)
 			return
 		}
+
+		if strings.HasPrefix(r.RequestURI, "/blockflow/chain-info") {
+			w.Header().Set("Content-Type", "application/json")
+			result := struct {
+				CurrentHeight uint32 `json:"currentHeight"`
+			}{
+				CurrentHeight: 0,
+			}
+			json.NewEncoder(w).Encode(result)
+			return
+		}
 	}))
 
 	lastEventIndexGetter := func() (*uint64, error) {
 		return nil, badger.ErrKeyNotFound
 	}
 
-	toUnconfirmedEvents := func(ctx context.Context, client *Client, events []*ContractEvent) ([]*UnconfirmedEvent, error) {
-		unconfirmed := make([]*UnconfirmedEvent, len(events))
-		for i, event := range events {
-			unconfirmed[i] = &UnconfirmedEvent{
+	toConfirmedEvents := func(height uint32, events *ContractEvents, fromIndex uint64) (*uint64, []*UnconfirmedEvent, error) {
+		confirmed := make([]*UnconfirmedEvent, len(events.Events))
+		for i, event := range events.Events {
+			confirmed[i] = &UnconfirmedEvent{
 				event: event,
 			}
 		}
-		return unconfirmed, nil
+		return &events.NextStart, confirmed, nil
 	}
 
 	var confirmedEvents *ConfirmedEvents
-	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents, b bool) error {
+	handler := func(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 		confirmedEvents = confirmed
 		return nil
 	}
 
 	client := NewClient(server.URL, "", 10)
-	eventIndex, err := watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
+	eventIndex, err := watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toConfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(0))
 	assert.Nil(t, confirmedEvents)
@@ -95,7 +106,7 @@ func TestFetchEvents(t *testing.T) {
 	}
 
 	events = append(events, []*ContractEvent{randomEvent(), randomEvent()}...)
-	eventIndex, err = watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toUnconfirmedEvents, handler)
+	eventIndex, err = watcher.fetchEvents_(context.Background(), logger, client, contractAddress, lastEventIndexGetter, toConfirmedEvents, handler)
 	assert.Nil(t, err)
 	assert.Equal(t, *eventIndex, uint64(2))
 	assert.Equal(t, len(confirmedEvents.events), 1)
@@ -103,7 +114,11 @@ func TestFetchEvents(t *testing.T) {
 }
 
 func TestToUnconfirmedEvents(t *testing.T) {
-	watcher := &Watcher{}
+	watcher := &Watcher{
+		minConfirmations: 5,
+	}
+	logger, err := zap.NewProduction()
+	assert.Nil(t, err)
 
 	blocks := []struct {
 		header      BlockHeader
@@ -120,6 +135,13 @@ func TestToUnconfirmedEvents(t *testing.T) {
 				Hash: randomByte32().ToHex(),
 			},
 			isCanonical: false,
+		},
+		{
+			header: BlockHeader{
+				Hash:   randomByte32().ToHex(),
+				Height: 4,
+			},
+			isCanonical: true,
 		},
 	}
 
@@ -152,17 +174,31 @@ func TestToUnconfirmedEvents(t *testing.T) {
 	}))
 
 	client := NewClient(server.URL, "", 10)
-	events := []*ContractEvent{
-		{
-			BlockHash:  blocks[0].header.Hash,
-			EventIndex: TokenWrapperCreatedEventIndex,
+	events := &ContractEvents{
+		Events: []*ContractEvent{
+			{
+				BlockHash:  blocks[0].header.Hash,
+				EventIndex: TokenWrapperCreatedEventIndex,
+			},
+			{
+				BlockHash:  blocks[0].header.Hash,
+				EventIndex: WormholeMessageEventIndex,
+			},
+			{
+				BlockHash:  blocks[1].header.Hash,
+				EventIndex: UndoneSequenceCompletedEventIndex,
+			},
+			{
+				BlockHash:  blocks[2].header.Hash,
+				EventIndex: UndoneSequencesRemovedEventIndex,
+			},
 		},
-		{
-			BlockHash:  blocks[1].header.Hash,
-			EventIndex: TokenWrapperCreatedEventIndex,
-		},
+		NextStart: 3,
 	}
-	unconfirmedEvents, err := watcher.toUnconfirmedEvents(context.Background(), client, events)
+	eventIndex, unconfirmedEvents, err := watcher.toConfirmedEvents(context.Background(), logger, client, 6, events, 0)
 	assert.Nil(t, err)
+	assert.Equal(t, *eventIndex, uint64(2))
 	assert.Equal(t, len(unconfirmedEvents), 1)
+	assert.Equal(t, unconfirmedEvents[0].event.blockHash(), blocks[0].header.Hash)
+	assert.Equal(t, unconfirmedEvents[0].event.eventIndex(), TokenWrapperCreatedEventIndex)
 }

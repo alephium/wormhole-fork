@@ -16,7 +16,10 @@ func (w *Watcher) fetchEvents(
 	lastEventIndexGetter := func() (*uint64, error) {
 		return w.db.getLastEventIndex()
 	}
-	return w.fetchEvents_(ctx, logger, client, contractAddress, lastEventIndexGetter, w.toUnconfirmedEvents, w.handleEvents)
+	toConfirmedEvents := func(blockHeight uint32, events *ContractEvents, fromIndex uint64) (*uint64, []*UnconfirmedEvent, error) {
+		return w.toConfirmedEvents(ctx, logger, client, blockHeight, events, fromIndex)
+	}
+	return w.fetchEvents_(ctx, logger, client, contractAddress, lastEventIndexGetter, toConfirmedEvents, w.handleEvents)
 }
 
 func (w *Watcher) fetchEvents_(
@@ -25,8 +28,8 @@ func (w *Watcher) fetchEvents_(
 	client *Client,
 	contractAddress string,
 	lastEventIndexGetter func() (*uint64, error),
-	toUnconfirmedEvents func(context.Context, *Client, []*ContractEvent) ([]*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
+	toConfirmedEvents func(uint32, *ContractEvents, uint64) (*uint64, []*UnconfirmedEvent, error),
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 ) (*uint64, error) {
 	lastEventIndex, err := lastEventIndexGetter()
 	if err == badger.ErrKeyNotFound {
@@ -39,9 +42,9 @@ func (w *Watcher) fetchEvents_(
 		return nil, err
 	}
 
-	count, err := client.GetContractEventsCount(ctx, contractAddress)
+	blockHeight, err := client.GetCurrentHeight(ctx, w.chainIndex)
 	if err != nil {
-		logger.Error("failed to get event count", zap.Error(err), zap.String("contractAddress", contractAddress))
+		logger.Error("failed to get current block height", zap.Error(err), zap.Any("chainIndex", w.chainIndex))
 		return nil, err
 	}
 
@@ -50,7 +53,7 @@ func (w *Watcher) fetchEvents_(
 	for {
 		events, err := client.GetContractEvents(ctx, contractAddress, from, w.chainIndex.FromGroup)
 		if err != nil {
-			logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.Uint64("to", *count), zap.String("contractAddress", contractAddress))
+			logger.Error("failed to get events", zap.Error(err), zap.Uint64("from", from), zap.String("contractAddress", contractAddress))
 			return nil, err
 		}
 
@@ -58,42 +61,70 @@ func (w *Watcher) fetchEvents_(
 			break
 		}
 
-		// TODO: wait for confirmed???
-		unconfirmedEvents, err := toUnconfirmedEvents(ctx, client, events.Events)
+		eventIndex, confirmedEvents, err := toConfirmedEvents(blockHeight, events, from)
 		if err != nil {
-			logger.Error("failed to fetch unconfirmed events", zap.Error(err))
 			return nil, err
 		}
-		allEvents = append(allEvents, unconfirmedEvents...)
-		from = events.NextStart
+		allEvents = append(allEvents, confirmedEvents...)
+		if *eventIndex != events.NextStart {
+			break
+		}
+		from = *eventIndex
 	}
 	confirmed := &ConfirmedEvents{[]*UnconfirmedEvents{
 		{
-			eventIndex: *count - 1,
+			eventIndex: 0,
 			events:     allEvents,
 		},
 	}}
-	if err := handler(logger, confirmed, true); err != nil {
+	if err := handler(logger, confirmed); err != nil {
 		return nil, err
 	}
-	logger.Info("alph watcher recovery completed, fetch events from", zap.Uint64("from", *count))
-	return count, nil
+	logger.Info("alph watcher recovery completed, fetch events from", zap.Uint64("from", from))
+	return &from, nil
 }
 
-func (w *Watcher) toUnconfirmedEvents(ctx context.Context, client *Client, events []*ContractEvent) ([]*UnconfirmedEvent, error) {
-	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
-	for _, event := range events {
-		unconfirmed, err := w.toUnconfirmedEvent(ctx, client, event)
-		if err != nil {
-			return nil, err
+func (w *Watcher) toConfirmedEvents(
+	ctx context.Context,
+	logger *zap.Logger,
+	client *Client,
+	blockHeight uint32,
+	events *ContractEvents,
+	fromIndex uint64,
+) (*uint64, []*UnconfirmedEvent, error) {
+	confirmedEvents := make([]*UnconfirmedEvent, 0)
+	var blockHeader *BlockHeader
+	var isCanonical bool
+	var err error
+	eventIndex := fromIndex
+	for _, event := range events.Events {
+		if blockHeader == nil || event.BlockHash != blockHeader.Hash {
+			blockHeader, err = client.GetBlockHeader(ctx, event.BlockHash)
+			if err != nil {
+				logger.Error("failed to get block header", zap.Error(err), zap.String("hash", event.BlockHash))
+				return nil, nil, err
+			}
+
+			if blockHeader.Height+uint32(w.minConfirmations) > blockHeight {
+				break
+			}
+			eventIndex += 1
+
+			isCanonical, err = client.IsBlockInMainChain(ctx, event.BlockHash)
+			if err != nil {
+				logger.Error("failed to check main chain block", zap.Error(err), zap.String("hash", event.BlockHash))
+				return nil, nil, err
+			}
 		}
-		isCanonical, err := client.IsBlockInMainChain(ctx, unconfirmed.blockHeader.Hash)
-		if err != nil {
-			return nil, err
+
+		if event.EventIndex == WormholeMessageEventIndex || !isCanonical {
+			continue
 		}
-		if isCanonical {
-			unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
-		}
+
+		confirmedEvents = append(confirmedEvents, &UnconfirmedEvent{
+			event:         event,
+			confirmations: w.minConfirmations,
+		})
 	}
-	return unconfirmedEvents, nil
+	return &eventIndex, confirmedEvents, nil
 }
