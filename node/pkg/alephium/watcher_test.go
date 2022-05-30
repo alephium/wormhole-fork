@@ -50,10 +50,9 @@ func TestSubscribeEvents(t *testing.T) {
 			query := r.URL.Query()
 			from, err := strconv.Atoi(query["start"][0])
 			assert.Nil(t, err)
-			to, err := strconv.Atoi(query["end"][0])
-			assert.Nil(t, err)
 			json.NewEncoder(w).Encode(&ContractEvents{
-				Events: events[from:to],
+				Events:    events[from:],
+				NextStart: uint64(len(events)),
 			})
 			return
 		}

@@ -18,8 +18,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const MaxForkHeight = uint32(100)
-
 type Watcher struct {
 	url    string
 	apiKey string
@@ -302,7 +300,7 @@ func (w *Watcher) subscribe_(
 	errC chan<- error,
 ) {
 	pendingEvents := map[string]*UnconfirmedEvents{}
-	nextIndex := fromIndex
+	startIndex := fromIndex
 	lastHeight := atomic.LoadUint32(&w.currentHeight)
 
 	eventTick := time.NewTicker(tickDuration)
@@ -378,9 +376,9 @@ func (w *Watcher) subscribe_(
 				errC <- err
 				return
 			}
-			logger.Info("alephium contract event count", zap.Uint64("count", *count), zap.Uint64("nextIndex", nextIndex))
+			logger.Info("alephium contract event count", zap.Uint64("count", *count), zap.Uint64("startIndex", startIndex))
 
-			if *count == nextIndex {
+			if *count == startIndex {
 				if err := process(); err != nil {
 					errC <- err
 					return
@@ -388,34 +386,40 @@ func (w *Watcher) subscribe_(
 				continue
 			}
 
-			events, err := client.GetContractEventsByRange(ctx, contractAddress, nextIndex, *count, w.chainIndex.FromGroup)
-			if err != nil {
-				logger.Error("failed to get contract events", zap.Uint64("from", nextIndex), zap.Uint64("to", *count), zap.Error(err))
-				errC <- err
-				return
-			}
-
-			eventIndex := nextIndex
-			for _, event := range events.Events {
-				unconfirmed, err := toUnconfirmed(ctx, client, event)
+			for {
+				events, err := client.GetContractEvents(ctx, contractAddress, startIndex, w.chainIndex.FromGroup)
 				if err != nil {
-					logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+					logger.Error("failed to get contract events", zap.Uint64("from", startIndex), zap.Error(err))
 					errC <- err
 					return
 				}
-				blockHash := unconfirmed.event.blockHash()
-				if lst, ok := pendingEvents[blockHash]; ok {
-					lst.events = append(lst.events, unconfirmed)
-				} else {
-					pendingEvents[blockHash] = &UnconfirmedEvents{
-						events:     []*UnconfirmedEvent{unconfirmed},
-						eventIndex: eventIndex,
+
+				eventIndex := startIndex
+				for _, event := range events.Events {
+					unconfirmed, err := toUnconfirmed(ctx, client, event)
+					if err != nil {
+						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+						errC <- err
+						return
 					}
-					eventIndex += 1
+					blockHash := unconfirmed.event.blockHash()
+					if lst, ok := pendingEvents[blockHash]; ok {
+						lst.events = append(lst.events, unconfirmed)
+					} else {
+						pendingEvents[blockHash] = &UnconfirmedEvents{
+							events:     []*UnconfirmedEvent{unconfirmed},
+							eventIndex: eventIndex,
+						}
+						eventIndex += 1
+					}
+				}
+
+				startIndex = events.NextStart
+				if events.NextStart == *count {
+					break
 				}
 			}
 
-			nextIndex = *count
 			if err := process(); err != nil {
 				errC <- err
 				return
