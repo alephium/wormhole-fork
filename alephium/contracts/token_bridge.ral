@@ -110,7 +110,7 @@ TxContract TokenBridge(
             let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
             offset = offset + stateLength
             assert!(payloadLength == offset)
-            migrateWithState!(newContractCode, newContractState)
+            migrateWithFields!(newContractCode, newContractState)
         }
     }
 
