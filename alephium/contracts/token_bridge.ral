@@ -62,7 +62,8 @@ TxContract TokenBridge(
     }
 
     // register chain is a governance action
-    pub payable fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseRegisterChain(vaa)
         assert!(remoteChainId != localChainId)
 
@@ -113,7 +114,8 @@ TxContract TokenBridge(
         }
     }
 
-    pub payable fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(tokenId) == 32)
         assert!(size!(nonce) == 4)
 
@@ -145,7 +147,8 @@ TxContract TokenBridge(
         return current
     }
 
-    pub payable fn publishTransfer(
+    @using(preapprovedAssets = true)
+    pub fn publishTransfer(
         payer: Address,
         data: ByteVec,
         nonce: ByteVec,
@@ -162,7 +165,8 @@ TxContract TokenBridge(
     }
 
     // handle undone sequence transfer message
-    pub payable fn completeUndoneTransfer(vaa: ByteVec, arbiter: Address) -> () {
+    @using(preapprovedAssets = true)
+    pub fn completeUndoneTransfer(vaa: ByteVec, arbiter: Address) -> () {
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
         let undoneSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))

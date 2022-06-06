@@ -50,7 +50,8 @@ TxContract TokenBridgeForChain(
         return tokenContractId, decimals, symbol, name
     }
 
-    pub payable fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let token = ERC20Token(tokenId)
         let symbol = token.symbol()
         let symbolSize = size!(symbol)
@@ -76,7 +77,8 @@ TxContract TokenBridgeForChain(
         eventEmitter.publishTokenWrapperCreated(contractId, true, tokenId, remoteChainId)
     }
 
-    pub payable fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (tokenId, decimals, symbol, name) = parseAttestToken(vaa)
         approveAlph!(payer, createContractAlphAmount)
         let encodedState = encodeToByteVec!(

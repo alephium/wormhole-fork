@@ -22,7 +22,8 @@ TxContract TestToken(
         return totalSupply_
     }
 
-    pub payable fn buy(from: Address, amount: U256) -> () {
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn buy(from: Address, amount: U256) -> () {
         let tokenAmount = amount
         transferAlphToSelf!(from, amount)
         transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)

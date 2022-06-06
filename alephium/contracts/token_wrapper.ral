@@ -52,7 +52,8 @@ TxContract TokenWrapper(
         return remoteChainId
     }
 
-    pub payable fn transfer(
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn transfer(
         fromAddress: Address,
         toAddress: ByteVec,
         amount: U256,
@@ -93,7 +94,8 @@ TxContract TokenWrapper(
         return transferAmount, denomalizedFee
     }
 
-    pub payable fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
         let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
         assert!(msgTokenId == tokenContractId)
@@ -109,7 +111,8 @@ TxContract TokenWrapper(
         }
     }
 
-    pub payable fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
         assert!(callerContractId!() == tokenBridgeId)
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)

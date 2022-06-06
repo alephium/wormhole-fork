@@ -24,7 +24,8 @@ TxContract Governance(
         return messageFee
     }
 
-    pub payable fn payMessageFee(payer: Address) -> () {
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn payMessageFee(payer: Address) -> () {
         transferAlphToSelf!(payer, messageFee)
     }
 
@@ -125,7 +126,8 @@ TxContract Governance(
         messageFee = fee
     }
 
-    pub payable fn submitTransferFee(vaa: ByteVec) -> () {
+    @using(assetsInContract = true)
+    pub fn submitTransferFee(vaa: ByteVec) -> () {
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #04)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
