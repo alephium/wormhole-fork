@@ -62,21 +62,47 @@ TxContract Governance(
         if (checkGuardianSetIndex) {
             assert!(guardianSetIndex == guardianSetIndexes[1])
         }
+
         let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
         assert!(signatureSize <= 19)
-        let mut index = 6
-        let mut signatures = [#; 19]
-        loop(0, 19, 1,
-            // 1 byte `guardianIndex` and 65 bytes signature
-            if (? == u256From1Byte!(byteVecSlice!(data, index, index + 1))) {
-                signatures[?] = byteVecSlice!(data, index, index + 66)
-                index = index + 66
-            }
-        )
-        let body = byteVecSlice!(data, index, size!(data))
+        let (keys, expirationTime, guardianSize) = getGuardiansInfo(guardianSetIndex)
+        assert!((guardianSetIndex == guardianSetIndexes[1]) || (blockTimeStamp!() <= expirationTime))
+
+        // check signature quorum size
+        assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
+
+        let mut offset = 6
+        let body = byteVecSlice!(data, 6 + signatureSize * 66, size!(data))
         let hash = keccak256!(keccak256!(body))
-        verifySignatures(guardianSetIndex, hash, signatures, signatureSize)
+
+        let mut lastGuardianIndex = 0
+        let mut sigIndex = 0
+        while (sigIndex < signatureSize) {
+            // 1 byte `guardianIndex` and 65 bytes signature
+            let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
+            assert!(sigIndex == 0 || guardianIndex > lastGuardianIndex)
+
+            let signature = byteVecSlice!(data, offset + 1, offset + 66)
+            let recId = u256From1Byte!(byteVecSlice!(signature, 64, 65)) + 27
+            let newSignature = byteVecSlice!(signature, 0, 64) ++ u256To1Byte!(recId)
+            assert!(keys[guardianIndex] == ethEcRecover!(hash, newSignature))
+            lastGuardianIndex = guardianIndex
+
+            offset = offset + 66
+            sigIndex = sigIndex + 1
+        }
         return body
+    }
+
+    fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256, U256) {
+        if (guardianSetIndex == guardianSetIndexes[1]) {
+            return guardianSets[1], 0, guardianSetSizes[1]
+        }
+        if (guardianSetIndex == guardianSetIndexes[0]) {
+            return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
+        }
+        assert!(false) // invalid guardian set index
+        return [#; 19], 0, 0
     }
 
     fn checkModuleAndAction(payload: ByteVec, start: U256, action: ByteVec) -> () {
@@ -102,16 +128,18 @@ TxContract Governance(
         assert!(newGuardianSetIndex == guardianSetIndexes[1] + 1)
         let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, 39, 40))
         assert!(newGuardianSetSize > 0 && newGuardianSetSize <= 19)
-        let mut index = 40
-        loop(0, 19, 1,
-            if (? < newGuardianSetSize) {
-                guardianSets[1][?] = byteVecSlice!(payload, index, index + 20)
-                index = index + 20
+        let mut offset = 40
+        let mut guardianIndex = 0
+        while (guardianIndex < 19) {
+            if (guardianIndex < newGuardianSetSize) {
+                guardianSets[1][guardianIndex] = byteVecSlice!(payload, offset, offset + 20)
+                offset = offset + 20
             } else {
-                guardianSets[1][?] = #
+                guardianSets[1][guardianIndex] = #
             }
-        )
-        assert!(size!(payload) == index)
+            guardianIndex = guardianIndex + 1
+        }
+        assert!(size!(payload) == offset)
         guardianSetIndexes[1] = newGuardianSetIndex
         guardianSetSizes[1] = newGuardianSetSize
     }
@@ -165,44 +193,5 @@ TxContract Governance(
             assert!(payloadLength == offset)
             migrateWithState!(newContractCode, newContractState)
         }
-    }
-
-    fn verifySignature(lastGuardianIndex: I256, signature: ByteVec, key: ByteVec, hash: ByteVec) -> I256 {
-        if (signature == #) {
-            return lastGuardianIndex
-        }
-        let guardianIndex = i256!(u256From1Byte!(byteVecSlice!(signature, 0, 1)))
-        assert!(guardianIndex > lastGuardianIndex)
-        let recId = u256From1Byte!(byteVecSlice!(signature, 65, 66)) + 27
-        let newSignature = byteVecSlice!(signature, 1, 65) ++ u256To1Byte!(recId)
-        assert!(key == ethEcRecover!(hash, newSignature))
-        return guardianIndex
-    }
-
-    fn verifySignatures(
-        guardianSetIndex: U256,
-        hash: ByteVec,
-        signatures: [ByteVec; 19],
-        signatureSize: U256
-    ) -> () {
-        let (keys, expirationTime, guardianSize) = getGuardiansInfo(guardianSetIndex)
-        assert!((guardianSetIndex == guardianSetIndexes[1]) || (blockTimeStamp!() <= expirationTime))
-
-        // check signature quorum size
-        assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
-
-        let mut lastGuardianIndex = -1i
-        loop(0, 19, 1, lastGuardianIndex = verifySignature(lastGuardianIndex, signatures[?], keys[?], hash))
-    }
-
-    fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256, U256) {
-        if (guardianSetIndex == guardianSetIndexes[1]) {
-            return guardianSets[1], 0, guardianSetSizes[1]
-        }
-        if (guardianSetIndex == guardianSetIndexes[0]) {
-            return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
-        }
-        assert!(false) // invalid guardian set index
-        return [#; 19], 0, 0
     }
 }
