@@ -10,7 +10,7 @@ TxContract Sequence(
     mut undoneSequenceId: ByteVec,
     undoneSequenceCodeHash: ByteVec,
     eventEmitterId: ByteVec
-) extends InitUndoneSequence {
+) implements InitUndoneSequence {
     fn initialized() -> Bool {
         return undoneSequenceId != #
     }

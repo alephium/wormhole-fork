@@ -13,7 +13,7 @@ TxContract TokenWrapper(
     symbol_: ByteVec,
     name_: ByteVec,
     decimals_: U256
-) extends Math(), ERC20Token {
+) extends Math() implements ERC20Token {
     pub fn name() -> ByteVec {
         return name_
     }

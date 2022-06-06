@@ -5,7 +5,7 @@ TxContract TestToken(
     name_: ByteVec,   // length is 32
     decimals_: U256,
     totalSupply_: U256
-) extends ERC20Token {
+) implements ERC20Token {
     pub fn name() -> ByteVec {
         return name_
     }
