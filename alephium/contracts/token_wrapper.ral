@@ -78,8 +78,7 @@ TxContract TokenWrapper(
             u256To2Byte!(tokenChainId) ++
             toAddress ++
             u256To2Byte!(remoteChainId) ++
-            u256To32Byte!(normalizedFee) ++
-            byteVec!(isLocalToken)
+            u256To32Byte!(normalizedFee)
 
         let tokenBridge = TokenBridge(tokenBridgeId)
         approveAlph!(fromAddress, tokenBridge.getMessageFee())

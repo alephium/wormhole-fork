@@ -199,9 +199,8 @@ describe("test token bridge", () => {
         const event = testResult.events[0]
         expect(event.name).toEqual('WormholeMessage')
 
-        let postfix = Buffer.allocUnsafe(33)
-        postfix.writeUint8(1, 0)
-        postfix.write(toContractId(tokenWrapperInfo.address), 1, 'hex')
+        let postfix = Buffer.allocUnsafe(32)
+        postfix.write(toContractId(tokenWrapperInfo.address), 0, 'hex')
 
         expect(event.fields).toEqual({
             'sender': tokenBridgeInfo.contractId,
@@ -379,9 +378,8 @@ describe("test token bridge", () => {
         const event = testResult.events[0]
         expect(event.name).toEqual('WormholeMessage')
 
-        let postfix = Buffer.allocUnsafe(33)
-        postfix.writeUint8(0, 0)
-        postfix.write(toContractId(tokenWrapperInfo.address), 1, 'hex')
+        let postfix = Buffer.allocUnsafe(32)
+        postfix.write(toContractId(tokenWrapperInfo.address), 0, 'hex')
 
         expect(event.fields).toEqual({
             'sender': toContractId(tokenBridgeInfo.address),
