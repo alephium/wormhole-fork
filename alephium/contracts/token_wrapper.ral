@@ -95,7 +95,7 @@ TxContract TokenWrapper(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeTransfer(vaa: ByteVec, arbiter: Address) -> () {
+    pub fn completeTransfer(vaa: ByteVec) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
         let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
         assert!(msgTokenId == tokenContractId)
@@ -104,23 +104,25 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
+        let caller = uniqueTxInputAddress!()
+        transferAlph!(caller, recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
-            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+            transferTokenFromSelf!(caller, tokenId, transferFee)
         }
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256, arbiter: Address) -> () {
+    pub fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256) -> () {
         assert!(callerContractId!() == tokenBridgeId)
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(txCaller!(0), recipient, 1000000000000) // dustAmount
+        let caller = uniqueTxInputAddress!()
+        transferAlph!(caller, recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
-            transferTokenFromSelf!(arbiter, tokenId, transferFee)
+            transferTokenFromSelf!(caller, tokenId, transferFee)
         }
     }
 }

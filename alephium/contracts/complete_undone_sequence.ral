@@ -1,7 +1,7 @@
 import "token_bridge.ral"
 
-TxScript Main(tokenBridgeId: ByteVec, vaa: ByteVec, arbiter: Address) {
-    approveAlph!(txCaller!(0), 1000000000000) // dustAmount
+TxScript Main(tokenBridgeId: ByteVec, vaa: ByteVec) {
+    approveAlph!(uniqueTxInputAddress!(), 1000000000000) // dustAmount
     let tokenBridge = TokenBridge(tokenBridgeId)
-    tokenBridge.completeUndoneTransfer(vaa, arbiter)
+    tokenBridge.completeUndoneTransfer(vaa)
 }

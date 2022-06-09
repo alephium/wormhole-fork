@@ -1,7 +1,7 @@
 import "token_wrapper.ral"
 
-TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec, arbiter: Address) {
-    approveAlph!(txCaller!(0), 1000000000000) // dustAmount
+TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec) {
+    approveAlph!(uniqueTxInputAddress!(), 1000000000000) // dustAmount
     let tokenWrapper = TokenWrapper(tokenWrapperId)
-    tokenWrapper.completeTransfer(vaa, arbiter)
+    tokenWrapper.completeTransfer(vaa)
 }
