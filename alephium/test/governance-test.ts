@@ -1,6 +1,6 @@
 import { Asset, NodeProvider, InputAsset, TestContractResult, Val, Contract } from 'alephium-web3'
 import { toHex } from '../lib/utils'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, createEventEmitter, encodeU256, expectAssertionFailed, expectAssertionFailedOrRecoverEthAddressFailed, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, createEventEmitter, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { createGovernance, governanceChainId, governanceContractId, governanceModule, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
@@ -63,9 +63,10 @@ describe("test governance", () => {
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
-        await expectAssertionFailedOrRecoverEthAddressFailed(async () => {
-            return await testCase(invalidVaa, 'updateGuardianSet')
-        })
+        await expectOneOfError(
+            async () => await testCase(invalidVaa, 'updateGuardianSet'),
+            ["AssertionFailed", "FailedInRecoverEthAddress", "InvalidConversion"]
+        )
     })
 
     it('should set message fee', async () => {
@@ -79,7 +80,7 @@ describe("test governance", () => {
 
     it('should transfer message fee to recipient', async () => {
         const asset: Asset = {
-            alphAmount: messageFee * 1000n
+            alphAmount: oneAlph * 4n
         }
         const inputAsset: InputAsset = {
             address: randomAssetAddress(),

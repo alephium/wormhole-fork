@@ -1,6 +1,6 @@
 import { NodeProvider, Contract, ContractState } from 'alephium-web3'
 import { createGovernance, governanceChainId, governanceContractId } from './governance-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractInfo, dustAmount, initAsset, randomContractAddress, toContractId } from './wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, toContractId } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
@@ -132,7 +132,7 @@ export async function createTestToken(
         "decimals_": decimals,
         "totalSupply_": supply ? supply : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
     }
-    const state = token.toState(initFields, {alphAmount: dustAmount}, address)
+    const state = token.toState(initFields, {alphAmount: minimalAlphInContract}, address)
     return new ContractInfo(token, state, [], address)
 }
 

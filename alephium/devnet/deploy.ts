@@ -35,7 +35,7 @@ async function createTokenWrapper(
     tokenBridgeForChainId: string,
     remoteChain: string
 ) {
-    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, consts.payer, consts.dustAmount)
+    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, consts.payer, consts.minimalAlphInContract)
     let tokenWrapper = await getCreatedContractAddress(provider, txId)
     const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
     console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperId)

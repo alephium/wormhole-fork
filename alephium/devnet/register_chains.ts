@@ -10,12 +10,12 @@ export interface RemoteChains {
 
 export async function registerChains(wormhole: Wormhole, tokenBridgeId: string): Promise<RemoteChains> {
     const registerEthVAA = process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!
-    var txId = await wormhole.registerChainToAlph(tokenBridgeId, registerEthVAA, consts.payer, consts.dustAmount)
+    var txId = await wormhole.registerChainToAlph(tokenBridgeId, registerEthVAA, consts.payer, consts.minimalAlphInContract)
     const bridgeForEth = await getCreatedContractAddress(wormhole.provider, txId)
     console.log("register eth tx id: " + txId + ', contract address: ' + bridgeForEth)
 
     const registerBSCVAA = process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!
-    txId = await wormhole.registerChainToAlph(tokenBridgeId, registerBSCVAA, consts.payer, consts.dustAmount)
+    txId = await wormhole.registerChainToAlph(tokenBridgeId, registerBSCVAA, consts.payer, consts.minimalAlphInContract)
     const bridgeForBsc = await getCreatedContractAddress(wormhole.provider, txId)
     console.log("register bsc tx id: " + txId + ', contractAddress: ' + bridgeForBsc)
 
