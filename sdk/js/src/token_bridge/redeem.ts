@@ -26,29 +26,25 @@ import { parseTransferPayload } from "../utils/parseVaa";
 
 export function redeemOnAlph(
   tokenWrapperId: string,
-  signedVAA: Uint8Array,
-  arbiterAddress: string
+  signedVAA: Uint8Array
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
   return script.buildByteCodeToDeploy({
     tokenWrapperId: tokenWrapperId,
-    vaa: vaaHex,
-    arbiter: arbiterAddress
+    vaa: vaaHex
   })
 }
 
 export function completeUndoneSequence(
   tokenBridgeId: string,
-  signedVAA: Uint8Array,
-  arbiterAddress: string,
+  signedVAA: Uint8Array
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeUndoneSequenceScript()
   return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
-    vaa: vaaHex,
-    arbiter: arbiterAddress
+    vaa: vaaHex
   })
 }
 

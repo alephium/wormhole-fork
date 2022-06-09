@@ -1,23 +1,21 @@
 {
-  "sourceCodeSha256": "f593eb125f059ec60aedc85ce2f2a3f3f2f7562120191afea91ad485879a8d0d",
-  "bytecodeTemplate": "0101010001000a0c5913c1e8d4a51000a2{0}1700{1}{2}1600010c",
+  "sourceCodeSha256": "7cc2f3277d89f760176792828f9a6f7303102d0c1c08769a726d8b02af84fc67",
+  "bytecodeTemplate": "010103000100087b13c1e8d4a51000a2{0}1700{1}1600010c",
   "fieldsSig": {
-    "signature": "TxScript Main(tokenWrapperId:ByteVec,vaa:ByteVec,arbiter:Address)",
+    "signature": "TxScript Main(tokenWrapperId:ByteVec,vaa:ByteVec)",
     "names": [
       "tokenWrapperId",
-      "vaa",
-      "arbiter"
+      "vaa"
     ],
     "types": [
       "ByteVec",
-      "ByteVec",
-      "Address"
+      "ByteVec"
     ]
   },
   "functions": [
     {
       "name": "main",
-      "signature": "pub payable main()->()",
+      "signature": "@using(preapprovedAssets=true) pub main()->()",
       "argNames": [],
       "argTypes": [],
       "returnTypes": []

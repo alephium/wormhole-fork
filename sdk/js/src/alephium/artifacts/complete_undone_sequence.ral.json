@@ -1,23 +1,21 @@
 {
-  "sourceCodeSha256": "27ceaa0980bdcd0754053cb3baba09e530f894f60b7e9a7f6bf8cc2146f8131f",
-  "bytecodeTemplate": "0101010001000a0c5913c1e8d4a51000a2{0}1700{1}{2}16000113",
+  "sourceCodeSha256": "a4bc79bb8afa793c3dfa3196b6f308acf89ae5ec939ae771897ee47c7cc8ae4d",
+  "bytecodeTemplate": "010103000100087b13c1e8d4a51000a2{0}1700{1}16000113",
   "fieldsSig": {
-    "signature": "TxScript Main(tokenBridgeId:ByteVec,vaa:ByteVec,arbiter:Address)",
+    "signature": "TxScript Main(tokenBridgeId:ByteVec,vaa:ByteVec)",
     "names": [
       "tokenBridgeId",
-      "vaa",
-      "arbiter"
+      "vaa"
     ],
     "types": [
       "ByteVec",
-      "ByteVec",
-      "Address"
+      "ByteVec"
     ]
   },
   "functions": [
     {
       "name": "main",
-      "signature": "pub payable main()->()",
+      "signature": "@using(preapprovedAssets=true) pub main()->()",
       "argNames": [],
       "argTypes": [],
       "returnTypes": []
