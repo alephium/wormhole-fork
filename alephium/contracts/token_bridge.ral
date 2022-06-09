@@ -84,9 +84,7 @@ TxContract TokenBridge(
         )
 
         approveAlph!(payer, createContractAlphAmount)
-        let contractId = copyCreateContract!(tokenBridgeForChainTemplateId, encodedState)
-        let eventEmitter = EventEmitter(eventEmitterId)
-        eventEmitter.publishTokenBridgeForChainCreated(contractId, remoteChainId)
+        copyCreateSubContract!(u256To2Byte!(remoteChainId), tokenBridgeForChainTemplateId, encodedState)
     }
 
     pub fn upgradeContract(vaa: ByteVec) -> () {

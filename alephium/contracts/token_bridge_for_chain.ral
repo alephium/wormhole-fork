@@ -72,9 +72,7 @@ TxContract TokenBridgeForChain(
             zeros!(32 - nameSize) ++ name,
             token.decimals()
         )
-        let contractId = copyCreateContract!(tokenWrapperTemplateId, encodedState)
-        let eventEmitter = EventEmitter(eventEmitterId)
-        eventEmitter.publishTokenWrapperCreated(contractId, true, tokenId, remoteChainId)
+        copyCreateSubContract!(tokenId, tokenWrapperTemplateId, encodedState)
     }
 
     @using(preapprovedAssets = true)
@@ -93,9 +91,7 @@ TxContract TokenBridgeForChain(
             decimals
         )
         let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-        let contractId = copyCreateContractWithToken!(tokenWrapperTemplateId, encodedState, tokenAmount)
-        let eventEmitter = EventEmitter(eventEmitterId)
-        eventEmitter.publishTokenWrapperCreated(contractId, false, tokenId, remoteChainId)
+        copyCreateSubContractWithToken!(tokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
