@@ -168,13 +168,17 @@ TxContract TokenBridge(
         let payload = verifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #03)
         let undoneSequence = u256From8Byte!(byteVecSlice!(payload, 33, 41))
-        let tokenWrapperId = byteVecSlice!(payload, 41, 73)
-        let toAddress = byteVecSlice!(payload, 73, 105)
-        let amount = u256From32Byte!(byteVecSlice!(payload, 105, 137))
-        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 137, 169))
-        assert!(size!(payload) == 169)
-        approveAlph!(caller, 1000000000000000) // dustAmount
+        let emitChainIdBytes = byteVecSlice!(payload, 41, 43)
+        let tokenId = byteVecSlice!(payload, 43, 75)
+        let toAddress = byteVecSlice!(payload, 75, 107)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 107, 139))
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 139, 171))
+        assert!(size!(payload) == 171)
 
+        let tokenBridgeForChainId = subContractId!(emitChainIdBytes)
+        let tokenWrapperId = blake2b!(blake2b!(tokenId ++ tokenBridgeForChainId))
+
+        approveAlph!(caller, 1000000000000000) // dustAmount
         let tokenWrapper = TokenWrapper(tokenWrapperId)
         tokenWrapper.completeUndoneTransfer(caller, toAddress, amount, arbiterFee)
         let eventEmitter = EventEmitter(eventEmitterId)
