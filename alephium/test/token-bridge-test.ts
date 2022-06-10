@@ -1,8 +1,8 @@
 import { Asset, NodeProvider, ContractEvent, InputAsset, Output, TestContractResult, Token } from 'alephium-web3'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractId, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, CompleteFailedTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, createEventEmitter, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody, chainIdToBytes, doubleHash, dustAmount } from './fixtures/wormhole-fixture'
+import { AttestToken, CompleteUndoneTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, TokenBridgeForChainInfo, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, createEventEmitter, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody, chainIdToBytes, doubleHash, dustAmount, toContractAddress } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
 
@@ -95,8 +95,8 @@ describe("test token bridge", () => {
 
         const output = testResult.txOutputs[0]
         const path = Buffer.concat([
-            Buffer.from(tokenBridgeInfo.contractId, 'hex'),
-            chainIdToBytes(remoteChainId)
+            chainIdToBytes(remoteChainId),
+            Buffer.from(tokenBridgeInfo.contractId, 'hex')
         ])
         const expectedContractId = Buffer.from(doubleHash(path)).toString('hex')
         expect(toContractId(output.address)).toEqual(expectedContractId)
@@ -127,8 +127,8 @@ describe("test token bridge", () => {
 
         const tokenWrapperOutput = testResult.txOutputs[0]
         const path = Buffer.concat([
-            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex'),
-            Buffer.from(testToken.contractId, 'hex')
+            Buffer.from(testToken.contractId, 'hex'),
+            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex')
         ])
         const expectedContractId = Buffer.from(doubleHash(path)).toString('hex')
         expect(toContractId(tokenWrapperOutput.address)).toEqual(expectedContractId)
@@ -244,7 +244,8 @@ describe("test token bridge", () => {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: {
-                'vaa': toHex(vaa.encode())
+                'vaa': toHex(vaa.encode()),
+                'caller': payer
             },
             initialAsset: initAsset,
             inputAssets: [inputAsset],
@@ -300,8 +301,8 @@ describe("test token bridge", () => {
 
         const tokenWrapperOutput = testResult.txOutputs[0]
         const path = Buffer.concat([
-            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex'),
-            Buffer.from(remoteTokenId, 'hex')
+            Buffer.from(remoteTokenId, 'hex'),
+            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex')
         ])
         const expectedContractId = Buffer.from(doubleHash(path)).toString('hex')
         expect(toContractId(tokenWrapperOutput.address)).toEqual(expectedContractId)
@@ -424,7 +425,8 @@ describe("test token bridge", () => {
             address: tokenWrapperInfo.address,
             initialFields: tokenWrapperInfo.selfState.fields,
             testArgs: {
-                'vaa': toHex(vaa.encode())
+                'vaa': toHex(vaa.encode()),
+                'caller': payer
             },
             initialAsset: initAsset,
             inputAssets: [inputAsset],
@@ -458,21 +460,30 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const eventEmitter = await createEventEmitter(provider)
         const tokenBridgeInfo = await createTokenBridge(provider, eventEmitter)
+        const tokenBridgeForChainId = doubleHash(Buffer.concat([
+            chainIdToBytes(remoteChainId),
+            Buffer.from(tokenBridgeInfo.contractId, 'hex')
+        ]))
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
-            provider, eventEmitter, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
+            provider, eventEmitter, tokenBridgeInfo, remoteChainId,
+            remoteTokenBridgeId, toContractAddress(toHex(tokenBridgeForChainId))
         )
         const wrappedTokenId = toHex(randomBytes(32))
+        const tokenWrapperId = doubleHash(Buffer.concat([
+            Buffer.from(wrappedTokenId, 'hex'),
+            Buffer.from(tokenBridgeForChainId)
+        ]))
         const tokenWrapperInfo = await createWrapper(
             wrappedTokenId, false, decimals, symbol, name,
-            tokenBridgeInfo, tokenBridgeForChainInfo
+            tokenBridgeInfo, tokenBridgeForChainInfo, toContractAddress(toHex(tokenWrapperId))
         )
         const tokenId = toContractId(tokenWrapperInfo.address)
         const toAddress = randomAssetAddress()
         const transferAmount = oneAlph
         const arbiterFee = messageFee
-        const failedSequence = 10
-        const transfer = new CompleteFailedTransfer(
-            tokenId, failedSequence, toRecipientId(toAddress), transferAmount, arbiterFee
+        const undoneSequence = 10
+        const transfer = new CompleteUndoneTransfer(
+            remoteChainId, wrappedTokenId, undoneSequence, toRecipientId(toAddress), transferAmount, arbiterFee
         )
         const vaaBody = new VAABody(transfer.encode(), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
@@ -488,7 +499,8 @@ describe("test token bridge", () => {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: {
-                'vaa': toHex(vaa.encode())
+                'vaa': toHex(vaa.encode()),
+                'caller': payer
             },
             initialAsset: initAsset,
             inputAssets: [inputAsset],
@@ -517,7 +529,7 @@ describe("test token bridge", () => {
         expect(event.fields).toEqual({
             'sender': toContractId(tokenBridgeInfo.address),
             'remoteChainId': remoteChainId,
-            'sequence': failedSequence
+            'sequence': undoneSequence
         })
         expect(event.contractAddress).toEqual(eventEmitter.address)
     })

@@ -55,30 +55,33 @@ export class RegisterChain {
     }
 }
 
-export class CompleteFailedTransfer {
-    tokenWrapperId: string
-    failedSequence: number
+export class CompleteUndoneTransfer {
+    emitChainId: number
+    tokenId: string
+    undoneSequence: number
     toAddress: string
     amount: bigint
     arbiterFee: bigint
 
-    constructor(tokenWrapperId: string, failedSequence: number, toAddress: string, amount: bigint, arbiterFee: bigint) {
-        this.tokenWrapperId = tokenWrapperId
-        this.failedSequence = failedSequence
+    constructor(emiterChainId: number, tokenId: string, undoneSequence: number, toAddress: string, amount: bigint, arbiterFee: bigint) {
+        this.emitChainId = emiterChainId
+        this.tokenId = tokenId
+        this.undoneSequence = undoneSequence
         this.toAddress = toAddress
         this.amount = amount
         this.arbiterFee = arbiterFee
     }
 
     encode(): Uint8Array {
-        let buffer = Buffer.allocUnsafe(169)
+        let buffer = Buffer.allocUnsafe(171)
         buffer.write(tokenBridgeModule, 0, 'hex')
         buffer.writeUint8(3, 32)
-        buffer.writeBigUint64BE(BigInt(this.failedSequence), 33)
-        buffer.write(this.tokenWrapperId, 41, 'hex')
-        buffer.write(this.toAddress, 73, 'hex')
-        buffer.write(zeroPad(this.amount.toString(16), 32), 105, 'hex')
-        buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 137, 'hex')
+        buffer.writeBigUint64BE(BigInt(this.undoneSequence), 33)
+        buffer.writeUInt16BE(this.emitChainId, 41)
+        buffer.write(this.tokenId, 43, 'hex')
+        buffer.write(this.toAddress, 75, 'hex')
+        buffer.write(zeroPad(this.amount.toString(16), 32), 107, 'hex')
+        buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 139, 'hex')
         return buffer
     }
 }
@@ -263,10 +266,11 @@ export async function createTokenBridgeForChain(
     eventEmitter: ContractInfo,
     tokenBridge: TokenBridgeInfo,
     remoteChainId: number,
-    remoteTokenBridgeId: string
+    remoteTokenBridgeId: string,
+    address?: string
 ): Promise<TokenBridgeForChainInfo> {
-    const address = randomContractAddress()
-    const undoneSequence = await createUndoneSequence(provider, address)
+    const contractAddress = typeof address === 'undefined' ? randomContractAddress() : address
+    const undoneSequence = await createUndoneSequence(provider, contractAddress)
     const tokenWrapper = await createTemplateTokenWrapper(provider)
     const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge_for_chain.ral")
     const initFields = {
@@ -284,13 +288,13 @@ export async function createTokenBridgeForChain(
         'undoneSequenceCodeHash': undoneSequence.codeHash,
         'eventEmitterId': eventEmitter.contractId
     }
-    const state = tokenBridgeForChainContract.toState(initFields, initAsset, address)
+    const state = tokenBridgeForChainContract.toState(initFields, initAsset, contractAddress)
     const deps = Array.prototype.concat(
         tokenBridge.states(),
         tokenWrapper.states(),
         undoneSequence.states()
     )
-    return new TokenBridgeForChainInfo(tokenBridgeForChainContract, state, deps, address, remoteChainId)
+    return new TokenBridgeForChainInfo(tokenBridgeForChainContract, state, deps, contractAddress, remoteChainId)
 }
 
 export async function createWrapper(
@@ -300,10 +304,11 @@ export async function createWrapper(
     symbol: string,
     name: string,
     tokenBridgeInfo: TokenBridgeInfo,
-    tokenBridgeForChainInfo: TokenBridgeForChainInfo 
+    tokenBridgeForChainInfo: TokenBridgeForChainInfo,
+    address?: string
 ): Promise<ContractInfo> {
     const tokenWrapperContract = tokenBridgeInfo.tokenWrapperContract
-    const address = randomContractAddress()
+    const contractAddress = typeof address === 'undefined' ? randomContractAddress() : address
     const initFields = {
         'tokenBridgeId': tokenBridgeInfo.contractId,
         'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
@@ -315,6 +320,6 @@ export async function createWrapper(
         'name_': name,
         'decimals_': decimals
     }
-    const state = tokenWrapperContract.toState(initFields, initAsset, address)
-    return new ContractInfo(tokenWrapperContract, state, tokenBridgeForChainInfo.states(), address)
+    const state = tokenWrapperContract.toState(initFields, initAsset, contractAddress)
+    return new ContractInfo(tokenWrapperContract, state, tokenBridgeForChainInfo.states(), contractAddress)
 }

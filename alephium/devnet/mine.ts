@@ -6,7 +6,7 @@ const fromPublicKey = '03034a46d0028a725e27fd24b9142eef856f2ce01d590732744bde0d7
 const toAddress = '199QZVT8bLkYNZ7d2xoHbip29yD18tdeHDPjB7cyx9ofi'
 const ec = new elliptic.ec('secp256k1')
 const fromPrivateKey = ec.keyFromPrivate('71d640c34b25eedd8acd60be136012f77059836c095fbd02a7cb86a124cbbdae')
-const transferAmount = "1000000000000"
+const transferAmount = "1000000000000000"
 
 function sign(txId: string): string {
     const sig = fromPrivateKey.sign(txId, {canonical: true})

@@ -11,7 +11,7 @@ export const ethAccounts = web3.eth.accounts
 export const web3Utils = web3.utils
 
 export const CHAIN_ID_ALEPHIUM = 255
-export const dustAmount = BigInt("1000000000000")
+export const dustAmount = BigInt("1000000000000000")
 export const oneAlph = BigInt("1000000000000000000")
 export const minimalAlphInContract = oneAlph
 export const initAsset: Asset = {
@@ -265,6 +265,15 @@ export async function expectOneOfError<T>(func: () => Promise<T>, errors: string
 export function toContractId(address: string): string {
     const bytes = base58.decode(address)
     return toHex(bytes.slice(1))
+}
+
+export function toContractAddress(contractId: string): string {
+    if (contractId.length != 64) {
+        throw Error("invalid contract id " + contractId)
+    }
+    const prefix = Buffer.from([0x03])
+    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
+    return base58.encode(bytes)
 }
 
 export function loadContract(code: string): Contract {
