@@ -2,7 +2,7 @@ import { TransactionResponse } from "@solana/web3.js";
 import { TxInfo } from "@terra-money/terra.js";
 import { BigNumber, ContractReceipt } from "ethers";
 import { Implementation__factory } from "../ethers-contracts";
-import { node } from "alephium-web3";
+import { node } from "@alephium/web3";
 
 export function parseSequenceFromLogAlph(event: node.ContractEventByTxId): string {
   if (event.fields && event.fields.length !== 5) {

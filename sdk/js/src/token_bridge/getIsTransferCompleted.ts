@@ -6,8 +6,7 @@ import { ethers } from "ethers";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
 import { toAlphContractAddress, VAA } from "../utils";
-import { NodeProvider } from "alephium-web3";
-import { node } from "alephium-web3";
+import { NodeProvider, node } from "@alephium/web3";
 import {
   BITS_PER_KEY,
   calcLogicSigAccount,

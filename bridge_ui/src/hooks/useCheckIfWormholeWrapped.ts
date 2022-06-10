@@ -43,7 +43,7 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { NodeProvider } from 'alephium-web3'
+import { NodeProvider } from '@alephium/web3'
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 

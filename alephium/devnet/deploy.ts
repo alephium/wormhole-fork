@@ -1,5 +1,5 @@
-import { binToHex, NodeProvider, contractIdFromAddress, Script, NodeWallet } from 'alephium-web3'
-import { testWallet } from 'alephium-web3/test'
+import { binToHex, NodeProvider, contractIdFromAddress, Script, NodeWallet } from '@alephium/web3'
+import { testWallet } from '@alephium/web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
 import { deployTestToken } from './deploy_test_token'

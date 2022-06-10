@@ -1,4 +1,4 @@
-import { binToHex, contractIdFromAddress } from 'alephium-web3'
+import { binToHex, contractIdFromAddress } from '@alephium/web3'
 import { Wormhole } from '../lib/wormhole'
 import * as consts from './consts'
 import { getCreatedContractAddress } from './get_contract_address'

@@ -83,7 +83,7 @@ import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import {
-  getLocalTokenWrapperIdWithRetry,
+  getTokenWrapperId,
   submitAlphScriptTx,
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
@@ -344,7 +344,7 @@ async function alephium(
       signer.nodeProvider, async () => {
         let bytecode: string 
         if (isLocalToken) {
-          const tokenWrapperId = await getLocalTokenWrapperIdWithRetry(tokenId, targetChain)
+          const tokenWrapperId = getTokenWrapperId(tokenId, targetChain)
           bytecode = transferLocalTokenFromAlph(
             tokenWrapperId,
             signer.account.address,

@@ -122,12 +122,8 @@ spec:
             - http://solana-devnet:8899
             - --alphRPC
             - http://alph-full-node:22973
-            - --alphContractServerRpc
-            - "[::]:31102"
-            - --alphContractWebServer
-            - "[::]:31103"
             - --alphContractIds
-            - "zVUfSG3oyM7tMoHRUbxAo7ee5yJUonVdt1LZNhGQwFcE,25uvpR8LCuCFFwzHWWaDFdu3AZmEWWmJZEDxbaAQT2yai,2Ap2xVFUZDfDM3xngtS8aZEzEFHE544bdZanqoEPiv2kz"
+            - "26Pbjzy524e8XmbQeRBiRTszErCGZmZbfGqVExKBwVphp,23xLDhby7V5pMNpM2MSzHieDkQMspCFwuXSD2EcVDDJBP,2ALYq9nqQRReeHDyb9AEW27jUkStz6ZGVVKdaSju6VQZ2"
             - --alphGroupIndex
             - "0"
             - --alphMinConfirmations

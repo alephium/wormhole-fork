@@ -1,4 +1,4 @@
-import { NodeProvider } from "alephium-web3"
+import { NodeProvider } from "@alephium/web3"
 import * as elliptic from 'elliptic'
 import { zeroPad } from "../lib/utils"
 

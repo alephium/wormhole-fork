@@ -32,7 +32,7 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { getTokenBridgeForChainIdWithRetry } from "../utils/alephium";
+import { getTokenBridgeForChainId } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 
@@ -153,7 +153,7 @@ export default function useGetIsTransferCompleted(
               throw Error("transfer source chain is undefined")
             }
 
-            const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+            const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
             transferCompleted = await getIsTransferCompletedAlph(
               alphSigner.nodeProvider,
               tokenBridgeForChainId,

@@ -1,4 +1,4 @@
-import { Asset, NodeProvider, InputAsset, TestContractResult, Val, Contract } from 'alephium-web3'
+import { Asset, NodeProvider, InputAsset, TestContractResult, Val } from '@alephium/web3'
 import { toHex } from '../lib/utils'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, createEventEmitter, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'

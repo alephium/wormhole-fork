@@ -1,4 +1,4 @@
-import { NodeProvider } from "alephium-web3"
+import { NodeProvider } from "@alephium/web3"
 import { waitTxConfirmed } from "../lib/utils"
 
 export async function getCreatedContractAddress(provider: NodeProvider, txId: string): Promise<string> {

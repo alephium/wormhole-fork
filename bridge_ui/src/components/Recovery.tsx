@@ -80,7 +80,7 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
-import { NodeProvider } from "alephium-web3";
+import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
 
 const useStyles = makeStyles((theme) => ({

@@ -29,8 +29,9 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { getRemoteTokenWrapperIdWithRetry } from "../utils/alephium";
+import { getTokenWrapperId, tokenWrapperExist } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
 export type ForeignAssetInfo = {
   doesExist: boolean;
@@ -46,6 +47,7 @@ function useFetchForeignAsset(
   const { isReady } = useIsWalletReady(foreignChain, false);
   const correctEvmNetwork = getEvmChainId(foreignChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
+  const { signer: alphSigner } = useAlephiumWallet();
 
   const [assetAddress, setAssetAddress] = useState<string | null>(null);
   const [doesExist, setDoesExist] = useState<boolean | null>(null);
@@ -118,7 +120,11 @@ function useFetchForeignAsset(
               hexToUint8Array(originAssetHex)
             )
         : foreignChain === CHAIN_ID_ALEPHIUM
-        ? () => getRemoteTokenWrapperIdWithRetry(originAssetHex).catch(_ => null)
+        ? () => {
+          const tokenWrapperId = getTokenWrapperId(originAssetHex, originChain)
+          return tokenWrapperExist(tokenWrapperId, alphSigner!.nodeProvider)
+            .then(exist => exist ? tokenWrapperId : null)
+        }
         : foreignChain === CHAIN_ID_TERRA
         ? () => {
             const lcd = new LCDClient(TERRA_HOST);
@@ -196,6 +202,7 @@ function useFetchForeignAsset(
     originAssetHex,
     originChain,
     provider,
+    alphSigner,
     setArgs,
     argsEqual,
   ]);

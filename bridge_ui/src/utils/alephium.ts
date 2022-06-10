@@ -1,21 +1,17 @@
 import {
     ALEPHIUM_EVENT_EMITTER_ADDRESS,
     ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-    ALEPHIUM_TOKEN_WRAPPER_CODE_HASH,
-    WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST
+    ALEPHIUM_TOKEN_WRAPPER_CODE_HASH
 } from "./consts";
 import {
     ChainId,
     uint8ArrayToHex,
-    getLocalTokenWrapperId,
-    getRemoteTokenWrapperId,
-    getTokenBridgeForChainId,
     toAlphContractAddress,
     parseSequenceFromLogAlph,
     CHAIN_ID_ALEPHIUM,
     WormholeWrappedInfo
 } from '@certusone/wormhole-sdk';
-import { NodeProvider, node } from 'alephium-web3';
+import { NodeProvider, node, subContractId } from '@alephium/web3';
 import WalletConnectProvider from "alephium-walletconnect-provider";
 
 const WormholeMessageEventIndex = 0
@@ -103,63 +99,18 @@ export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
     }
 }
 
-// TODO: replicated hosts
-async function retry<T>(func: (host: string) => Promise<T>, retryAttempts?: number): Promise<T> {
-  let result;
-  let attempts = 0;
-  while (!result) {
-    attempts++;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    try {
-      result = await func(WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST);
-    } catch (e) {
-      console.log("request error: " + e)
-      if (typeof retryAttempts === "undefined") {
-          throw e
-      }
-      if (attempts > retryAttempts) {
-          throw e
-      }
+export function getTokenWrapperId(tokenId: string, remoteChainId: ChainId): string {
+    if (tokenId.length !== 64) {
+        throw Error("invalid token id " + tokenId)
     }
-  }
-  return result;
+    const tokenBridgeForChainId = getTokenBridgeForChainId(remoteChainId)
+    return subContractId(tokenBridgeForChainId, tokenId)
 }
 
-export async function getLocalTokenWrapperIdWithRetry(
-    localTokenId: string,
-    remoteChainId: ChainId,
-    retryAttempts?: number,
-    extraGrpcOpts?: {}
-): Promise<string> {
-    const func = async (host: string) => {
-        return getLocalTokenWrapperId(host, localTokenId, remoteChainId, extraGrpcOpts)
-    }
-    const response = await retry(func, retryAttempts)
-    return uint8ArrayToHex(response.tokenWrapperId)
-}
-
-export async function getRemoteTokenWrapperIdWithRetry(
-    remoteTokenId: string,
-    retryAttempts?: number,
-    extraGrpcOpts?: {}
-): Promise<string> {
-    const func = async (host: string) => {
-        return getRemoteTokenWrapperId(host, remoteTokenId, extraGrpcOpts)
-    }
-    const response = await retry(func, retryAttempts)
-    return uint8ArrayToHex(response.tokenWrapperId)
-}
-
-export async function getTokenBridgeForChainIdWithRetry(
-    remoteChainId: ChainId,
-    retryAttempts?: number,
-    extraGrpcOpts?: {}
-): Promise<string> {
-    const func = async (host: string) => {
-        return getTokenBridgeForChainId(host, remoteChainId, extraGrpcOpts)
-    }
-    const response = await retry(func, retryAttempts)
-    return uint8ArrayToHex(response.tokenBridgeForChainId)
+export function getTokenBridgeForChainId(remoteChainId: ChainId): string {
+    const encodedChainId = Buffer.allocUnsafe(2)
+    encodedChainId.writeUInt16BE(remoteChainId)
+    return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, encodedChainId.toString('hex'))
 }
 
 export class TokenInfo {
@@ -201,6 +152,15 @@ export async function submitAlphScriptTx(
     bytecode: bytecode,
     submitTx: true
   })
+}
+
+export async function tokenWrapperExist(contractId: string, provider: NodeProvider): Promise<boolean> {
+    const address = toAlphContractAddress(contractId)
+    return provider
+        .addresses
+        .getAddressesAddressGroup(address)
+        .then(_ => true)
+        .catch(_ => false)
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {

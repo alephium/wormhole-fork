@@ -22,7 +22,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
-import { NodeProvider } from "alephium-web3";
+import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenInfo } from "../utils/alephium";
 import {
   ALGORAND_HOST,

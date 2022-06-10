@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, ContractState } from 'alephium-web3'
+import { NodeProvider, Contract, ContractState } from '@alephium/web3'
 import { createGovernance, governanceChainId, governanceContractId } from './governance-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, toContractId } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'

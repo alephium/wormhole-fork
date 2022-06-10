@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk11:jre-11.0.11_9
 
-ARG RELEASE=1.4.0-leman8
+ARG RELEASE=1.4.0-rc2
 
 RUN curl -L https://github.com/alephium/alephium/releases/download/v${RELEASE}/alephium-${RELEASE}.jar -o /alephium.jar
 

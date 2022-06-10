@@ -1,4 +1,4 @@
-import { Asset, NodeProvider, ContractEvent, InputAsset, Output, TestContractResult, Token } from 'alephium-web3'
+import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token } from '@alephium/web3'
 import { nonce, toHex } from '../lib/utils'
 import { governanceChainId, governanceContractId, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, CompleteUndoneTransfer, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, RegisterChain, TokenBridgeForChainInfo, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'

@@ -178,7 +178,7 @@ func TestToUnconfirmedEvents(t *testing.T) {
 		Events: []*ContractEvent{
 			{
 				BlockHash:  blocks[0].header.Hash,
-				EventIndex: TokenWrapperCreatedEventIndex,
+				EventIndex: UndoneSequenceCompletedEventIndex,
 			},
 			{
 				BlockHash:  blocks[0].header.Hash,
@@ -200,5 +200,5 @@ func TestToUnconfirmedEvents(t *testing.T) {
 	assert.Equal(t, *eventIndex, uint64(2))
 	assert.Equal(t, len(unconfirmedEvents), 1)
 	assert.Equal(t, unconfirmedEvents[0].event.blockHash(), blocks[0].header.Hash)
-	assert.Equal(t, unconfirmedEvents[0].event.eventIndex(), TokenWrapperCreatedEventIndex)
+	assert.Equal(t, unconfirmedEvents[0].event.eventIndex(), UndoneSequenceCompletedEventIndex)
 }

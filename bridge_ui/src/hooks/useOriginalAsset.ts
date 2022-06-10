@@ -42,7 +42,7 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { NodeProvider } from "alephium-web3";
+import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 
 export type OriginalAssetInfo = {

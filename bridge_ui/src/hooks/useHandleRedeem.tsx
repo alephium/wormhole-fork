@@ -56,8 +56,7 @@ import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import {
   getRedeemInfo,
-  getLocalTokenWrapperIdWithRetry,
-  getRemoteTokenWrapperIdWithRetry,
+  getTokenWrapperId,
   waitTxConfirmed,
   submitAlphScriptTx
 } from "../utils/alephium";
@@ -240,13 +239,8 @@ async function alephium(
   dispatch(setIsRedeeming(true));
   try {
     const redeemInfo = getRedeemInfo(signedVAA)
-    let tokenWrapperId: string
-    if (redeemInfo.tokenChainId === CHAIN_ID_ALEPHIUM) {
-      tokenWrapperId = await getLocalTokenWrapperIdWithRetry(redeemInfo.tokenId, redeemInfo.remoteChainId)
-    } else {
-      tokenWrapperId = await getRemoteTokenWrapperIdWithRetry(redeemInfo.tokenId)
-    }
-    const bytecode = redeemOnAlph(tokenWrapperId, signedVAA, signer.account.address)
+    const tokenWrapperId = getTokenWrapperId(redeemInfo.tokenId, redeemInfo.remoteChainId)
+    const bytecode = redeemOnAlph(tokenWrapperId, signedVAA)
     const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)

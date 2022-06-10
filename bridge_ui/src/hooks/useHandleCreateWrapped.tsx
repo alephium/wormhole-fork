@@ -41,7 +41,7 @@ import {
 } from "../store/selectors";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  alphDustAmount,
+  minimalAlphInContract,
   ACALA_HOST,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -60,7 +60,7 @@ import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { getTokenBridgeForChainIdWithRetry, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
+import { getTokenBridgeForChainId, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 
 async function algo(
@@ -251,14 +251,14 @@ async function alephium(
   dispatch(setIsCreating(true));
   try {
     if (shouldUpdate) {
-      throw Error("alephium: does not support update")
+      throw Error("alephium: contract already exist, update not supported")
     }
-    const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
     const bytecode = createRemoteTokenWrapperOnAlph(
       tokenBridgeForChainId,
       signedVAA,
       signer.account.address,
-      alphDustAmount
+      minimalAlphInContract
     )
     const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)

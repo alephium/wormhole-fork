@@ -3,7 +3,7 @@ import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } f
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
-import { NodeProvider } from "alephium-web3";
+import { NodeProvider } from "@alephium/web3";
 import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";

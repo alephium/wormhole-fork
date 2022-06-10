@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, SubmissionResult, Fields } from 'alephium-web3'
+import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, SubmissionResult, Fields } from '@alephium/web3'
 import { waitTxConfirmed } from './utils'
 
 const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"

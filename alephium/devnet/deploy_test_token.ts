@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, NodeWallet } from 'alephium-web3'
+import { NodeProvider, Contract, NodeWallet } from '@alephium/web3'
 import { toHex } from '../lib/utils'
 
 export async function deployTestToken(provider: NodeProvider, signer: NodeWallet): Promise<string> {

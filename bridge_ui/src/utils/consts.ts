@@ -39,7 +39,7 @@ import alephiumIcon from "../icons/alephium.svg";
 
 export const alphMessageFee = BigInt("100000000000000")
 export const alphArbiterFee = BigInt("0")
-export const alphDustAmount = BigInt("1000000000000")
+export const minimalAlphInContract = BigInt("1000000000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =
@@ -318,12 +318,6 @@ export const WORMHOLE_RPC_HOSTS =
     : CLUSTER === "testnet"
     ? ["https://wormhole-v2-testnet-api.certus.one"]
     : ["http://localhost:7071"];
-export const WORMHOLE_ALEPHIUM_CONTRACT_SERVICE_HOST =
-  CLUSTER === "mainnet"
-    ? ""
-    : CLUSTER === "testnet"
-    ? ""
-    : "http://localhost:31103"
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1337;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
@@ -748,20 +742,20 @@ export const ALEPHIUM_BRIDGE_ADDRESS =
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "000000000000000000000000000000000000000000000"
-    : "25uvpR8LCuCFFwzHWWaDFdu3AZmEWWmJZEDxbaAQT2yai";
+    : "23xLDhby7V5pMNpM2MSzHieDkQMspCFwuXSD2EcVDDJBP";
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
-    : "ef8b88d5a3d7a191871955f4c25a1da15bc5203227c077a8d0c41af6b3754ef3";
-export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "90deae4a74b24e7f51d96d5a738ffb0275a2acc67d9decfa846cf759b9df9703";
+    : "e8810cca1de76a15c21431098142c803cdef9b98896e43f6826606fbd6c535ad";
+export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "4b3179eeed8788656507c0fb8b2139e40c3a8dd62218b0ea5cbe653cf16b4714";
 export const ALEPHIUM_EVENT_EMITTER_ADDRESS =
   CLUSTER === "mainnet"
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "000000000000000000000000000000000000000000000"
-    : "zVUfSG3oyM7tMoHRUbxAo7ee5yJUonVdt1LZNhGQwFcE";
+    : "26Pbjzy524e8XmbQeRBiRTszErCGZmZbfGqVExKBwVphp";
 export const ALEPHIUM_CONFIRMATIONS =
   CLUSTER === "mainnet"
     ? 10

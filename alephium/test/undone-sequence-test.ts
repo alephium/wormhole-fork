@@ -1,4 +1,4 @@
-import { NodeProvider, Contract } from 'alephium-web3'
+import { NodeProvider, Contract } from '@alephium/web3'
 import { createUndoneSequence } from './fixtures/sequence-fixture'
 import { expectAssertionFailed, randomContractAddress, randomContractId } from './fixtures/wormhole-fixture'
 

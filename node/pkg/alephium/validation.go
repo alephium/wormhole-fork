@@ -5,21 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/dgraph-io/badger/v3"
-	// We should not rely on ETH, but some data structures of wormhole use ETH hash
+	"github.com/certusone/wormhole/node/pkg/vaa"
 )
-
-func (w *Watcher) validateTokenBridgeForChainCreatedEvents(event *tokenBridgeForChainCreated) (bool, error) {
-	if !event.senderId.equalWith(w.tokenBridgeContractId) {
-		return true, fmt.Errorf("invalid sender for token bridge for chain created event, expected %v, have %v", w.tokenBridgeContractId.ToHex(), event.senderId.ToHex())
-	}
-	if err := w.db.addRemoteChain(event.contractId, event.remoteChainId); err != nil {
-		return false, fmt.Errorf("failed to persist remote chain to db, err %v", err)
-	}
-	w.tokenBridgeForChainCache.Store(event.remoteChainId, &event.contractId)
-	w.remoteChainIdCache.Store(event.contractId, &event.remoteChainId)
-	return false, nil
-}
 
 func (w *Watcher) validateUndoneSequencesRemovedEvents(
 	event *undoneSequencesRemoved,
@@ -50,51 +37,6 @@ func (w *Watcher) validateUndoneSequenceCompletedEvents(event *undoneSequenceCom
 	return false, nil
 }
 
-// return skipIfError, error
-func (w *Watcher) validateTokenWrapperCreatedEvent(event *tokenWrapperCreated) (bool, error) {
-	contractId, err := w.getTokenBridgeForChain(event.remoteChainId)
-	if err == badger.ErrKeyNotFound {
-		err := fmt.Errorf("token bridge for chain does not exist: %v", event.remoteChainId)
-		return true, err
-	}
-	if err != nil {
-		err := fmt.Errorf("failed to get token bridge for chain contract, err %v, remoteChainId %v", err, event.remoteChainId)
-		return false, err
-	}
-	if !bytes.Equal(event.senderId[:], contractId[:]) {
-		err := fmt.Errorf(
-			"ignore invalid token wrapper created event, expected %s, have %s",
-			event.senderId.ToHex(),
-			contractId.ToHex(),
-		)
-		return true, err
-	}
-
-	if event.isLocalToken {
-		key := LocalTokenWrapperKey{
-			localTokenId:  event.tokenId,
-			remoteChainId: event.remoteChainId,
-		}
-		exist, err := w.db.localTokenWrapperExist(&key)
-		if err != nil {
-			err := fmt.Errorf("failed to check if local token wrapper already exist, err %v", err)
-			return false, err
-		}
-
-		if exist {
-			err := fmt.Errorf("local token wrapper already exist, tokenId %s, remoteChainId %v", event.tokenId.ToHex(), event.remoteChainId)
-			return true, err
-		}
-
-		w.localTokenWrapperCache.Store(key, &event.tokenWrapperId)
-		w.db.addLocalTokenWrapper(&key, event.tokenWrapperId)
-	} else {
-		w.remoteTokenWrapperCache.Store(event.tokenId, &event.tokenWrapperId)
-		w.db.addRemoteTokenWrapper(event.tokenId, event.tokenWrapperId)
-	}
-	return false, nil
-}
-
 func (w *Watcher) validateGovernanceMessages(event *WormholeMessage) (bool, error) {
 	if !event.senderId.equalWith(w.tokenBridgeContractId) {
 		err := fmt.Errorf("invalid sender for wormhole message, expect %v, have %v", w.tokenBridgeContractId.ToHex(), event.senderId.ToHex())
@@ -109,14 +51,7 @@ func (w *Watcher) validateGovernanceMessages(event *WormholeMessage) (bool, erro
 }
 
 func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) (bool, error) {
-	var contractId *Byte32
-	var err error
-	if transferMsg.isLocalToken {
-		contractId, err = w.getLocalTokenWrapper(transferMsg.tokenId, transferMsg.toChainId)
-	} else {
-		contractId, err = w.getRemoteTokenWrapper(transferMsg.tokenId)
-	}
-
+	contractId, err := w.getTokenWrapperId(transferMsg.toChainId, transferMsg.tokenId)
 	if err != nil {
 		return true, fmt.Errorf("faield to get token wrapper id, err %v", err)
 	}
@@ -126,54 +61,29 @@ func (w *Watcher) validateTransferMessage(transferMsg *TransferMessage) (bool, e
 	return false, nil
 }
 
+func (w *Watcher) getTokenBridgeForChainId(remoteChainId uint16) (*Byte32, error) {
+	contractId, ok := w.chainIdToContractId[vaa.ChainID(remoteChainId)]
+	if ok {
+		return &contractId, nil
+	}
+	return nil, fmt.Errorf("invalid remote chain id %d", remoteChainId)
+}
+
 func (w *Watcher) getRemoteChainId(contractId Byte32) (*uint16, error) {
-	if value, ok := w.remoteChainIdCache.Load(contractId); ok {
-		return (value).(*uint16), nil
+	value, ok := w.contractIdToChainId[contractId]
+	if ok {
+		remoteChainId := uint16(value)
+		return &remoteChainId, nil
 	}
-	remoteChainId, err := w.db.getRemoteChainId(contractId)
-	if err != nil {
-		return nil, err
-	}
-	w.remoteChainIdCache.Store(contractId, remoteChainId)
-	return remoteChainId, nil
+	return nil, fmt.Errorf("invalid contract id %s", contractId.ToHex())
 }
 
-func (w *Watcher) getTokenBridgeForChain(chainId uint16) (*Byte32, error) {
-	if value, ok := w.tokenBridgeForChainCache.Load(chainId); ok {
-		return value.(*Byte32), nil
-	}
-	contractId, err := w.db.getTokenBridgeForChain(chainId)
+func (w *Watcher) getTokenWrapperId(remoteChainId uint16, tokenId Byte32) (*Byte32, error) {
+	tokenBridgeForChainId, err := w.getTokenBridgeForChainId(remoteChainId)
 	if err != nil {
 		return nil, err
 	}
-	w.tokenBridgeForChainCache.Store(chainId, contractId)
-	return contractId, nil
-}
-
-func (w *Watcher) getRemoteTokenWrapper(tokenId Byte32) (*Byte32, error) {
-	if value, ok := w.remoteTokenWrapperCache.Load(tokenId); ok {
-		return value.(*Byte32), nil
-	}
-	contractId, err := w.db.GetRemoteTokenWrapper(tokenId)
-	if err != nil {
-		return nil, err
-	}
-	w.remoteTokenWrapperCache.Store(tokenId, contractId)
-	return contractId, err
-}
-
-func (w *Watcher) getLocalTokenWrapper(tokenId Byte32, remoteChainId uint16) (*Byte32, error) {
-	key := LocalTokenWrapperKey{
-		localTokenId:  tokenId,
-		remoteChainId: remoteChainId,
-	}
-	if value, ok := w.localTokenWrapperCache.Load(key); ok {
-		return value.(*Byte32), nil
-	}
-	contractId, err := w.db.GetLocalTokenWrapper(tokenId, remoteChainId)
-	if err != nil {
-		return nil, err
-	}
-	w.localTokenWrapperCache.Store(key, contractId)
-	return contractId, err
+	preImage := append(tokenId[:], (*tokenBridgeForChainId)[:]...)
+	hash := Byte32(blake2bDoubleHash(preImage))
+	return &hash, nil
 }

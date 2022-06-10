@@ -25,51 +25,6 @@ func randomAddress() string {
 	return base58.Encode(bytes)
 }
 
-func randomUint16() uint16 {
-	return uint16(rand.Int63() >> 47)
-}
-
-type testData struct {
-	chainId               uint16
-	tokenBridgeForChainId Byte32
-	tokenId               Byte32
-	tokenWrapperId        Byte32
-	lastHeight            uint32
-}
-
-func randTestData() *testData {
-	return &testData{
-		chainId:               randomUint16(),
-		tokenBridgeForChainId: randomByte32(),
-		tokenId:               randomByte32(),
-		tokenWrapperId:        randomByte32(),
-		lastHeight:            rand.Uint32(),
-	}
-}
-
-func TestReadWrite(t *testing.T) {
-	td := randTestData()
-	db, err := Open(t.TempDir())
-	assert.Nil(t, err)
-	defer db.Close()
-
-	_, err = db.GetRemoteTokenWrapper(td.tokenId)
-	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.addRemoteTokenWrapper(td.tokenId, td.tokenWrapperId)
-	assert.Nil(t, err)
-	tokenWrapperId, err := db.GetRemoteTokenWrapper(td.tokenId)
-	assert.Nil(t, err)
-	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
-
-	_, err = db.GetLocalTokenWrapper(td.tokenId, td.chainId)
-	assert.Equal(t, err, badger.ErrKeyNotFound)
-	err = db.AddLocalTokenWrapper(td.tokenId, td.chainId, td.tokenWrapperId)
-	assert.Nil(t, err)
-	tokenWrapperId, err = db.GetLocalTokenWrapper(td.tokenId, td.chainId)
-	assert.Nil(t, err)
-	assert.Equal(t, *tokenWrapperId, td.tokenWrapperId)
-}
-
 func TestUpdateUndoneSequenceStatus(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
@@ -146,22 +101,4 @@ func TestGetUndoneSequences(t *testing.T) {
 		assert.Equal(t, result1[i].Sequence, sequences0[i].Sequence)
 		assert.Equal(t, result1[i].Status, sequences0[i].Status)
 	}
-}
-
-func TestAddRemoteChain(t *testing.T) {
-	db, err := Open(t.TempDir())
-	assert.Nil(t, err)
-	defer db.Close()
-
-	remoteChainId := uint16(100)
-	contractId := randomByte32()
-	err = db.addRemoteChain(contractId, remoteChainId)
-	assert.Nil(t, err)
-	chainContractId, err := db.getTokenBridgeForChain(remoteChainId)
-	assert.Nil(t, err)
-	assert.Equal(t, *chainContractId, contractId)
-
-	chainId, err := db.getRemoteChainId(contractId)
-	assert.Nil(t, err)
-	assert.Equal(t, *chainId, remoteChainId)
 }

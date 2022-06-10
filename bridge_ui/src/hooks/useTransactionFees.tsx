@@ -22,7 +22,7 @@ import { getMultipleAccountsRPC } from "../utils/solana";
 import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import useIsWalletReady from "./useIsWalletReady";
 import { LCDClient } from "@terra-money/terra.js";
-import { NodeProvider } from "alephium-web3";
+import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
 

@@ -530,16 +530,6 @@ func transferFromBytes(data []byte) (*transfer, error) {
 	return &message, nil
 }
 
-func (s *nodePrivilegedService) getTokenWrapperId(msg *transfer, remoteChainId uint16) (*alephium.Byte32, error) {
-	if msg.tokenChainId == uint16(vaa.ChainIDAlephium) {
-		// local token
-		return s.alphDb.GetLocalTokenWrapper(msg.tokenId, remoteChainId)
-	} else {
-		// remote token
-		return s.alphDb.GetRemoteTokenWrapper(msg.tokenId)
-	}
-}
-
 func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Context, req *nodev1.GenUndoneTransferGovernanceMsgRequest) (*nodev1.GenUndoneTransferGovernanceMsgResponse, error) {
 	address, err := vaa.StringToAddress(req.EmitterAddress)
 	if err != nil {
@@ -584,18 +574,13 @@ func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Conte
 		return nil, fmt.Errorf("failed to decode transfer message, error: %v", err)
 	}
 
-	tokenWrapperId, err := s.getTokenWrapperId(transferMsg, uint16(req.EmitterChain))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token wrapper id, error: %v", err)
-	}
-
 	// TODO: save the vaa id
 	if err := s.alphDb.SetSequenceExecuting(uint16(emitterChain), req.Sequence); err != nil {
 		return nil, fmt.Errorf("failed to update undone sequence status, error: %v", err)
 	}
 	payload := &nodev1.GovernanceMessage_UndoneTransfer{
 		UndoneTransfer: &nodev1.TokenBridgeUndoneTransfer{
-			Payload: transferPayload(transferMsg, tokenWrapperId, req.Sequence),
+			Payload: transferPayload(transferMsg, emitterChain, req.Sequence),
 		},
 	}
 	return &nodev1.GenUndoneTransferGovernanceMsgResponse{
@@ -609,16 +594,13 @@ func (s *nodePrivilegedService) GenUndoneTransferGovernanceMsg(ctx context.Conte
 
 // TODO: better name
 // transfer payload for undone sequence
-func transferPayload(
-	transferMsg *transfer,
-	tokenWrapperId *alephium.Byte32,
-	sequence uint64,
-) []byte {
+func transferPayload(transferMsg *transfer, emitChainId vaa.ChainID, sequence uint64) []byte {
 	buf := new(bytes.Buffer)
 	buf.Write(vaa.TokenBridgeModule)
 	buf.WriteByte(3) // action id
 	binary.Write(buf, binary.BigEndian, sequence)
-	buf.Write(tokenWrapperId[:])
+	binary.Write(buf, binary.BigEndian, uint16(emitChainId))
+	buf.Write(transferMsg.tokenId[:])
 	buf.Write(transferMsg.toAddress[:])
 	buf.Write(transferMsg.amount.FillBytes(make([]byte, 32)))
 	buf.Write(transferMsg.fee.FillBytes(make([]byte, 32)))

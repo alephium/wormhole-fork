@@ -20,7 +20,7 @@ import {
   isEVMChain,
 } from "./consts";
 import * as base58 from 'bs58';
-import { tokenIdFromAddress } from "alephium-web3";
+import { tokenIdFromAddress } from "@alephium/web3";
 
 export function toAlphContractAddress(contractId: string): string {
     const prefix = Buffer.from([0x03])
