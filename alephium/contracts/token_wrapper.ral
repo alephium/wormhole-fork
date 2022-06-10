@@ -103,7 +103,7 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(caller, recipient, 1000000000000) // dustAmount
+        transferAlph!(caller, recipient, 1000000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
             transferTokenFromSelf!(caller, tokenId, transferFee)
@@ -116,7 +116,7 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(caller, recipient, 1000000000000) // dustAmount
+        transferAlph!(caller, recipient, 1000000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
             transferTokenFromSelf!(caller, tokenId, transferFee)
