@@ -94,7 +94,7 @@ TxContract TokenWrapper(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeTransfer(vaa: ByteVec) -> () {
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
         let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
         assert!(msgTokenId == tokenContractId)
@@ -103,7 +103,6 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        let caller = uniqueTxInputAddress!()
         transferAlph!(caller, recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
@@ -112,12 +111,11 @@ TxContract TokenWrapper(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeUndoneTransfer(toAddress: ByteVec, amount: U256, arbiterFee: U256) -> () {
+    pub fn completeUndoneTransfer(caller: Address, toAddress: ByteVec, amount: U256, arbiterFee: U256) -> () {
         assert!(callerContractId!() == tokenBridgeId)
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        let caller = uniqueTxInputAddress!()
         transferAlph!(caller, recipient, 1000000000000) // dustAmount
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
