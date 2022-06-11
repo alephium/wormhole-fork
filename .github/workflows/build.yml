@@ -43,7 +43,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '1.17.5'
-      - run: make node
+      - run: make node && make guardian-test
 
   ethereum:
     runs-on: ubuntu-20.04
@@ -54,14 +54,14 @@ jobs:
           node-version: '16'
       - run: cd ethereum && make test
 
-  terra:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-      - run: cd terra && make test
+#   terra:
+#     runs-on: ubuntu-20.04
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: actions/setup-node@v2
+#         with:
+#           node-version: '16'
+#       - run: cd terra && make test
 
   # Run linters, Go tests and other outside-of-Tilt things.
 #   lint-and-tests:

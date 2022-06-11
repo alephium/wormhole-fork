@@ -23,7 +23,7 @@ jobs:
         working-directory: ./alephium
         run: |
           npm ci
-          npm explore alephium-web3 -- npm run start-devnet
+          npm explore @alephium/web3 -- npm run start-devnet
           npm test
-          npm explore alephium-web3 -- npm run stop-devnet
+          npm explore @alephium/web3 -- npm run stop-devnet
 
