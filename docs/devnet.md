@@ -28,3 +28,7 @@
 ### Terra
 
 The terra testnet can be used just like a normal localterra network (can be selected in finder and station).
+
+### devnet guardian addresses
+
+see [../scripts/devnet-consts.json](../scripts/devnet-consts.json)

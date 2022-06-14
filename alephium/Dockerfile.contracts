@@ -13,5 +13,6 @@ COPY ./contracts /alephium/contracts
 COPY ./lib /alephium/lib
 COPY ./devnet /alephium/devnet
 COPY ./deploy.sh /alephium
+COPY .env /alephium
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
     npm ci

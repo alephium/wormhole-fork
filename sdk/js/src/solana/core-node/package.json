@@ -1,0 +1,13 @@
+{
+  "name": "wormhole-bridge-solana",
+  "description": "Wormhole bridge core contract",
+  "version": "0.1.0",
+  "files": [
+    "bridge_bg.wasm",
+    "bridge.js",
+    "bridge_bg.js",
+    "bridge.d.ts"
+  ],
+  "main": "bridge.js",
+  "types": "bridge.d.ts"
+}

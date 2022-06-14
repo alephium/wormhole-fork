@@ -98,6 +98,8 @@ func (c ChainID) String() string {
 		return "avalanche"
 	case ChainIDOasis:
 		return "oasis"
+	case ChainIDAurora:
+		return "aurora"
 	case ChainIDFantom:
 		return "fantom"
 	case ChainIDAlgorand:
@@ -110,6 +112,12 @@ func (c ChainID) String() string {
 		return "acala"
 	case ChainIDAlephium:
 		return "alephium"
+	case ChainIDKlaytn:
+		return "klaytn"
+	case ChainIDCelo:
+		return "celo"
+	case ChainIDMoonbeam:
+		return "moonbeam"
 	default:
 		return fmt.Sprintf("unknown chain ID: %d", c)
 	}
@@ -133,6 +141,8 @@ func ChainIDFromString(s string) (ChainID, error) {
 		return ChainIDAvalanche, nil
 	case "oasis":
 		return ChainIDOasis, nil
+	case "aurora":
+		return ChainIDAurora, nil
 	case "fantom":
 		return ChainIDFantom, nil
 	case "algorand":
@@ -145,6 +155,12 @@ func ChainIDFromString(s string) (ChainID, error) {
 		return ChainIDAcala, nil
 	case "alephium":
 		return ChainIDAlephium, nil
+	case "klaytn":
+		return ChainIDKlaytn, nil
+	case "celo":
+		return ChainIDCelo, nil
+	case "moonbeam":
+		return ChainIDMoonbeam, nil
 	default:
 		return ChainIDUnset, fmt.Errorf("unknown chain ID: %s", s)
 	}
@@ -168,19 +184,45 @@ const (
 	ChainIDOasis ChainID = 7
 	// ChainIDAlgorand is the ChainID of Algorand
 	ChainIDAlgorand ChainID = 8
+	// ChainIDAurora is the ChainID of Aurora
+	ChainIDAurora ChainID = 9
 	// ChainIDFantom is the ChainID of Fantom
 	ChainIDFantom ChainID = 10
 	// ChainIDKarura is the ChainID of Karura
 	ChainIDKarura ChainID = 11
 	// ChainIDAcala is the ChainID of Acala
 	ChainIDAcala ChainID = 12
+	// ChainIDKlaytn is the ChainID of Klaytn
+	ChainIDKlaytn ChainID = 13
+	// ChainIDCelo is the ChainID of Celo
+	ChainIDCelo ChainID = 14
+	// ChainIDMoonbeam is the ChainID of Moonbeam
+	ChainIDMoonbeam ChainID = 16
 	// ChainIDAlephium is the ChainID of Alephium
-	ChainIDAlephium ChainID = 13
+	ChainIDAlephium ChainID = 255
 
 	// ChainIDEthereumRopsten is the ChainID of Ethereum Ropsten
 	ChainIDEthereumRopsten ChainID = 10001
 
-	minVAALength        = 1 + 4 + 52 + 4 + 1 + 1
+	// Minimum VAA size is derrived from the following assumptions:
+	//  HEADER
+	//  - Supported VAA Version (1 byte)
+	//  - Guardian Set Index (4 bytes)
+	//  - Length of Signatures (1 byte) <== assume no signatures
+	//  - Actual Signatures (0 bytes)
+	//  BODY
+	//  - timestamp (4 bytes)
+	//  - nonce (4 bytes)
+	//  - emitter chain (2 bytes)
+	//  - emitter address (32 bytes)
+	//  - sequence (8 bytes)
+	//  - consistency level (1 byte)
+	//  - payload (0 bytes)
+	//
+	// From Above: 1 + 4 + 1 + 0 + 4 + 4 + 2 + 32 + 8  + 1 + 0 // Equals 57
+	//
+	// More details here: https://docs.wormholenetwork.com/wormhole/vaas
+	minVAALength        = 57
 	SupportedVAAVersion = 0x01
 )
 
@@ -285,20 +327,39 @@ func (v *VAA) VerifySignatures(addresses []common.Address) bool {
 
 	h := v.SigningMsg()
 
+	last_index := -1
+	signing_addresses := []common.Address{}
+
 	for _, sig := range v.Signatures {
 		if int(sig.Index) >= len(addresses) {
 			return false
 		}
 
+		// Ensure increasing indexes
+		if int(sig.Index) <= last_index {
+			return false
+		}
+		last_index = int(sig.Index)
+
+		// Get pubKey to determine who signers address
 		pubKey, err := crypto.Ecrecover(h.Bytes(), sig.Signature[:])
 		if err != nil {
 			return false
 		}
 		addr := common.BytesToAddress(crypto.Keccak256(pubKey[1:])[12:])
 
+		// Ensure this signer is at the correct positional index
 		if addr != addresses[sig.Index] {
 			return false
 		}
+
+		// Ensure we never see the same signer twice
+		for _, signing_address := range signing_addresses {
+			if signing_address == addr {
+				return false
+			}
+		}
+		signing_addresses = append(signing_addresses, addr)
 	}
 
 	return true

@@ -1,11 +1,12 @@
 import {
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { Checkbox, FormControlLabel } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { ethers } from "ethers";
-import { parseUnits } from "ethers/lib/utils";
+import { formatUnits, parseUnits } from "ethers/lib/utils";
 import { useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import useAllowance from "../../hooks/useAllowance";
@@ -15,16 +16,18 @@ import {
   selectSourceWalletAddress,
   selectTransferAmount,
   selectTransferIsSendComplete,
+  selectTransferRelayerFee,
   selectTransferSourceAsset,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetError,
   selectTransferTransferTx,
 } from "../../store/selectors";
-import { CHAINS_BY_ID } from "../../utils/consts";
+import { CHAINS_BY_ID, CLUSTER } from "../../utils/consts";
 import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
 import ShowTx from "../ShowTx";
+import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import TransactionProgress from "../TransactionProgress";
@@ -51,13 +54,25 @@ function Send() {
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
   );
+  const relayerFee = useSelector(selectTransferRelayerFee);
   const sourceDecimals = sourceParsedTokenAccount?.decimals;
   const sourceIsNative = sourceParsedTokenAccount?.isNativeAsset;
-  const sourceAmountParsed =
+  const baseAmountParsed =
     sourceDecimals !== undefined &&
     sourceDecimals !== null &&
     sourceAmount &&
-    parseUnits(sourceAmount, sourceDecimals).toBigInt();
+    parseUnits(sourceAmount, sourceDecimals);
+  const feeParsed =
+    sourceDecimals !== undefined
+      ? parseUnits(relayerFee || "0", sourceDecimals)
+      : 0;
+  const transferAmountParsed =
+    baseAmountParsed && baseAmountParsed.add(feeParsed).toBigInt();
+  const humanReadableTransferAmount =
+    sourceDecimals !== undefined &&
+    sourceDecimals !== null &&
+    transferAmountParsed &&
+    formatUnits(transferAmountParsed, sourceDecimals);
   const oneParsed =
     sourceDecimals !== undefined &&
     sourceDecimals !== null &&
@@ -89,12 +104,12 @@ function Send() {
   } = useAllowance(
     sourceChain,
     sourceAsset,
-    sourceAmountParsed || undefined,
+    transferAmountParsed || undefined,
     sourceIsNative
   );
 
   const approveButtonNeeded = isEVMChain(sourceChain) && !sufficientAllowance;
-  const notOne = shouldApproveUnlimited || sourceAmountParsed !== oneParsed;
+  const notOne = shouldApproveUnlimited || transferAmountParsed !== oneParsed;
   const isDisabled =
     !isReady ||
     isWrongWallet ||
@@ -108,14 +123,14 @@ function Send() {
   const approveExactAmount = useMemo(() => {
     return () => {
       setAllowanceError("");
-      approveAmount(BigInt(sourceAmountParsed)).then(
+      approveAmount(BigInt(transferAmountParsed)).then(
         () => {
           setAllowanceError("");
         },
         (error) => setAllowanceError("Failed to approve the token transfer.")
       );
     };
-  }, [approveAmount, sourceAmountParsed]);
+  }, [approveAmount, transferAmountParsed]);
   const approveUnlimited = useMemo(() => {
     return () => {
       setAllowanceError("");
@@ -143,6 +158,9 @@ function Send() {
         completing Step 4, you will have to perform the recovery workflow to
         complete the transfer.
       </Alert>
+      {sourceChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
+        <SolanaTPSWarning />
+      )}
       {approveButtonNeeded ? (
         <>
           <FormControlLabel
@@ -164,7 +182,11 @@ function Send() {
             error={errorMessage}
           >
             {"Approve " +
-              (shouldApproveUnlimited ? "Unlimited" : sourceAmount) +
+              (shouldApproveUnlimited
+                ? "Unlimited"
+                : humanReadableTransferAmount
+                ? humanReadableTransferAmount
+                : sourceAmount) +
               ` Token${notOne ? "s" : ""}`}
           </ButtonWithLoader>
         </>

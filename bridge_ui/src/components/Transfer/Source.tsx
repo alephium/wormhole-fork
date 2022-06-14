@@ -1,6 +1,7 @@
 import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
+  CHAIN_ID_SOLANA,
 } from "@certusone/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
 import { Button, makeStyles, Typography } from "@material-ui/core";
@@ -29,7 +30,10 @@ import {
 import {
   BSC_MIGRATION_ASSET_MAP,
   CHAINS,
+  CLUSTER,
   ETH_MIGRATION_ASSET_MAP,
+  getIsTransferDisabled,
+  MIGRATION_ASSET_MAP,
 } from "../../utils/consts";
 import ButtonWithLoader from "../ButtonWithLoader";
 import ChainSelect from "../ChainSelect";
@@ -37,9 +41,11 @@ import ChainSelectArrow from "../ChainSelectArrow";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
 import NumberTextField from "../NumberTextField";
+import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import { TokenSelector } from "../TokenSelectors/SourceTokenSelector";
 import SourceAssetWarning from "./SourceAssetWarning";
+import ChainWarningMessage from "../ChainWarningMessage";
 
 const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
@@ -75,10 +81,20 @@ function Source() {
     () => CHAINS.filter((c) => c.id !== sourceChain),
     [sourceChain]
   );
+  const isSourceTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(sourceChain, true);
+  }, [sourceChain]);
+  const isTargetTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(targetChain, false);
+  }, [targetChain]);
   const parsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
   );
   const hasParsedTokenAccount = !!parsedTokenAccount;
+  const isSolanaMigration =
+    sourceChain === CHAIN_ID_SOLANA &&
+    !!parsedTokenAccount &&
+    !!MIGRATION_ASSET_MAP.get(parsedTokenAccount.mintKey);
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
     !!parsedTokenAccount &&
@@ -87,7 +103,8 @@ function Source() {
     sourceChain === CHAIN_ID_BSC &&
     !!parsedTokenAccount &&
     !!BSC_MIGRATION_ASSET_MAP.get(getAddress(parsedTokenAccount.mintKey));
-  const isMigrationAsset = isEthereumMigration || isBscMigration;
+  const isMigrationAsset =
+    isSolanaMigration || isEthereumMigration || isBscMigration;
   const uiAmountString = useSelector(selectTransferSourceBalanceString);
   const amount = useSelector(selectTransferAmount);
   const error = useSelector(selectTransferSourceError);
@@ -95,7 +112,11 @@ function Source() {
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
   const { isReady, statusMessage } = useIsWalletReady(sourceChain);
   const handleMigrationClick = useCallback(() => {
-    if (sourceChain === CHAIN_ID_ETH) {
+    if (sourceChain === CHAIN_ID_SOLANA) {
+      history.push(
+        `/migrate/Solana/${parsedTokenAccount?.mintKey}/${parsedTokenAccount?.publicKey}`
+      );
+    } else if (sourceChain === CHAIN_ID_ETH) {
       history.push(`/migrate/Ethereum/${parsedTokenAccount?.mintKey}`);
     } else if (sourceChain === CHAIN_ID_BSC) {
       history.push(`/migrate/BinanceSmartChain/${parsedTokenAccount?.mintKey}`);
@@ -147,7 +168,10 @@ function Source() {
           </div>
         </div>
       </StepDescription>
-      <div className={classes.chainSelectWrapper}>
+      <div
+        className={classes.chainSelectWrapper}
+        style={{ marginBottom: "25px" }}
+      >
         <div className={classes.chainSelectContainer}>
           <Typography variant="caption">Source</Typography>
           <ChainSelect
@@ -199,6 +223,9 @@ function Source() {
       ) : (
         <>
           <LowBalanceWarning chainId={sourceChain} />
+          {sourceChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
+            <SolanaTPSWarning />
+          )}
           <SourceAssetWarning
             sourceChain={sourceChain}
             sourceAsset={parsedTokenAccount?.mintKey}
@@ -219,8 +246,14 @@ function Source() {
               }
             />
           ) : null}
+          <ChainWarningMessage chainId={sourceChain} />
+          <ChainWarningMessage chainId={targetChain} />
           <ButtonWithLoader
-            disabled={!isSourceComplete}
+            disabled={
+              !isSourceComplete ||
+              isSourceTransferDisabled ||
+              isTargetTransferDisabled
+            }
             onClick={handleNextClick}
             showLoader={false}
             error={statusMessage || error}

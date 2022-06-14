@@ -1,5 +1,9 @@
 import { ethers, Overrides } from "ethers";
-import { createWrappedOnTerra } from ".";
+import {
+  createWrappedOnAlgorand,
+  createWrappedOnSolana,
+  createWrappedOnTerra,
+} from ".";
 import { Bridge__factory } from "../ethers-contracts";
 
 export async function updateWrappedOnEth(
@@ -15,3 +19,7 @@ export async function updateWrappedOnEth(
 }
 
 export const updateWrappedOnTerra = createWrappedOnTerra;
+
+export const updateWrappedOnSolana = createWrappedOnSolana;
+
+export const updateWrappedOnAlgorand = createWrappedOnAlgorand;

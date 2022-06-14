@@ -1,4 +1,4 @@
-import { NodeProvider, node } from 'alephium-web3'
+import { NodeProvider, node } from '@alephium/web3'
 import { randomBytes } from 'crypto'
 
 export function toHex(bytes: Uint8Array): string {

@@ -1,7 +1,8 @@
+import { TransactionResponse } from "@solana/web3.js";
 import { TxInfo } from "@terra-money/terra.js";
-import { ContractReceipt } from "ethers";
+import { BigNumber, ContractReceipt } from "ethers";
 import { Implementation__factory } from "../ethers-contracts";
-import { node } from "alephium-web3";
+import { node } from "@alephium/web3";
 
 export function parseSequenceFromLogAlph(event: node.ContractEventByTxId): string {
   if (event.fields && event.fields.length !== 5) {
@@ -58,7 +59,6 @@ export function parseSequenceFromLogTerra(info: TxInfo): string {
       });
     });
   });
-  console.log("Terra Sequence: ", sequence);
   return sequence.toString();
 }
 
@@ -77,4 +77,44 @@ export function parseSequencesFromLogTerra(info: TxInfo): string[] {
     });
   });
   return sequences;
+}
+
+const SOLANA_SEQ_LOG = "Program log: Sequence: ";
+export function parseSequenceFromLogSolana(info: TransactionResponse) {
+  // TODO: better parsing, safer
+  const sequence = info.meta?.logMessages
+    ?.filter((msg) => msg.startsWith(SOLANA_SEQ_LOG))?.[0]
+    ?.replace(SOLANA_SEQ_LOG, "");
+  if (!sequence) {
+    throw new Error("sequence not found");
+  }
+  return sequence.toString();
+}
+
+export function parseSequencesFromLogSolana(info: TransactionResponse) {
+  // TODO: better parsing, safer
+  return info.meta?.logMessages
+    ?.filter((msg) => msg.startsWith(SOLANA_SEQ_LOG))
+    .map((msg) => msg.replace(SOLANA_SEQ_LOG, ""));
+}
+
+export function parseSequenceFromLogAlgorand(
+  result: Record<string, any>
+): string {
+  let sequence = "";
+  if (result["inner-txns"]) {
+    const innerTxns: [] = result["inner-txns"];
+    class iTxn {
+      "local-state-delta": [[Object]];
+      logs: Buffer[] | undefined;
+      "pool-eror": string;
+      txn: { txn: [Object] } | undefined;
+    }
+    innerTxns.forEach((txn: iTxn) => {
+      if (txn.logs) {
+        sequence = BigNumber.from(txn.logs[0].slice(0, 8)).toString();
+      }
+    });
+  }
+  return sequence;
 }

@@ -4,10 +4,12 @@ package p
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 
@@ -23,24 +25,7 @@ var warmTvlCumulativeCache = map[string]map[string]map[string]LockedAsset{}
 var muWarmTvlCumulativeCache sync.RWMutex
 var warmTvlCumulativeCacheFilePath = "tvl-cumulative-cache.json"
 
-var tvlUpToYesterday = map[string]map[string]map[string]map[string]float64{}
-var muTvlUpToYesterday sync.RWMutex
-var tvlUpToYesterdayFilePath = "tvl-up-to-yesterday-cache.json"
-
-// token addresses blacklisted from TVL calculation
-var tokensToSkip = map[string]bool{
-	"0x04132bf45511d03a58afd4f1d36a29d229ccc574": true,
-	"0xa79bd679ce21a2418be9e6f88b2186c9986bbe7d": true,
-	"0x931c3987040c90b6db09981c7c91ba155d3fa31f": true,
-	"0x8fb1a59ca2d57b51e5971a85277efe72c4492983": true,
-	"0xd52d9ba6fcbadb1fe1e3aca52cbb72c4d9bbb4ec": true,
-	"0x1353c55fd2beebd976d7acc4a7083b0618d94689": true,
-	"0xf0fbdb8a402ec0fc626db974b8d019c902deb486": true,
-	"0x1fd4a95f4335cf36cac85730289579c104544328": true,
-	"0x358aa13c52544eccef6b0add0f801012adad5ee3": true,
-	"0xbe32b7acd03bcc62f25ebabd169a35e69ef17601": true,
-	"0x7ffb3d637014488b63fb9858e279385685afc1e2": true,
-}
+var notionalTvlCumulativeResultPath = "notional-tvl-cumulative.json"
 
 // days to be excluded from the TVL result
 var skipDays = map[string]bool{
@@ -48,7 +33,7 @@ var skipDays = map[string]bool{
 	// "2022-02-19": true,
 }
 
-// calcuates a running total of notional value transferred, by symbol, since the start time specified.
+// calculates a running total of notional value transferred, by symbol, since the start time specified.
 func createTvlCumulativeOfInterval(tbl *bigtable.Table, ctx context.Context, start time.Time) map[string]map[string]map[string]LockedAsset {
 	if len(warmTvlCumulativeCache) == 0 {
 		loadJsonToInterface(ctx, warmTvlCumulativeCacheFilePath, &muWarmTvlCumulativeCache, &warmTvlCumulativeCache)
@@ -168,7 +153,7 @@ func createTvlCumulativeOfInterval(tbl *bigtable.Table, ctx context.Context, sta
 					}
 				}
 			}
-			// dont cache today
+			// don't cache today
 			if date != today {
 				// set the result in the cache
 				muWarmTvlCumulativeCache.Lock()
@@ -224,7 +209,7 @@ func createTvlCumulativeOfInterval(tbl *bigtable.Table, ctx context.Context, sta
 }
 
 // calculates the cumulative value transferred each day since launch.
-func TvlCumulative(w http.ResponseWriter, r *http.Request) {
+func ComputeTvlCumulative(w http.ResponseWriter, r *http.Request) {
 	// Set CORS headers for the preflight request
 	if r.Method == http.MethodOptions {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -237,10 +222,10 @@ func TvlCumulative(w http.ResponseWriter, r *http.Request) {
 	// Set CORS headers for the main request.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// get the number of days to query - days since launch day
+	// days since launch day
 	queryDays := int(time.Now().UTC().Sub(releaseDay).Hours() / 24)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	dailyTvl := map[string]map[string]map[string]LockedAsset{}
@@ -262,12 +247,8 @@ func TvlCumulative(w http.ResponseWriter, r *http.Request) {
 		dailyTvl[date] = map[string]map[string]LockedAsset{}
 		dailyTvl[date]["*"] = map[string]LockedAsset{}
 		dailyTvl[date]["*"]["*"] = LockedAsset{
-			Symbol:      "*",
-			Address:     "",
-			CoinGeckoId: "",
-			TokenPrice:  0,
-			Amount:      0,
-			Notional:    0,
+			Symbol:   "*",
+			Notional: 0,
 		}
 		for chain, tokens := range chains {
 			if chain == "*" {
@@ -275,12 +256,8 @@ func TvlCumulative(w http.ResponseWriter, r *http.Request) {
 			}
 			dailyTvl[date][chain] = map[string]LockedAsset{}
 			dailyTvl[date][chain]["*"] = LockedAsset{
-				Symbol:      "*",
-				Address:     "",
-				CoinGeckoId: "",
-				TokenPrice:  0,
-				Amount:      0,
-				Notional:    0,
+				Symbol:   "*",
+				Notional: 0,
 			}
 
 			for symbol, asset := range tokens {
@@ -294,12 +271,19 @@ func TvlCumulative(w http.ResponseWriter, r *http.Request) {
 
 				notional := asset.Amount * asset.TokenPrice
 				if notional <= 0 {
-					log.Printf("skipping token with no/negative value. notional: %v, chain: %v, symbol %v, address %v", notional, chain, asset.Symbol, asset.Address)
 					continue
 				}
 
 				asset.Notional = roundToTwoDecimalPlaces(notional)
-				dailyTvl[date][chain][symbol] = asset
+
+				// Note: disable individual symbols to reduce response size for now
+				//// create a new LockAsset in order to exclude TokenPrice and Amount
+				//dailyTvl[date][chain][symbol] = LockedAsset{
+				//	Symbol:      asset.Symbol,
+				//	Address:     asset.Address,
+				//	CoinGeckoId: asset.CoinGeckoId,
+				//	Notional:    asset.Notional,
+				//}
 
 				// add this asset's notional to the date/chain/*
 				if allAssets, ok := dailyTvl[date][chain]["*"]; ok {
@@ -330,6 +314,90 @@ func TvlCumulative(w http.ResponseWriter, r *http.Request) {
 
 	result := &tvlCumulativeResult{
 		DailyLocked: dailyTvl,
+	}
+
+	persistInterfaceToJson(ctx, notionalTvlCumulativeResultPath, &muWarmTvlCumulativeCache, result)
+
+	// Note: GCP HTTP Load Balancer returns 502 error if response data is large,
+	// just return success if there wasn't an error
+	// jsonBytes, err := json.Marshal(result)
+
+	//if err != nil {
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	w.Write([]byte(err.Error()))
+	//	log.Println(err.Error())
+	//	return
+	//}
+	w.WriteHeader(http.StatusOK)
+	//w.Write(jsonBytes)
+}
+
+func TvlCumulative(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers for the preflight request
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "3600")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	// Set CORS headers for the main request.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var numDays string
+	var totalsOnly string
+	switch r.Method {
+	case http.MethodGet:
+		queryParams := r.URL.Query()
+		numDays = queryParams.Get("numDays")
+		totalsOnly = queryParams.Get("totalsOnly")
+	}
+
+	var queryDays int
+	if numDays == "" {
+		// days since launch day
+		queryDays = int(time.Now().UTC().Sub(releaseDay).Hours() / 24)
+	} else {
+		var convErr error
+		queryDays, convErr = strconv.Atoi(numDays)
+		if convErr != nil {
+			fmt.Fprint(w, "numDays must be an integer")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	hours := (24 * queryDays)
+	periodInterval := -time.Duration(hours) * time.Hour
+	now := time.Now().UTC()
+	prev := now.Add(periodInterval)
+	start := time.Date(prev.Year(), prev.Month(), prev.Day(), 0, 0, 0, 0, prev.Location())
+	startStr := start.Format("2006-01-02")
+
+	var cachedResult tvlCumulativeResult
+	loadJsonToInterface(ctx, notionalTvlCumulativeResultPath, &muWarmTvlCumulativeCache, &cachedResult)
+
+	dailyLocked := map[string]map[string]map[string]LockedAsset{}
+	for date, chains := range cachedResult.DailyLocked {
+		if date >= startStr {
+			if totalsOnly == "" {
+				dailyLocked[date] = chains
+			} else {
+				dailyLocked[date] = map[string]map[string]LockedAsset{}
+				for chain, addresses := range chains {
+					dailyLocked[date][chain] = map[string]LockedAsset{}
+					dailyLocked[date][chain]["*"] = addresses["*"]
+				}
+			}
+		}
+	}
+
+	result := &tvlCumulativeResult{
+		DailyLocked: dailyLocked,
 	}
 
 	jsonBytes, err := json.Marshal(result)

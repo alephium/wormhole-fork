@@ -1,19 +1,24 @@
 import {
+  CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@certusone/wormhole-sdk";
-import { makeStyles, Paper, Typography } from "@material-ui/core";
+import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
 import { useMemo } from "react";
 import { COLORS } from "../../muiTheme";
 import {
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  SOL_CUSTODY_ADDRESS,
+  SOL_NFT_CUSTODY_ADDRESS,
 } from "../../utils/consts";
+import HeaderText from "../HeaderText";
 import SmartAddress from "../SmartAddress";
 import MuiReactTable from "./tableComponents/MuiReactTable";
 
@@ -53,6 +58,12 @@ const CustodyAddresses: React.FC<any> = () => {
         nftAddress: getNFTBridgeAddressForChain(CHAIN_ID_ETH),
       },
       {
+        chainName: "Solana",
+        chainId: CHAIN_ID_SOLANA,
+        tokenAddress: SOL_CUSTODY_ADDRESS,
+        nftAddress: SOL_NFT_CUSTODY_ADDRESS,
+      },
+      {
         chainName: "Binance Smart Chain",
         chainId: CHAIN_ID_BSC,
         tokenAddress: getTokenBridgeAddressForChain(CHAIN_ID_BSC),
@@ -87,6 +98,12 @@ const CustodyAddresses: React.FC<any> = () => {
         chainId: CHAIN_ID_FANTOM,
         tokenAddress: getTokenBridgeAddressForChain(CHAIN_ID_FANTOM),
         nftAddress: getNFTBridgeAddressForChain(CHAIN_ID_FANTOM),
+      },
+      {
+        chainName: "Aurora",
+        chainId: CHAIN_ID_AURORA,
+        tokenAddress: getTokenBridgeAddressForChain(CHAIN_ID_AURORA),
+        nftAddress: getNFTBridgeAddressForChain(CHAIN_ID_AURORA),
       },
     ];
   }, []);
@@ -150,10 +167,13 @@ const CustodyAddresses: React.FC<any> = () => {
   );
 
   return (
-    <>
+    <Container maxWidth="lg">
+      <Container maxWidth="md">
+        <HeaderText white>Custody</HeaderText>
+      </Container>
       {header}
       <Paper className={classes.mainPaper}>{table}</Paper>
-    </>
+    </Container>
   );
 };
 

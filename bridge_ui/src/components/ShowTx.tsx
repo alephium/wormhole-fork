@@ -1,12 +1,18 @@
 import {
   ChainId,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
+  CHAIN_ID_CELO,
   CHAIN_ID_ETH,
   CHAIN_ID_ETHEREUM_ROPSTEN,
   CHAIN_ID_FANTOM,
+  CHAIN_ID_KLAYTN,
+  CHAIN_ID_KARURA,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@certusone/wormhole-sdk";
 import { Button, makeStyles, Typography } from "@material-ui/core";
@@ -34,7 +40,8 @@ export default function ShowTx({
   const showExplorerLink =
     CLUSTER === "testnet" ||
     CLUSTER === "mainnet" ||
-    (CLUSTER === "devnet" && chainId === CHAIN_ID_TERRA);
+    (CLUSTER === "devnet" &&
+      (chainId === CHAIN_ID_SOLANA || chainId === CHAIN_ID_TERRA));
   const explorerAddress =
     chainId === CHAIN_ID_ETH
       ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/tx/${
@@ -60,9 +67,37 @@ export default function ShowTx({
       ? `https://${
           CLUSTER === "testnet" ? "testnet." : ""
         }explorer.emerald.oasis.dev/tx/${tx?.id}`
+      : chainId === CHAIN_ID_AURORA
+      ? `https://${CLUSTER === "testnet" ? "testnet." : ""}aurorascan.dev/tx/${
+          tx?.id
+        }`
       : chainId === CHAIN_ID_FANTOM
       ? `https://${CLUSTER === "testnet" ? "testnet." : ""}ftmscan.com/tx/${
           tx?.id
+        }`
+      : chainId === CHAIN_ID_KLAYTN
+      ? `https://${CLUSTER === "testnet" ? "baobab." : ""}scope.klaytn.com/tx/${
+          tx?.id
+        }`
+      : chainId === CHAIN_ID_CELO
+      ? `https://${
+          CLUSTER === "testnet"
+            ? "alfajores-blockscout.celo-testnet.org"
+            : "explorer.celo.org"
+        }/tx/${tx?.id}`
+      : chainId === CHAIN_ID_KARURA
+      ? `https://${
+          CLUSTER === "testnet"
+            ? "blockscout.karura-dev.aca-dev.network"
+            : "blockscout.karura.network"
+        }/tx/${tx?.id}`
+      : chainId === CHAIN_ID_SOLANA
+      ? `https://explorer.solana.com/tx/${tx?.id}${
+          CLUSTER === "testnet"
+            ? "?cluster=devnet"
+            : CLUSTER === "devnet"
+            ? "?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899"
+            : ""
         }`
       : chainId === CHAIN_ID_TERRA
       ? `https://finder.terra.money/${
@@ -72,6 +107,10 @@ export default function ShowTx({
             ? "bombay-12"
             : "columbus-5"
         }/tx/${tx?.id}`
+      : chainId === CHAIN_ID_ALGORAND
+      ? `https://${CLUSTER === "testnet" ? "testnet." : ""}algoexplorer.io/tx/${
+          tx?.id
+        }`
       : undefined;
   const explorerName = getExplorerName(chainId);
 

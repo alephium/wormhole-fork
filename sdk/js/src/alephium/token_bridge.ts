@@ -1,4 +1,4 @@
-import { Script } from 'alephium-web3'
+import { Script } from '@alephium/web3'
 import { default as createLocalTokenWrapper } from './artifacts/create_local_wrapper.ral.json'
 import { default as createRemoteTokenWrapper } from './artifacts/create_remote_wrapper.ral.json'
 import { default as transferLocalToken } from './artifacts/transfer_local.ral.json'

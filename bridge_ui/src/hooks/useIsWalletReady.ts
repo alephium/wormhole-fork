@@ -1,6 +1,8 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
@@ -8,8 +10,11 @@ import { hexlify, hexStripZeros } from "@ethersproject/bytes";
 import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useCallback, useMemo } from "react";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
+import { METAMASK_CHAIN_PARAMETERS } from "../utils/metaMaskChainParameters";
 
 const createWalletStatus = (
   isReady: boolean,
@@ -33,6 +38,8 @@ function useIsWalletReady(
   forceNetworkSwitch: () => void;
 } {
   const autoSwitch = enableNetworkAutoswitch;
+  const solanaWallet = useSolanaWallet();
+  const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
   const { signer: alphSigner } = useAlephiumWallet();
   const hasTerraWallet = !!terraWallet;
@@ -44,17 +51,34 @@ function useIsWalletReady(
   const hasEthInfo = !!provider && !!signerAddress;
   const correctEvmNetwork = getEvmChainId(chainId);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
+  const { accounts: algorandAccounts } = useAlgorandContext();
+  const algoPK = algorandAccounts[0]?.address;
 
-  const forceNetworkSwitch = useCallback(() => {
+  const forceNetworkSwitch = useCallback(async () => {
     if (provider && correctEvmNetwork) {
       if (!isEVMChain(chainId)) {
         return;
       }
       try {
-        provider.send("wallet_switchEthereumChain", [
+        await provider.send("wallet_switchEthereumChain", [
           { chainId: hexStripZeros(hexlify(correctEvmNetwork)) },
         ]);
-      } catch (e) {}
+      } catch (switchError: any) {
+        // This error code indicates that the chain has not been added to MetaMask.
+        if (switchError.code === 4902) {
+          const addChainParameter =
+            METAMASK_CHAIN_PARAMETERS[correctEvmNetwork];
+          if (addChainParameter !== undefined) {
+            try {
+              await provider.send("wallet_addEthereumChain", [
+                addChainParameter,
+              ]);
+            } catch (addError) {
+              console.error(addError);
+            }
+          }
+        }
+      }
     }
   }, [provider, correctEvmNetwork, chainId]);
 
@@ -79,6 +103,17 @@ function useIsWalletReady(
         forceNetworkSwitch,
         terraWallet.walletAddress
       );
+    }
+    if (chainId === CHAIN_ID_SOLANA && solPK) {
+      return createWalletStatus(
+        true,
+        undefined,
+        forceNetworkSwitch,
+        solPK.toString()
+      );
+    }
+    if (chainId === CHAIN_ID_ALGORAND && algoPK) {
+      return createWalletStatus(true, undefined, forceNetworkSwitch, algoPK);
     }
     if (isEVMChain(chainId) && hasEthInfo && signerAddress) {
       if (hasCorrectEvmNetwork) {
@@ -112,6 +147,7 @@ function useIsWalletReady(
     autoSwitch,
     forceNetworkSwitch,
     hasTerraWallet,
+    solPK,
     hasEthInfo,
     correctEvmNetwork,
     hasCorrectEvmNetwork,
@@ -119,6 +155,7 @@ function useIsWalletReady(
     signerAddress,
     terraWallet,
     alphSigner,
+    algoPK,
   ]);
 }
 

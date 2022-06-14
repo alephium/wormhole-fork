@@ -203,7 +203,7 @@ pub struct GuardianSetInfo {
 impl GuardianSetInfo {
     pub fn quorum(&self) -> usize {
         // allow quorum of 0 for testing purposes...
-        if self.addresses.len() == 0 {
+        if self.addresses.is_empty() {
             return 0;
         }
         ((self.addresses.len() * 10 / 3) * 2) / 10 + 1
@@ -243,7 +243,7 @@ pub fn sequence_set(storage: &mut dyn Storage, emitter: &[u8], sequence: u64) ->
 
 pub fn sequence_read(storage: &dyn Storage, emitter: &[u8]) -> u64 {
     bucket_read(storage, SEQUENCE_KEY)
-        .load(&emitter)
+        .load(emitter)
         .or::<u64>(Ok(0))
         .unwrap()
 }
@@ -254,7 +254,7 @@ pub fn vaa_archive_add(storage: &mut dyn Storage, hash: &[u8]) -> StdResult<()> 
 
 pub fn vaa_archive_check(storage: &dyn Storage, hash: &[u8]) -> bool {
     bucket_read(storage, GUARDIAN_SET_KEY)
-        .load(&hash)
+        .load(hash)
         .or::<bool>(Ok(false))
         .unwrap()
 }
@@ -283,8 +283,7 @@ pub struct GovernancePacket {
 }
 
 impl GovernancePacket {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
-        let data = data.as_slice();
+    pub fn deserialize(data: &[u8]) -> StdResult<Self> {
         let module = data.get_bytes32(0).to_vec();
         let action = data.get_u8(32);
         let chain = data.get_u16(33);
@@ -311,8 +310,7 @@ pub struct GuardianSetUpgrade {
 }
 
 impl ContractUpgrade {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
-        let data = data.as_slice();
+    pub fn deserialize(data: &[u8]) -> StdResult<Self> {
         let new_contract = data.get_u64(24);
         Ok(ContractUpgrade {
             new_contract,
@@ -321,10 +319,9 @@ impl ContractUpgrade {
 }
 
 impl GuardianSetUpgrade {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
+    pub fn deserialize(data: &[u8]) -> StdResult<Self> {
         const ADDRESS_LEN: usize = 20;
 
-        let data = data.as_slice();
         let new_guardian_set_index = data.get_u32(0);
 
         let n_guardians = data.get_u8(4);
@@ -347,10 +344,10 @@ impl GuardianSetUpgrade {
             expiration_time: 0,
         };
 
-        return Ok(GuardianSetUpgrade {
+        Ok(GuardianSetUpgrade {
             new_guardian_set_index,
             new_guardian_set,
-        });
+        })
     }
 }
 
@@ -360,9 +357,7 @@ pub struct SetFee {
 }
 
 impl SetFee {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
-        let data = data.as_slice();
-
+    pub fn deserialize(data: &[u8]) -> StdResult<Self> {
         let (_, amount) = data.get_u256(0);
         let fee = Coin {
             denom: String::from(FEE_DENOMINATION),
@@ -379,8 +374,7 @@ pub struct TransferFee {
 }
 
 impl TransferFee {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
-        let data = data.as_slice();
+    pub fn deserialize(data: &[u8]) -> StdResult<Self> {
         let recipient = data.get_address(0);
 
         let (_, amount) = data.get_u256(32);
@@ -392,68 +386,3 @@ impl TransferFee {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn build_guardian_set(length: usize) -> GuardianSetInfo {
-        let mut addresses: Vec<GuardianAddress> = Vec::with_capacity(length);
-        for _ in 0..length {
-            addresses.push(GuardianAddress {
-                bytes: vec![].into(),
-            });
-        }
-
-        GuardianSetInfo {
-            addresses,
-            expiration_time: 0,
-        }
-    }
-
-    #[test]
-    fn quardian_set_quorum() {
-        assert_eq!(build_guardian_set(1).quorum(), 1);
-        assert_eq!(build_guardian_set(2).quorum(), 2);
-        assert_eq!(build_guardian_set(3).quorum(), 3);
-        assert_eq!(build_guardian_set(4).quorum(), 3);
-        assert_eq!(build_guardian_set(5).quorum(), 4);
-        assert_eq!(build_guardian_set(6).quorum(), 5);
-        assert_eq!(build_guardian_set(7).quorum(), 5);
-        assert_eq!(build_guardian_set(8).quorum(), 6);
-        assert_eq!(build_guardian_set(9).quorum(), 7);
-        assert_eq!(build_guardian_set(10).quorum(), 7);
-        assert_eq!(build_guardian_set(11).quorum(), 8);
-        assert_eq!(build_guardian_set(12).quorum(), 9);
-        assert_eq!(build_guardian_set(20).quorum(), 14);
-        assert_eq!(build_guardian_set(25).quorum(), 17);
-        assert_eq!(build_guardian_set(100).quorum(), 67);
-    }
-
-    #[test]
-    fn test_deserialize() {
-        let x = hex::decode("080000000901007bfa71192f886ab6819fa4862e34b4d178962958d9b2e3d9437338c9e5fde1443b809d2886eaa69e0f0158ea517675d96243c9209c3fe1d94d5b19866654c6980000000b150000000500020001020304000000000000000000000000000000000000000000000000000000000000000000000a0261626364").unwrap();
-        let v = ParsedVAA::deserialize(x.as_slice()).unwrap();
-        assert_eq!(
-            v,
-            ParsedVAA {
-                version: 8,
-                guardian_set_index: 9,
-                timestamp: 2837,
-                nonce: 5,
-                len_signers: 1,
-                emitter_chain: 2,
-                emitter_address: vec![
-                    0, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0
-                ],
-                sequence: 10,
-                consistency_level: 2,
-                payload: vec![97, 98, 99, 100],
-                hash: vec![
-                    195, 10, 19, 96, 8, 61, 218, 69, 160, 238, 165, 142, 105, 119, 139, 121, 212,
-                    73, 238, 179, 13, 80, 245, 224, 75, 110, 163, 8, 185, 132, 55, 34
-                ]
-            }
-        );
-    }
-}

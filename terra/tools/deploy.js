@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import {
   StdFee,
@@ -16,12 +17,13 @@ import { zeroPad } from "ethers/lib/utils.js";
 */
 const artifacts = [
   "wormhole.wasm",
-  "token_bridge.wasm",
+  "token_bridge_terra.wasm",
   "cw20_wrapped.wasm",
   "cw20_base.wasm",
   "nft_bridge.wasm",
   "cw721_wrapped.wasm",
   "cw721_base.wasm",
+  "mock_bridge_integration.wasm",
 ];
 
 /* Check that the artifact folder contains all the wasm files we expect and nothing else */
@@ -146,24 +148,26 @@ async function instantiate(contract, inst_msg) {
 
 const addresses = {};
 
+const init_guardians = JSON.parse(process.env.INIT_SIGNERS)
+if (!init_guardians || init_guardians.length === 0) {
+  throw "failed to get initial guardians from .env file."
+}
+
 addresses["wormhole.wasm"] = await instantiate("wormhole.wasm", {
   gov_chain: govChain,
   gov_address: Buffer.from(govAddress, "hex").toString("base64"),
   guardian_set_expirity: 86400,
   initial_guardian_set: {
-    addresses: [
-      {
-        bytes: Buffer.from(
-          "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
-          "hex"
-        ).toString("base64"),
-      },
-    ],
+    addresses: init_guardians.map(hex => {
+      return {
+        bytes: Buffer.from(hex, "hex").toString("base64")
+      }
+    }),
     expiration_time: 0,
   },
 });
 
-addresses["token_bridge.wasm"] = await instantiate("token_bridge.wasm", {
+addresses["token_bridge_terra.wasm"] = await instantiate("token_bridge_terra.wasm", {
   gov_chain: govChain,
   gov_address: Buffer.from(govAddress, "hex").toString("base64"),
   wormhole_contract: addresses["wormhole.wasm"],
@@ -236,21 +240,23 @@ await mint_cw721(
 /* Registrations: tell the bridge contracts to know about each other */
 
 const contract_registrations = {
-  "token_bridge.wasm": [
+  "token_bridge_terra.wasm": [
     // Solana
-    "01000000000100c9f4230109e378f7efc0605fb40f0e1869f2d82fda5b1dfad8a5a2dafee85e033d155c18641165a77a2db6a7afbf2745b458616cb59347e89ae0c7aa3e7cc2d400000000010000000100010000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000546f6b656e4272696467650100000001c69a1b1a65dd336bf1df6a77afb501fc25db7fc0938cb08595a9ef473265cb4f",
+    process.env.REGISTER_SOL_TOKEN_BRIDGE_VAA,
     // Ethereum
-    "01000000000100e2e1975d14734206e7a23d90db48a6b5b6696df72675443293c6057dcb936bf224b5df67d32967adeb220d4fe3cb28be515be5608c74aab6adb31099a478db5c01000000010000000100010000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000546f6b656e42726964676501000000020000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16",
+    process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA,
     // BSC
-    "01000000000100719b4ada436f614489dbf87593c38ba9aea35aa7b997387f8ae09f819806f5654c8d45b6b751faa0e809ccbc294794885efa205bd8a046669464c7cbfb03d183010000000100000001000100000000000000000000000000000000000000000000000000000000000000040000000002c8bb0600000000000000000000000000000000000000000000546f6b656e42726964676501000000040000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16",
+    process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA,
+    // ALGO
+    process.env.REGISTER_ALGO_TOKEN_BRIDGE_VAA,
     // ALPH
-    "0100000000010071aeddd7838cc10746b579706443b0c158a0f594b6e82592f1ff8f6e0f909d94489c4907f133430de22ef2248f98005dff57f7ce87fd0e277162d88244d1687800000000010000000100010000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000546f6b656e427269646765010000000d068bc98d8a7ac5f72a799fa44477867b5b74826f8de54d8fc5db0f7452761691"
+    process.env.REGISTER_ALPH_TOKEN_BRIDGE_VAA,
   ],
   "nft_bridge.wasm": [
     // Solana
-    "010000000001007985ba742002ae745c19722fea4d82102e68526c7c9d94d0e5d0a809071c98451c9693b230b3390f4ca9555a3ba9a9abbe87cf6f9e400682213e4fbbe1dabb9e0100000001000000010001000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000004e4654427269646765010000000196ee982293251b48729804c8e8b24b553eb6b887867024948d2236fd37a577ab",
+    process.env.REGISTER_SOL_NFT_BRIDGE_VAA,
     // Ethereum
-    "01000000000100d073f81a4ecf2469b0674b1902dcbcad2da7f70ecdd7e1aec65414380ca2c05426380c33bb083ab41167c522231c1485b9c8ffce04eaf2e8a6f50edaa72074c50000000001000000010001000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000004e4654427269646765010000000200000000000000000000000026b4afb60d6c903165150c6f0aa14f8016be4aec",
+    process.env.REGISTER_ETH_NFT_BRIDGE_VAA,
   ],
 };
 

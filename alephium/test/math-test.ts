@@ -1,4 +1,4 @@
-import { NodeProvider, Number256 } from "alephium-web3"
+import { NodeProvider, Number256 } from "@alephium/web3"
 import { createMath } from "./fixtures/wormhole-fixture"
 
 describe('test math', () => {

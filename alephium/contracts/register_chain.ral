@@ -1,7 +1,6 @@
 import "token_bridge.ral" 
 
 TxScript Main(payer: Address, tokenBridgeId: ByteVec, vaa: ByteVec, alphAmount: U256) {
-    approveAlph!(payer, alphAmount)
     let tokenBridge = TokenBridge(tokenBridgeId)
-    tokenBridge.registerChain(vaa, payer, alphAmount)
+    tokenBridge.registerChain{payer -> alphAmount}(vaa, payer, alphAmount)
 }

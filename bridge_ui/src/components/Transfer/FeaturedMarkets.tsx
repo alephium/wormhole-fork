@@ -1,13 +1,17 @@
 import { Button, makeStyles, Typography } from "@material-ui/core";
 import { Launch } from "@material-ui/icons";
+import { TokenInfo } from "@solana/spl-token-registry";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
+import { DataWrapper } from "../../store/helpers";
 import {
+  selectSolanaTokenMap,
   selectTransferSourceAsset,
   selectTransferSourceChain,
   selectTransferTargetAsset,
   selectTransferTargetChain,
 } from "../../store/selectors";
+import { JUPITER_SWAP_BASE_URL } from "../../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -18,11 +22,32 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+function getJupiterSwapUrl(
+  link: string,
+  targetAsset: string,
+  tokenMap: DataWrapper<TokenInfo[]>
+) {
+  if (!tokenMap.error && !tokenMap.isFetching && tokenMap.data) {
+    const tokenInfo = tokenMap.data.find((value) => {
+      return value.address === targetAsset;
+    });
+    if (tokenInfo) {
+      const sourceSymbol = tokenInfo.symbol;
+      if (sourceSymbol) {
+        const targetSymbol = sourceSymbol === "UST" ? "SOL" : "UST";
+        return `${JUPITER_SWAP_BASE_URL}/${sourceSymbol}-${targetSymbol}`;
+      }
+    }
+  }
+  return link;
+}
+
 export default function FeaturedMarkets() {
   const sourceChain = useSelector(selectTransferSourceChain);
   const sourceAsset = useSelector(selectTransferSourceAsset);
   const targetChain = useSelector(selectTransferTargetChain);
   const targetAsset = useSelector(selectTransferTargetAsset);
+  const solanaTokenMap = useSelector(selectSolanaTokenMap);
   const { data: marketsData } = useMarketsMap(true);
   const classes = useStyles();
 
@@ -46,7 +71,10 @@ export default function FeaturedMarkets() {
   for (const market of tokenMarkets.markets) {
     const marketInfo = marketsData.markets[market];
     if (marketInfo) {
-      const url = marketInfo.link;
+      const url =
+        market === "jupiter"
+          ? getJupiterSwapUrl(marketInfo.link, sourceAsset, solanaTokenMap)
+          : marketInfo.link;
       tokenMarketButtons.push(
         <Button
           key={market}

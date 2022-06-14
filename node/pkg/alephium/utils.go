@@ -16,16 +16,15 @@ import (
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"golang.org/x/crypto/blake2b"
 )
 
 const HashLength = 32
 const transferPayloadId byte = 1
 const (
-	WormholeMessageEventIndex            = 0
-	TokenBridgeForChainCreatedEventIndex = 1
-	TokenWrapperCreatedEventIndex        = 2
-	UndoneSequencesRemovedEventIndex     = 3
-	UndoneSequenceCompletedEventIndex    = 4
+	WormholeMessageEventIndex         = 0
+	UndoneSequencesRemovedEventIndex  = 1
+	UndoneSequenceCompletedEventIndex = 2
 )
 
 func assume(cond bool) {
@@ -88,6 +87,12 @@ func HexToHash(str string) Hash {
 	var hash Hash
 	copy(hash[:], HexToFixedSizeBytes(str, 32))
 	return hash
+}
+
+func blake2bDoubleHash(data []byte) Hash {
+	hash0 := blake2b.Sum256(data)
+	hash := blake2b.Sum256(hash0[:])
+	return Hash(hash)
 }
 
 type Byte32 [32]byte
@@ -225,8 +230,8 @@ func (w *WormholeMessage) toMessagePublication(header *BlockHeader) *common.Mess
 
 	payload := w.payload
 	if w.isTransferMessage() {
-		// remove the last 33 bytes from transfer message payload
-		payload = w.payload[0 : len(w.payload)-33]
+		// remove the last 32 bytes from transfer message payload
+		payload = w.payload[0 : len(w.payload)-32]
 	}
 
 	return &common.MessagePublication{
@@ -249,7 +254,6 @@ type TransferMessage struct {
 	toAddress      Byte32
 	toChainId      uint16
 	fee            big.Int
-	isLocalToken   bool
 	tokenWrapperId Byte32
 }
 
@@ -272,12 +276,6 @@ func readByte32(reader *bytes.Reader, byte32 *Byte32) {
 	assume(err == nil)
 }
 
-func readBool(reader *bytes.Reader) bool {
-	b, err := reader.ReadByte()
-	assume(err == nil)
-	return b == 1
-}
-
 func TransferMessageFromBytes(data []byte) *TransferMessage {
 	assume(data[0] == transferPayloadId)
 	reader := bytes.NewReader(data[1:]) // skip the payloadId
@@ -288,23 +286,8 @@ func TransferMessageFromBytes(data []byte) *TransferMessage {
 	readByte32(reader, &message.toAddress)
 	readUint16(reader, &message.toChainId)
 	readBigInt(reader, &message.fee)
-	message.isLocalToken = readBool(reader)
 	readByte32(reader, &message.tokenWrapperId)
 	return &message
-}
-
-type tokenWrapperCreated struct {
-	senderId       Byte32
-	tokenWrapperId Byte32
-	isLocalToken   bool
-	tokenId        Byte32
-	remoteChainId  uint16
-}
-
-type tokenBridgeForChainCreated struct {
-	senderId      Byte32
-	contractId    Byte32
-	remoteChainId uint16
 }
 
 type undoneSequencesRemoved struct {
@@ -384,59 +367,10 @@ func (f Fields) toUndoneSequenceCompleted() (*undoneSequenceCompleted, error) {
 	}, nil
 }
 
-func (f Fields) toTokenWrapperCreatedEvent() (*tokenWrapperCreated, error) {
-	assume(len(f) == 5)
-	senderId, err := f[0].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	tokenWrapperId, err := f[1].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	isLocalToken := f[2].ToBool()
-	tokenId, err := f[3].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	remoteChainId, err := f[4].ToUint16()
-	if err != nil {
-		return nil, err
-	}
-	return &tokenWrapperCreated{
-		senderId:       *senderId,
-		tokenWrapperId: *tokenWrapperId,
-		isLocalToken:   isLocalToken,
-		tokenId:        *tokenId,
-		remoteChainId:  remoteChainId,
-	}, nil
-}
-
-func (f Fields) toTokenBridgeForChainCreatedEvent() (*tokenBridgeForChainCreated, error) {
-	assume(len(f) == 3)
-	senderId, err := f[0].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	contractId, err := f[1].ToByte32()
-	if err != nil {
-		return nil, err
-	}
-	remoteChainId, err := f[2].ToUint16()
-	if err != nil {
-		return nil, err
-	}
-	return &tokenBridgeForChainCreated{
-		senderId:      *senderId,
-		contractId:    *contractId,
-		remoteChainId: remoteChainId,
-	}, nil
-}
-
 type Event interface {
 	blockHash() string
 	txId() string
-	eventIndex() int32
+	eventIndex() int
 	fields() Fields
 	getConsistencyLevel(uint8) (*uint8, error)
 
@@ -447,7 +381,7 @@ type Event interface {
 type ContractEvent struct {
 	BlockHash  string `json:"blockHash"`
 	TxId       string `json:"txId"`
-	EventIndex int32  `json:"eventIndex"`
+	EventIndex int    `json:"eventIndex"`
 	Fields     Fields `json:"fields"`
 }
 
@@ -459,7 +393,7 @@ func (e *ContractEvent) txId() string {
 	return e.TxId
 }
 
-func (e *ContractEvent) eventIndex() int32 {
+func (e *ContractEvent) eventIndex() int {
 	return e.EventIndex
 }
 
@@ -502,7 +436,7 @@ type ContractEventByTxId struct {
 	TxId            string `json:"-"`
 	BlockHash       string `json:"blockHash"`
 	ContractAddress string `json:"contractAddress"`
-	EventIndex      int32  `json:"eventIndex"`
+	EventIndex      int    `json:"eventIndex"`
 	Fields          Fields `json:"fields"`
 }
 
@@ -514,7 +448,7 @@ func (e *ContractEventByTxId) txId() string {
 	return e.TxId
 }
 
-func (e *ContractEventByTxId) eventIndex() int32 {
+func (e *ContractEventByTxId) eventIndex() int {
 	return e.EventIndex
 }
 

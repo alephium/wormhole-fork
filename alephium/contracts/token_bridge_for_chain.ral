@@ -50,7 +50,8 @@ TxContract TokenBridgeForChain(
         return tokenContractId, decimals, symbol, name
     }
 
-    pub payable fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let token = ERC20Token(tokenId)
         let symbol = token.symbol()
         let symbolSize = size!(symbol)
@@ -59,7 +60,6 @@ TxContract TokenBridgeForChain(
         let nameSize = size!(name)
         assert!(nameSize <= 32)
 
-        approveAlph!(payer, createContractAlphAmount)
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -71,14 +71,12 @@ TxContract TokenBridgeForChain(
             zeros!(32 - nameSize) ++ name,
             token.decimals()
         )
-        let contractId = copyCreateContract!(tokenWrapperTemplateId, encodedState)
-        let eventEmitter = EventEmitter(eventEmitterId)
-        eventEmitter.publishTokenWrapperCreated(contractId, true, tokenId, remoteChainId)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState)
     }
 
-    pub payable fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (tokenId, decimals, symbol, name) = parseAttestToken(vaa)
-        approveAlph!(payer, createContractAlphAmount)
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -91,9 +89,7 @@ TxContract TokenBridgeForChain(
             decimals
         )
         let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-        let contractId = copyCreateContractWithToken!(tokenWrapperTemplateId, encodedState, tokenAmount)
-        let eventEmitter = EventEmitter(eventEmitterId)
-        eventEmitter.publishTokenWrapperCreated(contractId, false, tokenId, remoteChainId)
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {

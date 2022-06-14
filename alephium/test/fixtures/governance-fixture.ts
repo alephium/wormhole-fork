@@ -1,4 +1,4 @@
-import { NodeProvider, Contract } from 'alephium-web3'
+import { NodeProvider, Contract } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'

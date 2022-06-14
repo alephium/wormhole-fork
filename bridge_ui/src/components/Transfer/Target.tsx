@@ -1,16 +1,14 @@
 import {
-  CHAIN_ID_TERRA,
+  CHAIN_ID_SOLANA,
   hexToNativeString,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useGetTargetParsedTokenAccounts from "../../hooks/useGetTargetParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import useSyncTargetAddress from "../../hooks/useSyncTargetAddress";
-import { GasEstimateSummary } from "../../hooks/useTransactionFees";
 import {
   selectTransferAmount,
   selectTransferIsTargetComplete,
@@ -25,12 +23,17 @@ import {
   selectTransferTargetParsedTokenAccount,
 } from "../../store/selectors";
 import { incrementStep, setTargetChain } from "../../store/transferSlice";
-import { CHAINS, CHAINS_BY_ID } from "../../utils/consts";
+import { CHAINS, CLUSTER } from "../../utils/consts";
 import ButtonWithLoader from "../ButtonWithLoader";
 import ChainSelect from "../ChainSelect";
+import FeeMethodSelector from "../FeeMethodSelector";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
 import SmartAddress from "../SmartAddress";
+import SolanaCreateAssociatedAddress, {
+  useAssociatedAccountExistsState,
+} from "../SolanaCreateAssociatedAddress";
+import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import RegisterNowButton from "./RegisterNowButton";
 
@@ -94,8 +97,14 @@ function Target() {
   const error = useSelector(selectTransferTargetError);
   const isTargetComplete = useSelector(selectTransferIsTargetComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
-  const { statusMessage } = useIsWalletReady(targetChain);
+  const { statusMessage, isReady } = useIsWalletReady(targetChain);
   const isLoading = !statusMessage && !targetAssetError && !data;
+  const { associatedAccountExists, setAssociatedAccountExists } =
+    useAssociatedAccountExistsState(
+      targetChain,
+      targetAsset,
+      readableTargetAddress
+    );
   useSyncTargetAddress(!shouldLockFields);
   const handleTargetChange = useCallback(
     (event: any) => {
@@ -132,6 +141,7 @@ function Target() {
                   tokenName={tokenName}
                   logo={logo}
                   variant="h6"
+                  isAsset
                 />
                 {`(Amount: ${transferAmount})`}
               </Typography>
@@ -150,18 +160,21 @@ function Target() {
           </div>
         </>
       ) : null}
-      <Alert severity="info" variant="outlined" className={classes.alert}>
-        <Typography>
-          You will have to pay transaction fees on{" "}
-          {CHAINS_BY_ID[targetChain].name} to redeem your tokens.
-        </Typography>
-        {(isEVMChain(targetChain) || targetChain === CHAIN_ID_TERRA) && (
-          <GasEstimateSummary methodType="transfer" chainId={targetChain} />
-        )}
-      </Alert>
+      {targetChain === CHAIN_ID_SOLANA && targetAsset ? (
+        <SolanaCreateAssociatedAddress
+          mintAddress={targetAsset}
+          readableTargetAddress={readableTargetAddress}
+          associatedAccountExists={associatedAccountExists}
+          setAssociatedAccountExists={setAssociatedAccountExists}
+        />
+      ) : null}
+      {isEVMChain(targetChain) && !isReady ? null : <FeeMethodSelector />}
       <LowBalanceWarning chainId={targetChain} />
+      {targetChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
+        <SolanaTPSWarning />
+      )}
       <ButtonWithLoader
-        disabled={!isTargetComplete}
+        disabled={!isTargetComplete || !associatedAccountExists}
         onClick={handleNextClick}
         showLoader={isLoading}
         error={

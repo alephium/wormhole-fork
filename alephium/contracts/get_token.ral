@@ -1,7 +1,6 @@
 import "test_token.ral"
 
 TxScript Main(sender: Address, tokenId: ByteVec, amount: U256) {
-    approveAlph!(sender, amount)
     let token = TestToken(tokenId)
-    token.buy(sender, amount)
+    token.buy{sender -> amount}(sender, amount)
 }

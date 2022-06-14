@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -15,10 +14,9 @@ import (
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
-const MaxForkHeight = uint32(100)
+var supportedChainIds = []vaa.ChainID{vaa.ChainIDEthereum}
 
 type Watcher struct {
 	url    string
@@ -34,15 +32,14 @@ type Watcher struct {
 	msgChan  chan *common.MessagePublication
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	tokenBridgeForChainCache sync.Map
-	remoteTokenWrapperCache  sync.Map
-	localTokenWrapperCache   sync.Map
-	remoteChainIdCache       sync.Map
-
 	minConfirmations uint8
 	currentHeight    uint32
 
-	db *Database
+	contractIdToChainId map[Byte32]vaa.ChainID
+	chainIdToContractId map[vaa.ChainID]Byte32
+
+	client *Client
+	db     *Database
 }
 
 type UnconfirmedEvent struct {
@@ -76,7 +73,7 @@ func NewAlephiumWatcher(
 		return nil, fmt.Errorf("invalid contract ids")
 	}
 
-	return &Watcher{
+	watcher := &Watcher{
 		url:                       url,
 		apiKey:                    apiKey,
 		eventEmitterId:            toContractId(contracts[0]),
@@ -92,18 +89,25 @@ func NewAlephiumWatcher(
 		msgChan:   messageEvents,
 		obsvReqC:  obsvReqC,
 
-		tokenBridgeForChainCache: sync.Map{},
-		remoteTokenWrapperCache:  sync.Map{},
-		localTokenWrapperCache:   sync.Map{},
-		remoteChainIdCache:       sync.Map{},
-
 		minConfirmations: uint8(minConfirmations),
-		db:               db,
-	}, nil
+
+		contractIdToChainId: make(map[Byte32]vaa.ChainID),
+		chainIdToContractId: make(map[vaa.ChainID]Byte32),
+
+		client: NewClient(url, apiKey, 10),
+		db:     db,
+	}
+	watcher.initSupportedChains()
+	return watcher, nil
 }
 
-func (w *Watcher) ContractServer(logger *zap.Logger, listenAddr string) (supervisor.Runnable, *grpc.Server, error) {
-	return contractServiceRunnable(w.db, listenAddr, logger)
+func (w *Watcher) initSupportedChains() {
+	for _, chainId := range supportedChainIds {
+		preImage := append(Uint16ToBytes(uint16(chainId))[:], w.tokenBridgeContractId[:]...)
+		tokenBridgeForChainId := Byte32(blake2bDoubleHash(preImage))
+		w.chainIdToContractId[chainId] = tokenBridgeForChainId
+		w.contractIdToChainId[tokenBridgeForChainId] = chainId
+	}
 }
 
 func (w *Watcher) Run(ctx context.Context) error {
@@ -112,8 +116,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	})
 
 	logger := supervisor.Logger(ctx)
-	client := NewClient(w.url, w.apiKey, 10)
-	nodeInfo, err := client.GetNodeInfo(ctx)
+	nodeInfo, err := w.client.GetNodeInfo(ctx)
 	if err != nil {
 		logger.Error("failed to get node info", zap.Error(err))
 		return err
@@ -121,7 +124,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
 	eventEmitterAddress := ToContractAddress(w.eventEmitterId)
-	nextEventIndex, err := w.fetchEvents(ctx, logger, client, eventEmitterAddress)
+	nextEventIndex, err := w.fetchEvents(ctx, logger, w.client, eventEmitterAddress)
 	if err != nil {
 		logger.Error("failed to fetch events when recovery", zap.Error(err))
 		return err
@@ -130,9 +133,9 @@ func (w *Watcher) Run(ctx context.Context) error {
 	readiness.SetReady(w.readiness)
 	errC := make(chan error)
 
-	go w.handleObsvRequest(ctx, logger, client)
-	go w.fetchHeight(ctx, logger, client, errC)
-	go w.subscribe(ctx, logger, client, eventEmitterAddress, *nextEventIndex, w.toUnconfirmedEvent, w.handleEvents, errC)
+	go w.handleObsvRequest(ctx, logger, w.client)
+	go w.fetchHeight(ctx, logger, w.client, errC)
+	go w.subscribe(ctx, logger, w.client, eventEmitterAddress, *nextEventIndex, w.toUnconfirmedEvent, w.handleEvents, errC)
 
 	select {
 	case <-ctx.Done():
@@ -169,7 +172,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
-func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, skipWormholeMessage bool) error {
+func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents) error {
 	if len(confirmed.events) == 0 {
 		return nil
 	}
@@ -187,9 +190,6 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 			var validateErr error
 			switch e.event.eventIndex() {
 			case WormholeMessageEventIndex:
-				if skipWormholeMessage {
-					continue
-				}
 				event, err := e.event.ToWormholeMessage()
 				if err != nil {
 					logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", e.event.ToString()))
@@ -199,22 +199,6 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed *ConfirmedEvents, s
 				if validateErr == nil {
 					w.msgChan <- event.toMessagePublication(e.blockHeader)
 				}
-
-			case TokenBridgeForChainCreatedEventIndex:
-				event, err := e.event.fields().toTokenBridgeForChainCreatedEvent()
-				if err != nil {
-					logger.Error("ignore invalid token bridge for chain created event", zap.Error(err), zap.String("event", e.event.ToString()))
-					continue
-				}
-				skipIfError, validateErr = w.validateTokenBridgeForChainCreatedEvents(event)
-
-			case TokenWrapperCreatedEventIndex:
-				event, err := e.event.fields().toTokenWrapperCreatedEvent()
-				if err != nil {
-					logger.Error("ignore invalid token wrapper created event", zap.Error(err), zap.String("event", e.event.ToString()))
-					continue
-				}
-				skipIfError, validateErr = w.validateTokenWrapperCreatedEvent(event)
 
 			case UndoneSequencesRemovedEventIndex:
 				event, err := e.event.fields().toUndoneSequencesRemoved()
@@ -284,7 +268,7 @@ func (w *Watcher) subscribe(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	errC chan<- error,
 ) {
 	w.subscribe_(ctx, logger, client, contractAddress, fromIndex, toUnconfirmed, handler, 10*time.Second, errC)
@@ -297,12 +281,12 @@ func (w *Watcher) subscribe_(
 	contractAddress string,
 	fromIndex uint64,
 	toUnconfirmed func(context.Context, *Client, *ContractEvent) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, *ConfirmedEvents, bool) error,
+	handler func(*zap.Logger, *ConfirmedEvents) error,
 	tickDuration time.Duration,
 	errC chan<- error,
 ) {
 	pendingEvents := map[string]*UnconfirmedEvents{}
-	nextIndex := fromIndex
+	startIndex := fromIndex
 	lastHeight := atomic.LoadUint32(&w.currentHeight)
 
 	eventTick := time.NewTicker(tickDuration)
@@ -359,7 +343,7 @@ func (w *Watcher) subscribe_(
 			return nil
 		}
 		confirmed := &ConfirmedEvents{confirmedEvents}
-		if err := handler(logger, confirmed, false); err != nil {
+		if err := handler(logger, confirmed); err != nil {
 			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
 			return err
 		}
@@ -378,9 +362,9 @@ func (w *Watcher) subscribe_(
 				errC <- err
 				return
 			}
-			logger.Info("alephium contract event count", zap.Uint64("count", *count), zap.Uint64("nextIndex", nextIndex))
+			logger.Info("alephium contract event count", zap.Uint64("count", *count), zap.Uint64("startIndex", startIndex))
 
-			if *count == nextIndex {
+			if *count == startIndex {
 				if err := process(); err != nil {
 					errC <- err
 					return
@@ -388,34 +372,40 @@ func (w *Watcher) subscribe_(
 				continue
 			}
 
-			events, err := client.GetContractEventsByRange(ctx, contractAddress, nextIndex, *count, w.chainIndex.FromGroup)
-			if err != nil {
-				logger.Error("failed to get contract events", zap.Uint64("from", nextIndex), zap.Uint64("to", *count), zap.Error(err))
-				errC <- err
-				return
-			}
-
-			eventIndex := nextIndex
-			for _, event := range events.Events {
-				unconfirmed, err := toUnconfirmed(ctx, client, event)
+			for {
+				events, err := client.GetContractEvents(ctx, contractAddress, startIndex, w.chainIndex.FromGroup)
 				if err != nil {
-					logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+					logger.Error("failed to get contract events", zap.Uint64("from", startIndex), zap.Error(err))
 					errC <- err
 					return
 				}
-				blockHash := unconfirmed.event.blockHash()
-				if lst, ok := pendingEvents[blockHash]; ok {
-					lst.events = append(lst.events, unconfirmed)
-				} else {
-					pendingEvents[blockHash] = &UnconfirmedEvents{
-						events:     []*UnconfirmedEvent{unconfirmed},
-						eventIndex: eventIndex,
+
+				eventIndex := startIndex
+				for _, event := range events.Events {
+					unconfirmed, err := toUnconfirmed(ctx, client, event)
+					if err != nil {
+						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+						errC <- err
+						return
 					}
-					eventIndex += 1
+					blockHash := unconfirmed.event.blockHash()
+					if lst, ok := pendingEvents[blockHash]; ok {
+						lst.events = append(lst.events, unconfirmed)
+					} else {
+						pendingEvents[blockHash] = &UnconfirmedEvents{
+							events:     []*UnconfirmedEvent{unconfirmed},
+							eventIndex: eventIndex,
+						}
+						eventIndex += 1
+					}
+				}
+
+				startIndex = events.NextStart
+				if events.NextStart == *count {
+					break
 				}
 			}
 
-			nextIndex = *count
 			if err := process(); err != nil {
 				errC <- err
 				return

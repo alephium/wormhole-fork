@@ -6,7 +6,7 @@ import { formatUnits } from "@ethersproject/units";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { DataWrapper } from "../store/helpers";
-import useTVL from "./useTVL";
+import { createTVLArray, useTVL } from "./useTVL";
 
 function convertbase64ToBinary(base64: string) {
   var raw = window.atob(base64);
@@ -24,6 +24,9 @@ function convertbase64ToBinary(base64: string) {
 //Don't actually mount this hook, it's way to expensive for the prod site.
 const useTotalTransactedAmount = (): DataWrapper<number> => {
   const tvl = useTVL();
+  const tvlArray = useMemo(() => {
+    return tvl.data ? createTVLArray(tvl.data) : [];
+  }, [tvl]);
   const [everyVaaPayloadInHistory, setEveryVaaPayloadInHistory] = useState<
     { EmitterChain: string; EmitterAddress: string; Payload: string }[] | null
   >(null);
@@ -45,6 +48,7 @@ const useTotalTransactedAmount = (): DataWrapper<number> => {
 
   const output = useMemo(() => {
     const emittersThatMatter = [
+      `ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5`, //SOLANA TOKEN
       `0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585`, //ETH token
       `0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2`, //terra
       `000000000000000000000000b6f6d86a8f9879a9c87f643768d9efc38c1da6e7`, //bsc
@@ -83,7 +87,7 @@ const useTotalTransactedAmount = (): DataWrapper<number> => {
       const assetAddress =
         hexToNativeString(payload.originAddress, payload.originChain) || "";
 
-      const tvlItem = tvl.data?.find((item) => {
+      const tvlItem = tvlArray.find((item) => {
         return (
           assetAddress &&
           item.assetAddress.toLowerCase() === assetAddress.toLowerCase()

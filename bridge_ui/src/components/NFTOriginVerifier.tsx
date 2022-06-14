@@ -1,16 +1,20 @@
 import {
+  ChainId,
+  CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
   CHAIN_ID_FANTOM,
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
-  hexToNativeString,
+  CHAIN_ID_SOLANA,
+  hexToNativeAssetString,
   isEVMChain,
   uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 import {
   getOriginalAssetEth,
+  getOriginalAssetSol,
   WormholeWrappedNFTInfo,
 } from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
 import {
@@ -25,10 +29,12 @@ import {
 } from "@material-ui/core";
 import { Launch } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
+import { Connection } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
+import { getMetaplexData } from "../hooks/useMetaplexData";
 import { COLORS } from "../muiTheme";
 import { NFTParsedTokenAccount } from "../store/nftSlice";
 import {
@@ -36,6 +42,8 @@ import {
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
   getNFTBridgeAddressForChain,
+  SOLANA_HOST,
+  SOL_NFT_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import {
   ethNFTToNFTParsedTokenAccount,
@@ -71,7 +79,7 @@ export default function NFTOriginVerifier() {
   const classes = useStyles();
   const isBeta = useBetaContext();
   const { provider, signerAddress } = useEthereumProvider();
-  const [lookupChain, setLookupChain] = useState(CHAIN_ID_ETH);
+  const [lookupChain, setLookupChain] = useState<ChainId>(CHAIN_ID_ETH);
   const { isReady, statusMessage } = useIsWalletReady(lookupChain);
   const [lookupAsset, setLookupAsset] = useState("");
   const [lookupTokenId, setLookupTokenId] = useState("");
@@ -148,6 +156,45 @@ export default function NFTOriginVerifier() {
       } else {
         setLookupError("Invalid address");
       }
+    } else if (lookupChain === CHAIN_ID_SOLANA && lookupAsset) {
+      (async () => {
+        try {
+          setIsLoading(true);
+          const [metadata] = await getMetaplexData([lookupAsset]);
+          if (metadata) {
+            const connection = new Connection(SOLANA_HOST, "confirmed");
+            const info = await getOriginalAssetSol(
+              connection,
+              SOL_NFT_BRIDGE_ADDRESS,
+              lookupAsset
+            );
+            if (!cancelled) {
+              setIsLoading(false);
+              setParsedTokenAccount({
+                amount: "0",
+                decimals: 0,
+                mintKey: lookupAsset,
+                publicKey: "",
+                uiAmount: 0,
+                uiAmountString: "0",
+                uri: metadata.data.uri,
+              });
+              setOriginInfo(info);
+            }
+          } else {
+            if (!cancelled) {
+              setIsLoading(false);
+              setLookupError("Error fetching metadata");
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          if (!cancelled) {
+            setIsLoading(false);
+            setLookupError("Invalid token");
+          }
+        }
+      })();
     }
     return () => {
       cancelled = true;
@@ -164,7 +211,7 @@ export default function NFTOriginVerifier() {
     originInfo &&
     originInfo.chainId &&
     originInfo.assetAddress &&
-    hexToNativeString(
+    hexToNativeAssetString(
       uint8ArrayToHex(originInfo.assetAddress),
       originInfo.chainId
     );
@@ -247,8 +294,24 @@ export default function NFTOriginVerifier() {
               <Typography variant="body2" gutterBottom>
                 Address: {readableAddress}
               </Typography>
+              {originInfo.chainId === CHAIN_ID_SOLANA ? null : (
+                <Typography variant="body2" gutterBottom>
+                  Token ID: {originInfo.tokenId}
+                </Typography>
+              )}
               <div className={classes.viewButtonWrapper}>
-                {originInfo.chainId === CHAIN_ID_BSC ? (
+                {originInfo.chainId === CHAIN_ID_SOLANA ? (
+                  <Button
+                    href={`https://solscan.io/token/${readableAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<Launch />}
+                    className={classes.viewButton}
+                    variant="outlined"
+                  >
+                    View on Solscan
+                  </Button>
+                ) : originInfo.chainId === CHAIN_ID_BSC ? (
                   <Button
                     href={`https://bscscan.com/token/${readableAddress}?a=${originInfo.tokenId}`}
                     target="_blank"
@@ -280,6 +343,17 @@ export default function NFTOriginVerifier() {
                     variant="outlined"
                   >
                     View on Snowtrace
+                  </Button>
+                ) : originInfo.chainId === CHAIN_ID_AURORA ? (
+                  <Button
+                    href={`https://aurorascan.dev/token/${readableAddress}?a=${originInfo.tokenId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<Launch />}
+                    className={classes.viewButton}
+                    variant="outlined"
+                  >
+                    View on Explorer
                   </Button>
                 ) : originInfo.chainId === CHAIN_ID_FANTOM ? (
                   <Button

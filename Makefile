@@ -9,6 +9,8 @@ PREFIX ?= /usr/local
 OUT = build
 BIN = $(OUT)/bin
 
+-include Makefile.help
+
 VERSION = $(shell git describe --tags --dirty)
 
 .PHONY: dirs
@@ -16,6 +18,7 @@ dirs: Makefile
 	@mkdir -p $(BIN)
 
 .PHONY: install
+## Install guardiand binary
 install:
 	install -m 775 $(BIN)/* $(PREFIX)/bin
 	setcap cap_ipc_lock=+ep $(PREFIX)/bin/guardiand
@@ -29,14 +32,16 @@ generate: dirs
 	tools/bin/buf generate
 
 .PHONY: node
+## Build guardiand binary
 node: $(BIN)/guardiand
 
 .PHONY: guardian-test
 guardian-test:
-	cd node && go test ./...
+	cd node && go test -ldflags "-extldflags -Wl,--allow-multiple-definition" ./...
 
 .PHONY: $(BIN)/guardiand
 $(BIN)/guardiand: dirs generate
-	cd node && go build -ldflags "-X github.com/certusone/wormhole/node/pkg/version.version=${VERSION}" \
+	@# The go-ethereum and celo-blockchain packages both implement secp256k1 using the exact same header, but that causes duplicate symbols.
+	cd node && go build -ldflags "-X github.com/certusone/wormhole/node/pkg/version.version=${VERSION} -extldflags -Wl,--allow-multiple-definition" \
 	  -mod=readonly -o ../$(BIN)/guardiand \
 	  github.com/certusone/wormhole/node

@@ -1,7 +1,6 @@
 import "token_bridge.ral"
 
 TxScript Main(payer: Address, tokenBridgeId: ByteVec, tokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
-    approveAlph!(payer, messageFee)
     let tokenBridge = TokenBridge(tokenBridgeId)
-    tokenBridge.attestToken(payer, tokenId, nonce, consistencyLevel)
+    tokenBridge.attestToken{payer -> messageFee}(payer, tokenId, nonce, consistencyLevel)
 }

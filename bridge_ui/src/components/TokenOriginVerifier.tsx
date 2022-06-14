@@ -1,6 +1,6 @@
 import {
   ChainId,
-  CHAIN_ID_ETH,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
   nativeToHexString,
@@ -76,12 +76,12 @@ function PrimaryAssetInfomation({
   const metadata = useMetadata(originChain, tokenArray);
   const nativeContent = (
     <div>
-      <Typography>{`This is not a Wormhole wrapped token.`}</Typography>
+      <Typography>{`This is not a Portal wrapped token.`}</Typography>
     </div>
   );
   const wrapped = (
     <div>
-      <Typography>{`This is wrapped by Wormhole! Here is the original token: `}</Typography>
+      <Typography>{`This is wrapped by Portal! Here is the original token: `}</Typography>
       <div className={classes.flexBox}>
         <Typography>{`Chain: ${CHAINS_BY_ID[originChain].name}`}</Typography>
         <div>
@@ -92,6 +92,7 @@ function PrimaryAssetInfomation({
               chainId={originChain}
               symbol={metadata.data?.get(originAsset)?.symbol}
               tokenName={metadata.data?.get(originAsset)?.tokenName}
+              isAsset
             />
           </Typography>
         </div>
@@ -137,6 +138,7 @@ function SecondaryAssetInformation({
             metadata.data?.get(originAssetInfo.originAddress || "")
               ?.tokenName || undefined
           }
+          isAsset
         />
       </div>
     </div>
@@ -146,12 +148,10 @@ function SecondaryAssetInformation({
       <RegisterNowButtonCore
         originChain={originAssetInfo?.originChain || undefined}
         originAsset={
-          originAssetInfo?.originChain
-            ? nativeToHexString(
-                originAssetInfo?.originAddress || undefined,
-                originAssetInfo.originChain // this should exist
-              ) || undefined
-            : undefined
+          nativeToHexString(
+            originAssetInfo?.originAddress || undefined,
+            originAssetInfo?.originChain || CHAIN_ID_SOLANA // this should exist
+          ) || undefined
         }
         targetChain={chainId}
       />
@@ -171,6 +171,7 @@ function SecondaryAssetInformation({
             metadata.data?.get(foreignAssetInfo.address || "")?.tokenName ||
             undefined
           }
+          isAsset
         />
       </div>
     </div>
@@ -181,11 +182,11 @@ export default function TokenOriginVerifier() {
   const classes = useStyles();
   const isBeta = useBetaContext();
 
-  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_ETH);
+  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_SOLANA);
   const [primaryLookupAsset, setPrimaryLookupAsset] = useState("");
 
   const [secondaryLookupChain, setSecondaryLookupChain] =
-    useState(CHAIN_ID_TERRA);
+    useState<ChainId>(CHAIN_ID_TERRA);
 
   const primaryLookupChainOptions = useMemo(
     () => (isBeta ? CHAINS.filter((x) => !BETA_CHAINS.includes(x.id)) : CHAINS),
@@ -206,7 +207,7 @@ export default function TokenOriginVerifier() {
       setPrimaryLookupChain(e.target.value);
       if (secondaryLookupChain === e.target.value) {
         setSecondaryLookupChain(
-          e.target.value === CHAIN_ID_ETH ? CHAIN_ID_TERRA : CHAIN_ID_ETH
+          e.target.value === CHAIN_ID_SOLANA ? CHAIN_ID_TERRA : CHAIN_ID_SOLANA
         );
       }
       setPrimaryLookupAsset("");

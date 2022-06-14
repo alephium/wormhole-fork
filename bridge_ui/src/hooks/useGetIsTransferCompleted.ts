@@ -1,11 +1,18 @@
 import {
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  getIsTransferCompletedAlgorand,
   getIsTransferCompletedEth,
+  getIsTransferCompletedSolana,
   getIsTransferCompletedTerra,
   getIsTransferCompletedAlph,
   isEVMChain,
 } from "@certusone/wormhole-sdk";
+import { Connection } from "@solana/web3.js";
+import { LCDClient } from "@terra-money/terra.js";
+import algosdk from "algosdk";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -16,21 +23,26 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
+  ALGORAND_HOST,
+  ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
   getTokenBridgeAddressForChain,
+  SOLANA_HOST,
   TERRA_GAS_PRICES_URL,
   TERRA_HOST,
 } from "../utils/consts";
-import useTransferSignedVAA from "./useTransferSignedVAA";
-import { LCDClient } from "@terra-money/terra.js";
 import useIsWalletReady from "./useIsWalletReady";
-import { getTokenBridgeForChainIdWithRetry } from "../utils/alephium";
+import { getTokenBridgeForChainId } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import useTransferSignedVAA from "./useTransferSignedVAA";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
  */
-export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
+export default function useGetIsTransferCompleted(
+  recoveryOnly: boolean,
+  pollFrequency?: number
+): {
   isTransferCompletedLoading: boolean;
   isTransferCompleted: boolean;
 } {
@@ -49,6 +61,27 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
 
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
   const shouldFire = !recoveryOnly || isRecovery;
+  const [pollState, setPollState] = useState(pollFrequency);
+
+  console.log(
+    "Executing get transfer completed",
+    isTransferCompleted,
+    pollState
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    if (pollFrequency && !isLoading && !isTransferCompleted) {
+      setTimeout(() => {
+        if (!cancelled) {
+          setPollState((prevState) => (prevState || 0) + 1);
+        }
+      }, pollFrequency);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [pollFrequency, isLoading, isTransferCompleted]);
 
   useEffect(() => {
     if (!shouldFire) {
@@ -66,6 +99,24 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
               getTokenBridgeAddressForChain(targetChain),
               provider,
               signedVAA
+            );
+          } catch (error) {
+            console.error(error);
+          }
+          if (!cancelled) {
+            setIsTransferCompleted(transferCompleted);
+            setIsLoading(false);
+          }
+        })();
+      } else if (targetChain === CHAIN_ID_SOLANA) {
+        setIsLoading(true);
+        (async () => {
+          try {
+            const connection = new Connection(SOLANA_HOST, "confirmed");
+            transferCompleted = await getIsTransferCompletedSolana(
+              getTokenBridgeAddressForChain(targetChain),
+              signedVAA,
+              connection
             );
           } catch (error) {
             console.error(error);
@@ -102,7 +153,7 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
               throw Error("transfer source chain is undefined")
             }
 
-            const tokenBridgeForChainId = await getTokenBridgeForChainIdWithRetry(sourceChain)
+            const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
             transferCompleted = await getIsTransferCompletedAlph(
               alphSigner.nodeProvider,
               tokenBridgeForChainId,
@@ -117,6 +168,28 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
             setIsLoading(false)
           }
         })()
+      } else if (targetChain === CHAIN_ID_ALGORAND) {
+        setIsLoading(true);
+        (async () => {
+          try {
+            const algodClient = new algosdk.Algodv2(
+              ALGORAND_HOST.algodToken,
+              ALGORAND_HOST.algodServer,
+              ALGORAND_HOST.algodPort
+            );
+            transferCompleted = await getIsTransferCompletedAlgorand(
+              algodClient,
+              ALGORAND_TOKEN_BRIDGE_ID,
+              signedVAA
+            );
+          } catch (error) {
+            console.error(error);
+          }
+          if (!cancelled) {
+            setIsTransferCompleted(transferCompleted);
+            setIsLoading(false);
+          }
+        })();
       }
     }
     return () => {
@@ -131,7 +204,8 @@ export default function useGetIsTransferCompleted(recoveryOnly: boolean): {
     signedVAA,
     isReady,
     provider,
-    alphSigner
+    alphSigner,
+    pollState,
   ]);
 
   return { isTransferCompletedLoading: isLoading, isTransferCompleted };

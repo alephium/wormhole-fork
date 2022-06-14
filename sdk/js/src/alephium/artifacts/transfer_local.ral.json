@@ -1,6 +1,6 @@
 {
-  "sourceCodeSha256": "94e3e085f7e46fdd157369b3509a46223be0d0310a1df73da89b591cec2bcb0f",
-  "bytecodeTemplate": "01010100010011{0}{5}a2{0}{2}{4}a3{1}1700{0}{3}{4}{6}{7}{8}1600010a",
+  "sourceCodeSha256": "3059f904bfbda55c1417c9275103d0dff256a4808727cc07533a7c0b18460d83",
+  "bytecodeTemplate": "01010300010011{1}1700{0}7a{5}a2{2}{4}a3{0}{3}{4}{6}{7}{8}1600010a",
   "fieldsSig": {
     "signature": "TxScript Main(sender:Address,tokenWrapperId:ByteVec,localTokenId:ByteVec,toAddress:ByteVec,tokenAmount:U256,messageFee:U256,arbiterFee:U256,nonce:ByteVec,consistencyLevel:U256)",
     "names": [
@@ -29,7 +29,7 @@
   "functions": [
     {
       "name": "main",
-      "signature": "pub payable main()->()",
+      "signature": "@using(preapprovedAssets=true) pub main()->()",
       "argNames": [],
       "argTypes": [],
       "returnTypes": []
