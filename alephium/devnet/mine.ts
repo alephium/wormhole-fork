@@ -18,7 +18,7 @@ export async function mine(provider: NodeProvider) {
         fromPublicKey: fromPublicKey,
         destinations: [{
             address: toAddress,
-            alphAmount: transferAmount,
+            attoAlphAmount: transferAmount,
         }]
     }
     const tx = await provider.transactions.postTransactionsBuild(txData)

@@ -83,8 +83,7 @@ TxContract TokenBridge(
             eventEmitterId
         )
 
-        approveAlph!(payer, createContractAlphAmount)
-        copyCreateSubContract!(u256To2Byte!(remoteChainId), tokenBridgeForChainTemplateId, encodedState)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(u256To2Byte!(remoteChainId), tokenBridgeForChainTemplateId, encodedState)
     }
 
     pub fn upgradeContract(vaa: ByteVec) -> () {
@@ -133,8 +132,7 @@ TxContract TokenBridge(
             zeros!(32 - nameSize) ++ name
 
         let governance = Governance(governanceId)
-        approveAlph!(payer, governance.getMessageFee())
-        governance.payMessageFee(payer)
+        governance.payMessageFee{payer -> governance.getMessageFee()}(payer)
         let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
@@ -156,8 +154,7 @@ TxContract TokenBridge(
 
         let payload = data ++ callerContractId!()
         let governance = Governance(governanceId)
-        approveAlph!(payer, governance.getMessageFee())
-        governance.payMessageFee(payer)
+        governance.payMessageFee{payer -> governance.getMessageFee()}(payer)
         let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishWormholeMessage(nextSequence(), nonce, payload, consistencyLevel)
     }
@@ -178,9 +175,8 @@ TxContract TokenBridge(
         let tokenBridgeForChainId = subContractId!(emitChainIdBytes)
         let tokenWrapperId = blake2b!(blake2b!(tokenId ++ tokenBridgeForChainId))
 
-        approveAlph!(caller, 1000000000000000) // dustAmount
         let tokenWrapper = TokenWrapper(tokenWrapperId)
-        tokenWrapper.completeUndoneTransfer(caller, toAddress, amount, arbiterFee)
+        tokenWrapper.completeUndoneTransfer{caller -> dustAmount!()}(caller, toAddress, amount, arbiterFee)
         let eventEmitter = EventEmitter(eventEmitterId)
         eventEmitter.publishUndoneSequenceCompleted(tokenWrapper.getRemoteChainId(), undoneSequence)
     }

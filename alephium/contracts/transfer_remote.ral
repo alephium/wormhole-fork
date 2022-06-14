@@ -13,7 +13,10 @@ TxScript Main(
     approveAlph!(sender, messageFee)
     approveToken!(sender, tokenWrapperId, tokenAmount)
     let tokenWrapper = TokenWrapper(tokenWrapperId)
-    tokenWrapper.transfer(
+    tokenWrapper.transfer{
+        sender -> messageFee,
+        tokenWrapperId: tokenAmount
+    }(
         sender,
         toAddress,
         tokenAmount,

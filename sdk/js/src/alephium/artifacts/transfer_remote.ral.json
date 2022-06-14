@@ -1,6 +1,6 @@
 {
-  "sourceCodeSha256": "60d727a4af567bf17c98d6b96f2d9cbd6ea7a2e46ac7c4a3df2d8d04ce3caa07",
-  "bytecodeTemplate": "01010300010011{0}{4}a2{0}{1}{3}a3{1}1700{0}{2}{3}{5}{6}{7}1600010a",
+  "sourceCodeSha256": "852f4a6638586e42042dde8851a651da197cd4c1a083534618ea0dd0166504e3",
+  "bytecodeTemplate": "01010300010018{0}{4}a2{0}{1}{3}a3{1}1700{0}7a{4}a2{1}{3}a3{0}{2}{3}{5}{6}{7}1600010a",
   "fieldsSig": {
     "signature": "TxScript Main(sender:Address,tokenWrapperId:ByteVec,toAddress:ByteVec,tokenAmount:U256,messageFee:U256,arbiterFee:U256,nonce:ByteVec,consistencyLevel:U256)",
     "names": [

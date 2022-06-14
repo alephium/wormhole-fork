@@ -12,7 +12,7 @@ import {
     WormholeWrappedInfo
 } from '@certusone/wormhole-sdk';
 import { NodeProvider, node, subContractId } from '@alephium/web3';
-import WalletConnectProvider from "alephium-walletconnect-provider";
+import WalletConnectProvider from "@alephium/walletconnect-provider";
 
 const WormholeMessageEventIndex = 0
 

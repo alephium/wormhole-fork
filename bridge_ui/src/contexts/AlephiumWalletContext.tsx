@@ -1,6 +1,6 @@
 import WalletConnectClient, { CLIENT_EVENTS } from '@walletconnect/client'
 import { PairingTypes } from '@walletconnect/types'
-import WalletConnectProvider from 'alephium-walletconnect-provider'
+import WalletConnectProvider from '@alephium/walletconnect-provider'
 import QRCodeModal from "@walletconnect/legacy-modal"
 import { NodeProvider, Account } from '@alephium/web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'

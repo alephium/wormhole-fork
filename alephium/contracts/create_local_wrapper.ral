@@ -3,5 +3,5 @@ import "token_bridge_for_chain.ral"
 TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, tokenId: ByteVec, alphAmount: U256) {
     approveAlph!(payer, alphAmount)
     let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-    tokenBridgeForChain.createWrapperForLocalToken(tokenId, payer, alphAmount)
+    tokenBridgeForChain.createWrapperForLocalToken{payer -> alphAmount}(tokenId, payer, alphAmount)
 }

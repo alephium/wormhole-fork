@@ -60,7 +60,6 @@ TxContract TokenBridgeForChain(
         let nameSize = size!(name)
         assert!(nameSize <= 32)
 
-        approveAlph!(payer, createContractAlphAmount)
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -72,13 +71,12 @@ TxContract TokenBridgeForChain(
             zeros!(32 - nameSize) ++ name,
             token.decimals()
         )
-        copyCreateSubContract!(tokenId, tokenWrapperTemplateId, encodedState)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState)
     }
 
     @using(preapprovedAssets = true)
     pub fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (tokenId, decimals, symbol, name) = parseAttestToken(vaa)
-        approveAlph!(payer, createContractAlphAmount)
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -91,7 +89,7 @@ TxContract TokenBridgeForChain(
             decimals
         )
         let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-        copyCreateSubContractWithToken!(tokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
     }
 
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {

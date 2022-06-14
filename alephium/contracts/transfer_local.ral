@@ -11,10 +11,11 @@ TxScript Main(
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
-    approveAlph!(sender, messageFee)
-    approveToken!(sender, localTokenId, tokenAmount)
     let tokenWrapper = TokenWrapper(tokenWrapperId)
-    tokenWrapper.transfer(
+    tokenWrapper.transfer{
+        sender -> messageFee,
+        localTokenId: tokenAmount
+    }(
         sender,
         toAddress,
         tokenAmount,

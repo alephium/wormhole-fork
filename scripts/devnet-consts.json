@@ -210,8 +210,8 @@
             "contracts": {
                 "coreEmitterAddress": "adda561b2175da31d6ef88c8b241db521ebe7d2c26492b5c85fd343120d6f7db",
                 "coreNativeAddress": "26Pbjzy524e8XmbQeRBiRTszErCGZmZbfGqVExKBwVphp",
-                "tokenBridgeEmitterAddress": "e8810cca1de76a15c21431098142c803cdef9b98896e43f6826606fbd6c535ad",
-                "tokenBridgeNativeAddress": "2ALYq9nqQRReeHDyb9AEW27jUkStz6ZGVVKdaSju6VQZ2"
+                "tokenBridgeEmitterAddress": "e795cc5385e0a0c27bd8dc88707ac7faedc7b857fb102a194a4dbc2414081106",
+                "tokenBridgeNativeAddress": "2AGxmo3DckmJFJ2jHHePRqLyhUKeeiAzn3JG8fzixHdvd"
             }
         }
     },

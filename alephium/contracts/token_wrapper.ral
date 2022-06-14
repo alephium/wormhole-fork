@@ -81,8 +81,7 @@ TxContract TokenWrapper(
             u256To32Byte!(normalizedFee)
 
         let tokenBridge = TokenBridge(tokenBridgeId)
-        approveAlph!(fromAddress, tokenBridge.getMessageFee())
-        tokenBridge.publishTransfer(fromAddress, payload, nonce, consistencyLevel)
+        tokenBridge.publishTransfer{fromAddress -> tokenBridge.getMessageFee()}(fromAddress, payload, nonce, consistencyLevel)
     }
 
     fn getTransferAmount(amount: U256, arbiterFee: U256) -> (U256, U256) {
@@ -103,7 +102,7 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(caller, recipient, 1000000000000000) // dustAmount
+        transferAlph!(caller, recipient, dustAmount!())
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
             transferTokenFromSelf!(caller, tokenId, transferFee)
@@ -116,7 +115,7 @@ TxContract TokenWrapper(
         let (transferAmount, transferFee) = getTransferAmount(amount, arbiterFee)
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(caller, recipient, 1000000000000000) // dustAmount
+        transferAlph!(caller, recipient, dustAmount!())
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
             transferTokenFromSelf!(caller, tokenId, transferFee)
