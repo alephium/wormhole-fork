@@ -36,7 +36,7 @@ function Target() {
   const isTargetComplete = useSelector(selectAttestIsTargetComplete);
   const shouldLockFields = useSelector(selectAttestShouldLockFields);
   const handleTargetChange = useCallback(
-    (event) => {
+    (event: any) => {
       dispatch(setTargetChain(event.target.value));
     },
     [dispatch]

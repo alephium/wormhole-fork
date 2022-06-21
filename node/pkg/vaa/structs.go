@@ -120,6 +120,8 @@ func (c ChainID) String() string {
 		return "karura"
 	case ChainIDAcala:
 		return "acala"
+	case ChainIDAlephium:
+		return "alephium"
 	case ChainIDKlaytn:
 		return "klaytn"
 	case ChainIDCelo:
@@ -163,6 +165,8 @@ func ChainIDFromString(s string) (ChainID, error) {
 		return ChainIDKarura, nil
 	case "acala":
 		return ChainIDAcala, nil
+	case "alephium":
+		return ChainIDAlephium, nil
 	case "klaytn":
 		return ChainIDKlaytn, nil
 	case "celo":
@@ -210,6 +214,8 @@ const (
 	ChainIDMoonbeam ChainID = 16
 	// ChainIDNeon is the ChainID of Neon
 	ChainIDNeon ChainID = 17
+	// ChainIDAlephium is the ChainID of Alephium
+	ChainIDAlephium ChainID = 255
 
 	// ChainIDEthereumRopsten is the ChainID of Ethereum Ropsten
 	ChainIDEthereumRopsten ChainID = 10001
@@ -402,6 +408,10 @@ func (v *VAA) MessageID() string {
 // HexDigest returns the hex-encoded digest.
 func (v *VAA) HexDigest() string {
 	return hex.EncodeToString(v.SigningMsg().Bytes())
+}
+
+func (v *VAA) SerializeBody() []byte {
+	return v.serializeBody()
 }
 
 func (v *VAA) serializeBody() []byte {

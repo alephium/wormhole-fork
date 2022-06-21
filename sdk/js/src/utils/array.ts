@@ -10,6 +10,7 @@ import { canonicalAddress, humanAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
   ChainName,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
   CHAIN_ID_SOLANA,
@@ -18,6 +19,14 @@ import {
   coalesceChainId,
   isEVMChain,
 } from "./consts";
+import * as base58 from 'bs58';
+import { tokenIdFromAddress } from "@alephium/web3";
+
+export function toAlphContractAddress(contractId: string): string {
+    const prefix = Buffer.from([0x03])
+    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
+    return base58.encode(bytes)
+}
 
 /**
  *
@@ -75,6 +84,8 @@ export const tryUint8ArrayToNative = (
     return uint8ArrayToNativeStringAlgorand(a);
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("uint8ArrayToNative: Near not supported yet.");
+  } else if (chainId === CHAIN_ID_ALEPHIUM) {
+    return toAlphContractAddress(uint8ArrayToHex(a))
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("uint8ArrayToNative: Chain id unset");
   } else {
@@ -183,6 +194,8 @@ export const tryNativeToHexString = (
     return nativeStringToHexAlgorand(address);
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("hexToNativeString: Near not supported yet.");
+  } else if (chainId === CHAIN_ID_ALEPHIUM) {
+    return uint8ArrayToHex(tokenIdFromAddress(address))
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("hexToNativeString: Chain id unset");
   } else {

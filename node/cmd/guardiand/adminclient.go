@@ -49,6 +49,7 @@ func init() {
 	AdminClientListNodes.Flags().AddFlagSet(pf)
 	DumpVAAByMessageID.Flags().AddFlagSet(pf)
 	SendObservationRequest.Flags().AddFlagSet(pf)
+	GetDestroyContractsGovernanceMessage.Flags().AddFlagSet(pf)
 
 	AdminCmd.AddCommand(AdminClientInjectGuardianSetUpdateCmd)
 	AdminCmd.AddCommand(AdminClientFindMissingMessagesCmd)
@@ -56,6 +57,7 @@ func init() {
 	AdminCmd.AddCommand(AdminClientListNodes)
 	AdminCmd.AddCommand(DumpVAAByMessageID)
 	AdminCmd.AddCommand(SendObservationRequest)
+	AdminCmd.AddCommand(GetDestroyContractsGovernanceMessage)
 }
 
 var AdminCmd = &cobra.Command{
@@ -89,6 +91,13 @@ var SendObservationRequest = &cobra.Command{
 	Short: "Broadcast an observation request for the given chain ID and chain-specific tx_hash",
 	Run:   runSendObservationRequest,
 	Args:  cobra.ExactArgs(2),
+}
+
+var GetDestroyContractsGovernanceMessage = &cobra.Command{
+	Use:   "get-destroy-contracts-governance-message [EMITTER_CHAIN_ID] [GOVERNANCE_SEQUENCE] [SEQUENCE_LIST] [FILE_PATH]",
+	Short: "Get destroy contracts governance message",
+	Run:   runGetDestroyContractsGovernanceMessage,
+	Args:  cobra.ExactArgs(4),
 }
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, nodev1.NodePrivilegedServiceClient) {
@@ -178,6 +187,58 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 
 	log.Printf("processed %s sequences %d to %d (%d gaps)",
 		emitterAddress, resp.FirstSequence, resp.LastSequence, len(resp.MissingMessages))
+}
+
+func runGetDestroyContractsGovernanceMessage(cmd *cobra.Command, args []string) {
+	chainId, err := strconv.Atoi(args[0])
+	if err != nil {
+		log.Fatalf("invalid chain id: %v", err)
+	}
+	sequence, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		log.Fatalf("invalid sequence: %v", err)
+	}
+	sequencesStr := args[2]
+	lst := strings.Split(sequencesStr, ",")
+	sequences := make([]uint64, 0)
+	for _, seqStr := range lst {
+		seq, err := strconv.ParseUint(seqStr, 10, 64)
+		if err != nil {
+			log.Fatalf("invalid sequence: %v", err)
+		}
+		sequences = append(sequences, seq)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	conn, err, c := getAdminClient(ctx, *clientSocketPath)
+	defer conn.Close()
+	if err != nil {
+		log.Fatalf("failed to get admin client: %v", err)
+	}
+
+	request := &nodev1.GetDestroyContractsGovernanceMessageRequest{
+		EmitterChain: uint32(chainId),
+		Sequence:     sequence,
+		Sequences:    sequences,
+	}
+	resp, err := c.GetDestroyContractsGovernanceMessage(ctx, request)
+	if err != nil {
+		log.Fatalf("failed to run GenUndoneTransferGovernanceMsg rpc, error: %v", err)
+	}
+
+	injectRequest := &nodev1.InjectGovernanceVAARequest{
+		CurrentSetIndex: 0, // TODO: pass in through command argument when we update the guardian set
+		Messages:        []*nodev1.GovernanceMessage{resp.Msg},
+	}
+	data, err := prototext.Marshal(injectRequest)
+	if err != nil {
+		log.Fatalf("failed to serialize the generated governance msg, err: %v", err)
+	}
+	if err := ioutil.WriteFile(args[3], data, 0644); err != nil {
+		log.Fatalf("failed to save the generated msg, err: %v", err)
+	}
 }
 
 // runDumpVAAByMessageID uses GetSignedVAA to request the given message,

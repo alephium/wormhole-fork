@@ -1,0 +1,57 @@
+import "undone_sequence.ral"
+
+// sequence started from 0, set `next = 0` when init contract state
+TxContract Sequence(
+    mut next: U256,
+    mut next1: U256, // TODO: better name
+    mut next2: U256,
+    undoneSequenceTemplateId: ByteVec,
+    refundAddress: Address
+) {
+    fn setExecuted(offset: U256, current: U256) -> U256 {
+        let flag = 1 << offset
+        assert!(current & flag == 0)
+        return current | flag
+    }
+
+    @using(assetsInContract = true)
+    fn compact() -> () {
+        if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
+            let encodedState = encodeToByteVec!(
+                selfContractId!(),
+                next,
+                next1,
+                refundAddress
+            )
+            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(next / 256), undoneSequenceTemplateId, encodedState)
+        }
+        next = next + 256
+        next1 = next2
+        next2 = 0
+    }
+
+    fn checkSequence(seq: U256) -> () {
+        if (seq < next) {
+            let undoneSequenceId = subContractId!(u256To8Byte!(seq / 256))
+            UndoneSequence(undoneSequenceId).check(seq)
+            return
+        }
+
+        if (seq >= (next + 512)) {
+            compact()
+        }
+
+        assert!(seq < (next + 512))
+        let offset = seq - next
+        if (offset < 256) {
+            next1 = setExecuted(offset, next1)
+        } else {
+            next2 = setExecuted(offset - 256, next2)
+        }
+    }
+
+    @using(assetsInContract = true, preapprovedAssets = true)
+    pub fn deposit(from: Address, alphAmount: U256) -> () {
+        transferAlphToSelf!(from, alphAmount)
+    }
+}

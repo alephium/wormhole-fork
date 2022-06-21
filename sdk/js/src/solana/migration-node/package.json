@@ -1,0 +1,13 @@
+{
+  "name": "wormhole-migration",
+  "description": "Created with Rocksalt",
+  "version": "0.1.0",
+  "files": [
+    "wormhole_migration_bg.wasm",
+    "wormhole_migration.js",
+    "wormhole_migration_bg.js",
+    "wormhole_migration.d.ts"
+  ],
+  "main": "wormhole_migration.js",
+  "types": "wormhole_migration.d.ts"
+}

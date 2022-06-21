@@ -22,6 +22,7 @@ var PublicRPCEndpoints = []string{
 // Wormhole is not permissioned - anyone can use it. Adding contracts to this list is
 // entirely optional and at the core team's discretion.
 //
+// TODO: Add alephium emitter
 var KnownEmitters = []struct {
 	ChainID vaa.ChainID
 	Emitter string
@@ -51,4 +52,5 @@ var KnownEmitters = []struct {
 	{vaa.ChainIDKlaytn, "0000000000000000000000003c3c561757BAa0b78c5C025CdEAa4ee24C1dFfEf"},    // 13 Klaytn NFT Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000796Dff6D74F3E27060B71255Fe517BFb23C93eed"},      // 14 Celo Token Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000A6A377d75ca5c9052c9a77ED1e865Cc25Bd97bf3"},      // 14 Celo NFT Bridge
+	{vaa.ChainIDAlephium, "0000000000000000000000000000000000000000000000000000000000000000"},  // 255 Alephium Token Bridge
 }

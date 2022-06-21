@@ -3,7 +3,10 @@ package guardiand
 import (
 	"context"
 	"fmt"
-	"github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
+	"net"
+	"net/http"
+	"strings"
+
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
@@ -11,9 +14,6 @@ import (
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
 	"google.golang.org/grpc"
-	"net"
-	"net/http"
-	"strings"
 )
 
 func allowCORSWrapper(h http.Handler) http.Handler {
@@ -52,11 +52,12 @@ func publicwebServiceRunnable(
 	tlsHostname string,
 	tlsProd bool,
 	tlsCacheDir string,
+	register func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error,
 ) (supervisor.Runnable, error) {
 	return func(ctx context.Context) error {
 		conn, err := grpc.DialContext(
 			ctx,
-			fmt.Sprintf("unix:///%s", upstreamAddr),
+			upstreamAddr,
 			grpc.WithBlock(),
 			grpc.WithInsecure())
 		if err != nil {
@@ -64,7 +65,7 @@ func publicwebServiceRunnable(
 		}
 
 		gwmux := runtime.NewServeMux()
-		err = publicrpcv1.RegisterPublicRPCServiceHandler(ctx, gwmux, conn)
+		err = register(ctx, gwmux, conn)
 		if err != nil {
 			panic(err)
 		}

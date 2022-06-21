@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alph-explorer-backend
+  labels:
+    app: alph-explorer-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: alph-explorer-backend
+  ports:
+  - name: alph-explorer-backend
+    port: 9090
+    targetPort: backend
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alph-explorer-backend
+spec:
+  selector:
+    matchLabels:
+      app: alph-explorer-backend
+  serviceName: alph-explorer-backend
+  template:
+    metadata:
+      labels:
+        app: alph-explorer-backend
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: alph-explorer-backend
+          image: alephium/explorer-backend:1.7.0-leman2
+          env:
+            - name: EXPLORER_HOST
+              value: "0.0.0.0"
+            - name: EXPLORER_PORT
+              value: "9090"
+            - name: BLOCKFLOW_HOST
+              value: "alph-full-node"
+            - name: BLOCKFLOW_PORT
+              value: "22973"
+            - name: BLOCKFLOW_NETWORK_ID
+              value: "2"
+            - name: DB_NAME
+              value: "explorer"
+            - name: DB_HOST
+              value: "alph-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: EXPLORER_READONLY
+              value: "false"
+          ports:
+            - containerPort: 9090
+              name: backend # name must be no more than 15 characters
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 20

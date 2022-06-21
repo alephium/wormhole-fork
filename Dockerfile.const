@@ -32,6 +32,7 @@ WORKDIR /
 
 COPY scripts ./scripts
 COPY ethereum/.env.test ./ethereum/.env.test
+COPY alephium/.env.test ./alephium/.env.test
 
 # run guardian-set-init.sh to create env files with the init state for NUM_GUARDIANS
 RUN ./scripts/guardian-set-init.sh $NUM_GUARDIANS
@@ -41,3 +42,4 @@ COPY --from=const-build /scripts/.env.0x ethereum/.env
 COPY --from=const-build /scripts/.env.hex solana/.env
 COPY --from=const-build /scripts/.env.hex terra/tools/.env
 COPY --from=const-build /scripts/.env.hex algorand/.env
+COPY --from=const-build /scripts/.env.alph alephium/.env

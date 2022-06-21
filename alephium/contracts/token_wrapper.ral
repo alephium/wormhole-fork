@@ -1,0 +1,100 @@
+import "token_bridge.ral"
+import "token_bridge_for_chain.ral"
+import "token_interface.ral"
+import "math.ral"
+
+TxContract TokenWrapper(
+    tokenBridgeId: ByteVec,
+    tokenBridgeForChainId: ByteVec,
+    localChainId: U256,
+    remoteChainId: U256,
+    tokenContractId: ByteVec,
+    isLocalToken: Bool,
+    symbol_: ByteVec,
+    name_: ByteVec,
+    decimals_: U256
+) extends Math() implements ERC20Token {
+    pub fn name() -> ByteVec {
+        return name_
+    }
+
+    pub fn symbol() -> ByteVec {
+        return symbol_
+    }
+
+    pub fn decimals() -> U256 {
+        return decimals_
+    }
+
+    pub fn totalSupply() -> U256 {
+        if (isLocalToken) {
+            let token = ERC20Token(tokenContractId)
+            return token.totalSupply()
+        }
+        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    }
+
+    fn getTokenId() -> ByteVec {
+        if (isLocalToken) {
+            return tokenContractId
+        }
+        return selfContractId!()
+    }
+
+    fn getTokenChainId() -> U256 {
+        if (isLocalToken) {
+            return localChainId
+        }
+        return remoteChainId
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn transfer(
+        fromAddress: Address,
+        toAddress: ByteVec,
+        amount: U256,
+        arbiterFee: U256,
+        nonce: ByteVec,
+        consistencyLevel: U256
+    ) -> ByteVec {
+        assert!(callerContractId!() == tokenBridgeId)
+        assert!(size!(toAddress) == 32)
+        assert!(size!(nonce) == 4)
+
+        let normalizedAmount = normalizeAmount(amount, decimals_)
+        let normalizedFee = normalizeAmount(arbiterFee, decimals_)
+        assert!(normalizedFee < normalizedAmount)
+
+        let transferAmount = deNormalizeAmount(normalizedAmount, decimals_)
+        transferTokenToSelf!(fromAddress, getTokenId(), transferAmount)
+
+        let tokenChainId = getTokenChainId()
+        return #01 ++ // payloadId
+            u256To32Byte!(normalizedAmount) ++
+            tokenContractId ++
+            u256To2Byte!(tokenChainId) ++
+            toAddress ++
+            u256To2Byte!(remoteChainId) ++
+            u256To32Byte!(normalizedFee)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
+        assert!(msgTokenId == tokenContractId)
+        assert!(msgTokenChainId == getTokenChainId())
+
+        let totalAmount = deNormalizeAmount(amount, decimals_)
+        let transferFee = deNormalizeAmount(arbiterFee, decimals_)
+        assert!(totalAmount > transferFee)
+        let transferAmount = totalAmount - transferFee
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        let tokenId = getTokenId()
+        transferAlph!(caller, recipient, dustAmount!())
+        transferTokenFromSelf!(recipient, tokenId, transferAmount)
+        if (transferFee > 0) {
+            transferTokenFromSelf!(caller, tokenId, transferFee)
+        }
+    }
+}

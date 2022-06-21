@@ -2,6 +2,18 @@ import { TransactionResponse } from "@solana/web3.js";
 import { TxInfo } from "@terra-money/terra.js";
 import { BigNumber, ContractReceipt } from "ethers";
 import { Implementation__factory } from "../ethers-contracts";
+import { node } from "@alephium/web3";
+
+export function parseSequenceFromLogAlph(event: node.ContractEventByTxId): string {
+  if (event.fields && event.fields.length !== 5) {
+      throw Error("invalid event, wormhole message has 5 fields")
+  }
+  const field = event.fields[1]
+  if (field.type !== 'U256') {
+      throw Error("invalid event, expect U256 type, have: " + field.type)
+  }
+  return (field as node.ValU256).value
+}
 
 export function parseSequenceFromLogEth(
   receipt: ContractReceipt,

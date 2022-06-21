@@ -1,0 +1,115 @@
+import "governance.ral"
+import "token_interface.ral"
+import "math.ral"
+import "sequence.ral"
+import "undone_sequence.ral"
+
+TxContract TokenBridgeForChain(
+    governanceId: ByteVec,
+    localChainId: U256,
+    localTokenBridgeId: ByteVec, // local chain token bridge contract id
+    remoteChainId: U256,
+    remoteTokenBridgeId: ByteVec, // remote chain token bridge contract id
+    mut next: U256,
+    mut next1: U256,
+    mut next2: U256,
+    undoneSequenceTemplateId: ByteVec,
+    tokenWrapperTemplateId: ByteVec, // used for create contract by copyCreateContract
+    tokenWrapperCodeHash: ByteVec,
+    refundAddress: Address
+) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress) {
+    fn verifyVAA(vaa: ByteVec) -> ByteVec {
+        let governance = Governance(governanceId)
+        let (emitterChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
+        assert!(emitterChainId == remoteChainId)
+        assert!(emitterAddress == remoteTokenBridgeId)
+        checkSequence(msgSequence)
+        return payload
+    }
+
+    // return (tokenContractId, tokenDecimals, tokenSymbol, tokenName)
+    fn parseAttestToken(vaa: ByteVec) -> (ByteVec, U256, ByteVec, ByteVec) {
+        let payload = verifyVAA(vaa)
+        assert!(byteVecSlice!(payload, 0, 1) == #02) // payload id
+        let tokenContractId = byteVecSlice!(payload, 1, 33)
+        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(tokenChainId == remoteChainId)
+        let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
+        let symbol = byteVecSlice!(payload, 36, 68)
+        let name = byteVecSlice!(payload, 68, 100)
+        assert!(size!(payload) == 100)
+        return tokenContractId, decimals, symbol, name
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForLocalToken(tokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        let token = ERC20Token(tokenId)
+        let symbol = token.symbol()
+        let symbolSize = size!(symbol)
+        assert!(symbolSize <= 32)
+        let name = token.name()
+        let nameSize = size!(name)
+        assert!(nameSize <= 32)
+
+        let encodedState = encodeToByteVec!(
+            localTokenBridgeId,
+            selfContractId!(),
+            localChainId,
+            remoteChainId,
+            tokenId,
+            true,
+            zeros!(32 - symbolSize) ++ symbol,
+            zeros!(32 - nameSize) ++ name,
+            token.decimals()
+        )
+        copyCreateSubContract!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState)
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForRemoteToken(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        let (tokenId, decimals, symbol, name) = parseAttestToken(vaa)
+        let encodedState = encodeToByteVec!(
+            localTokenBridgeId,
+            selfContractId!(),
+            localChainId,
+            remoteChainId,
+            tokenId,
+            false,
+            symbol,
+            name,
+            decimals
+        )
+        let tokenAmount = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(tokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
+    }
+
+    pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
+        assert!(callerCodeHash!() == tokenWrapperCodeHash)
+
+        let payload = verifyVAA(vaa)
+        assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let tokenId = byteVecSlice!(payload, 33, 65)
+        let expectedCaller = subContractId!(tokenId)
+        assert!(callerContractId!() == expectedCaller)
+
+        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let recipientAddress = byteVecSlice!(payload, 67, 99)
+        let recipientChainId = u256From2Byte!(byteVecSlice!(payload, 99, 101))
+        assert!(recipientChainId == localChainId)
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 101, 133))
+        assert!(size!(payload) == 133)
+        return tokenId, tokenChainId, recipientAddress, amount, arbiterFee
+    }
+
+    pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
+        assert!(callerContractId!() == localTokenBridgeId)
+        let length = size!(paths)
+        let mut index = 0
+        while (index < length) {
+            let undoneSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
+            UndoneSequence(undoneSequenceId).destroy()
+            index = index + 8
+        }
+    }
+}

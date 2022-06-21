@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
@@ -29,6 +30,7 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
+  ALEPHIUM_HOST,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   getNFTBridgeAddressForChain,
@@ -40,6 +42,8 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
+import { NodeProvider } from "@alephium/web3";
+import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 
 export type OriginalAssetInfo = {
   originChain: ChainId | null;
@@ -71,6 +75,9 @@ export async function getOriginalAssetToken(
     } else if (foreignChain === CHAIN_ID_TERRA) {
       const lcd = new LCDClient(TERRA_HOST);
       promise = await getOriginalAssetTerra(lcd, foreignNativeStringAddress);
+    } else if (foreignChain === CHAIN_ID_ALEPHIUM) {
+      const provider = new NodeProvider(ALEPHIUM_HOST)
+      promise = await getAlephiumTokenWrappedInfo(foreignNativeStringAddress, provider)
     } else if (foreignChain === CHAIN_ID_ALGORAND) {
       const algodClient = new Algodv2(
         ALGORAND_HOST.algodToken,

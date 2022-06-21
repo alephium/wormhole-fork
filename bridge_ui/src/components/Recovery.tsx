@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_KARURA,
@@ -54,7 +55,10 @@ import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
+import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   CHAINS,
@@ -76,6 +80,7 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
+import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
 
 const useStyles = makeStyles((theme) => ({
@@ -217,6 +222,25 @@ async function terra(tx: string, enqueueSnackbar: any) {
       emitterAddress,
       sequence,
       WORMHOLE_RPC_HOSTS.length
+    );
+    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    return { vaa: null, error: parseError(e) };
+  }
+}
+
+async function alephium(txId: string, enqueueSnackbar: any) {
+  try {
+    const provider = new NodeProvider(ALEPHIUM_HOST)
+    const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      txInfo.sequence
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
   } catch (e) {
@@ -482,6 +506,21 @@ export default function Recovery() {
             }
           }
         })();
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+        setRecoverySourceTxError("");
+        setRecoverySourceTxIsLoading(true);
+        (async () => {
+          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
+          if (!cancelled) {
+            setRecoverySourceTxIsLoading(false);
+            if (vaa) {
+              setRecoverySignedVAA(vaa);
+            }
+            if (error) {
+              setRecoverySourceTxError(error);
+            }
+          }
+        })();
       } else if (recoverySourceChain === CHAIN_ID_ALGORAND) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
@@ -510,7 +549,7 @@ export default function Recovery() {
     isNFT,
     isReady,
   ]);
-  const handleTypeChange = useCallback((event) => {
+  const handleTypeChange = useCallback((event: any) => {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
@@ -519,14 +558,14 @@ export default function Recovery() {
     );
     setType(event.target.value);
   }, []);
-  const handleSourceChainChange = useCallback((event) => {
+  const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
   }, []);
-  const handleSourceTxChange = useCallback((event) => {
+  const handleSourceTxChange = useCallback((event: any) => {
     setRecoverySourceTx(event.target.value.trim());
   }, []);
-  const handleSignedVAAChange = useCallback((event) => {
+  const handleSignedVAAChange = useCallback((event: any) => {
     setRecoverySignedVAA(event.target.value.trim());
   }, []);
   useEffect(() => {

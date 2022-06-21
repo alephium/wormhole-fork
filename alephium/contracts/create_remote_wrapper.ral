@@ -1,0 +1,6 @@
+import "token_bridge_for_chain.ral"
+
+TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, vaa: ByteVec, alphAmount: U256) {
+    let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+    tokenBridgeForChain.createWrapperForRemoteToken{payer -> alphAmount}(vaa, payer, alphAmount)
+}

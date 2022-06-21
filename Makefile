@@ -28,11 +28,16 @@ generate: dirs
 	cd tools && ./build.sh
 	rm -rf bridge
 	rm -rf node/pkg/proto
+	tools/bin/buf lint
 	tools/bin/buf generate
 
 .PHONY: node
 ## Build guardiand binary
 node: $(BIN)/guardiand
+
+.PHONY: guardian-test
+guardian-test:
+	cd node && go test -ldflags "-extldflags -Wl,--allow-multiple-definition" ./...
 
 .PHONY: $(BIN)/guardiand
 $(BIN)/guardiand: dirs generate

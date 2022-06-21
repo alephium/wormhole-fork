@@ -1,0 +1,29 @@
+name: Unit Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14, 16]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Run tests
+        working-directory: ./alephium
+        run: |
+          npm ci
+          npm explore @alephium/web3 -- npm run start-devnet
+          npm test
+          npm explore @alephium/web3 -- npm run stop-devnet
+

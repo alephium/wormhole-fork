@@ -1,4 +1,4 @@
-import { CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
@@ -61,7 +61,7 @@ function Create() {
             showLoader={showLoader}
             error={error}
           >
-            {shouldUpdate ? "Update" : "Create"}
+            {targetChain === CHAIN_ID_ALEPHIUM ? "Create" : shouldUpdate ? "Update" : "Create"}
           </ButtonWithLoader>
           <WaitingForWalletMessage />
         </>

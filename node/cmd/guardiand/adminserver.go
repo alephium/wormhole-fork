@@ -1,12 +1,21 @@
 package guardiand
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/certusone/wormhole/node/pkg/db"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
@@ -15,18 +24,14 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math"
-	"math/rand"
-	"net"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 )
+
+const destroyContractsNonce uint32 = 0
 
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
@@ -342,7 +347,15 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	}, nil
 }
 
-func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- *vaa.VAA, signedInC chan *gossipv1.SignedVAAWithQuorum, obsvReqSendC chan *gossipv1.ObservationRequest, db *db.Database, gst *common.GuardianSetState) (supervisor.Runnable, error) {
+func adminServiceRunnable(
+	logger *zap.Logger,
+	socketPath string,
+	injectC chan<- *vaa.VAA,
+	signedInC chan *gossipv1.SignedVAAWithQuorum,
+	obsvReqSendC chan *gossipv1.ObservationRequest,
+	db *db.Database,
+	gst *common.GuardianSetState,
+) (supervisor.Runnable, error) {
 	// Delete existing UNIX socket, if present.
 	fi, err := os.Stat(socketPath)
 	if err == nil {
@@ -394,4 +407,33 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	s.obsvReqSendC <- req.ObservationRequest
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
+}
+
+func (s *nodePrivilegedService) GetDestroyContractsGovernanceMessage(ctx context.Context, req *nodev1.GetDestroyContractsGovernanceMessageRequest) (*nodev1.GetDestroyContractsGovernanceMessageResponse, error) {
+	emitterChain := vaa.ChainID(req.EmitterChain)
+
+	payload := &nodev1.GovernanceMessage_DestroyUndoneSequenceContracts{
+		DestroyUndoneSequenceContracts: &nodev1.DestroyUndoneSequenceContracts{
+			Payload: destroyContractsPayload(emitterChain, req.Sequences),
+		},
+	}
+	return &nodev1.GetDestroyContractsGovernanceMessageResponse{
+		Msg: &nodev1.GovernanceMessage{
+			Sequence: req.Sequence,
+			Nonce:    destroyContractsNonce, // we need to ensure all guardians have same vaa body
+			Payload:  payload,
+		},
+	}, nil
+}
+
+func destroyContractsPayload(emitterChainId vaa.ChainID, sequences []uint64) []byte {
+	buf := new(bytes.Buffer)
+	buf.Write(vaa.TokenBridgeModule)
+	buf.WriteByte(0xf0) // action id
+	binary.Write(buf, binary.BigEndian, uint16(emitterChainId))
+	binary.Write(buf, binary.BigEndian, uint16(len(sequences)))
+	for _, seq := range sequences {
+		binary.Write(buf, binary.BigEndian, seq)
+	}
+	return buf.Bytes()
 }

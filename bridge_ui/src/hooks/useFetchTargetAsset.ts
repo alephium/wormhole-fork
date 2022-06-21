@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
@@ -42,6 +43,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
+import { getTokenWrapperId } from "../utils/alephium";
 import {
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -119,6 +121,10 @@ function useFetchTargetAsset(nft?: boolean) {
     }
     setLastSuccessfulArgs(null);
     if (isSourceAssetWormholeWrapped && originChain === targetChain) {
+      // true && true => normal case
+      // true && false ??? do we need to raise an error when this happen?
+      // false && true =>  it should never happen
+      // false && false => normal case
       dispatch(
         setTargetAsset(
           receiveDataWrapper({
@@ -241,6 +247,28 @@ function useFetchTargetAsset(nft?: boolean) {
                 )
               )
             );
+          }
+        }
+      }
+      if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
+        dispatch(setTargetAsset(fetchDataWrapper()))
+        try {
+          const remoteTokenWrapperId = getTokenWrapperId(originAsset, originChain)
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                receiveDataWrapper({ doesExist: !!remoteTokenWrapperId, address: remoteTokenWrapperId })
+              )
+            )
+            setArgs()
+          }
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(
+              setTargetAsset(
+                errorDataWrapper("Failed to get token wrapper contract id " + e)
+              )
+            )
           }
         }
       }

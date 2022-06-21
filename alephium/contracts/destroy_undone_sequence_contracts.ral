@@ -1,0 +1,6 @@
+import "token_bridge.ral"
+
+TxScript Main(tokenBridgeId: ByteVec, vaa: ByteVec) {
+  let tokenBridge = TokenBridge(tokenBridgeId)
+  tokenBridge.destroyUndoneSequenceContracts(vaa)
+}

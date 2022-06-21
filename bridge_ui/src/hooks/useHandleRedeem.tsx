@@ -11,6 +11,8 @@ import {
   redeemOnEthNative,
   redeemOnSolana,
   redeemOnTerra,
+  redeemOnAlph,
+  CHAIN_ID_ALEPHIUM,
   uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
@@ -52,6 +54,13 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
+import {
+  getRedeemInfo,
+  getTokenWrapperId,
+  waitTxConfirmed,
+  submitAlphScriptTx
+} from "../utils/alephium";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 
 async function algo(
@@ -221,6 +230,34 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  signer: AlephiumWalletSigner,
+  signedVAA: Uint8Array
+) {
+  dispatch(setIsRedeeming(true));
+  try {
+    const redeemInfo = getRedeemInfo(signedVAA)
+    const tokenWrapperId = getTokenWrapperId(redeemInfo.tokenId, redeemInfo.remoteChainId)
+    const bytecode = redeemOnAlph(tokenWrapperId, signedVAA)
+    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
+    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    dispatch(
+      setRedeemTx({ id: result.txId, block: blockHeader.height })
+    );
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+  } catch (e) {
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsRedeeming(false));
+  }
+}
+
 export function useHandleRedeem() {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -230,6 +267,7 @@ export function useHandleRedeem() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const { signer: alphSigner } = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const signedVAA = useTransferSignedVAA();
   const isRedeeming = useSelector(selectTransferIsRedeeming);
@@ -252,6 +290,8 @@ export function useHandleRedeem() {
       );
     } else if (targetChain === CHAIN_ID_TERRA && !!terraWallet && signedVAA) {
       terra(dispatch, enqueueSnackbar, terraWallet, signedVAA, terraFeeDenom);
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && signedVAA) {
+      alephium(dispatch, enqueueSnackbar, alphSigner, signedVAA)
     } else if (
       targetChain === CHAIN_ID_ALGORAND &&
       algoAccounts[0] &&
@@ -270,6 +310,7 @@ export function useHandleRedeem() {
     solPK,
     terraWallet,
     terraFeeDenom,
+    alphSigner,
     algoAccounts,
   ]);
 

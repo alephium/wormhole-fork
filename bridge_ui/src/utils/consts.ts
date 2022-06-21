@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_AURORA,
@@ -37,6 +38,11 @@ import oasisIcon from "../icons/oasis-network-rose-logo.svg";
 import polygonIcon from "../icons/polygon.svg";
 import solanaIcon from "../icons/solana.svg";
 import terraIcon from "../icons/terra.svg";
+import alephiumIcon from "../icons/alephium.svg";
+
+export const alphMessageFee = BigInt("100000000000000")
+export const alphArbiterFee = BigInt("0")
+export const minimalAlphInContract = BigInt("1000000000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =
@@ -49,6 +55,11 @@ export interface ChainInfo {
   id: ChainId;
   name: string;
   logo: string;
+}
+const alephiumChainInfo: ChainInfo = {
+  id: CHAIN_ID_ALEPHIUM,
+  name: "Alephium",
+  logo: alephiumIcon
 }
 export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
@@ -118,6 +129,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra Classic",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ]
     : CLUSTER === "testnet"
     ? [
@@ -201,6 +213,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra Classic",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ]
     : [
         {
@@ -228,6 +241,7 @@ export const CHAINS: ChainInfo[] =
           name: "Terra Classic",
           logo: terraIcon,
         },
+        alephiumChainInfo
       ];
 export const BETA_CHAINS: ChainId[] =
   CLUSTER === "mainnet" ? [CHAIN_ID_ACALA, CHAIN_ID_KLAYTN] : [];
@@ -435,6 +449,14 @@ export const TERRA_HOST =
         chainID: "columbus-5",
         name: "localterra",
       };
+
+export const ALEPHIUM_HOST =
+  CLUSTER === "mainnet"
+    ? "http://localhost:12973"
+    : CLUSTER === "testnet"
+    ? "http://localhost:12973"
+    : "http://localhost:22973"
+
 export const ALGORAND_HOST =
   CLUSTER === "mainnet"
     ? {
@@ -466,6 +488,7 @@ export const ACALA_HOST =
     : CLUSTER === "testnet"
     ? "https://acala-dev.aca-dev.network/eth/http"
     : "";
+
 export const ETH_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
@@ -785,6 +808,39 @@ export const ALGORAND_TOKEN_BRIDGE_ID = BigInt(
 export const ALGORAND_WAIT_FOR_CONFIRMATIONS =
   CLUSTER === "mainnet" ? 4 : CLUSTER === "testnet" ? 4 : 1;
 
+// the wormhole governance address
+export const ALEPHIUM_BRIDGE_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "000000000000000000000000000000000000000000000"
+    : "21XKHJ6fpVxc1AukU4K7QZ3986vPXgT7TQ4yFCCv5qbL4";
+export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
+  CLUSTER === "mainnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    : "685d6c0819d24e6c11b924f821fbf74c43074868d9beb4ab7d55ca87025cb4a5";
+export const ALEPHIUM_TOKEN_WRAPPER_CODE_HASH = "6a400c646b1942663d9b606af0591b45dcf49d27081add1d3dd9ae415558c6b8";
+export const ALEPHIUM_EVENT_EMITTER_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "000000000000000000000000000000000000000000000"
+    : CLUSTER === "testnet"
+    ? "000000000000000000000000000000000000000000000"
+    : "21XKHJ6fpVxc1AukU4K7QZ3986vPXgT7TQ4yFCCv5qbL4";
+export const ALEPHIUM_CONFIRMATIONS =
+  CLUSTER === "mainnet"
+    ? 10
+    : CLUSTER === "testnet"
+    ? 10
+    : 0;
+export const ALEPHIUM_NETWORK_ID =
+  CLUSTER === "mainnet"
+    ? 0
+    : CLUSTER === "testnet"
+    ? 1
+    : 4;
+
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_BRIDGE_ADDRESS
@@ -806,6 +862,8 @@ export const getBridgeAddressForChain = (chainId: ChainId) =>
     ? AURORA_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_FANTOM
     ? FANTOM_BRIDGE_ADDRESS
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? ALEPHIUM_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KARURA
     ? KARURA_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_ACALA
@@ -868,6 +926,8 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
     ? AURORA_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_FANTOM
     ? FANTOM_TOKEN_BRIDGE_ADDRESS
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
     : chainId === CHAIN_ID_KARURA
     ? KARURA_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_ACALA
@@ -1471,6 +1531,7 @@ export const RELAYER_COMPARE_ASSET: RelayerCompareAsset = {
   [CHAIN_ID_AURORA]: "ethereum", // Aurora uses bridged ether
   [CHAIN_ID_KLAYTN]: "klay-token",
   [CHAIN_ID_CELO]: "celo",
+  [CHAIN_ID_ALEPHIUM]: "alephium",
 } as RelayerCompareAsset;
 export const getCoinGeckoURL = (coinGeckoId: string) =>
   `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoId}&vs_currencies=usd`;
@@ -1512,6 +1573,7 @@ export const COLOR_BY_CHAIN_ID: { [key in ChainId]?: string } = {
   [CHAIN_ID_FANTOM]: "#1969FF",
   [CHAIN_ID_KARURA]: "#FF4B3B",
   [CHAIN_ID_ACALA]: "#E00F51",
+  [CHAIN_ID_ALEPHIUM]: "#8A92B2",
 };
 
 export const DISABLED_TOKEN_TRANSFERS: { [key in ChainId]?: string[] } = {

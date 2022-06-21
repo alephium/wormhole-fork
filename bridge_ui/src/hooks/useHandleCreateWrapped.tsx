@@ -6,6 +6,7 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  CHAIN_ID_ALEPHIUM,
   createWrappedOnAlgorand,
   createWrappedOnEth,
   createWrappedOnSolana,
@@ -13,6 +14,7 @@ import {
   isEVMChain,
   updateWrappedOnEth,
   updateWrappedOnSolana,
+  createRemoteTokenWrapperOnAlph,
   updateWrappedOnTerra,
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
@@ -33,11 +35,13 @@ import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { setCreateTx, setIsCreating } from "../store/attestSlice";
 import {
   selectAttestIsCreating,
+  selectAttestSourceChain,
   selectAttestTargetChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
+  minimalAlphInContract,
   ACALA_HOST,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -55,6 +59,8 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { getTokenBridgeForChainId, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 
 async function algo(
@@ -234,9 +240,47 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  sourceChain: ChainId,
+  signer: AlephiumWalletSigner,
+  signedVAA: Uint8Array,
+  shouldUpdate: boolean
+) {
+  dispatch(setIsCreating(true));
+  try {
+    if (shouldUpdate) {
+      throw Error("alephium: contract already exist, update not supported")
+    }
+    const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
+    const bytecode = createRemoteTokenWrapperOnAlph(
+      tokenBridgeForChainId,
+      signedVAA,
+      signer.account.address,
+      minimalAlphInContract
+    )
+    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
+    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    dispatch(
+      setCreateTx({ id: result.txId, block: blockHeader.height })
+    );
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+  } catch (e) {
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsCreating(false));
+  }
+}
+
 export function useHandleCreateWrapped(shouldUpdate: boolean) {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
+  const sourceChain = useSelector(selectAttestSourceChain);
   const targetChain = useSelector(selectAttestTargetChain);
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
@@ -245,6 +289,7 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const { signer: alphSigner } = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const handleCreateClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && !!signedVAA) {
@@ -279,6 +324,15 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
         shouldUpdate,
         terraFeeDenom
       );
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && !!signedVAA) {
+      alephium(
+        dispatch,
+        enqueueSnackbar,
+        sourceChain,
+        alphSigner,
+        signedVAA,
+        shouldUpdate
+      )
     } else if (
       targetChain === CHAIN_ID_ALGORAND &&
       algoAccounts[0] &&
@@ -296,10 +350,12 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
   }, [
     dispatch,
     enqueueSnackbar,
+    sourceChain,
     targetChain,
     solanaWallet,
     solPK,
     terraWallet,
+    alphSigner,
     signedVAA,
     signer,
     shouldUpdate,

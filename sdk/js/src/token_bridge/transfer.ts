@@ -20,6 +20,7 @@ import {
 } from "algosdk";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
+import { transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
 import {
   assetOptinCheck,
   getMessageFee,
@@ -44,6 +45,66 @@ import {
   WSOL_ADDRESS,
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
+
+export function transferLocalTokenFromAlph(
+  tokenBridgeId: string,
+  fromAddress: string,
+  localTokenId: string,
+  toChainId: ChainId,
+  toAddress: string,
+  tokenAmount: bigint,
+  messageFee: bigint,
+  arbiterFee: bigint,
+  consistencyLevel?: number,
+  nonce?: string
+): string {
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
+  const script = transferLocalTokenScript()
+  return script.buildByteCodeToDeploy({
+    tokenBridgeId: tokenBridgeId,
+    fromAddress: fromAddress,
+    localTokenId: localTokenId,
+    toChainId: Number(toChainId),
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  })
+}
+
+export function transferRemoteTokenFromAlph(
+  tokenBridgeId: string,
+  fromAddress: string,
+  tokenWrapperId: string,
+  wrappedTokenId: string,
+  toChainId: ChainId,
+  toAddress: string,
+  tokenAmount: bigint,
+  messageFee: bigint,
+  arbiterFee: bigint,
+  consistencyLevel?: number,
+  nonce?: string
+): string {
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
+  const script = transferRemoteTokenScript()
+  return script.buildByteCodeToDeploy({
+    tokenBridgeId: tokenBridgeId,
+    fromAddress: fromAddress,
+    tokenWrapperId: tokenWrapperId,
+    wrappedTokenId: wrappedTokenId,
+    toChainId: Number(toChainId),
+    toAddress: toAddress,
+    tokenAmount: tokenAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  })
+}
 
 export async function getAllowanceEth(
   tokenBridgeAddress: string,

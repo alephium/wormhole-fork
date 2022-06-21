@@ -1,4 +1,5 @@
 import {
+  attestFromAlph,
   attestFromAlgorand,
   attestFromEth,
   attestFromSolana,
@@ -8,6 +9,7 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  CHAIN_ID_ALEPHIUM,
   getEmitterAddressAlgorand,
   getEmitterAddressEth,
   getEmitterAddressSolana,
@@ -31,6 +33,7 @@ import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
@@ -47,8 +50,12 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
+import { submitAlphScriptTx, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
+  ALEPHIUM_CONFIRMATIONS,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  alphMessageFee,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -275,6 +282,52 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  signer: AlephiumWalletSigner,
+  localTokenId: string
+) {
+  dispatch(setIsSending(true));
+  try {
+    const txInfo = await waitTxConfirmedAndGetTxInfo(
+      signer.nodeProvider, async () => {
+        const bytecode = attestFromAlph(
+          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+          localTokenId,
+          signer.account.address,
+          alphMessageFee,
+          ALEPHIUM_CONFIRMATIONS
+        );
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+        return result.txId;
+      }
+    );
+    dispatch(setAttestTx({ id: txInfo.txId, block: txInfo.blockHeight }));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Transaction confirmed</Alert>,
+    });
+    enqueueSnackbar(null, {
+      content: <Alert severity="info">Fetching VAA</Alert>,
+    });
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      txInfo.sequence
+    );
+    dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+    enqueueSnackbar(null, {
+      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+    });
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsSending(false));
+  }
+}
+
 export function useHandleAttest() {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -288,6 +341,7 @@ export function useHandleAttest() {
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const { signer: alphSigner } = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const disabled = !isTargetComplete || isSending || isSendComplete;
   const handleAttestClick = useCallback(() => {
@@ -297,6 +351,8 @@ export function useHandleAttest() {
       solana(dispatch, enqueueSnackbar, solPK, sourceAsset, solanaWallet);
     } else if (sourceChain === CHAIN_ID_TERRA && !!terraWallet) {
       terra(dispatch, enqueueSnackbar, terraWallet, sourceAsset, terraFeeDenom);
+    } else if (sourceChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+      alephium(dispatch, enqueueSnackbar, alphSigner, sourceAsset)
     } else if (sourceChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
       algo(dispatch, enqueueSnackbar, algoAccounts[0].address, sourceAsset);
     } else {
@@ -309,6 +365,7 @@ export function useHandleAttest() {
     solanaWallet,
     solPK,
     terraWallet,
+    alphSigner,
     sourceAsset,
     terraFeeDenom,
     algoAccounts,

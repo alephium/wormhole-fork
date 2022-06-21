@@ -202,6 +202,17 @@
             "contracts": {
                 "tokenBridgeEmitterAddress": "8edf5b0e108c3a1a0a4b704cc89591f2ad8d50df24e991567e640ed720a94be2"
             }
+        },
+        "255": {
+            "rpcUrlTilt": "http://alph-full-node:22973",
+            "rpcUrlLocal": "http://localhost:22973",
+            "rpcPort": "22973",
+            "contracts": {
+                "coreEmitterAddress": "6589efb35e22003fe0c489d0a7fbb50eda48f7b2fd513b1bfb935819a112d339",
+                "coreNativeAddress": "21XKHJ6fpVxc1AukU4K7QZ3986vPXgT7TQ4yFCCv5qbL4",
+                "tokenBridgeEmitterAddress": "685d6c0819d24e6c11b924f821fbf74c43074868d9beb4ab7d55ca87025cb4a5",
+                "tokenBridgeNativeAddress": "21iM8rGsHMgFr8jchANGwG8zJ68NBFhMR9AXdYn9TF9kx"
+            }
         }
     },
     "gancheDefaults": [

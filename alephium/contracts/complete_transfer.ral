@@ -1,0 +1,7 @@
+import "token_wrapper.ral"
+
+TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec) {
+    let caller = callerAddress!()
+    let tokenWrapper = TokenWrapper(tokenWrapperId)
+    tokenWrapper.completeTransfer{caller -> dustAmount!()}(vaa, caller)
+}

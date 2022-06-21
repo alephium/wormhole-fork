@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
@@ -41,6 +42,9 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
 } from "../utils/consts";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import { NodeProvider } from '@alephium/web3'
+import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 
 export interface StateSafeWormholeWrappedInfo {
@@ -56,6 +60,26 @@ const makeStateSafe = (
   ...info,
   assetAddress: uint8ArrayToHex(info.assetAddress),
 });
+
+async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<StateSafeWormholeWrappedInfo> {
+  const tokenInfo = await getAlephiumTokenWrappedInfo(tokenId, provider)
+  if (tokenInfo.isWrapped) {
+    const originalAsset = uint8ArrayToHex(tokenInfo.assetAddress)
+    return {
+      isWrapped: true,
+      chainId: tokenInfo.chainId,
+      assetAddress: originalAsset,
+      tokenId: originalAsset
+    }
+  } else {
+    return {
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: tokenId,
+      tokenId: tokenId
+    }
+  }
+}
 
 // Check if the tokens in the configured source chain/address are wrapped
 // tokens. Wrapped tokens are tokens that are non-native, I.E, are locked up on
@@ -79,6 +103,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
   const isRecovery = useSelector(
     nft ? selectNFTIsRecovery : selectTransferIsRecovery
   );
+  const { signer: alphSigner } = useAlephiumWallet()
   useEffect(() => {
     if (isRecovery) {
       return;
@@ -139,6 +164,16 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {}
       }
+      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphSigner) {
+        try {
+          const wrappedInfo = await getAlephiumTokenInfo(alphSigner.nodeProvider, sourceAsset)
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
+          }
+        } catch (e) {
+          console.log("get alephium token info failed, error: " + JSON.stringify(e))
+        }
+      }
       if (sourceChain === CHAIN_ID_ALGORAND && sourceAsset) {
         try {
           const algodClient = new Algodv2(
@@ -168,6 +203,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     sourceChain,
     sourceAsset,
     provider,
+    alphSigner,
     nft,
     setSourceWormholeWrappedInfo,
     tokenId,

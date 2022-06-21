@@ -3,10 +3,42 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
+import { createLocalTokenWrapperScript, createRemoteTokenWrapperScript } from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
+
+export function createRemoteTokenWrapperOnAlph(
+  tokenBridgeForChainId: string,
+  signedVAA: Uint8Array,
+  payer: string,
+  alphAmount: bigint
+): string {
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
+  const script = createRemoteTokenWrapperScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    vaa: vaaHex,
+    alphAmount: alphAmount
+  })
+}
+
+export function createLocalTokenWrapperOnAlph(
+  tokenBridgeForChainId: string,
+  localTokenId: string,
+  payer: string,
+  alphAmount: bigint
+): string {
+  const script = createLocalTokenWrapperScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    tokenId: localTokenId,
+    alphAmount: alphAmount
+  })
+}
 
 export async function createWrappedOnEth(
   tokenBridgeAddress: string,

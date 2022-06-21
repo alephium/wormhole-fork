@@ -1,0 +1,17 @@
+import "undone_sequence.ral"
+
+TxContract UndoneSequenceTest(
+    undoneSequenceId: ByteVec
+) {
+    @using(preapprovedAssets = true)
+    pub fn check(seq: U256) -> () {
+        let undoneSequence = UndoneSequence(undoneSequenceId)
+        undoneSequence.check(seq)
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn destroy() -> () {
+        let undoneSequence = UndoneSequence(undoneSequenceId)
+        undoneSequence.destroy()
+    }
+}

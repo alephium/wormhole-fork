@@ -42,8 +42,9 @@ spec:
       terminationGracePeriodSeconds: 0
       volumes:
         # mount shared between containers for runtime state
-        - name: node-rundir
-          emptyDir: {}
+        - name: node-data
+          persistentVolumeClaim:
+            claimName: guardian-node-pvc
         - name: node-keysdir
           secret:
             secretName: node-bigtable-key
@@ -55,8 +56,8 @@ spec:
         - name: guardiand
           image: guardiand-image
           volumeMounts:
-            - mountPath: /run/node
-              name: node-rundir
+            - mountPath: /run/node/
+              name: node-data
             - mountPath: /tmp/mounted-keys
               name: node-keysdir
           env:
@@ -115,9 +116,17 @@ spec:
             - ws://solana-devnet:8900
             - --solanaRPC
             - http://solana-devnet:8899
+            - --alphRPC
+            - http://alph-full-node:22973
+            - --alphContractIds
+            - "21XKHJ6fpVxc1AukU4K7QZ3986vPXgT7TQ4yFCCv5qbL4,21iM8rGsHMgFr8jchANGwG8zJ68NBFhMR9AXdYn9TF9kx"
+            - --alphGroupIndex
+            - "0"
+            - --alphMinConfirmations
+            - "0"
             - --unsafeDevMode
             - --guardianKey
-            - /tmp/bridge.key
+            - /run/node/bridge.key
             - --publicRPC
             - "[::]:7070"
             - --publicWeb
@@ -125,8 +134,8 @@ spec:
             - --adminSocket
             - /tmp/admin.sock
             - --dataDir
-            - /tmp/data
-          #            - --logLevel=debug
+            - /run/node/data
+            - --logLevel=debug
           securityContext:
             capabilities:
               add:
@@ -136,6 +145,7 @@ spec:
             httpGet:
               port: 6060
               path: /readyz
+            initialDelaySeconds: 5
           ports:
             - containerPort: 8999
               name: p2p
@@ -152,3 +162,14 @@ spec:
             - containerPort: 2345
               name: debugger
               protocol: TCP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: guardian-node-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

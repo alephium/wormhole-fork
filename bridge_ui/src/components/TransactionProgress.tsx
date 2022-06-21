@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
   CHAIN_ID_AURORA,
   CHAIN_ID_CELO,
@@ -14,9 +15,10 @@ import {
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { CHAINS_BY_ID, CLUSTER, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_CONFIRMATIONS, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -39,6 +41,7 @@ export default function TransactionProgress({
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
+  const { signer: alphSigner } = useAlephiumWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
   useEffect(() => {
     if (isSendComplete || !tx) return;
@@ -74,7 +77,29 @@ export default function TransactionProgress({
         connection.removeSlotChangeListener(sub);
       };
     }
-  }, [isSendComplete, chainId, provider, tx]);
+    if (chainId === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+      let cancelled = false;
+      (async () => {
+        while (!cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+          try {
+            const chainInfo = await alphSigner.nodeProvider.blockflow.getBlockflowChainInfo({
+              fromGroup: alphSigner.account.group,
+              toGroup: alphSigner.account.group
+            });
+            if (!cancelled) {
+              setCurrentBlock(chainInfo.currentHeight);
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [isSendComplete, chainId, provider, alphSigner, tx]);
   const blockDiff =
     tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
   const expectedBlocks = // minimum confirmations enforced by guardians or specified by the contract
@@ -94,6 +119,8 @@ export default function TransactionProgress({
       ? 32
       : isEVMChain(chainId)
       ? 15
+      : chainId === CHAIN_ID_ALEPHIUM
+      ? ALEPHIUM_CONFIRMATIONS
       : 1;
   if (
     !isSendComplete &&
