@@ -176,7 +176,8 @@ yargs(hideBin(process.argv))
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
+              const contractAddress = removePrefix(argv["contract-address"])
+              const address = Buffer.from(contractAddress.padStart(64, "0"), "hex")
               const payload: ContractUpgrade<typeof module> = {
                 type: 'ContractUpgrade',
                 module,
@@ -612,6 +613,10 @@ yargs(hideBin(process.argv))
 function exitOnError(msg: string) {
   console.log(msg)
   process.exit(1)
+}
+
+function removePrefix(str: string): string {
+  return (str.startsWith('0x') || str.startsWith('0X')) ? str.slice(2) : str
 }
 
 function hex(x: string): string {
