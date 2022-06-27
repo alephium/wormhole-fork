@@ -1,7 +1,7 @@
 import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields } from '@alephium/web3'
 import { toContractAddress, waitTxConfirmed } from './utils'
 
-const Byte32Zero = "0000000000000000000000000000000000000000000000000000000000000000"
+const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = toContractAddress(Byte32Zero)
 
 export interface DeployResult {

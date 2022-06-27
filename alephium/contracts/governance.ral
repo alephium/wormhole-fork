@@ -1,5 +1,3 @@
-import "sequence.ral"
-
 TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
@@ -42,7 +40,7 @@ TxContract Governance(
         return emitterChainId, emitterAddress, sequence, payload
     }
 
-    fn verifyGovernanceVAA(vaa: ByteVec) -> ByteVec {
+    fn parseAndVerifyGovernanceVAA(vaa: ByteVec) -> ByteVec {
         let body = parseAndVerifySignatures(vaa, true)
         let (emitterChainId, emitterAddress, msgSequence, payload) = parseBody(body)
         assert!(emitterChainId == governanceChainId)
@@ -67,28 +65,31 @@ TxContract Governance(
 
         let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
         assert!(signatureSize <= 19)
-        let (keys, expirationTime, guardianSize) = getGuardiansInfo(guardianSetIndex)
-        assert!((guardianSetIndex == guardianSetIndexes[1]) || (blockTimeStamp!() <= expirationTime))
+        let (keys, guardianSize) = getGuardiansInfo(guardianSetIndex)
 
         // check signature quorum size
-        assert!((guardianSize * 10 / 3) * 2 / 10 + 1 <= signatureSize)
+        assert!(guardianSize != 0) // this is guaranteed, but let's double check
+        let quorumSize = ((guardianSize * 2) / 3) + 1
+        assert!(quorumSize <= signatureSize)
 
-        let mut offset = 6
         let body = byteVecSlice!(data, 6 + signatureSize * 66, size!(data))
         let hash = keccak256!(keccak256!(body))
 
-        let mut lastGuardianIndex = 0
+        let mut offset = 6
+        let mut lastGuardianIndex = -1
         let mut sigIndex = 0
         while (sigIndex < signatureSize) {
             // 1 byte `guardianIndex` and 65 bytes signature
             let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
-            assert!(sigIndex == 0 || guardianIndex > lastGuardianIndex)
+
+            let guardianIndexI256 = i256!(guardianIndex)
+            assert!(guardianIndexI256 > lastGuardianIndex)
+            lastGuardianIndex = guardianIndexI256
 
             let signature = byteVecSlice!(data, offset + 1, offset + 66)
             let recId = u256From1Byte!(byteVecSlice!(signature, 64, 65)) + 27
             let newSignature = byteVecSlice!(signature, 0, 64) ++ u256To1Byte!(recId)
             assert!(keys[guardianIndex] == ethEcRecover!(hash, newSignature))
-            lastGuardianIndex = guardianIndex
 
             offset = offset + 66
             sigIndex = sigIndex + 1
@@ -96,80 +97,27 @@ TxContract Governance(
         return body
     }
 
-    fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256, U256) {
+    // return (keys, guardian set size)
+    fn getGuardiansInfo(guardianSetIndex: U256) -> ([ByteVec; 19], U256) {
         if (guardianSetIndex == guardianSetIndexes[1]) {
-            return guardianSets[1], 0, guardianSetSizes[1]
+            return guardianSets[1], guardianSetSizes[1]
         }
         if (guardianSetIndex == guardianSetIndexes[0]) {
-            return guardianSets[0], previousGuardianSetExpirationTime, guardianSetSizes[0]
+            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTime)
+            return guardianSets[0], guardianSetSizes[0]
         }
         assert!(false) // invalid guardian set index
-        return [#; 19], 0, 0
+        return [#; 19], 0
     }
 
     fn checkModuleAndAction(payload: ByteVec, start: U256, action: ByteVec) -> () {
-        let coreModule = #00000000000000000000000000000000000000000000000000000000436f7265
-        assert!(byteVecSlice!(payload, start, start + 32) == coreModule)
+        let coreModule = 0x436f7265
+        assert!(u256From32Byte!(byteVecSlice!(payload, start, start + 32)) == coreModule)
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
     }
 
-    fn updatePreviousGuardianSet() -> () {
-        guardianSets[0] = guardianSets[1]
-        guardianSetIndexes[0] = guardianSetIndexes[1]
-        guardianSetSizes[0] = guardianSetSizes[1]
-        previousGuardianSetExpirationTime = blockTimeStamp!() + 86400000 // expired after one day
-    }
-
-    pub fn updateGuardianSet(vaa: ByteVec) -> () {
-        updatePreviousGuardianSet()
-        let payload = verifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #02)
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(vaaChainId == chainId || vaaChainId == 0)
-        let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, 35, 39))
-        assert!(newGuardianSetIndex == guardianSetIndexes[1] + 1)
-        let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, 39, 40))
-        assert!(newGuardianSetSize > 0 && newGuardianSetSize <= 19)
-        let mut offset = 40
-        let mut guardianIndex = 0
-        while (guardianIndex < 19) {
-            if (guardianIndex < newGuardianSetSize) {
-                guardianSets[1][guardianIndex] = byteVecSlice!(payload, offset, offset + 20)
-                offset = offset + 20
-            } else {
-                guardianSets[1][guardianIndex] = #
-            }
-            guardianIndex = guardianIndex + 1
-        }
-        assert!(size!(payload) == offset)
-        guardianSetIndexes[1] = newGuardianSetIndex
-        guardianSetSizes[1] = newGuardianSetSize
-    }
-
-    pub fn setMessageFee(vaa: ByteVec) -> () {
-        let payload = verifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #03)
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(vaaChainId == chainId)
-        let fee = u256From32Byte!(byteVecSlice!(payload, 35, 67))
-        assert!(size!(payload) == 67)
-        messageFee = fee
-    }
-
-    @using(assetsInContract = true)
-    pub fn submitTransferFee(vaa: ByteVec) -> () {
-        let payload = verifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #04)
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(vaaChainId == chainId || vaaChainId == 0)
-        let amount = u256From32Byte!(byteVecSlice!(payload, 35, 67))
-        let recipient = byteVecSlice!(payload, 67, 99)
-        assert!(size!(payload) == 99)
-        transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
-    }
-
-    pub fn upgradeContract(vaa: ByteVec) -> () {
-        let payload = verifyGovernanceVAA(vaa)
+    pub fn submitContractUpgrade(vaa: ByteVec) -> () {
+        let payload = parseAndVerifyGovernanceVAA(vaa)
         checkModuleAndAction(payload, 0, #01)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId)
@@ -194,5 +142,60 @@ TxContract Governance(
             assert!(payloadLength == offset)
             migrateWithFields!(newContractCode, newContractState)
         }
+    }
+
+    fn updatePreviousGuardianSet() -> () {
+        guardianSets[0] = guardianSets[1]
+        guardianSetIndexes[0] = guardianSetIndexes[1]
+        guardianSetSizes[0] = guardianSetSizes[1]
+        previousGuardianSetExpirationTime = blockTimeStamp!() + 86400000 // expired after one day
+    }
+
+    pub fn submitNewGuardianSet(vaa: ByteVec) -> () {
+        updatePreviousGuardianSet()
+        let payload = parseAndVerifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #02)
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(vaaChainId == chainId || vaaChainId == 0)
+        let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, 35, 39))
+        assert!(newGuardianSetIndex == guardianSetIndexes[1] + 1)
+        let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, 39, 40))
+        assert!(newGuardianSetSize > 0 && newGuardianSetSize <= 19)
+        let mut offset = 40
+        let mut guardianIndex = 0
+        while (guardianIndex < 19) {
+            if (guardianIndex < newGuardianSetSize) {
+                guardianSets[1][guardianIndex] = byteVecSlice!(payload, offset, offset + 20)
+                offset = offset + 20
+            } else {
+                guardianSets[1][guardianIndex] = #
+            }
+            guardianIndex = guardianIndex + 1
+        }
+        assert!(size!(payload) == offset)
+        guardianSetIndexes[1] = newGuardianSetIndex
+        guardianSetSizes[1] = newGuardianSetSize
+    }
+
+    pub fn submitSetMessageFee(vaa: ByteVec) -> () {
+        let payload = parseAndVerifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #03)
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(vaaChainId == chainId)
+        let fee = u256From32Byte!(byteVecSlice!(payload, 35, 67))
+        assert!(size!(payload) == 67)
+        messageFee = fee
+    }
+
+    @using(assetsInContract = true)
+    pub fn submitTransferFees(vaa: ByteVec) -> () {
+        let payload = parseAndVerifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #04)
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(vaaChainId == chainId || vaaChainId == 0)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 35, 67))
+        let recipient = byteVecSlice!(payload, 67, 99)
+        assert!(size!(payload) == 99)
+        transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
     }
 }
