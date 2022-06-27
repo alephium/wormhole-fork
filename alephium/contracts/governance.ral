@@ -116,6 +116,34 @@ TxContract Governance(
         assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
     }
 
+    pub fn submitContractUpgrade(vaa: ByteVec) -> () {
+        let payload = parseAndVerifyGovernanceVAA(vaa)
+        checkModuleAndAction(payload, 0, #01)
+        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        assert!(vaaChainId == chainId)
+        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
+        let mut offset = 37 + contractCodeLength
+        let newContractCode = byteVecSlice!(payload, 37, offset)
+        let payloadLength = size!(payload)
+        if (payloadLength == offset) {
+            migrate!(newContractCode)
+        } else {
+            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
+            offset = offset + 32
+            let currentEncodedState = u256To32Byte!(receivedSequence)
+                ++ u256To32Byte!(messageFee)
+                ++ u256To32Byte!(guardianSetIndexes[0])
+                ++ u256To32Byte!(guardianSetIndexes[1])
+            assert!(prevStateHash == blake2b!(currentEncodedState))
+            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+            offset = offset + 2
+            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
+            offset = offset + stateLength
+            assert!(payloadLength == offset)
+            migrateWithFields!(newContractCode, newContractState)
+        }
+    }
+
     fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
         guardianSetIndexes[0] = guardianSetIndexes[1]
@@ -169,33 +197,5 @@ TxContract Governance(
         let recipient = byteVecSlice!(payload, 67, 99)
         assert!(size!(payload) == 99)
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
-    }
-
-    pub fn submitContractUpgrade(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #01)
-        let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(vaaChainId == chainId)
-        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
-        let mut offset = 37 + contractCodeLength
-        let newContractCode = byteVecSlice!(payload, 37, offset)
-        let payloadLength = size!(payload)
-        if (payloadLength == offset) {
-            migrate!(newContractCode)
-        } else {
-            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
-            offset = offset + 32
-            let currentEncodedState = u256To32Byte!(receivedSequence)
-                ++ u256To32Byte!(messageFee)
-                ++ u256To32Byte!(guardianSetIndexes[0])
-                ++ u256To32Byte!(guardianSetIndexes[1])
-            assert!(prevStateHash == blake2b!(currentEncodedState))
-            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
-            offset = offset + 2
-            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
-            offset = offset + stateLength
-            assert!(payloadLength == offset)
-            migrateWithFields!(newContractCode, newContractState)
-        }
     }
 }
