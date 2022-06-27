@@ -26,7 +26,7 @@ describe("test governance", () => {
         const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const testResult = await testCase(vaa, 'updateGuardianSet')
+        const testResult = await testCase(vaa, 'submitNewGuardianSet')
         const governanceState = testResult.contracts[0]
         expect(governanceState.fields['guardianSets']).toEqual(Array(
             initGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase()),
@@ -38,7 +38,7 @@ describe("test governance", () => {
         const invalidSequenceVaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 1)
         const invalidSequenceVaa = initGuardianSet.sign(initGuardianSet.quorumSize(), invalidSequenceVaaBody)
         await expectAssertionFailed(async () => {
-            await testCase(invalidSequenceVaa, 'updateGuardianSet')
+            await testCase(invalidSequenceVaa, 'submitNewGuardianSet')
         })
     }, 10000)
 
@@ -47,7 +47,7 @@ describe("test governance", () => {
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
         await expectAssertionFailed(async () => {
-            return await testCase(vaa, 'updateGuardianSet')
+            return await testCase(vaa, 'submitNewGuardianSet')
         })
     })
 
@@ -58,7 +58,7 @@ describe("test governance", () => {
         const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
         await expectAssertionFailed(async () => {
-            return await testCase(invalidVaa, 'updateGuardianSet')
+            return await testCase(invalidVaa, 'submitNewGuardianSet')
         })
     })
 
@@ -69,7 +69,7 @@ describe("test governance", () => {
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
         await expectOneOfError(
-            async () => await testCase(invalidVaa, 'updateGuardianSet'),
+            async () => await testCase(invalidVaa, 'submitNewGuardianSet'),
             ["AssertionFailed", "FailedInRecoverEthAddress", "InvalidConversion"]
         )
     })
@@ -78,7 +78,7 @@ describe("test governance", () => {
         const setMessageFee = new SetMessageFee(messageFee * 2n)
         const vaaBody = new VAABody(setMessageFee.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const testResult = await testCase(vaa, 'setMessageFee')
+        const testResult = await testCase(vaa, 'submitSetMessageFee')
         const governanceState = testResult.contracts[0]
         expect(governanceState.fields['messageFee']).toEqual(Number(setMessageFee.newMessageFee))
     })
@@ -98,7 +98,7 @@ describe("test governance", () => {
         const submitTransferFee = new SubmitTransferFee(toHex(recipient), amount)
         const vaaBody = new VAABody(submitTransferFee.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const testResult = await testCase(vaa, 'submitTransferFee', asset, [inputAsset])
+        const testResult = await testCase(vaa, 'submitTransferFees', asset, [inputAsset])
         const assetOutput = testResult.txOutputs[0]
         expect(assetOutput.type).toEqual("AssetOutput")
         expect(assetOutput.address).toEqual(base58.encode(Buffer.concat([Buffer.from([0x00]), recipient])))
@@ -117,7 +117,7 @@ describe("test governance", () => {
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
             const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1, CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
             const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-            return await contract.testPublicMethod(provider, 'upgradeContract', {
+            return await contract.testPublicMethod(provider, 'submitContractUpgrade', {
                 initialFields: governanceInfo.selfState.fields,
                 address: governanceInfo.address,
                 existingContracts: governanceInfo.dependencies,
