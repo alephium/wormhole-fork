@@ -208,10 +208,10 @@
             "rpcUrlLocal": "http://localhost:22973",
             "rpcPort": "22973",
             "contracts": {
-                "coreEmitterAddress": "6589efb35e22003fe0c489d0a7fbb50eda48f7b2fd513b1bfb935819a112d339",
-                "coreNativeAddress": "21XKHJ6fpVxc1AukU4K7QZ3986vPXgT7TQ4yFCCv5qbL4",
-                "tokenBridgeEmitterAddress": "685d6c0819d24e6c11b924f821fbf74c43074868d9beb4ab7d55ca87025cb4a5",
-                "tokenBridgeNativeAddress": "21iM8rGsHMgFr8jchANGwG8zJ68NBFhMR9AXdYn9TF9kx"
+                "coreEmitterAddress": "96523458007a498d812dfe8ad8cdd04d58f44ee6a93a432a85ad25816c813bdd",
+                "coreNativeAddress": "24ojyBM6QK5xmEMX9Jd1mFcJ176pnCSDMYguXDr1R9JZz",
+                "tokenBridgeEmitterAddress": "8d543ba31cb77d0e551d26aeff9c98cb45f3345c10da7f524728e8d09ae36d78",
+                "tokenBridgeNativeAddress": "24Ce6QvoHVuhmb55DcdkFW28c3LJ4886j3qRs2ABeFZoD"
             }
         }
     },
