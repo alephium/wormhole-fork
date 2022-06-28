@@ -1,5 +1,5 @@
 import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields } from '@alephium/web3'
-import { toContractAddress, waitTxConfirmed } from './utils'
+import { toContractAddress, waitTxConfirmed, zeroPad } from './utils'
 
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = toContractAddress(Byte32Zero)
@@ -115,22 +115,16 @@ export class Wormhole {
         initMessageFee: bigint
     ): Promise<DeployResult> {
         const governance = await Contract.fromSource(this.provider, 'governance.ral')
-        const previousGuardianSet = Array<string>(19).fill('')
-        const initGuardianSetSize = initGuardianSet.length
-        if (initGuardianSetSize > 19) {
-            throw Error("init guardian set size larger than 19")
-        }
-
-        const currentGuardianSet = initGuardianSet.concat(Array(19 - initGuardianSetSize).fill(Byte32Zero))
+        const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
+        const currentGuardianSet = sizePrefix + initGuardianSet.join('')
         const initFields = {
             'chainId': this.localChainId,
             'governanceChainId': governanceChainId,
             'governanceContract': governanceContractId,
             'receivedSequence': 0,
             'messageFee': initMessageFee,
-            'guardianSets': Array(previousGuardianSet, currentGuardianSet),
+            'guardianSets': Array('', currentGuardianSet),
             'guardianSetIndexes': Array(0, initGuardianSetIndex),
-            'guardianSetSizes': Array(0, initGuardianSet.length),
             'previousGuardianSetExpirationTime': 0
         }
         return await this._deploy(governance, initFields)
