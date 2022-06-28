@@ -8,6 +8,7 @@ import * as blake from 'blakejs'
 
 describe("test governance", () => {
     const provider = new NodeProvider("http://127.0.0.1:22973")
+    const testGuardianSet = GuardianSet.random(18, 1)
 
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {
         const governanceInfo = await createGovernance(provider)
@@ -23,14 +24,14 @@ describe("test governance", () => {
     }
 
     test('should update guardian set', async () => {
-        const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'submitNewGuardianSet')
         const governanceState = testResult.contracts[0]
         expect(governanceState.fields['guardianSets']).toEqual(Array(
-            initGuardianSet.guardianSetAddresses().toLowerCase(),
-            updateGuardianSet.newGuardianSet.guardianSetAddresses().toLowerCase()
+            initGuardianSet.encodeAddresses().toLowerCase(),
+            updateGuardianSet.newGuardianSet.encodeAddresses().toLowerCase()
         ))
         expect(governanceState.fields['guardianSetIndexes']).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
 
@@ -39,10 +40,10 @@ describe("test governance", () => {
         await expectAssertionFailed(async () => {
             await testCase(invalidSequenceVaa, 'submitNewGuardianSet')
         })
-    }, 10000)
+    })
 
     it('should failed if signature is not enough', async () => {
-        const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
         await expectAssertionFailed(async () => {
@@ -51,7 +52,7 @@ describe("test governance", () => {
     })
 
     it('should failed if signature is duplicated', async () => {
-        const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
@@ -62,7 +63,7 @@ describe("test governance", () => {
     })
 
     it('should failed if signature is invalid', async () => {
-        const updateGuardianSet = new UpdateGuardianSet(GuardianSet.random(18, 1))
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
         const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
