@@ -16,17 +16,19 @@ export class UpdateGuardianSet {
     }
 
     encode(chainId: number): Uint8Array {
-        let header = Buffer.allocUnsafe(40)
-        header.write(governanceModule, 0, 'hex')
-        header.writeUint8(2, 32) // actionId
-        header.writeUint16BE(chainId, 33)
-        header.writeUint32BE(this.newGuardianSet.index, 35)
-        header.writeUint8(this.newGuardianSet.size(), 39)
-        let addresses = this.newGuardianSet.addresses().map(address => Buffer.from(address.slice(2), 'hex'))
-        return Buffer.concat([
-            header,
-            Buffer.concat(addresses)
-        ])
+        const buffer = Buffer.allocUnsafe(40 + this.newGuardianSet.addresses.length * 20)
+        buffer.write(governanceModule, 0, 'hex')
+        buffer.writeUint8(2, 32) // actionId
+        buffer.writeUint16BE(chainId, 33)
+        buffer.writeUint32BE(this.newGuardianSet.index, 35)
+        buffer.writeUint8(this.newGuardianSet.size(), 39)
+
+        let index = 40
+        this.newGuardianSet.addresses.forEach(address => {
+            buffer.write(address, index, 'hex')
+            index += 20
+        })
+        return buffer
     }
 }
 
@@ -38,7 +40,7 @@ export class SetMessageFee {
     }
 
     encode(chainId: number): Uint8Array {
-        let buffer = Buffer.allocUnsafe(67)
+        const buffer = Buffer.allocUnsafe(67)
         buffer.write(governanceModule, 0, 'hex')
         buffer.writeUint8(3, 32) // actionId
         buffer.writeUint16BE(chainId, 33)
@@ -57,7 +59,7 @@ export class SubmitTransferFee {
     }
 
     encode(chainId: number) {
-        let buffer = Buffer.allocUnsafe(99)
+        const buffer = Buffer.allocUnsafe(99)
         buffer.write(governanceModule, 0, 'hex')
         buffer.writeUint8(4, 32) // actionId
         buffer.writeUint16BE(chainId, 33)
@@ -76,7 +78,7 @@ export async function createGovernance(provider: NodeProvider): Promise<Contract
         'governanceContract': governanceContractId,
         'receivedSequence': 0,
         'messageFee': messageFee,
-        'guardianSets': Array('', initGuardianSet.guardianSetAddresses()),
+        'guardianSets': Array('', initGuardianSet.encodeAddresses()),
         'guardianSetIndexes': [0, initGuardianSet.index],
         'previousGuardianSetExpirationTime': 0
     }

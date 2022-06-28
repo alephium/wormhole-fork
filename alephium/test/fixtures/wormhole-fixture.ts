@@ -67,25 +67,23 @@ export async function createEventEmitter(provider: NodeProvider): Promise<Contra
 export class GuardianSet {
     privateKeys: string[]
     index: number
+    addresses: string[]
 
-    constructor(keys: string[], index: number) {
+    constructor(keys: string[], index: number, addresses: string[]) {
         this.privateKeys = keys
         this.index = index
+        this.addresses = addresses
     }
 
     static random(size: number, index: number): GuardianSet {
         const pks = Array(size).fill(0).map(_ => ethAccounts.create().privateKey)
-        return new GuardianSet(pks, index)
+        const addresses = pks.map(key => ethAccounts.privateKeyToAccount(key).address.slice(2)) // drop the 0x prefix
+        return new GuardianSet(pks, index, addresses)
     }
 
-    addresses(): string[] {
-        return this.privateKeys.map(key => ethAccounts.privateKeyToAccount(key).address)
-    }
-
-    guardianSetAddresses(): string {
-        const addresses = this.addresses()
-        const sizeHex = zeroPad(addresses.length.toString(16), 1)
-        return sizeHex + addresses.map(addr => addr.slice(2)).join('')
+    encodeAddresses(): string {
+        const sizeHex = zeroPad(this.addresses.length.toString(16), 1)
+        return sizeHex + this.addresses.join('')
     }
 
     size(): number {
