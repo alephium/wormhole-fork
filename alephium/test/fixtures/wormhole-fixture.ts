@@ -82,8 +82,10 @@ export class GuardianSet {
         return this.privateKeys.map(key => ethAccounts.privateKeyToAccount(key).address)
     }
 
-    guardianSetAddresses(size: number): string[] {
-        return this.addresses().map(addr => addr.slice(2)).concat(Array(size - this.size()).fill(''))
+    guardianSetAddresses(): string {
+        const addresses = this.addresses()
+        const sizeHex = zeroPad(addresses.length.toString(16), 1)
+        return sizeHex + addresses.map(addr => addr.slice(2)).join('')
     }
 
     size(): number {

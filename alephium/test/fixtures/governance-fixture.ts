@@ -76,9 +76,8 @@ export async function createGovernance(provider: NodeProvider): Promise<Contract
         'governanceContract': governanceContractId,
         'receivedSequence': 0,
         'messageFee': messageFee,
-        'guardianSets': Array(Array(19).fill(''), initGuardianSet.guardianSetAddresses(19)),
+        'guardianSets': Array('', initGuardianSet.guardianSetAddresses()),
         'guardianSetIndexes': [0, initGuardianSet.index],
-        'guardianSetSizes': [0, initGuardianSet.size()],
         'previousGuardianSetExpirationTime': 0
     }
     const contractState = governanceContract.toState(initFields, initAsset, address)

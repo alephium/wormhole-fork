@@ -29,11 +29,10 @@ describe("test governance", () => {
         const testResult = await testCase(vaa, 'submitNewGuardianSet')
         const governanceState = testResult.contracts[0]
         expect(governanceState.fields['guardianSets']).toEqual(Array(
-            initGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase()),
-            updateGuardianSet.newGuardianSet.guardianSetAddresses(19).map(str => str.toLowerCase())
+            initGuardianSet.guardianSetAddresses().toLowerCase(),
+            updateGuardianSet.newGuardianSet.guardianSetAddresses().toLowerCase()
         ))
         expect(governanceState.fields['guardianSetIndexes']).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
-        expect(governanceState.fields['guardianSetSizes']).toEqual(Array(initGuardianSet.size(), updateGuardianSet.newGuardianSet.size()))
 
         const invalidSequenceVaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 1)
         const invalidSequenceVaa = initGuardianSet.sign(initGuardianSet.quorumSize(), invalidSequenceVaaBody)
@@ -70,7 +69,7 @@ describe("test governance", () => {
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
         await expectOneOfError(
             async () => await testCase(invalidVaa, 'submitNewGuardianSet'),
-            ["AssertionFailed", "FailedInRecoverEthAddress", "InvalidConversion"]
+            ["AssertionFailed", "FailedInRecoverEthAddress", "InvalidConversion", "InvalidBytesSliceArg"]
         )
     })
 
@@ -126,7 +125,7 @@ describe("test governance", () => {
         }
 
         {
-            const newContractCode = "40300106010000000000"
+            const newContractCode = "0a0106010000000000"
             loadContract(newContractCode)
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
