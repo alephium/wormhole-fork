@@ -1,7 +1,7 @@
 TxContract Governance(
     chainId: U256,
     governanceChainId: U256,
-    governanceContract: ByteVec,
+    governanceEmitterAddress: ByteVec,
     mut receivedSequence: U256,
     mut messageFee: U256,
     mut guardianSets: [ByteVec; 2], // keep previous and current guardian set
@@ -28,7 +28,7 @@ TxContract Governance(
     }
 
     // return emitterChainId, emitterAddress, sequence, payload
-    pub fn parseBody(body: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
+    fn parseBody(body: ByteVec) -> (U256, ByteVec, U256, ByteVec) {
         let timestamp = u256From4Byte!(byteVecSlice!(body, 0, 4))
         let nonce = u256From4Byte!(byteVecSlice!(body, 4, 8))
         let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
@@ -39,12 +39,23 @@ TxContract Governance(
         return emitterChainId, emitterAddress, sequence, payload
     }
 
-    fn parseAndVerifyGovernanceVAA(vaa: ByteVec) -> ByteVec {
+    pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> ByteVec {
         let body = parseAndVerifySignatures(vaa, true)
         let (emitterChainId, emitterAddress, msgSequence, payload) = parseBody(body)
         assert!(emitterChainId == governanceChainId)
-        assert!(emitterAddress == governanceContract)
-        assert!(msgSequence == receivedSequence)
+        assert!(emitterAddress == governanceEmitterAddress)
+        assert!(msgSequence == targetSequence)
+
+        // check module and governance action
+        assert!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule)
+        assert!(byteVecSlice!(payload, 32, 33) == action)
+
+        return payload
+    }
+
+    fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> ByteVec {
+        let coreModule = 0x436f7265 // module identifier: "Core"
+        let payload = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, coreModule, action)
         receivedSequence = receivedSequence + 1
         return payload
     }
@@ -55,10 +66,10 @@ TxContract Governance(
     }
 
     // parse VAA and verify signatures, return body
-    fn parseAndVerifySignatures(data: ByteVec, checkGuardianSetIndex: Bool) -> (ByteVec) {
+    fn parseAndVerifySignatures(data: ByteVec, useLatestGuardianSetIndex: Bool) -> (ByteVec) {
         assert!(byteVecSlice!(data, 0, 1) == #01)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
-        if (checkGuardianSetIndex) {
+        if (useLatestGuardianSetIndex) {
             assert!(guardianSetIndex == guardianSetIndexes[1])
         }
 
@@ -110,15 +121,8 @@ TxContract Governance(
         return #
     }
 
-    fn checkModuleAndAction(payload: ByteVec, start: U256, action: ByteVec) -> () {
-        let coreModule = 0x436f7265
-        assert!(u256From32Byte!(byteVecSlice!(payload, start, start + 32)) == coreModule)
-        assert!(byteVecSlice!(payload, start + 32, start + 33) == action)
-    }
-
     pub fn submitContractUpgrade(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #01)
+        let payload = parseAndVerifyGovernanceVAA(vaa, #01)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId)
         let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
@@ -152,8 +156,7 @@ TxContract Governance(
 
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {
         updatePreviousGuardianSet()
-        let payload = parseAndVerifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #02)
+        let payload = parseAndVerifyGovernanceVAA(vaa, #02)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId || vaaChainId == 0)
         let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, 35, 39))
@@ -167,8 +170,7 @@ TxContract Governance(
     }
 
     pub fn submitSetMessageFee(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #03)
+        let payload = parseAndVerifyGovernanceVAA(vaa, #03)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId)
         let fee = u256From32Byte!(byteVecSlice!(payload, 35, 67))
@@ -178,8 +180,7 @@ TxContract Governance(
 
     @using(assetsInContract = true)
     pub fn submitTransferFees(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa)
-        checkModuleAndAction(payload, 0, #04)
+        let payload = parseAndVerifyGovernanceVAA(vaa, #04)
         let vaaChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(vaaChainId == chainId || vaaChainId == 0)
         let amount = u256From32Byte!(byteVecSlice!(payload, 35, 67))

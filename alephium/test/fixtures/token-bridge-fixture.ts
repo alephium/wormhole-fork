@@ -1,5 +1,5 @@
 import { NodeProvider, Contract, ContractState, subContractId } from '@alephium/web3'
-import { createGovernance, governanceChainId, governanceContractId } from './governance-fixture'
+import { createGovernance, governanceChainId } from './governance-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, toContractAddress } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
@@ -195,7 +195,7 @@ async function createTemplateTokenBridgeForChain(provider: NodeProvider): Promis
     const tokenBridgeForChain = await Contract.fromSource(provider, 'token_bridge_for_chain.ral')
     const address = randomContractAddress()
     const initFields = {
-        'governanceId': '',
+        'governanceContractId': '',
         'localChainId': 0,
         'localTokenBridgeId': '',
         'remoteChainId': 0,
@@ -223,9 +223,7 @@ export async function createTokenBridge(provider: NodeProvider, address?: string
         provider, randomContractId(), 0, 0n, randomAssetAddress()
     )
     const initFields = {
-        'governanceId': governance.contractId,
-        'governanceChainId': governanceChainId,
-        'governanceContractId': governanceContractId,
+        'governanceContractId': governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'receivedSequence': 0,
         'sendSequence': 0,
@@ -266,7 +264,7 @@ export async function createTokenBridgeForChain(
     const tokenWrapper = await createTemplateTokenWrapper(provider)
     const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge_for_chain.ral")
     const initFields = {
-        'governanceId': tokenBridge.governance.contractId,
+        'governanceContractId': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'localTokenBridgeId': tokenBridge.contractId,
         'remoteChainId': remoteChainId,

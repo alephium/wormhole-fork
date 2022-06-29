@@ -5,7 +5,7 @@ import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContract
 export const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
 export const initGuardianSet = GuardianSet.random(12, 0)
 export const governanceChainId = 0
-export const governanceContractId = '0000000000000000000000000000000000000000000000000000000000000004'
+export const governanceEmitterAddress = '0000000000000000000000000000000000000000000000000000000000000004'
 export const messageFee = BigInt("100000000000000")
 
 export class UpdateGuardianSet {
@@ -75,7 +75,7 @@ export async function createGovernance(provider: NodeProvider): Promise<Contract
     const initFields = {
         'chainId': CHAIN_ID_ALEPHIUM,
         'governanceChainId': governanceChainId,
-        'governanceContract': governanceContractId,
+        'governanceEmitterAddress': governanceEmitterAddress,
         'receivedSequence': 0,
         'messageFee': messageFee,
         'guardianSets': Array('', initGuardianSet.encodeAddresses()),
