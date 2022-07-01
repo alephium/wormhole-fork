@@ -5,7 +5,7 @@ import "sequence.ral"
 import "undone_sequence.ral"
 
 TxContract TokenBridgeForChain(
-    governanceId: ByteVec,
+    governanceContractId: ByteVec,
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
     remoteChainId: U256,
@@ -18,8 +18,8 @@ TxContract TokenBridgeForChain(
     tokenWrapperCodeHash: ByteVec,
     refundAddress: Address
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress) {
-    fn verifyVAA(vaa: ByteVec) -> ByteVec {
-        let governance = Governance(governanceId)
+    fn parseAndVerifyVAA(vaa: ByteVec) -> ByteVec {
+        let governance = Governance(governanceContractId)
         let (emitterChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
         assert!(emitterChainId == remoteChainId)
         assert!(emitterAddress == remoteTokenBridgeId)
@@ -29,7 +29,7 @@ TxContract TokenBridgeForChain(
 
     // return (tokenContractId, tokenDecimals, tokenSymbol, tokenName)
     fn parseAttestToken(vaa: ByteVec) -> (ByteVec, U256, ByteVec, ByteVec) {
-        let payload = verifyVAA(vaa)
+        let payload = parseAndVerifyVAA(vaa)
         assert!(byteVecSlice!(payload, 0, 1) == #02) // payload id
         let tokenContractId = byteVecSlice!(payload, 1, 33)
         let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
@@ -86,7 +86,7 @@ TxContract TokenBridgeForChain(
     pub fn parseTransfer(vaa: ByteVec) -> (ByteVec, U256, ByteVec, U256, U256) {
         assert!(callerCodeHash!() == tokenWrapperCodeHash)
 
-        let payload = verifyVAA(vaa)
+        let payload = parseAndVerifyVAA(vaa)
         assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
         let tokenId = byteVecSlice!(payload, 33, 65)

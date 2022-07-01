@@ -1,6 +1,6 @@
 import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState } from '@alephium/web3'
 import { nonce, toHex, zeroPad } from '../lib/utils'
-import { governanceChainId, governanceContractId, initGuardianSet, messageFee } from './fixtures/governance-fixture'
+import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, DestroyUndoneSequenceContracts, RegisterChain, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody, chainIdToBytes, doubleHash, dustAmount, toContractAddress, defaultGasFee, randomContractId, ContractInfo, randomContractAddress } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
@@ -75,7 +75,7 @@ describe("test token bridge", () => {
         const remoteTokenBridgeId = toHex(randomBytes(32))
         const remoteChainId = CHAIN_ID_ALEPHIUM + 1
         const registerChain = new RegisterChain(CHAIN_ID_ALEPHIUM, remoteChainId, remoteTokenBridgeId)
-        const vaaBody = new VAABody(registerChain.encode(), governanceChainId, governanceContractId, 0)
+        const vaaBody = new VAABody(registerChain.encode(), governanceChainId, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await tokenBridge.testPublicMethod(provider, 'registerChain', {
             address: tokenBridgeInfo.address,
@@ -103,7 +103,7 @@ describe("test token bridge", () => {
         const tokenBridgeInfo = await createTokenBridge(provider)
         const tokenBridge = tokenBridgeInfo.contract
         const registerChain = new RegisterChain(CHAIN_ID_ALEPHIUM, CHAIN_ID_ALEPHIUM + 1, randomContractId())
-        const vaaBody = new VAABody(registerChain.encode(), governanceChainId, governanceContractId, 1)
+        const vaaBody = new VAABody(registerChain.encode(), governanceChainId, governanceEmitterAddress, 1)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         await expectAssertionFailed(async () => {
             await tokenBridge.testPublicMethod(provider, 'registerChain', {
@@ -531,7 +531,7 @@ describe("test token bridge", () => {
         }
         const existingContracts = Array.prototype.concat(tokenBridgeForChainInfo.states(), subContracts) 
         const destroyUndoneSequenceContracts = new DestroyUndoneSequenceContracts(remoteChainId, paths)
-        const vaaBody = new VAABody(destroyUndoneSequenceContracts.encode(), governanceChainId, governanceContractId, 0)
+        const vaaBody = new VAABody(destroyUndoneSequenceContracts.encode(), governanceChainId, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const tokenBridge = tokenBridgeInfo.contract
         const testResult = await tokenBridge.testPublicMethod(provider, 'destroyUndoneSequenceContracts', {
@@ -557,7 +557,7 @@ describe("test token bridge", () => {
         const tokenBridge = tokenBridgeInfo.contract
 
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
-            const vaaBody = new VAABody(contractUpgrade.encode(tokenBridgeModule, 2, CHAIN_ID_ALEPHIUM), governanceChainId, governanceContractId, 0)
+            const vaaBody = new VAABody(contractUpgrade.encode(tokenBridgeModule, 2, CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
             const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
             return tokenBridge.testPublicMethod(provider, 'upgradeContract', {
                 address: tokenBridgeInfo.address,
@@ -569,7 +569,7 @@ describe("test token bridge", () => {
         }
 
         {
-            const newContractCode = "0b0106010000000000"
+            const newContractCode = "090106010000000000"
             loadContract(newContractCode)
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
@@ -581,6 +581,7 @@ describe("test token bridge", () => {
         {
             await expectAssertionFailed(async () => {
                 const newContractCode = "000106010000000000"
+                loadContract(newContractCode)
                 const prevStateHash = randomBytes(32).toString('hex')
                 const newState = "00"
                 const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
