@@ -9,7 +9,9 @@ import {
     toAlphContractAddress,
     parseSequenceFromLogAlph,
     CHAIN_ID_ALEPHIUM,
-    WormholeWrappedInfo
+    WormholeWrappedInfo,
+    getTokenBridgeForChainId,
+    parseTargetChainFromLogAlph
 } from '@certusone/wormhole-sdk';
 import { NodeProvider, node, subContractId } from '@alephium/web3';
 import WalletConnectProvider from "@alephium/walletconnect-provider";
@@ -21,12 +23,14 @@ export class AlphTxInfo {
     blockHeight: number
     txId: string
     sequence: string
+    targetChain: ChainId
 
-    constructor(blockHash: string, blockHeight: number, txId: string, sequence: string) {
+    constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId) {
         this.blockHash = blockHash
         this.blockHeight = blockHeight
         this.txId = txId
         this.sequence = sequence
+        this.targetChain = targetChain
     }
 }
 
@@ -58,7 +62,8 @@ async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string
         return Promise.reject("invalid sender, expect token bridge contract id, have: " + senderContractId)
     }
     const sequence = parseSequenceFromLogAlph(event)
-    return new AlphTxInfo(blockHash, blockHeader.height, txId, sequence)
+    const targetChain = parseTargetChainFromLogAlph(event)
+    return new AlphTxInfo(blockHash, blockHeader.height, txId, sequence, targetChain)
 }
 
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
@@ -87,9 +92,9 @@ export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
     const remoteChainIdOffset = length - 176
     const remoteChainIdBytes = signedVAA.slice(remoteChainIdOffset, remoteChainIdOffset + 2)
     const remoteChainId = Buffer.from(remoteChainIdBytes).readUInt16BE(0)
-    const tokenIdOffset = length - 100
+    const tokenIdOffset = length - 98
     const tokenId = signedVAA.slice(tokenIdOffset, tokenIdOffset + 32)
-    const tokenChainIdOffset = length - 68
+    const tokenChainIdOffset = length - 66
     const tokenChainIdBytes = signedVAA.slice(tokenChainIdOffset, tokenChainIdOffset + 2)
     const tokenChainId = Buffer.from(tokenChainIdBytes).readUInt16BE(0)
     return {
@@ -103,14 +108,8 @@ export function getTokenWrapperId(tokenId: string, remoteChainId: ChainId): stri
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
-    const tokenBridgeForChainId = getTokenBridgeForChainId(remoteChainId)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, remoteChainId)
     return subContractId(tokenBridgeForChainId, tokenId)
-}
-
-export function getTokenBridgeForChainId(remoteChainId: ChainId): string {
-    const encodedChainId = Buffer.allocUnsafe(2)
-    encodedChainId.writeUInt16BE(remoteChainId)
-    return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, encodedChainId.toString('hex'))
 }
 
 export class TokenInfo {

@@ -16,6 +16,7 @@ import {
   updateWrappedOnSolana,
   createRemoteTokenWrapperOnAlph,
   updateWrappedOnTerra,
+  getAttestTokenHandlerId
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -53,6 +54,7 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
 } from "../utils/consts";
 import { getKaruraGasParams } from "../utils/karura";
 import parseError from "../utils/parseError";
@@ -60,7 +62,7 @@ import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { getTokenBridgeForChainId, submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
+import { submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 
 async function algo(
@@ -253,9 +255,9 @@ async function alephium(
     if (shouldUpdate) {
       throw Error("alephium: contract already exist, update not supported")
     }
-    const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
+    const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
     const bytecode = createRemoteTokenWrapperOnAlph(
-      tokenBridgeForChainId,
+      attestTokenHandlerId,
       signedVAA,
       signer.account.address,
       minimalAlphInContract

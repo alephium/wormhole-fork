@@ -98,6 +98,7 @@ async function evm(
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
       emitterAddress,
+      recipientChain,
       sequence.toString()
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -164,6 +165,7 @@ async function solana(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_SOLANA,
       emitterAddress,
+      targetChain,
       sequence
     );
 
