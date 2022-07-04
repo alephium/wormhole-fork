@@ -42,7 +42,7 @@ contract Setters is State {
         _state.messageFee = newFee;
     }
 
-    function setNextSequence(address emitter, uint64 sequence) internal {
-        _state.sequences[emitter] = sequence;
+    function setNextSequence(address emitter, uint16 targetChainId, uint64 sequence) internal {
+        _state.sequences[emitter][targetChainId] = sequence;
     }
 }

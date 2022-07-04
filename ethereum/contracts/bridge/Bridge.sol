@@ -58,7 +58,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
 
         sequence = wormhole().publishMessage{
             value : msg.value
-        }(nonce, encoded, 15);
+        }(0, nonce, encoded, 15);
     }
 
     function wrapAndTransferETH(uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce) public payable returns (uint64 sequence) {
@@ -197,7 +197,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
             tokenAddress : tokenAddress,
             tokenChain : tokenChain,
             to : recipient,
-            toChain : recipientChain,
             fee : fee
         });
 
@@ -205,7 +204,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
 
         sequence = wormhole().publishMessage{
             value : callValue
-        }(nonce, encoded, 15);
+        }(recipientChain, nonce, encoded, 15);
     }
 
     function logTransferWithPayload(uint16 tokenChain, bytes32 tokenAddress, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 fee, uint256 callValue, uint32 nonce, bytes memory payload) internal returns (uint64 sequence) {
@@ -217,7 +216,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
             tokenAddress : tokenAddress,
             tokenChain : tokenChain,
             to : recipient,
-            toChain : recipientChain,
             fee : fee,
             payload : payload
         });
@@ -226,7 +224,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
 
         sequence = wormhole().publishMessage{
             value : callValue
-        }(nonce, encoded, 15);
+        }(recipientChain, nonce, encoded, 15);
     }
 
     function updateWrapped(bytes memory encodedVm) external returns (address token) {
@@ -331,7 +329,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         require(!isTransferCompleted(vm.hash), "transfer already completed");
         setTransferCompleted(vm.hash);
 
-        require(transfer.toChain == chainId(), "invalid target chain");
+        require(vm.targetChainId == chainId(), "invalid target chain");
 
         IERC20 transferToken;
         if (transfer.tokenChain == chainId()) {
@@ -432,7 +430,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
             transfer.tokenAddress,
             transfer.tokenChain,
             transfer.to,
-            transfer.toChain,
             transfer.fee
         );
     }
@@ -444,7 +441,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
             transfer.tokenAddress,
             transfer.tokenChain,
             transfer.to,
-            transfer.toChain,
             transfer.fee,
             transfer.payload
         );
@@ -495,9 +491,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
 
         transfer.to = encoded.toBytes32(index);
         index += 32;
-
-        transfer.toChain = encoded.toUint16(index);
-        index += 2;
 
         transfer.fee = encoded.toUint256(index);
         index += 32;
