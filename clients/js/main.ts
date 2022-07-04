@@ -26,6 +26,7 @@ const GOVERNANCE_EMITTER =
 
 function makeVAA(
   emitterChain: number,
+  targetChain: number,
   emitterAddress: string,
   signers: string[],
   sequence: string | undefined,
@@ -38,6 +39,7 @@ function makeVAA(
     timestamp: 1,
     nonce: 1,
     emitterChain: emitterChain,
+    targetChain: targetChain,
     emitterAddress: emitterAddress,
     sequence: typeof sequence === 'undefined' ? BigInt(Math.floor(Math.random() * 100000000)) : BigInt(sequence),
     consistencyLevel: 0,
@@ -108,7 +110,6 @@ yargs(hideBin(process.argv))
               let payload: vaa.PortalRegisterChain<typeof module> = {
                 module,
                 type: "RegisterChain",
-                chain: 0,
                 emitterChain: emitterChainId,
                 emitterAddress: Buffer.from(
                   argv["contract-address"].padStart(64, "0"),
@@ -117,6 +118,7 @@ yargs(hideBin(process.argv))
               };
               let v = makeVAA(
                 GOVERNANCE_CHAIN,
+                0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
@@ -161,7 +163,6 @@ yargs(hideBin(process.argv))
               let payload: Payload = {
                 module,
                 type: "ContractUpgrade",
-                chain: toChainId(argv["chain"]),
                 address: Buffer.from(
                   argv["contract-address"].padStart(64, "0"),
                   "hex"
@@ -169,6 +170,7 @@ yargs(hideBin(process.argv))
               };
               let v = makeVAA(
                 GOVERNANCE_CHAIN,
+                toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
@@ -261,7 +263,7 @@ yargs(hideBin(process.argv))
       // two don't agree instead of silently taking the VAA's target chain.
 
       // get VAA chain
-      const vaa_chain_id = parsed_vaa.payload.chain;
+      const vaa_chain_id = parsed_vaa.targetChain;
       assertChain(vaa_chain_id);
       const vaa_chain = toChainName(vaa_chain_id);
 
