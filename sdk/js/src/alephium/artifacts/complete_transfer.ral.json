@@ -1,5 +1,5 @@
 {
-  "sourceCodeSha256": "64f63e0006e143baabb44651cf43c77610e458df64f1fcdd5d2dd8752ea17a35",
+  "sourceCodeSha256": "61c8ceac660919c9c7d617cc8366c7cc88a4996c8deba36b23e916d4c9592839",
   "bytecodeTemplate": "0101030002000bb41700{0}1701160013c3038d7ea4c68000a2{1}16001601010a",
   "fieldsSig": {
     "signature": "TxScript Main(tokenWrapperId:ByteVec,vaa:ByteVec)",

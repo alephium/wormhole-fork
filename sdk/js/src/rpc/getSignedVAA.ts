@@ -8,6 +8,7 @@ export async function getSignedVAA(
   host: string,
   emitterChain: ChainId | ChainName,
   emitterAddress: string,
+  targetChain: ChainId | ChainName,
   sequence: string,
   extraGrpcOpts = {}
 ) {
@@ -17,6 +18,7 @@ export async function getSignedVAA(
     messageId: {
       emitterChain: coalesceChainId(emitterChain),
       emitterAddress,
+      targetChain: coalesceChainId(targetChain),
       sequence,
     },
   });

@@ -10,7 +10,7 @@ import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
 
 export function createRemoteTokenWrapperOnAlph(
-  tokenBridgeForChainId: string,
+  attestTokenHandlerId: string,
   signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint
@@ -19,7 +19,7 @@ export function createRemoteTokenWrapperOnAlph(
   const script = createRemoteTokenWrapperScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    tokenBridgeForChainId: tokenBridgeForChainId,
+    attestTokenHandlerId: attestTokenHandlerId,
     vaa: vaaHex,
     alphAmount: alphAmount
   })

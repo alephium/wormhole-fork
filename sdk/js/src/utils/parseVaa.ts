@@ -14,7 +14,6 @@ export const METADATA_REPLACE = new RegExp("\u0000", "g");
 //     130 u8       uri_len
 //     131 [u8;len] uri
 //     ?   [u8; 32] recipient
-//     ?   u16      recipient_chain
 export const parseNFTPayload = (arr: Buffer) => {
   const originAddress = arr.slice(1, 1 + 32).toString("hex");
   const originChain = arr.readUInt16BE(33) as ChainId;
@@ -33,7 +32,6 @@ export const parseNFTPayload = (arr: Buffer) => {
   const targetAddress = arr
     .slice(target_offset, target_offset + 32)
     .toString("hex");
-  const targetChain = arr.readUInt16BE(target_offset + 32) as ChainId;
   return {
     originAddress,
     originChain,
@@ -41,8 +39,7 @@ export const parseNFTPayload = (arr: Buffer) => {
     name,
     tokenId,
     uri,
-    targetAddress,
-    targetChain,
+    targetAddress
   };
 };
 
@@ -57,8 +54,7 @@ export const parseTransferPayload = (arr: Buffer) => ({
   originAddress: arr.slice(33, 33 + 32).toString("hex"),
   originChain: arr.readUInt16BE(65) as ChainId,
   targetAddress: arr.slice(67, 67 + 32).toString("hex"),
-  targetChain: arr.readUInt16BE(99) as ChainId,
-  fee: BigNumber.from(arr.slice(101, 101 + 32)).toBigInt(),
+  fee: BigNumber.from(arr.slice(99, 99 + 32)).toBigInt(),
 });
 
 class Reader {
@@ -153,6 +149,7 @@ export class VAABody {
   timestamp: number
   nonce: number
   emitterChainId: ChainId
+  targetChainId: ChainId
   emitterAddress: Uint8Array
   sequence: number
   consistencyLevel: number
@@ -163,22 +160,28 @@ export class VAABody {
     const timestamp = reader.readUint32BE()
     const nonce = reader.readUint32BE()
     const emitterChainId = reader.readUint16BE() as ChainId
+    const targetChainId = reader.readUint16BE() as ChainId
     const emitterAddress = reader.readBytes(32)
     const sequence = reader.readUint64BE()
     const consistencyLevel = reader.readUint8()
     const payload = reader.remain()
-    return new VAABody(timestamp, nonce, emitterChainId, emitterAddress, sequence, consistencyLevel, payload)
+    return new VAABody(timestamp, nonce, emitterChainId, targetChainId, emitterAddress, sequence, consistencyLevel, payload)
   }
 
-  constructor(timestamp: number, nonce: number, emitterChainId: ChainId, emitterAddress: Uint8Array, sequence: number, consistencyLevel: number, payload: Uint8Array) {
+  constructor(timestamp: number, nonce: number, emitterChainId: ChainId, targetChainId: ChainId, emitterAddress: Uint8Array, sequence: number, consistencyLevel: number, payload: Uint8Array) {
     this.timestamp = timestamp
     this.nonce = nonce
     this.emitterChainId = emitterChainId
+    this.targetChainId = targetChainId
     this.emitterAddress = emitterAddress
     this.sequence = sequence
     this.consistencyLevel = consistencyLevel
     this.payload = payload
   }
+}
+
+export function parseVAA(data: Uint8Array): VAA {
+  return VAA.from(data)
 }
 
 //This returns a corrected amount, which accounts for the difference between the VAA
