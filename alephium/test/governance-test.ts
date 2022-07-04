@@ -25,7 +25,7 @@ describe("test governance", () => {
 
     test('should update guardian set', async () => {
         const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-        const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'submitNewGuardianSet')
         const governanceState = testResult.contracts[0]
@@ -35,7 +35,7 @@ describe("test governance", () => {
         ))
         expect(governanceState.fields['guardianSetIndexes']).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
 
-        const invalidSequenceVaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 1)
+        const invalidSequenceVaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 1)
         const invalidSequenceVaa = initGuardianSet.sign(initGuardianSet.quorumSize(), invalidSequenceVaaBody)
         await expectAssertionFailed(async () => {
             await testCase(invalidSequenceVaa, 'submitNewGuardianSet')
@@ -44,7 +44,7 @@ describe("test governance", () => {
 
     it('should failed if signature is not enough', async () => {
         const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-        const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
         await expectAssertionFailed(async () => {
             return await testCase(vaa, 'submitNewGuardianSet')
@@ -53,7 +53,7 @@ describe("test governance", () => {
 
     it('should failed if signature is duplicated', async () => {
         const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-        const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
@@ -64,7 +64,7 @@ describe("test governance", () => {
 
     it('should failed if signature is invalid', async () => {
         const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-        const vaaBody = new VAABody(updateGuardianSet.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const invalidSignatures = Array(vaa.signatures.length).fill(0).map(_ => randomBytes(66))
         const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
@@ -76,7 +76,7 @@ describe("test governance", () => {
 
     it('should set message fee', async () => {
         const setMessageFee = new SetMessageFee(messageFee * 2n)
-        const vaaBody = new VAABody(setMessageFee.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(setMessageFee.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'submitSetMessageFee')
         const governanceState = testResult.contracts[0]
@@ -96,7 +96,7 @@ describe("test governance", () => {
         const recipient = randomBytes(32)
         const amount = messageFee * 20n
         const submitTransferFee = new SubmitTransferFee(toHex(recipient), amount)
-        const vaaBody = new VAABody(submitTransferFee.encode(CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+        const vaaBody = new VAABody(submitTransferFee.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'submitTransferFees', asset, [inputAsset])
         const assetOutput = testResult.txOutputs[0]
@@ -115,7 +115,7 @@ describe("test governance", () => {
         const governanceInfo = await createGovernance(provider)
         const contract = governanceInfo.contract
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
-            const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1, CHAIN_ID_ALEPHIUM), governanceChainId, governanceEmitterAddress, 0)
+            const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
             const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
             return await contract.testPublicMethod(provider, 'submitContractUpgrade', {
                 initialFields: governanceInfo.selfState.fields,

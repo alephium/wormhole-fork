@@ -1,6 +1,11 @@
-import "token_bridge_for_chain.ral"
+import "attest_token_handler.ral"
 
-TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, vaa: ByteVec, alphAmount: U256) {
-    let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-    tokenBridgeForChain.createWrapperForRemoteToken{payer -> alphAmount}(vaa, payer, alphAmount)
+TxScript Main(
+    payer: Address,
+    attestTokenHandlerId: ByteVec,
+    vaa: ByteVec,
+    alphAmount: U256
+) {
+    let attestTokenHandler = AttestTokenHandler(attestTokenHandlerId)
+    attestTokenHandler.handleAttestToken{payer -> alphAmount}(vaa, payer, alphAmount)
 }

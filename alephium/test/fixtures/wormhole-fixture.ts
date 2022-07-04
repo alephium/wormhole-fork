@@ -124,6 +124,7 @@ export class VAABody {
     timestamp: number   // seconds
     nonce: string
     emitterChainId: number
+    targetChainId: number
     emitterAddress: string 
     sequence: number
     consistencyLevel: number
@@ -132,6 +133,7 @@ export class VAABody {
     constructor(
         payload: Uint8Array,
         emitterChainId: number,
+        targetChainId: number,
         emitterAddress: string,
         sequence: number,
         timestamp: number = 0,
@@ -141,6 +143,7 @@ export class VAABody {
         this.timestamp = timestamp
         this.nonce = nonceHex
         this.emitterChainId = emitterChainId
+        this.targetChainId = targetChainId
         this.emitterAddress = emitterAddress
         this.sequence = sequence
         this.consistencyLevel = consistencyLevel
@@ -148,13 +151,14 @@ export class VAABody {
     }
 
     encode(): Uint8Array {
-        let header = Buffer.allocUnsafe(51)
+        let header = Buffer.allocUnsafe(53)
         header.writeUint32BE(this.timestamp, 0)
         header.write(this.nonce, 4, 'hex')
         header.writeUint16BE(this.emitterChainId, 8)
-        header.write(this.emitterAddress, 10, 'hex')
-        header.writeBigUInt64BE(BigInt(this.sequence), 42)
-        header.writeUint8(this.consistencyLevel, 50)
+        header.writeUint16BE(this.targetChainId, 10)
+        header.write(this.emitterAddress, 12, 'hex')
+        header.writeBigUInt64BE(BigInt(this.sequence), 44)
+        header.writeUint8(this.consistencyLevel, 52)
         return Buffer.concat([header, this.payload])
     }
 }
@@ -197,14 +201,13 @@ export class ContractUpgrade {
         this.state = state
     }
 
-    encode(module: string, action: number, chainId: number) {
+    encode(module: string, action: number) {
         const contractCodeLength = this.contractCode.length / 2
-        const buffer0 = Buffer.allocUnsafe(32 + 1 + 2 + 2 + contractCodeLength)
+        const buffer0 = Buffer.allocUnsafe(32 + 1 + 2 + contractCodeLength)
         buffer0.write(module, 0, 'hex')
         buffer0.writeUint8(action, 32)
-        buffer0.writeUint16BE(chainId, 33)
-        buffer0.writeUint16BE(contractCodeLength, 35)
-        buffer0.write(this.contractCode, 37, 'hex')
+        buffer0.writeUint16BE(contractCodeLength, 33)
+        buffer0.write(this.contractCode, 35, 'hex')
         if (this.state !== undefined) {
             const stateLength = this.state.length / 2
             const buffer1 = Buffer.allocUnsafe(32 + 2 + stateLength)

@@ -25,16 +25,12 @@ export class Wormhole {
     refundAddress: string
     localChainId: number
     governanceChainId: number
-    governanceContractId: string
-    tokenBridgeGovernanceChainId: number
-    tokenBridgeGovernanceContractId: string
+    governanceEmitterAddress: string
     initGuardianSet: string[]
     initGuardianSetIndex: number
     initMessageFee: bigint
 
     private _tokenWrapperContract: Contract | undefined = undefined
-    private _tokenBridgeForChainContract: Contract | undefined = undefined
-    private _undoneSequenceContract: Contract | undefined = undefined
 
     constructor(
         provider: NodeProvider,
@@ -42,9 +38,7 @@ export class Wormhole {
         refundAddress: string,
         localChainId: number,
         governanceChainId: number,
-        governanceContractId: string,
-        tokenBridgeGovernanceChainId: number,
-        tokenBridgeGovernanceContractId: string,
+        governanceEmitterAddress: string,
         initGuardianSet: string[],
         initGuardianSetIndex: number,
         initMessageFee: bigint
@@ -54,9 +48,7 @@ export class Wormhole {
         this.refundAddress = refundAddress
         this.localChainId = localChainId
         this.governanceChainId = governanceChainId
-        this.governanceContractId = governanceContractId
-        this.tokenBridgeGovernanceChainId = tokenBridgeGovernanceChainId
-        this.tokenBridgeGovernanceContractId = tokenBridgeGovernanceContractId
+        this.governanceEmitterAddress = governanceEmitterAddress
         this.initGuardianSet = initGuardianSet
         this.initGuardianSetIndex = initGuardianSetIndex
         this.initMessageFee = initMessageFee
@@ -71,33 +63,13 @@ export class Wormhole {
         return contract
     }
 
-    private async tokenBridgeForChainContract(): Promise<Contract> {
-        if (typeof this._tokenBridgeForChainContract !== 'undefined') {
-            return this._tokenBridgeForChainContract as Contract
-        }
-        const contract = await Contract.fromSource(this.provider, 'token_bridge_for_chain.ral')
-        this._tokenBridgeForChainContract = contract
-        return contract
-    }
-
-    private async undoneSequenceContract(): Promise<Contract> {
-        if (typeof this._undoneSequenceContract !== 'undefined') {
-            return this._undoneSequenceContract as Contract
-        }
-        const contract = await Contract.fromSource(this.provider, 'undone_sequence.ral')
-        this._undoneSequenceContract = contract
-        return contract
-    }
-
     async deployContracts(): Promise<WormholeContracts> {
         const governanceDeployResult = await this.deployGovernance(
-            this.governanceChainId, this.governanceContractId, this.initGuardianSet,
+            this.governanceChainId, this.governanceEmitterAddress, this.initGuardianSet,
             this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            governanceDeployResult.contractId,
-            this.tokenBridgeGovernanceChainId,
-            this.tokenBridgeGovernanceContractId
+            governanceDeployResult.contractId
         )
         const tokenWrapper = await this.tokenWrapperContract()
         return {
@@ -109,7 +81,7 @@ export class Wormhole {
 
     private async deployGovernance(
         governanceChainId: number,
-        governanceContractId: string,
+        governanceEmitterAddress: string,
         initGuardianSet: string[],
         initGuardianSetIndex: number,
         initMessageFee: bigint
@@ -120,7 +92,7 @@ export class Wormhole {
         const initFields = {
             'chainId': this.localChainId,
             'governanceChainId': governanceChainId,
-            'governanceContract': governanceContractId,
+            'governanceEmitterAddress': governanceEmitterAddress,
             'receivedSequence': 0,
             'messageFee': initMessageFee,
             'guardianSets': Array('', currentGuardianSet),
@@ -137,7 +109,7 @@ export class Wormhole {
             'sequences': 0n,
             'refundAddress': DummyRefundAddress
         }
-        const undoneSequence = await this.undoneSequenceContract()
+        const undoneSequence = await Contract.fromSource(this.provider, 'undone_sequence.ral')
         return await this._deploy(undoneSequence, initFields)
     }
 
@@ -159,7 +131,7 @@ export class Wormhole {
 
     private async deployTokenBridgeForChainTemplate(): Promise<DeployResult> {
         const initFields = {
-            'governanceId': '',
+            'governanceContractId': '',
             'localChainId': 0,
             'localTokenBridgeId': '',
             'remoteChainId': 0,
@@ -169,33 +141,42 @@ export class Wormhole {
             'next2': 0,
             'undoneSequenceTemplateId': '',
             'tokenWrapperTemplateId': '',
-            'tokenWrapperCodeHash': '',
-            'refundAddress': DummyRefundAddress
+            'refundAddress': DummyRefundAddress,
+            'sendSequence': 0
         }
-        const tokenBridgeForChain = await this.tokenBridgeForChainContract()
+        const tokenBridgeForChain = await Contract.fromSource(this.provider, 'token_bridge_for_chain.ral')
         return this._deploy(tokenBridgeForChain, initFields)
     }
 
+    private async deployAttestTokenHandlerTemplate(): Promise<DeployResult> {
+        const initFields = {
+            'governanceContractId': '',
+            'localChainId': 0,
+            'localTokenBridgeId': '',
+            'remoteChainId': 0,
+            'remoteTokenBridgeId': '',
+            'receivedSequence': 0
+        }
+        const attestTokenHandler = await Contract.fromSource(this.provider, 'attest_token_handler.ral')
+        return this._deploy(attestTokenHandler, initFields)
+    }
+
     private async deployTokenBridge(
-        governanceId: string,
-        governanceChainId: number,
         governanceContractId: string
     ): Promise<DeployResult> {
-        const tokenWrapper = await this.tokenWrapperContract()
         const tokenWrapperDeployResult = await this.deployTokenWrapperTemplate()
         const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
+        const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
         const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
         const tokenBridge = await Contract.fromSource(this.provider, 'token_bridge.ral')
         const initFields = {
-            'governanceId': governanceId,
-            'governanceChainId': governanceChainId,
             'governanceContractId': governanceContractId,
             'localChainId': this.localChainId,
             'receivedSequence': 0,
             'sendSequence': 0,
-            'tokenWrapperCodeHash': tokenWrapper.codeHash,
             'tokenWrapperTemplateId': tokenWrapperDeployResult.contractId,
             'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
+            'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
             'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
             'refundAddress': this.refundAddress
         }

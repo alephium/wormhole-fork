@@ -74,7 +74,6 @@ TxContract TokenWrapper(
             tokenContractId ++
             u256To2Byte!(tokenChainId) ++
             toAddress ++
-            u256To2Byte!(remoteChainId) ++
             u256To32Byte!(normalizedFee)
     }
 

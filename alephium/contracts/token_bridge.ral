@@ -9,28 +9,27 @@ TxContract TokenBridge(
     localChainId: U256,
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
-    tokenWrapperCodeHash: ByteVec,
     tokenWrapperTemplateId: ByteVec,         // used for create contract by copyCreateContract
     tokenBridgeForChainTemplateId: ByteVec,  // used for create contract by copyCreateContract
+    attestTokenHandlerTemplateId: ByteVec,   // used for create contract by copyCreateContract
     undoneSequenceTemplateId: ByteVec,       // used for create contract by copyCreateContract
     refundAddress: Address
 ) {
-    fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> ByteVec {
+    fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
         let tokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
         let governance = Governance(governanceContractId)
-        let payload = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, tokenBridgeModule, action)
+        let (targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, tokenBridgeModule, action)
         receivedSequence = receivedSequence + 1
-        return payload
+        return targetChainId, payload
     }
 
     fn parseAndVerifyRegisterChain(vaa: ByteVec) -> (U256, ByteVec) {
-        let payload = parseAndVerifyGovernanceVAA(vaa, #01)
-        let chainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(chainId == localChainId || chainId == 0)
-        let remoteChainId = u256From2Byte!(byteVecSlice!(payload, 35, 37))
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, #01)
+        assert!(targetChainId == localChainId || targetChainId == 0)
+        let remoteChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         assert!(remoteChainId != localChainId)
-        let remoteTokenBridgeId = byteVecSlice!(payload, 37, 69)
-        assert!(size!(payload) == 69)
+        let remoteTokenBridgeId = byteVecSlice!(payload, 35, 67)
+        assert!(size!(payload) == 67)
         return remoteChainId, remoteTokenBridgeId
     }
 
@@ -39,7 +38,23 @@ TxContract TokenBridge(
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
 
-        let mut encodedState = encodeToByteVec!(
+        let remoteChainIdBytes = u256To2Byte!(remoteChainId)
+        let attestTokenHandlerState = encodeToByteVec!(
+            governanceContractId,
+            localChainId,
+            selfContractId!(),
+            remoteChainId,
+            remoteTokenBridgeId,
+            0
+        )
+        let attestTokenHandlerPath = #00 ++ remoteChainIdBytes
+        copyCreateSubContract!{payer -> createContractAlphAmount}(
+            attestTokenHandlerPath,
+            attestTokenHandlerTemplateId,
+            attestTokenHandlerState
+        )
+
+        let tokenBridgeForChainState = encodeToByteVec!(
             governanceContractId,
             localChainId,
             selfContractId!(),
@@ -50,20 +65,23 @@ TxContract TokenBridge(
             0,
             undoneSequenceTemplateId,
             tokenWrapperTemplateId,
-            tokenWrapperCodeHash,
-            refundAddress
+            refundAddress,
+            0
         )
-
-        copyCreateSubContract!{payer -> createContractAlphAmount}(u256To2Byte!(remoteChainId), tokenBridgeForChainTemplateId, encodedState)
+        let tokenBridgeForChainPath = #01 ++ remoteChainIdBytes
+        copyCreateSubContract!{payer -> createContractAlphAmount}(
+            tokenBridgeForChainPath,
+            tokenBridgeForChainTemplateId,
+            tokenBridgeForChainState
+        )
     }
 
     pub fn upgradeContract(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa, #02)
-        let chainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assert!(chainId == localChainId)
-        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 35, 37))
-        let mut offset = 37 + contractCodeLength
-        let newContractCode = byteVecSlice!(payload, 37, offset)
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, #02)
+        assert!(targetChainId == localChainId)
+        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        let mut offset = 35 + contractCodeLength
+        let newContractCode = byteVecSlice!(payload, 35, offset)
         let payloadLength = size!(payload)
         if (payloadLength == offset) {
             migrate!(newContractCode)
@@ -102,7 +120,7 @@ TxContract TokenBridge(
             zeros!(32 - nameSize) ++ name
 
         let governance = Governance(governanceContractId)
-        governance.publishWormholeMessage{payer -> governance.getMessageFee()}(payer, nextSendSequence(), nonce, payload, consistencyLevel)
+        governance.publishWormholeMessage{payer -> governance.getMessageFee()}(payer, 0, nextSendSequence(), nonce, payload, consistencyLevel)
     }
 
     fn nextSendSequence() -> (U256) {
@@ -123,12 +141,15 @@ TxContract TokenBridge(
         consistencyLevel: U256 // TODO: Do we need to limit the minimum confirmation
     ) -> () {
         assert!(toChainId != localChainId)
-        let tokenBridgeForChainId = subContractId!(u256To2Byte!(toChainId))
+        let tokenBridgeForChainId = subContractId!(#01 ++ u256To2Byte!(toChainId))
         let tokenWrapperId = blake2b!(blake2b!(localTokenId ++ tokenBridgeForChainId))
         let tokenWrapper = TokenWrapper(tokenWrapperId)
         let payload = tokenWrapper.transfer{fromAddress -> localTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce, consistencyLevel)
         let governance = Governance(governanceContractId)
-        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(fromAddress, nextSendSequence(), nonce, payload, consistencyLevel)
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(
+            fromAddress, toChainId, tokenBridgeForChain.nextSendSequence(), nonce, payload, consistencyLevel
+        )
     }
 
     @using(preapprovedAssets = true)
@@ -144,17 +165,21 @@ TxContract TokenBridge(
         consistencyLevel: U256 // TODO: Do we need to limit the minimum confirmation
     ) -> () {
         assert!(toChainId != localChainId)
-        let tokenBridgeForChainId = subContractId!(u256To2Byte!(toChainId))
+        let tokenBridgeForChainId = subContractId!(#01 ++ u256To2Byte!(toChainId))
         let expectedTokenWrapperId = blake2b!(blake2b!(wrappedTokenId ++ tokenBridgeForChainId))
         assert!(expectedTokenWrapperId == tokenWrapperId)
         let tokenWrapper = TokenWrapper(tokenWrapperId)
         let payload = tokenWrapper.transfer{fromAddress -> tokenWrapperId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce, consistencyLevel)
         let governance = Governance(governanceContractId)
-        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(fromAddress, nextSendSequence(), nonce, payload, consistencyLevel)
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(
+            fromAddress, toChainId, tokenBridgeForChain.nextSendSequence(), nonce, payload, consistencyLevel
+        )
     }
 
     pub fn destroyUndoneSequenceContracts(vaa: ByteVec) -> () {
-        let payload = parseAndVerifyGovernanceVAA(vaa, #f0)
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, #f0)
+        assert!(targetChainId == localChainId)
         let remoteChainIdBytes = byteVecSlice!(payload, 33, 35)
         let length = u256From2Byte!(byteVecSlice!(payload, 35, 37))
         assert!(length > 0)
@@ -162,7 +187,7 @@ TxContract TokenBridge(
         assert!(size!(payload) == payloadSize)
         let paths = byteVecSlice!(payload, 37, payloadSize)
 
-        let tokenBridgeForChainId = subContractId!(remoteChainIdBytes)
+        let tokenBridgeForChainId = subContractId!(#01 ++ remoteChainIdBytes)
         TokenBridgeForChain(tokenBridgeForChainId).destroyUndoneSequenceContracts(paths)
     }
 }
