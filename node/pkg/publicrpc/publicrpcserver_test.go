@@ -2,12 +2,13 @@ package publicrpc
 
 import (
 	"context"
+	"testing"
+
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
 )
 
 func TestGetSignedVAANoMessage(t *testing.T) {
@@ -39,14 +40,16 @@ func TestGetSignedVAANoAddress(t *testing.T) {
 }
 
 func TestGetSignedVAABadAddress(t *testing.T) {
-	chainID := uint32(1)
+	emitterChainID := uint32(1)
 	emitterAddr := "AAAA"
+	targetChainID := uint32(2)
 	seq := uint64(1)
 
 	msg := publicrpcv1.GetSignedVAARequest{
 		MessageId: &publicrpcv1.MessageID{
-			EmitterChain:   publicrpcv1.ChainID(chainID),
+			EmitterChain:   publicrpcv1.ChainID(emitterChainID),
 			EmitterAddress: emitterAddr,
+			TargetChain:    publicrpcv1.ChainID(targetChainID),
 			Sequence:       seq,
 		},
 	}

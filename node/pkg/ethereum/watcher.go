@@ -346,6 +346,7 @@ func (e *Watcher) Run(ctx context.Context) error {
 					Nonce:            ev.Nonce,
 					Sequence:         ev.Sequence,
 					EmitterChain:     e.chainID,
+					TargetChain:      vaa.ChainID(ev.TargetChainId),
 					EmitterAddress:   PadAddress(ev.Sender),
 					Payload:          ev.Payload,
 					ConsistencyLevel: ev.ConsistencyLevel,

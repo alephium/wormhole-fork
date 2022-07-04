@@ -35,6 +35,8 @@ type (
 		ConsistencyLevel uint8
 		// EmitterChain the VAA was emitted on
 		EmitterChain ChainID
+		// The target chain of the VAA
+		TargetChain ChainID
 		// EmitterAddress of the contract that emitted the Message
 		EmitterAddress Address
 		// Payload of the message
@@ -66,7 +68,6 @@ type (
 		OriginAddress Address
 		OriginChain   ChainID
 		TargetAddress Address
-		TargetChain   ChainID
 	}
 )
 
@@ -297,6 +298,10 @@ func Unmarshal(data []byte) (*VAA, error) {
 		return nil, fmt.Errorf("failed to read emitter chain: %w", err)
 	}
 
+	if err := binary.Read(reader, binary.BigEndian, &v.TargetChain); err != nil {
+		return nil, fmt.Errorf("failed to read to chain: %w", err)
+	}
+
 	emitterAddress := Address{}
 	if n, err := reader.Read(emitterAddress[:]); err != nil || n != 32 {
 		return nil, fmt.Errorf("failed to read emitter address [%d]: %w", n, err)
@@ -400,9 +405,9 @@ func (v *VAA) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// MessageID returns a human-readable emitter_chain/emitter_address/sequence tuple.
+// MessageID returns a human-readable emitter_chain/emitter_address/target_chain/sequence tuple.
 func (v *VAA) MessageID() string {
-	return fmt.Sprintf("%d/%s/%d", v.EmitterChain, v.EmitterAddress, v.Sequence)
+	return fmt.Sprintf("%d/%s/%d/%d", v.EmitterChain, v.EmitterAddress, v.TargetChain, v.Sequence)
 }
 
 // HexDigest returns the hex-encoded digest.
@@ -419,6 +424,7 @@ func (v *VAA) serializeBody() []byte {
 	MustWrite(buf, binary.BigEndian, uint32(v.Timestamp.Unix()))
 	MustWrite(buf, binary.BigEndian, v.Nonce)
 	MustWrite(buf, binary.BigEndian, v.EmitterChain)
+	MustWrite(buf, binary.BigEndian, v.TargetChain)
 	buf.Write(v.EmitterAddress[:])
 	MustWrite(buf, binary.BigEndian, v.Sequence)
 	MustWrite(buf, binary.BigEndian, v.ConsistencyLevel)
@@ -480,12 +486,6 @@ func DecodeTransferPayloadHdr(payload []byte) (*TransferPayloadHdr, error) {
 
 	// Target address: payload[67] for 32
 	err = binary.Read(reader, binary.BigEndian, &p.TargetAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	// Target chain ID: payload[99] for 2
-	err = binary.Read(reader, binary.BigEndian, &p.TargetChain)
 	if err != nil {
 		return nil, err
 	}

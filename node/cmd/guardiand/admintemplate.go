@@ -112,8 +112,9 @@ func runGuardianSetTemplate(cmd *cobra.Command, args []string) {
 		CurrentSetIndex: uint32(*templateGuardianIndex),
 		Messages: []*nodev1.GovernanceMessage{
 			{
-				Sequence: rand.Uint64(),
-				Nonce:    rand.Uint32(),
+				Sequence:      rand.Uint64(),
+				Nonce:         rand.Uint32(),
+				TargetChainId: uint32(vaa.ChainIDUnset),
 				Payload: &nodev1.GovernanceMessage_GuardianSet{
 					GuardianSet: &nodev1.GuardianSetUpdate{Guardians: guardians},
 				},
@@ -142,11 +143,11 @@ func runContractUpgradeTemplate(cmd *cobra.Command, args []string) {
 		CurrentSetIndex: uint32(*templateGuardianIndex),
 		Messages: []*nodev1.GovernanceMessage{
 			{
-				Sequence: rand.Uint64(),
-				Nonce:    rand.Uint32(),
+				Sequence:      rand.Uint64(),
+				Nonce:         rand.Uint32(),
+				TargetChainId: uint32(chainID),
 				Payload: &nodev1.GovernanceMessage_ContractUpgrade{
 					ContractUpgrade: &nodev1.ContractUpgrade{
-						ChainId:     uint32(chainID),
 						NewContract: address,
 					},
 				},
@@ -174,8 +175,9 @@ func runTokenBridgeRegisterChainTemplate(cmd *cobra.Command, args []string) {
 		CurrentSetIndex: uint32(*templateGuardianIndex),
 		Messages: []*nodev1.GovernanceMessage{
 			{
-				Sequence: rand.Uint64(),
-				Nonce:    rand.Uint32(),
+				Sequence:      rand.Uint64(),
+				Nonce:         rand.Uint32(),
+				TargetChainId: uint32(vaa.ChainIDUnset),
 				Payload: &nodev1.GovernanceMessage_BridgeRegisterChain{
 					BridgeRegisterChain: &nodev1.BridgeRegisterChain{
 						Module:         *module,
@@ -208,13 +210,13 @@ func runTokenBridgeUpgradeContractTemplate(cmd *cobra.Command, args []string) {
 		CurrentSetIndex: uint32(*templateGuardianIndex),
 		Messages: []*nodev1.GovernanceMessage{
 			{
-				Sequence: rand.Uint64(),
-				Nonce:    rand.Uint32(),
+				Sequence:      rand.Uint64(),
+				Nonce:         rand.Uint32(),
+				TargetChainId: uint32(chainID),
 				Payload: &nodev1.GovernanceMessage_BridgeContractUpgrade{
 					BridgeContractUpgrade: &nodev1.BridgeUpgradeContract{
-						Module:        *module,
-						TargetChainId: uint32(chainID),
-						NewContract:   address,
+						Module:      *module,
+						NewContract: address,
 					},
 				},
 			},

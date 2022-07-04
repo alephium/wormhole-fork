@@ -3,10 +3,11 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/certusone/wormhole/node/pkg/vaa"
-	"github.com/dgraph-io/badger/v3"
 	"strconv"
 	"strings"
+
+	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/dgraph-io/badger/v3"
 )
 
 type Database struct {
@@ -16,13 +17,14 @@ type Database struct {
 type VAAID struct {
 	EmitterChain   vaa.ChainID
 	EmitterAddress vaa.Address
+	TargetChain    vaa.ChainID
 	Sequence       uint64
 }
 
-// VaaIDFromString parses a <chain>/<address>/<sequence> string into a VAAID.
+// VaaIDFromString parses a <emitter_chain>/<address>/<target_chain>/<sequence> string into a VAAID.
 func VaaIDFromString(s string) (*VAAID, error) {
 	parts := strings.Split(s, "/")
-	if len(parts) != 3 {
+	if len(parts) != 4 {
 		return nil, errors.New("invalid message id")
 	}
 
@@ -36,7 +38,12 @@ func VaaIDFromString(s string) (*VAAID, error) {
 		return nil, fmt.Errorf("invalid emitter address: %s", err)
 	}
 
-	sequence, err := strconv.ParseUint(parts[2], 10, 64)
+	targetChain, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return nil, fmt.Errorf("invalid target chain: %s", err)
+	}
+
+	sequence, err := strconv.ParseUint(parts[3], 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid sequence: %s", err)
 	}
@@ -44,6 +51,7 @@ func VaaIDFromString(s string) (*VAAID, error) {
 	msgId := &VAAID{
 		EmitterChain:   vaa.ChainID(emitterChain),
 		EmitterAddress: emitterAddress,
+		TargetChain:    vaa.ChainID(targetChain),
 		Sequence:       sequence,
 	}
 
@@ -54,6 +62,7 @@ func VaaIDFromVAA(v *vaa.VAA) *VAAID {
 	return &VAAID{
 		EmitterChain:   v.EmitterChain,
 		EmitterAddress: v.EmitterAddress,
+		TargetChain:    v.TargetChain,
 		Sequence:       v.Sequence,
 	}
 }
@@ -63,11 +72,11 @@ var (
 )
 
 func (i *VAAID) Bytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s/%d", i.EmitterChain, i.EmitterAddress, i.Sequence))
+	return []byte(fmt.Sprintf("signed/%d/%s/%d/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain, i.Sequence))
 }
 
 func (i *VAAID) EmitterPrefixBytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s", i.EmitterChain, i.EmitterAddress))
+	return []byte(fmt.Sprintf("signed/%d/%s/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain))
 }
 
 func Open(path string) (*Database, error) {
@@ -161,7 +170,8 @@ func (d *Database) FindEmitterSequenceGap(prefix VAAID) (resp []uint64, firstSeq
 		}
 
 		// Find min/max (yay lack of Go generics)
-		first := false
+		// TODO: add tests
+		first := true
 		for k := range seqs {
 			if first {
 				firstSeq = k

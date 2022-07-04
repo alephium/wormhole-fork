@@ -21,7 +21,6 @@ import (
 )
 
 const HashLength = 32
-const transferPayloadId byte = 1
 const WormholeMessageEventIndex = 0
 
 func assume(cond bool) {
@@ -130,6 +129,7 @@ func Uint64ToBytes(value uint64) []byte {
 type WormholeMessage struct {
 	txId             string
 	senderId         Byte32
+	targetChainId    uint16
 	nonce            uint32
 	payload          []byte
 	Sequence         uint64
@@ -147,6 +147,7 @@ func (w *WormholeMessage) toMessagePublication(header *sdk.BlockHeaderEntry) *co
 		Sequence:         w.Sequence,
 		ConsistencyLevel: w.consistencyLevel,
 		EmitterChain:     vaa.ChainIDAlephium,
+		TargetChain:      vaa.ChainID(w.targetChainId),
 		EmitterAddress:   vaa.Address(w.senderId),
 		Payload:          w.payload,
 	}
@@ -247,6 +248,18 @@ func toUint8(field sdk.Val) (*uint8, error) {
 	return nil, errors.New("invalid uint8")
 }
 
+func toUint16(field sdk.Val) (*uint16, error) {
+	value, err := toU256(field)
+	if err != nil {
+		return nil, err
+	}
+	if value.Cmp(big.NewInt(math.MaxUint16)) < 0 {
+		v := uint16(value.Uint64())
+		return &v, nil
+	}
+	return nil, errors.New("invalid uint16")
+}
+
 func getConsistencyLevel(field sdk.Val, minConfirmations uint8) (*uint8, error) {
 	confirmation, err := toUint8(field)
 	if err != nil {
@@ -259,18 +272,23 @@ func getConsistencyLevel(field sdk.Val, minConfirmations uint8) (*uint8, error) 
 }
 
 func ToWormholeMessage(fields []sdk.Val, txId string) (*WormholeMessage, error) {
-	assume(len(fields) == 5)
+	assume(len(fields) == 6)
 	emitter, err := toByte32(fields[0])
 	if err != nil {
 		return nil, err
 	}
 
-	sequence, err := toUint64(fields[1])
+	targetChainId, err := toUint16(fields[1])
 	if err != nil {
 		return nil, err
 	}
 
-	nonceBytes, err := toByteVec(fields[2])
+	sequence, err := toUint64(fields[2])
+	if err != nil {
+		return nil, err
+	}
+
+	nonceBytes, err := toByteVec(fields[3])
 	if err != nil {
 		return nil, err
 	}
@@ -279,18 +297,19 @@ func ToWormholeMessage(fields []sdk.Val, txId string) (*WormholeMessage, error) 
 	}
 
 	nonce := binary.BigEndian.Uint32(nonceBytes)
-	payload, err := toByteVec(fields[3])
+	payload, err := toByteVec(fields[4])
 	if err != nil {
 		return nil, err
 	}
 
-	consistencyLevel, err := toUint8(fields[4])
+	consistencyLevel, err := toUint8(fields[5])
 	if err != nil {
 		return nil, err
 	}
 	return &WormholeMessage{
 		txId:             txId,
 		senderId:         *emitter,
+		targetChainId:    *targetChainId,
 		nonce:            nonce,
 		payload:          payload,
 		Sequence:         *sequence,

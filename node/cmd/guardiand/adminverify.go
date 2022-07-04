@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/vaa"
@@ -43,15 +44,19 @@ func runGovernanceVAAVerify(cmd *cobra.Command, args []string) {
 		var (
 			v *vaa.VAA
 		)
+		if message.TargetChainId > math.MaxUint16 {
+			panic(fmt.Sprintf("invalid target chain id: %d", message.TargetChainId))
+		}
+		targetChainId := vaa.ChainID(message.TargetChainId)
 		switch payload := message.Payload.(type) {
 		case *nodev1.GovernanceMessage_GuardianSet:
-			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_ContractUpgrade:
-			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeRegisterChain:
-			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
-			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}

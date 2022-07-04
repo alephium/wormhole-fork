@@ -2,9 +2,10 @@ package vaa
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCoreModule(t *testing.T) {
@@ -14,8 +15,7 @@ func TestCoreModule(t *testing.T) {
 
 func TestBodyContractUpgrade(t *testing.T) {
 	addr := Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
-	test := BodyContractUpgrade{ChainID: 1, NewContract: addr}
-	assert.Equal(t, test.ChainID, ChainID(1))
+	test := BodyContractUpgrade{NewContract: addr}
 	assert.Equal(t, test.NewContract, addr)
 }
 
@@ -41,16 +41,15 @@ func TestBodyTokenBridgeRegisterChain(t *testing.T) {
 func TestBodyTokenBridgeUpgradeContract(t *testing.T) {
 	module := "test"
 	addr := Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
-	test := BodyTokenBridgeUpgradeContract{Module: module, TargetChainID: 1, NewContract: addr}
+	test := BodyTokenBridgeUpgradeContract{Module: module, NewContract: addr}
 	assert.Equal(t, test.Module, module)
-	assert.Equal(t, test.TargetChainID, ChainID(1))
 	assert.Equal(t, test.NewContract, addr)
 }
 
 func TestBodyContractUpgradeSerialize(t *testing.T) {
 	addr := Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
-	bodyContractUpgrade := BodyContractUpgrade{ChainID: 1, NewContract: addr}
-	expected := "00000000000000000000000000000000000000000000000000000000436f72650100010000000000000000000000000000000000000000000000000000000000000004"
+	bodyContractUpgrade := BodyContractUpgrade{NewContract: addr}
+	expected := "00000000000000000000000000000000000000000000000000000000436f7265010000000000000000000000000000000000000000000000000000000000000004"
 	serializedBodyContractUpgrade := bodyContractUpgrade.Serialize()
 	assert.Equal(t, hex.EncodeToString(serializedBodyContractUpgrade), expected)
 }
@@ -78,8 +77,8 @@ func TestBodyTokenBridgeRegisterChainSerialize(t *testing.T) {
 func TestBodyTokenBridgeUpgradeContractSerialize(t *testing.T) {
 	module := "test"
 	addr := Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
-	bodyTokenBridgeUpgradeContract := BodyTokenBridgeUpgradeContract{Module: module, TargetChainID: 1, NewContract: addr}
-	expected := "00000000000000000000000000000000000000000000000000000000746573740200010000000000000000000000000000000000000000000000000000000000000004"
+	bodyTokenBridgeUpgradeContract := BodyTokenBridgeUpgradeContract{Module: module, NewContract: addr}
+	expected := "0000000000000000000000000000000000000000000000000000000074657374020000000000000000000000000000000000000000000000000000000000000004"
 	serializedBodyTokenBridgeUpgradeContract := bodyTokenBridgeUpgradeContract.Serialize()
 	assert.Equal(t, hex.EncodeToString(serializedBodyTokenBridgeUpgradeContract), expected)
 }

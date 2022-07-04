@@ -78,6 +78,7 @@ func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.Get
 	b, err := s.db.GetSignedVAABytes(db.VAAID{
 		EmitterChain:   vaa.ChainID(req.MessageId.EmitterChain.Number()),
 		EmitterAddress: addr,
+		TargetChain:    vaa.ChainID(req.MessageId.TargetChain.Number()),
 		Sequence:       req.MessageId.Sequence,
 	})
 

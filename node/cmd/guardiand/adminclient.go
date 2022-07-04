@@ -73,10 +73,10 @@ var AdminClientInjectGuardianSetUpdateCmd = &cobra.Command{
 }
 
 var AdminClientFindMissingMessagesCmd = &cobra.Command{
-	Use:   "find-missing-messages [CHAIN_ID] [EMITTER_ADDRESS_HEX]",
+	Use:   "find-missing-messages [EMITTER_CHAIN_ID] [EMITTER_ADDRESS_HEX] [TARGET_CHAIN_ID]",
 	Short: "Find sequence number gaps for the given chain ID and emitter address",
 	Run:   runFindMissingMessages,
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(3),
 }
 
 var DumpVAAByMessageID = &cobra.Command{
@@ -155,11 +155,16 @@ func runInjectGovernanceVAA(cmd *cobra.Command, args []string) {
 }
 
 func runFindMissingMessages(cmd *cobra.Command, args []string) {
-	chainID, err := strconv.Atoi(args[0])
+	emitterChainId, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.Fatalf("invalid chain ID: %v", err)
+		log.Fatalf("invalid emitter chain ID: %v", err)
 	}
 	emitterAddress := args[1]
+
+	targetChainId, err := strconv.Atoi(args[2])
+	if err != nil {
+		log.Fatalf("invalid target chain ID: %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
@@ -171,7 +176,8 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 	}
 
 	msg := nodev1.FindMissingMessagesRequest{
-		EmitterChain:   uint32(chainID),
+		EmitterChain:   uint32(emitterChainId),
+		TargetChain:    uint32(targetChainId),
 		EmitterAddress: emitterAddress,
 		RpcBackfill:    *shouldBackfill,
 		BackfillNodes:  common.PublicRPCEndpoints,
@@ -184,9 +190,6 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 	for _, id := range resp.MissingMessages {
 		fmt.Println(id)
 	}
-
-	log.Printf("processed %s sequences %d to %d (%d gaps)",
-		emitterAddress, resp.FirstSequence, resp.LastSequence, len(resp.MissingMessages))
 }
 
 func runGetDestroyContractsGovernanceMessage(cmd *cobra.Command, args []string) {
@@ -246,15 +249,19 @@ func runGetDestroyContractsGovernanceMessage(cmd *cobra.Command, args []string) 
 func runDumpVAAByMessageID(cmd *cobra.Command, args []string) {
 	// Parse the {chain,emitter,seq} string.
 	parts := strings.Split(args[0], "/")
-	if len(parts) != 3 {
+	if len(parts) != 4 {
 		log.Fatalf("invalid message ID: %s", args[0])
 	}
-	chainID, err := strconv.ParseUint(parts[0], 10, 32)
+	emitterChainId, err := strconv.ParseUint(parts[0], 10, 32)
 	if err != nil {
 		log.Fatalf("invalid chain ID: %v", err)
 	}
 	emitterAddress := parts[1]
-	seq, err := strconv.ParseUint(parts[2], 10, 64)
+	targetChainId, err := strconv.ParseUint(parts[2], 10, 32)
+	if err != nil {
+		log.Fatalf("invalid chain ID: %v", err)
+	}
+	seq, err := strconv.ParseUint(parts[3], 10, 64)
 	if err != nil {
 		log.Fatalf("invalid sequence number: %v", err)
 	}
@@ -270,8 +277,9 @@ func runDumpVAAByMessageID(cmd *cobra.Command, args []string) {
 
 	msg := publicrpcv1.GetSignedVAARequest{
 		MessageId: &publicrpcv1.MessageID{
-			EmitterChain:   publicrpcv1.ChainID(chainID),
+			EmitterChain:   publicrpcv1.ChainID(emitterChainId),
 			EmitterAddress: emitterAddress,
+			TargetChain:    publicrpcv1.ChainID(targetChainId),
 			Sequence:       seq,
 		},
 	}

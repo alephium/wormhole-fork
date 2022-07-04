@@ -16,7 +16,6 @@ var TokenBridgeModule = []byte{00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0
 type (
 	// BodyContractUpgrade is a governance message to perform a contract upgrade of the core module
 	BodyContractUpgrade struct {
-		ChainID     ChainID
 		NewContract Address
 	}
 
@@ -35,9 +34,8 @@ type (
 
 	// BodyTokenBridgeUpgradeContract is a governance message to upgrade the token bridge.
 	BodyTokenBridgeUpgradeContract struct {
-		Module        string
-		TargetChainID ChainID
-		NewContract   Address
+		Module      string
+		NewContract Address
 	}
 )
 
@@ -48,8 +46,6 @@ func (b BodyContractUpgrade) Serialize() []byte {
 	buf.Write(CoreModule)
 	// Action
 	MustWrite(buf, binary.BigEndian, uint8(1))
-	// ChainID
-	MustWrite(buf, binary.BigEndian, uint16(b.ChainID))
 
 	buf.Write(b.NewContract[:])
 
@@ -113,8 +109,6 @@ func (r BodyTokenBridgeUpgradeContract) Serialize() []byte {
 	buf.Write([]byte(r.Module))
 	// Write action ID
 	MustWrite(buf, binary.BigEndian, uint8(2))
-	// Write target chain
-	MustWrite(buf, binary.BigEndian, r.TargetChainID)
 	// Write emitter address of chain to be registered
 	buf.Write(r.NewContract[:])
 

@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/certusone/wormhole/node/pkg/vaa"
 	"time"
+
+	"github.com/certusone/wormhole/node/pkg/vaa"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -15,6 +16,7 @@ type MessagePublication struct {
 	Sequence         uint64
 	ConsistencyLevel uint8
 	EmitterChain     vaa.ChainID
+	TargetChain      vaa.ChainID
 	EmitterAddress   vaa.Address
 	Payload          []byte
 }
