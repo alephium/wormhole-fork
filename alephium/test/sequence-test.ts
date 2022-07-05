@@ -1,4 +1,5 @@
 import { NodeProvider, subContractId } from '@alephium/web3'
+import { toContractAddress } from '../lib/utils'
 import { createSequence, createUndoneSequence } from './fixtures/sequence-fixture'
 import { defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
@@ -17,6 +18,7 @@ describe("test sequence", () => {
                 testArgs: { 'seq': seq },
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
             })
+            expect(testResult.returns).toEqual([true])
             expect(testResult.contracts.length).toEqual(1)
             expect(testResult.contracts[0].fields['next']).toEqual(0)
             const next1 = BigInt(1) << BigInt(seq)
@@ -32,6 +34,7 @@ describe("test sequence", () => {
                 testArgs: { 'seq': seq },
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
             })
+            expect(testResult.returns).toEqual([true])
             expect(testResult.contracts.length).toEqual(1)
             expect(testResult.contracts[0].fields['next']).toEqual(0)
             expect(testResult.contracts[0].fields['next1']).toEqual(0)
@@ -50,6 +53,7 @@ describe("test sequence", () => {
             testArgs: { 'seq': 1025 },
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
+        expect(testResult.returns).toEqual([true])
         expect(testResult.contracts.length).toEqual(1)
         expect(testResult.contracts[0].fields['next']).toEqual(512 + 256)
         expect(testResult.contracts[0].fields['next1']).toEqual(allExecuted)
@@ -57,18 +61,33 @@ describe("test sequence", () => {
         expect(testResult.events.length).toEqual(0)
     })
 
-    it('should failed if sequence too large', async () => {
-        const sequenceInfo = await createSequence(provider, 0, allExecuted, 0n, refundAddress)
+    it('should check sequence failed and create undone sequence subcontract', async () => {
+        const sequenceInfo = await createSequence(provider, 0, 1n, 1n, refundAddress)
         const sequence = sequenceInfo.contract
-        await expectAssertionFailed(async() => {
-            await sequence.testPrivateMethod(provider, 'checkSequence', {
-                initialFields: sequenceInfo.selfState.fields,
-                address: sequenceInfo.address,
-                testArgs: { 'seq': 1024 },
-                existingContracts: sequenceInfo.dependencies,
-                inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
-            })
+        const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+            initialFields: sequenceInfo.selfState.fields,
+            initialAsset: {alphAmount: oneAlph * 2n},
+            address: sequenceInfo.address,
+            testArgs: { 'seq': 768 },
+            inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}],
+            existingContracts: sequenceInfo.dependencies
         })
+        expect(testResult.returns).toEqual([false])
+        const sequenceContractState = testResult.contracts[2]
+        expect(sequenceContractState.fields['next']).toEqual(256)
+        expect(sequenceContractState.fields['next1']).toEqual(1)
+        expect(sequenceContractState.fields['next2']).toEqual(0)
+
+        const undoneSequenceContractState = testResult.contracts[0]
+        expect(undoneSequenceContractState.fields['begin']).toEqual(0)
+        expect(undoneSequenceContractState.fields['sequences']).toEqual(1)
+
+        const sequenceOutput = testResult.txOutputs[1]
+        expect(sequenceOutput.alphAmount).toEqual(oneAlph)
+        const undoneSequenceOutput = testResult.txOutputs[0]
+        expect(undoneSequenceOutput.address).toEqual(
+            toContractAddress(subContractId(sequenceInfo.contractId, '0000000000000000'))
+        )
     })
 
     it("should failed when executed repeatedly", async () => {
@@ -107,7 +126,7 @@ describe("test sequence", () => {
         }
     }, 120000)
 
-    it('should create undone sequence subcontract', async () => {
+    it('should check sequence succeed and create undone sequence subcontract', async () => {
         const next = 256
         const next1 = (BigInt(0xff) << 248n)
         const sequenceInfo = await createSequence(provider, next, next1, 0n, refundAddress)
@@ -120,6 +139,7 @@ describe("test sequence", () => {
             existingContracts: sequenceInfo.dependencies,
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
+        expect(testResult.returns).toEqual([true])
         const subContractOutput = testResult.contracts[0]
         expect(subContractOutput.fields['begin']).toEqual(256)
         expect(subContractOutput.fields['sequences']).toEqual(next1)
@@ -149,6 +169,7 @@ describe("test sequence", () => {
                 existingContracts: Array.prototype.concat(sequenceInfo.dependencies, undoneSequenceInfo.states()),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
             })
+            expect(testResult.returns).toEqual([true])
             const undoneSequenceContract = testResult.contracts[1]
             expect(undoneSequenceContract.fields['sequences']).toEqual(sequences + (1n << BigInt(seq)))
             expect(testResult.contracts[2].fields['next']).toEqual(512)
@@ -198,6 +219,7 @@ describe("test sequence", () => {
             existingContracts: Array.prototype.concat(sequenceInfo.dependencies, undoneSequenceInfo.states()),
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
+        expect(testResult.returns).toEqual([true])
         expect(testResult.contracts.map(c => c.address).includes(undoneSequenceInfo.address)).toEqual(false)
         expect(testResult.events.length).toEqual(1)
         const destroyEvent = testResult.events[0]

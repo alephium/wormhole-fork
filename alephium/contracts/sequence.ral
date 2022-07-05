@@ -30,11 +30,16 @@ TxContract Sequence(
         next2 = 0
     }
 
-    fn checkSequence(seq: U256) -> () {
+    fn checkSequence(seq: U256) -> Bool {
         if (seq < next) {
             let undoneSequenceId = subContractId!(u256To8Byte!(seq / 256))
             UndoneSequence(undoneSequenceId).check(seq)
-            return
+            return true
+        }
+
+        if (seq >= (next + 768)) {
+            compact()
+            return false
         }
 
         if (seq >= (next + 512)) {
@@ -48,6 +53,7 @@ TxContract Sequence(
         } else {
             next2 = setExecuted(offset - 256, next2)
         }
+        return true
     }
 
     @using(assetsInContract = true, preapprovedAssets = true)

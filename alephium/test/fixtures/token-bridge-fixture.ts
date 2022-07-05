@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, ContractState, subContractId } from '@alephium/web3'
+import { NodeProvider, Contract, ContractState, subContractId, Asset } from '@alephium/web3'
 import { createGovernance, governanceChainId } from './governance-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, toContractAddress } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
@@ -287,7 +287,8 @@ export async function createTokenBridgeForChain(
     tokenBridge: TokenBridgeInfo,
     remoteChainId: number,
     remoteTokenBridgeId: string,
-    address?: string
+    address?: string,
+    initAlphAmount?: bigint
 ): Promise<TokenBridgeForChainInfo> {
     const contractAddress = typeof address === 'undefined' ? tokenBridgeForChainAddress(tokenBridge.contractId, remoteChainId) : address
     const undoneSequenceTemplate = await createUndoneSequence(
@@ -309,7 +310,8 @@ export async function createTokenBridgeForChain(
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
     }
-    const state = tokenBridgeForChainContract.toState(initFields, initAsset, contractAddress)
+    const contractAsset: Asset = typeof initAlphAmount === 'undefined' ? initAsset : {alphAmount: initAlphAmount}
+    const state = tokenBridgeForChainContract.toState(initFields, contractAsset, contractAddress)
     const deps = Array.prototype.concat(
         tokenBridge.states(),
         tokenWrapper.states(),

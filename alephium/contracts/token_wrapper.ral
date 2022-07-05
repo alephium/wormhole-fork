@@ -80,9 +80,20 @@ TxContract TokenWrapper(
     @using(preapprovedAssets = true, assetsInContract = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        let (msgTokenId, msgTokenChainId, toAddress, amount, arbiterFee) = tokenBridgeForChain.parseTransfer(vaa)
-        assert!(msgTokenId == tokenContractId)
-        assert!(msgTokenChainId == getTokenChainId())
+        let (okey, payload) = tokenBridgeForChain.checkTransfer(vaa)
+        if (!okey) {
+            return
+        }
+
+        assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let originalTokenId = byteVecSlice!(payload, 33, 65)
+        let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let toAddress = byteVecSlice!(payload, 67, 99)
+        let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
+        assert!(size!(payload) == 131)
+        assert!(originalTokenId == tokenContractId)
+        assert!(tokenChainId == getTokenChainId())
 
         let totalAmount = deNormalizeAmount(amount, decimals_)
         let transferFee = deNormalizeAmount(arbiterFee, decimals_)

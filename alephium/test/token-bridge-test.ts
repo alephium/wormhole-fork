@@ -1,4 +1,4 @@
-import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState } from '@alephium/web3'
+import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, addressFromContractId } from '@alephium/web3'
 import { nonce, toHex, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, DestroyUndoneSequenceContracts, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
@@ -519,6 +519,65 @@ describe("test token bridge", () => {
             id: toContractId(tokenWrapperInfo.address),
             amount: initTokenAmount - transferAmount
         }])
+    })
+
+    it('should failed to complete transfer and create undone sequence contracts', async () => {
+        const remoteChainId = CHAIN_ID_ALEPHIUM + 1
+        const remoteTokenBridgeId = toHex(randomBytes(32))
+        const tokenBridgeInfo = await createTokenBridge(provider)
+        const initAlphAmount = oneAlph * 2n
+        const tokenBridgeForChainInfo = await createTokenBridgeForChain(
+            provider, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId, undefined, initAlphAmount
+        )
+        const testTokenInfo = await createTestToken(provider, decimals, symbol, name)
+        const tokenWrapperInfo = await createWrapper(
+            testTokenInfo.contractId, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
+        )
+        const toAddress = randomAssetAddress()
+        const transferAmount = oneAlph
+        const arbiterFee = messageFee
+        const transfer = new Transfer(
+            transferAmount, toContractId(testTokenInfo.address), CHAIN_ID_ALEPHIUM, toRecipientId(toAddress), arbiterFee
+        )
+        const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 768)
+        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+        const initTokenAmount = transferAmount * 2n
+        const initAsset: Asset = {
+            alphAmount: oneAlph,
+            tokens: [{
+                id: toContractId(testTokenInfo.address),
+                amount: initTokenAmount
+            }]
+        }
+        const tokenWrapper = tokenWrapperInfo.contract
+        const testResult = await tokenWrapper.testPublicMethod(provider, 'completeTransfer', {
+            address: tokenWrapperInfo.address,
+            initialFields: tokenWrapperInfo.selfState.fields,
+            testArgs: {
+                'vaa': toHex(vaa.encode()),
+                'caller': payer
+            },
+            initialAsset: initAsset,
+            inputAssets: [inputAsset],
+            existingContracts: tokenWrapperInfo.dependencies.concat(testTokenInfo.states())
+        })
+
+        const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === tokenBridgeForChainInfo.contractId)[0]
+        expect(tokenBridgeForChainState.fields['next']).toEqual(256)
+        expect(tokenBridgeForChainState.fields['next1']).toEqual(0)
+        expect(tokenBridgeForChainState.fields['next2']).toEqual(0)
+
+        // the locked assets have not changed
+        const tokenWrapperOutput = testResult.txOutputs.filter(c => c.address === tokenWrapperInfo.address)[0]
+        expect(tokenWrapperOutput.alphAmount).toEqual(initAsset.alphAmount)
+        expect(tokenWrapperOutput.tokens).toEqual(initAsset.tokens)
+
+        const undoneSequenceContractId = subContractId(tokenBridgeForChainInfo.contractId, '0000000000000000')
+        const undoneSequenceState = testResult.contracts.filter(c => c.contractId === undoneSequenceContractId)[0]
+        expect(undoneSequenceState.fields['begin']).toEqual(0)
+        expect(undoneSequenceState.fields['sequences']).toEqual(0)
+
+        checkTxCallerBalance(testResult.txOutputs[3], 0n)
     })
 
     it('should destroy undone sequence contracts', async () => {
