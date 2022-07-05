@@ -14,6 +14,8 @@ import {
   redeemOnAlph,
   CHAIN_ID_ALEPHIUM,
   uint8ArrayToHex,
+  getTokenBridgeForChainId,
+  getIsTransferCompletedAlph
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -40,6 +42,7 @@ import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -244,12 +247,25 @@ async function alephium(
     const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, redeemInfo.remoteChainId)
+    const isTransferCompleted = await getIsTransferCompletedAlph(
+      signer.nodeProvider,
+      tokenBridgeForChainId,
+      signer.account.group,
+      signedVAA
+    )
     dispatch(
       setRedeemTx({ id: result.txId, block: blockHeader.height })
     );
-    enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
-    });
+    if (isTransferCompleted) {
+      enqueueSnackbar(null, {
+        content: <Alert severity="success">Transaction confirmed</Alert>,
+      });
+    } else {
+      enqueueSnackbar(null, {
+        content: <Alert severity="error">Transfer failed, please try again later</Alert>,
+      });
+    }
   } catch (e) {
     enqueueSnackbar(null, {
       content: <Alert severity="error">{parseError(e)}</Alert>,

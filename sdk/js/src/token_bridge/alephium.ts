@@ -13,7 +13,7 @@ export function destroyUndoneSequenceContracts(
   })
 }
 
-function zeroPad(value: string, byteLength: number): string {
+export function zeroPad(value: string, byteLength: number): string {
   const expectedLength = 2 * byteLength
   if (value.length < expectedLength) {
       const prefix = Array(expectedLength - value.length).fill('0').join("")
