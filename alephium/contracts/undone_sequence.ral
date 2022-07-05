@@ -5,7 +5,7 @@ TxContract UndoneSequence(
     refundAddress: Address
 ) {
     @using(assetsInContract = true)
-    pub fn check(seq: U256) -> () {
+    pub fn checkUndone(seq: U256) -> () {
         assert!(callerContractId!() == parentId)
         assert!(seq >= begin)
         let offset = seq - begin

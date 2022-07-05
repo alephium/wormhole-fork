@@ -8,44 +8,41 @@ TxContract TokenWrapper(
     tokenBridgeForChainId: ByteVec,
     localChainId: U256,
     remoteChainId: U256,
-    tokenContractId: ByteVec,
+    bridgeTokenId: ByteVec, // either local token id or remote token id
     isLocalToken: Bool,
     symbol_: ByteVec,
     name_: ByteVec,
     decimals_: U256
-) extends Math() implements ERC20Token {
+) extends Math() {
     pub fn name() -> ByteVec {
+        assert!(!isLocalToken) // unknown for local token
         return name_
     }
 
     pub fn symbol() -> ByteVec {
+        assert!(!isLocalToken) // unknown for local token
         return symbol_
     }
 
     pub fn decimals() -> U256 {
+        assert!(!isLocalToken) // unknown for local token
         return decimals_
-    }
-
-    pub fn totalSupply() -> U256 {
-        if (isLocalToken) {
-            let token = ERC20Token(tokenContractId)
-            return token.totalSupply()
-        }
-        return 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     }
 
     fn getTokenId() -> ByteVec {
         if (isLocalToken) {
-            return tokenContractId
+            return bridgeTokenId
+        } else {
+            return selfContractId!()
         }
-        return selfContractId!()
     }
 
     fn getTokenChainId() -> U256 {
         if (isLocalToken) {
             return localChainId
+        } else {
+            return remoteChainId
         }
-        return remoteChainId
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
@@ -61,8 +58,8 @@ TxContract TokenWrapper(
         assert!(size!(toAddress) == 32)
         assert!(size!(nonce) == 4)
 
-        let normalizedAmount = normalizeAmount(amount, decimals_)
-        let normalizedFee = normalizeAmount(arbiterFee, decimals_)
+        let normalizedAmount = if (isLocalToken) amount else normalizeAmount(amount, decimals_)
+        let normalizedFee = if (isLocalToken) arbiterFee else normalizeAmount(arbiterFee, decimals_)
         assert!(normalizedFee < normalizedAmount)
 
         let transferAmount = deNormalizeAmount(normalizedAmount, decimals_)
@@ -71,7 +68,7 @@ TxContract TokenWrapper(
         let tokenChainId = getTokenChainId()
         return #01 ++ // payloadId
             u256To32Byte!(normalizedAmount) ++
-            tokenContractId ++
+            bridgeTokenId ++
             u256To2Byte!(tokenChainId) ++
             toAddress ++
             u256To32Byte!(normalizedFee)
@@ -80,8 +77,8 @@ TxContract TokenWrapper(
     @using(preapprovedAssets = true, assetsInContract = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        let (okey, payload) = tokenBridgeForChain.checkTransfer(vaa)
-        if (!okey) {
+        let (sequenceReady, payload) = tokenBridgeForChain.checkTransfer(vaa)
+        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
             return
         }
 
@@ -92,7 +89,7 @@ TxContract TokenWrapper(
         let toAddress = byteVecSlice!(payload, 67, 99)
         let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
         assert!(size!(payload) == 131)
-        assert!(originalTokenId == tokenContractId)
+        assert!(originalTokenId == bridgeTokenId)
         assert!(tokenChainId == getTokenChainId())
 
         let totalAmount = deNormalizeAmount(amount, decimals_)

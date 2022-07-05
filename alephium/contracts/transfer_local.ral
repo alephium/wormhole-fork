@@ -13,12 +13,13 @@ TxScript Main(
     consistencyLevel: U256
 ) {
     let tokenBridge = TokenBridge(tokenBridgeId)
-    tokenBridge.transferLocalToken{
+    tokenBridge.transferToken{
         fromAddress -> messageFee,
-        localTokenId: tokenAmount
+            localTokenId: tokenAmount
     }(
         fromAddress,
         localTokenId,
+        true, // isLocalToken
         toChainId,
         toAddress,
         tokenAmount,

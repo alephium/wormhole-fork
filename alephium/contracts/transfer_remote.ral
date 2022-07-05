@@ -4,7 +4,7 @@ TxScript Main(
     tokenBridgeId: ByteVec,
     fromAddress: Address,
     tokenWrapperId: ByteVec,
-    wrappedTokenId: ByteVec,
+    remoteTokenId: ByteVec,
     toChainId: U256,
     toAddress: ByteVec,
     tokenAmount: U256,
@@ -14,13 +14,13 @@ TxScript Main(
     consistencyLevel: U256
 ) {
     let tokenBridge = TokenBridge(tokenBridgeId)
-    tokenBridge.transferRemoteToken{
+    tokenBridge.transferToken{
         fromAddress -> messageFee,
-        tokenWrapperId: tokenAmount
+            tokenWrapperId: tokenAmount
     }(
         fromAddress,
-        tokenWrapperId,
-        wrappedTokenId,
+        remoteTokenId,
+        false, // isLocalToken
         toChainId,
         toAddress,
         tokenAmount,

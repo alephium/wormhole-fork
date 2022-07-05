@@ -26,6 +26,7 @@ TxContract AttestTokenHandler(
     assert!(byteVecSlice!(payload, 0, 1) == #02) // payload id
     let tokenId = byteVecSlice!(payload, 1, 33)
     let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+    assert!(tokenChainId == remoteChainId)
     let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
     let symbol = byteVecSlice!(payload, 36, 68)
     let name = byteVecSlice!(payload, 68, 100)
