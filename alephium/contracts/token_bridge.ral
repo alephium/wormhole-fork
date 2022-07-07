@@ -1,7 +1,6 @@
 import "governance.ral"
 import "sequence.ral"
 import "token_wrapper.ral"
-import "token_interface.ral"
 import "token_bridge_for_chain.ral"
 
 TxContract TokenBridge(
@@ -103,7 +102,8 @@ TxContract TokenBridge(
     pub fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(tokenId) == 32)
         assert!(size!(nonce) == 4)
-        assert!(tokenRemaining!(tokenId) != 0) // make sure that the token exists
+        // FIXME: tokenExists!(tokenId)?
+        // assert!(tokenRemaining!(tokenId) != 0) // make sure that the token exists
 
         // We don't set decimals, symbol and name for local token due to sharding
         let payload = #02 ++ // payloadId

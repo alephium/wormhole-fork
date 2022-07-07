@@ -119,7 +119,7 @@ export class Wormhole {
             'tokenBridgeForChainId': '',
             'localChainId': 0,
             'remoteChainId': 0,
-            'tokenContractId': '',
+            'bridgeTokenId': '',
             'isLocalToken': true,
             'symbol_': '',
             'name_': '',

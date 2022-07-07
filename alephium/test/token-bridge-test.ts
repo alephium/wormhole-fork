@@ -1,8 +1,8 @@
-import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, addressFromContractId } from '@alephium/web3'
+import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState } from '@alephium/web3'
 import { nonce, toHex, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, DestroyUndoneSequenceContracts, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody, chainIdToBytes, doubleHash, dustAmount, toContractAddress, defaultGasFee, randomContractId, ContractInfo, randomContractAddress } from './fixtures/wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toContractId, toRecipientId, u256Max, VAABody, doubleHash, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
 import { createUndoneSequence } from './fixtures/sequence-fixture'
@@ -32,7 +32,7 @@ describe("test token bridge", () => {
     it('should attest token', async () => {
         const tokenBridgeInfo = await createTokenBridge(provider)
         const tokenBridge = tokenBridgeInfo.contract
-        const testToken = await createTestToken(provider, decimals, symbol, name)
+        const testToken = await createTestToken(provider)
         const nonceHex = nonce()
         const testResult = await tokenBridge.testPublicMethod(provider, 'attestToken', {
             address: tokenBridgeInfo.address,
@@ -50,12 +50,13 @@ describe("test token bridge", () => {
         expect(governanceOutput.address).toEqual(tokenBridgeInfo.governance.address)
         expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
 
+        const byte32Zero = '0'.repeat(64)
         const message = new AttestToken(
             testToken.contractId,
             CHAIN_ID_ALEPHIUM,
-            testToken.selfState.fields['symbol_'] as string,
-            testToken.selfState.fields['name_'] as string,
-            testToken.selfState.fields['decimals_'] as number,
+            byte32Zero,
+            byte32Zero,
+            0
         )
         const events = testResult.events
         expect(events.length).toEqual(1)
@@ -126,13 +127,13 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             provider, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
-        const testToken = await createTestToken(provider, decimals, symbol, name)
+        const testToken = await createTestToken(provider)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
         const testResult = await tokenBridgeForChain.testPublicMethod(provider, 'createWrapperForLocalToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,
             testArgs: {
-                'tokenId': testToken.contractId,
+                'localTokenId': testToken.contractId,
                 'payer': payer,
                 'createContractAlphAmount': minimalAlphInContract
             },
@@ -158,7 +159,7 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             provider, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
-        const testTokenInfo = await createTestToken(provider, decimals, symbol, name)
+        const testTokenInfo = await createTestToken(provider)
         const tokenWrapperInfo = await createWrapper(
             testTokenInfo.contractId, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
@@ -178,12 +179,13 @@ describe("test token bridge", () => {
             }
         }
         const tokenBridge = tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod(provider, 'transferLocalToken', {
+        const testResult = await tokenBridge.testPublicMethod(provider, 'transferToken', {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: {
                 'fromAddress': fromAddress,
-                'localTokenId': testTokenInfo.contractId,
+                'bridgeTokenId': testTokenInfo.contractId,
+                'isLocalToken': true,
                 'toChainId': remoteChainId,
                 'toAddress': toAddress,
                 'tokenAmount': transferAmount,
@@ -234,7 +236,7 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             provider, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
-        const testTokenInfo = await createTestToken(provider, decimals, symbol, name)
+        const testTokenInfo = await createTestToken(provider)
         const tokenWrapperInfo = await createWrapper(
             testTokenInfo.contractId, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
         )
@@ -359,13 +361,13 @@ describe("test token bridge", () => {
             }
         }
         const tokenBridge = tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod(provider, 'transferRemoteToken', {
+        const testResult = await tokenBridge.testPublicMethod(provider, 'transferToken', {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: {
                 'fromAddress': fromAddress,
-                'tokenWrapperId': tokenWrapperInfo.contractId,
-                'wrappedTokenId': wrappedTokenId,
+                'bridgeTokenId': wrappedTokenId,
+                'isLocalToken': false,
                 'toChainId': remoteChainId,
                 'toAddress': toAddress,
                 'tokenAmount': transferAmount,
@@ -410,7 +412,7 @@ describe("test token bridge", () => {
         })
     })
 
-    it('should transfer remote token failed', async () => {
+    it('should transfer remote token failed because of invalid token wrapper id', async () => {
         const remoteChainId = CHAIN_ID_ALEPHIUM + 1
         const tokenBridgeInfo = await createTokenBridge(provider)
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
@@ -431,20 +433,20 @@ describe("test token bridge", () => {
             asset: {
                 alphAmount: oneAlph * 4n,
                 tokens: [{
-                    id: toContractId(tokenWrapperInfo.address),
+                    id: tokenWrapperInfo.contractId,
                     amount: transferAmount * 2n
                 }]
             }
         }
         const tokenBridge = tokenBridgeInfo.contract
-        await expectAssertionFailed(async() => {
-            await tokenBridge.testPublicMethod(provider, 'transferRemoteToken', {
+        await expectNotEnoughBalance(async() => {
+            await tokenBridge.testPublicMethod(provider, 'transferToken', {
                 address: tokenBridgeInfo.address,
                 initialFields: tokenBridgeInfo.selfState.fields,
                 testArgs: {
                     'fromAddress': fromAddress,
-                    'tokenWrapperId': tokenWrapperInfo.contractId,
-                    'wrappedTokenId': wrappedTokenId,
+                    'bridgeTokenId': wrappedTokenId,
+                    'isLocalToken': false,
                     'toChainId': remoteChainId,
                     'toAddress': toAddress,
                     'tokenAmount': transferAmount,
@@ -529,7 +531,7 @@ describe("test token bridge", () => {
         const tokenBridgeForChainInfo = await createTokenBridgeForChain(
             provider, tokenBridgeInfo, remoteChainId, remoteTokenBridgeId, undefined, initAlphAmount
         )
-        const testTokenInfo = await createTestToken(provider, decimals, symbol, name)
+        const testTokenInfo = await createTestToken(provider)
         const tokenWrapperInfo = await createWrapper(
             testTokenInfo.contractId, true, decimals, symbol, name, tokenBridgeInfo, tokenBridgeForChainInfo
         )

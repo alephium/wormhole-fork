@@ -1,6 +1,5 @@
 import "token_bridge.ral"
 import "token_bridge_for_chain.ral"
-import "token_interface.ral"
 import "math.ral"
 
 TxContract TokenWrapper(
@@ -98,7 +97,9 @@ TxContract TokenWrapper(
         let transferAmount = totalAmount - transferFee
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
-        transferAlph!(caller, recipient, dustAmount!())
+        if (caller != recipient) {
+            transferAlph!(caller, recipient, dustAmount!())
+        }
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (transferFee > 0) {
             transferTokenFromSelf!(caller, tokenId, transferFee)

@@ -1,5 +1,4 @@
 import "governance.ral"
-import "token_interface.ral"
 import "math.ral"
 import "sequence.ral"
 import "undone_sequence.ral"
@@ -20,7 +19,8 @@ TxContract TokenBridgeForChain(
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress) {
     @using(preapprovedAssets = true)
     pub fn createWrapperForLocalToken(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        assert!(tokenRemaining!(localTokenId) != 0) // make sure that the token exists
+        // FIXME: tokenExists!(tokenId)?
+        // assert!(tokenRemaining!(localTokenId) != 0) // make sure that the token exists
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),

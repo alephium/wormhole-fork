@@ -1,30 +1,7 @@
-import "token_interface.ral"
-
-TxContract TestToken(
-    symbol_: ByteVec, // length is 32
-    name_: ByteVec,   // length is 32
-    decimals_: U256,
-    totalSupply_: U256
-) implements ERC20Token {
-    pub fn name() -> ByteVec {
-        return name_
-    }
-
-    pub fn symbol() -> ByteVec {
-        return symbol_
-    }
-
-    pub fn decimals() -> U256 {
-        return decimals_
-    }
-
-    pub fn totalSupply() -> U256 {
-        return totalSupply_
-    }
-
+TxContract TestToken() {
     @using(preapprovedAssets = true, assetsInContract = true)
     pub fn buy(from: Address, amount: U256) -> () {
-        let tokenAmount = amount
+        let tokenAmount = amount * 1000000
         transferAlphToSelf!(from, amount)
         transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)
     }
