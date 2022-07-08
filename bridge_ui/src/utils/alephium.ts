@@ -11,7 +11,7 @@ import {
     CHAIN_ID_ALEPHIUM,
     WormholeWrappedInfo,
     getTokenBridgeForChainId,
-    parseTargetChainFromLogAlph
+    parseTargetChainFromLogAlph,
 } from '@certusone/wormhole-sdk';
 import { NodeProvider, node, subContractId } from '@alephium/web3';
 import WalletConnectProvider from "@alephium/walletconnect-provider";
@@ -134,10 +134,8 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
         const decimals = parseInt((state.fields[8] as node.ValU256).value)
         return new TokenInfo(decimals, symbol, name)
     } else {
-        const symbol = (state.fields[0] as node.ValByteVec).value
-        const name = (state.fields[1] as node.ValByteVec).value
-        const decimals = parseInt((state.fields[2] as node.ValU256).value)
-        return new TokenInfo(decimals, symbol, name)
+        // TODO: get symbol and name from configs
+        return new TokenInfo(0, 'token', 'token')
     }
 }
 
