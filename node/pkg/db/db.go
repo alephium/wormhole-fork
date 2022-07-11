@@ -170,8 +170,7 @@ func (d *Database) FindEmitterSequenceGap(prefix VAAID) (resp []uint64, firstSeq
 		}
 
 		// Find min/max (yay lack of Go generics)
-		// TODO: add tests
-		first := true
+		first := false
 		for k := range seqs {
 			if first {
 				firstSeq = k
