@@ -1,9 +1,9 @@
 import Web3  from 'web3'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
-import { nonce, toHex, zeroPad } from '../../lib/utils'
+import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { NodeProvider, Contract, ContractState, Asset } from '@alephium/web3'
+import { NodeProvider, Contract, ContractState, Asset, contractIdFromAddress, binToHex } from '@alephium/web3'
 import * as blake from 'blakejs'
 
 export const web3 = new Web3()
@@ -100,7 +100,7 @@ export class GuardianSet {
             .sort((a, b) => a[0] - b[0])
             .slice(0, size)
             .sort((a, b) => a[1] - b[1])
-        const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + toHex(body.encode())))
+        const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + binToHex(body.encode())))
         const signatures = keys.map(element => {
             const keyIndex = element[1]
             const ec = new elliptic.ec('secp256k1')
@@ -228,11 +228,11 @@ export function randomAssetAddress(): string {
 
 export function toRecipientId(address: string): string {
     const bytes = base58.decode(address)
-    return toHex(bytes.slice(1))
+    return binToHex(bytes.slice(1))
 }
 
 export function randomContractId(): string {
-    return toContractId(randomContractAddress())
+    return binToHex(contractIdFromAddress(randomContractAddress()))
 }
 
 export function randomContractAddress(): string {
@@ -266,20 +266,6 @@ export async function expectAssertionFailed<T>(func: () => Promise<T>) {
 
 export async function expectOneOfError<T>(func: () => Promise<T>, errors: string[]) {
     await expectFailed(func, errors)
-}
-
-export function toContractId(address: string): string {
-    const bytes = base58.decode(address)
-    return toHex(bytes.slice(1))
-}
-
-export function toContractAddress(contractId: string): string {
-    if (contractId.length != 64) {
-        throw Error("invalid contract id " + contractId)
-    }
-    const prefix = Buffer.from([0x03])
-    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
-    return base58.encode(bytes)
 }
 
 export function loadContract(code: string): Contract {

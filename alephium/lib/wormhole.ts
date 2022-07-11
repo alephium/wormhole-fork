@@ -1,8 +1,8 @@
-import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields } from '@alephium/web3'
-import { toContractAddress, waitTxConfirmed, zeroPad } from './utils'
+import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields, addressFromContractId } from '@alephium/web3'
+import { waitTxConfirmed, zeroPad } from './utils'
 
 const Byte32Zero = "0".repeat(64)
-const DummyRefundAddress = toContractAddress(Byte32Zero)
+const DummyRefundAddress = addressFromContractId(Byte32Zero)
 
 export interface DeployResult {
     fromGroup: number

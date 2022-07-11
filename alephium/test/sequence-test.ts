@@ -1,5 +1,4 @@
-import { NodeProvider, subContractId } from '@alephium/web3'
-import { toContractAddress } from '../lib/utils'
+import { addressFromContractId, NodeProvider, subContractId } from '@alephium/web3'
 import { createSequence, createUndoneSequence } from './fixtures/sequence-fixture'
 import { defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
@@ -86,7 +85,7 @@ describe("test sequence", () => {
         expect(sequenceOutput.alphAmount).toEqual(oneAlph)
         const undoneSequenceOutput = testResult.txOutputs[0]
         expect(undoneSequenceOutput.address).toEqual(
-            toContractAddress(subContractId(sequenceInfo.contractId, '0000000000000000'))
+            addressFromContractId(subContractId(sequenceInfo.contractId, '0000000000000000'))
         )
     })
 

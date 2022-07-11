@@ -1,6 +1,6 @@
-import { NodeProvider, Contract, Number256 } from '@alephium/web3'
+import { NodeProvider, Contract, Number256, addressFromContractId } from '@alephium/web3'
 import { createUndoneSequence } from './fixtures/sequence-fixture'
-import { expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId, toContractAddress } from './fixtures/wormhole-fixture'
+import { expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test undone sequence", () => {
     const provider = new NodeProvider('http://127.0.0.1:22973')
@@ -16,7 +16,7 @@ describe("test undone sequence", () => {
             const undoneSequenceTest = await Contract.fromSource(provider, 'undone_sequence_test.ral')
             const testResult = await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-                address: toContractAddress(parentId),
+                address: addressFromContractId(parentId),
                 testArgs: { 'seq': seq + startSequence },
                 existingContracts: undoneSequenceInfo.states(),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
@@ -37,7 +37,7 @@ describe("test undone sequence", () => {
             const undoneSequenceTest = await Contract.fromSource(provider, 'undone_sequence_test.ral')
             expectAssertionFailed(async () => await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-                address: toContractAddress(parentId),
+                address: addressFromContractId(parentId),
                 testArgs: { 'seq': seq + startSequence },
                 existingContracts: undoneSequenceInfo.states(),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
@@ -55,7 +55,7 @@ describe("test undone sequence", () => {
             const undoneSequenceTest = await Contract.fromSource(provider, 'undone_sequence_test.ral')
             expectAssertionFailed(async () => await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-                address: toContractAddress(parentId),
+                address: addressFromContractId(parentId),
                 testArgs: { 'seq': seq },
                 existingContracts: undoneSequenceInfo.states(),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
@@ -73,7 +73,7 @@ describe("test undone sequence", () => {
         const undoneSequenceTest = await Contract.fromSource(provider, 'undone_sequence_test.ral')
         const testResult = await undoneSequenceTest.testPublicMethod(provider, 'check', {
             initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-            address: toContractAddress(parentId),
+            address: addressFromContractId(parentId),
             testArgs: { 'seq': startSequence + undoneSequenceOffset },
             existingContracts: undoneSequenceInfo.states(),
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
@@ -93,7 +93,7 @@ describe("test undone sequence", () => {
         const undoneSequenceTest = await Contract.fromSource(provider, 'undone_sequence_test.ral')
         const testResult = await undoneSequenceTest.testPublicMethod(provider, 'destroy', {
             initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-            address: toContractAddress(parentId),
+            address: addressFromContractId(parentId),
             existingContracts: undoneSequenceInfo.states(),
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
@@ -113,7 +113,7 @@ describe("test undone sequence", () => {
         expectAssertionFailed(async () => {
             await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-                address: toContractAddress(parentId),
+                address: addressFromContractId(parentId),
                 testArgs: { 'seq': 1n },
                 existingContracts: undoneSequenceInfo.states(),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
@@ -122,7 +122,7 @@ describe("test undone sequence", () => {
         expectAssertionFailed(async () => {
             await undoneSequenceTest.testPublicMethod(provider, 'destroy', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
-                address: toContractAddress(parentId),
+                address: addressFromContractId(parentId),
                 existingContracts: undoneSequenceInfo.states(),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
             })
