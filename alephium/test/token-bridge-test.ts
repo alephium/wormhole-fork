@@ -34,12 +34,19 @@ describe("test token bridge", () => {
         const tokenBridge = tokenBridgeInfo.contract
         const testToken = await createTestToken(provider)
         const nonceHex = nonce()
+        const inputAsset: InputAsset = {
+            address: payer,
+            asset: {
+                alphAmount: oneAlph * 2n,
+                tokens: [{id: testToken.contractId, amount: 1}]
+            }
+        }
         const testResult = await tokenBridge.testPublicMethod(provider, 'attestToken', {
             address: tokenBridgeInfo.address,
             initialFields: tokenBridgeInfo.selfState.fields,
             testArgs: {
                 'payer': payer,
-                'tokenId': testToken.contractId,
+                'localTokenId': testToken.contractId,
                 'nonce': nonceHex,
                 'consistencyLevel': 0
             },
@@ -129,6 +136,13 @@ describe("test token bridge", () => {
         )
         const testToken = await createTestToken(provider)
         const tokenBridgeForChain = tokenBridgeForChainInfo.contract
+        const inputAsset: InputAsset = {
+            address: payer,
+            asset: {
+                alphAmount: oneAlph * 2n,
+                tokens: [{id: testToken.contractId, amount: 1}]
+            }
+        }
         const testResult = await tokenBridgeForChain.testPublicMethod(provider, 'createWrapperForLocalToken', {
             address: tokenBridgeForChainInfo.address,
             initialFields: tokenBridgeForChainInfo.selfState.fields,

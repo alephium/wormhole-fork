@@ -99,15 +99,14 @@ TxContract TokenBridge(
     }
 
     @using(preapprovedAssets = true)
-    pub fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
-        assert!(size!(tokenId) == 32)
+    pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
+        assert!(size!(localTokenId) == 32)
         assert!(size!(nonce) == 4)
-        // FIXME: tokenExists!(tokenId)?
-        // assert!(tokenRemaining!(tokenId) != 0) // make sure that the token exists
+        assert!(tokenRemaining!(payer, localTokenId) == 1) // make sure that the token exists
 
         // We don't set decimals, symbol and name for local token due to sharding
         let payload = #02 ++ // payloadId
-            tokenId ++
+            localTokenId ++
             u256To2Byte!(localChainId) ++
             #00 ++  // zero decimals
             zeros!(32) ++ // no symbol

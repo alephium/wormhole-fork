@@ -212,7 +212,7 @@ export class Wormhole {
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 tokenBridgeForChainId: tokenBridgeForChainId,
-                tokenId: localTokenId,
+                localTokenId: localTokenId,
                 payer: payer,
                 alphAmount: alphAmount
             }
