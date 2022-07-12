@@ -625,7 +625,20 @@ func runNode(cmd *cobra.Command, args []string) {
 			logger.Fatal("failed to generate devnet guardian key", zap.Error(err))
 		}
 
-		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		index, err := devnet.GetDevnetIndex()
+		if err != nil {
+			logger.Fatal("failed to get devnet guardian index", zap.Error(err))
+		}
+		keyPath := fmt.Sprintf("%s-%d", *guardianKeyPath, index)
+		guardianKeyPath = &keyPath
+		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", keyPath, true)
+		if err != nil {
+			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
+		}
+
+		guardianDataDir := fmt.Sprintf("%s-%d", *dataDir, index)
+		dataDir = &guardianDataDir
+		logger.Info("devnet guardian", zap.Int("index", index), zap.String("keyPath", keyPath), zap.String("dbPath", *dataDir))
 		if err != nil {
 			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
 		}
