@@ -64,6 +64,9 @@ async function deploy() {
     await createWallet()
 
     const signer = await testWallet(provider)
+    // deploy the test token first to make sure the contract id is deterministic
+    const testTokenId = await deployTestToken(provider, signer)
+
     const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
     const wormhole = new Wormhole(
         provider,
@@ -77,12 +80,10 @@ async function deploy() {
         consts.messageFee
     )
 
-    const contracts = await wormhole.deployContracts()
+    const contracts = await wormhole.deployContracts(true)
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
-    const testTokenId = await deployTestToken(provider, signer)
-    console.log("local token id: " + testTokenId)
 
     const tokenAmount = consts.oneAlph * 10n
     const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)

@@ -1,5 +1,5 @@
 import {
-    ALEPHIUM_EVENT_EMITTER_ADDRESS,
+    ALEPHIUM_BRIDGE_ADDRESS,
     ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
     ALEPHIUM_TOKEN_WRAPPER_CODE_HASH
 } from "./consts";
@@ -46,7 +46,7 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
 async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string): Promise<AlphTxInfo> {
     const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(blockHash)
     const events = await provider.events.getEventsTxIdTxid(txId, {group: blockHeader.chainFrom})
-    const event = events.events.find((event) => event.contractAddress === ALEPHIUM_EVENT_EMITTER_ADDRESS)
+    const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
     if (typeof event === 'undefined') {
         return Promise.reject('failed to get event for tx: ' + txId)
     }
