@@ -1,0 +1,29 @@
+import "devnet_deployer.ral"
+
+TxScript Main(
+  deployerId: ByteVec,
+  bytecode: ByteVec,
+  governanceContractId: ByteVec,
+  localChainId: U256,
+  receivedSequence: U256,
+  sendSequence: U256,
+  tokenWrapperTemplateId: ByteVec,
+  tokenBridgeForChainTemplateId: ByteVec,
+  attestTokenHandlerTemplateId: ByteVec,
+  undoneSequenceTemplateId: ByteVec,
+  refundAddress: Address
+) {
+  let deployer = DevnetDeployer(deployerId)
+  deployer.deployTokenBridge{callerAddress!() -> 1 alph}(
+    bytecode,
+    governanceContractId,
+    localChainId,
+    receivedSequence,
+    sendSequence,
+    tokenWrapperTemplateId,
+    tokenBridgeForChainTemplateId,
+    attestTokenHandlerTemplateId,
+    undoneSequenceTemplateId,
+    refundAddress
+  )
+}

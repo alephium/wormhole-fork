@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields, addressFromContractId } from '@alephium/web3'
+import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields, addressFromContractId, subContractId } from '@alephium/web3'
 import { waitTxConfirmed, zeroPad } from './utils'
 
 const Byte32Zero = "0".repeat(64)
@@ -31,6 +31,7 @@ export class Wormhole {
     initMessageFee: bigint
 
     private _tokenWrapperContract: Contract | undefined = undefined
+    private _devnetDeployerId: string | undefined = undefined
 
     constructor(
         provider: NodeProvider,
@@ -63,13 +64,22 @@ export class Wormhole {
         return contract
     }
 
-    async deployContracts(): Promise<WormholeContracts> {
+    private async getDevnetDeployerId(): Promise<string> {
+        if (typeof this._devnetDeployerId === 'undefined') {
+            const devnetDeployerContract = await Contract.fromSource(this.provider, 'devnet/devnet_deployer.ral')
+            const result = await this._deploy(devnetDeployerContract, {})
+            this._devnetDeployerId = result.contractId
+        }
+        return this._devnetDeployerId
+    }
+
+    async deployContracts(devnet: boolean = false): Promise<WormholeContracts> {
         const governanceDeployResult = await this.deployGovernance(
-            this.governanceChainId, this.governanceEmitterAddress, this.initGuardianSet,
-            this.initGuardianSetIndex, this.initMessageFee
+            devnet, this.governanceChainId, this.governanceEmitterAddress,
+            this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            governanceDeployResult.contractId
+            devnet, governanceDeployResult.contractId
         )
         const tokenWrapper = await this.tokenWrapperContract()
         return {
@@ -80,6 +90,7 @@ export class Wormhole {
     }
 
     private async deployGovernance(
+        devnet: boolean,
         governanceChainId: number,
         governanceEmitterAddress: string,
         initGuardianSet: string[],
@@ -95,11 +106,40 @@ export class Wormhole {
             'governanceEmitterAddress': governanceEmitterAddress,
             'receivedSequence': 0,
             'messageFee': initMessageFee,
-            'guardianSets': Array('', currentGuardianSet),
-            'guardianSetIndexes': Array(0, initGuardianSetIndex),
             'previousGuardianSetExpirationTime': 0
         }
-        return await this._deploy(governance, initFields)
+        if (devnet) {
+            const deployerId = await this.getDevnetDeployerId()
+            const script = await Script.fromSource(this.provider, 'devnet/deploy_governance.ral')
+            const scriptTx = await script.transactionForDeployment(this.signer, {
+                initialFields: {
+                    'deployerId': deployerId,
+                    'bytecode': governance.bytecode,
+                    'guardianSet0': '',
+                    'guardianSet1': currentGuardianSet,
+                    'guardianSetIndex0': 0,
+                    'guardianSetIndex1': initGuardianSetIndex,
+                    ...initFields
+                }
+            })
+            const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
+            const confirmed = await waitTxConfirmed(this.provider, submitResult.txId)
+            const contractId = subContractId(deployerId, '00')
+            return {
+                fromGroup: scriptTx.fromGroup,
+                toGroup: scriptTx.toGroup,
+                contractAddress: addressFromContractId(contractId),
+                contractId: contractId,
+                txId: submitResult.txId,
+                blockHash: confirmed.blockHash
+            }
+        } else {
+            return await this._deploy(governance, {
+                'guardianSets': Array('', currentGuardianSet),
+                'guardianSetIndexes': Array(0, initGuardianSetIndex),
+                ...initFields
+            })
+        }
     }
 
     private async deployUndoneSequenceTemplate(): Promise<DeployResult> {
@@ -162,6 +202,7 @@ export class Wormhole {
     }
 
     private async deployTokenBridge(
+        devnet: boolean,
         governanceContractId: string
     ): Promise<DeployResult> {
         const tokenWrapperDeployResult = await this.deployTokenWrapperTemplate()
@@ -180,7 +221,30 @@ export class Wormhole {
             'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
             'refundAddress': this.refundAddress
         }
-        return await this._deploy(tokenBridge, initFields)
+        if (devnet) {
+            const deployerId = await this.getDevnetDeployerId()
+            const script = await Script.fromSource(this.provider, 'devnet/deploy_token_bridge.ral')
+            const scriptTx = await script.transactionForDeployment(this.signer, {
+                initialFields: {
+                    'deployerId': deployerId,
+                    'bytecode': tokenBridge.bytecode,
+                    ...initFields
+                }
+            })
+            const submitResult = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
+            const confirmed = await waitTxConfirmed(this.provider, submitResult.txId)
+            const contractId = subContractId(deployerId, '01')
+            return {
+                fromGroup: scriptTx.fromGroup,
+                toGroup: scriptTx.toGroup,
+                contractAddress: addressFromContractId(contractId),
+                contractId: contractId,
+                txId: submitResult.txId,
+                blockHash: confirmed.blockHash
+            }
+        } else {
+            return await this._deploy(tokenBridge, initFields)
+        }
     }
 
     async registerChainToAlph(
