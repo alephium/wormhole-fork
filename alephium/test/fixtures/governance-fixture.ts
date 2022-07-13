@@ -1,13 +1,14 @@
-import { NodeProvider, Contract } from '@alephium/web3'
+import { NodeProvider, Contract, stringToHex } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
-import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress, randomAssetAddress, randomContractId } from './wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'
 
-export const governanceModule = "00000000000000000000000000000000000000000000000000000000436f7265"
+export const governanceModule = zeroPad(stringToHex('Core'), 32)
 export const initGuardianSet = GuardianSet.random(12, 0)
 export const governanceChainId = 0
 export const governanceEmitterAddress = '0000000000000000000000000000000000000000000000000000000000000004'
 export const messageFee = BigInt("100000000000000")
 
+// Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0002_governance_messaging.md
 export class UpdateGuardianSet {
     newGuardianSet: GuardianSet
 

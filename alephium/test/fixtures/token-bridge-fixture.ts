@@ -1,11 +1,12 @@
-import { NodeProvider, Contract, ContractState, subContractId, Asset } from '@alephium/web3'
-import { createGovernance, governanceChainId } from './governance-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, toContractAddress } from './wormhole-fixture'
+import { NodeProvider, Contract, ContractState, subContractId, Asset, stringToHex, addressFromContractId } from '@alephium/web3'
+import { createGovernance } from './governance-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
-export const tokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
+export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
 
+// Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0003_token_bridge.md
 export class AttestToken {
     tokenId: string
     tokenChainId: number
@@ -238,7 +239,7 @@ export async function createTokenBridge(provider: NodeProvider, address?: string
 }
 
 function subContractAddress(parentId: string, pathHex: string): string {
-    return toContractAddress(subContractId(parentId, pathHex))
+    return addressFromContractId(subContractId(parentId, pathHex))
 }
 
 export function attestTokenHandlerAddress(tokenBridgeId: string, remoteChainId: number): string {

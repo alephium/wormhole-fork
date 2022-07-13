@@ -1,5 +1,4 @@
-import { Asset, NodeProvider, InputAsset, TestContractResult, Val } from '@alephium/web3'
-import { toHex } from '../lib/utils'
+import { Asset, NodeProvider, InputAsset, TestContractResult, Val, binToHex } from '@alephium/web3'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
@@ -17,28 +16,56 @@ describe("test governance", () => {
             initialFields: governanceInfo.selfState.fields,
             address: governanceInfo.address,
             existingContracts: governanceInfo.dependencies,
-            testArgs: { 'vaa': toHex(vaa.encode()) },
+            testArgs: { 'vaa': binToHex(vaa.encode()) },
             initialAsset: initialAsset,
             inputAssets: inputAssets
         })
     }
 
-    test('should update guardian set', async () => {
+    it('should update guardian set succeed if target chain id is valid', async () => {
         const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
-        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const testResult = await testCase(vaa, 'submitNewGuardianSet')
-        const governanceState = testResult.contracts[0]
-        expect(governanceState.fields['guardianSets']).toEqual(Array(
-            initGuardianSet.encodeAddresses().toLowerCase(),
-            updateGuardianSet.newGuardianSet.encodeAddresses().toLowerCase()
-        ))
-        expect(governanceState.fields['guardianSetIndexes']).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
+        const validChainIds = [CHAIN_ID_ALEPHIUM, 0]
+        for (const chainId of validChainIds) {
+            const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            const testResult = await testCase(vaa, 'submitNewGuardianSet')
+            const governanceState = testResult.contracts[0]
+            expect(governanceState.fields['guardianSets']).toEqual(Array(
+                initGuardianSet.encodeAddresses().toLowerCase(),
+                updateGuardianSet.newGuardianSet.encodeAddresses().toLowerCase()
+            ))
+            expect(governanceState.fields['guardianSetIndexes']).toEqual(Array(initGuardianSet.index, updateGuardianSet.newGuardianSet.index))
+        }
+    })
 
+    it('should update guardian set failed if target chain id is invalid', async () => {
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+        const invalidChainIds = [CHAIN_ID_ALEPHIUM + 1, CHAIN_ID_ALEPHIUM - 1]
+        for (const chainId of invalidChainIds) {
+            const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            await expectAssertionFailed(async () => {
+                return await testCase(vaa, 'submitNewGuardianSet')
+            })
+        }
+    })
+
+    it('should update guardian set failed if sequence is invalid', async () => {
+        const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
         const invalidSequenceVaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 1)
         const invalidSequenceVaa = initGuardianSet.sign(initGuardianSet.quorumSize(), invalidSequenceVaaBody)
         await expectAssertionFailed(async () => {
             await testCase(invalidSequenceVaa, 'submitNewGuardianSet')
+        })
+    })
+
+    it('should update guardian set failed if new guardian set is empty', async () => {
+        const emptyGuardianSet = new GuardianSet([], 1, [])
+        const updateGuardianSet = new UpdateGuardianSet(emptyGuardianSet)
+        const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, 0, governanceEmitterAddress, 0)
+        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+        await expectAssertionFailed(async () => {
+            await testCase(vaa, 'submitNewGuardianSet')
         })
     })
 
@@ -95,7 +122,7 @@ describe("test governance", () => {
         }
         const recipient = randomBytes(32)
         const amount = messageFee * 20n
-        const submitTransferFee = new SubmitTransferFee(toHex(recipient), amount)
+        const submitTransferFee = new SubmitTransferFee(binToHex(recipient), amount)
         const vaaBody = new VAABody(submitTransferFee.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const testResult = await testCase(vaa, 'submitTransferFees', asset, [inputAsset])
@@ -121,7 +148,7 @@ describe("test governance", () => {
                 initialFields: governanceInfo.selfState.fields,
                 address: governanceInfo.address,
                 existingContracts: governanceInfo.dependencies,
-                testArgs: { 'vaa': toHex(vaa.encode()) },
+                testArgs: { 'vaa': binToHex(vaa.encode()) },
             })
         }
 

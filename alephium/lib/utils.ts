@@ -1,6 +1,5 @@
 import { NodeProvider, node } from '@alephium/web3'
 import { randomBytes } from 'crypto'
-import * as base58 from 'bs58'
 
 export function toHex(bytes: Uint8Array): string {
     return Array.from(bytes, b => {
@@ -33,9 +32,4 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
         return waitTxConfirmed(provider, txId)
     }
     return status as node.Confirmed;
-}
-
-export function toContractAddress(contractId: string): string {
-    const bytes = Buffer.from('03' + contractId, 'hex')
-    return base58.encode(bytes)
 }
