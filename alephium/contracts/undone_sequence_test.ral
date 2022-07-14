@@ -6,7 +6,7 @@ TxContract UndoneSequenceTest(
     @using(preapprovedAssets = true)
     pub fn check(seq: U256) -> () {
         let undoneSequence = UndoneSequence(undoneSequenceId)
-        undoneSequence.check(seq)
+        undoneSequence.checkUndone(seq)
     }
 
     @using(preapprovedAssets = true)

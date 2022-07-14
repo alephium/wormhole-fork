@@ -1,7 +1,6 @@
 import "governance.ral"
 import "sequence.ral"
 import "token_wrapper.ral"
-import "token_interface.ral"
 import "token_bridge_for_chain.ral"
 
 TxContract TokenBridge(
@@ -100,24 +99,18 @@ TxContract TokenBridge(
     }
 
     @using(preapprovedAssets = true)
-    pub fn attestToken(payer: Address, tokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
-        assert!(size!(tokenId) == 32)
+    pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
+        assert!(size!(localTokenId) == 32)
         assert!(size!(nonce) == 4)
+        assert!(tokenRemaining!(payer, localTokenId) == 1) // make sure that the token exists
 
-        let token = ERC20Token(tokenId)
-        let symbol = token.symbol()
-        let symbolSize = size!(symbol)
-        assert!(symbolSize <= 32)
-        let name = token.name()
-        let nameSize = size!(name)
-        assert!(nameSize <= 32)
-
+        // We don't set decimals, symbol and name for local token due to sharding
         let payload = #02 ++ // payloadId
-            tokenId ++
+            localTokenId ++
             u256To2Byte!(localChainId) ++
-            u256To1Byte!(token.decimals()) ++
-            zeros!(32 - symbolSize) ++ symbol ++
-            zeros!(32 - nameSize) ++ name
+            #00 ++  // zero decimals
+            zeros!(32) ++ // no symbol
+            zeros!(32) // no name
 
         let governance = Governance(governanceContractId)
         governance.publishWormholeMessage{payer -> governance.getMessageFee()}(payer, 0, nextSendSequence(), nonce, payload, consistencyLevel)
@@ -130,9 +123,10 @@ TxContract TokenBridge(
     }
 
     @using(preapprovedAssets = true)
-    pub fn transferLocalToken(
+    pub fn transferToken(
         fromAddress: Address,
-        localTokenId: ByteVec,
+        bridgeTokenId: ByteVec,
+        isLocalToken: Bool,
         toChainId: U256,
         toAddress: ByteVec,
         tokenAmount: U256,
@@ -142,34 +136,12 @@ TxContract TokenBridge(
     ) -> () {
         assert!(toChainId != localChainId)
         let tokenBridgeForChainId = subContractId!(#01 ++ u256To2Byte!(toChainId))
-        let tokenWrapperId = blake2b!(blake2b!(localTokenId ++ tokenBridgeForChainId))
+        let tokenWrapperId = blake2b!(blake2b!(bridgeTokenId ++ tokenBridgeForChainId))
         let tokenWrapper = TokenWrapper(tokenWrapperId)
-        let payload = tokenWrapper.transfer{fromAddress -> localTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce, consistencyLevel)
-        let governance = Governance(governanceContractId)
-        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(
-            fromAddress, toChainId, tokenBridgeForChain.nextSendSequence(), nonce, payload, consistencyLevel
-        )
-    }
 
-    @using(preapprovedAssets = true)
-    pub fn transferRemoteToken(
-        fromAddress: Address,
-        tokenWrapperId: ByteVec,
-        wrappedTokenId: ByteVec,
-        toChainId: U256,
-        toAddress: ByteVec,
-        tokenAmount: U256,
-        arbiterFee: U256,
-        nonce: ByteVec,
-        consistencyLevel: U256 // TODO: Do we need to limit the minimum confirmation
-    ) -> () {
-        assert!(toChainId != localChainId)
-        let tokenBridgeForChainId = subContractId!(#01 ++ u256To2Byte!(toChainId))
-        let expectedTokenWrapperId = blake2b!(blake2b!(wrappedTokenId ++ tokenBridgeForChainId))
-        assert!(expectedTokenWrapperId == tokenWrapperId)
-        let tokenWrapper = TokenWrapper(tokenWrapperId)
-        let payload = tokenWrapper.transfer{fromAddress -> tokenWrapperId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce, consistencyLevel)
+        let wrappedTokenId = if (isLocalToken) bridgeTokenId else tokenWrapperId
+        let payload = tokenWrapper.transfer{fromAddress -> wrappedTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce, consistencyLevel)
+
         let governance = Governance(governanceContractId)
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
         governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(

@@ -33,7 +33,7 @@ TxContract Sequence(
     fn checkSequence(seq: U256) -> Bool {
         if (seq < next) {
             let undoneSequenceId = subContractId!(u256To8Byte!(seq / 256))
-            UndoneSequence(undoneSequenceId).check(seq)
+            UndoneSequence(undoneSequenceId).checkUndone(seq)
             return true
         }
 

@@ -1,6 +1,0 @@
-Interface ERC20Token {
-    pub fn symbol() -> ByteVec
-    pub fn name() -> ByteVec
-    pub fn decimals() -> U256
-    pub fn totalSupply() -> U256
-}

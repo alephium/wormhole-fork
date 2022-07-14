@@ -17,7 +17,7 @@ export const minimalAlphInContract = oneAlph
 export const initAsset: Asset = {
     alphAmount: minimalAlphInContract
 }
-export const u256Max = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+export const u256Max = 1n << 255n
 export const gasPrice = BigInt("100000000000")
 export const maxGasPerTx = BigInt("625000")
 export const defaultGasFee = gasPrice * maxGasPerTx
@@ -262,6 +262,10 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
     await expectFailed(func, ['AssertionFailed'])
+}
+
+export async function expectNotEnoughBalance<T>(func: () => Promise<T>) {
+    await expectFailed(func, ['NotEnoughBalance'])
 }
 
 export async function expectOneOfError<T>(func: () => Promise<T>, errors: string[]) {

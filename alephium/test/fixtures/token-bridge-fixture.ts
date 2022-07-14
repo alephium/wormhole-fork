@@ -109,22 +109,10 @@ export async function getTokenWrapperContract(provider: NodeProvider): Promise<C
     return await Contract.fromSource(provider, 'token_wrapper.ral')
 }
 
-export async function createTestToken(
-    provider: NodeProvider,
-    decimals: number,
-    symbol: string,
-    name: string,
-    supply?: bigint
-): Promise<ContractInfo> {
+export async function createTestToken(provider: NodeProvider): Promise<ContractInfo> {
     const token = await Contract.fromSource(provider, 'test_token.ral')
     const address = randomContractAddress()
-    const initFields = {
-        "symbol_": symbol,
-        "name_": name,
-        "decimals_": decimals,
-        "totalSupply_": supply ? supply : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-    }
-    const state = token.toState(initFields, {alphAmount: minimalAlphInContract}, address)
+    const state = token.toState({}, {alphAmount: minimalAlphInContract}, address)
     return new ContractInfo(token, state, [], address)
 }
 
@@ -169,7 +157,7 @@ async function createTemplateTokenWrapper(provider: NodeProvider): Promise<Contr
         'tokenBridgeForChainId': '',
         'localChainId': 0,
         'remoteChainId': 0,
-        'tokenContractId': '',
+        'bridgeTokenId': '',
         'isLocalToken': true,
         'symbol_': '',
         'name_': '',
@@ -338,7 +326,7 @@ export async function createWrapper(
         'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'remoteChainId': tokenBridgeForChainInfo.remoteChainId,
-        'tokenContractId': tokenId,
+        'bridgeTokenId': tokenId,
         'isLocalToken': isLocalToken,
         'symbol_': symbol,
         'name_': name,
