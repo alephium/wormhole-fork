@@ -309,7 +309,11 @@ async function alephium(
           alphMessageFee,
           ALEPHIUM_CONFIRMATIONS
         );
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+        const tokens = [{
+          id: localTokenId,
+          amount: '1'
+        }];
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId;
       }
     );

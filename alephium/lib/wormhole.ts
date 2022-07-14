@@ -279,7 +279,11 @@ export class Wormhole {
                 localTokenId: localTokenId,
                 payer: payer,
                 alphAmount: alphAmount
-            }
+            },
+            tokens: [{
+                id: localTokenId,
+                amount: 1
+            }]
         })
         const result = await this.signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
         return result.txId

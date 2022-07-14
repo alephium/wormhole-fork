@@ -142,12 +142,14 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 export async function submitAlphScriptTx(
   provider: WalletConnectProvider,
   fromAddress: string,
-  bytecode: string
+  bytecode: string,
+  tokens?: node.Token[]
 ) {
   return provider.signExecuteScriptTx({
     signerAddress: fromAddress,
     bytecode: bytecode,
-    submitTx: true
+    submitTx: true,
+    tokens: tokens
   })
 }
 
