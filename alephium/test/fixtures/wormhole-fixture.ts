@@ -261,7 +261,7 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-    await expectFailed(func, ['AssertionFailed'])
+    await expectFailed(func, ['AssertionFailed', 'AssertionFailedWithErrorCode'])
 }
 
 export async function expectNotEnoughBalance<T>(func: () => Promise<T>) {
@@ -287,8 +287,4 @@ export function loadContract(code: string): Contract {
 
 export function chainIdToBytes(chainId: number): Uint8Array {
     return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
-}
-
-export function doubleHash(bytes: Uint8Array): Uint8Array {
-    return blake.blake2b(blake.blake2b(bytes, undefined, 32), undefined, 32)
 }

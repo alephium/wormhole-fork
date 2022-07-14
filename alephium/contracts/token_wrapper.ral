@@ -1,6 +1,8 @@
 import "token_bridge.ral"
 import "token_bridge_for_chain.ral"
 import "math.ral"
+import "constants.ral"
+import "token_bridge_constants.ral"
 
 TxContract TokenWrapper(
     tokenBridgeId: ByteVec,
@@ -12,7 +14,7 @@ TxContract TokenWrapper(
     symbol_: ByteVec,
     name_: ByteVec,
     decimals_: U256
-) extends Math() {
+) extends Math(), Constants(), TokenBridgeConstants() {
     pub fn name() -> ByteVec {
         assert!(!isLocalToken) // unknown for local token
         return name_
@@ -50,22 +52,21 @@ TxContract TokenWrapper(
         toAddress: ByteVec,
         amount: U256,
         arbiterFee: U256,
-        nonce: ByteVec,
-        consistencyLevel: U256
+        nonce: ByteVec
     ) -> ByteVec {
-        assert!(callerContractId!() == tokenBridgeId)
-        assert!(size!(toAddress) == 32)
-        assert!(size!(nonce) == 4)
+        assertWithErrorCode!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        assertWithErrorCode!(size!(toAddress) == 32, ErrorCodes.InvalidTransferToAddress)
+        assertWithErrorCode!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
 
         let normalizedAmount = if (isLocalToken) amount else normalizeAmount(amount, decimals_)
         let normalizedFee = if (isLocalToken) arbiterFee else normalizeAmount(arbiterFee, decimals_)
-        assert!(normalizedFee < normalizedAmount)
+        assertWithErrorCode!(normalizedFee < normalizedAmount, ErrorCodes.TransferFeeLessThanAmount)
 
         let transferAmount = deNormalizeAmount(normalizedAmount, decimals_)
         transferTokenToSelf!(fromAddress, getTokenId(), transferAmount)
 
         let tokenChainId = getTokenChainId()
-        return #01 ++ // payloadId
+        return PayloadId.Transfer ++
             u256To32Byte!(normalizedAmount) ++
             bridgeTokenId ++
             u256To2Byte!(tokenChainId) ++
@@ -81,19 +82,19 @@ TxContract TokenWrapper(
             return
         }
 
-        assert!(byteVecSlice!(payload, 0, 1) == #01) // payloadId
+        assertWithErrorCode!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
         let originalTokenId = byteVecSlice!(payload, 33, 65)
         let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
         let toAddress = byteVecSlice!(payload, 67, 99)
         let arbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
-        assert!(size!(payload) == 131)
-        assert!(originalTokenId == bridgeTokenId)
-        assert!(tokenChainId == getTokenChainId())
+        assertWithErrorCode!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
+        assertWithErrorCode!(originalTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
+        assertWithErrorCode!(tokenChainId == getTokenChainId(), ErrorCodes.InvalidTransferMessage)
 
         let totalAmount = deNormalizeAmount(amount, decimals_)
         let transferFee = deNormalizeAmount(arbiterFee, decimals_)
-        assert!(totalAmount > transferFee)
+        assertWithErrorCode!(totalAmount > transferFee, ErrorCodes.TransferFeeLessThanAmount)
         let transferAmount = totalAmount - transferFee
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
