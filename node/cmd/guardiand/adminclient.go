@@ -190,6 +190,9 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 	for _, id := range resp.MissingMessages {
 		fmt.Println(id)
 	}
+
+	log.Printf("processed %s sequences %d to %d (%d gaps)",
+		emitterAddress, resp.FirstSequence, resp.LastSequence, len(resp.MissingMessages))
 }
 
 func runGetDestroyContractsGovernanceMessage(cmd *cobra.Command, args []string) {
