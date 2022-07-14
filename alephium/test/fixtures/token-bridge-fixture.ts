@@ -106,11 +106,11 @@ export class Transfer {
 }
 
 export async function getTokenWrapperContract(provider: NodeProvider): Promise<Contract> {
-    return await Contract.fromSource(provider, 'token_wrapper.ral')
+    return await Contract.fromSource(provider, 'token_bridge/token_wrapper.ral')
 }
 
 export async function createTestToken(provider: NodeProvider): Promise<ContractInfo> {
-    const token = await Contract.fromSource(provider, 'test_token.ral')
+    const token = await Contract.fromSource(provider, 'tests/test_token.ral')
     const address = randomContractAddress()
     const state = token.toState({}, {alphAmount: minimalAlphInContract}, address)
     return new ContractInfo(token, state, [], address)
@@ -150,7 +150,7 @@ export class TokenBridgeForChainInfo extends ContractInfo {
 }
 
 async function createTemplateTokenWrapper(provider: NodeProvider): Promise<ContractInfo> {
-    const tokenWrapper = await Contract.fromSource(provider, 'token_wrapper.ral')
+    const tokenWrapper = await Contract.fromSource(provider, 'token_bridge/token_wrapper.ral')
     const address = randomContractAddress()
     const initFields = {
         'tokenBridgeId': '',
@@ -177,13 +177,13 @@ async function createTemplateAttestTokenHandler(provider: NodeProvider): Promise
         'remoteTokenBridgeId': '',
         'receivedSequence': 0
     }
-    const attestTokenHandler = await Contract.fromSource(provider, 'attest_token_handler.ral')
+    const attestTokenHandler = await Contract.fromSource(provider, 'token_bridge/attest_token_handler.ral')
     const state = attestTokenHandler.toState(initFields, initAsset, address)
     return new ContractInfo(attestTokenHandler, state, [], address)
 }
 
 async function createTemplateTokenBridgeForChain(provider: NodeProvider): Promise<ContractInfo> {
-    const tokenBridgeForChain = await Contract.fromSource(provider, 'token_bridge_for_chain.ral')
+    const tokenBridgeForChain = await Contract.fromSource(provider, 'token_bridge/token_bridge_for_chain.ral')
     const address = randomContractAddress()
     const initFields = {
         'governanceContractId': '',
@@ -204,7 +204,7 @@ async function createTemplateTokenBridgeForChain(provider: NodeProvider): Promis
 }
 
 export async function createTokenBridge(provider: NodeProvider, address?: string): Promise<TokenBridgeInfo> {
-    const tokenBridge = await Contract.fromSource(provider, 'token_bridge.ral')
+    const tokenBridge = await Contract.fromSource(provider, 'token_bridge/token_bridge.ral')
     const governance = await createGovernance(provider)
     const attestTokenHandler = await createTemplateAttestTokenHandler(provider)
     const tokenWrapper = await createTemplateTokenWrapper(provider)
@@ -258,7 +258,7 @@ export async function createAttestTokenHandler(
     address?: string
 ): Promise<ContractInfo> {
     const contractAddress = typeof address === 'undefined' ? attestTokenHandlerAddress(tokenBridge.contractId, remoteChainId) : address
-    const attestTokenHandlerContract = await Contract.fromSource(provider, "attest_token_handler.ral")
+    const attestTokenHandlerContract = await Contract.fromSource(provider, "token_bridge/attest_token_handler.ral")
     const initFields = {
         'governanceContractId': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
@@ -284,7 +284,7 @@ export async function createTokenBridgeForChain(
         provider, randomContractId(), 0, 0n, randomAssetAddress()
     )
     const tokenWrapper = await createTemplateTokenWrapper(provider)
-    const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge_for_chain.ral")
+    const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge/token_bridge_for_chain.ral")
     const initFields = {
         'governanceContractId': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,

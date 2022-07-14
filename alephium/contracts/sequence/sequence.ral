@@ -1,5 +1,5 @@
 import "undone_sequence.ral"
-import "constants.ral"
+import "../constants.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
 Abstract TxContract Sequence(

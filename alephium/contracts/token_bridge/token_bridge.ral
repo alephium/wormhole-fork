@@ -1,8 +1,8 @@
-import "governance.ral"
-import "sequence.ral"
+import "../governance.ral"
+import "../constants.ral"
+import "../sequence/sequence.ral"
 import "token_wrapper.ral"
 import "token_bridge_for_chain.ral"
-import "constants.ral"
 import "token_bridge_constants.ral"
 
 TxContract TokenBridge(

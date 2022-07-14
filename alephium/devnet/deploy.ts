@@ -48,7 +48,7 @@ async function getToken(
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await Script.fromSource(provider, 'get_token.ral')
+    const script = await Script.fromSource(provider, 'tests/get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
         initialFields: {
             sender: from,

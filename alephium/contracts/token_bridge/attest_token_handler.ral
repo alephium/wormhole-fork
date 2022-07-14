@@ -1,8 +1,8 @@
 import "token_bridge_for_chain.ral"
-import "governance.ral"
-import "constants.ral"
 import "token_bridge_constants.ral"
 import "token_bridge.ral"
+import "../governance.ral"
+import "../constants.ral"
 
 TxContract AttestTokenHandler(
   governanceContractId: ByteVec,

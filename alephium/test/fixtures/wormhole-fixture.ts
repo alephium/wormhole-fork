@@ -55,15 +55,6 @@ export async function createMath(provider: NodeProvider): Promise<ContractInfo> 
     return new ContractInfo(mathContract, contractState, [], address)
 }
 
-export async function createEventEmitter(provider: NodeProvider): Promise<ContractInfo> {
-    const eventEmitterContract = await Contract.fromSource(provider, 'event_emitter.ral')
-    const address = randomContractAddress()
-    const contractState = eventEmitterContract.toState(
-        {}, {alphAmount: minimalAlphInContract}, address
-    )
-    return new ContractInfo(eventEmitterContract, contractState, [], address)
-}
-
 export class GuardianSet {
     privateKeys: string[]
     index: number

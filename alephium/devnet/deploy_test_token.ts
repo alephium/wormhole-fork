@@ -2,7 +2,7 @@ import { NodeProvider, Contract, NodeWallet } from '@alephium/web3'
 
 export async function deployTestToken(provider: NodeProvider, signer: NodeWallet): Promise<string> {
     const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-    const token = await Contract.fromSource(provider, 'test_token.ral')
+    const token = await Contract.fromSource(provider, 'tests/test_token.ral')
     const deployTx = await token.transactionForDeployment(signer, {
         issueTokenAmount: tokenSupply.toString()
     })

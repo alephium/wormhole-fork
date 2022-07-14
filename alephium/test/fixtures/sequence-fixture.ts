@@ -9,7 +9,7 @@ export async function createUndoneSequence(
     refundAddress: string,
     contractId?: string
 ): Promise<ContractInfo> {
-    const contract = await Contract.fromSource(provider, 'undone_sequence.ral')
+    const contract = await Contract.fromSource(provider, 'sequence/undone_sequence.ral')
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
     const initFields = {
         "parentId": parentId,
@@ -33,7 +33,7 @@ export async function createSequence(
     const undoneSequenceTemplate = await createUndoneSequence(
         provider, randomContractId(), 0, 0n, randomAssetAddress()
     )
-    const contract = await Contract.fromSource(provider, 'sequence.ral')
+    const contract = await Contract.fromSource(provider, 'sequence/sequence.ral')
     const initField = {
         'next': next,
         'next1': next1,

@@ -1,4 +1,4 @@
-import "constants.ral"
+import "../constants.ral"
 
 TxContract UndoneSequence(
     parentId: ByteVec,

@@ -1,4 +1,4 @@
-import "undone_sequence.ral"
+import "../sequence/undone_sequence.ral"
 
 TxContract UndoneSequenceTest(
     undoneSequenceId: ByteVec

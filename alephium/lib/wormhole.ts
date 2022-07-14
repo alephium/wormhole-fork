@@ -58,7 +58,7 @@ export class Wormhole {
         if (typeof this._tokenWrapperContract !== 'undefined') {
             return this._tokenWrapperContract as Contract
         }
-        const contract = await Contract.fromSource(this.provider, 'token_wrapper.ral')
+        const contract = await Contract.fromSource(this.provider, 'token_bridge/token_wrapper.ral')
         this._tokenWrapperContract = contract
         return contract
     }
@@ -109,7 +109,7 @@ export class Wormhole {
             'sequences': 0n,
             'refundAddress': DummyRefundAddress
         }
-        const undoneSequence = await Contract.fromSource(this.provider, 'undone_sequence.ral')
+        const undoneSequence = await Contract.fromSource(this.provider, 'sequence/undone_sequence.ral')
         return await this._deploy(undoneSequence, initFields)
     }
 
@@ -144,7 +144,7 @@ export class Wormhole {
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0
         }
-        const tokenBridgeForChain = await Contract.fromSource(this.provider, 'token_bridge_for_chain.ral')
+        const tokenBridgeForChain = await Contract.fromSource(this.provider, 'token_bridge/token_bridge_for_chain.ral')
         return this._deploy(tokenBridgeForChain, initFields)
     }
 
@@ -157,7 +157,7 @@ export class Wormhole {
             'remoteTokenBridgeId': '',
             'receivedSequence': 0
         }
-        const attestTokenHandler = await Contract.fromSource(this.provider, 'attest_token_handler.ral')
+        const attestTokenHandler = await Contract.fromSource(this.provider, 'token_bridge/attest_token_handler.ral')
         return this._deploy(attestTokenHandler, initFields)
     }
 
@@ -168,7 +168,7 @@ export class Wormhole {
         const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
         const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
         const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
-        const tokenBridge = await Contract.fromSource(this.provider, 'token_bridge.ral')
+        const tokenBridge = await Contract.fromSource(this.provider, 'token_bridge/token_bridge.ral')
         const initFields = {
             'governanceContractId': governanceContractId,
             'localChainId': this.localChainId,
@@ -189,7 +189,7 @@ export class Wormhole {
         payer: string,
         alphAmount: Number256
     ): Promise<string> {
-        const script = await Script.fromSource(this.provider, "register_chain.ral")
+        const script = await Script.fromSource(this.provider, "token_bridge_scripts/register_chain.ral")
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 payer: payer,
@@ -208,7 +208,7 @@ export class Wormhole {
         payer: string,
         alphAmount: bigint
     ): Promise<string> {
-        const script = await Script.fromSource(this.provider, 'create_local_wrapper.ral')
+        const script = await Script.fromSource(this.provider, 'token_bridge_scripts/create_local_wrapper.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 tokenBridgeForChainId: tokenBridgeForChainId,
