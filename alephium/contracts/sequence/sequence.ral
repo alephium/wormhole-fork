@@ -2,7 +2,7 @@ import "undone_sequence.ral"
 import "../constants.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
-Abstract TxContract Sequence(
+Abstract Contract Sequence(
     mut next: U256,
     mut next1: U256, // TODO: better name
     mut next2: U256,

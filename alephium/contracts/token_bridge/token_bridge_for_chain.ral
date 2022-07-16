@@ -6,7 +6,7 @@ import "../sequence/undone_sequence.ral"
 import "token_bridge_constants.ral"
 import "token_bridge.ral"
 
-TxContract TokenBridgeForChain(
+Contract TokenBridgeForChain(
     governanceContractId: ByteVec,
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id

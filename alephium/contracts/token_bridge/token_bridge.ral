@@ -5,7 +5,7 @@ import "token_wrapper.ral"
 import "token_bridge_for_chain.ral"
 import "token_bridge_constants.ral"
 
-TxContract TokenBridge(
+Contract TokenBridge(
     governanceContractId: ByteVec,
     localChainId: U256,
     mut receivedSequence: U256,

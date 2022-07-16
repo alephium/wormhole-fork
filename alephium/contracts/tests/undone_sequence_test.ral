@@ -1,6 +1,6 @@
 import "../sequence/undone_sequence.ral"
 
-TxContract UndoneSequenceTest(
+Contract UndoneSequenceTest(
     undoneSequenceId: ByteVec
 ) {
     @using(preapprovedAssets = true)

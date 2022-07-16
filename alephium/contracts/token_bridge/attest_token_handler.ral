@@ -4,7 +4,7 @@ import "token_bridge.ral"
 import "../governance.ral"
 import "../constants.ral"
 
-TxContract AttestTokenHandler(
+Contract AttestTokenHandler(
   governanceContractId: ByteVec,
   localChainId: U256,
   localTokenBridgeId: ByteVec,

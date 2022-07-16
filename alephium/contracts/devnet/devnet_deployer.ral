@@ -1,4 +1,4 @@
-TxContract DevnetDeployer() {
+Contract DevnetDeployer() {
   @using(preapprovedAssets = true)
   pub fn deployGovernance(
     bytecode: ByteVec,

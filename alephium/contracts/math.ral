@@ -1,4 +1,4 @@
-Abstract TxContract Math() {
+Abstract Contract Math() {
     pub fn pow(x: U256, y: U256) -> (U256) {
         let mut i = 0
         let mut result = 1

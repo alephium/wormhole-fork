@@ -1,6 +1,6 @@
 import "constants.ral"
 
-TxContract Governance(
+Contract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceEmitterAddress: ByteVec,

@@ -1,4 +1,4 @@
-Abstract TxContract Constants() {
+Abstract Contract Constants() {
   const SequenceExecutedFlag = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
   enum ErrorCodes {

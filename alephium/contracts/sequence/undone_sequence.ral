@@ -1,6 +1,6 @@
 import "../constants.ral"
 
-TxContract UndoneSequence(
+Contract UndoneSequence(
     parentId: ByteVec,
     begin: U256,
     mut sequences: U256,
