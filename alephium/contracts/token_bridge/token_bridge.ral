@@ -33,11 +33,11 @@ TxContract TokenBridge(
 
     fn parseAndVerifyRegisterChain(vaa: ByteVec) -> (U256, ByteVec) {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.RegisterChain)
-        assertWithErrorCode!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
         let remoteChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        assertWithErrorCode!(remoteChainId != localChainId, ErrorCodes.InvalidRegisterChainMessage)
+        assert!(remoteChainId != localChainId, ErrorCodes.InvalidRegisterChainMessage)
         let remoteTokenBridgeId = byteVecSlice!(payload, 35, 67)
-        assertWithErrorCode!(size!(payload) == 67, ErrorCodes.InvalidMessageSize)
+        assert!(size!(payload) == 67, ErrorCodes.InvalidMessageSize)
         return remoteChainId, remoteTokenBridgeId
     }
 
@@ -86,7 +86,7 @@ TxContract TokenBridge(
 
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
-        assertWithErrorCode!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
         let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         let mut offset = 35 + contractCodeLength
         let newContractCode = byteVecSlice!(payload, 35, offset)
@@ -97,21 +97,21 @@ TxContract TokenBridge(
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
             let currentEncodedState = u256To32Byte!(receivedSequence) ++ u256To32Byte!(sendSequence)
-            assertWithErrorCode!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
+            assert!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
             let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
             let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
             offset = offset + stateLength
-            assertWithErrorCode!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
+            assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
             migrateWithFields!(newContractCode, newContractState)
         }
     }
 
     @using(preapprovedAssets = true)
     pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
-        assertWithErrorCode!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)
-        assertWithErrorCode!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
-        assertWithErrorCode!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
+        assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)
+        assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
+        assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
 
         // We don't set decimals, symbol and name for local token due to sharding
         let payload = PayloadId.AttestToken ++
@@ -143,7 +143,7 @@ TxContract TokenBridge(
         nonce: ByteVec,
         consistencyLevel: U256 // TODO: Do we need to limit the minimum confirmation
     ) -> () {
-        assertWithErrorCode!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
+        assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
         let tokenWrapperId = subContractIdOf!(TokenBridgeForChain(tokenBridgeForChainId), bridgeTokenId)
         let tokenWrapper = TokenWrapper(tokenWrapperId)
@@ -160,12 +160,12 @@ TxContract TokenBridge(
 
     pub fn destroyUndoneSequenceContracts(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUndoneSequences)
-        assertWithErrorCode!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
         let remoteChainIdBytes = byteVecSlice!(payload, 33, 35)
         let length = u256From2Byte!(byteVecSlice!(payload, 35, 37))
-        assertWithErrorCode!(length > 0, ErrorCodes.InvalidDestroyUndoneSequenceMessage)
+        assert!(length > 0, ErrorCodes.InvalidDestroyUndoneSequenceMessage)
         let payloadSize = 37 + length * 8
-        assertWithErrorCode!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
+        assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
         let paths = byteVecSlice!(payload, 37, payloadSize)
 
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ remoteChainIdBytes)

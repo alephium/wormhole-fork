@@ -55,13 +55,13 @@ TxContract Governance(
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
         let body = parseAndVerifySignatures(vaa, true)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseBody(body)
-        assertWithErrorCode!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
-        assertWithErrorCode!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
-        assertWithErrorCode!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
+        assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
+        assert!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
+        assert!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
 
         // check module and governance action
-        assertWithErrorCode!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule, ErrorCodes.InvalidModule)
-        assertWithErrorCode!(byteVecSlice!(payload, 32, 33) == action, ErrorCodes.InvalidActionId)
+        assert!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule, ErrorCodes.InvalidModule)
+        assert!(byteVecSlice!(payload, 32, 33) == action, ErrorCodes.InvalidActionId)
 
         return targetChainId, payload
     }
@@ -79,10 +79,10 @@ TxContract Governance(
 
     // parse VAA and verify signatures, return body
     fn parseAndVerifySignatures(data: ByteVec, useLatestGuardianSetIndex: Bool) -> (ByteVec) {
-        assertWithErrorCode!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
+        assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
         if (useLatestGuardianSetIndex) {
-            assertWithErrorCode!(guardianSetIndex == guardianSetIndexes[1], ErrorCodes.InvalidGuardianSetIndex)
+            assert!(guardianSetIndex == guardianSetIndexes[1], ErrorCodes.InvalidGuardianSetIndex)
         }
 
         let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
@@ -90,9 +90,9 @@ TxContract Governance(
         let guardianSize = u256From1Byte!(byteVecSlice!(guardians, 0, 1))
 
         // check signature quorum size
-        assertWithErrorCode!(guardianSize != 0, ErrorCodes.InvalidGuardianSetSize) // this is guaranteed, but let's double check
+        assert!(guardianSize != 0, ErrorCodes.InvalidGuardianSetSize) // this is guaranteed, but let's double check
         let quorumSize = ((guardianSize * 2) / 3) + 1
-        assertWithErrorCode!(quorumSize <= signatureSize, ErrorCodes.InvalidSignatureSize)
+        assert!(quorumSize <= signatureSize, ErrorCodes.InvalidSignatureSize)
 
         let body = byteVecSlice!(data, 6 + signatureSize * 66, size!(data))
         let hash = keccak256!(keccak256!(body))
@@ -105,7 +105,7 @@ TxContract Governance(
             let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
 
             let guardianIndexI256 = toI256!(guardianIndex)
-            assertWithErrorCode!(guardianIndexI256 > lastGuardianIndex, ErrorCodes.InvalidSignatureGuardianIndex)
+            assert!(guardianIndexI256 > lastGuardianIndex, ErrorCodes.InvalidSignatureGuardianIndex)
             lastGuardianIndex = guardianIndexI256
 
             let signature = byteVecSlice!(data, offset + 1, offset + 66)
@@ -113,7 +113,7 @@ TxContract Governance(
             let newSignature = byteVecSlice!(signature, 0, 64) ++ u256To1Byte!(recId)
             let guardianKeyIndex = 1 + guardianIndex * 20
             let guardianKey = byteVecSlice!(guardians, guardianKeyIndex, guardianKeyIndex + 20)
-            assertWithErrorCode!(guardianKey == ethEcRecover!(hash, newSignature), ErrorCodes.InvalidSignature)
+            assert!(guardianKey == ethEcRecover!(hash, newSignature), ErrorCodes.InvalidSignature)
 
             offset = offset + 66
             sigIndex = sigIndex + 1
@@ -126,7 +126,7 @@ TxContract Governance(
             return guardianSets[1]
         }
         if (guardianSetIndex == guardianSetIndexes[0]) {
-            assertWithErrorCode!(blockTimeStamp!() <= previousGuardianSetExpirationTime, ErrorCodes.GuardianSetExpired)
+            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTime, ErrorCodes.GuardianSetExpired)
             return guardianSets[0]
         }
         panic!(ErrorCodes.InvalidGuardianSetIndex)
@@ -134,7 +134,7 @@ TxContract Governance(
 
     pub fn submitContractUpgrade(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
-        assertWithErrorCode!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
         let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
         let mut offset = 35 + contractCodeLength
         let newContractCode = byteVecSlice!(payload, 35, offset)
@@ -148,12 +148,12 @@ TxContract Governance(
                 ++ u256To32Byte!(messageFee)
                 ++ u256To32Byte!(guardianSetIndexes[0])
                 ++ u256To32Byte!(guardianSetIndexes[1])
-            assertWithErrorCode!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
+            assert!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
             let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
             let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
             offset = offset + stateLength
-            assertWithErrorCode!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
+            assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
             migrateWithFields!(newContractCode, newContractState)
         }
     }
@@ -167,32 +167,32 @@ TxContract Governance(
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {
         updatePreviousGuardianSet()
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewGuardianSet)
-        assertWithErrorCode!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
         let newGuardianSetIndex = u256From4Byte!(byteVecSlice!(payload, 33, 37))
-        assertWithErrorCode!(newGuardianSetIndex == guardianSetIndexes[1] + 1, ErrorCodes.InvalidGuardianSetIndex)
+        assert!(newGuardianSetIndex == guardianSetIndexes[1] + 1, ErrorCodes.InvalidGuardianSetIndex)
         let newGuardianSetSize = u256From1Byte!(byteVecSlice!(payload, 37, 38))
-        assertWithErrorCode!(newGuardianSetSize > 0, ErrorCodes.InvalidGuardianSetSize)
+        assert!(newGuardianSetSize > 0, ErrorCodes.InvalidGuardianSetSize)
         let payloadSize = 38 + newGuardianSetSize * 20
-        assertWithErrorCode!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
+        assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
         guardianSetIndexes[1] = newGuardianSetIndex
         guardianSets[1] = byteVecSlice!(payload, 37, payloadSize)
     }
 
     pub fn submitSetMessageFee(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewMessageFee)
-        assertWithErrorCode!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
         let fee = u256From32Byte!(byteVecSlice!(payload, 33, 65))
-        assertWithErrorCode!(size!(payload) == 65, ErrorCodes.InvalidMessageSize)
+        assert!(size!(payload) == 65, ErrorCodes.InvalidMessageSize)
         messageFee = fee
     }
 
     @using(assetsInContract = true)
     pub fn submitTransferFees(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.TransferFee)
-        assertWithErrorCode!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+        assert!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 33, 65))
         let recipient = byteVecSlice!(payload, 65, 97)
-        assertWithErrorCode!(size!(payload) == 97, ErrorCodes.InvalidMessageSize)
+        assert!(size!(payload) == 97, ErrorCodes.InvalidMessageSize)
         transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
     }
 }

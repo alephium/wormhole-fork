@@ -20,20 +20,20 @@ TxContract AttestTokenHandler(
   ) -> () {
     let governance = Governance(governanceContractId)
     let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
-    assertWithErrorCode!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
-    assertWithErrorCode!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
-    assertWithErrorCode!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
-    assertWithErrorCode!(msgSequence >= receivedSequence, ErrorCodes.InvalidSequence)
+    assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
+    assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
+    assert!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+    assert!(msgSequence >= receivedSequence, ErrorCodes.InvalidSequence)
     receivedSequence = msgSequence + 1
 
-    assertWithErrorCode!(byteVecSlice!(payload, 0, 1) == PayloadId.AttestToken, ErrorCodes.InvalidPayloadId)
+    assert!(byteVecSlice!(payload, 0, 1) == PayloadId.AttestToken, ErrorCodes.InvalidPayloadId)
     let tokenId = byteVecSlice!(payload, 1, 33)
     let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-    assertWithErrorCode!(tokenChainId == remoteChainId, ErrorCodes.InvalidAttestTokenMessage)
+    assert!(tokenChainId == remoteChainId, ErrorCodes.InvalidAttestTokenMessage)
     let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
     let symbol = byteVecSlice!(payload, 36, 68)
     let name = byteVecSlice!(payload, 68, 100)
-    assertWithErrorCode!(size!(payload) == 100, ErrorCodes.InvalidMessageSize)
+    assert!(size!(payload) == 100, ErrorCodes.InvalidMessageSize)
 
     let path = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
     let tokenBridgeForChainId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)

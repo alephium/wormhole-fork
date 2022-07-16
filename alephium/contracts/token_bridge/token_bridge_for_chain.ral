@@ -22,7 +22,7 @@ TxContract TokenBridgeForChain(
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     @using(preapprovedAssets = true)
     pub fn createWrapperForLocalToken(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        assertWithErrorCode!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
+        assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -48,7 +48,7 @@ TxContract TokenBridgeForChain(
     ) -> () {
         let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
         let expectedCaller = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
-        assertWithErrorCode!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
+        assert!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
@@ -65,7 +65,7 @@ TxContract TokenBridgeForChain(
     }
 
     pub fn nextSendSequence() -> U256 {
-        assertWithErrorCode!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
         sendSequence = sendSequence + 1
         return msgSequence
@@ -74,17 +74,17 @@ TxContract TokenBridgeForChain(
     pub fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
         let governance = Governance(governanceContractId)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
-        assertWithErrorCode!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
-        assertWithErrorCode!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
-        assertWithErrorCode!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
+        assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
 
         let tokenId = byteVecSlice!(payload, 33, 65)
-        assertWithErrorCode!(callerContractId!() == subContractId!(tokenId), ErrorCodes.InvalidCaller)
+        assert!(callerContractId!() == subContractId!(tokenId), ErrorCodes.InvalidCaller)
         return checkSequence(msgSequence), payload
     }
 
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
-        assertWithErrorCode!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         let mut index = 0
         while (index < length) {

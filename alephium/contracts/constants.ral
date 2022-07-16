@@ -29,5 +29,6 @@ Abstract TxContract Constants() {
     InvalidAttestTokenMessage           = 24
     InvalidPayloadId                    = 25
     InvalidTransferMessage              = 26
+    ExpectRemoteToken                   = 27
   }
 }

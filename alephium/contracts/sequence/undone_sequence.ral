@@ -8,12 +8,12 @@ TxContract UndoneSequence(
 ) extends Constants() {
     @using(assetsInContract = true)
     pub fn checkUndone(seq: U256) -> () {
-        assertWithErrorCode!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
-        assertWithErrorCode!(seq >= begin, ErrorCodes.InvalidSequence)
+        assert!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        assert!(seq >= begin, ErrorCodes.InvalidSequence)
         let offset = seq - begin
-        assertWithErrorCode!(offset < 256, ErrorCodes.InvalidSequence)
+        assert!(offset < 256, ErrorCodes.InvalidSequence)
         let flag = 1 << offset
-        assertWithErrorCode!(sequences & flag == 0, ErrorCodes.InvalidSequence)
+        assert!(sequences & flag == 0, ErrorCodes.InvalidSequence)
         sequences = sequences | flag
         if (sequences == SequenceExecutedFlag) {
             destroySelf!(refundAddress)
@@ -22,7 +22,7 @@ TxContract UndoneSequence(
 
     @using(assetsInContract = true)
     pub fn destroy() -> () {
-        assertWithErrorCode!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        assert!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         destroySelf!(refundAddress)
     }
 }

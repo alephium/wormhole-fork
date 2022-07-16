@@ -11,7 +11,7 @@ Abstract TxContract Sequence(
 ) extends Constants() {
     fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
-        assertWithErrorCode!(current & flag == 0, ErrorCodes.InvalidSequence)
+        assert!(current & flag == 0, ErrorCodes.InvalidSequence)
         return current | flag
     }
 
@@ -47,7 +47,7 @@ Abstract TxContract Sequence(
             compact()
         }
 
-        assert!(seq < (next + 512))
+        assert!(seq < (next + 512), ErrorCodes.InvalidSequence)
         let offset = seq - next
         if (offset < 256) {
             next1 = setExecuted(offset, next1)
