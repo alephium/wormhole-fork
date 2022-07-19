@@ -1,4 +1,4 @@
-import "token_bridge.ral"
+import "../token_bridge/token_bridge.ral"
 
 TxScript Main(payer: Address, tokenBridgeId: ByteVec, localTokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
     let tokenBridge = TokenBridge(tokenBridgeId)

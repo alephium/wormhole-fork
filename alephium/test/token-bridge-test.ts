@@ -2,7 +2,7 @@ import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, sub
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
 import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, createWrapper, DestroyUndoneSequenceContracts, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, doubleHash, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance } from './fixtures/wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
 import { createUndoneSequence } from './fixtures/sequence-fixture'
@@ -160,11 +160,7 @@ describe("test token bridge", () => {
         })
 
         const tokenWrapperOutput = testResult.txOutputs[0]
-        const path = Buffer.concat([
-            Buffer.from(testToken.contractId, 'hex'),
-            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex')
-        ])
-        const expectedContractId = Buffer.from(doubleHash(path)).toString('hex')
+        const expectedContractId = subContractId(tokenBridgeForChainInfo.contractId, testToken.contractId)
         expect(binToHex(contractIdFromAddress(tokenWrapperOutput.address))).toEqual(expectedContractId)
         expect(BigInt(tokenWrapperOutput.alphAmount)).toEqual(minimalAlphInContract)
         expect(tokenWrapperOutput.tokens).toEqual([])
@@ -358,11 +354,7 @@ describe("test token bridge", () => {
         })
 
         const tokenWrapperOutput = testResult.txOutputs[0]
-        const path = Buffer.concat([
-            Buffer.from(remoteTokenId, 'hex'),
-            Buffer.from(tokenBridgeForChainInfo.contractId, 'hex')
-        ])
-        const expectedContractId = Buffer.from(doubleHash(path)).toString('hex')
+        const expectedContractId = subContractId(tokenBridgeForChainInfo.contractId, remoteTokenId)
         const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapperOutput.address))
         expect(tokenWrapperId).toEqual(expectedContractId)
         expect(BigInt(tokenWrapperOutput.alphAmount)).toEqual(minimalAlphInContract)

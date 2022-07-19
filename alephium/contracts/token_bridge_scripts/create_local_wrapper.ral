@@ -1,4 +1,4 @@
-import "token_bridge_for_chain.ral"
+import "../token_bridge/token_bridge_for_chain.ral"
 
 TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, localTokenId: ByteVec, alphAmount: U256) {
     let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)

@@ -1,22 +1,23 @@
 import "undone_sequence.ral"
+import "../constants.ral"
 
 // sequence started from 0, set `next = 0` when init contract state
-TxContract Sequence(
+Abstract Contract Sequence(
     mut next: U256,
     mut next1: U256, // TODO: better name
     mut next2: U256,
     undoneSequenceTemplateId: ByteVec,
     refundAddress: Address
-) {
+) extends Constants() {
     fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
-        assert!(current & flag == 0)
+        assert!(current & flag == 0, ErrorCodes.InvalidSequence)
         return current | flag
     }
 
     @using(assetsInContract = true)
     fn compact() -> () {
-        if (next1 != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
+        if (next1 != SequenceExecutedFlag) {
             let encodedState = encodeToByteVec!(
                 selfContractId!(),
                 next,
@@ -46,7 +47,7 @@ TxContract Sequence(
             compact()
         }
 
-        assert!(seq < (next + 512))
+        assert!(seq < (next + 512), ErrorCodes.InvalidSequence)
         let offset = seq - next
         if (offset < 256) {
             next1 = setExecuted(offset, next1)

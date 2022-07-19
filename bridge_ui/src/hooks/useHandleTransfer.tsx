@@ -372,7 +372,11 @@ async function alephium(
             ALEPHIUM_CONFIRMATIONS
           )
         }
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+        const tokens = [{
+          id: tokenId,
+          amount: amountParsed.toString()
+        }]
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId
       }
     )

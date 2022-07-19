@@ -1,4 +1,4 @@
-import "token_bridge.ral"
+import "../token_bridge/token_bridge.ral"
 
 TxScript Main(
     tokenBridgeId: ByteVec,

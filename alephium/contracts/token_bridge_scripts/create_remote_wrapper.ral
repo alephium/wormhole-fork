@@ -1,4 +1,4 @@
-import "attest_token_handler.ral"
+import "../token_bridge/attest_token_handler.ral"
 
 TxScript Main(
     payer: Address,

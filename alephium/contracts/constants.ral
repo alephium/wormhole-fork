@@ -1,0 +1,34 @@
+Abstract Contract Constants() {
+  const SequenceExecutedFlag = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+  enum ErrorCodes {
+    InvalidEmitChainId                  = 0
+    InvalidEmitAddress                  = 1
+    InvalidMessageSize                  = 2
+    InvalidSequence                     = 3
+    InvalidModule                       = 4
+    InvalidActionId                     = 5
+    InvalidVersion                      = 6
+    InvalidGuardianSetIndex             = 7
+    InvalidGuardianSetSize              = 8
+    InvalidSignatureSize                = 9
+    InvalidSignatureGuardianIndex       = 10
+    InvalidSignature                    = 11
+    GuardianSetExpired                  = 12
+    InvalidTargetChainId                = 13
+    ContractStateMismatch               = 14
+    InvalidRegisterChainMessage         = 15
+    InvalidTokenId                      = 16
+    InvalidNonceSize                    = 17
+    TokenNotExist                       = 18
+    InvalidTransferTargetChain          = 19
+    InvalidDestroyUndoneSequenceMessage = 20
+    InvalidCaller                       = 21
+    InvalidTransferToAddress            = 22
+    TransferFeeLessThanAmount           = 23
+    InvalidAttestTokenMessage           = 24
+    InvalidPayloadId                    = 25
+    InvalidTransferMessage              = 26
+    ExpectRemoteToken                   = 27
+  }
+}
