@@ -99,6 +99,7 @@ contract("Wormhole", function () {
         const accounts = await web3.eth.getAccounts();
 
         const log = await initialized.methods.publishMessage(
+            "0",
             "0x123",
             "0x123321",
             32
@@ -108,6 +109,7 @@ contract("Wormhole", function () {
         })
 
         assert.equal(log.events.LogMessagePublished.returnValues.sender.toString(), accounts[0]);
+        assert.equal(log.events.LogMessagePublished.returnValues.targetChainId.toString(), "0")
         assert.equal(log.events.LogMessagePublished.returnValues.sequence.toString(), "0");
         assert.equal(log.events.LogMessagePublished.returnValues.nonce, 291);
         assert.equal(log.events.LogMessagePublished.returnValues.payload.toString(), "0x123321");
@@ -118,7 +120,8 @@ contract("Wormhole", function () {
         const initialized = new web3.eth.Contract(ImplementationFullABI, Wormhole.address);
         const accounts = await web3.eth.getAccounts();
 
-        const log = await initialized.methods.publishMessage(
+        const log0 = await initialized.methods.publishMessage(
+            "0",
             "0x1",
             "0x1",
             32
@@ -127,7 +130,19 @@ contract("Wormhole", function () {
             from: accounts[0]
         })
 
-        assert.equal(log.events.LogMessagePublished.returnValues.sequence.toString(), "1");
+        assert.equal(log0.events.LogMessagePublished.returnValues.sequence.toString(), "1");
+
+        const log1 = await initialized.methods.publishMessage(
+            "1",
+            "0x1",
+            "0x1",
+            32
+        ).send({
+            value: 0, // fees are set to 0 initially
+            from: accounts[0]
+        })
+
+        assert.equal(log1.events.LogMessagePublished.returnValues.sequence.toString(), "0");
     })
 
     it("parses VMs correctly", async function () {
@@ -136,6 +151,7 @@ contract("Wormhole", function () {
         const timestamp = 1000;
         const nonce = 1001;
         const emitterChainId = 11;
+        const targetChainId = 12;
         const emitterAddress = "0x0000000000000000000000000000000000000000000000000000000000000eee"
         const data = "0xaaaaaa";
 
@@ -143,6 +159,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            targetChainId,
             emitterAddress,
             1337,
             data,
@@ -165,6 +182,7 @@ contract("Wormhole", function () {
         assert.equal(result.vm.timestamp, timestamp);
         assert.equal(result.vm.nonce, nonce);
         assert.equal(result.vm.emitterChainId, emitterChainId);
+        assert.equal(result.vm.targetChainId, targetChainId);
         assert.equal(result.vm.emitterAddress, emitterAddress);
         assert.equal(result.vm.payload, data);
         assert.equal(result.vm.guardianSetIndex, 0);
@@ -190,6 +208,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            0,
             emitterAddress,
             1337,
             data,
@@ -217,6 +236,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            0,
             emitterAddress,
             1337,
             data,
@@ -245,6 +265,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            0,
             emitterAddress,
             1337,
             data,
@@ -308,8 +329,6 @@ contract("Wormhole", function () {
             core,
             // Action 3 (Set Message Fee)
             actionMessageFee,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // Message Fee
             web3.eth.abi.encodeParameter("uint256", 1111).substring(2),
         ].join('')
@@ -318,6 +337,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            testChainId,
             emitterAddress,
             0,
             data,
@@ -344,6 +364,7 @@ contract("Wormhole", function () {
 
         // test message publishing
         await initialized.methods.publishMessage(
+            "0",
             "0x123",
             "0x123321",
             32
@@ -355,6 +376,7 @@ contract("Wormhole", function () {
         let failed = false;
         try {
             await initialized.methods.publishMessage(
+                "0",
                 "0x123",
                 "0x123321",
                 32
@@ -385,8 +407,6 @@ contract("Wormhole", function () {
             core,
             // Action 4 (Transfer Fees)
             actionTransferFee,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // Amount
             web3.eth.abi.encodeParameter("uint256", 11).substring(2),
             // Recipient
@@ -397,6 +417,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            testChainId,
             emitterAddress,
             0,
             data,
@@ -439,7 +460,6 @@ contract("Wormhole", function () {
             core,
             // Action 2 (Guardian Set Upgrade)
             actionGuardianSetUpgrade,
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("uint32", oldIndex + 1).substring(2 + (64 - 8)),
             web3.eth.abi.encodeParameter("uint8", 3).substring(2 + (64 - 2)),
             web3.eth.abi.encodeParameter("address", testSigner1.address).substring(2 + (64 - 40)),
@@ -451,6 +471,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            testChainId,
             emitterAddress,
             0,
             data,
@@ -509,8 +530,6 @@ contract("Wormhole", function () {
             core,
             // Action 1 (Contract Upgrade)
             actionContractUpgrade,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // New Contract Address
             web3.eth.abi.encodeParameter("address", mock.address).substring(2),
         ].join('')
@@ -519,6 +538,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            testChainId,
             emitterAddress,
             0,
             data,
@@ -561,8 +581,6 @@ contract("Wormhole", function () {
             core,
             // Action 4 (Transfer Fee)
             actionTransferFee,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // Amount
             web3.eth.abi.encodeParameter("uint256", 1).substring(2),
             // Recipient            
@@ -573,6 +591,7 @@ contract("Wormhole", function () {
             0,
             0,
             testGovernanceChainId,
+            testChainId,
             testGovernanceContract,
             0,
             data,
@@ -609,6 +628,7 @@ contract("Wormhole", function () {
             timestamp,
             nonce,
             emitterChainId,
+            0,
             emitterAddress,
             0,
             data,
@@ -640,8 +660,6 @@ contract("Wormhole", function () {
             core,
             // Action 4 (set fees)
             actionTransferFee,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // Amount
             web3.eth.abi.encodeParameter("uint256", 1).substring(2),
             // Recipient
@@ -652,6 +670,7 @@ contract("Wormhole", function () {
             0,
             0,
             999,
+            testChainId,
             testGovernanceContract,
             0,
             data,
@@ -685,7 +704,6 @@ contract("Wormhole", function () {
             core,
             // Action 4 (Transfer Fee)
             actionTransferFee,
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("uint256", 1).substring(2),
             web3.eth.abi.encodeParameter("address", "0x0000000000000000000000000000000000000000").substring(2),
         ].join('')
@@ -694,6 +712,7 @@ contract("Wormhole", function () {
             0,
             0,
             testGovernanceChainId,
+            testChainId,
             core,
             0,
             data,
@@ -727,8 +746,6 @@ contract("Wormhole", function () {
             core,
             // Action 4 (Transfer Fee)
             actionTransferFee,
-            // ChainID
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             // Amount
             web3.eth.abi.encodeParameter("uint256", 1).substring(2),
             // Recipient
@@ -739,6 +756,7 @@ contract("Wormhole", function () {
             0,
             0,
             testGovernanceChainId,
+            testChainId,
             testGovernanceContract,
             0,
             data,
@@ -776,6 +794,7 @@ const signAndEncodeVM = async function (
     timestamp,
     nonce,
     emitterChainId,
+    targetChainId,
     emitterAddress,
     sequence,
     data,
@@ -787,6 +806,7 @@ const signAndEncodeVM = async function (
         web3.eth.abi.encodeParameter("uint32", timestamp).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint32", nonce).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint16", emitterChainId).substring(2 + (64 - 4)),
+        web3.eth.abi.encodeParameter("uint16", targetChainId).substring(2 + (64 - 4)),
         web3.eth.abi.encodeParameter("bytes32", emitterAddress).substring(2),
         web3.eth.abi.encodeParameter("uint64", sequence).substring(2 + (64 - 16)),
         web3.eth.abi.encodeParameter("uint8", consistencyLevel).substring(2 + (64 - 2)),

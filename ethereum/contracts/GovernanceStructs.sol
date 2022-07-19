@@ -17,7 +17,6 @@ contract GovernanceStructs {
     struct ContractUpgrade {
         bytes32 module;
         uint8 action;
-        uint16 chain;
 
         address newContract;
     }
@@ -25,7 +24,6 @@ contract GovernanceStructs {
     struct GuardianSetUpgrade {
         bytes32 module;
         uint8 action;
-        uint16 chain;
 
         Structs.GuardianSet newGuardianSet;
         uint32 newGuardianSetIndex;
@@ -34,7 +32,6 @@ contract GovernanceStructs {
     struct SetMessageFee {
         bytes32 module;
         uint8 action;
-        uint16 chain;
 
         uint256 messageFee;
     }
@@ -42,7 +39,6 @@ contract GovernanceStructs {
     struct TransferFees {
         bytes32 module;
         uint8 action;
-        uint16 chain;
 
         uint256 amount;
         bytes32 recipient;
@@ -58,9 +54,6 @@ contract GovernanceStructs {
         index += 1;
 
         require(cu.action == 1, "invalid ContractUpgrade");
-
-        cu.chain = encodedUpgrade.toUint16(index);
-        index += 2;
 
         cu.newContract = address(uint160(uint256(encodedUpgrade.toBytes32(index))));
         index += 32;
@@ -78,9 +71,6 @@ contract GovernanceStructs {
         index += 1;
 
         require(gsu.action == 2, "invalid GuardianSetUpgrade");
-
-        gsu.chain = encodedUpgrade.toUint16(index);
-        index += 2;
 
         gsu.newGuardianSetIndex = encodedUpgrade.toUint32(index);
         index += 4;
@@ -112,9 +102,6 @@ contract GovernanceStructs {
 
         require(smf.action == 3, "invalid SetMessageFee");
 
-        smf.chain = encodedSetMessageFee.toUint16(index);
-        index += 2;
-
         smf.messageFee = encodedSetMessageFee.toUint256(index);
         index += 32;
 
@@ -131,9 +118,6 @@ contract GovernanceStructs {
         index += 1;
 
         require(tf.action == 4, "invalid TransferFees");
-
-        tf.chain = encodedTransferFees.toUint16(index);
-        index += 2;
 
         tf.amount = encodedTransferFees.toUint256(index);
         index += 32;

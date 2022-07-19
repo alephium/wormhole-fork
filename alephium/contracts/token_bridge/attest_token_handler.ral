@@ -1,0 +1,46 @@
+import "token_bridge_for_chain.ral"
+import "token_bridge_constants.ral"
+import "token_bridge.ral"
+import "../governance.ral"
+import "../constants.ral"
+
+Contract AttestTokenHandler(
+  governanceContractId: ByteVec,
+  localChainId: U256,
+  localTokenBridgeId: ByteVec,
+  remoteChainId: U256,
+  remoteTokenBridgeId: ByteVec,
+  mut receivedSequence: U256
+) extends Constants(), TokenBridgeConstants() {
+  @using(preapprovedAssets = true)
+  pub fn handleAttestToken(
+    vaa: ByteVec,
+    payer: Address,
+    createContractAlphAmount: U256
+  ) -> () {
+    let governance = Governance(governanceContractId)
+    let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
+    assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
+    assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
+    assert!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+    assert!(msgSequence >= receivedSequence, ErrorCodes.InvalidSequence)
+    receivedSequence = msgSequence + 1
+
+    assert!(byteVecSlice!(payload, 0, 1) == PayloadId.AttestToken, ErrorCodes.InvalidPayloadId)
+    let tokenId = byteVecSlice!(payload, 1, 33)
+    let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+    assert!(tokenChainId == remoteChainId, ErrorCodes.InvalidAttestTokenMessage)
+    let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
+    let symbol = byteVecSlice!(payload, 36, 68)
+    let name = byteVecSlice!(payload, 68, 100)
+    assert!(size!(payload) == 100, ErrorCodes.InvalidMessageSize)
+
+    let path = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
+    let tokenBridgeForChainId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
+    let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+    tokenBridgeForChain.createWrapperForRemoteToken{payer -> createContractAlphAmount}(
+      tokenId, decimals, symbol, name, payer, createContractAlphAmount
+    )
+  }
+}
+

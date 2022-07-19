@@ -1,4 +1,4 @@
-import "token_wrapper.ral"
+import "../token_bridge/token_wrapper.ral"
 
 TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec) {
     let caller = callerAddress!()

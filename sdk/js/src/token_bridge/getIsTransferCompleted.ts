@@ -5,8 +5,8 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
-import { toAlphContractAddress, VAA } from "../utils";
-import { NodeProvider, node } from "@alephium/web3";
+import { VAA } from "../utils";
+import { NodeProvider, node, addressFromContractId, subContractId } from "@alephium/web3";
 import {
   BITS_PER_KEY,
   calcLogicSigAccount,
@@ -17,10 +17,32 @@ import { getSignedVAAHash } from "../bridge";
 import { Bridge__factory } from "../ethers-contracts";
 import { importCoreWasm } from "../solana/wasm";
 import { safeBigIntToNumber } from "../utils/bigint";
+import { zeroPad } from "./alephium";
 
 const bigInt512 = BigInt(512)
 const bigInt256 = BigInt(256)
 const bigInt1 = BigInt(1)
+
+async function isSequenceExecuted(
+  provider: NodeProvider,
+  tokenBridgeForChainId: string,
+  sequence: bigint,
+  groupIndex: number
+): Promise<boolean> {
+  const path = zeroPad(Math.floor(Number(sequence) / 256).toString(16), 8)
+  const undoneSequenceId = subContractId(tokenBridgeForChainId, path)
+  const contractAddress = addressFromContractId(undoneSequenceId)
+  try {
+    const state = await provider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
+    const begin = BigInt((state.fields[1] as node.ValU256).value)
+    const sequences = BigInt((state.fields[2] as node.ValU256).value)
+    const distance = sequence - begin
+    return ((sequences >> distance) & bigInt1) === bigInt1
+  } catch (error) {
+    // TODO: handle errors properly(contract does not exist and other errors)
+    return true
+  }
+}
 
 export async function getIsTransferCompletedAlph(
   provider: NodeProvider,
@@ -28,7 +50,7 @@ export async function getIsTransferCompletedAlph(
   groupIndex: number,
   signedVAA: Uint8Array
 ) {
-  const tokenBridgeForChainAddress = toAlphContractAddress(tokenBridgeForChainId)
+  const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
   const contractState = await provider.contracts.getContractsAddressState(tokenBridgeForChainAddress, {group: groupIndex})
   const fields = contractState.fields
   const next = BigInt((fields[5] as node.ValU256).value)
@@ -37,8 +59,7 @@ export async function getIsTransferCompletedAlph(
   const sequence = BigInt(VAA.from(signedVAA).body.sequence)
 
   if (sequence < next) {
-    // TODO: check undone sequence list
-    return true
+    return isSequenceExecuted(provider, tokenBridgeForChainId, sequence, groupIndex)
   }
 
   let distance = sequence - next

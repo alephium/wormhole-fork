@@ -1,9 +1,9 @@
 import Web3  from 'web3'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
-import { nonce, toHex, zeroPad } from '../../lib/utils'
+import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { NodeProvider, Contract, ContractState, Asset } from '@alephium/web3'
+import { NodeProvider, Contract, ContractState, Asset, contractIdFromAddress, binToHex } from '@alephium/web3'
 import * as blake from 'blakejs'
 
 export const web3 = new Web3()
@@ -17,7 +17,7 @@ export const minimalAlphInContract = oneAlph
 export const initAsset: Asset = {
     alphAmount: minimalAlphInContract
 }
-export const u256Max = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+export const u256Max = 1n << 255n
 export const gasPrice = BigInt("100000000000")
 export const maxGasPerTx = BigInt("625000")
 export const defaultGasFee = gasPrice * maxGasPerTx
@@ -53,15 +53,6 @@ export async function createMath(provider: NodeProvider): Promise<ContractInfo> 
         {}, {alphAmount: minimalAlphInContract}, address
     )
     return new ContractInfo(mathContract, contractState, [], address)
-}
-
-export async function createEventEmitter(provider: NodeProvider): Promise<ContractInfo> {
-    const eventEmitterContract = await Contract.fromSource(provider, 'event_emitter.ral')
-    const address = randomContractAddress()
-    const contractState = eventEmitterContract.toState(
-        {}, {alphAmount: minimalAlphInContract}, address
-    )
-    return new ContractInfo(eventEmitterContract, contractState, [], address)
 }
 
 export class GuardianSet {
@@ -100,7 +91,7 @@ export class GuardianSet {
             .sort((a, b) => a[0] - b[0])
             .slice(0, size)
             .sort((a, b) => a[1] - b[1])
-        const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + toHex(body.encode())))
+        const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + binToHex(body.encode())))
         const signatures = keys.map(element => {
             const keyIndex = element[1]
             const ec = new elliptic.ec('secp256k1')
@@ -124,6 +115,7 @@ export class VAABody {
     timestamp: number   // seconds
     nonce: string
     emitterChainId: number
+    targetChainId: number
     emitterAddress: string 
     sequence: number
     consistencyLevel: number
@@ -132,6 +124,7 @@ export class VAABody {
     constructor(
         payload: Uint8Array,
         emitterChainId: number,
+        targetChainId: number,
         emitterAddress: string,
         sequence: number,
         timestamp: number = 0,
@@ -141,6 +134,7 @@ export class VAABody {
         this.timestamp = timestamp
         this.nonce = nonceHex
         this.emitterChainId = emitterChainId
+        this.targetChainId = targetChainId
         this.emitterAddress = emitterAddress
         this.sequence = sequence
         this.consistencyLevel = consistencyLevel
@@ -148,13 +142,14 @@ export class VAABody {
     }
 
     encode(): Uint8Array {
-        let header = Buffer.allocUnsafe(51)
+        let header = Buffer.allocUnsafe(53)
         header.writeUint32BE(this.timestamp, 0)
         header.write(this.nonce, 4, 'hex')
         header.writeUint16BE(this.emitterChainId, 8)
-        header.write(this.emitterAddress, 10, 'hex')
-        header.writeBigUInt64BE(BigInt(this.sequence), 42)
-        header.writeUint8(this.consistencyLevel, 50)
+        header.writeUint16BE(this.targetChainId, 10)
+        header.write(this.emitterAddress, 12, 'hex')
+        header.writeBigUInt64BE(BigInt(this.sequence), 44)
+        header.writeUint8(this.consistencyLevel, 52)
         return Buffer.concat([header, this.payload])
     }
 }
@@ -197,14 +192,13 @@ export class ContractUpgrade {
         this.state = state
     }
 
-    encode(module: string, action: number, chainId: number) {
+    encode(module: string, action: number) {
         const contractCodeLength = this.contractCode.length / 2
-        const buffer0 = Buffer.allocUnsafe(32 + 1 + 2 + 2 + contractCodeLength)
+        const buffer0 = Buffer.allocUnsafe(32 + 1 + 2 + contractCodeLength)
         buffer0.write(module, 0, 'hex')
         buffer0.writeUint8(action, 32)
-        buffer0.writeUint16BE(chainId, 33)
-        buffer0.writeUint16BE(contractCodeLength, 35)
-        buffer0.write(this.contractCode, 37, 'hex')
+        buffer0.writeUint16BE(contractCodeLength, 33)
+        buffer0.write(this.contractCode, 35, 'hex')
         if (this.state !== undefined) {
             const stateLength = this.state.length / 2
             const buffer1 = Buffer.allocUnsafe(32 + 2 + stateLength)
@@ -225,11 +219,11 @@ export function randomAssetAddress(): string {
 
 export function toRecipientId(address: string): string {
     const bytes = base58.decode(address)
-    return toHex(bytes.slice(1))
+    return binToHex(bytes.slice(1))
 }
 
 export function randomContractId(): string {
-    return toContractId(randomContractAddress())
+    return binToHex(contractIdFromAddress(randomContractAddress()))
 }
 
 export function randomContractAddress(): string {
@@ -258,25 +252,15 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-    await expectFailed(func, ['AssertionFailed'])
+    await expectFailed(func, ['AssertionFailed', 'AssertionFailedWithErrorCode'])
+}
+
+export async function expectNotEnoughBalance<T>(func: () => Promise<T>) {
+    await expectFailed(func, ['NotEnoughBalance'])
 }
 
 export async function expectOneOfError<T>(func: () => Promise<T>, errors: string[]) {
     await expectFailed(func, errors)
-}
-
-export function toContractId(address: string): string {
-    const bytes = base58.decode(address)
-    return toHex(bytes.slice(1))
-}
-
-export function toContractAddress(contractId: string): string {
-    if (contractId.length != 64) {
-        throw Error("invalid contract id " + contractId)
-    }
-    const prefix = Buffer.from([0x03])
-    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
-    return base58.encode(bytes)
 }
 
 export function loadContract(code: string): Contract {
@@ -294,8 +278,4 @@ export function loadContract(code: string): Contract {
 
 export function chainIdToBytes(chainId: number): Uint8Array {
     return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
-}
-
-export function doubleHash(bytes: Uint8Array): Uint8Array {
-    return blake.blake2b(blake.blake2b(bytes, undefined, 32), undefined, 32)
 }

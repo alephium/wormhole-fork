@@ -1,0 +1,96 @@
+import "../governance.ral"
+import "../math.ral"
+import "../constants.ral"
+import "../sequence/sequence.ral"
+import "../sequence/undone_sequence.ral"
+import "token_bridge_constants.ral"
+import "token_bridge.ral"
+
+Contract TokenBridgeForChain(
+    governanceContractId: ByteVec,
+    localChainId: U256,
+    localTokenBridgeId: ByteVec, // local chain token bridge contract id
+    remoteChainId: U256,
+    remoteTokenBridgeId: ByteVec, // remote chain token bridge contract id
+    mut next: U256,
+    mut next1: U256,
+    mut next2: U256,
+    undoneSequenceTemplateId: ByteVec,
+    tokenWrapperTemplateId: ByteVec, // used for create contract by copyCreateContract
+    refundAddress: Address,
+    mut sendSequence: U256
+) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForLocalToken(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+        assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
+        let encodedState = encodeToByteVec!(
+            localTokenBridgeId,
+            selfContractId!(),
+            localChainId,
+            remoteChainId,
+            localTokenId,
+            true, // isLocalToken
+            #, // no symbol for local token
+            #, // no name for local token
+            0  // no decimals for local token
+        )
+        copyCreateSubContract!{payer -> createContractAlphAmount}(localTokenId, tokenWrapperTemplateId, encodedState)
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn createWrapperForRemoteToken(
+        remoteTokenId: ByteVec,
+        decimals: U256,
+        symbol: ByteVec,
+        name: ByteVec,
+        payer: Address,
+        createContractAlphAmount: U256
+    ) -> () {
+        let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
+        let expectedCaller = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
+        assert!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
+        let encodedState = encodeToByteVec!(
+            localTokenBridgeId,
+            selfContractId!(),
+            localChainId,
+            remoteChainId,
+            remoteTokenId,
+            false, // isLocalToken
+            symbol,
+            name,
+            decimals
+        )
+        let tokenAmount = 1 << 255 // save some space from 0xff...ff
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(remoteTokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
+    }
+
+    pub fn nextSendSequence() -> U256 {
+        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        let msgSequence = sendSequence
+        sendSequence = sendSequence + 1
+        return msgSequence
+    }
+
+    pub fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
+        let governance = Governance(governanceContractId)
+        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
+        assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
+        assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+
+        let tokenId = byteVecSlice!(payload, 33, 65)
+        assert!(callerContractId!() == subContractId!(tokenId), ErrorCodes.InvalidCaller)
+        return checkSequence(msgSequence), payload
+    }
+
+    pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
+        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        let length = size!(paths)
+        let mut index = 0
+        while (index < length) {
+            let undoneSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
+            UndoneSequence(undoneSequenceId).destroy()
+            index = index + 8
+        }
+    }
+}

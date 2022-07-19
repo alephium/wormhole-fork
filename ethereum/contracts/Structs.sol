@@ -27,6 +27,7 @@ interface Structs {
 		uint32 timestamp;
 		uint32 nonce;
 		uint16 emitterChainId;
+		uint16 targetChainId;
 		bytes32 emitterAddress;
 		uint64 sequence;
 		uint8 consistencyLevel;

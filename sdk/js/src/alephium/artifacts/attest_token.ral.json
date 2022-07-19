@@ -1,12 +1,12 @@
 {
-  "sourceCodeSha256": "e986664f78d8231e301c908b2b8c0286c8e4b1d01ca8f06e4b25287c29dd19ae",
-  "bytecodeTemplate": "0101030001000b{1}1700{0}{3}a2{0}{2}{4}{5}16000105",
+  "sourceCodeSha256": "9367f044495cbc25569668277c8ddccd95f7857225955dbe37219cb445362bf0",
+  "bytecodeTemplate": "01010300010011{1}1700{0}7a{3}a2{2}0da3{0}{2}{4}{5}100c16000104",
   "fieldsSig": {
-    "signature": "TxScript Main(payer:Address,tokenBridgeId:ByteVec,tokenId:ByteVec,messageFee:U256,nonce:ByteVec,consistencyLevel:U256)",
+    "signature": "TxScript Main(payer:Address,tokenBridgeId:ByteVec,localTokenId:ByteVec,messageFee:U256,nonce:ByteVec,consistencyLevel:U256)",
     "names": [
       "payer",
       "tokenBridgeId",
-      "tokenId",
+      "localTokenId",
       "messageFee",
       "nonce",
       "consistencyLevel"

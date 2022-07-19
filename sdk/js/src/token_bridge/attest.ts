@@ -35,7 +35,7 @@ export function attestFromAlph(
   return script.buildByteCodeToDeploy({
     payer: payer,
     tokenBridgeId: tokenBridgeId,
-    tokenId: tokenId,
+    localTokenId: tokenId,
     messageFee: messageFee,
     nonce: nonceHex,
     consistencyLevel: cl

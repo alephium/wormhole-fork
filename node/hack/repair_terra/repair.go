@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -32,6 +33,7 @@ var (
 	terraAddr    = flag.String("terraProgram", "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5", "Terra program address")
 	dryRun       = flag.Bool("dryRun", true, "Dry run")
 	sleepTime    = flag.Int("sleepTime", 1, "Time to sleep between http requests")
+	targetChain  = flag.Uint("targetChain", 0, "VAA target chain id")
 	TerraEmitter = struct {
 		ChainID vaa.ChainID
 		Emitter string
@@ -232,6 +234,10 @@ func EventsToMessagePublications(contract string, txHash string, events []gjson.
 func main() {
 	flag.Parse()
 
+	if *targetChain > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChain)
+	}
+
 	ctx := context.Background()
 
 	missingMessages := make(map[uint64]bool)
@@ -246,6 +252,7 @@ func main() {
 
 	msg := nodev1.FindMissingMessagesRequest{
 		EmitterChain:   uint32(vaa.ChainIDTerra),
+		TargetChain:    uint32(*targetChain),
 		EmitterAddress: TerraEmitter.Emitter,
 		RpcBackfill:    true,
 		BackfillNodes:  common.PublicRPCEndpoints,

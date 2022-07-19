@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 
 	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/common"
@@ -16,10 +17,11 @@ import (
 )
 
 var (
-	alphRPC    = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
-	apiKey     = flag.String("apiKey", "", "Alephium RPC api key")
-	adminRPC   = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
-	groupIndex = flag.Uint("group", 0, "Contract group index")
+	alphRPC     = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
+	apiKey      = flag.String("apiKey", "", "Alephium RPC api key")
+	adminRPC    = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	groupIndex  = flag.Uint("group", 0, "Contract group index")
+	targetChain = flag.Uint("targetChain", 0, "VAA target chain id")
 )
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.NodePrivilegedServiceClient, error) {
@@ -35,6 +37,10 @@ func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.
 
 func main() {
 	flag.Parse()
+
+	if *targetChain > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChain)
+	}
 
 	ctx := context.Background()
 	conn, admin, err := getAdminClient(ctx, *adminRPC)
@@ -54,6 +60,7 @@ func main() {
 
 	msg := nodev1.FindMissingMessagesRequest{
 		EmitterChain:   uint32(vaa.ChainIDAlephium),
+		TargetChain:    uint32(*targetChain),
 		EmitterAddress: alphEmitter,
 		RpcBackfill:    true,
 		BackfillNodes:  common.PublicRPCEndpoints,

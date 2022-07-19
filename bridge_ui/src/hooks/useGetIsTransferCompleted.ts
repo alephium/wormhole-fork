@@ -9,6 +9,7 @@ import {
   getIsTransferCompletedTerra,
   getIsTransferCompletedAlph,
   isEVMChain,
+  getTokenBridgeForChainId,
 } from "@certusone/wormhole-sdk";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
@@ -23,6 +24,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
@@ -32,7 +34,6 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { getTokenBridgeForChainId } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 
@@ -153,7 +154,7 @@ export default function useGetIsTransferCompleted(
               throw Error("transfer source chain is undefined")
             }
 
-            const tokenBridgeForChainId = getTokenBridgeForChainId(sourceChain)
+            const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
             transferCompleted = await getIsTransferCompletedAlph(
               alphSigner.nodeProvider,
               tokenBridgeForChainId,

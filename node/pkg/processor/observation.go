@@ -200,6 +200,7 @@ func (p *Processor) handleObservation(ctx context.Context, m *gossipv1.SignedObs
 			Nonce:            v.Nonce,
 			Sequence:         v.Sequence,
 			EmitterChain:     v.EmitterChain,
+			TargetChain:      v.TargetChain,
 			EmitterAddress:   v.EmitterAddress,
 			Payload:          v.Payload,
 			ConsistencyLevel: v.ConsistencyLevel,

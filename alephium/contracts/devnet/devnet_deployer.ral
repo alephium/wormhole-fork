@@ -1,0 +1,55 @@
+Contract DevnetDeployer() {
+  @using(preapprovedAssets = true)
+  pub fn deployGovernance(
+    bytecode: ByteVec,
+    chainId: U256,
+    governanceChainId: U256,
+    governanceEmitterAddress: ByteVec,
+    receivedSequence: U256,
+    messageFee: U256,
+    guardianSets: [ByteVec; 2],
+    guardianSetIndexes: [U256; 2],
+    previousGuardianSetExpirationTime: U256
+  ) -> () {
+    let encodedState = encodeToByteVec!(
+      chainId,
+      governanceChainId,
+      governanceEmitterAddress,
+      receivedSequence,
+      messageFee,
+      guardianSets[0],
+      guardianSets[1],
+      guardianSetIndexes[0],
+      guardianSetIndexes[1],
+      previousGuardianSetExpirationTime
+    )
+    createSubContract!{callerAddress!() -> 1 alph}(#00, bytecode, encodedState)
+  }
+
+  @using(preapprovedAssets = true)
+  pub fn deployTokenBridge(
+    bytecode: ByteVec,
+    governanceContractId: ByteVec,
+    localChainId: U256,
+    receivedSequence: U256,
+    sendSequence: U256,
+    tokenWrapperTemplateId: ByteVec,
+    tokenBridgeForChainTemplateId: ByteVec,
+    attestTokenHandlerTemplateId: ByteVec,
+    undoneSequenceTemplateId: ByteVec,
+    refundAddress: Address
+  ) -> () {
+    let encodedState = encodeToByteVec!(
+      governanceContractId,
+      localChainId,
+      receivedSequence,
+      sendSequence,
+      tokenWrapperTemplateId,
+      tokenBridgeForChainTemplateId,
+      attestTokenHandlerTemplateId,
+      undoneSequenceTemplateId,
+      refundAddress
+    )
+    createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedState)
+  }
+}

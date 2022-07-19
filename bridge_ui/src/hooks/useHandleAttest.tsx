@@ -20,7 +20,9 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
+  parseTargetChainFromLogEth,
 } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -111,6 +113,7 @@ async function algo(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALGORAND,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -156,6 +159,10 @@ async function evm(
       receipt,
       getBridgeAddressForChain(chainId)
     );
+    const targetChain = parseTargetChainFromLogEth(
+      receipt,
+      getBridgeAddressForChain(chainId)
+    )
     const emitterAddress = getEmitterAddressEth(
       getTokenBridgeAddressForChain(chainId)
     );
@@ -165,6 +172,7 @@ async function evm(
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
       emitterAddress,
+      targetChain,
       sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -217,6 +225,7 @@ async function solana(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_SOLANA,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -267,6 +276,7 @@ async function terra(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_TERRA,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -299,7 +309,11 @@ async function alephium(
           alphMessageFee,
           ALEPHIUM_CONFIRMATIONS
         );
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+        const tokens = [{
+          id: localTokenId,
+          amount: '1'
+        }];
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId;
       }
     );
@@ -313,6 +327,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      txInfo.targetChain,
       txInfo.sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));

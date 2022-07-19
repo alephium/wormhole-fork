@@ -63,7 +63,6 @@ contract("Bridge", function () {
             "0x",
             "000000000000000000000000000000000000000000546f6b656e427269646765",
             "01",
-            "0000",
             web3.eth.abi.encodeParameter("uint16", testForeignChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("bytes32", testForeignBridgeContract).substring(2),
         ].join('')
@@ -72,6 +71,7 @@ contract("Bridge", function () {
             1,
             1,
             testGovernanceChainId,
+            0,
             testGovernanceContract,
             0,
             data,
@@ -108,7 +108,6 @@ contract("Bridge", function () {
             "0x",
             "000000000000000000000000000000000000000000546f6b656e427269646765",
             "02",
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("address", mock.address).substring(2),
         ].join('')
 
@@ -116,6 +115,7 @@ contract("Bridge", function () {
             1,
             1,
             testGovernanceChainId,
+            testChainId,
             testGovernanceContract,
             0,
             data,
@@ -226,6 +226,8 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
+        assert.equal(log.targetChainId, "0")
+
         assert.equal(log.payload.length - 2, 200);
 
         // payload id
@@ -267,6 +269,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            0,
             testForeignBridgeContract,
             0,
             data,
@@ -325,6 +328,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            0,
             testForeignBridgeContract,
             0,
             data,
@@ -352,6 +356,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            0,
             testForeignBridgeContract,
             1,
             data,
@@ -444,7 +449,9 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
-        assert.equal(log.payload.length - 2, 266);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2, 262);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
@@ -461,11 +468,8 @@ contract("Bridge", function () {
         // to
         assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
-        // to chain id
-        assert.equal(log.payload.substr(200, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
-
         // fee
-        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
     })
 
     it("should deposit and log fee token transfers correctly", async function () {
@@ -535,7 +539,9 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
-        assert.equal(log.payload.length - 2, 266);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2, 262);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
@@ -552,11 +558,8 @@ contract("Bridge", function () {
         // to
         assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
-        // to chain id
-        assert.equal(log.payload.substr(200, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
-
         // fee
-        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
     })
 
     it("should transfer out locked assets for a valid transfer vm", async function () {
@@ -583,8 +586,6 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // receiver
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -592,6 +593,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -671,7 +673,9 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
-        assert.equal(log.payload.length - 2 - additionalPayload.length, 266);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2 - additionalPayload.length, 262);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "03");
@@ -688,14 +692,11 @@ contract("Bridge", function () {
         // to
         assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
-        // to chain id
-        assert.equal(log.payload.substr(200, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
-
         // fee
-        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
 
         // payload
-        assert.equal(log.payload.substr(268), additionalPayload)
+        assert.equal(log.payload.substr(264), additionalPayload)
     })
 
     it("should transfer out locked assets for a valid transfer with payload vm", async function () {
@@ -722,8 +723,6 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // receiver
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             "0000000000000000000000000000000000000000000000000000000000000000" +
             // additional payload
@@ -733,6 +732,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -780,8 +780,6 @@ contract("Bridge", function () {
             testBridgedAssetChain +
             // receiver
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2);
 
@@ -789,6 +787,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -845,8 +844,6 @@ contract("Bridge", function () {
             testBridgedAssetChain +
             // receiver (must be self msg.sender)
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2) +
             // additional payload
@@ -856,6 +853,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             1,
             data,
@@ -901,8 +899,6 @@ contract("Bridge", function () {
             testBridgedAssetChain +
             // receiver (must be self msg.sender)
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2) +
             // additional payload
@@ -912,6 +908,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             1,
             data,
@@ -969,8 +966,6 @@ contract("Bridge", function () {
             testBridgedAssetChain +
             // receiver
             web3.eth.abi.encodeParameter("address", mock).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2) +
             // additional payload
@@ -980,6 +975,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             2,
             data,
@@ -1103,7 +1099,9 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
-        assert.equal(log.payload.length - 2, 266);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2, 262);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
@@ -1120,11 +1118,8 @@ contract("Bridge", function () {
         // to
         assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
-        // to chain id
-        assert.equal(log.payload.substr(200, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
-
         // fee
-        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
     })
 
     it("should handle ETH withdrawals and fees correctly", async function () {
@@ -1153,8 +1148,6 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // receiver
             web3.eth.abi.encodeParameter("address", accounts[1]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2);
 
@@ -1162,6 +1155,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -1240,7 +1234,9 @@ contract("Bridge", function () {
 
         assert.equal(log.sender, TokenBridge.address)
 
-        assert.equal(log.payload.length - 2 - additionalPayload.length, 266);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2 - additionalPayload.length, 262);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "03");
@@ -1257,14 +1253,11 @@ contract("Bridge", function () {
         // to
         assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
-        // to chain id
-        assert.equal(log.payload.substr(200, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
-
         // fee
-        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
 
         // payload
-        assert.equal(log.payload.substr(268), additionalPayload)
+        assert.equal(log.payload.substr(264), additionalPayload)
     })
 
     it("should handle ETH withdrawals with payload correctly", async function () {
@@ -1293,8 +1286,6 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // receiver
             web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).toString()).substring(2) +
             // additional payload
@@ -1304,6 +1295,7 @@ contract("Bridge", function () {
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -1388,6 +1380,7 @@ const signAndEncodeVM = async function (
     timestamp,
     nonce,
     emitterChainId,
+    targetChainId,
     emitterAddress,
     sequence,
     data,
@@ -1399,6 +1392,7 @@ const signAndEncodeVM = async function (
         web3.eth.abi.encodeParameter("uint32", timestamp).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint32", nonce).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint16", emitterChainId).substring(2 + (64 - 4)),
+        web3.eth.abi.encodeParameter("uint16", targetChainId).substring(2 + (64 - 4)),
         web3.eth.abi.encodeParameter("bytes32", emitterAddress).substring(2),
         web3.eth.abi.encodeParameter("uint64", sequence).substring(2 + (64 - 16)),
         web3.eth.abi.encodeParameter("uint8", consistencyLevel).substring(2 + (64 - 2)),

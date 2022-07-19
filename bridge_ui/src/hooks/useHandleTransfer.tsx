@@ -138,6 +138,7 @@ async function algo(
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
       emitterAddress,
+      recipientChain,
       sequence
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -223,6 +224,7 @@ async function evm(
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
       emitterAddress,
+      recipientChain,
       sequence.toString()
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -309,6 +311,7 @@ async function solana(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_SOLANA,
       emitterAddress,
+      targetChain,
       sequence
     );
 
@@ -369,7 +372,11 @@ async function alephium(
             ALEPHIUM_CONFIRMATIONS
           )
         }
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+        const tokens = [{
+          id: tokenId,
+          amount: amountParsed.toString()
+        }]
+        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId
       }
     )
@@ -383,6 +390,7 @@ async function alephium(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      targetChain,
       txInfo.sequence
     );
     enqueueSnackbar(null, {
@@ -450,6 +458,7 @@ async function terra(
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_TERRA,
       emitterAddress,
+      targetChain,
       sequence
     );
     enqueueSnackbar(null, {
