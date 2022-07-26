@@ -25,7 +25,7 @@ Abstract Contract Constants() {
     InvalidDestroyUndoneSequenceMessage = 20
     InvalidCaller                       = 21
     InvalidTransferToAddress            = 22
-    TransferFeeLessThanAmount           = 23
+    ArbiterFeeLessThanAmount            = 23
     InvalidAttestTokenMessage           = 24
     InvalidPayloadId                    = 25
     InvalidTransferMessage              = 26

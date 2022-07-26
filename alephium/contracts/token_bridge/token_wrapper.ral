@@ -60,7 +60,7 @@ Contract TokenWrapper(
 
         let normalizedAmount = if (isLocalToken) amount else normalizeAmount(amount, decimals_)
         let normalizedFee = if (isLocalToken) arbiterFee else normalizeAmount(arbiterFee, decimals_)
-        assert!(normalizedFee < normalizedAmount, ErrorCodes.TransferFeeLessThanAmount)
+        assert!(normalizedFee < normalizedAmount, ErrorCodes.ArbiterFeeLessThanAmount)
 
         let transferAmount = deNormalizeAmount(normalizedAmount, decimals_)
         transferTokenToSelf!(fromAddress, getTokenId(), transferAmount)
@@ -94,7 +94,7 @@ Contract TokenWrapper(
 
         let totalAmount = deNormalizeAmount(amount, decimals_)
         let transferFee = deNormalizeAmount(arbiterFee, decimals_)
-        assert!(totalAmount > transferFee, ErrorCodes.TransferFeeLessThanAmount)
+        assert!(totalAmount > transferFee, ErrorCodes.ArbiterFeeLessThanAmount)
         let transferAmount = totalAmount - transferFee
         let recipient = byteVecToAddress!(#00 ++ toAddress)
         let tokenId = getTokenId()
