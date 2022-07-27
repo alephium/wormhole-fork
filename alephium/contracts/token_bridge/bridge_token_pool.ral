@@ -1,5 +1,6 @@
 import "../math.ral"
 import "../constants.ral"
+import "token_pool.ral"
 import "token_bridge_constants.ral"
 import "token_bridge_for_chain.ral"
 
@@ -8,7 +9,7 @@ Abstract Contract BridgeTokenPool(
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
     decimals_: U256
-) extends Math(), Constants(), TokenBridgeConstants() {
+) extends Math(), Constants(), TokenBridgeConstants() implements TokenPool {
     fn prepareTransfer(
         toAddress: ByteVec,
         amount: U256,

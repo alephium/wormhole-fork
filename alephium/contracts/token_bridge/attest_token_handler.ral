@@ -38,7 +38,7 @@ Contract AttestTokenHandler(
     let path = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
     let tokenBridgeForChainId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
     let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-    tokenBridgeForChain.createWrapperForRemoteToken{payer -> createContractAlphAmount}(
+    tokenBridgeForChain.createRemoteTokenPool{payer -> createContractAlphAmount}(
       tokenId, decimals, symbol, name, payer, createContractAlphAmount
     )
   }

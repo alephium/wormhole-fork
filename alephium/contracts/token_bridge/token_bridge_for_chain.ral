@@ -15,30 +15,43 @@ Contract TokenBridgeForChain(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    undoneSequenceTemplateId: ByteVec,
-    tokenWrapperTemplateId: ByteVec, // used for create contract by copyCreateContract
+    undoneSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
+    wrappedAlphId: ByteVec,
+    wrappedAlphPoolTemplateId: ByteVec,
+    localTokenPoolTemplateId: ByteVec,
+    remoteTokenPoolTemplateId: ByteVec,
     refundAddress: Address,
     mut sendSequence: U256
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     @using(preapprovedAssets = true)
-    pub fn createWrapperForLocalToken(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    pub fn createWrappedAlphPool(payer: Address, createContractAlphAmount: U256) -> () {
+        let encodedState = encodeToByteVec!(
+            localTokenBridgeId,
+            selfContractId!(),
+            localChainId,
+            wrappedAlphId,
+            0,
+            0
+        )
+        copyCreateSubContract!{payer -> createContractAlphAmount}(wrappedAlphId, wrappedAlphPoolTemplateId, encodedState)
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
             localChainId,
-            remoteChainId,
             localTokenId,
-            true, // isLocalToken
-            #, // no symbol for local token
-            #, // no name for local token
-            0  // no decimals for local token
+            0,
+            0
         )
-        copyCreateSubContract!{payer -> createContractAlphAmount}(localTokenId, tokenWrapperTemplateId, encodedState)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(localTokenId, localTokenPoolTemplateId, encodedState)
     }
 
     @using(preapprovedAssets = true)
-    pub fn createWrapperForRemoteToken(
+    pub fn createRemoteTokenPool(
         remoteTokenId: ByteVec,
         decimals: U256,
         symbol: ByteVec,
@@ -52,16 +65,15 @@ Contract TokenBridgeForChain(
         let encodedState = encodeToByteVec!(
             localTokenBridgeId,
             selfContractId!(),
-            localChainId,
             remoteChainId,
             remoteTokenId,
-            false, // isLocalToken
+            0,
             symbol,
             name,
             decimals
         )
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
-        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(remoteTokenId, tokenWrapperTemplateId, encodedState, tokenAmount)
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(remoteTokenId, remoteTokenPoolTemplateId, encodedState, tokenAmount)
     }
 
     pub fn nextSendSequence() -> U256 {
