@@ -29,16 +29,27 @@ async function createWallet() {
     console.log('create test wallet succeed')
 }
 
-async function createTokenWrapper(
+async function createLocalTokenPool(
     wormhole: Wormhole,
     localTokenId: string,
     tokenBridgeForChainId: string,
     remoteChain: string
 ) {
-    let txId = await wormhole.createWrapperForLocalToken(tokenBridgeForChainId, localTokenId, consts.payer, consts.minimalAlphInContract)
-    let tokenWrapper = await getCreatedContractAddress(provider, txId, 0)
-    const tokenWrapperId = binToHex(contractIdFromAddress(tokenWrapper))
-    console.log('token wrapper id for ' + remoteChain + ': ' + tokenWrapperId)
+    let txId = await wormhole.createLocalTokenPool(tokenBridgeForChainId, localTokenId, consts.payer, consts.minimalAlphInContract)
+    let tokenPoolAddress = await getCreatedContractAddress(provider, txId, 0)
+    const tokenPoolId = binToHex(contractIdFromAddress(tokenPoolAddress))
+    console.log('token pool id for ' + remoteChain + ': ' + tokenPoolId)
+}
+
+async function createWrappedAlphPool(
+    wormhole: Wormhole,
+    tokenBridgeForChainId: string,
+    remoteChain: string
+) {
+    let txId = await wormhole.createWrappedAlphPool(tokenBridgeForChainId, consts.payer, consts.minimalAlphInContract)
+    let alphPoolAddress = await getCreatedContractAddress(provider, txId, 0)
+    const alphPoolId = binToHex(contractIdFromAddress(alphPoolAddress))
+    console.log('alph pool id for ' + remoteChain + ': ' + alphPoolId)
 }
 
 async function getToken(
@@ -89,8 +100,11 @@ async function deploy() {
     const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
-    await createTokenWrapper(wormhole, testTokenId, remoteChains.eth, "eth")
-    await createTokenWrapper(wormhole, testTokenId, remoteChains.bsc, "bsc")
+    await createLocalTokenPool(wormhole, testTokenId, remoteChains.eth, "eth")
+    await createLocalTokenPool(wormhole, testTokenId, remoteChains.bsc, "bsc")
+
+    await createWrappedAlphPool(wormhole, remoteChains.eth, "eth")
+    await createWrappedAlphPool(wormhole, remoteChains.bsc, "bsc")
 
     // start auto mining, used for check confirmations
     mine(provider)

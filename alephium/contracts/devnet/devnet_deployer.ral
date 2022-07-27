@@ -33,7 +33,10 @@ Contract DevnetDeployer() {
     localChainId: U256,
     receivedSequence: U256,
     sendSequence: U256,
-    tokenWrapperTemplateId: ByteVec,
+    wrappedAlphId: ByteVec,
+    wrappedAlphPoolTemplateId: ByteVec,
+    localTokenPoolTemplateId: ByteVec,
+    remoteTokenPoolTemplateId: ByteVec,
     tokenBridgeForChainTemplateId: ByteVec,
     attestTokenHandlerTemplateId: ByteVec,
     undoneSequenceTemplateId: ByteVec,
@@ -44,12 +47,21 @@ Contract DevnetDeployer() {
       localChainId,
       receivedSequence,
       sendSequence,
-      tokenWrapperTemplateId,
+      wrappedAlphId,
+      wrappedAlphPoolTemplateId,
+      localTokenPoolTemplateId,
+      remoteTokenPoolTemplateId,
       tokenBridgeForChainTemplateId,
       attestTokenHandlerTemplateId,
       undoneSequenceTemplateId,
       refundAddress
     )
     createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedState)
+  }
+
+  @using(preapprovedAssets = true)
+  pub fn deployWrappedAlph(bytecode: ByteVec) -> () {
+    let encodedState = encodeToByteVec!(0)
+    createSubContractWithToken!{callerAddress!() -> 1 alph}(#02, bytecode, encodedState, 1000000000 alph)
   }
 }
