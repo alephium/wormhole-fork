@@ -8,6 +8,7 @@ import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
 import { getAlephiumTokenInfo } from "../../utils/alephium";
+import { ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID } from "../../utils/consts";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -20,8 +21,10 @@ type AlephiumTokenPickerProps = {
 async function getAlephiumTokenAccounts(address: string, client: NodeProvider): Promise<ParsedTokenAccount[]> {
   const utxos = await client.addresses.getAddressesAddressUtxos(address)
   const now = Date.now()
+  let alphAmount: bigint = BigInt(0)
   let tokenAmounts = new Map<string, bigint>()
   utxos.utxos.forEach(utxo => {
+    alphAmount = alphAmount + BigInt(utxo.amount)
     if (now > utxo.lockTime) {
       utxo.tokens.forEach(token => {
         const amount = tokenAmounts.get(token.id)
@@ -33,6 +36,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
       })
     }
   });
+  tokenAmounts.set(ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID, alphAmount)
 
   let tokenAccounts = []
   for (let [tokenId, amount] of tokenAmounts) {
