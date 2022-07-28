@@ -232,6 +232,10 @@ export function randomContractAddress(): string {
     return base58.encode(bytes)
 }
 
+export function alph(n: number): bigint {
+    return oneAlph * BigInt(n)
+}
+
 export function encodeU256(value: bigint): Uint8Array {
     return Buffer.from(zeroPad(value.toString(16), 32), 'hex')
 }
