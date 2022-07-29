@@ -21,6 +21,7 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
+  attestWrappedAlph,
 } from "@certusone/wormhole-sdk";
 import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
@@ -67,11 +68,13 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
+import { node as alphApi } from "@alephium/web3"
 
 async function algo(
   dispatch: any,
@@ -302,17 +305,26 @@ async function alephium(
   try {
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
-        const bytecode = attestFromAlph(
-          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-          localTokenId,
-          signer.account.address,
-          alphMessageFee,
-          ALEPHIUM_CONFIRMATIONS
-        );
-        const tokens = [{
-          id: localTokenId,
-          amount: '1'
-        }];
+        let bytecode: string
+        let tokens: alphApi.Token[] = []
+        if (localTokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
+          bytecode = attestWrappedAlph(
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
+            signer.account.address,
+            alphMessageFee,
+            ALEPHIUM_CONFIRMATIONS
+          );
+        } else {
+          bytecode = attestFromAlph(
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            localTokenId,
+            signer.account.address,
+            alphMessageFee,
+            ALEPHIUM_CONFIRMATIONS
+          );
+          tokens = [{id: localTokenId, amount: '1'}];
+        }
         const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId;
       }

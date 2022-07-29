@@ -19,7 +19,7 @@ import { importTokenWasm } from "../solana/wasm";
 import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
-import { attestTokenScript } from '../alephium/token_bridge';
+import { attestTokenScript, attestWrappedAlphScript } from '../alephium/token_bridge';
 
 export function attestFromAlph(
   tokenBridgeId: string,
@@ -36,6 +36,27 @@ export function attestFromAlph(
     payer: payer,
     tokenBridgeId: tokenBridgeId,
     localTokenId: tokenId,
+    messageFee: messageFee,
+    nonce: nonceHex,
+    consistencyLevel: cl
+  })
+}
+
+export function attestWrappedAlph(
+  tokenBridgeId: string,
+  wrappedAlphId: string,
+  payer: string,
+  messageFee: bigint,
+  consistencyLevel?: number,
+  nonce?: string
+): string {
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
+  const script = attestWrappedAlphScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    tokenBridgeId: tokenBridgeId,
+    wrappedAlphId: wrappedAlphId,
     messageFee: messageFee,
     nonce: nonceHex,
     consistencyLevel: cl

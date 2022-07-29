@@ -43,7 +43,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
-import { getTokenWrapperId } from "../utils/alephium";
+import { getTokenPoolId } from "../utils/alephium";
 import {
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -253,11 +253,11 @@ function useFetchTargetAsset(nft?: boolean) {
       if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
-          const remoteTokenWrapperId = getTokenWrapperId(originAsset, originChain)
+          const remoteTokenPoolId = getTokenPoolId(originAsset, originChain)
           if (!cancelled) {
             dispatch(
               setTargetAsset(
-                receiveDataWrapper({ doesExist: !!remoteTokenWrapperId, address: remoteTokenWrapperId })
+                receiveDataWrapper({ doesExist: !!remoteTokenPoolId, address: remoteTokenPoolId })
               )
             )
             setArgs()

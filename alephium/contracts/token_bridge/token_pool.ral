@@ -1,0 +1,4 @@
+Interface TokenPool {
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> ()
+}

@@ -24,6 +24,7 @@ import {
   uint8ArrayToHex,
   transferRemoteTokenFromAlph,
   transferLocalTokenFromAlph,
+  transferAlph,
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -75,6 +76,7 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
+  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
@@ -86,6 +88,7 @@ import {
   submitAlphScriptTx,
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
+import { SignExecuteScriptTxResult } from "@alephium/web3";
 
 async function algo(
   dispatch: any,
@@ -345,9 +348,21 @@ async function alephium(
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
-        let bytecode: string 
-        if (isLocalToken) {
-          bytecode = transferLocalTokenFromAlph(
+        let result: SignExecuteScriptTxResult
+        if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
+          const bytecode = transferAlph(
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            signer.account.address,
+            targetChain,
+            uint8ArrayToHex(targetAddress),
+            amountParsed,
+            alphMessageFee,
+            alphArbiterFee,
+            ALEPHIUM_CONFIRMATIONS
+          )
+          result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [], amountParsed.toString())
+        } else if (isLocalToken) {
+          const bytecode = transferLocalTokenFromAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
             tokenId,
@@ -358,8 +373,9 @@ async function alephium(
             alphArbiterFee,
             ALEPHIUM_CONFIRMATIONS
           )
+          result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         } else {
-          bytecode = transferRemoteTokenFromAlph(
+          const bytecode = transferRemoteTokenFromAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
             tokenId,
@@ -371,12 +387,8 @@ async function alephium(
             alphArbiterFee,
             ALEPHIUM_CONFIRMATIONS
           )
+          result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         }
-        const tokens = [{
-          id: tokenId,
-          amount: amountParsed.toString()
-        }]
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
         return result.txId
       }
     )

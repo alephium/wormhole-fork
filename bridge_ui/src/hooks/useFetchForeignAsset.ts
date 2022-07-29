@@ -29,7 +29,7 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { getTokenWrapperId, tokenWrapperExist } from "../utils/alephium";
+import { getTokenPoolId, contractExist } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
@@ -121,9 +121,9 @@ function useFetchForeignAsset(
             )
         : foreignChain === CHAIN_ID_ALEPHIUM
         ? () => {
-          const tokenWrapperId = getTokenWrapperId(originAssetHex, originChain)
-          return tokenWrapperExist(tokenWrapperId, alphSigner!.nodeProvider)
-            .then(exist => exist ? tokenWrapperId : null)
+          const tokenPoolId = getTokenPoolId(originAssetHex, originChain)
+          return contractExist(tokenPoolId, alphSigner!.nodeProvider)
+            .then(exist => exist ? tokenPoolId : null)
         }
         : foreignChain === CHAIN_ID_TERRA
         ? () => {

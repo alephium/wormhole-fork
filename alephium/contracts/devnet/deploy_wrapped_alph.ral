@@ -1,0 +1,6 @@
+import "devnet_deployer.ral"
+
+TxScript Main(deployerId: ByteVec, bytecode: ByteVec) {
+  let deployer = DevnetDeployer(deployerId)
+  deployer.deployWrappedAlph{callerAddress!() -> 1 alph}(bytecode)
+}

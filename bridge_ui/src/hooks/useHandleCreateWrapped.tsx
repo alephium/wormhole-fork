@@ -14,7 +14,7 @@ import {
   isEVMChain,
   updateWrappedOnEth,
   updateWrappedOnSolana,
-  createRemoteTokenWrapperOnAlph,
+  createRemoteTokenPoolOnAlph,
   updateWrappedOnTerra,
   getAttestTokenHandlerId
 } from "@certusone/wormhole-sdk";
@@ -256,7 +256,7 @@ async function alephium(
       throw Error("alephium: contract already exist, update not supported")
     }
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
-    const bytecode = createRemoteTokenWrapperOnAlph(
+    const bytecode = createRemoteTokenPoolOnAlph(
       attestTokenHandlerId,
       signedVAA,
       signer.account.address,

@@ -1,0 +1,52 @@
+import "bridge_token_pool.ral"
+import "wrapped_alph.ral"
+
+Contract WrappedAlphPool(
+    tokenBridgeId: ByteVec,
+    tokenBridgeForChainId: ByteVec,
+    tokenChainId: U256, // local chain id
+    bridgeTokenId: ByteVec, // wrapped ALPH id
+    mut totalBridged: U256,
+    decimals_: U256 // should be 0
+) extends BridgeTokenPool(tokenBridgeForChainId, tokenChainId, bridgeTokenId, decimals_) {
+    @using(preapprovedAssets = true)
+    pub fn transfer(
+        fromAddress: Address,
+        toAddress: ByteVec,
+        amount: U256,
+        arbiterFee: U256,
+        nonce: ByteVec
+    ) -> ByteVec {
+        assert!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
+
+        WrappedAlph(bridgeTokenId).wrapAndTransfer{
+            fromAddress -> totalAmount
+        }(fromAddress, totalAmount)
+        totalBridged = totalBridged + totalAmount
+
+        return payload
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn receiveWrappedAlph(totalAmount: U256) -> () {
+        assert!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
+        transferTokenToSelf!(callerAddress!(), bridgeTokenId, totalAmount)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
+        let (sequenceReady, recipient, transferAmount, arbiterFee) = prepareCompleteTransfer(vaa)
+        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
+            return
+        }
+
+        if (caller != recipient) {
+            transferAlph!(caller, recipient, dustAmount!())
+        }
+        WrappedAlph(bridgeTokenId).unwrapAndCompleteTransfer{
+            selfAddress!() -> bridgeTokenId: transferAmount + arbiterFee
+        }(recipient, transferAmount, caller, arbiterFee)
+        totalBridged = totalBridged - transferAmount - arbiterFee
+    }
+}

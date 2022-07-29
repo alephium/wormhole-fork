@@ -1,7 +1,8 @@
 import {
     ALEPHIUM_BRIDGE_ADDRESS,
+    ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
     ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-    ALEPHIUM_TOKEN_WRAPPER_CODE_HASH
+    ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID
 } from "./consts";
 import {
     ChainId,
@@ -104,7 +105,7 @@ export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
     }
 }
 
-export function getTokenWrapperId(tokenId: string, remoteChainId: ChainId): string {
+export function getTokenPoolId(tokenId: string, remoteChainId: ChainId): string {
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
@@ -125,16 +126,20 @@ export class TokenInfo {
 }
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+    // TODO: get symbol and name from configs
+    if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
+        return new TokenInfo(0, 'wrapped-alph', 'wrapped-alph')
+    }
+
     const tokenAddress = toAlphContractAddress(tokenId)
     const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
     const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
-    if (state.codeHash === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
-        const symbol = (state.fields[6] as node.ValByteVec).value
-        const name = (state.fields[7] as node.ValByteVec).value
-        const decimals = parseInt((state.fields[8] as node.ValU256).value)
+    if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
+        const symbol = (state.fields[5] as node.ValByteVec).value
+        const name = (state.fields[6] as node.ValByteVec).value
+        const decimals = parseInt((state.fields[7] as node.ValU256).value)
         return new TokenInfo(decimals, symbol, name)
     } else {
-        // TODO: get symbol and name from configs
         return new TokenInfo(0, 'token', 'token')
     }
 }
@@ -143,17 +148,19 @@ export async function submitAlphScriptTx(
   provider: WalletConnectProvider,
   fromAddress: string,
   bytecode: string,
-  tokens?: node.Token[]
+  tokens?: node.Token[],
+  attoAlphAmount?: string
 ) {
   return provider.signExecuteScriptTx({
     signerAddress: fromAddress,
     bytecode: bytecode,
     submitTx: true,
-    tokens: tokens
+    tokens: tokens,
+    attoAlphAmount: attoAlphAmount
   })
 }
 
-export async function tokenWrapperExist(contractId: string, provider: NodeProvider): Promise<boolean> {
+export async function contractExist(contractId: string, provider: NodeProvider): Promise<boolean> {
     const address = toAlphContractAddress(contractId)
     return provider
         .addresses
@@ -169,11 +176,11 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     .contracts
     .getContractsAddressState(tokenAddress, {group: group.group})
     .then(response => {
-      if (response.codeHash === ALEPHIUM_TOKEN_WRAPPER_CODE_HASH) {
-        const originalAsset = Buffer.from((response.fields[4] as node.ValByteVec).value, 'hex')
+      if (response.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
+        const originalAsset = Buffer.from((response.fields[3] as node.ValByteVec).value, 'hex')
         return {
           isWrapped: true,
-          chainId: parseInt((response.fields[3] as node.ValU256).value) as ChainId,
+          chainId: parseInt((response.fields[2] as node.ValU256).value) as ChainId,
           assetAddress: originalAsset,
         }
       } else {

@@ -25,13 +25,13 @@ import { hexToNativeString } from "../utils/array";
 import { parseTransferPayload } from "../utils/parseVaa";
 
 export function redeemOnAlph(
-  tokenWrapperId: string,
+  tokenPoolId: string,
   signedVAA: Uint8Array
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
   return script.buildByteCodeToDeploy({
-    tokenWrapperId: tokenWrapperId,
+    tokenPoolId: tokenPoolId,
     vaa: vaaHex
   })
 }

@@ -20,7 +20,7 @@ import {
 } from "algosdk";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
-import { transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
+import { transferAlphScript, transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
 import {
   assetOptinCheck,
   getMessageFee,
@@ -45,6 +45,33 @@ import {
   WSOL_ADDRESS,
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
+
+export function transferAlph(
+  tokenBridgeId: string,
+  fromAddress: string,
+  toChainId: ChainId,
+  toAddress: string,
+  alphAmount: bigint,
+  messageFee: bigint,
+  arbiterFee: bigint,
+  consistencyLevel?: number,
+  nonce?: string
+): string {
+  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
+  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
+  const script = transferAlphScript()
+  return script.buildByteCodeToDeploy({
+    tokenBridgeId: tokenBridgeId,
+    fromAddress: fromAddress,
+    toChainId: toChainId,
+    toAddress: toAddress,
+    alphAmount: alphAmount,
+    messageFee: messageFee,
+    arbiterFee: arbiterFee,
+    nonce: nonceHex,
+    consistencyLevel: cl,
+  })
+}
 
 export function transferLocalTokenFromAlph(
   tokenBridgeId: string,

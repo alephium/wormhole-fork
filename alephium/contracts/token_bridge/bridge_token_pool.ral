@@ -1,0 +1,59 @@
+import "../math.ral"
+import "../constants.ral"
+import "token_pool.ral"
+import "token_bridge_constants.ral"
+import "token_bridge_for_chain.ral"
+
+Abstract Contract BridgeTokenPool(
+    tokenBridgeForChainId: ByteVec,
+    tokenChainId: U256,
+    bridgeTokenId: ByteVec,
+    decimals_: U256
+) extends Math(), Constants(), TokenBridgeConstants() implements TokenPool {
+    fn prepareTransfer(
+        toAddress: ByteVec,
+        amount: U256,
+        arbiterFee: U256,
+        nonce: ByteVec
+    ) -> (ByteVec, U256) {
+        assert!(size!(toAddress) == 32, ErrorCodes.InvalidTransferToAddress)
+        assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
+
+        let normalizedAmount = normalizeAmount(amount, decimals_)
+        let normalizedFee = normalizeAmount(arbiterFee, decimals_)
+        assert!(normalizedFee < normalizedAmount, ErrorCodes.ArbiterFeeLessThanAmount)
+
+        let payload = PayloadId.Transfer ++
+            u256To32Byte!(normalizedAmount) ++
+            bridgeTokenId ++
+            u256To2Byte!(tokenChainId) ++
+            toAddress ++
+            u256To32Byte!(normalizedFee)
+        let totalAmount = deNormalizeAmount(normalizedAmount, decimals_)
+        
+        return payload, totalAmount
+    }
+
+    fn prepareCompleteTransfer(vaa: ByteVec) -> (Bool, Address, U256, U256) {
+        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
+        let (sequenceReady, payload) = tokenBridgeForChain.checkTransfer(vaa)
+
+        assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let vaaTokenId = byteVecSlice!(payload, 33, 65)
+        let vaaTokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let toAddress = byteVecSlice!(payload, 67, 99)
+        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
+        assert!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
+        assert!(vaaTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
+        assert!(vaaTokenChainId == tokenChainId, ErrorCodes.InvalidTransferMessage)
+
+        let totalAmount = deNormalizeAmount(amount, decimals_)
+        let arbiterFee = deNormalizeAmount(normalizedArbiterFee, decimals_)
+        assert!(totalAmount > arbiterFee, ErrorCodes.ArbiterFeeLessThanAmount)
+        let transferAmount = totalAmount - arbiterFee
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+
+        return sequenceReady, recipient, transferAmount, arbiterFee
+    }
+}

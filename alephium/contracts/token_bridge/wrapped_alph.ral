@@ -1,0 +1,35 @@
+import "token_bridge.ral"
+import "wrapped_alph_pool.ral"
+
+Contract WrappedAlph(
+    mut totalWrapped: U256
+) {
+    @using(preapprovedAssets=true, assetsInContract=true)
+    pub fn wrapAndTransfer(
+        fromAddress: Address,
+        totalAmount: U256
+    ) -> () {
+        totalWrapped = totalWrapped + totalAmount
+        transferAlphToSelf!(fromAddress, totalAmount)
+        WrappedAlphPool(callerContractId!()).receiveWrappedAlph{
+            selfAddress!() -> selfContractId!(): totalAmount
+        }(totalAmount)
+    }
+
+    @using(preapprovedAssets=true, assetsInContract=true)
+    pub fn unwrapAndCompleteTransfer(
+        recipient: Address,
+        transferAmount: U256,
+        arbiter: Address,
+        arbiterFee: U256
+    ) -> () {
+        let totalAmount = transferAmount + arbiterFee
+        totalWrapped = totalWrapped - totalAmount
+
+        transferTokenToSelf!(callerAddress!(), selfContractId!(), totalAmount)
+        transferAlphFromSelf!(recipient, transferAmount)
+        if (arbiterFee > 0) {
+            transferAlphFromSelf!(arbiter, arbiterFee)
+        }
+    }
+}

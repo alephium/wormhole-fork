@@ -1,10 +1,10 @@
 {
-  "sourceCodeSha256": "fa2554428bfd1227919140613faceb4aabe4264b2d70bdbe21e4f02ec5a0291e",
-  "bytecodeTemplate": "0101030002000db41700{0}1701160013c3038d7ea4c68000a2{1}16000e0c16010109",
+  "sourceCodeSha256": "d7f9f4e0097059751d5fe01404b6a6f98d0937dcddb1cb1f12761060653a3a01",
+  "bytecodeTemplate": "0101030002000db41700{0}1701160013c3038d7ea4c68000a2{1}16000e0c16010100",
   "fieldsSig": {
-    "signature": "TxScript Main(tokenWrapperId:ByteVec,vaa:ByteVec)",
+    "signature": "TxScript Main(tokenPoolId:ByteVec,vaa:ByteVec)",
     "names": [
-      "tokenWrapperId",
+      "tokenPoolId",
       "vaa"
     ],
     "types": [

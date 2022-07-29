@@ -1,7 +1,7 @@
-import "../token_bridge/token_wrapper.ral"
+import "../token_bridge/token_pool.ral"
 
-TxScript Main(tokenWrapperId: ByteVec, vaa: ByteVec) {
+TxScript Main(tokenPoolId: ByteVec, vaa: ByteVec) {
     let caller = callerAddress!()
-    let tokenWrapper = TokenWrapper(tokenWrapperId)
-    tokenWrapper.completeTransfer{caller -> dustAmount!()}(vaa, caller)
+    let tokenPool = TokenPool(tokenPoolId)
+    tokenPool.completeTransfer{caller -> dustAmount!()}(vaa, caller)
 }
