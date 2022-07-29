@@ -356,7 +356,7 @@ export default function Workflow({
   };
 
   const handleAmountChange = useCallback(
-    (event) => setMigrationAmount(event.target.value),
+    (event: any) => setMigrationAmount(event.target.value),
     [setMigrationAmount]
   );
   const handleMaxClick = useCallback(() => {

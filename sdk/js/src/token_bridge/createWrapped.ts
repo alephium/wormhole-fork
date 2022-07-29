@@ -3,10 +3,55 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
+import { createLocalTokenPoolScript, createRemoteTokenPoolScript, createWrappedAlphPoolScript } from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
+
+export function createRemoteTokenPoolOnAlph(
+  attestTokenHandlerId: string,
+  signedVAA: Uint8Array,
+  payer: string,
+  alphAmount: bigint
+): string {
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
+  const script = createRemoteTokenPoolScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    attestTokenHandlerId: attestTokenHandlerId,
+    vaa: vaaHex,
+    alphAmount: alphAmount
+  })
+}
+
+export function createLocalTokenPoolOnAlph(
+  tokenBridgeForChainId: string,
+  localTokenId: string,
+  payer: string,
+  alphAmount: bigint
+): string {
+  const script = createLocalTokenPoolScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    tokenId: localTokenId,
+    alphAmount: alphAmount
+  })
+}
+
+export function createWrappedAlphPool(
+  tokenBridgeForChainId: string,
+  payer: string,
+  alphAmount: bigint
+): string {
+  const script = createWrappedAlphPoolScript()
+  return script.buildByteCodeToDeploy({
+    payer: payer,
+    tokenBridgeForChainId: tokenBridgeForChainId,
+    alphAmount: alphAmount
+  })
+}
 
 export async function createWrappedOnEth(
   tokenBridgeAddress: string,

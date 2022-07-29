@@ -57,7 +57,6 @@ contract("NFT", function () {
             "0x",
             "00000000000000000000000000000000000000000000004e4654427269646765",
             "01",
-            "0000",
             web3.eth.abi.encodeParameter("uint16", testForeignChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("bytes32", testForeignBridgeContract).substring(2),
         ].join('')
@@ -66,6 +65,7 @@ contract("NFT", function () {
             1,
             1,
             testGovernanceChainId,
+            0,
             testGovernanceContract,
             0,
             data,
@@ -102,7 +102,6 @@ contract("NFT", function () {
             "0x",
             "00000000000000000000000000000000000000000000004e4654427269646765",
             "02",
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
             web3.eth.abi.encodeParameter("address", mock.address).substring(2),
         ].join('')
 
@@ -110,6 +109,7 @@ contract("NFT", function () {
             1,
             1,
             testGovernanceChainId,
+            testChainId,
             testGovernanceContract,
             0,
             data,
@@ -238,7 +238,9 @@ contract("NFT", function () {
 
         assert.equal(log.sender, NFTBridge.address)
 
-        assert.equal(log.payload.length - 2, 340);
+        assert.equal(log.targetChainId, "10")
+
+        assert.equal(log.payload.length - 2, 336);
 
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
@@ -266,9 +268,6 @@ contract("NFT", function () {
 
         // to
         assert.equal(log.payload.substr(274, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
-
-        // to chain id
-        assert.equal(log.payload.substr(338, 4), web3.eth.abi.encodeParameter("uint16", 10).substring(2 + 64 - 4))
     })
 
     it("should transfer out locked assets for a valid transfer vm", async function () {
@@ -316,14 +315,13 @@ contract("NFT", function () {
             // no URL
             "" +
             // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4));
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2)
 
         const vm = await signAndEncodeVM(
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -368,14 +366,13 @@ contract("NFT", function () {
             // no URL
             "" +
             // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4));
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2)
 
         let vm = await signAndEncodeVM(
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -430,14 +427,13 @@ contract("NFT", function () {
             // no URL
             "" +
             // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4));
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2)
 
         vm = await signAndEncodeVM(
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             1,
             data,
@@ -482,14 +478,13 @@ contract("NFT", function () {
             // no URL
             "" +
             // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
-            // receiving chain
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4));
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2)
 
         let vm = await signAndEncodeVM(
             0,
             0,
             testForeignChainId,
+            testChainId,
             testForeignBridgeContract,
             0,
             data,
@@ -669,6 +664,7 @@ const signAndEncodeVM = async function (
     timestamp,
     nonce,
     emitterChainId,
+    targetChainId,
     emitterAddress,
     sequence,
     data,
@@ -680,6 +676,7 @@ const signAndEncodeVM = async function (
         web3.eth.abi.encodeParameter("uint32", timestamp).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint32", nonce).substring(2 + (64 - 8)),
         web3.eth.abi.encodeParameter("uint16", emitterChainId).substring(2 + (64 - 4)),
+        web3.eth.abi.encodeParameter("uint16", targetChainId).substring(2 + (64 - 4)),
         web3.eth.abi.encodeParameter("bytes32", emitterAddress).substring(2),
         web3.eth.abi.encodeParameter("uint64", sequence).substring(2 + (64 - 16)),
         web3.eth.abi.encodeParameter("uint8", consistencyLevel).substring(2 + (64 - 2)),

@@ -1,12 +1,21 @@
 package guardiand
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/certusone/wormhole/node/pkg/db"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	publicrpcv1 "github.com/certusone/wormhole/node/pkg/proto/publicrpc/v1"
@@ -15,18 +24,14 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math"
-	"math/rand"
-	"net"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 )
+
+const destroyContractsNonce uint32 = 0
 
 type nodePrivilegedService struct {
 	nodev1.UnimplementedNodePrivilegedServiceServer
@@ -39,7 +44,7 @@ type nodePrivilegedService struct {
 
 // adminGuardianSetUpdateToVAA converts a nodev1.GuardianSetUpdate message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	if len(req.Guardians) == 0 {
 		return nil, errors.New("empty guardian set specified")
 	}
@@ -64,7 +69,7 @@ func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.T
 		addrs[i] = ethAddr
 	}
 
-	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, guardianSetIndex,
+	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
 		vaa.BodyGuardianSetUpdate{
 			Keys:     addrs,
 			NewIndex: guardianSetIndex + 1,
@@ -75,7 +80,7 @@ func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.T
 
 // adminContractUpgradeToVAA converts a nodev1.ContractUpgrade message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func adminContractUpgradeToVAA(req *nodev1.ContractUpgrade, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+func adminContractUpgradeToVAA(req *nodev1.ContractUpgrade, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	b, err := hex.DecodeString(req.NewContract)
 	if err != nil {
 		return nil, errors.New("invalid new contract address encoding (expected hex)")
@@ -85,16 +90,11 @@ func adminContractUpgradeToVAA(req *nodev1.ContractUpgrade, timestamp time.Time,
 		return nil, errors.New("invalid new_contract address")
 	}
 
-	if req.ChainId > math.MaxUint16 {
-		return nil, errors.New("invalid chain_id")
-	}
-
 	newContractAddress := vaa.Address{}
 	copy(newContractAddress[:], b)
 
-	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, guardianSetIndex,
+	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
 		vaa.BodyContractUpgrade{
-			ChainID:     vaa.ChainID(req.ChainId),
 			NewContract: newContractAddress,
 		}.Serialize())
 
@@ -103,7 +103,7 @@ func adminContractUpgradeToVAA(req *nodev1.ContractUpgrade, timestamp time.Time,
 
 // tokenBridgeRegisterChain converts a nodev1.TokenBridgeRegisterChain message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func tokenBridgeRegisterChain(req *nodev1.BridgeRegisterChain, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+func tokenBridgeRegisterChain(req *nodev1.BridgeRegisterChain, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	if req.ChainId > math.MaxUint16 {
 		return nil, errors.New("invalid chain_id")
 	}
@@ -120,7 +120,7 @@ func tokenBridgeRegisterChain(req *nodev1.BridgeRegisterChain, timestamp time.Ti
 	emitterAddress := vaa.Address{}
 	copy(emitterAddress[:], b)
 
-	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, guardianSetIndex,
+	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
 		vaa.BodyTokenBridgeRegisterChain{
 			Module:         req.Module,
 			ChainID:        vaa.ChainID(req.ChainId),
@@ -130,13 +130,9 @@ func tokenBridgeRegisterChain(req *nodev1.BridgeRegisterChain, timestamp time.Ti
 	return v, nil
 }
 
-// tokenBridgeUpgradeContract converts a nodev1.TokenBridgeRegisterChain message to its canonical VAA representation.
+// tokenBridgeUpgradeContract converts a nodev1.BridgeUpgradeContract message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
-	if req.TargetChainId > math.MaxUint16 {
-		return nil, errors.New("invalid target_chain_id")
-	}
-
+func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	b, err := hex.DecodeString(req.NewContract)
 	if err != nil {
 		return nil, errors.New("invalid new contract address (expected hex)")
@@ -149,11 +145,10 @@ func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, timestamp tim
 	newContract := vaa.Address{}
 	copy(newContract[:], b)
 
-	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, guardianSetIndex,
+	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
 		vaa.BodyTokenBridgeUpgradeContract{
-			Module:        req.Module,
-			TargetChainID: vaa.ChainID(req.TargetChainId),
-			NewContract:   newContract,
+			Module:      req.Module,
+			NewContract: newContract,
 		}.Serialize())
 
 	return v, nil
@@ -172,15 +167,19 @@ func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *no
 	digests := make([][]byte, len(req.Messages))
 
 	for i, message := range req.Messages {
+		if message.TargetChainId > math.MaxUint16 {
+			return nil, fmt.Errorf("invalid target chain id: %d", message.TargetChainId)
+		}
+		targetChainId := vaa.ChainID(message.TargetChainId)
 		switch payload := message.Payload.(type) {
 		case *nodev1.GovernanceMessage_GuardianSet:
-			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_ContractUpgrade:
-			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeRegisterChain:
-			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
-			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence)
+			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}
@@ -312,6 +311,7 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	ids, first, last, err := s.db.FindEmitterSequenceGap(db.VAAID{
 		EmitterChain:   vaa.ChainID(req.EmitterChain),
 		EmitterAddress: emitterAddress,
+		TargetChain:    vaa.ChainID(req.TargetChain),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "database operation failed: %v", err)
@@ -333,7 +333,7 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 
 	resp := make([]string, len(ids))
 	for i, v := range ids {
-		resp[i] = fmt.Sprintf("%d/%s/%d", req.EmitterChain, emitterAddress, v)
+		resp[i] = fmt.Sprintf("%d/%s/%d/%d", req.EmitterChain, emitterAddress, req.TargetChain, v)
 	}
 	return &nodev1.FindMissingMessagesResponse{
 		MissingMessages: resp,
@@ -342,7 +342,15 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	}, nil
 }
 
-func adminServiceRunnable(logger *zap.Logger, socketPath string, injectC chan<- *vaa.VAA, signedInC chan *gossipv1.SignedVAAWithQuorum, obsvReqSendC chan *gossipv1.ObservationRequest, db *db.Database, gst *common.GuardianSetState) (supervisor.Runnable, error) {
+func adminServiceRunnable(
+	logger *zap.Logger,
+	socketPath string,
+	injectC chan<- *vaa.VAA,
+	signedInC chan *gossipv1.SignedVAAWithQuorum,
+	obsvReqSendC chan *gossipv1.ObservationRequest,
+	db *db.Database,
+	gst *common.GuardianSetState,
+) (supervisor.Runnable, error) {
 	// Delete existing UNIX socket, if present.
 	fi, err := os.Stat(socketPath)
 	if err == nil {
@@ -394,4 +402,34 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	s.obsvReqSendC <- req.ObservationRequest
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
+}
+
+func (s *nodePrivilegedService) GetDestroyContractsGovernanceMessage(ctx context.Context, req *nodev1.GetDestroyContractsGovernanceMessageRequest) (*nodev1.GetDestroyContractsGovernanceMessageResponse, error) {
+	emitterChain := vaa.ChainID(req.EmitterChain)
+
+	payload := &nodev1.GovernanceMessage_DestroyUndoneSequenceContracts{
+		DestroyUndoneSequenceContracts: &nodev1.DestroyUndoneSequenceContracts{
+			Payload: destroyContractsPayload(emitterChain, req.Sequences),
+		},
+	}
+	return &nodev1.GetDestroyContractsGovernanceMessageResponse{
+		Msg: &nodev1.GovernanceMessage{
+			Sequence:      req.Sequence,
+			Nonce:         destroyContractsNonce, // we need to ensure all guardians have same vaa body
+			TargetChainId: uint32(vaa.ChainIDAlephium),
+			Payload:       payload,
+		},
+	}, nil
+}
+
+func destroyContractsPayload(emitterChainId vaa.ChainID, sequences []uint64) []byte {
+	buf := new(bytes.Buffer)
+	buf.Write(vaa.TokenBridgeModule)
+	buf.WriteByte(0xf0) // action id
+	binary.Write(buf, binary.BigEndian, uint16(emitterChainId))
+	binary.Write(buf, binary.BigEndian, uint16(len(sequences)))
+	for _, seq := range sequences {
+		binary.Write(buf, binary.BigEndian, seq)
+	}
+	return buf.Bytes()
 }

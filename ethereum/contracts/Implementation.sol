@@ -9,10 +9,11 @@ import "./Governance.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
 contract Implementation is Governance {
-    event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel);
+    event LogMessagePublished(address indexed sender, uint16 targetChainId, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel);
 
     // Publish a message to be attested by the Wormhole network
     function publishMessage(
+        uint16 targetChainId,
         uint32 nonce,
         bytes memory payload,
         uint8 consistencyLevel
@@ -20,14 +21,14 @@ contract Implementation is Governance {
         // check fee
         require(msg.value == messageFee(), "invalid fee");
 
-        sequence = useSequence(msg.sender);
+        sequence = useSequence(msg.sender, targetChainId);
         // emit log
-        emit LogMessagePublished(msg.sender, sequence, nonce, payload, consistencyLevel);
+        emit LogMessagePublished(msg.sender, targetChainId, sequence, nonce, payload, consistencyLevel);
     }
 
-    function useSequence(address emitter) internal returns (uint64 sequence) {
-        sequence = nextSequence(emitter);
-        setNextSequence(emitter, sequence + 1);
+    function useSequence(address emitter, uint16 targetChainId) internal returns (uint64 sequence) {
+        sequence = nextSequence(emitter, targetChainId);
+        setNextSequence(emitter, targetChainId, sequence + 1);
     }
 
     modifier initializer() {

@@ -1,0 +1,7 @@
+import "../token_bridge/token_pool.ral"
+
+TxScript Main(tokenPoolId: ByteVec, vaa: ByteVec) {
+    let caller = callerAddress!()
+    let tokenPool = TokenPool(tokenPoolId)
+    tokenPool.completeTransfer{caller -> dustAmount!()}(vaa, caller)
+}

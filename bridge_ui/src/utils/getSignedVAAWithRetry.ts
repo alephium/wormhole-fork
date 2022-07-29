@@ -9,6 +9,7 @@ export const getNextRpcHost = () =>
 export async function getSignedVAAWithRetry(
   emitterChain: ChainId,
   emitterAddress: string,
+  targetChain: ChainId,
   sequence: string,
   retryAttempts?: number
 ) {
@@ -22,6 +23,7 @@ export async function getSignedVAAWithRetry(
         WORMHOLE_RPC_HOSTS[getNextRpcHost()],
         emitterChain,
         emitterAddress,
+        targetChain,
         sequence
       );
     } catch (e) {

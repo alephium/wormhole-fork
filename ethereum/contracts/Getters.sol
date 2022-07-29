@@ -42,7 +42,7 @@ contract Getters is State {
         return _state.messageFee;
     }
 
-    function nextSequence(address emitter) public view returns (uint64) {
-        return _state.sequences[emitter];
+    function nextSequence(address emitter, uint16 targetChainId) public view returns (uint64) {
+        return _state.sequences[emitter][targetChainId];
     }
 }

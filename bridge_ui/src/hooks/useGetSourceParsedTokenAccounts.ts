@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_AURORA,
@@ -1510,6 +1511,9 @@ function useGetAvailableTokens(nft: boolean = false) {
     return () => {};
   }, [dispatch, lookupChain, currentSourceWalletAddress, tokenAccounts, nft]);
 
+  //Alephium account load
+  useEffect(() => {}, [])
+
   const ethAccounts = useMemo(() => {
     const output = { ...tokenAccounts };
     output.data = output.data?.slice() || [];
@@ -1550,6 +1554,10 @@ function useGetAvailableTokens(nft: boolean = false) {
     ? {
         resetAccounts: resetSourceAccounts,
       }
+    : lookupChain === CHAIN_ID_ALEPHIUM
+    ? {
+        resetAccounts: resetSourceAccounts,
+    }
     : lookupChain === CHAIN_ID_ALGORAND
     ? {
         tokenAccounts,

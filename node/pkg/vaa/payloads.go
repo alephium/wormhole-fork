@@ -3,16 +3,19 @@ package vaa
 import (
 	"bytes"
 	"encoding/binary"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
 // CoreModule is the identifier of the Core module (which is used for governance messages)
 var CoreModule = []byte{00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x43, 0x6f, 0x72, 0x65}
 
+// 000000000000000000000000000000000000000000546f6b656e427269646765
+var TokenBridgeModule = []byte{00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65}
+
 type (
 	// BodyContractUpgrade is a governance message to perform a contract upgrade of the core module
 	BodyContractUpgrade struct {
-		ChainID     ChainID
 		NewContract Address
 	}
 
@@ -31,9 +34,8 @@ type (
 
 	// BodyTokenBridgeUpgradeContract is a governance message to upgrade the token bridge.
 	BodyTokenBridgeUpgradeContract struct {
-		Module        string
-		TargetChainID ChainID
-		NewContract   Address
+		Module      string
+		NewContract Address
 	}
 )
 
@@ -44,8 +46,6 @@ func (b BodyContractUpgrade) Serialize() []byte {
 	buf.Write(CoreModule)
 	// Action
 	MustWrite(buf, binary.BigEndian, uint8(1))
-	// ChainID
-	MustWrite(buf, binary.BigEndian, uint16(b.ChainID))
 
 	buf.Write(b.NewContract[:])
 
@@ -109,8 +109,6 @@ func (r BodyTokenBridgeUpgradeContract) Serialize() []byte {
 	buf.Write([]byte(r.Module))
 	// Write action ID
 	MustWrite(buf, binary.BigEndian, uint8(2))
-	// Write target chain
-	MustWrite(buf, binary.BigEndian, r.TargetChainID)
 	// Write emitter address of chain to be registered
 	buf.Write(r.NewContract[:])
 

@@ -5,6 +5,13 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/db"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
@@ -14,17 +21,13 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
-	"log"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var (
-	solanaRPC  = flag.String("solanaRPC", "http://localhost:8899", "Solana RPC address")
-	adminRPC   = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
-	solanaAddr = flag.String("solanaProgram", "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth", "Solana program address")
+	solanaRPC   = flag.String("solanaRPC", "http://localhost:8899", "Solana RPC address")
+	adminRPC    = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	targetChain = flag.Uint("targetChain", 0, "VAA target chain id")
+	solanaAddr  = flag.String("solanaProgram", "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth", "Solana program address")
 )
 
 const (
@@ -45,6 +48,10 @@ func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, 
 func main() {
 	flag.Parse()
 
+	if *targetChain > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChain)
+	}
+
 	ctx := context.Background()
 	sr := rpc.New(*solanaRPC)
 
@@ -63,6 +70,7 @@ func main() {
 
 		msg := nodev1.FindMissingMessagesRequest{
 			EmitterChain:   uint32(vaa.ChainIDSolana),
+			TargetChain:    uint32(*targetChain),
 			EmitterAddress: emitter.Emitter,
 			RpcBackfill:    true,
 			BackfillNodes:  common.PublicRPCEndpoints,

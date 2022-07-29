@@ -32,7 +32,7 @@ contract NFTBridgeGovernance is NFTBridgeGetters, NFTBridgeSetters, ERC1967Upgra
 
         NFTBridgeStructs.RegisterChain memory chain = parseRegisterChain(vm.payload);
 
-        require(chain.chainId == chainId() || chain.chainId == 0, "invalid chain id");
+        require(vm.targetChainId == chainId() || vm.targetChainId == 0, "invalid chain id");
 
         setBridgeImplementation(chain.emitterChainID, chain.emitterAddress);
     }
@@ -46,7 +46,7 @@ contract NFTBridgeGovernance is NFTBridgeGetters, NFTBridgeSetters, ERC1967Upgra
 
         NFTBridgeStructs.UpgradeContract memory implementation = parseUpgrade(vm.payload);
 
-        require(implementation.chainId == chainId(), "wrong chain id");
+        require(vm.targetChainId == chainId(), "wrong chain id");
 
         upgradeImplementation(address(uint160(uint256(implementation.newContract))));
     }
@@ -99,9 +99,6 @@ contract NFTBridgeGovernance is NFTBridgeGetters, NFTBridgeSetters, ERC1967Upgra
         index += 1;
         require(chain.action == 1, "invalid RegisterChain: wrong action");
 
-        chain.chainId = encoded.toUint16(index);
-        index += 2;
-
         // payload
 
         chain.emitterChainID = encoded.toUint16(index);
@@ -125,9 +122,6 @@ contract NFTBridgeGovernance is NFTBridgeGetters, NFTBridgeSetters, ERC1967Upgra
         chain.action = encoded.toUint8(index);
         index += 1;
         require(chain.action == 2, "invalid UpgradeContract: wrong action");
-
-        chain.chainId = encoded.toUint16(index);
-        index += 2;
 
         // payload
 

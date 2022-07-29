@@ -5,14 +5,15 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/big"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestChainIDFromString(t *testing.T) {
@@ -168,6 +169,7 @@ func getVaa() VAA {
 		Sequence:         uint64(1),
 		ConsistencyLevel: uint8(32),
 		EmitterChain:     ChainIDSolana,
+		TargetChain:      ChainIDEthereum,
 		EmitterAddress:   governanceEmitter,
 		Payload:          payload,
 	}
@@ -187,31 +189,31 @@ func TestAddSignature(t *testing.T) {
 
 func TestSerializeBody(t *testing.T) {
 	vaa := getVaa()
-	expected := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x20, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61}
+	expected := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x20, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61}
 	assert.Equal(t, vaa.serializeBody(), expected)
 }
 
 func TestSigningBody(t *testing.T) {
 	vaa := getVaa()
-	expected := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x20, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61}
+	expected := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x0, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x20, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61}
 	assert.Equal(t, vaa.signingBody(), expected)
 }
 
 func TestSigningMsg(t *testing.T) {
 	vaa := getVaa()
-	expected := common.HexToHash("4fae136bb1fd782fe1b5180ba735cdc83bcece3f9b7fd0e5e35300a61c8acd8f")
+	expected := common.HexToHash("0x274d11088cad4749a94cdd69d936c6811a70c93b0aee4f5f865ca3f110d664d6")
 	assert.Equal(t, vaa.SigningMsg(), expected)
 }
 
 func TestMessageID(t *testing.T) {
 	vaa := getVaa()
-	expected := "1/0000000000000000000000000000000000000000000000000000000000000004/1"
+	expected := "1/0000000000000000000000000000000000000000000000000000000000000004/2/1"
 	assert.Equal(t, vaa.MessageID(), expected)
 }
 
 func TestHexDigest(t *testing.T) {
 	vaa := getVaa()
-	expected := "4fae136bb1fd782fe1b5180ba735cdc83bcece3f9b7fd0e5e35300a61c8acd8f"
+	expected := "274d11088cad4749a94cdd69d936c6811a70c93b0aee4f5f865ca3f110d664d6"
 	assert.Equal(t, vaa.HexDigest(), expected)
 }
 
@@ -548,7 +550,6 @@ func TestDecodeTransferPayloadHdr(t *testing.T) {
 		emitterAddr    string
 		originChain    ChainID
 		originAddress  string
-		targetChain    ChainID
 		targetAddress  string
 		amount         int64
 		errString      string
@@ -556,23 +557,22 @@ func TestDecodeTransferPayloadHdr(t *testing.T) {
 
 	tests := []Test{
 		{label: "valid vaa",
-			vaa:            "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d000000020000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f01000000000000000000000000000000000000000000000000000000002b369f40000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e000221c175fcd8e3a19fe2e0deae96534f0f4e6a896f4df0e3ec5345fe27ac3f63f000010000000000000000000000000000000000000000000000000000000000000000",
+			vaa:            "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d0000000200010000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f01000000000000000000000000000000000000000000000000000000002b369f40000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e000221c175fcd8e3a19fe2e0deae96534f0f4e6a896f4df0e3ec5345fe27ac3f63f00000000000000000000000000000000000000000000000000000000000000000",
 			payloadType:    1,
 			emitterChainId: ChainIDEthereum,
 			emitterAddr:    "0000000000000000000000000290FB167208Af455bB137780163b7B7a9a10C16",
 			originChain:    ChainIDEthereum,
 			originAddress:  "000000000000000000000000DDb64fE46a91D46ee29420539FC25FD07c5FEa3E",
-			targetChain:    ChainIDSolana,
 			targetAddress:  "21c175fcd8e3a19fe2e0deae96534f0f4e6a896f4df0e3ec5345fe27ac3f63f0",
 			amount:         725000000,
 			errString:      "",
 		},
 		{label: "unsupported payload type",
-			vaa:       "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d000000020000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f02000000000000000000000000000000000000000000000000000000002b369f40000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e000221c175fcd8e3a19fe2e0deae96534f0f4e6a896f4df0e3ec5345fe27ac3f63f000010000000000000000000000000000000000000000000000000000000000000000",
+			vaa:       "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d0000000200010000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f02000000000000000000000000000000000000000000000000000000002b369f40000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e000221c175fcd8e3a19fe2e0deae96534f0f4e6a896f4df0e3ec5345fe27ac3f63f00000000000000000000000000000000000000000000000000000000000000000",
 			errString: "unsupported payload type",
 		},
 		{label: "buffer too short",
-			vaa:       "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d000000020000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f01",
+			vaa:       "01000000000100e424aef95296cb0f2185f351086c7c0b9cd031d1288f0537d04ab20d5fc709416224b2bd9a8010a81988aa9cb38b378eb915f88b67e32a765928d948dc02077e00000102584a8d0000000200010000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16000000000000000f0f01",
 			errString: "buffer too short",
 		},
 		{label: "empty string",
@@ -607,14 +607,13 @@ func TestDecodeTransferPayloadHdr(t *testing.T) {
 
 					assert.Equal(t, tc.emitterChainId, vaa.EmitterChain)
 					assert.Equal(t, expectedEmitterAddr, vaa.EmitterAddress)
-					assert.Equal(t, 133, len(vaa.Payload))
+					assert.Equal(t, 131, len(vaa.Payload))
 
 					payload, err := DecodeTransferPayloadHdr(vaa.Payload)
 					assert.NoError(t, err)
 					assert.Equal(t, tc.payloadType, payload.Type)
 					assert.Equal(t, tc.originChain, payload.OriginChain)
 					assert.Equal(t, expectedOriginAddress, payload.OriginAddress)
-					assert.Equal(t, tc.targetChain, payload.TargetChain)
 					assert.Equal(t, expectedTargetAddress, payload.TargetAddress)
 					assert.Equal(t, expectedAmount.Cmp(payload.Amount), 0)
 				} else {

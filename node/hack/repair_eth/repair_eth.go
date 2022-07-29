@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"net/http/cookiejar"
 	"strconv"
@@ -59,6 +60,7 @@ var (
 	adminRPC     = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
 	etherscanKey = flag.String("etherscanKey", "", "Etherscan API Key")
 	chain        = flag.String("chain", "ethereum", "Eth Chain name")
+	targetChain  = flag.Uint("targetChain", 0, "VAA target chain id")
 	dryRun       = flag.Bool("dryRun", true, "Dry run")
 	step         = flag.Uint64("step", 10000, "Step")
 	showError    = flag.Bool("showError", false, "On http error, show the response body")
@@ -239,6 +241,11 @@ func getLogs(chainId vaa.ChainID, ctx context.Context, c *http.Client, api, key,
 
 func main() {
 	flag.Parse()
+
+	if *targetChain > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChain)
+	}
+
 	chainID, err := vaa.ChainIDFromString(*chain)
 	if err != nil {
 		log.Fatalf("Invalid chain: %v", err)
@@ -303,6 +310,7 @@ func main() {
 
 		msg := nodev1.FindMissingMessagesRequest{
 			EmitterChain:   uint32(chainID),
+			TargetChain:    uint32(*targetChain),
 			EmitterAddress: emitter.Emitter,
 			RpcBackfill:    true,
 			BackfillNodes:  common.PublicRPCEndpoints,

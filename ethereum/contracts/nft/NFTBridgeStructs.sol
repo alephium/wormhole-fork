@@ -20,8 +20,6 @@ contract NFTBridgeStructs {
         string uri;
         // Address of the recipient. Left-zero-padded if shorter than 32 bytes
         bytes32 to;
-        // Chain ID of the recipient
-        uint16 toChain;
     }
 
     struct RegisterChain {
@@ -30,8 +28,6 @@ contract NFTBridgeStructs {
         bytes32 module;
         // governance action: 1
         uint8 action;
-        // governance paket chain id: this or 0
-        uint16 chainId;
 
         // Chain ID
         uint16 emitterChainID;
@@ -45,8 +41,6 @@ contract NFTBridgeStructs {
         bytes32 module;
         // governance action: 2
         uint8 action;
-        // governance paket chain id
-        uint16 chainId;
 
         // Address of the new contract
         bytes32 newContract;

@@ -4,17 +4,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/certusone/wormhole/node/pkg/common"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"google.golang.org/grpc"
-	"log"
 )
 
 var (
 	adminRPC       = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
 	shouldBackfill = flag.Bool("backfill", true, "Backfill missing sequences")
 	onlyChain      = flag.String("only", "", "Only check this chain")
+	targetChain    = flag.Uint("targetChain", 0, "VAA target chain id")
 )
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, nodev1.NodePrivilegedServiceClient) {
@@ -30,6 +33,10 @@ func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, 
 
 func main() {
 	flag.Parse()
+
+	if *targetChain > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChain)
+	}
 
 	ctx := context.Background()
 
@@ -58,6 +65,7 @@ func main() {
 
 		msg := nodev1.FindMissingMessagesRequest{
 			EmitterChain:   uint32(emitter.ChainID),
+			TargetChain:    uint32(*targetChain),
 			EmitterAddress: emitter.Emitter,
 			RpcBackfill:    *shouldBackfill,
 			BackfillNodes:  common.PublicRPCEndpoints,

@@ -35,6 +35,8 @@ type (
 		ConsistencyLevel uint8
 		// EmitterChain the VAA was emitted on
 		EmitterChain ChainID
+		// The target chain of the VAA
+		TargetChain ChainID
 		// EmitterAddress of the contract that emitted the Message
 		EmitterAddress Address
 		// Payload of the message
@@ -66,7 +68,6 @@ type (
 		OriginAddress Address
 		OriginChain   ChainID
 		TargetAddress Address
-		TargetChain   ChainID
 	}
 )
 
@@ -120,6 +121,8 @@ func (c ChainID) String() string {
 		return "karura"
 	case ChainIDAcala:
 		return "acala"
+	case ChainIDAlephium:
+		return "alephium"
 	case ChainIDKlaytn:
 		return "klaytn"
 	case ChainIDCelo:
@@ -163,6 +166,8 @@ func ChainIDFromString(s string) (ChainID, error) {
 		return ChainIDKarura, nil
 	case "acala":
 		return ChainIDAcala, nil
+	case "alephium":
+		return ChainIDAlephium, nil
 	case "klaytn":
 		return ChainIDKlaytn, nil
 	case "celo":
@@ -210,6 +215,8 @@ const (
 	ChainIDMoonbeam ChainID = 16
 	// ChainIDNeon is the ChainID of Neon
 	ChainIDNeon ChainID = 17
+	// ChainIDAlephium is the ChainID of Alephium
+	ChainIDAlephium ChainID = 255
 
 	// ChainIDEthereumRopsten is the ChainID of Ethereum Ropsten
 	ChainIDEthereumRopsten ChainID = 10001
@@ -289,6 +296,10 @@ func Unmarshal(data []byte) (*VAA, error) {
 
 	if err := binary.Read(reader, binary.BigEndian, &v.EmitterChain); err != nil {
 		return nil, fmt.Errorf("failed to read emitter chain: %w", err)
+	}
+
+	if err := binary.Read(reader, binary.BigEndian, &v.TargetChain); err != nil {
+		return nil, fmt.Errorf("failed to read to chain: %w", err)
 	}
 
 	emitterAddress := Address{}
@@ -394,9 +405,9 @@ func (v *VAA) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// MessageID returns a human-readable emitter_chain/emitter_address/sequence tuple.
+// MessageID returns a human-readable emitter_chain/emitter_address/target_chain/sequence tuple.
 func (v *VAA) MessageID() string {
-	return fmt.Sprintf("%d/%s/%d", v.EmitterChain, v.EmitterAddress, v.Sequence)
+	return fmt.Sprintf("%d/%s/%d/%d", v.EmitterChain, v.EmitterAddress, v.TargetChain, v.Sequence)
 }
 
 // HexDigest returns the hex-encoded digest.
@@ -404,11 +415,16 @@ func (v *VAA) HexDigest() string {
 	return hex.EncodeToString(v.SigningMsg().Bytes())
 }
 
+func (v *VAA) SerializeBody() []byte {
+	return v.serializeBody()
+}
+
 func (v *VAA) serializeBody() []byte {
 	buf := new(bytes.Buffer)
 	MustWrite(buf, binary.BigEndian, uint32(v.Timestamp.Unix()))
 	MustWrite(buf, binary.BigEndian, v.Nonce)
 	MustWrite(buf, binary.BigEndian, v.EmitterChain)
+	MustWrite(buf, binary.BigEndian, v.TargetChain)
 	buf.Write(v.EmitterAddress[:])
 	MustWrite(buf, binary.BigEndian, v.Sequence)
 	MustWrite(buf, binary.BigEndian, v.ConsistencyLevel)
@@ -470,12 +486,6 @@ func DecodeTransferPayloadHdr(payload []byte) (*TransferPayloadHdr, error) {
 
 	// Target address: payload[67] for 32
 	err = binary.Read(reader, binary.BigEndian, &p.TargetAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	// Target chain ID: payload[99] for 2
-	err = binary.Read(reader, binary.BigEndian, &p.TargetChain)
 	if err != nil {
 		return nil, err
 	}

@@ -15,8 +15,6 @@ contract BridgeStructs {
         uint16 tokenChain;
         // Address of the recipient. Left-zero-padded if shorter than 32 bytes
         bytes32 to;
-        // Chain ID of the recipient
-        uint16 toChain;
         // Amount of tokens (big-endian uint256) that the user is willing to pay as relayer fee. Must be <= Amount.
         uint256 fee;
     }
@@ -32,8 +30,6 @@ contract BridgeStructs {
         uint16 tokenChain;
         // Address of the recipient. Left-zero-padded if shorter than 32 bytes
         bytes32 to;
-        // Chain ID of the recipient
-        uint16 toChain;
         // Amount of tokens (big-endian uint256) that the user is willing to pay as relayer fee. Must be <= Amount.
         uint256 fee;
         // An arbitrary payload
@@ -74,8 +70,6 @@ contract BridgeStructs {
         bytes32 module;
         // governance action: 1
         uint8 action;
-        // governance paket chain id: this or 0
-        uint16 chainId;
 
         // Chain ID
         uint16 emitterChainID;
@@ -89,8 +83,6 @@ contract BridgeStructs {
         bytes32 module;
         // governance action: 2
         uint8 action;
-        // governance paket chain id
-        uint16 chainId;
 
         // Address of the new contract
         bytes32 newContract;

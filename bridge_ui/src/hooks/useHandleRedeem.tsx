@@ -11,7 +11,11 @@ import {
   redeemOnEthNative,
   redeemOnSolana,
   redeemOnTerra,
+  redeemOnAlph,
+  CHAIN_ID_ALEPHIUM,
   uint8ArrayToHex,
+  getTokenBridgeForChainId,
+  getIsTransferCompletedAlph
 } from "@certusone/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -38,6 +42,7 @@ import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -52,6 +57,13 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
+import {
+  getRedeemInfo,
+  getTokenPoolId,
+  waitTxConfirmed,
+  submitAlphScriptTx
+} from "../utils/alephium";
+import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 
 async function algo(
@@ -221,6 +233,47 @@ async function terra(
   }
 }
 
+async function alephium(
+  dispatch: any,
+  enqueueSnackbar: any,
+  signer: AlephiumWalletSigner,
+  signedVAA: Uint8Array
+) {
+  dispatch(setIsRedeeming(true));
+  try {
+    const redeemInfo = getRedeemInfo(signedVAA)
+    const tokenPoolId = getTokenPoolId(redeemInfo.tokenId, redeemInfo.remoteChainId)
+    const bytecode = redeemOnAlph(tokenPoolId, signedVAA)
+    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
+    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, redeemInfo.remoteChainId)
+    const isTransferCompleted = await getIsTransferCompletedAlph(
+      signer.nodeProvider,
+      tokenBridgeForChainId,
+      signer.account.group,
+      signedVAA
+    )
+    dispatch(
+      setRedeemTx({ id: result.txId, block: blockHeader.height })
+    );
+    if (isTransferCompleted) {
+      enqueueSnackbar(null, {
+        content: <Alert severity="success">Transaction confirmed</Alert>,
+      });
+    } else {
+      enqueueSnackbar(null, {
+        content: <Alert severity="error">Transfer failed, please try again later</Alert>,
+      });
+    }
+  } catch (e) {
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    dispatch(setIsRedeeming(false));
+  }
+}
+
 export function useHandleRedeem() {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -230,6 +283,7 @@ export function useHandleRedeem() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
+  const { signer: alphSigner } = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const signedVAA = useTransferSignedVAA();
   const isRedeeming = useSelector(selectTransferIsRedeeming);
@@ -252,6 +306,8 @@ export function useHandleRedeem() {
       );
     } else if (targetChain === CHAIN_ID_TERRA && !!terraWallet && signedVAA) {
       terra(dispatch, enqueueSnackbar, terraWallet, signedVAA, terraFeeDenom);
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && signedVAA) {
+      alephium(dispatch, enqueueSnackbar, alphSigner, signedVAA)
     } else if (
       targetChain === CHAIN_ID_ALGORAND &&
       algoAccounts[0] &&
@@ -270,6 +326,7 @@ export function useHandleRedeem() {
     solPK,
     terraWallet,
     terraFeeDenom,
+    alphSigner,
     algoAccounts,
   ]);
 

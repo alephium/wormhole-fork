@@ -7,7 +7,7 @@ import (
 var GovernanceEmitter = Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
 var GovernanceChain = ChainIDSolana
 
-func CreateGovernanceVAA(timestamp time.Time, nonce uint32, sequence uint64, guardianSetIndex uint32, payload []byte) *VAA {
+func CreateGovernanceVAA(timestamp time.Time, nonce uint32, sequence uint64, targetChain ChainID, guardianSetIndex uint32, payload []byte) *VAA {
 	vaa := &VAA{
 		Version:          SupportedVAAVersion,
 		GuardianSetIndex: guardianSetIndex,
@@ -17,6 +17,7 @@ func CreateGovernanceVAA(timestamp time.Time, nonce uint32, sequence uint64, gua
 		Sequence:         sequence,
 		ConsistencyLevel: 32,
 		EmitterChain:     GovernanceChain,
+		TargetChain:      targetChain,
 		EmitterAddress:   GovernanceEmitter,
 		Payload:          payload,
 	}

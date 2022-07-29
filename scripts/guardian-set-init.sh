@@ -11,9 +11,11 @@ addressesJson="./scripts/devnet-consts.json"
 # working files for accumulating state
 envFile="./scripts/.env.hex" # for generic hex data, for solana, terra, etc
 ethFile="./scripts/.env.0x" # for "0x" prefixed data, for ethereum scripts
+alphFile="./scripts/.env.alph"
 
 # copy the eth defaults so we can override just the things we need
 cp ./ethereum/.env.test $ethFile
+cp ./alephium/.env.test $alphFile
 
 
 # function for updating or inserting a KEY=value pair in a file.
@@ -53,6 +55,7 @@ guardiansPublicHexCSV=$(echo ${guardiansPublicHex} | jq --raw-output -c  '. | jo
 initSigners="INIT_SIGNERS"
 upsert_env_file $ethFile $initSigners $guardiansPublicEth
 upsert_env_file $envFile $initSigners $guardiansPublicHex
+upsert_env_file $alphFile $initSigners $guardiansPublicHex
 upsert_env_file $envFile "INIT_SIGNERS_CSV" $guardiansPublicHexCSV
 
 
@@ -76,6 +79,7 @@ ethTokenBridge=$(jq --raw-output '.chains."2".contracts.tokenBridgeEmitterAddres
 terraTokenBridge=$(jq --raw-output '.chains."3".contracts.tokenBridgeEmitterAddress' $addressesJson)
 bscTokenBridge=$(jq --raw-output '.chains."4".contracts.tokenBridgeEmitterAddress' $addressesJson)
 algoTokenBridge=$(jq --raw-output '.chains."8".contracts.tokenBridgeEmitterAddress' $addressesJson)
+alphTokenBridge=$(jq --raw-output '.chains."255".contracts.tokenBridgeEmitterAddress' $addressesJson)
 
 solNFTBridge=$(jq --raw-output '.chains."1".contracts.nftBridgeEmitterAddress' $addressesJson)
 ethNFTBridge=$(jq --raw-output '.chains."2".contracts.nftBridgeEmitterAddress' $addressesJson)
@@ -91,10 +95,14 @@ if [[ ! -d ./clients/js/node_modules ]]; then
 fi
 # invoke clients/token_bridge commands to create registration VAAs
 solTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c solana -a ${solTokenBridge} -g ${guardiansPrivateCSV})
-ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} )
+ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV})
 terraTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c terra -a ${terraTokenBridge} -g ${guardiansPrivateCSV})
 bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV})
 algoTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c algorand -a ${algoTokenBridge} -g ${guardiansPrivateCSV})
+alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV})
+
+ethTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
+bscTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
 
 
 # 5) create nft bridge registration VAAs
@@ -113,6 +121,7 @@ ethTokenBridge="REGISTER_ETH_TOKEN_BRIDGE_VAA"
 terraTokenBridge="REGISTER_TERRA_TOKEN_BRIDGE_VAA"
 bscTokenBridge="REGISTER_BSC_TOKEN_BRIDGE_VAA"
 algoTokenBridge="REGISTER_ALGO_TOKEN_BRIDGE_VAA"
+alphTokenBridge="REGISTER_ALPH_TOKEN_BRIDGE_VAA"
 
 solNFTBridge="REGISTER_SOL_NFT_BRIDGE_VAA"
 ethNFTBridge="REGISTER_ETH_NFT_BRIDGE_VAA"
@@ -151,6 +160,12 @@ upsert_env_file $envFile $bscTokenBridge $bscTokenBridgeVAA
 upsert_env_file $ethFile $algoTokenBridge $algoTokenBridgeVAA
 upsert_env_file $envFile $algoTokenBridge $algoTokenBridgeVAA
 
+# alph token bridge
+upsert_env_file $ethFile $alphTokenBridge $alphTokenBridgeVAA
+upsert_env_file $envFile $alphTokenBridge $alphTokenBridgeVAA
+
+upsert_env_file $alphFile $ethTokenBridge $ethTokenBridgeVAAForAlph
+upsert_env_file $alphFile $bscTokenBridge $bscTokenBridgeVAAForAlph
 
 # 7) copy the local .env file to the solana & terra dirs, if the script is running on the host machine
 # chain dirs will not exist if running in docker for Tilt, only if running locally. check before copying.
@@ -158,6 +173,12 @@ upsert_env_file $envFile $algoTokenBridge $algoTokenBridgeVAA
 if [[ -d ./ethereum ]]; then
     echo "copying $ethFile to /etherum/.env"
     cp $ethFile ./ethereum/.env
+fi
+
+# copy the alphFile to alephium dir
+if [[ -d ./alephium ]]; then
+    echo "copying $alphFile to /alephium/.env"
+    cp $alphFile ./alephium/.env
 fi
 
 # copy the hex envFile to each of the non-EVM chains

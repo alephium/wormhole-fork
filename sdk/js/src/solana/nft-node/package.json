@@ -1,0 +1,13 @@
+{
+  "name": "nft-bridge",
+  "description": "Created with Rocksalt",
+  "version": "0.1.0",
+  "files": [
+    "nft_bridge_bg.wasm",
+    "nft_bridge.js",
+    "nft_bridge_bg.js",
+    "nft_bridge.d.ts"
+  ],
+  "main": "nft_bridge.js",
+  "types": "nft_bridge.d.ts"
+}

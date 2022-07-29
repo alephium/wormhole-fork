@@ -134,6 +134,9 @@ contract Messages is Getters {
         vm.emitterChainId = encodedVM.toUint16(index);
         index += 2;
 
+        vm.targetChainId = encodedVM.toUint16(index);
+        index += 2;
+
         vm.emitterAddress = encodedVM.toBytes32(index);
         index += 32;
 

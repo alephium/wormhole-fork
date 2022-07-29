@@ -26,7 +26,7 @@ abstract contract Governance is GovernanceStructs, Messages, Setters, ERC1967Upg
         GovernanceStructs.ContractUpgrade memory upgrade = parseContractUpgrade(vm.payload);
 
         require(upgrade.module == module, "Invalid Module");
-        require(upgrade.chain == chainId(), "Invalid Chain");
+        require(vm.targetChainId == chainId(), "Invalid Chain");
 
         setGovernanceActionConsumed(vm.hash);
 
@@ -42,7 +42,7 @@ abstract contract Governance is GovernanceStructs, Messages, Setters, ERC1967Upg
         GovernanceStructs.SetMessageFee memory upgrade = parseSetMessageFee(vm.payload);
 
         require(upgrade.module == module, "Invalid Module");
-        require(upgrade.chain == chainId(), "Invalid Chain");
+        require(vm.targetChainId == chainId(), "Invalid Chain");
 
         setGovernanceActionConsumed(vm.hash);
 
@@ -58,7 +58,7 @@ abstract contract Governance is GovernanceStructs, Messages, Setters, ERC1967Upg
         GovernanceStructs.GuardianSetUpgrade memory upgrade = parseGuardianSetUpgrade(vm.payload);
 
         require(upgrade.module == module, "invalid Module");
-        require(upgrade.chain == chainId() || upgrade.chain == 0, "invalid Chain");
+        require(vm.targetChainId == chainId() || vm.targetChainId == 0, "invalid Chain");
 
         require(upgrade.newGuardianSet.keys.length > 0, "new guardian set is empty");
         require(upgrade.newGuardianSetIndex == getCurrentGuardianSetIndex() + 1, "index must increase in steps of 1");
@@ -79,7 +79,7 @@ abstract contract Governance is GovernanceStructs, Messages, Setters, ERC1967Upg
         GovernanceStructs.TransferFees memory transfer = parseTransferFees(vm.payload);
 
         require(transfer.module == module, "invalid Module");
-        require(transfer.chain == chainId() || transfer.chain == 0, "invalid Chain");
+        require(vm.targetChainId == chainId() || vm.targetChainId == 0, "invalid Chain");
 
         setGovernanceActionConsumed(vm.hash);
 

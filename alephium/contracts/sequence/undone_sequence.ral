@@ -1,0 +1,28 @@
+import "../constants.ral"
+
+Contract UndoneSequence(
+    parentId: ByteVec,
+    begin: U256,
+    mut sequences: U256,
+    refundAddress: Address
+) extends Constants() {
+    @using(assetsInContract = true)
+    pub fn checkUndone(seq: U256) -> () {
+        assert!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        assert!(seq >= begin, ErrorCodes.InvalidSequence)
+        let offset = seq - begin
+        assert!(offset < 256, ErrorCodes.InvalidSequence)
+        let flag = 1 << offset
+        assert!(sequences & flag == 0, ErrorCodes.InvalidSequence)
+        sequences = sequences | flag
+        if (sequences == SequenceExecutedFlag) {
+            destroySelf!(refundAddress)
+        }
+    }
+
+    @using(assetsInContract = true)
+    pub fn destroy() -> () {
+        assert!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        destroySelf!(refundAddress)
+    }
+}

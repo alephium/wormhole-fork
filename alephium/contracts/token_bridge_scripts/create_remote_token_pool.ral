@@ -1,0 +1,11 @@
+import "../token_bridge/attest_token_handler.ral"
+
+TxScript Main(
+    payer: Address,
+    attestTokenHandlerId: ByteVec,
+    vaa: ByteVec,
+    alphAmount: U256
+) {
+    let attestTokenHandler = AttestTokenHandler(attestTokenHandlerId)
+    attestTokenHandler.handleAttestToken{payer -> alphAmount}(vaa, payer, alphAmount)
+}

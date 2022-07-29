@@ -31,8 +31,8 @@ contract Storage {
         // Period for which a guardian set stays active after it has been replaced
         uint32 guardianSetExpiry;
 
-        // Sequence numbers per emitter
-        mapping(address => uint64) sequences;
+        // Sequence numbers per emitter/targetChainId
+        mapping(address => mapping(uint16 => uint64)) sequences;
 
         // Mapping of consumed governance actions
         mapping(bytes32 => bool) consumedGovernanceActions;

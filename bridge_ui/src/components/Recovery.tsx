@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_KARURA,
@@ -12,7 +13,6 @@ import {
   hexToNativeAssetString,
   hexToNativeString,
   hexToUint8Array,
-  importCoreWasm,
   isEVMChain,
   parseNFTPayload,
   parseSequenceFromLogAlgorand,
@@ -21,6 +21,8 @@ import {
   parseSequenceFromLogTerra,
   parseTransferPayload,
   uint8ArrayToHex,
+  parseVAA,
+  parseTargetChainFromLogEth,
 } from "@certusone/wormhole-sdk";
 import {
   Accordion,
@@ -54,7 +56,10 @@ import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
+import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
+  ALEPHIUM_HOST,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   CHAINS,
@@ -76,7 +81,9 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
+import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
+import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -127,6 +134,7 @@ async function algo(tx: string, enqueueSnackbar: any) {
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALGORAND,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence,
       WORMHOLE_RPC_HOSTS.length
     );
@@ -153,6 +161,10 @@ async function evm(
       receipt,
       getBridgeAddressForChain(chainId)
     );
+    const targetChain = parseTargetChainFromLogEth(
+      receipt,
+      getBridgeAddressForChain(chainId)
+    )
     const emitterAddress = getEmitterAddressEth(
       nft
         ? getNFTBridgeAddressForChain(chainId)
@@ -161,6 +173,7 @@ async function evm(
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
       emitterAddress,
+      targetChain,
       sequence.toString(),
       WORMHOLE_RPC_HOSTS.length
     );
@@ -188,6 +201,7 @@ async function solana(tx: string, enqueueSnackbar: any, nft: boolean) {
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_SOLANA,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence.toString(),
       WORMHOLE_RPC_HOSTS.length
     );
@@ -215,7 +229,29 @@ async function terra(tx: string, enqueueSnackbar: any) {
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_TERRA,
       emitterAddress,
+      CHAIN_ID_UNSET,
       sequence,
+      WORMHOLE_RPC_HOSTS.length
+    );
+    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
+  } catch (e) {
+    console.error(e);
+    enqueueSnackbar(null, {
+      content: <Alert severity="error">{parseError(e)}</Alert>,
+    });
+    return { vaa: null, error: parseError(e) };
+  }
+}
+
+async function alephium(txId: string, enqueueSnackbar: any) {
+  try {
+    const provider = new NodeProvider(ALEPHIUM_HOST)
+    const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      CHAIN_ID_ALEPHIUM,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      txInfo.targetChain,
+      txInfo.sequence,
       WORMHOLE_RPC_HOSTS.length
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
@@ -383,13 +419,13 @@ export default function Recovery() {
     isEVMChain(recoverySourceChain) && !isReady ? statusMessage : "";
   const parsedPayload = useMemo(() => {
     try {
-      return recoveryParsedVAA?.payload
+      return recoveryParsedVAA?.body.payload
         ? isNFT
           ? parseNFTPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(recoveryParsedVAA.body.payload)
             )
           : parseTransferPayload(
-              Buffer.from(new Uint8Array(recoveryParsedVAA.payload))
+              Buffer.from(recoveryParsedVAA.body.payload)
             )
         : null;
     } catch (e) {
@@ -482,6 +518,21 @@ export default function Recovery() {
             }
           }
         })();
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+        setRecoverySourceTxError("");
+        setRecoverySourceTxIsLoading(true);
+        (async () => {
+          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
+          if (!cancelled) {
+            setRecoverySourceTxIsLoading(false);
+            if (vaa) {
+              setRecoverySignedVAA(vaa);
+            }
+            if (error) {
+              setRecoverySourceTxError(error);
+            }
+          }
+        })();
       } else if (recoverySourceChain === CHAIN_ID_ALGORAND) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
@@ -510,7 +561,7 @@ export default function Recovery() {
     isNFT,
     isReady,
   ]);
-  const handleTypeChange = useCallback((event) => {
+  const handleTypeChange = useCallback((event: any) => {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
@@ -519,14 +570,14 @@ export default function Recovery() {
     );
     setType(event.target.value);
   }, []);
-  const handleSourceChainChange = useCallback((event) => {
+  const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
   }, []);
-  const handleSourceTxChange = useCallback((event) => {
+  const handleSourceTxChange = useCallback((event: any) => {
     setRecoverySourceTx(event.target.value.trim());
   }, []);
-  const handleSignedVAAChange = useCallback((event) => {
+  const handleSignedVAAChange = useCallback((event: any) => {
     setRecoverySignedVAA(event.target.value.trim());
   }, []);
   useEffect(() => {
@@ -534,8 +585,7 @@ export default function Recovery() {
     if (recoverySignedVAA) {
       (async () => {
         try {
-          const { parse_vaa } = await importCoreWasm();
-          const parsedVAA = parse_vaa(hexToUint8Array(recoverySignedVAA));
+          const parsedVAA = parseVAA(hexToUint8Array(recoverySignedVAA));
           if (!cancelled) {
             setRecoveryParsedVAA(parsedVAA);
           }
@@ -551,19 +601,19 @@ export default function Recovery() {
       cancelled = true;
     };
   }, [recoverySignedVAA]);
-  const parsedPayloadTargetChain = parsedPayload?.targetChain;
-  const enableRecovery = recoverySignedVAA && parsedPayloadTargetChain;
+  const parsedVAATargetChain = recoveryParsedVAA?.body.targetChainId;
+  const enableRecovery = recoverySignedVAA && parsedVAATargetChain;
 
   const handleRecoverClickBase = useCallback(
     (useRelayer: boolean) => {
-      if (enableRecovery && recoverySignedVAA && parsedPayloadTargetChain) {
+      if (enableRecovery && recoverySignedVAA && parsedVAATargetChain && parsedPayload) {
         // TODO: make recovery reducer
         if (isNFT) {
           dispatch(
             setRecoveryNFTVaa({
               vaa: recoverySignedVAA,
               parsedPayload: {
-                targetChain: parsedPayload.targetChain,
+                targetChain: parsedVAATargetChain,
                 targetAddress: parsedPayload.targetAddress,
                 originChain: parsedPayload.originChain,
                 originAddress: parsedPayload.originAddress,
@@ -577,7 +627,7 @@ export default function Recovery() {
               vaa: recoverySignedVAA,
               useRelayer,
               parsedPayload: {
-                targetChain: parsedPayload.targetChain,
+                targetChain: parsedVAATargetChain,
                 targetAddress: parsedPayload.targetAddress,
                 originChain: parsedPayload.originChain,
                 originAddress: parsedPayload.originAddress,
@@ -596,7 +646,7 @@ export default function Recovery() {
       dispatch,
       enableRecovery,
       recoverySignedVAA,
-      parsedPayloadTargetChain,
+      parsedVAATargetChain,
       parsedPayload,
       isNFT,
       push,
@@ -810,7 +860,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Target Chain"
                   disabled
-                  value={parsedPayload?.targetChain.toString() || ""}
+                  value={parsedVAATargetChain || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -822,7 +872,7 @@ export default function Recovery() {
                     (parsedPayload &&
                       hexToNativeString(
                         parsedPayload.targetAddress,
-                        parsedPayload.targetChain
+                        parsedVAATargetChain
                       )) ||
                     ""
                   }

@@ -15,6 +15,7 @@ export interface VAA<T> {
     timestamp: number
     nonce: number
     emitterChain: number
+    targetChain: number
     emitterAddress: string
     sequence: bigint
     consistencyLevel: number
@@ -121,6 +122,7 @@ const vaaParser = new Parser()
     .uint32("timestamp")
     .uint32("nonce")
     .uint16("emitterChain")
+    .uint16("targetChain")
     .array("emitterAddress", {
         type: "uint8",
         lengthInBytes: 32,
@@ -178,6 +180,7 @@ function vaaBody(vaa: VAA<Payload>) {
         encode("uint32", vaa.timestamp),
         encode("uint32", vaa.nonce),
         encode("uint16", vaa.emitterChain),
+        encode("uint16", vaa.targetChain),
         encode("bytes32", Buffer.from(vaa.emitterAddress, "hex")),
         encode("uint64", vaa.sequence),
         encode("uint8", vaa.consistencyLevel),
@@ -221,7 +224,6 @@ const addressParser = (length: number) => new Parser()
 export interface GuardianSetUpgrade {
     module: "Core"
     type: "GuardianSetUpgrade"
-    chain: number
     newGuardianSetIndex: number
     newGuardianSetLength: number
     newGuardianSet: string[]
@@ -240,7 +242,6 @@ const guardianSetUpgradeParser: P<GuardianSetUpgrade> = new P(new Parser()
         assert: 2,
         formatter: (_action) => "GuardianSetUpgrade"
     })
-    .uint16("chain")
     .uint32("newGuardianSetIndex")
     .uint8("newGuardianSetLength")
     .array("newGuardianSet", {
@@ -257,7 +258,6 @@ function serialiseGuardianSetUpgrade(payload: GuardianSetUpgrade): string {
     const body = [
         encode("bytes32", Buffer.from(Buffer.from(payload.module).toString("hex").padStart(64, "0"), "hex")),
         encode("uint8", 2),
-        encode("uint16", payload.chain),
         encode("uint32", payload.newGuardianSetIndex),
         encode("uint8", payload.newGuardianSet.length),
         ...payload.newGuardianSet
@@ -271,7 +271,6 @@ function serialiseGuardianSetUpgrade(payload: GuardianSetUpgrade): string {
 export interface CoreContractUpgrade {
     module: "Core"
     type: "ContractUpgrade"
-    chain: number
     address: Uint8Array
 }
 
@@ -289,7 +288,6 @@ const coreContractUpgradeParser: P<CoreContractUpgrade> =
             assert: 1,
             formatter: (_action) => "ContractUpgrade"
         })
-        .uint16("chain")
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
@@ -304,7 +302,6 @@ function serialiseCoreContractUpgrade(payload: CoreContractUpgrade): string {
     const body = [
         encode("bytes32", encodeString(payload.module)),
         encode("uint8", 1),
-        encode("uint16", payload.chain),
         encode("bytes32", payload.address)
     ]
     return body.join("")
@@ -313,7 +310,6 @@ function serialiseCoreContractUpgrade(payload: CoreContractUpgrade): string {
 export interface PortalContractUpgrade<Module extends "NFTBridge" | "TokenBridge"> {
     module: Module
     type: "ContractUpgrade"
-    chain: number
     address: Uint8Array
 }
 
@@ -331,7 +327,6 @@ function portalContractUpgradeParser<Module extends "NFTBridge" | "TokenBridge">
             assert: 2,
             formatter: (_action: number) => "ContractUpgrade"
         })
-        .uint16("chain")
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
@@ -347,7 +342,6 @@ function serialisePortalContractUpgrade<Module extends "NFTBridge" | "TokenBridg
     const body = [
         encode("bytes32", encodeString(payload.module)),
         encode("uint8", 2),
-        encode("uint16", payload.chain),
         encode("bytes32", payload.address)
     ]
     return body.join("")
@@ -359,7 +353,6 @@ function serialisePortalContractUpgrade<Module extends "NFTBridge" | "TokenBridg
 export interface PortalRegisterChain<Module extends "NFTBridge" | "TokenBridge"> {
     module: Module
     type: "RegisterChain"
-    chain: number
     emitterChain: number
     emitterAddress: Uint8Array
 }
@@ -378,7 +371,6 @@ function portalRegisterChainParser<Module extends "NFTBridge" | "TokenBridge">(m
             assert: 1,
             formatter: (_action) => "RegisterChain"
         })
-        .uint16("chain")
         .uint16("emitterChain")
         .array("emitterAddress", {
             type: "uint8",
@@ -396,7 +388,6 @@ function serialisePortalRegisterChain<Module extends "NFTBridge" | "TokenBridge"
     const body = [
         encode("bytes32", encodeString(payload.module)),
         encode("uint8", 1),
-        encode("uint16", payload.chain),
         encode("uint16", payload.emitterChain),
         encode("bytes32", payload.emitterAddress)
     ]

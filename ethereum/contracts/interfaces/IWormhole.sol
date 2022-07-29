@@ -9,6 +9,7 @@ interface IWormhole is Structs {
     event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel);
 
     function publishMessage(
+        uint16 targetChainId,
         uint32 nonce,
         bytes memory payload,
         uint8 consistencyLevel

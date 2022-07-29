@@ -44,6 +44,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	if p.gs == nil {
 		p.logger.Warn("dropping observation since we haven't initialized our guardian set yet",
 			zap.Stringer("emitter_chain", k.EmitterChain),
+			zap.Stringer("target_chain", k.TargetChain),
 			zap.Stringer("emitter_address", k.EmitterAddress),
 			zap.Uint32("nonce", k.Nonce),
 			zap.Stringer("txhash", k.TxHash),
@@ -54,6 +55,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 
 	supervisor.Logger(ctx).Info("message publication confirmed",
 		zap.Stringer("emitter_chain", k.EmitterChain),
+		zap.Stringer("target_chain", k.TargetChain),
 		zap.Stringer("emitter_address", k.EmitterAddress),
 		zap.Uint32("nonce", k.Nonce),
 		zap.Stringer("txhash", k.TxHash),
@@ -74,6 +76,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 		Timestamp:        k.Timestamp,
 		Nonce:            k.Nonce,
 		EmitterChain:     k.EmitterChain,
+		TargetChain:      k.TargetChain,
 		EmitterAddress:   k.EmitterAddress,
 		Payload:          k.Payload,
 		Sequence:         k.Sequence,
@@ -108,6 +111,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 		if k.Timestamp.Sub(existing.Timestamp) > settlementTime {
 			p.logger.Info("ignoring observation since we already have a quorum VAA for it",
 				zap.Stringer("emitter_chain", k.EmitterChain),
+				zap.Stringer("target_chain", k.TargetChain),
 				zap.Stringer("emitter_address", k.EmitterAddress),
 				zap.String("emitter_address_b58", base58.Encode(k.EmitterAddress.Bytes())),
 				zap.Uint32("nonce", k.Nonce),
@@ -122,6 +126,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	} else if err != db.ErrVAANotFound {
 		p.logger.Error("failed to get VAA from db",
 			zap.Stringer("emitter_chain", k.EmitterChain),
+			zap.Stringer("target_chain", k.TargetChain),
 			zap.Stringer("emitter_address", k.EmitterAddress),
 			zap.Uint32("nonce", k.Nonce),
 			zap.Stringer("txhash", k.TxHash),
@@ -141,6 +146,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 
 	p.logger.Info("observed and signed confirmed message publication",
 		zap.Stringer("source_chain", k.EmitterChain),
+		zap.Stringer("target_chain", k.TargetChain),
 		zap.Stringer("txhash", k.TxHash),
 		zap.String("txhash_b58", base58.Encode(k.TxHash.Bytes())),
 		zap.String("digest", hex.EncodeToString(digest.Bytes())),

@@ -5,6 +5,7 @@ export async function getSignedVAAWithRetry(
   hosts: string[],
   emitterChain: ChainId | ChainName,
   emitterAddress: string,
+  targetChain: ChainId | ChainName,
   sequence: string,
   extraGrpcOpts = {},
   retryTimeout = 1000,
@@ -22,6 +23,7 @@ export async function getSignedVAAWithRetry(
         hosts[getNextRpcHost()],
         coalesceChainId(emitterChain),
         emitterAddress,
+        targetChain,
         sequence,
         extraGrpcOpts
       );

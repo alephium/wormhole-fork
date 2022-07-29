@@ -84,17 +84,16 @@ contract NFTBridge is NFTBridgeGovernance {
             symbol       : symbol,
             tokenID      : tokenID,
             uri          : uriString,
-            to           : recipient,
-            toChain      : recipientChain
-        }), msg.value, nonce);
+            to           : recipient
+        }), recipientChain, msg.value, nonce);
     }
 
-    function logTransfer(NFTBridgeStructs.Transfer memory transfer, uint256 callValue, uint32 nonce) internal returns (uint64 sequence) {
+    function logTransfer(NFTBridgeStructs.Transfer memory transfer, uint16 targetChainId, uint256 callValue, uint32 nonce) internal returns (uint64 sequence) {
         bytes memory encoded = encodeTransfer(transfer);
 
         sequence = wormhole().publishMessage{
             value : callValue
-        }(nonce, encoded, 15);
+        }(targetChainId, nonce, encoded, 15);
     }
 
     function completeTransfer(bytes memory encodedVm) public {
@@ -113,7 +112,7 @@ contract NFTBridge is NFTBridgeGovernance {
         require(!isTransferCompleted(vm.hash), "transfer already completed");
         setTransferCompleted(vm.hash);
 
-        require(transfer.toChain == chainId(), "invalid target chain");
+        require(vm.targetChainId == chainId(), "invalid target chain");
 
         IERC721 transferToken;
         if (transfer.tokenChain == chainId()) {
@@ -213,8 +212,7 @@ contract NFTBridge is NFTBridgeGovernance {
             transfer.tokenID,
             uint8(bytes(transfer.uri).length),
             transfer.uri,
-            transfer.to,
-            transfer.toChain
+            transfer.to
         );
     }
 
@@ -243,13 +241,10 @@ contract NFTBridge is NFTBridgeGovernance {
         
         // Ignore length due to malformatted payload
         index += 1;
-        transfer.uri = string(encoded.slice(index, encoded.length - index - 34));
+        transfer.uri = string(encoded.slice(index, encoded.length - index - 32));
 
         // From here we read backwards due malformatted package
         index = encoded.length;
-
-        index -= 2;
-        transfer.toChain = encoded.toUint16(index);
 
         index -= 32;
         transfer.to = encoded.toBytes32(index);

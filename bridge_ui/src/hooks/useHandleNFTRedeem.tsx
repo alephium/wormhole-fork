@@ -6,9 +6,9 @@ import {
   CHAIN_ID_SOLANA,
   getClaimAddressSolana,
   hexToUint8Array,
-  importCoreWasm,
   isEVMChain,
   parseNFTPayload,
+  parseVAA
 } from "@certusone/wormhole-sdk";
 import {
   createMetaOnSolana,
@@ -125,10 +125,9 @@ async function solana(
     }
     const isNative = await isNFTVAASolanaNative(signedVAA);
     if (!isNative) {
-      const { parse_vaa } = await importCoreWasm();
-      const parsedVAA = parse_vaa(signedVAA);
+      const parsedVAA = parseVAA(signedVAA);
       const { originChain, originAddress, tokenId } = parseNFTPayload(
-        Buffer.from(new Uint8Array(parsedVAA.payload))
+        Buffer.from(parsedVAA.body.payload)
       );
       const mintAddress = await getForeignAssetSol(
         SOL_NFT_BRIDGE_ADDRESS,

@@ -26,8 +26,10 @@ const GOVERNANCE_EMITTER =
 
 function makeVAA(
   emitterChain: number,
+  targetChain: number,
   emitterAddress: string,
   signers: string[],
+  sequence: string | undefined,
   p: Payload
 ): VAA<Payload> {
   let v: VAA<Payload> = {
@@ -37,8 +39,9 @@ function makeVAA(
     timestamp: 1,
     nonce: 1,
     emitterChain: emitterChain,
+    targetChain: targetChain,
     emitterAddress: emitterAddress,
-    sequence: BigInt(Math.floor(Math.random() * 100000000)),
+    sequence: typeof sequence === 'undefined' ? BigInt(Math.floor(Math.random() * 100000000)) : BigInt(sequence),
     consistencyLevel: 0,
     payload: p,
   };
@@ -61,6 +64,12 @@ yargs(hideBin(process.argv))
             describe: "Guardians' secret keys",
             type: "string",
           })
+          .option("sequence", {
+            alias: "s",
+            required: false,
+            describe: "VAA sequence",
+            type: "string",
+          })
           // Registration
           .command(
             "registration",
@@ -71,7 +80,7 @@ yargs(hideBin(process.argv))
                   alias: "c",
                   describe: "Chain to register",
                   type: "string",
-                  choices: Object.keys(CHAINS),
+                  // choices: Object.keys(CHAINS), TODO: remove the comment once we release our sdk
                   required: true,
                 })
                 .option("contract-address", {
@@ -86,16 +95,22 @@ yargs(hideBin(process.argv))
                   type: "string",
                   choices: ["NFTBridge", "TokenBridge"],
                   required: true,
-                });
+                })
             },
             (argv) => {
               let module = argv["module"] as "NFTBridge" | "TokenBridge";
-              assertChain(argv["chain"]);
+              // TODO: remove this once we release our sdk
+              let emitterChainId = 0
+              if (argv["chain"] === "alephium") {
+                emitterChainId = 255
+              } else {
+                assertChain(argv["chain"])
+                emitterChainId = toChainId(argv["chain"])
+              }
               let payload: vaa.PortalRegisterChain<typeof module> = {
                 module,
                 type: "RegisterChain",
-                chain: 0,
-                emitterChain: toChainId(argv["chain"]),
+                emitterChain: emitterChainId,
                 emitterAddress: Buffer.from(
                   argv["contract-address"].padStart(64, "0"),
                   "hex"
@@ -103,8 +118,10 @@ yargs(hideBin(process.argv))
               };
               let v = makeVAA(
                 GOVERNANCE_CHAIN,
+                0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
+                argv["sequence"],
                 payload
               );
               console.log(serialiseVAA(v));
@@ -146,7 +163,6 @@ yargs(hideBin(process.argv))
               let payload: Payload = {
                 module,
                 type: "ContractUpgrade",
-                chain: toChainId(argv["chain"]),
                 address: Buffer.from(
                   argv["contract-address"].padStart(64, "0"),
                   "hex"
@@ -154,8 +170,10 @@ yargs(hideBin(process.argv))
               };
               let v = makeVAA(
                 GOVERNANCE_CHAIN,
+                toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
+                argv["sequence"],
                 payload
               );
               console.log(serialiseVAA(v));
@@ -245,7 +263,7 @@ yargs(hideBin(process.argv))
       // two don't agree instead of silently taking the VAA's target chain.
 
       // get VAA chain
-      const vaa_chain_id = parsed_vaa.payload.chain;
+      const vaa_chain_id = parsed_vaa.targetChain;
       assertChain(vaa_chain_id);
       const vaa_chain = toChainName(vaa_chain_id);
 
@@ -279,6 +297,8 @@ yargs(hideBin(process.argv))
         throw Error("Algorand is not supported yet");
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
+      } else if (chain === "alephium") {
+        throw Error("Alephium is not supported yet")
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled

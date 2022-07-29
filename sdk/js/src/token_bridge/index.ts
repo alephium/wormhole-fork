@@ -7,3 +7,4 @@ export * from "./getOriginalAsset";
 export * from "./redeem";
 export * from "./transfer";
 export * from "./updateWrapped";
+export * from "./alephium"

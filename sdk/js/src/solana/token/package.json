@@ -1,0 +1,13 @@
+{
+  "name": "token-bridge",
+  "description": "Created with Rocksalt",
+  "version": "0.1.0",
+  "files": [
+    "token_bridge_bg.wasm",
+    "token_bridge.js",
+    "token_bridge.d.ts"
+  ],
+  "module": "token_bridge.js",
+  "types": "token_bridge.d.ts",
+  "sideEffects": false
+}
