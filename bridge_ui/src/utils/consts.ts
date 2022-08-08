@@ -23,21 +23,8 @@ import {
 import { clusterApiUrl } from "@solana/web3.js";
 import { getAddress } from "ethers/lib/utils";
 import { CHAIN_CONFIG_MAP } from "../config";
-import acalaIcon from "../icons/acala.svg";
-import algorandIcon from "../icons/algorand.svg";
-import auroraIcon from "../icons/aurora.svg";
-import avaxIcon from "../icons/avax.svg";
 import bscIcon from "../icons/bsc.svg";
-import celoIcon from "../icons/celo.svg";
 import ethIcon from "../icons/eth.svg";
-import fantomIcon from "../icons/fantom.svg";
-import karuraIcon from "../icons/karura.svg";
-import klaytnIcon from "../icons/klaytn.svg";
-import neonIcon from "../icons/neon.svg";
-import oasisIcon from "../icons/oasis-network-rose-logo.svg";
-import polygonIcon from "../icons/polygon.svg";
-import solanaIcon from "../icons/solana.svg";
-import terraIcon from "../icons/terra.svg";
 import alephiumIcon from "../icons/alephium.svg";
 
 export const alphMessageFee = BigInt("100000000000000")
@@ -65,104 +52,14 @@ export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
     ? [
         {
-          id: CHAIN_ID_ACALA,
-          name: "Acala",
-          logo: acalaIcon,
-        },
-        {
-          id: CHAIN_ID_AURORA,
-          name: "Aurora",
-          logo: auroraIcon,
-        },
-        {
-          id: CHAIN_ID_AVAX,
-          name: "Avalanche",
-          logo: avaxIcon,
-        },
-        {
-          id: CHAIN_ID_BSC,
-          name: "Binance Smart Chain",
-          logo: bscIcon,
-        },
-        {
-          id: CHAIN_ID_CELO,
-          name: "Celo",
-          logo: celoIcon,
-        },
-        {
           id: CHAIN_ID_ETH,
           name: "Ethereum",
           logo: ethIcon,
-        },
-        {
-          id: CHAIN_ID_FANTOM,
-          name: "Fantom",
-          logo: fantomIcon,
-        },
-        {
-          id: CHAIN_ID_KARURA,
-          name: "Karura",
-          logo: karuraIcon,
-        },
-        {
-          id: CHAIN_ID_KLAYTN,
-          name: "Klaytn",
-          logo: klaytnIcon,
-        },
-        {
-          id: CHAIN_ID_OASIS,
-          name: "Oasis",
-          logo: oasisIcon,
-        },
-        {
-          id: CHAIN_ID_POLYGON,
-          name: "Polygon",
-          logo: polygonIcon,
-        },
-        {
-          id: CHAIN_ID_SOLANA,
-          name: "Solana",
-          logo: solanaIcon,
-        },
-        {
-          id: CHAIN_ID_TERRA,
-          name: "Terra Classic",
-          logo: terraIcon,
         },
         alephiumChainInfo
       ]
     : CLUSTER === "testnet"
     ? [
-        {
-          id: CHAIN_ID_ACALA,
-          name: "Acala",
-          logo: acalaIcon,
-        },
-        {
-          id: CHAIN_ID_ALGORAND,
-          name: "Algorand",
-          logo: algorandIcon,
-        },
-        {
-          id: CHAIN_ID_AURORA,
-          name: "Aurora",
-          logo: auroraIcon,
-        },
-        {
-          id: CHAIN_ID_AVAX,
-          name: "Avalanche",
-          logo: avaxIcon,
-        },
-        {
-          id: CHAIN_ID_BSC,
-          name: "Binance Smart Chain",
-          logo: bscIcon,
-        },
-        {
-          id: CHAIN_ID_CELO,
-          name: "Celo",
-          logo: celoIcon,
-        },
         {
           id: CHAIN_ID_ETH,
           name: "Ethereum (Goerli)",
@@ -173,54 +70,9 @@ export const CHAINS: ChainInfo[] =
           name: "Ethereum (Ropsten)",
           logo: ethIcon,
         },
-        {
-          id: CHAIN_ID_FANTOM,
-          name: "Fantom",
-          logo: fantomIcon,
-        },
-        {
-          id: CHAIN_ID_KARURA,
-          name: "Karura",
-          logo: karuraIcon,
-        },
-        {
-          id: CHAIN_ID_KLAYTN,
-          name: "Klaytn",
-          logo: klaytnIcon,
-        },
-        {
-          id: CHAIN_ID_NEON,
-          name: "Neon",
-          logo: neonIcon,
-        },
-        {
-          id: CHAIN_ID_OASIS,
-          name: "Oasis",
-          logo: oasisIcon,
-        },
-        {
-          id: CHAIN_ID_POLYGON,
-          name: "Polygon",
-          logo: polygonIcon,
-        },
-        {
-          id: CHAIN_ID_SOLANA,
-          name: "Solana",
-          logo: solanaIcon,
-        },
-        {
-          id: CHAIN_ID_TERRA,
-          name: "Terra Classic",
-          logo: terraIcon,
-        },
         alephiumChainInfo
       ]
     : [
-        {
-          id: CHAIN_ID_ALGORAND,
-          name: "Algorand",
-          logo: algorandIcon,
-        },
         {
           id: CHAIN_ID_BSC,
           name: "Binance Smart Chain",
@@ -231,36 +83,13 @@ export const CHAINS: ChainInfo[] =
           name: "Ethereum",
           logo: ethIcon,
         },
-        {
-          id: CHAIN_ID_SOLANA,
-          name: "Solana",
-          logo: solanaIcon,
-        },
-        {
-          id: CHAIN_ID_TERRA,
-          name: "Terra Classic",
-          logo: terraIcon,
-        },
         alephiumChainInfo
       ];
 export const BETA_CHAINS: ChainId[] =
   CLUSTER === "mainnet" ? [CHAIN_ID_ACALA, CHAIN_ID_KLAYTN] : [];
 export const CHAINS_WITH_NFT_SUPPORT = CHAINS.filter(
   ({ id }) =>
-    id === CHAIN_ID_AVAX ||
-    id === CHAIN_ID_BSC ||
-    id === CHAIN_ID_ETH ||
-    id === CHAIN_ID_ETHEREUM_ROPSTEN ||
-    id === CHAIN_ID_POLYGON ||
-    id === CHAIN_ID_OASIS ||
-    id === CHAIN_ID_SOLANA ||
-    id === CHAIN_ID_AURORA ||
-    id === CHAIN_ID_FANTOM ||
-    id === CHAIN_ID_KARURA ||
-    id === CHAIN_ID_ACALA ||
-    id === CHAIN_ID_KLAYTN ||
-    id === CHAIN_ID_CELO ||
-    id === CHAIN_ID_NEON
+    id === CHAIN_ID_ETH
 );
 export type ChainsById = { [key in ChainId]: ChainInfo };
 export const CHAINS_BY_ID: ChainsById = CHAINS.reduce((obj, chain) => {
