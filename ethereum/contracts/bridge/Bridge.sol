@@ -66,11 +66,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         sequence = logTransfer(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce);
     }
 
-    function wrapAndTransferETHWithPayload(uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce, bytes memory payload) public payable returns (uint64 sequence) {
-        BridgeStructs.TransferResult memory transferResult = _wrapAndTransferETH(arbiterFee);
-        sequence = logTransferWithPayload(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce, payload);
-    }
-
     function _wrapAndTransferETH(uint256 arbiterFee) internal returns (BridgeStructs.TransferResult memory transferResult) {
         uint wormholeFee = wormhole().messageFee();
 
@@ -109,11 +104,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
     function transferTokens(address token, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce) public payable nonReentrant returns (uint64 sequence) {
         BridgeStructs.TransferResult memory transferResult = _transferTokens(token, amount, arbiterFee);
         sequence = logTransfer(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce);
-    }
-
-    function transferTokensWithPayload(address token, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce, bytes memory payload) public payable nonReentrant returns (uint64 sequence) {
-        BridgeStructs.TransferResult memory transferResult = _transferTokens(token, amount, arbiterFee);
-        sequence = logTransferWithPayload(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce, payload);
     }
 
     // Initiate a Transfer
@@ -207,26 +197,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         }(recipientChain, nonce, encoded, 15);
     }
 
-    function logTransferWithPayload(uint16 tokenChain, bytes32 tokenAddress, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 fee, uint256 callValue, uint32 nonce, bytes memory payload) internal returns (uint64 sequence) {
-        require(fee <= amount, "fee exceeds amount");
-
-        BridgeStructs.TransferWithPayload memory transfer = BridgeStructs.TransferWithPayload({
-            payloadID : 3,
-            amount : amount,
-            tokenAddress : tokenAddress,
-            tokenChain : tokenChain,
-            to : recipient,
-            fee : fee,
-            payload : payload
-        });
-
-        bytes memory encoded = encodeTransferWithPayload(transfer);
-
-        sequence = wormhole().publishMessage{
-            value : callValue
-        }(recipientChain, nonce, encoded, 15);
-    }
-
     function updateWrapped(bytes memory encodedVm) external returns (address token) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
@@ -295,14 +265,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         setWrappedAsset(meta.tokenChain, meta.tokenAddress, token);
     }
 
-    function completeTransferWithPayload(bytes memory encodedVm, address feeRecipient) public returns (bytes memory) {
-        return _completeTransfer(encodedVm, false, feeRecipient);
-    }
-
-    function completeTransferAndUnwrapETHWithPayload(bytes memory encodedVm, address feeRecipient) public returns (bytes memory) {
-        return _completeTransfer(encodedVm, true, feeRecipient);
-    }
-
     function completeTransfer(bytes memory encodedVm) public {
         _completeTransfer(encodedVm, false, msg.sender);
     }
@@ -319,12 +281,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         require(verifyBridgeVM(vm), "invalid emitter");
 
         BridgeStructs.Transfer memory transfer = parseTransfer(vm.payload);
-
-        // payload 3 must be redeemed by the designated proxy contract
         address transferRecipient = address(uint160(uint256(transfer.to)));
-        if (transfer.payloadID == 3) {
-            require(msg.sender == transferRecipient, "invalid sender");
-        }
 
         require(!isTransferCompleted(vm.hash), "transfer already completed");
         setTransferCompleted(vm.hash);
@@ -434,18 +391,6 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         );
     }
 
-    function encodeTransferWithPayload(BridgeStructs.TransferWithPayload memory transfer) public pure returns (bytes memory encoded) {
-        encoded = abi.encodePacked(
-            transfer.payloadID,
-            transfer.amount,
-            transfer.tokenAddress,
-            transfer.tokenChain,
-            transfer.to,
-            transfer.fee,
-            transfer.payload
-        );
-    }
-
     function parseAssetMeta(bytes memory encoded) public pure returns (BridgeStructs.AssetMeta memory meta) {
         uint index = 0;
 
@@ -478,7 +423,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         transfer.payloadID = encoded.toUint8(index);
         index += 1;
 
-        require(transfer.payloadID == 1 || transfer.payloadID == 3, "invalid Transfer");
+        require(transfer.payloadID == 1, "invalid Transfer");
 
         transfer.amount = encoded.toUint256(index);
         index += 32;
@@ -495,8 +440,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         transfer.fee = encoded.toUint256(index);
         index += 32;
 
-        // payload 3 allows for an arbitrary additional payload
-        require(encoded.length == index || transfer.payloadID == 3, "invalid Transfer");
+        require(encoded.length == index, "invalid Transfer");
     }
 
     function bytes32ToString(bytes32 input) internal pure returns (string memory) {
