@@ -828,12 +828,12 @@ export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : "7a30852556dd137abb1ce6b5229c7ffeb28ee38a5f449e4c01ade7d807732b05";
-export const ALEPHIUM_CONFIRMATIONS =
+export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? 10
     : CLUSTER === "testnet"
     ? 10
-    : 0;
+    : 10;
 export const ALEPHIUM_NETWORK_ID =
   CLUSTER === "mainnet"
     ? 0

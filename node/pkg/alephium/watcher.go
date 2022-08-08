@@ -58,7 +58,7 @@ func NewAlephiumWatcher(
 	contracts []string,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
-	minConfirmations uint64,
+	minConfirmations uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
 	if len(contracts) != 2 {
@@ -80,7 +80,7 @@ func NewAlephiumWatcher(
 		msgChan:   messageEvents,
 		obsvReqC:  obsvReqC,
 
-		minConfirmations: uint8(minConfirmations),
+		minConfirmations: minConfirmations,
 
 		client: NewClient(url, apiKey, 10),
 	}

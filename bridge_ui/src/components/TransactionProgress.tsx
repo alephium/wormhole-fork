@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { ALEPHIUM_CONFIRMATIONS, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -120,7 +120,7 @@ export default function TransactionProgress({
       : isEVMChain(chainId)
       ? 15
       : chainId === CHAIN_ID_ALEPHIUM
-      ? ALEPHIUM_CONFIRMATIONS
+      ? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
       : 1;
   if (
     !isSendComplete &&

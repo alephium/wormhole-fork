@@ -22,6 +22,7 @@ Contract TokenBridge(
     refundAddress: Address
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
+    const MinimalConsistencyLevel = 10
 
     enum ActionId {
         RegisterChain          = #01
@@ -151,8 +152,9 @@ Contract TokenBridge(
         tokenAmount: U256,
         arbiterFee: U256,
         nonce: ByteVec,
-        consistencyLevel: U256 // TODO: Do we need to limit the minimum confirmation
+        consistencyLevel: U256
     ) -> () {
+        assert!(consistencyLevel >= MinimalConsistencyLevel, ErrorCodes.InvalidConsistencyLevel)
         assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
         let tokenPoolId = subContractIdOf!(TokenBridgeForChain(tokenBridgeForChainId), bridgeTokenId)

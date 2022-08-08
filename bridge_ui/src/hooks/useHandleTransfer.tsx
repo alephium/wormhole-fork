@@ -63,7 +63,7 @@ import {
 } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  ALEPHIUM_CONFIRMATIONS,
+  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphArbiterFee,
   alphMessageFee,
@@ -358,7 +358,7 @@ async function alephium(
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [], amountParsed.toString())
         } else if (isLocalToken) {
@@ -371,7 +371,7 @@ async function alephium(
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         } else {
@@ -385,7 +385,7 @@ async function alephium(
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         }

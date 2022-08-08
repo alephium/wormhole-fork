@@ -12,6 +12,7 @@ describe("test token bridge", () => {
 
     const payer = randomAssetAddress()
     const defaultInputAsset: InputAsset = alphInputAsset(payer, alph(4))
+    const minimalConsistencyLevel = 10
 
     function randomByte32Hex(): string {
         return binToHex(randomBytes(32))
@@ -229,7 +230,7 @@ describe("test token bridge", () => {
                 'alphAmount': transferAmount,
                 'arbiterFee': arbiterFee,
                 'nonce': nonceHex,
-                'consistencyLevel': 0
+                'consistencyLevel': minimalConsistencyLevel
             },
             inputAssets: [inputAsset],
             existingContracts: fixture.wrappedAlphPoolInfo.states()
@@ -277,7 +278,7 @@ describe("test token bridge", () => {
             'sequence': 0,
             'nonce': nonceHex,
             'payload': binToHex(transferMessage.encode()),
-            'consistencyLevel': 0
+            'consistencyLevel': minimalConsistencyLevel
         })
     })
 
@@ -390,7 +391,7 @@ describe("test token bridge", () => {
                 'tokenAmount': transferAmount,
                 'arbiterFee': arbiterFee,
                 'nonce': nonceHex,
-                'consistencyLevel': 0
+                'consistencyLevel': minimalConsistencyLevel
             },
             inputAssets: [inputAsset],
             existingContracts: fixture.localTokenPoolInfo.states().concat(testTokenInfo.states())
@@ -427,7 +428,7 @@ describe("test token bridge", () => {
             'sequence': 0,
             'nonce': nonceHex,
             'payload': binToHex(transferMessage.encode()),
-            'consistencyLevel': 0
+            'consistencyLevel': minimalConsistencyLevel
         })
     })
 
@@ -552,23 +553,30 @@ describe("test token bridge", () => {
         const nonceHex = nonce()
         const inputAsset = alphAndTokenInputAsset(fromAddress, oneAlph, fixture.remoteTokenPoolInfo.contractId, transferAmount)
         const tokenBridge = fixture.tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod(provider, 'transferToken', {
-            address: fixture.tokenBridgeInfo.address,
-            initialFields: fixture.tokenBridgeInfo.selfState.fields,
-            testArgs: {
-                'fromAddress': fromAddress,
-                'bridgeTokenId': remoteTokenId,
-                'isLocalToken': false,
-                'toChainId': remoteChainId,
-                'toAddress': toAddress,
-                'tokenAmount': transferAmount,
-                'arbiterFee': arbiterFee,
-                'nonce': nonceHex,
-                'consistencyLevel': 0 
-            },
-            inputAssets: [inputAsset],
-            existingContracts: fixture.remoteTokenPoolInfo.states()
-        })
+
+        async function transferToken(consistencyLevel: number) {
+            return tokenBridge.testPublicMethod(provider, 'transferToken', {
+                address: fixture.tokenBridgeInfo.address,
+                initialFields: fixture.tokenBridgeInfo.selfState.fields,
+                testArgs: {
+                    'fromAddress': fromAddress,
+                    'bridgeTokenId': remoteTokenId,
+                    'isLocalToken': false,
+                    'toChainId': remoteChainId,
+                    'toAddress': toAddress,
+                    'tokenAmount': transferAmount,
+                    'arbiterFee': arbiterFee,
+                    'nonce': nonceHex,
+                    'consistencyLevel': consistencyLevel
+                },
+                inputAssets: [inputAsset],
+                existingContracts: fixture.remoteTokenPoolInfo.states()
+            })
+        }
+
+        await expectAssertionFailed(async () => transferToken(minimalConsistencyLevel - 1))
+        
+        const testResult = await transferToken(minimalConsistencyLevel)
 
         const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
         expect(tokenBridgeForChainState.fields["sendSequence"]).toEqual(1)
@@ -602,7 +610,7 @@ describe("test token bridge", () => {
             'sequence': 0,
             'nonce': nonceHex,
             'payload': binToHex(transfer.encode()),
-            'consistencyLevel': 0
+            'consistencyLevel': minimalConsistencyLevel
         })
     })
 
@@ -632,7 +640,7 @@ describe("test token bridge", () => {
                     'tokenAmount': transferAmount,
                     'arbiterFee': arbiterFee,
                     'nonce': nonceHex,
-                    'consistencyLevel': 0 
+                    'consistencyLevel': minimalConsistencyLevel
                 },
                 inputAssets: [inputAsset],
                 existingContracts: fixture.remoteTokenPoolInfo.states()
