@@ -166,32 +166,19 @@ export async function transferFromEth(
   recipientChain: ChainId | ChainName,
   recipientAddress: Uint8Array,
   relayerFee: ethers.BigNumberish = 0,
-  overrides: PayableOverrides & { from?: string | Promise<string> } = {},
-  payload: Uint8Array | null = null
+  overrides: PayableOverrides & { from?: string | Promise<string> } = {}
 ) {
   const recipientChainId = coalesceChainId(recipientChain);
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v =
-    payload === null
-      ? await bridge.transferTokens(
-          tokenAddress,
-          amount,
-          recipientChainId,
-          recipientAddress,
-          relayerFee,
-          createNonce(),
-          overrides
-        )
-      : await bridge.transferTokensWithPayload(
-          tokenAddress,
-          amount,
-          recipientChainId,
-          recipientAddress,
-          relayerFee,
-          createNonce(),
-          payload,
-          overrides
-        );
+  const v = await bridge.transferTokens(
+    tokenAddress,
+    amount,
+    recipientChainId,
+    recipientAddress,
+    relayerFee,
+    createNonce(),
+    overrides
+  );
   const receipt = await v.wait();
   return receipt;
 }
@@ -203,34 +190,20 @@ export async function transferFromEthNative(
   recipientChain: ChainId | ChainId,
   recipientAddress: Uint8Array,
   relayerFee: ethers.BigNumberish = 0,
-  overrides: PayableOverrides & { from?: string | Promise<string> } = {},
-  payload: Uint8Array | null = null
+  overrides: PayableOverrides & { from?: string | Promise<string> } = {}
 ) {
   const recipientChainId = coalesceChainId(recipientChain);
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v =
-    payload === null
-      ? await bridge.wrapAndTransferETH(
-          recipientChainId,
-          recipientAddress,
-          relayerFee,
-          createNonce(),
-          {
-            ...overrides,
-            value: amount,
-          }
-        )
-      : await bridge.wrapAndTransferETHWithPayload(
-          recipientChainId,
-          recipientAddress,
-          relayerFee,
-          createNonce(),
-          payload,
-          {
-            ...overrides,
-            value: amount,
-          }
-        );
+  const v = await bridge.wrapAndTransferETH(
+    recipientChainId,
+    recipientAddress,
+    relayerFee,
+    createNonce(),
+    {
+      ...overrides,
+      value: amount,
+    }
+  );
   const receipt = await v.wait();
   return receipt;
 }
