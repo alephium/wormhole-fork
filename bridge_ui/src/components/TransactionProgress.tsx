@@ -81,7 +81,8 @@ export default function TransactionProgress({
       let cancelled = false;
       (async () => {
         while (!cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, 10000));
+          const timeout = CLUSTER === "devnet" ? 1000 : 10000
+          await new Promise((resolve) => setTimeout(resolve, timeout));
           try {
             const chainInfo = await alphSigner.nodeProvider.blockflow.getBlockflowChainInfo({
               fromGroup: alphSigner.account.group,
@@ -124,7 +125,7 @@ export default function TransactionProgress({
       : 1;
   if (
     !isSendComplete &&
-    (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
+    (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId) || chainId === CHAIN_ID_ALEPHIUM) &&
     blockDiff !== undefined
   ) {
     return (
