@@ -40,11 +40,18 @@ Contract RemoteTokenPool(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
-        let (sequenceReady, recipient, transferAmount, arbiterFee) = prepareCompleteTransfer(vaa)
-        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
-            return
-        }
+    pub fn completeTransfer(
+        emitterChainId: U256,
+        amount: U256,
+        vaaTokenId: ByteVec,
+        vaaTokenChainId: U256,
+        recipient: Address,
+        normalizedArbiterFee: U256,
+        caller: Address
+    ) -> () {
+        let (transferAmount, arbiterFee) = prepareCompleteTransfer(
+            callerContractId!(), emitterChainId, amount, vaaTokenId, vaaTokenChainId, normalizedArbiterFee
+        )
 
         if (caller != recipient) {
             transferAlph!(caller, recipient, dustAmount!())

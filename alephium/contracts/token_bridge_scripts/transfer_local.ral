@@ -4,6 +4,7 @@ TxScript Main(
     tokenBridgeId: ByteVec,
     fromAddress: Address,
     localTokenId: ByteVec,
+    alphChainId: U256,
     toChainId: U256,
     toAddress: ByteVec,
     tokenAmount: U256,
@@ -19,7 +20,7 @@ TxScript Main(
     }(
         fromAddress,
         localTokenId,
-        true, // isLocalToken
+        alphChainId,
         toChainId,
         toAddress,
         tokenAmount,

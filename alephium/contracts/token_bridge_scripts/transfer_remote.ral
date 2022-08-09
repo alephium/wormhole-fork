@@ -3,8 +3,9 @@ import "../token_bridge/token_bridge.ral"
 TxScript Main(
     tokenBridgeId: ByteVec,
     fromAddress: Address,
-    tokenWrapperId: ByteVec,
+    tokenPoolId: ByteVec,
     remoteTokenId: ByteVec,
+    tokenChainId: U256,
     toChainId: U256,
     toAddress: ByteVec,
     tokenAmount: U256,
@@ -16,11 +17,11 @@ TxScript Main(
     let tokenBridge = TokenBridge(tokenBridgeId)
     tokenBridge.transferToken{
         fromAddress -> messageFee,
-            tokenWrapperId: tokenAmount
+            tokenPoolId: tokenAmount
     }(
         fromAddress,
         remoteTokenId,
-        false, // isLocalToken
+        tokenChainId,
         toChainId,
         toAddress,
         tokenAmount,

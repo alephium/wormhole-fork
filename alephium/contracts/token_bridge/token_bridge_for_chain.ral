@@ -3,6 +3,7 @@ import "../math.ral"
 import "../constants.ral"
 import "../sequence/sequence.ral"
 import "../sequence/undone_sequence.ral"
+import "token_pool.ral"
 import "token_bridge_constants.ral"
 import "token_bridge.ral"
 
@@ -83,16 +84,46 @@ Contract TokenBridgeForChain(
         return msgSequence
     }
 
-    pub fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
+    fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
         let governance = Governance(governanceContractId)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
         assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-
-        let tokenId = byteVecSlice!(payload, 33, 65)
-        assert!(callerContractId!() == subContractId!(tokenId), ErrorCodes.InvalidCaller)
         return checkSequence(msgSequence), payload
+    }
+
+    fn parseCompleteTransfer(payload: ByteVec) -> (U256, ByteVec, U256, Address, U256) {
+        assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let vaaTokenId = byteVecSlice!(payload, 33, 65)
+        let vaaTokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let toAddress = byteVecSlice!(payload, 67, 99)
+        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
+        assert!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        return amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
+        let (sequenceReady, payload) = checkTransfer(vaa)
+        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
+            return
+        }
+
+        let (amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee) = parseCompleteTransfer(payload)
+        let tokenPoolId =
+            if (vaaTokenChainId == localChainId || vaaTokenChainId == remoteChainId) subContractId!(vaaTokenId)
+            else subContractIdOf!(
+                TokenBridgeForChain(subContractIdOf!(TokenBridge(localTokenBridgeId), Path.TokenBridgeForChain ++ u256To2Byte!(vaaTokenChainId))),
+                vaaTokenId
+            )
+
+        let tokenPool = TokenPool(tokenPoolId)
+        tokenPool.completeTransfer{caller -> dustAmount!()}(
+            remoteChainId, amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee, caller
+        )
     }
 
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {

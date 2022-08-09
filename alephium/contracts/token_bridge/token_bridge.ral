@@ -146,7 +146,7 @@ Contract TokenBridge(
     pub fn transferToken(
         fromAddress: Address,
         bridgeTokenId: ByteVec,
-        isLocalToken: Bool,
+        tokenChainId: U256,
         toChainId: U256,
         toAddress: ByteVec,
         tokenAmount: U256,
@@ -156,7 +156,9 @@ Contract TokenBridge(
     ) -> () {
         assert!(consistencyLevel >= MinimalConsistencyLevel, ErrorCodes.InvalidConsistencyLevel)
         assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
-        let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
+        let isLocalToken = tokenChainId == localChainId
+        let chainId = if (isLocalToken) toChainId else tokenChainId
+        let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(chainId))
         let tokenPoolId = subContractIdOf!(TokenBridgeForChain(tokenBridgeForChainId), bridgeTokenId)
         let payload =
             if (bridgeTokenId == wrappedAlphId) WrappedAlphPool(tokenPoolId).transfer{fromAddress -> tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
@@ -180,7 +182,7 @@ Contract TokenBridge(
         nonce: ByteVec,
         consistencyLevel: U256
     ) -> () {
-        transferToken{fromAddress -> alphRemaining!(fromAddress)}(fromAddress, wrappedAlphId, true, toChainId, toAddress, alphAmount, arbiterFee, nonce, consistencyLevel)
+        transferToken{fromAddress -> alphRemaining!(fromAddress)}(fromAddress, wrappedAlphId, localChainId, toChainId, toAddress, alphAmount, arbiterFee, nonce, consistencyLevel)
     }
 
     pub fn destroyUndoneSequenceContracts(vaa: ByteVec) -> () {
