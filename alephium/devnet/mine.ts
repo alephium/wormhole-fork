@@ -29,6 +29,6 @@ export async function mine(provider: NodeProvider) {
     }
     const submitResult = await provider.transactions.postTransactionsSubmit(signedTx)
     console.log("tx submitted, tx id: " + submitResult.txId)
-    await new Promise(resolve => setTimeout(resolve, 5000))
+    await new Promise(resolve => setTimeout(resolve, 1000))
     mine(provider)
 }
