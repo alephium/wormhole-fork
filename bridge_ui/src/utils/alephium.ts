@@ -6,7 +6,6 @@ import {
 } from "./consts";
 import {
     ChainId,
-    uint8ArrayToHex,
     toAlphContractAddress,
     parseSequenceFromLogAlph,
     CHAIN_ID_ALEPHIUM,
@@ -82,27 +81,12 @@ function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
     return (txStatus as node.Confirmed).blockHash !== undefined
 }
 
-export interface RedeemInfo {
-    remoteChainId: ChainId
-    tokenId: string
-    tokenChainId: ChainId
-}
-
-export function getRedeemInfo(signedVAA: Uint8Array): RedeemInfo {
+export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
     const length = signedVAA.length
-    const remoteChainIdOffset = length - 176
-    const remoteChainIdBytes = signedVAA.slice(remoteChainIdOffset, remoteChainIdOffset + 2)
-    const remoteChainId = Buffer.from(remoteChainIdBytes).readUInt16BE(0)
-    const tokenIdOffset = length - 98
-    const tokenId = signedVAA.slice(tokenIdOffset, tokenIdOffset + 32)
-    const tokenChainIdOffset = length - 66
-    const tokenChainIdBytes = signedVAA.slice(tokenChainIdOffset, tokenChainIdOffset + 2)
-    const tokenChainId = Buffer.from(tokenChainIdBytes).readUInt16BE(0)
-    return {
-        remoteChainId: remoteChainId as ChainId,
-        tokenId: uint8ArrayToHex(tokenId),
-        tokenChainId: tokenChainId as ChainId
-    }
+    const emitterChainIdOffset = length - 176
+    const emitterChainIdBytes = signedVAA.slice(emitterChainIdOffset, emitterChainIdOffset + 2)
+    const emitterChainId = Buffer.from(emitterChainIdBytes).readUInt16BE(0)
+    return emitterChainId as ChainId
 }
 
 export function getTokenPoolId(tokenId: string, remoteChainId: ChainId): string {

@@ -42,6 +42,7 @@ import { importTokenWasm } from "../solana/wasm";
 import {
   ChainId,
   ChainName,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   coalesceChainId,
   createNonce,
@@ -107,6 +108,7 @@ export function transferLocalTokenFromAlph(
     tokenBridgeId: tokenBridgeId,
     fromAddress: fromAddress,
     localTokenId: localTokenId,
+    alphChainId: CHAIN_ID_ALEPHIUM,
     toChainId: Number(toChainId),
     toAddress: toAddress,
     tokenAmount: tokenAmount,
@@ -120,8 +122,9 @@ export function transferLocalTokenFromAlph(
 export function transferRemoteTokenFromAlph(
   tokenBridgeId: string,
   fromAddress: string,
-  tokenWrapperId: string,
+  tokenPoolId: string,
   remoteTokenId: string,
+  tokenChainId: ChainId,
   toChainId: ChainId,
   toAddress: string,
   tokenAmount: bigint,
@@ -135,8 +138,9 @@ export function transferRemoteTokenFromAlph(
   return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
     fromAddress: fromAddress,
-    tokenWrapperId: tokenWrapperId,
+    tokenPoolId: tokenPoolId,
     remoteTokenId: remoteTokenId,
+    tokenChainId: Number(tokenChainId),
     toChainId: Number(toChainId),
     toAddress: toAddress,
     tokenAmount: tokenAmount,

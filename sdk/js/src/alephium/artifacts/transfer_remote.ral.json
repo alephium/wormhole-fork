@@ -1,13 +1,14 @@
 {
-  "sourceCodeSha256": "b6d6ef4755a86d545394455c3e2e8231a7f21fd8229621a8f4b0f532110cd611",
-  "bytecodeTemplate": "01010300010016{0}1700{1}7a{7}a2{2}{6}a3{1}{3}04{4}{5}{6}{8}{9}{10}13090c16000106",
+  "sourceCodeSha256": "77def885fd65d9f0689125824a7d9eb1887ccbb2dfbae88560d69127e6618d83",
+  "bytecodeTemplate": "01010300010016{0}1700{1}7a{8}a2{2}{7}a3{1}{3}{4}{5}{6}{7}{9}{10}{11}13090c16000106",
   "fieldsSig": {
-    "signature": "TxScript Main(tokenBridgeId:ByteVec,fromAddress:Address,tokenWrapperId:ByteVec,remoteTokenId:ByteVec,toChainId:U256,toAddress:ByteVec,tokenAmount:U256,messageFee:U256,arbiterFee:U256,nonce:ByteVec,consistencyLevel:U256)",
+    "signature": "TxScript Main(tokenBridgeId:ByteVec,fromAddress:Address,tokenPoolId:ByteVec,remoteTokenId:ByteVec,tokenChainId:U256,toChainId:U256,toAddress:ByteVec,tokenAmount:U256,messageFee:U256,arbiterFee:U256,nonce:ByteVec,consistencyLevel:U256)",
     "names": [
       "tokenBridgeId",
       "fromAddress",
-      "tokenWrapperId",
+      "tokenPoolId",
       "remoteTokenId",
+      "tokenChainId",
       "toChainId",
       "toAddress",
       "tokenAmount",
@@ -21,6 +22,7 @@
       "Address",
       "ByteVec",
       "ByteVec",
+      "U256",
       "U256",
       "ByteVec",
       "U256",

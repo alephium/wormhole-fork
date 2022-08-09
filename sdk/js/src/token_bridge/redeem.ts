@@ -10,7 +10,7 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import { completeTransferScript, destroyUndoneSequencesScript } from "../alephium/token_bridge";
+import { completeTransferScript } from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
@@ -25,13 +25,13 @@ import { hexToNativeString } from "../utils/array";
 import { parseTransferPayload } from "../utils/parseVaa";
 
 export function redeemOnAlph(
-  tokenPoolId: string,
+  tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
   return script.buildByteCodeToDeploy({
-    tokenPoolId: tokenPoolId,
+    tokenBridgeForChainId: tokenBridgeForChainId,
     vaa: vaaHex
   })
 }

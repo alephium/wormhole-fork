@@ -1,5 +1,5 @@
 {
-  "sourceCodeSha256": "04c36304caa03a64c9951c8c55421eeaed49be75404cb7fe28825e67594320b1",
+  "sourceCodeSha256": "20ffe2dd4a17ad4960b574b496e99bd5401d120d7008ea7cef690c73d69bbc8d",
   "bytecodeTemplate": "0101030001000c{1}1700{0}{3}a2{2}{0}{3}0f0c16000100",
   "fieldsSig": {
     "signature": "TxScript Main(payer:Address,attestTokenHandlerId:ByteVec,vaa:ByteVec,alphAmount:U256)",
