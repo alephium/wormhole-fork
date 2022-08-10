@@ -38,12 +38,12 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
     }
   });
 
-  const alphUIAmount = formatUnits(alphAmount, 0)
+  const alphUIAmount = formatUnits(alphAmount, 18)
   const alph = createParsedTokenAccount(
     address,
     ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
     alphAmount.toString(),
-    0,
+    18,
     parseFloat(alphUIAmount),
     alphUIAmount,
     "ALPH",
