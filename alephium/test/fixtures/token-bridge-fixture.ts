@@ -216,7 +216,6 @@ async function createWrappedAlph(provider: NodeProvider, totalWrapped: bigint): 
 async function createWrappedAlphPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/wrapped_alph_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -227,7 +226,6 @@ async function createWrappedAlphPoolTemplate(provider: NodeProvider): Promise<Co
 async function createLocalTokenPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/local_token_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -238,7 +236,6 @@ async function createLocalTokenPoolTemplate(provider: NodeProvider): Promise<Con
 async function createRemoteTokenPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/remote_token_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -270,10 +267,6 @@ async function createTokenBridgeForChainTemplate(provider: NodeProvider): Promis
         'next1': 0,
         'next2': 0,
         'undoneSequenceTemplateId': '',
-        'wrappedAlphId': '',
-        'wrappedAlphPoolTemplateId': '',
-        'localTokenPoolTemplateId': '',
-        'remoteTokenPoolTemplateId': '',
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
     })
@@ -314,12 +307,16 @@ function subContractAddress(parentId: string, pathHex: string): string {
     return addressFromContractId(subContractId(parentId, pathHex))
 }
 
+export function chainIdHex(chainId: number): string {
+    return zeroPad(chainId.toString(16), 2)
+}
+
 export function attestTokenHandlerAddress(tokenBridgeId: string, remoteChainId: number): string {
-    return subContractAddress(tokenBridgeId, '00' + zeroPad(remoteChainId.toString(16), 2))
+    return subContractAddress(tokenBridgeId, '00' + chainIdHex(remoteChainId))
 }
 
 export function tokenBridgeForChainAddress(tokenBridgeId: string, remoteChainId: number): string {
-    return subContractAddress(tokenBridgeId, '01' + zeroPad(remoteChainId.toString(16), 2))
+    return subContractAddress(tokenBridgeId, '01' + chainIdHex(remoteChainId))
 }
 
 export async function createAttestTokenHandler(
@@ -361,10 +358,6 @@ export async function createTokenBridgeForChain(
         'next': 0,
         'next1': 0,
         'next2': 0,
-        'wrappedAlphId': tokenBridge.wrappedAlphId,
-        'wrappedAlphPoolTemplateId': templateContracts.wrappedAlphPoolTemplate.contractId,
-        'localTokenPoolTemplateId': templateContracts.localTokenPoolTemplate.contractId,
-        'remoteTokenPoolTemplateId': templateContracts.remoteTokenPoolTemplate.contractId,
         'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
@@ -435,7 +428,8 @@ export async function newWrappedAlphPoolFixture(
         remoteChainId,
         remoteTokenBridgeId
     )
-    const address = subContractAddress(tokenBridgeForChainInfo.contractId, tokenBridgeInfo.wrappedAlphId)
+    const path = chainIdHex(CHAIN_ID_ALEPHIUM) + tokenBridgeInfo.wrappedAlphId
+    const address = subContractAddress(tokenBridgeInfo.contractId, path)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -445,7 +439,6 @@ export async function newWrappedAlphPoolFixture(
     }
     const wrappedAlphPoolInfo = await createContract(provider, 'token_bridge/wrapped_alph_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': CHAIN_ID_ALEPHIUM,
         'bridgeTokenId': tokenBridgeInfo.wrappedAlphId,
         'totalBridged': totalBridged,
@@ -464,7 +457,8 @@ export async function newLocalTokenPoolFixture(
     const fixture = await newTokenBridgeForChainFixture(provider, remoteChainId, remoteTokenBridgeId)
     const tokenBridgeInfo = fixture.tokenBridgeInfo
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
-    const address = subContractAddress(tokenBridgeForChainInfo.contractId, localTokenId)
+    const path = chainIdHex(CHAIN_ID_ALEPHIUM) + localTokenId
+    const address = subContractAddress(tokenBridgeInfo.contractId, path)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -474,7 +468,6 @@ export async function newLocalTokenPoolFixture(
     }
     const localTokenPoolInfo = await createContract(provider, 'token_bridge/local_token_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': CHAIN_ID_ALEPHIUM,
         'bridgeTokenId': localTokenId,
         'totalBridged': totalBridged,
@@ -497,7 +490,10 @@ export async function newRemoteTokenPoolFixture(
     const fixture = await newTokenBridgeForChainFixture(provider, remoteChainId, remoteTokenBridgeId)
     const tokenBridgeInfo = fixture.tokenBridgeInfo
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
-    const contractAddress = typeof address === 'undefined' ? subContractAddress(tokenBridgeForChainInfo.contractId, remoteTokenId) : address
+    const contractAddress =
+        typeof address === 'undefined'
+            ? subContractAddress(tokenBridgeInfo.contractId, chainIdHex(remoteChainId) + remoteTokenId)
+            : address
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -507,7 +503,6 @@ export async function newRemoteTokenPoolFixture(
     }
     const remoteTokenPoolInfo = await createContract(provider, 'token_bridge/remote_token_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': remoteChainId,
         'bridgeTokenId': remoteTokenId,
         'totalBridged': totalBridged,

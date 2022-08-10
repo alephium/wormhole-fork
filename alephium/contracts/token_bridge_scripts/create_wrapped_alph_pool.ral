@@ -1,6 +1,6 @@
-import "../token_bridge/token_bridge_for_chain.ral"
+import "../token_bridge/token_bridge.ral"
 
-TxScript Main(payer: Address, tokenBridgeForChainId: ByteVec, alphAmount: U256) {
-    let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-    tokenBridgeForChain.createWrappedAlphPool{payer -> alphAmount}(payer, alphAmount)
+TxScript Main(payer: Address, tokenBridgeId: ByteVec, alphAmount: U256) {
+    let tokenBridge = TokenBridge(tokenBridgeId)
+    tokenBridge.createWrappedAlphPool{payer -> alphAmount}(payer, alphAmount)
 }

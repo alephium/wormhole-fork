@@ -3,12 +3,11 @@ import "wrapped_alph.ral"
 
 Contract WrappedAlphPool(
     tokenBridgeId: ByteVec,
-    tokenBridgeForChainId: ByteVec,
     tokenChainId: U256, // local chain id
     bridgeTokenId: ByteVec, // wrapped ALPH id
     mut totalBridged: U256,
     decimals_: U256 // should be 0
-) extends BridgeTokenPool(tokenBridgeForChainId, tokenChainId, bridgeTokenId, decimals_) {
+) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
     @using(preapprovedAssets = true)
     pub fn transfer(
         fromAddress: Address,

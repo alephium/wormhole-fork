@@ -2,14 +2,13 @@ import "bridge_token_pool.ral"
 
 Contract RemoteTokenPool(
     tokenBridgeId: ByteVec,
-    tokenBridgeForChainId: ByteVec,
     tokenChainId: U256, // remote token chain id
     bridgeTokenId: ByteVec, // remote token id
     mut totalBridged: U256,
     symbol_: ByteVec,
     name_: ByteVec,
     decimals_: U256
-) extends BridgeTokenPool(tokenBridgeForChainId, tokenChainId, bridgeTokenId, decimals_) {
+) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
     pub fn name() -> ByteVec {
         return name_
     }

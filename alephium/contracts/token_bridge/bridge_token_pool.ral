@@ -5,7 +5,6 @@ import "token_bridge_constants.ral"
 import "token_bridge_for_chain.ral"
 
 Abstract Contract BridgeTokenPool(
-    tokenBridgeForChainId: ByteVec,
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
     decimals_: U256

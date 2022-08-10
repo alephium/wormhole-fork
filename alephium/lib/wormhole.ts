@@ -144,7 +144,6 @@ export class Wormhole {
     private async deployWrappedAlphTokenPoolTemplate(): Promise<DeployResult> {
         const initFields = {
             'tokenBridgeId': '',
-            'tokenBridgeForChainId': '',
             'tokenChainId': 0,
             'bridgeTokenId': '',
             'totalBridged': 0,
@@ -157,7 +156,6 @@ export class Wormhole {
     private async deployLocalTokenPoolTemplate(): Promise<DeployResult> {
         const initFields = {
             'tokenBridgeId': '',
-            'tokenBridgeForChainId': '',
             'tokenChainId': 0,
             'bridgeTokenId': '',
             'totalBridged': 0,
@@ -170,7 +168,6 @@ export class Wormhole {
     private async deployRemoteTokenPoolTemplate(): Promise<DeployResult> {
         const initFields = {
             'tokenBridgeId': '',
-            'tokenBridgeForChainId': '',
             'tokenChainId': 0,
             'bridgeTokenId': '',
             'totalBridged': 0,
@@ -193,10 +190,6 @@ export class Wormhole {
             'next1': 0,
             'next2': 0,
             'undoneSequenceTemplateId': '',
-            'wrappedAlphId': '',
-            'wrappedAlphPoolTemplateId': '',
-            'localTokenPoolTemplateId': '',
-            'remoteTokenPoolTemplateId': '',
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0
         }
@@ -308,7 +301,7 @@ export class Wormhole {
     }
 
     async createLocalTokenPool(
-        tokenBridgeForChainId: string,
+        tokenBridgeId: string,
         localTokenId: string,
         payer: string,
         alphAmount: bigint
@@ -316,7 +309,7 @@ export class Wormhole {
         const script = await Script.fromSource(this.provider, 'token_bridge_scripts/create_local_token_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
-                tokenBridgeForChainId: tokenBridgeForChainId,
+                tokenBridgeId: tokenBridgeId,
                 localTokenId: localTokenId,
                 payer: payer,
                 alphAmount: alphAmount
@@ -330,11 +323,11 @@ export class Wormhole {
         return result.txId
     }
 
-    async createWrappedAlphPool(tokenBridgeForChainId: string, payer: string, alphAmount: bigint): Promise<string> {
+    async createWrappedAlphPool(tokenBridgeId: string, payer: string, alphAmount: bigint): Promise<string> {
         const script = await Script.fromSource(this.provider, 'token_bridge_scripts/create_wrapped_alph_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
-                tokenBridgeForChainId: tokenBridgeForChainId,
+                tokenBridgeId: tokenBridgeId,
                 payer: payer,
                 alphAmount: alphAmount
             }
