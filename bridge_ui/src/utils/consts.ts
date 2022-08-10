@@ -129,6 +129,8 @@ export const getDefaultNativeCurrencySymbol = (chainId: ChainId) =>
     ? "CELO"
     : chainId === CHAIN_ID_NEON
     ? "NEON"
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? "ALPH"
     : "";
 
 export const getDefaultNativeCurrencyAddressEvm = (chainId: ChainId) => {
