@@ -10,8 +10,8 @@ import {
     parseSequenceFromLogAlph,
     CHAIN_ID_ALEPHIUM,
     WormholeWrappedInfo,
-    getTokenBridgeForChainId,
     parseTargetChainFromLogAlph,
+    zeroPad
 } from '@certusone/wormhole-sdk';
 import { NodeProvider, node, subContractId } from '@alephium/web3';
 import WalletConnectProvider from "@alephium/walletconnect-provider";
@@ -89,12 +89,12 @@ export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
     return emitterChainId as ChainId
 }
 
-export function getTokenPoolId(tokenId: string, remoteChainId: ChainId): string {
+export function getTokenPoolId(tokenId: string, tokenChainId: ChainId): string {
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
-    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, remoteChainId)
-    return subContractId(tokenBridgeForChainId, tokenId)
+    const path = zeroPad(Number(tokenChainId).toString(16), 2) + tokenId
+    return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, path)
 }
 
 export class TokenInfo {
@@ -119,9 +119,9 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
     const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-        const symbol = (state.fields[5] as node.ValByteVec).value
-        const name = (state.fields[6] as node.ValByteVec).value
-        const decimals = parseInt((state.fields[7] as node.ValU256).value)
+        const symbol = (state.fields[4] as node.ValByteVec).value
+        const name = (state.fields[5] as node.ValByteVec).value
+        const decimals = parseInt((state.fields[6] as node.ValU256).value)
         return new TokenInfo(decimals, symbol, name)
     } else {
         return new TokenInfo(0, 'token', 'token')
@@ -161,10 +161,10 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     .getContractsAddressState(tokenAddress, {group: group.group})
     .then(response => {
       if (response.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-        const originalAsset = Buffer.from((response.fields[3] as node.ValByteVec).value, 'hex')
+        const originalAsset = Buffer.from((response.fields[2] as node.ValByteVec).value, 'hex')
         return {
           isWrapped: true,
-          chainId: parseInt((response.fields[2] as node.ValU256).value) as ChainId,
+          chainId: parseInt((response.fields[1] as node.ValU256).value) as ChainId,
           assetAddress: originalAsset,
         }
       } else {

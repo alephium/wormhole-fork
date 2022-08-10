@@ -1,5 +1,5 @@
 {
-  "sourceCodeSha256": "8324189f3f80fec40409621349409308dc0ec11fecede9fa7e7d2e22f85e530e",
+  "sourceCodeSha256": "11152ddf6d1eecf76f882bc526012b73fb8e9d43fc7af9be9af732b48b59ba91",
   "bytecodeTemplate": "0101030001000d{1}1700{0}{3}a2{0}{2}{4}{5}100c16000104",
   "fieldsSig": {
     "signature": "TxScript Main(payer:Address,tokenBridgeId:ByteVec,wrappedAlphId:ByteVec,messageFee:U256,nonce:ByteVec,consistencyLevel:U256)",
