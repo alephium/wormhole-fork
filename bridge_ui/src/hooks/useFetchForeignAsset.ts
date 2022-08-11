@@ -114,56 +114,56 @@ function useFetchForeignAsset(
         foreignChain
       )
         ? () =>
-            getForeignAssetEth(
-              getTokenBridgeAddressForChain(foreignChain),
-              provider as any, //why does this typecheck work elsewhere?
-              originChain,
-              hexToUint8Array(originAssetHex)
-            )
-        : foreignChain === CHAIN_ID_ALEPHIUM
-        ? () => {
-          return getForeignAssetAlephium(
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            alphSigner!.nodeProvider,
+          getForeignAssetEth(
+            getTokenBridgeAddressForChain(foreignChain),
+            provider as any, //why does this typecheck work elsewhere?
             originChain,
             hexToUint8Array(originAssetHex)
           )
-        }
-        : foreignChain === CHAIN_ID_TERRA
-        ? () => {
-            const lcd = new LCDClient(TERRA_HOST);
-            return getForeignAssetTerra(
-              TERRA_TOKEN_BRIDGE_ADDRESS,
-              lcd,
+        : foreignChain === CHAIN_ID_ALEPHIUM
+          ? () => {
+            return getForeignAssetAlephium(
+              ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+              alphSigner!.nodeProvider,
               originChain,
               hexToUint8Array(originAssetHex)
-            );
+            )
           }
-        : foreignChain === CHAIN_ID_SOLANA
-        ? () => {
-            const connection = new Connection(SOLANA_HOST, "confirmed");
-            return getForeignAssetSolana(
-              connection,
-              SOL_TOKEN_BRIDGE_ADDRESS,
-              originChain,
-              hexToUint8Array(originAssetHex)
-            );
-          }
-        : foreignChain === CHAIN_ID_ALGORAND
-        ? () => {
-            const algodClient = new Algodv2(
-              ALGORAND_HOST.algodToken,
-              ALGORAND_HOST.algodServer,
-              ALGORAND_HOST.algodPort
-            );
-            return getForeignAssetAlgorand(
-              algodClient,
-              ALGORAND_TOKEN_BRIDGE_ID,
-              originChain,
-              originAssetHex
-            );
-          }
-        : () => Promise.resolve(null);
+          : foreignChain === CHAIN_ID_TERRA
+            ? () => {
+              const lcd = new LCDClient(TERRA_HOST);
+              return getForeignAssetTerra(
+                TERRA_TOKEN_BRIDGE_ADDRESS,
+                lcd,
+                originChain,
+                hexToUint8Array(originAssetHex)
+              );
+            }
+            : foreignChain === CHAIN_ID_SOLANA
+              ? () => {
+                const connection = new Connection(SOLANA_HOST, "confirmed");
+                return getForeignAssetSolana(
+                  connection,
+                  SOL_TOKEN_BRIDGE_ADDRESS,
+                  originChain,
+                  hexToUint8Array(originAssetHex)
+                );
+              }
+              : foreignChain === CHAIN_ID_ALGORAND
+                ? () => {
+                  const algodClient = new Algodv2(
+                    ALGORAND_HOST.algodToken,
+                    ALGORAND_HOST.algodServer,
+                    ALGORAND_HOST.algodPort
+                  );
+                  return getForeignAssetAlgorand(
+                    algodClient,
+                    ALGORAND_TOKEN_BRIDGE_ID,
+                    originChain,
+                    originAssetHex
+                  );
+                }
+                : () => Promise.resolve(null);
 
       getterFunc()
         .then((result) => {
@@ -221,7 +221,7 @@ function useFetchForeignAsset(
       isFetching: isLoading,
       data:
         (assetAddress !== null && assetAddress !== undefined) ||
-        (doesExist !== null && doesExist !== undefined)
+          (doesExist !== null && doesExist !== undefined)
           ? { address: assetAddress, doesExist: !!doesExist }
           : null,
       receivedAt: null,

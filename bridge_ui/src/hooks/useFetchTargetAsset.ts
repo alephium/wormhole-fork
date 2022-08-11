@@ -79,7 +79,7 @@ function useFetchTargetAsset(nft?: boolean) {
   );
   const setTargetAsset = nft ? setNFTTargetAsset : setTransferTargetAsset;
   const { provider, chainId: evmChainId } = useEthereumProvider();
-  const { signer: alphSigner} = useAlephiumWallet()
+  const { signer: alphSigner } = useAlephiumWallet()
   const correctEvmNetwork = getEvmChainId(targetChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
   const [lastSuccessfulArgs, setLastSuccessfulArgs] = useState<{
@@ -93,7 +93,7 @@ function useFetchTargetAsset(nft?: boolean) {
   const argsMatchLastSuccess =
     !!lastSuccessfulArgs &&
     lastSuccessfulArgs.isSourceAssetWormholeWrapped ===
-      isSourceAssetWormholeWrapped &&
+    isSourceAssetWormholeWrapped &&
     lastSuccessfulArgs.originChain === originChain &&
     lastSuccessfulArgs.originAsset === originAsset &&
     lastSuccessfulArgs.targetChain === targetChain &&
@@ -152,17 +152,17 @@ function useFetchTargetAsset(nft?: boolean) {
         try {
           const asset = await (nft
             ? getForeignAssetEthNFT(
-                getNFTBridgeAddressForChain(targetChain),
-                provider,
-                originChain,
-                hexToUint8Array(originAsset)
-              )
+              getNFTBridgeAddressForChain(targetChain),
+              provider,
+              originChain,
+              hexToUint8Array(originAsset)
+            )
             : getForeignAssetEth(
-                getTokenBridgeAddressForChain(targetChain),
-                provider,
-                originChain,
-                hexToUint8Array(originAsset)
-              ));
+              getTokenBridgeAddressForChain(targetChain),
+              provider,
+              originChain,
+              hexToUint8Array(originAsset)
+            ));
           if (!cancelled) {
             dispatch(
               setTargetAsset(
@@ -192,17 +192,17 @@ function useFetchTargetAsset(nft?: boolean) {
           const connection = new Connection(SOLANA_HOST, "confirmed");
           const asset = await (nft
             ? getForeignAssetSolNFT(
-                SOL_NFT_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset),
-                arrayify(BigNumber.from(tokenId || "0"))
-              )
+              SOL_NFT_BRIDGE_ADDRESS,
+              originChain,
+              hexToUint8Array(originAsset),
+              arrayify(BigNumber.from(tokenId || "0"))
+            )
             : getForeignAssetSolana(
-                connection,
-                SOL_TOKEN_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset)
-              ));
+              connection,
+              SOL_TOKEN_BRIDGE_ADDRESS,
+              originChain,
+              hexToUint8Array(originAsset)
+            ));
           if (!cancelled) {
             dispatch(
               setTargetAsset(
