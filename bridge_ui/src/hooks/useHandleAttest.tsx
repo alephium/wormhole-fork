@@ -325,7 +325,7 @@ async function alephium(
           );
           tokens = [{id: localTokenId, amount: '1'}];
         }
-        const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, tokens)
+        const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode, tokens)
         return result.txId;
       }
     );

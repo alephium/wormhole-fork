@@ -13,8 +13,7 @@ import {
     parseTargetChainFromLogAlph,
     zeroPad
 } from '@certusone/wormhole-sdk';
-import { NodeProvider, node, subContractId } from '@alephium/web3';
-import WalletConnectProvider from "@alephium/walletconnect-provider";
+import { NodeProvider, node, subContractId, SignerProvider } from '@alephium/web3';
 
 const WormholeMessageEventIndex = 0
 
@@ -129,7 +128,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 }
 
 export async function submitAlphScriptTx(
-  provider: WalletConnectProvider,
+  provider: SignerProvider,
   fromAddress: string,
   bytecode: string,
   tokens?: node.Token[],
