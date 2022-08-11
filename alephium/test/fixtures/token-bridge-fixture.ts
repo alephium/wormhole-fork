@@ -319,6 +319,11 @@ export function tokenBridgeForChainAddress(tokenBridgeId: string, remoteChainId:
     return subContractAddress(tokenBridgeId, '01' + chainIdHex(remoteChainId))
 }
 
+export function tokenPoolAddress(tokenBridgeId: string, tokenChainId: number, tokenId: string): string {
+    const path = '02' + chainIdHex(tokenChainId) + tokenId
+    return subContractAddress(tokenBridgeId, path)
+}
+
 export async function createAttestTokenHandler(
     provider: NodeProvider,
     tokenBridge: TokenBridgeInfo,
@@ -428,8 +433,7 @@ export async function newWrappedAlphPoolFixture(
         remoteChainId,
         remoteTokenBridgeId
     )
-    const path = chainIdHex(CHAIN_ID_ALEPHIUM) + tokenBridgeInfo.wrappedAlphId
-    const address = subContractAddress(tokenBridgeInfo.contractId, path)
+    const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, tokenBridgeInfo.wrappedAlphId)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -457,8 +461,7 @@ export async function newLocalTokenPoolFixture(
     const fixture = await newTokenBridgeForChainFixture(provider, remoteChainId, remoteTokenBridgeId)
     const tokenBridgeInfo = fixture.tokenBridgeInfo
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
-    const path = chainIdHex(CHAIN_ID_ALEPHIUM) + localTokenId
-    const address = subContractAddress(tokenBridgeInfo.contractId, path)
+    const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, localTokenId)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -492,7 +495,7 @@ export async function newRemoteTokenPoolFixture(
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
     const contractAddress =
         typeof address === 'undefined'
-            ? subContractAddress(tokenBridgeInfo.contractId, chainIdHex(remoteChainId) + remoteTokenId)
+            ? tokenPoolAddress(tokenBridgeInfo.contractId, remoteChainId, remoteTokenId)
             : address
     const asset: Asset = {
         alphAmount: minimalAlphInContract,

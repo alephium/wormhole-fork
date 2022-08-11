@@ -1,7 +1,7 @@
 import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, contractIdFromAddress, binToHex, addressFromContractId } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, attestTokenHandlerAddress, chainIdHex, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, Transfer } from './fixtures/token-bridge-fixture'
+import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer } from './fixtures/token-bridge-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
@@ -200,9 +200,8 @@ describe("test token bridge", () => {
         })
 
         const tokenPoolOutput = testResult.txOutputs[0]
-        const path = chainIdHex(CHAIN_ID_ALEPHIUM) + wrappedAlphId
-        const expectedContractId = subContractId(fixture.tokenBridgeInfo.contractId, path)
-        expect(binToHex(contractIdFromAddress(tokenPoolOutput.address))).toEqual(expectedContractId)
+        const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, wrappedAlphId)
+        expect(tokenPoolOutput.address).toEqual(expectedAddress)
         expect(BigInt(tokenPoolOutput.alphAmount)).toEqual(minimalAlphInContract)
         expect(tokenPoolOutput.tokens).toEqual([])
     })
@@ -361,9 +360,8 @@ describe("test token bridge", () => {
         })
 
         const tokenPoolOutput = testResult.txOutputs[0]
-        const path = chainIdHex(CHAIN_ID_ALEPHIUM) + testToken.contractId
-        const expectedContractId = subContractId(fixture.tokenBridgeInfo.contractId, path)
-        expect(binToHex(contractIdFromAddress(tokenPoolOutput.address))).toEqual(expectedContractId)
+        const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, testToken.contractId)
+        expect(tokenPoolOutput.address).toEqual(expectedAddress)
         expect(BigInt(tokenPoolOutput.alphAmount)).toEqual(minimalAlphInContract)
         expect(tokenPoolOutput.tokens).toEqual([])
     })
@@ -537,11 +535,10 @@ describe("test token bridge", () => {
         })
 
         const tokenPoolOutput = testResult.txOutputs[0]
-        const path = chainIdHex(remoteChainId) + remoteTokenId
-        const expectedContractId = subContractId(fixture.tokenBridgeInfo.contractId, path)
-        const tokenPoolId = binToHex(contractIdFromAddress(tokenPoolOutput.address))
-        expect(tokenPoolId).toEqual(expectedContractId)
+        const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, remoteChainId, remoteTokenId)
+        expect(tokenPoolOutput.address).toEqual(expectedAddress)
         expect(BigInt(tokenPoolOutput.alphAmount)).toEqual(minimalAlphInContract)
+        const tokenPoolId = binToHex(contractIdFromAddress(expectedAddress))
         expect(tokenPoolOutput.tokens).toEqual([{
             id: tokenPoolId,
             amount: u256Max

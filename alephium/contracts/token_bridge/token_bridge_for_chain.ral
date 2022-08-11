@@ -56,7 +56,7 @@ Contract TokenBridgeForChain(
         }
 
         let (amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee) = parseCompleteTransfer(payload)
-        let path = u256To2Byte!(vaaTokenChainId) ++ vaaTokenId
+        let path = Path.TokenPool ++ u256To2Byte!(vaaTokenChainId) ++ vaaTokenId
         let tokenPoolId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
         let tokenPool = TokenPool(tokenPoolId)
         tokenPool.completeTransfer{caller -> dustAmount!()}(

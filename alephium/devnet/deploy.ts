@@ -37,7 +37,7 @@ async function createLocalTokenPool(
     let txId = await wormhole.createLocalTokenPool(tokenBridgeId, localTokenId, consts.payer, consts.minimalAlphInContract)
     let tokenPoolAddress = await getCreatedContractAddress(provider, txId, 0)
     const tokenPoolId = binToHex(contractIdFromAddress(tokenPoolAddress))
-    console.log('token pool id: ' + tokenPoolId)
+    console.log('local token id: ' + localTokenId + ', token pool id: ' + tokenPoolId)
 }
 
 async function createWrappedAlphPool(

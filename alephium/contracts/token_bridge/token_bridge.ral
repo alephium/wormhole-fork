@@ -147,7 +147,7 @@ Contract TokenBridge(
             0,
             0
         )
-        let path = u256To2Byte!(localChainId) ++ wrappedAlphId
+        let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ wrappedAlphId
         copyCreateSubContract!{payer -> createContractAlphAmount}(path, wrappedAlphPoolTemplateId, encodedState)
     }
 
@@ -161,7 +161,7 @@ Contract TokenBridge(
             0,
             0
         )
-        let path = u256To2Byte!(localChainId) ++ localTokenId
+        let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
         copyCreateSubContract!{payer -> createContractAlphAmount}(path, localTokenPoolTemplateId, encodedState)
     }
 
@@ -186,7 +186,7 @@ Contract TokenBridge(
             name,
             decimals
         )
-        let path = u256To2Byte!(tokenChainId) ++ bridgeTokenId
+        let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
         copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(path, remoteTokenPoolTemplateId, encodedState, tokenAmount)
     }
@@ -206,7 +206,7 @@ Contract TokenBridge(
         assert!(consistencyLevel >= MinimalConsistencyLevel, ErrorCodes.InvalidConsistencyLevel)
         assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
         let isLocalToken = tokenChainId == localChainId
-        let tokenPoolId = subContractId!(u256To2Byte!(tokenChainId) ++ bridgeTokenId)
+        let tokenPoolId = subContractId!(Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId)
         let payload =
             if (bridgeTokenId == wrappedAlphId) WrappedAlphPool(tokenPoolId).transfer{fromAddress -> tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
             else if (isLocalToken) LocalTokenPool(tokenPoolId).transfer{fromAddress -> bridgeTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)

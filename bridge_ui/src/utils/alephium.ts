@@ -93,7 +93,7 @@ export function getTokenPoolId(tokenId: string, tokenChainId: ChainId): string {
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
-    const path = zeroPad(Number(tokenChainId).toString(16), 2) + tokenId
+    const path = '02' + zeroPad(Number(tokenChainId).toString(16), 2) + tokenId
     return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, path)
 }
 
