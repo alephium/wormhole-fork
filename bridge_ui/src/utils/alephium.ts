@@ -88,12 +88,14 @@ export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
     return emitterChainId as ChainId
 }
 
-export function getTokenPoolId(tokenId: string, tokenChainId: ChainId): string {
+export async function getTokenPoolId(tokenId: string, tokenChainId: ChainId, nodeProvider: NodeProvider): Promise<string | null> {
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
     const path = zeroPad(Number(tokenChainId).toString(16), 2) + tokenId
-    return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, path)
+    const tokenPoolId = subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, path)
+    const tokenPoolCreated = await contractExist(tokenPoolId, nodeProvider)
+    return tokenPoolCreated ? tokenPoolId : null
 }
 
 export class TokenInfo {
@@ -143,7 +145,7 @@ export async function submitAlphScriptTx(
   })
 }
 
-export async function contractExist(contractId: string, provider: NodeProvider): Promise<boolean> {
+async function contractExist(contractId: string, provider: NodeProvider): Promise<boolean> {
     const address = toAlphContractAddress(contractId)
     return provider
         .addresses
@@ -175,4 +177,3 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
       }
     })
 }
-
