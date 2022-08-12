@@ -32,7 +32,7 @@ Contract RemoteTokenPool(
         assert!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
-        transferTokenToSelf!(fromAddress, selfContractId!(), totalAmount)
+        transferTokenToSelf!(fromAddress, selfTokenId!(), totalAmount)
         totalBridged = totalBridged - totalAmount
 
         return payload

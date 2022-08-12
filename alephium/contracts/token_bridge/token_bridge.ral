@@ -13,12 +13,12 @@ Contract TokenBridge(
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
     wrappedAlphId: ByteVec,
-    wrappedAlphPoolTemplateId: ByteVec,      // used for create contract by copyCreateContract
-    localTokenPoolTemplateId: ByteVec,       // used for create contract by copyCreateContract
-    remoteTokenPoolTemplateId: ByteVec,      // used for create contract by copyCreateContract
-    tokenBridgeForChainTemplateId: ByteVec,  // used for create contract by copyCreateContract
-    attestTokenHandlerTemplateId: ByteVec,   // used for create contract by copyCreateContract
-    undoneSequenceTemplateId: ByteVec,       // used for create contract by copyCreateContract
+    wrappedAlphPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
+    localTokenPoolTemplateId: ByteVec,       // used to create contract by copyCreateContract
+    remoteTokenPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
+    tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
+    attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
+    undoneSequenceTemplateId: ByteVec,       // used to create contract by copyCreateContract
     refundAddress: Address
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
@@ -117,7 +117,7 @@ Contract TokenBridge(
         assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
         if (localTokenId != wrappedAlphId) {
-            assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
+            assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
         }
 
         // We don't set decimals, symbol and name for local token due to sharding

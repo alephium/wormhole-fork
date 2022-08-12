@@ -28,9 +28,9 @@ Contract WrappedAlphPool(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn receiveWrappedAlph(totalAmount: U256) -> () {
+    pub fn receiveWrappedAlph(fromAddress: Address, totalAmount: U256) -> () {
         assert!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
-        transferTokenToSelf!(callerAddress!(), bridgeTokenId, totalAmount)
+        transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
@@ -50,9 +50,10 @@ Contract WrappedAlphPool(
         if (caller != recipient) {
             transferAlph!(caller, recipient, dustAmount!())
         }
+        let self = selfAddress!()
         WrappedAlph(bridgeTokenId).unwrapAndCompleteTransfer{
-            selfAddress!() -> bridgeTokenId: transferAmount + arbiterFee
-        }(recipient, transferAmount, caller, arbiterFee)
+            self -> bridgeTokenId: transferAmount + arbiterFee
+        }(self, recipient, transferAmount, caller, arbiterFee)
         totalBridged = totalBridged - transferAmount - arbiterFee
     }
 }

@@ -11,13 +11,15 @@ Contract WrappedAlph(
     ) -> () {
         totalWrapped = totalWrapped + totalAmount
         transferAlphToSelf!(fromAddress, totalAmount)
+        let self = selfAddress!()
         WrappedAlphPool(callerContractId!()).receiveWrappedAlph{
-            selfAddress!() -> selfContractId!(): totalAmount
-        }(totalAmount)
+            self -> selfTokenId!(): totalAmount
+        }(self, totalAmount)
     }
 
     @using(preapprovedAssets=true, assetsInContract=true)
     pub fn unwrapAndCompleteTransfer(
+        fromAddress: Address,
         recipient: Address,
         transferAmount: U256,
         arbiter: Address,
@@ -26,7 +28,7 @@ Contract WrappedAlph(
         let totalAmount = transferAmount + arbiterFee
         totalWrapped = totalWrapped - totalAmount
 
-        transferTokenToSelf!(callerAddress!(), selfContractId!(), totalAmount)
+        transferTokenToSelf!(fromAddress, selfTokenId!(), totalAmount)
         transferAlphFromSelf!(recipient, transferAmount)
         if (arbiterFee > 0) {
             transferAlphFromSelf!(arbiter, arbiterFee)
