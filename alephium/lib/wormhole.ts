@@ -9,11 +9,6 @@ import {
     subContractId
 } from '@alephium/web3'
 import { waitTxConfirmed, zeroPad } from './utils'
-import {
-    MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
-    TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
-    DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
-} from '@certusone/wormhole-sdk'
 
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = addressFromContractId(Byte32Zero)
@@ -27,13 +22,13 @@ interface NetworkConfigs {
 
 const networkConfigs: Record<NetworkType, NetworkConfigs> = {
     "mainnet": {
-        minimalConsistencyLevel: MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+        minimalConsistencyLevel: 105
     },
     "testnet": {
-        minimalConsistencyLevel: TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+        minimalConsistencyLevel: 105
     },
     "devnet": {
-        minimalConsistencyLevel: DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+        minimalConsistencyLevel: 10
     }
 }
 
