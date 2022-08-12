@@ -1,9 +1,41 @@
-import { NodeProvider, Contract, Number256, Script, SignerWithNodeProvider, Fields, addressFromContractId, subContractId } from '@alephium/web3'
+import {
+    NodeProvider,
+    Contract,
+    Number256,
+    Script,
+    SignerWithNodeProvider,
+    Fields,
+    addressFromContractId,
+    subContractId
+} from '@alephium/web3'
 import { waitTxConfirmed, zeroPad } from './utils'
+import {
+    MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
+    TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
+    DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+} from '@certusone/wormhole-sdk'
 
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = addressFromContractId(Byte32Zero)
 const MaxALPHValue = BigInt("1000000000") * BigInt("1000000000000000000")
+
+export type NetworkType = "mainnet" | "testnet" | "devnet"
+
+interface NetworkConfigs {
+    minimalConsistencyLevel: number
+}
+
+const networkConfigs: Record<NetworkType, NetworkConfigs> = {
+    "mainnet": {
+        minimalConsistencyLevel: MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+    },
+    "testnet": {
+        minimalConsistencyLevel: TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+    },
+    "devnet": {
+        minimalConsistencyLevel: DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
+    }
+}
 
 export interface DeployResult {
     fromGroup: number
@@ -75,14 +107,14 @@ export class Wormhole {
         return this._devnetDeployerId
     }
 
-    async deployContracts(devnet: boolean = false): Promise<WormholeContracts> {
+    async deployContracts(networkType: NetworkType): Promise<WormholeContracts> {
         const governanceDeployResult = await this.deployGovernance(
-            devnet, this.governanceChainId, this.governanceEmitterAddress,
+            networkType, this.governanceChainId, this.governanceEmitterAddress,
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
-        const wrappedAlphDeployResult = await this.deployWrappedAlph(devnet)
+        const wrappedAlphDeployResult = await this.deployWrappedAlph(networkType)
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            devnet, governanceDeployResult.contractId, wrappedAlphDeployResult.contractId
+            networkType, governanceDeployResult.contractId, wrappedAlphDeployResult.contractId
         )
         const remoteTokenPool = await this.remotTokenPoolContract()
         return {
@@ -94,7 +126,7 @@ export class Wormhole {
     }
 
     private async deployGovernance(
-        devnet: boolean,
+        networkType: NetworkType,
         governanceChainId: number,
         governanceEmitterAddress: string,
         initGuardianSet: string[],
@@ -112,7 +144,7 @@ export class Wormhole {
             'messageFee': initMessageFee,
             'previousGuardianSetExpirationTime': 0
         }
-        if (devnet) {
+        if (networkType === "devnet") {
             const fields = {
                 'guardianSet0': '',
                 'guardianSet1': currentGuardianSet,
@@ -238,10 +270,10 @@ export class Wormhole {
         }
     }
 
-    private async deployWrappedAlph(devnet: boolean): Promise<DeployResult> {
+    private async deployWrappedAlph(networkType: NetworkType): Promise<DeployResult> {
         const initFields = {'totalWrapped': 0}
         const wrappedAlph = await Contract.fromSource(this.provider, 'token_bridge/wrapped_alph.ral')
-        if (devnet) {
+        if (networkType === "devnet") {
             return this.deployOnDevnet(wrappedAlph, 'deploy_wrapped_alph.ral', initFields, '02')
         } else {
             return this._deploy(wrappedAlph, initFields, MaxALPHValue)
@@ -249,7 +281,7 @@ export class Wormhole {
     }
 
     private async deployTokenBridge(
-        devnet: boolean,
+        networkType: NetworkType,
         governanceContractId: string,
         wrappedAlphId: string
     ): Promise<DeployResult> {
@@ -272,9 +304,10 @@ export class Wormhole {
             'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
             'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
             'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
-            'refundAddress': this.refundAddress
+            'refundAddress': this.refundAddress,
+            'minimalConsistencyLevel': networkConfigs[networkType].minimalConsistencyLevel
         }
-        if (devnet) {
+        if (networkType === "devnet") {
             return this.deployOnDevnet(tokenBridge, 'deploy_token_bridge.ral', initFields, '01')
         } else {
             return this._deploy(tokenBridge, initFields)

@@ -19,15 +19,16 @@ Contract TokenBridge(
     tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
     attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
     undoneSequenceTemplateId: ByteVec,       // used to create contract by copyCreateContract
-    refundAddress: Address
+    refundAddress: Address,
+    mut minimalConsistencyLevel: U256
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
-    const MinimalConsistencyLevel = 10
 
     enum ActionId {
-        RegisterChain          = #01
-        ContractUpgrade        = #02
-        DestroyUndoneSequences = #f0
+        RegisterChain                 = #01
+        ContractUpgrade               = #02
+        DestroyUndoneSequences        = #f0
+        UpdateMinimalConsistencyLevel = #f1
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
@@ -45,6 +46,14 @@ Contract TokenBridge(
         let remoteTokenBridgeId = byteVecSlice!(payload, 35, 67)
         assert!(size!(payload) == 67, ErrorCodes.InvalidMessageSize)
         return remoteChainId, remoteTokenBridgeId
+    }
+
+    pub fn updateMinimalConsistencyLevel(vaa: ByteVec) -> () {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateMinimalConsistencyLevel)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        assert!(size!(payload) == 34, ErrorCodes.InvalidMessageSize)
+        let consistencyLevel = u256From1Byte!(byteVecSlice!(payload, 33, 34))
+        minimalConsistencyLevel = consistencyLevel
     }
 
     // register chain is a governance action
@@ -203,7 +212,7 @@ Contract TokenBridge(
         nonce: ByteVec,
         consistencyLevel: U256
     ) -> () {
-        assert!(consistencyLevel >= MinimalConsistencyLevel, ErrorCodes.InvalidConsistencyLevel)
+        assert!(consistencyLevel >= minimalConsistencyLevel, ErrorCodes.InvalidConsistencyLevel)
         assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
         let isLocalToken = tokenChainId == localChainId
         let tokenPoolId = subContractId!(Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId)

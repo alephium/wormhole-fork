@@ -89,7 +89,7 @@ async function deploy() {
         consts.messageFee
     )
 
-    const contracts = await wormhole.deployContracts(true)
+    const contracts = await wormhole.deployContracts("devnet")
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))

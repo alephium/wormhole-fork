@@ -19,6 +19,7 @@
     "@alephium/web3": "^0.2.0-rc.2",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
+    "@certusone/wormhole-sdk": "file:../sdk/js",
     "blakejs": "^1.2.1",
     "bs58": "^5.0.0",
     "dotenv": "^16.0.1",

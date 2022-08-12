@@ -10,8 +10,6 @@ import { default as attestToken } from './artifacts/attest_token.ral.json'
 import { default as attestWrappedAlph } from './artifacts/attest_wrapped_alph.ral.json'
 import { default as destroyUndoneSequences } from './artifacts/destroy_undone_sequence_contracts.ral.json'
 
-export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL = 10
-
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
 }

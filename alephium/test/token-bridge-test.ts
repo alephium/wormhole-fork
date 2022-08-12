@@ -1,7 +1,7 @@
 import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, contractIdFromAddress, binToHex, addressFromContractId } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer } from './fixtures/token-bridge-fixture'
+import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, minimalConsistencyLevel, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer, UpdateMinimalConsistencyLevel } from './fixtures/token-bridge-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
@@ -12,7 +12,6 @@ describe("test token bridge", () => {
 
     const payer = randomAssetAddress()
     const defaultInputAsset: InputAsset = alphInputAsset(payer, alph(4))
-    const minimalConsistencyLevel = 10
 
     function randomByte32Hex(): string {
         return binToHex(randomBytes(32))
@@ -135,6 +134,27 @@ describe("test token bridge", () => {
             'payload': binToHex(message.encode()),
             'consistencyLevel': 0
         })
+    })
+
+    it('should update minimal consistency level', async () => {
+        const tokenBridgeInfo = await createTokenBridge(provider)
+        const tokenBridge = tokenBridgeInfo.contract
+        const newMinimalConsistencyLevel = 5
+        const message = new UpdateMinimalConsistencyLevel(newMinimalConsistencyLevel)
+        const vaaBody = new VAABody(message.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
+        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+        const testResult = await tokenBridge.testPublicMethod(provider, 'updateMinimalConsistencyLevel', {
+            address: tokenBridgeInfo.address,
+            initialFields: tokenBridgeInfo.selfState.fields,
+            testArgs: {
+                'vaa': binToHex(vaa.encode())
+            },
+            inputAssets: [defaultInputAsset],
+            existingContracts: tokenBridgeInfo.dependencies
+        })
+
+        const tokenBridgeState = testResult.contracts.filter(c => c.contractId === tokenBridgeInfo.contractId)[0]
+        expect(tokenBridgeState.fields["minimalConsistencyLevel"]).toEqual(newMinimalConsistencyLevel)
     })
 
     it('should register chain', async () => {
@@ -953,7 +973,7 @@ describe("test token bridge", () => {
         }
 
         {
-            const newContractCode = "0c0106010000000000"
+            const newContractCode = "0d0106010000000000"
             loadContract(newContractCode)
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)

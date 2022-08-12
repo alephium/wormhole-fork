@@ -611,3 +611,7 @@ function evm_chain_subset(e: EVMChainName): ChainName {
   // will fail to compile if 'e' can't be typed as a [[ChainName]]
   return e;
 }
+
+export const MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 105
+export const TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 105
+export const DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 10

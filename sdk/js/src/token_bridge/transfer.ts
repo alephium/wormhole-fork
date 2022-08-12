@@ -21,7 +21,6 @@ import {
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import {
-  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   transferAlphScript,
   transferLocalTokenScript,
   transferRemoteTokenScript
@@ -52,18 +51,6 @@ import {
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 
-function getAlephiumConsistencyLevel(
-  consistencyLevel?: number
-): number {
-  if (typeof consistencyLevel === 'undefined') {
-    return ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-  } else if (consistencyLevel < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-    throw Error("Invalid consistencyLevel")
-  } else {
-    return consistencyLevel
-  }
-}
-
 export function transferAlph(
   tokenBridgeId: string,
   fromAddress: string,
@@ -72,7 +59,7 @@ export function transferAlph(
   alphAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
@@ -86,7 +73,7 @@ export function transferAlph(
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: getAlephiumConsistencyLevel(consistencyLevel),
+    consistencyLevel: consistencyLevel,
   })
 }
 
@@ -99,7 +86,7 @@ export function transferLocalTokenFromAlph(
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
@@ -115,7 +102,7 @@ export function transferLocalTokenFromAlph(
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: getAlephiumConsistencyLevel(consistencyLevel)
+    consistencyLevel: consistencyLevel
   })
 }
 
@@ -130,7 +117,7 @@ export function transferRemoteTokenFromAlph(
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
@@ -147,7 +134,7 @@ export function transferRemoteTokenFromAlph(
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: getAlephiumConsistencyLevel(consistencyLevel)
+    consistencyLevel: consistencyLevel
   })
 }
 

@@ -5,6 +5,7 @@ import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
+export const minimalConsistencyLevel = 105
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0003_token_bridge.md
 export class AttestToken {
@@ -49,6 +50,22 @@ export class RegisterChain {
         buffer.writeUint8(1, 32) // actionId
         buffer.writeUint16BE(this.remoteChainId, 33)
         buffer.write(this.remoteTokenBridgeId, 35, 'hex')
+        return buffer
+    }
+}
+
+export class UpdateMinimalConsistencyLevel {
+    minimalConsistencyLevel: number
+
+    constructor(minimalConsistencyLevel: number) {
+        this.minimalConsistencyLevel = minimalConsistencyLevel
+    }
+
+    encode(): Uint8Array {
+        let buffer = Buffer.allocUnsafe(34)
+        buffer.write(tokenBridgeModule, 0, 'hex')
+        buffer.writeUint8(241, 32) // actionId, #f1
+        buffer.writeUint8(this.minimalConsistencyLevel, 33)
         return buffer
     }
 }
@@ -290,7 +307,8 @@ export async function createTokenBridge(provider: NodeProvider, totalWrappedAlph
         'tokenBridgeForChainTemplateId': templateContracts.tokenBridgeForChainTemplate.contractId,
         'attestTokenHandlerTemplateId': templateContracts.attestTokenHandlerTemplate.contractId,
         'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
-        'refundAddress': randomAssetAddress()
+        'refundAddress': randomAssetAddress(),
+        'minimalConsistencyLevel': minimalConsistencyLevel
     }
     const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
     const deps = Array.prototype.concat(

@@ -26,11 +26,10 @@ export function attestFromAlph(
   tokenId: string,
   payer: string,
   messageFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = attestTokenScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
@@ -38,7 +37,7 @@ export function attestFromAlph(
     localTokenId: tokenId,
     messageFee: messageFee,
     nonce: nonceHex,
-    consistencyLevel: cl
+    consistencyLevel: consistencyLevel
   })
 }
 
@@ -47,11 +46,10 @@ export function attestWrappedAlph(
   wrappedAlphId: string,
   payer: string,
   messageFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = attestWrappedAlphScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
@@ -59,7 +57,7 @@ export function attestWrappedAlph(
     wrappedAlphId: wrappedAlphId,
     messageFee: messageFee,
     nonce: nonceHex,
-    consistencyLevel: cl
+    consistencyLevel: consistencyLevel
   })
 }
 
