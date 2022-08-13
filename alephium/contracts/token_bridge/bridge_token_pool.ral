@@ -5,7 +5,6 @@ import "token_bridge_constants.ral"
 import "token_bridge_for_chain.ral"
 
 Abstract Contract BridgeTokenPool(
-    tokenBridgeForChainId: ByteVec,
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
     decimals_: U256
@@ -34,17 +33,16 @@ Abstract Contract BridgeTokenPool(
         return payload, totalAmount
     }
 
-    fn prepareCompleteTransfer(vaa: ByteVec) -> (Bool, Address, U256, U256) {
-        let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        let (sequenceReady, payload) = tokenBridgeForChain.checkTransfer(vaa)
-
-        assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
-        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
-        let vaaTokenId = byteVecSlice!(payload, 33, 65)
-        let vaaTokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
-        let toAddress = byteVecSlice!(payload, 67, 99)
-        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
-        assert!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
+    fn prepareCompleteTransfer(
+        callerContractId: ByteVec,
+        emitterChainId: U256,
+        amount: U256,
+        vaaTokenId: ByteVec,
+        vaaTokenChainId: U256,
+        normalizedArbiterFee: U256
+    ) -> (U256, U256) {
+        let expectedCallerContractId = subContractIdOf!(TokenBridge(tokenBridgeId), Path.TokenBridgeForChain ++ u256To2Byte!(emitterChainId))
+        assert!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
         assert!(vaaTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
         assert!(vaaTokenChainId == tokenChainId, ErrorCodes.InvalidTransferMessage)
 
@@ -52,8 +50,7 @@ Abstract Contract BridgeTokenPool(
         let arbiterFee = deNormalizeAmount(normalizedArbiterFee, decimals_)
         assert!(totalAmount > arbiterFee, ErrorCodes.ArbiterFeeLessThanAmount)
         let transferAmount = totalAmount - arbiterFee
-        let recipient = byteVecToAddress!(#00 ++ toAddress)
 
-        return sequenceReady, recipient, transferAmount, arbiterFee
+        return transferAmount, arbiterFee
     }
 }

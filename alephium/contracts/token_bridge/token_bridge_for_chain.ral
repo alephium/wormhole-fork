@@ -3,6 +3,7 @@ import "../math.ral"
 import "../constants.ral"
 import "../sequence/sequence.ral"
 import "../sequence/undone_sequence.ral"
+import "token_pool.ral"
 import "token_bridge_constants.ral"
 import "token_bridge.ral"
 
@@ -16,66 +17,9 @@ Contract TokenBridgeForChain(
     mut next1: U256,
     mut next2: U256,
     undoneSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
-    wrappedAlphId: ByteVec,
-    wrappedAlphPoolTemplateId: ByteVec,
-    localTokenPoolTemplateId: ByteVec,
-    remoteTokenPoolTemplateId: ByteVec,
     refundAddress: Address,
     mut sendSequence: U256
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
-    @using(preapprovedAssets = true)
-    pub fn createWrappedAlphPool(payer: Address, createContractAlphAmount: U256) -> () {
-        let encodedState = encodeToByteVec!(
-            localTokenBridgeId,
-            selfContractId!(),
-            localChainId,
-            wrappedAlphId,
-            0,
-            0
-        )
-        copyCreateSubContract!{payer -> createContractAlphAmount}(wrappedAlphId, wrappedAlphPoolTemplateId, encodedState)
-    }
-
-    @using(preapprovedAssets = true)
-    pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
-        assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
-        let encodedState = encodeToByteVec!(
-            localTokenBridgeId,
-            selfContractId!(),
-            localChainId,
-            localTokenId,
-            0,
-            0
-        )
-        copyCreateSubContract!{payer -> createContractAlphAmount}(localTokenId, localTokenPoolTemplateId, encodedState)
-    }
-
-    @using(preapprovedAssets = true)
-    pub fn createRemoteTokenPool(
-        remoteTokenId: ByteVec,
-        decimals: U256,
-        symbol: ByteVec,
-        name: ByteVec,
-        payer: Address,
-        createContractAlphAmount: U256
-    ) -> () {
-        let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
-        let expectedCaller = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
-        assert!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
-        let encodedState = encodeToByteVec!(
-            localTokenBridgeId,
-            selfContractId!(),
-            remoteChainId,
-            remoteTokenId,
-            0,
-            symbol,
-            name,
-            decimals
-        )
-        let tokenAmount = 1 << 255 // save some space from 0xff...ff
-        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(remoteTokenId, remoteTokenPoolTemplateId, encodedState, tokenAmount)
-    }
-
     pub fn nextSendSequence() -> U256 {
         assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
@@ -83,16 +27,41 @@ Contract TokenBridgeForChain(
         return msgSequence
     }
 
-    pub fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
+    fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
         let governance = Governance(governanceContractId)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
         assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-
-        let tokenId = byteVecSlice!(payload, 33, 65)
-        assert!(callerContractId!() == subContractId!(tokenId), ErrorCodes.InvalidCaller)
         return checkSequence(msgSequence), payload
+    }
+
+    fn parseCompleteTransfer(payload: ByteVec) -> (U256, ByteVec, U256, Address, U256) {
+        assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
+        let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
+        let vaaTokenId = byteVecSlice!(payload, 33, 65)
+        let vaaTokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
+        let toAddress = byteVecSlice!(payload, 67, 99)
+        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
+        assert!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
+        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        return amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
+        let (sequenceReady, payload) = checkTransfer(vaa)
+        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
+            return
+        }
+
+        let (amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee) = parseCompleteTransfer(payload)
+        let path = Path.TokenPool ++ u256To2Byte!(vaaTokenChainId) ++ vaaTokenId
+        let tokenPoolId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
+        let tokenPool = TokenPool(tokenPoolId)
+        tokenPool.completeTransfer{caller -> dustAmount!()}(
+            remoteChainId, amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee, caller
+        )
     }
 
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {

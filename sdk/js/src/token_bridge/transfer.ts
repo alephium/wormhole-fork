@@ -20,7 +20,11 @@ import {
 } from "algosdk";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
-import { transferAlphScript, transferLocalTokenScript, transferRemoteTokenScript } from "../alephium/token_bridge";
+import {
+  transferAlphScript,
+  transferLocalTokenScript,
+  transferRemoteTokenScript
+} from "../alephium/token_bridge";
 import {
   assetOptinCheck,
   getMessageFee,
@@ -37,6 +41,7 @@ import { importTokenWasm } from "../solana/wasm";
 import {
   ChainId,
   ChainName,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   coalesceChainId,
   createNonce,
@@ -54,11 +59,10 @@ export function transferAlph(
   alphAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferAlphScript()
   return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
@@ -69,7 +73,7 @@ export function transferAlph(
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: cl,
+    consistencyLevel: consistencyLevel,
   })
 }
 
@@ -82,54 +86,55 @@ export function transferLocalTokenFromAlph(
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferLocalTokenScript()
   return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
     fromAddress: fromAddress,
     localTokenId: localTokenId,
+    alphChainId: CHAIN_ID_ALEPHIUM,
     toChainId: Number(toChainId),
     toAddress: toAddress,
     tokenAmount: tokenAmount,
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: cl
+    consistencyLevel: consistencyLevel
   })
 }
 
 export function transferRemoteTokenFromAlph(
   tokenBridgeId: string,
   fromAddress: string,
-  tokenWrapperId: string,
+  tokenPoolId: string,
   remoteTokenId: string,
+  tokenChainId: ChainId,
   toChainId: ChainId,
   toAddress: string,
   tokenAmount: bigint,
   messageFee: bigint,
   arbiterFee: bigint,
-  consistencyLevel?: number,
+  consistencyLevel: number,
   nonce?: string
 ): string {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const cl = (typeof consistencyLevel !== "undefined") ? consistencyLevel : 10
   const script = transferRemoteTokenScript()
   return script.buildByteCodeToDeploy({
     tokenBridgeId: tokenBridgeId,
     fromAddress: fromAddress,
-    tokenWrapperId: tokenWrapperId,
+    tokenPoolId: tokenPoolId,
     remoteTokenId: remoteTokenId,
+    tokenChainId: Number(tokenChainId),
     toChainId: Number(toChainId),
     toAddress: toAddress,
     tokenAmount: tokenAmount,
     messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
-    consistencyLevel: cl
+    consistencyLevel: consistencyLevel
   })
 }
 

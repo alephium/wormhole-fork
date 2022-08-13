@@ -5,6 +5,7 @@ import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
+export const minimalConsistencyLevel = 105
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0003_token_bridge.md
 export class AttestToken {
@@ -49,6 +50,22 @@ export class RegisterChain {
         buffer.writeUint8(1, 32) // actionId
         buffer.writeUint16BE(this.remoteChainId, 33)
         buffer.write(this.remoteTokenBridgeId, 35, 'hex')
+        return buffer
+    }
+}
+
+export class UpdateMinimalConsistencyLevel {
+    minimalConsistencyLevel: number
+
+    constructor(minimalConsistencyLevel: number) {
+        this.minimalConsistencyLevel = minimalConsistencyLevel
+    }
+
+    encode(): Uint8Array {
+        let buffer = Buffer.allocUnsafe(34)
+        buffer.write(tokenBridgeModule, 0, 'hex')
+        buffer.writeUint8(241, 32) // actionId, #f1
+        buffer.writeUint8(this.minimalConsistencyLevel, 33)
         return buffer
     }
 }
@@ -216,7 +233,6 @@ async function createWrappedAlph(provider: NodeProvider, totalWrapped: bigint): 
 async function createWrappedAlphPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/wrapped_alph_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -227,7 +243,6 @@ async function createWrappedAlphPoolTemplate(provider: NodeProvider): Promise<Co
 async function createLocalTokenPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/local_token_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -238,7 +253,6 @@ async function createLocalTokenPoolTemplate(provider: NodeProvider): Promise<Con
 async function createRemoteTokenPoolTemplate(provider: NodeProvider): Promise<ContractInfo> {
     return createContract(provider, 'token_bridge/remote_token_pool.ral', {
         'tokenBridgeId': '',
-        'tokenBridgeForChainId': '',
         'tokenChainId': 0,
         'bridgeTokenId': '',
         'totalBridged': 0,
@@ -270,10 +284,6 @@ async function createTokenBridgeForChainTemplate(provider: NodeProvider): Promis
         'next1': 0,
         'next2': 0,
         'undoneSequenceTemplateId': '',
-        'wrappedAlphId': '',
-        'wrappedAlphPoolTemplateId': '',
-        'localTokenPoolTemplateId': '',
-        'remoteTokenPoolTemplateId': '',
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
     })
@@ -297,7 +307,8 @@ export async function createTokenBridge(provider: NodeProvider, totalWrappedAlph
         'tokenBridgeForChainTemplateId': templateContracts.tokenBridgeForChainTemplate.contractId,
         'attestTokenHandlerTemplateId': templateContracts.attestTokenHandlerTemplate.contractId,
         'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
-        'refundAddress': randomAssetAddress()
+        'refundAddress': randomAssetAddress(),
+        'minimalConsistencyLevel': minimalConsistencyLevel
     }
     const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
     const deps = Array.prototype.concat(
@@ -314,12 +325,21 @@ function subContractAddress(parentId: string, pathHex: string): string {
     return addressFromContractId(subContractId(parentId, pathHex))
 }
 
+export function chainIdHex(chainId: number): string {
+    return zeroPad(chainId.toString(16), 2)
+}
+
 export function attestTokenHandlerAddress(tokenBridgeId: string, remoteChainId: number): string {
-    return subContractAddress(tokenBridgeId, '00' + zeroPad(remoteChainId.toString(16), 2))
+    return subContractAddress(tokenBridgeId, '00' + chainIdHex(remoteChainId))
 }
 
 export function tokenBridgeForChainAddress(tokenBridgeId: string, remoteChainId: number): string {
-    return subContractAddress(tokenBridgeId, '01' + zeroPad(remoteChainId.toString(16), 2))
+    return subContractAddress(tokenBridgeId, '01' + chainIdHex(remoteChainId))
+}
+
+export function tokenPoolAddress(tokenBridgeId: string, tokenChainId: number, tokenId: string): string {
+    const path = '02' + chainIdHex(tokenChainId) + tokenId
+    return subContractAddress(tokenBridgeId, path)
 }
 
 export async function createAttestTokenHandler(
@@ -361,10 +381,6 @@ export async function createTokenBridgeForChain(
         'next': 0,
         'next1': 0,
         'next2': 0,
-        'wrappedAlphId': tokenBridge.wrappedAlphId,
-        'wrappedAlphPoolTemplateId': templateContracts.wrappedAlphPoolTemplate.contractId,
-        'localTokenPoolTemplateId': templateContracts.localTokenPoolTemplate.contractId,
-        'remoteTokenPoolTemplateId': templateContracts.remoteTokenPoolTemplate.contractId,
         'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
@@ -435,7 +451,7 @@ export async function newWrappedAlphPoolFixture(
         remoteChainId,
         remoteTokenBridgeId
     )
-    const address = subContractAddress(tokenBridgeForChainInfo.contractId, tokenBridgeInfo.wrappedAlphId)
+    const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, tokenBridgeInfo.wrappedAlphId)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -445,7 +461,6 @@ export async function newWrappedAlphPoolFixture(
     }
     const wrappedAlphPoolInfo = await createContract(provider, 'token_bridge/wrapped_alph_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': CHAIN_ID_ALEPHIUM,
         'bridgeTokenId': tokenBridgeInfo.wrappedAlphId,
         'totalBridged': totalBridged,
@@ -464,7 +479,7 @@ export async function newLocalTokenPoolFixture(
     const fixture = await newTokenBridgeForChainFixture(provider, remoteChainId, remoteTokenBridgeId)
     const tokenBridgeInfo = fixture.tokenBridgeInfo
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
-    const address = subContractAddress(tokenBridgeForChainInfo.contractId, localTokenId)
+    const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, localTokenId)
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -474,7 +489,6 @@ export async function newLocalTokenPoolFixture(
     }
     const localTokenPoolInfo = await createContract(provider, 'token_bridge/local_token_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': CHAIN_ID_ALEPHIUM,
         'bridgeTokenId': localTokenId,
         'totalBridged': totalBridged,
@@ -497,7 +511,10 @@ export async function newRemoteTokenPoolFixture(
     const fixture = await newTokenBridgeForChainFixture(provider, remoteChainId, remoteTokenBridgeId)
     const tokenBridgeInfo = fixture.tokenBridgeInfo
     const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
-    const contractAddress = typeof address === 'undefined' ? subContractAddress(tokenBridgeForChainInfo.contractId, remoteTokenId) : address
+    const contractAddress =
+        typeof address === 'undefined'
+            ? tokenPoolAddress(tokenBridgeInfo.contractId, remoteChainId, remoteTokenId)
+            : address
     const asset: Asset = {
         alphAmount: minimalAlphInContract,
         tokens: [{
@@ -507,7 +524,6 @@ export async function newRemoteTokenPoolFixture(
     }
     const remoteTokenPoolInfo = await createContract(provider, 'token_bridge/remote_token_pool.ral', {
         'tokenBridgeId': tokenBridgeInfo.contractId,
-        'tokenBridgeForChainId': tokenBridgeForChainInfo.contractId,
         'tokenChainId': remoteChainId,
         'bridgeTokenId': remoteTokenId,
         'totalBridged': totalBridged,

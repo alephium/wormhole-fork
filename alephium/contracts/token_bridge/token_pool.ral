@@ -1,4 +1,12 @@
 Interface TokenPool {
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> ()
+    pub fn completeTransfer(
+        emitterChainId: U256,
+        amount: U256,
+        vaaTokenId: ByteVec,
+        vaaTokenChainId: U256,
+        recipient: Address,
+        normalizedArbiterFee: U256,
+        caller: Address
+    ) -> ()
 }

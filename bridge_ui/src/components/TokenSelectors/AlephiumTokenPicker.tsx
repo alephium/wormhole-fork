@@ -9,6 +9,7 @@ import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAcc
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
 import { getAlephiumTokenInfo } from "../../utils/alephium";
 import { ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID } from "../../utils/consts";
+import alephiumIcon from "../../icons/alephium.svg";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -36,9 +37,22 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
       })
     }
   });
-  tokenAmounts.set(ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID, alphAmount)
 
-  let tokenAccounts = []
+  const alphUIAmount = formatUnits(alphAmount, 18)
+  const alph = createParsedTokenAccount(
+    address,
+    ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
+    alphAmount.toString(),
+    18,
+    parseFloat(alphUIAmount),
+    alphUIAmount,
+    "ALPH",
+    "ALPH",
+    alephiumIcon,
+    true
+  )
+
+  let tokenAccounts = [alph]
   for (let [tokenId, amount] of tokenAmounts) {
     const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
     const uiAmount = formatUnits(amount, tokenInfo.decimals)

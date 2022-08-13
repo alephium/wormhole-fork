@@ -224,7 +224,7 @@ func init() {
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
 	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
-	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 0, "The min confirmations for alephium tx")
+	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 10, "The min confirmations for alephium tx")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -918,7 +918,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 			alphWatcher, err := alephium.NewAlephiumWatcher(
 				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds, common.ReadinessAlephiumSyncing,
-				lockC, uint64(*alphMinConfirmations), chainObsvReqC[vaa.ChainIDAlephium],
+				lockC, *alphMinConfirmations, chainObsvReqC[vaa.ChainIDAlephium],
 			)
 			if err != nil {
 				logger.Error("failed to create alephium watcher", zap.Error(err))

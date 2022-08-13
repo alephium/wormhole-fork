@@ -63,7 +63,7 @@ import {
 } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  ALEPHIUM_CONFIRMATIONS,
+  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphArbiterFee,
   alphMessageFee,
@@ -337,7 +337,7 @@ async function alephium(
   signer: AlephiumWalletSigner,
   tokenId: string,
   originAsset: string,
-  isLocalToken: boolean,
+  tokenChainId: ChainId,
   amount: string,
   decimals: number,
   targetChain: ChainId,
@@ -358,10 +358,10 @@ async function alephium(
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [], amountParsed.toString())
-        } else if (isLocalToken) {
+        } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
           const bytecode = transferLocalTokenFromAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
@@ -371,7 +371,7 @@ async function alephium(
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         } else {
@@ -380,12 +380,13 @@ async function alephium(
             signer.account.address,
             tokenId,
             originAsset,
+            tokenChainId,
             targetChain,
             uint8ArrayToHex(targetAddress),
             amountParsed,
             alphMessageFee,
             alphArbiterFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
           result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode, [{id: tokenId, amount: amountParsed.toString()}])
         }
@@ -608,7 +609,8 @@ export function useHandleTransfer() {
       !!sourceAsset &&
       decimals !== undefined &&
       !!targetAddress &&
-      !!originAsset
+      !!originAsset &&
+      !!originChain
     ) {
       alephium(
         dispatch,
@@ -616,7 +618,7 @@ export function useHandleTransfer() {
         alphSigner,
         sourceAsset,
         originAsset,
-        originChain === CHAIN_ID_ALEPHIUM,
+        originChain,
         amount,
         decimals,
         targetChain,

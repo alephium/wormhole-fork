@@ -1,6 +1,6 @@
 {
-  "sourceCodeSha256": "d1f7da86908c180af80eb9b9cf51ca102490dd1930c6c98fe2c2a893bfc0c8cf",
-  "bytecodeTemplate": "01010300010007{0}1700{1}0d0c16000108",
+  "sourceCodeSha256": "7777a7c98e82994a9df9edebaa1f0cf65d5bb88d27be9292cd4752bd81938ef8",
+  "bytecodeTemplate": "01010300010007{0}1700{1}0d0c1600010c",
   "fieldsSig": {
     "signature": "TxScript Main(tokenBridgeId:ByteVec,vaa:ByteVec)",
     "names": [

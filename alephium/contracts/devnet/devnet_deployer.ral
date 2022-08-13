@@ -40,7 +40,8 @@ Contract DevnetDeployer() {
     tokenBridgeForChainTemplateId: ByteVec,
     attestTokenHandlerTemplateId: ByteVec,
     undoneSequenceTemplateId: ByteVec,
-    refundAddress: Address
+    refundAddress: Address,
+    minimalConsistencyLevel: U256
   ) -> () {
     let encodedState = encodeToByteVec!(
       governanceContractId,
@@ -54,7 +55,8 @@ Contract DevnetDeployer() {
       tokenBridgeForChainTemplateId,
       attestTokenHandlerTemplateId,
       undoneSequenceTemplateId,
-      refundAddress
+      refundAddress,
+      minimalConsistencyLevel
     )
     createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedState)
   }
@@ -62,6 +64,6 @@ Contract DevnetDeployer() {
   @using(preapprovedAssets = true)
   pub fn deployWrappedAlph(bytecode: ByteVec) -> () {
     let encodedState = encodeToByteVec!(0)
-    createSubContractWithToken!{callerAddress!() -> 1 alph}(#02, bytecode, encodedState, 1000000000 alph)
+    createSubContractWithToken!{callerAddress!() -> 1 alph}(#02, bytecode, encodedState, 1e9 alph)
   }
 }

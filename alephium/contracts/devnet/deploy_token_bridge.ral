@@ -14,7 +14,8 @@ TxScript Main(
   tokenBridgeForChainTemplateId: ByteVec,
   attestTokenHandlerTemplateId: ByteVec,
   undoneSequenceTemplateId: ByteVec,
-  refundAddress: Address
+  refundAddress: Address,
+  minimalConsistencyLevel: U256
 ) {
   let deployer = DevnetDeployer(deployerId)
   deployer.deployTokenBridge{callerAddress!() -> 1 alph}(
@@ -30,6 +31,7 @@ TxScript Main(
     tokenBridgeForChainTemplateId,
     attestTokenHandlerTemplateId,
     undoneSequenceTemplateId,
-    refundAddress
+    refundAddress,
+    minimalConsistencyLevel
   )
 }

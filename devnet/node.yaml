@@ -119,11 +119,11 @@ spec:
             - --alphRPC
             - http://alph-full-node:22973
             - --alphContractIds
-            - "wbzM5XKieVucNC4E6rVm6toN56qHiCvVZ8NsFUvcvBn3,27SnQEM3r3xutJrpmEUCtCHmWmVJ1KFSY5fvgd34ZNXik"
+            - "2ATrGktY3d3U7HmRiLJinEa24bGSVxcuAqyMtPKqQvqeR,28uVCPJNHpYKDzmtrxyTXWUndXtdm95mfE3zXrq7akymE"
             - --alphGroupIndex
             - "0"
             - --alphMinConfirmations
-            - "0"
+            - "10"
             - --unsafeDevMode
             - --guardianKey
             - /run/node/bridge.key

@@ -30,5 +30,6 @@ Abstract Contract Constants() {
     InvalidPayloadId                    = 25
     InvalidTransferMessage              = 26
     ExpectRemoteToken                   = 27
+    InvalidConsistencyLevel             = 28
   }
 }

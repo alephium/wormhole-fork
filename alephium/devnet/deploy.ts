@@ -32,24 +32,22 @@ async function createWallet() {
 async function createLocalTokenPool(
     wormhole: Wormhole,
     localTokenId: string,
-    tokenBridgeForChainId: string,
-    remoteChain: string
+    tokenBridgeId: string
 ) {
-    let txId = await wormhole.createLocalTokenPool(tokenBridgeForChainId, localTokenId, consts.payer, consts.minimalAlphInContract)
+    let txId = await wormhole.createLocalTokenPool(tokenBridgeId, localTokenId, consts.payer, consts.minimalAlphInContract)
     let tokenPoolAddress = await getCreatedContractAddress(provider, txId, 0)
     const tokenPoolId = binToHex(contractIdFromAddress(tokenPoolAddress))
-    console.log('token pool id for ' + remoteChain + ': ' + tokenPoolId)
+    console.log('local token id: ' + localTokenId + ', token pool id: ' + tokenPoolId)
 }
 
 async function createWrappedAlphPool(
     wormhole: Wormhole,
-    tokenBridgeForChainId: string,
-    remoteChain: string
+    tokenBridgeId: string
 ) {
-    let txId = await wormhole.createWrappedAlphPool(tokenBridgeForChainId, consts.payer, consts.minimalAlphInContract)
+    let txId = await wormhole.createWrappedAlphPool(tokenBridgeId, consts.payer, consts.minimalAlphInContract)
     let alphPoolAddress = await getCreatedContractAddress(provider, txId, 0)
     const alphPoolId = binToHex(contractIdFromAddress(alphPoolAddress))
-    console.log('alph pool id for ' + remoteChain + ': ' + alphPoolId)
+    console.log('alph pool id: ' + alphPoolId)
 }
 
 async function getToken(
@@ -91,7 +89,7 @@ async function deploy() {
         consts.messageFee
     )
 
-    const contracts = await wormhole.deployContracts(true)
+    const contracts = await wormhole.deployContracts("devnet")
     console.log("wormhole contracts: " + JSON.stringify(contracts, null, 2))
     const remoteChains = await registerChains(wormhole, contracts.tokenBridge.contractId)
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
@@ -100,11 +98,8 @@ async function deploy() {
     const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
-    await createLocalTokenPool(wormhole, testTokenId, remoteChains.eth, "eth")
-    await createLocalTokenPool(wormhole, testTokenId, remoteChains.bsc, "bsc")
-
-    await createWrappedAlphPool(wormhole, remoteChains.eth, "eth")
-    await createWrappedAlphPool(wormhole, remoteChains.bsc, "bsc")
+    await createLocalTokenPool(wormhole, testTokenId, contracts.tokenBridge.contractId)
+    await createWrappedAlphPool(wormhole, contracts.tokenBridge.contractId)
 
     // start auto mining, used for check confirmations
     mine(provider)

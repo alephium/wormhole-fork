@@ -58,8 +58,7 @@ import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import {
-  getRedeemInfo,
-  getTokenPoolId,
+  getEmitterChainId,
   waitTxConfirmed,
   submitAlphScriptTx
 } from "../utils/alephium";
@@ -241,13 +240,12 @@ async function alephium(
 ) {
   dispatch(setIsRedeeming(true));
   try {
-    const redeemInfo = getRedeemInfo(signedVAA)
-    const tokenPoolId = getTokenPoolId(redeemInfo.tokenId, redeemInfo.remoteChainId)
-    const bytecode = redeemOnAlph(tokenPoolId, signedVAA)
+    const emitterChainId = getEmitterChainId(signedVAA)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
+    const bytecode = redeemOnAlph(tokenBridgeForChainId, signedVAA)
     const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
-    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, redeemInfo.remoteChainId)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       signer.nodeProvider,
       tokenBridgeForChainId,

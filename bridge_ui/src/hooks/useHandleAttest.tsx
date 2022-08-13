@@ -56,7 +56,7 @@ import {
 import { submitAlphScriptTx, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  ALEPHIUM_CONFIRMATIONS,
+  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphMessageFee,
   ALGORAND_BRIDGE_ID,
@@ -313,7 +313,7 @@ async function alephium(
             ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
             signer.account.address,
             alphMessageFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         } else {
           bytecode = attestFromAlph(
@@ -321,7 +321,7 @@ async function alephium(
             localTokenId,
             signer.account.address,
             alphMessageFee,
-            ALEPHIUM_CONFIRMATIONS
+            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
           tokens = [{id: localTokenId, amount: '1'}];
         }

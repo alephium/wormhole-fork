@@ -3,12 +3,11 @@ import "wrapped_alph.ral"
 
 Contract WrappedAlphPool(
     tokenBridgeId: ByteVec,
-    tokenBridgeForChainId: ByteVec,
     tokenChainId: U256, // local chain id
     bridgeTokenId: ByteVec, // wrapped ALPH id
     mut totalBridged: U256,
     decimals_: U256 // should be 0
-) extends BridgeTokenPool(tokenBridgeForChainId, tokenChainId, bridgeTokenId, decimals_) {
+) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
     @using(preapprovedAssets = true)
     pub fn transfer(
         fromAddress: Address,
@@ -29,24 +28,32 @@ Contract WrappedAlphPool(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn receiveWrappedAlph(totalAmount: U256) -> () {
+    pub fn receiveWrappedAlph(fromAddress: Address, totalAmount: U256) -> () {
         assert!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
-        transferTokenToSelf!(callerAddress!(), bridgeTokenId, totalAmount)
+        transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
-        let (sequenceReady, recipient, transferAmount, arbiterFee) = prepareCompleteTransfer(vaa)
-        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
-            return
-        }
+    pub fn completeTransfer(
+        emitterChainId: U256,
+        amount: U256,
+        vaaTokenId: ByteVec,
+        vaaTokenChainId: U256,
+        recipient: Address,
+        normalizedArbiterFee: U256,
+        caller: Address
+    ) -> () {
+        let (transferAmount, arbiterFee) = prepareCompleteTransfer(
+            callerContractId!(), emitterChainId, amount, vaaTokenId, vaaTokenChainId, normalizedArbiterFee
+        )
 
         if (caller != recipient) {
             transferAlph!(caller, recipient, dustAmount!())
         }
+        let self = selfAddress!()
         WrappedAlph(bridgeTokenId).unwrapAndCompleteTransfer{
-            selfAddress!() -> bridgeTokenId: transferAmount + arbiterFee
-        }(recipient, transferAmount, caller, arbiterFee)
+            self -> bridgeTokenId: transferAmount + arbiterFee
+        }(self, recipient, transferAmount, caller, arbiterFee)
         totalBridged = totalBridged - transferAmount - arbiterFee
     }
 }
