@@ -20,12 +20,13 @@ interface NetworkConfigs {
     minimalConsistencyLevel: number
 }
 
+// TODO: update this once we release the SDK
 const networkConfigs: Record<NetworkType, NetworkConfigs> = {
     "mainnet": {
         minimalConsistencyLevel: 105
     },
     "testnet": {
-        minimalConsistencyLevel: 105
+        minimalConsistencyLevel: 10
     },
     "devnet": {
         minimalConsistencyLevel: 10
