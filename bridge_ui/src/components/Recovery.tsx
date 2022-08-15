@@ -23,6 +23,7 @@ import {
   uint8ArrayToHex,
   parseVAA,
   parseTargetChainFromLogEth,
+  CHAIN_ID_ETH,
 } from "@certusone/wormhole-sdk";
 import {
   Accordion,
@@ -55,7 +56,7 @@ import useIsWalletReady from "../hooks/useIsWalletReady";
 import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";
 import { COLORS } from "../muiTheme";
 import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
-import { setRecoveryVaa } from "../store/transferSlice";
+import { setRecoveryVaa, setRecoverySourceTxId } from "../store/transferSlice";
 import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
   ALEPHIUM_HOST,
@@ -407,8 +408,8 @@ export default function Recovery() {
   const [type, setType] = useState("Token");
   const isNFT = type === "NFT";
   const [recoverySourceChain, setRecoverySourceChain] =
-    useState<ChainId>(CHAIN_ID_SOLANA);
-  const [recoverySourceTx, setRecoverySourceTx] = useState("");
+    useState<ChainId>(CHAIN_ID_ALEPHIUM);
+  const [recoverySourceTx, setRecoverySourceTx] = useState("")
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] =
     useState(false);
   const [recoverySourceTxError, setRecoverySourceTxError] = useState("");
@@ -452,7 +453,7 @@ export default function Recovery() {
         setRecoverySourceChain(sourceChain);
       }
       if (pathSourceTransaction) {
-        setRecoverySourceTx(pathSourceTransaction);
+        setRecoverySourceTx(pathSourceTransaction)
       }
     } catch (e) {
       console.error(e);
@@ -565,7 +566,7 @@ export default function Recovery() {
     setRecoverySourceChain((prevChain) =>
       event.target.value === "NFT" &&
       !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
-        ? CHAIN_ID_SOLANA
+        ? CHAIN_ID_ETH
         : prevChain
     );
     setType(event.target.value);
@@ -602,6 +603,7 @@ export default function Recovery() {
     };
   }, [recoverySignedVAA]);
   const parsedVAATargetChain = recoveryParsedVAA?.body.targetChainId;
+  const parsedVAAEmitterChain = recoveryParsedVAA?.body.emitterChainId;
   const enableRecovery = recoverySignedVAA && parsedVAATargetChain;
 
   const handleRecoverClickBase = useCallback(
@@ -627,6 +629,8 @@ export default function Recovery() {
               vaa: recoverySignedVAA,
               useRelayer,
               parsedPayload: {
+                sourceTxId: recoverySourceTx,
+                sourceChain: parsedVAAEmitterChain,
                 targetChain: parsedVAATargetChain,
                 targetAddress: parsedPayload.targetAddress,
                 originChain: parsedPayload.originChain,
@@ -645,8 +649,10 @@ export default function Recovery() {
     [
       dispatch,
       enableRecovery,
+      recoverySourceTx,
       recoverySignedVAA,
       parsedVAATargetChain,
+      parsedVAAEmitterChain,
       parsedPayload,
       isNFT,
       push,
@@ -770,7 +776,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Emitter Chain"
                   disabled
-                  value={recoveryParsedVAA?.emitter_chain || ""}
+                  value={recoveryParsedVAA?.body.emitterChainId || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -781,8 +787,8 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       hexToNativeString(
-                        recoveryParsedVAA.emitter_address,
-                        recoveryParsedVAA.emitter_chain
+                        recoveryParsedVAA.body.emitterAddress,
+                        recoveryParsedVAA.body.emitterChainId
                       )) ||
                     ""
                   }
@@ -793,7 +799,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Sequence"
                   disabled
-                  value={recoveryParsedVAA?.sequence || ""}
+                  value={recoveryParsedVAA?.body.sequence || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -804,7 +810,7 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       new Date(
-                        recoveryParsedVAA.timestamp * 1000
+                        recoveryParsedVAA.body.timestamp * 1000
                       ).toLocaleString()) ||
                     ""
                   }
@@ -815,7 +821,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Guardian Set"
                   disabled
-                  value={recoveryParsedVAA?.guardian_set_index || ""}
+                  value={recoveryParsedVAA?.guardianSetIndex || ""}
                   fullWidth
                   margin="normal"
                 />

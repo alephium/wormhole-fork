@@ -60,6 +60,7 @@ import {
   setIsSending,
   setSignedVAAHex,
   setTransferTx,
+  setRecoverySourceTxId
 } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
@@ -89,6 +90,7 @@ import {
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
 import { SignExecuteScriptTxResult } from "@alephium/web3";
+import { transactionDB } from "../utils/db";
 
 async function algo(
   dispatch: any,
@@ -393,7 +395,14 @@ async function alephium(
         return result.txId
       }
     )
+    await transactionDB.txs.put({
+      txId: txInfo.txId,
+      sourceChainId: CHAIN_ID_ALEPHIUM,
+      targetChainId: targetChain,
+      status: "Pending"
+    })
     dispatch(setTransferTx({ id: txInfo.txId, block: txInfo.blockHeight }));
+    dispatch(setRecoverySourceTxId(txInfo.txId))
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
