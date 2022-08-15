@@ -31,6 +31,7 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { NodeProvider } from "@alephium/web3"
 import { isAlphTxConfirmed } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
+import useIsWalletReady from "../hooks/useIsWalletReady";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -161,6 +162,9 @@ export default function Transactions() {
   const [txTargetChain, setTxTargetChain] =
     useState<ChainId>(CHAIN_ID_ETH)
 
+  const { isReady: sourceChainReady } = useIsWalletReady(txSourceChain)
+  const { isReady: targetChainReady } = useIsWalletReady(txTargetChain)
+
   const handleTypeChange = useCallback((event: any) => {
     setTxSourceChain((prevChain) =>
       event.target.value === "NFT" &&
@@ -219,16 +223,22 @@ export default function Transactions() {
           chains={(isNFT ? CHAINS_WITH_NFT_SUPPORT : CHAINS).filter((c) => c.id !== txSourceChain)}
         />
         <KeyAndBalance chainId={txTargetChain} />
-        <ListTransaction
-          status="Confirmed"
-          sourceChainId={txSourceChain}
-          targetChainId={txTargetChain}
-        />
-        <ListTransaction
-          status="Pending"
-          sourceChainId={txSourceChain}
-          targetChainId={txTargetChain}
-        />
+        {
+          (sourceChainReady && targetChainReady)
+            ? (<>
+              <ListTransaction
+                status="Confirmed"
+                sourceChainId={txSourceChain}
+                targetChainId={txTargetChain}
+              />
+              <ListTransaction
+                status="Pending"
+                sourceChainId={txSourceChain}
+                targetChainId={txTargetChain}
+              />
+            </>)
+            : null
+        }
       </Card>
     </Container>
   );
