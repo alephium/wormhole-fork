@@ -29,7 +29,7 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { useLiveQuery } from "dexie-react-hooks"
 import { NodeProvider } from "@alephium/web3"
-import { isAlphTxConfirmed } from "../utils/alephium";
+import { isAlphTxConfirmed, isAlphTxNotFound } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 
@@ -61,39 +61,27 @@ async function getTxsByStatus(
     .toArray()
 }
 
-async function getTxs(sourceChainId: ChainId, targetChainId: ChainId): Promise<Transaction[]> {
-  return transactionDB.txs
-    .where({
-      "sourceChainId": sourceChainId,
-      "targetChainId": targetChainId
-    })
-    .toArray()
-}
-
-async function asyncFilter<T>(array: Array<T>, pred: (e: T) => Promise<Boolean>): Promise<Array<T>> {
-  const promise = Promise.all(array.map(e => pred(e)))
-  return promise.then((results) => array.filter((_, index) => results[index]))
-}
-
 async function updateTxStatus(nodeProvider: NodeProvider) {
-  const txs = await getTxs(CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH)
-  const pendingTxs = txs.filter(tx => tx.status === "Pending")
-  const isTxConfirmed = async (tx: Transaction): Promise<Boolean> => {
-    const status = await nodeProvider
-      .transactions
-      .getTransactionsStatus({txId: tx.txId})
-    if (!isAlphTxConfirmed(status)) {
-      return false
+  const pendingTxs = await getTxsByStatus("Pending", CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH)
+  const pendingTxsStatus = await Promise.all(
+    pendingTxs.map((tx) => nodeProvider.transactions.getTransactionsStatus({txId: tx.txId}))
+  )
+  const removedTxs: string[] = []
+  const confirmedTxs: Transaction[] = []
+  pendingTxs.forEach((tx, index) => {
+    const txStatus = pendingTxsStatus[index]
+    if (isAlphTxNotFound(txStatus)) {
+      removedTxs.push(tx.txId)
+    } else if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
+      confirmedTxs.push(toConfirmedTx(tx))
     }
-    return status.chainConfirmations >= ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-  }
-  const confirmedTxs = (await asyncFilter(pendingTxs, isTxConfirmed)).map(tx => toConfirmedTx(tx))
+  })
   await transactionDB.transaction("rw", transactionDB.txs, () => {
     transactionDB.txs
       .bulkPut(confirmedTxs)
-      .catch((error) => {
-        console.log("failed to update tx status, error: " + error)
-      })
+      .then(_ => transactionDB.txs.bulkDelete(removedTxs))
+  }).catch(error => {
+    console.log("failed to update txs status, error: " + error)
   })
 }
 

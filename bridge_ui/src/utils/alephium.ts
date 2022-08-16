@@ -77,6 +77,10 @@ export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string):
     return getTxInfo(provider, txId, confirmed.blockHash)
 }
 
+export function isAlphTxNotFound(txStatus: node.TxStatus): Boolean {
+    return txStatus.type === "TxNotFound"
+}
+
 export function isAlphTxConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
     return (txStatus as node.Confirmed).blockHash !== undefined
 }
