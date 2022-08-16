@@ -271,6 +271,7 @@ export const transferSlice = createSlice({
       state.amount = action.payload.parsedPayload.amount;
       state.activeStep = 3;
       state.isRecovery = true;
+      state.redeemTx = undefined
       state.useRelayer = action.payload.useRelayer;
     },
     setGasPrice: (state, action: PayloadAction<number | undefined>) => {
