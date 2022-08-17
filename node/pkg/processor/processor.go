@@ -40,6 +40,8 @@ type (
 		retryCount uint
 		// Copy of the bytes we submitted (ourVAA, but signed and serialized). Used for retransmissions.
 		ourMsg []byte
+		// The hash of the transaction in which the observation was made.  Used for re-observation requests.
+		txHash []byte
 		// Copy of the guardian set valid at observation/injection time.
 		gs *common.GuardianSet
 	}
@@ -62,6 +64,10 @@ type Processor struct {
 	sendC chan []byte
 	// obsvC is a channel of inbound decoded observations from p2p
 	obsvC chan *gossipv1.SignedObservation
+
+	// obsvReqSendC is a send-only channel of outbound re-observation requests to broadcast on p2p
+	obsvReqSendC chan<- *gossipv1.ObservationRequest
+
 	// signedInC is a channel of inbound signed VAA observations from p2p
 	signedInC chan *gossipv1.SignedVAAWithQuorum
 
@@ -105,6 +111,7 @@ func NewProcessor(
 	setC chan *common.GuardianSet,
 	sendC chan []byte,
 	obsvC chan *gossipv1.SignedObservation,
+	obsvReqSendC chan<- *gossipv1.ObservationRequest,
 	injectC chan *vaa.VAA,
 	signedInC chan *gossipv1.SignedVAAWithQuorum,
 	guardianSigner ecdsasigner.ECDSASigner,
@@ -120,6 +127,7 @@ func NewProcessor(
 		setC:           setC,
 		sendC:          sendC,
 		obsvC:          obsvC,
+		obsvReqSendC:   obsvReqSendC,
 		signedInC:      signedInC,
 		injectC:        injectC,
 		guardianSigner: guardianSigner,

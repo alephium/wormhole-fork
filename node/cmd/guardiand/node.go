@@ -742,6 +742,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			setC,
 			sendC,
 			obsvC,
+			obsvReqSendC,
 			injectC,
 			signedInC,
 			guardianSigner,
