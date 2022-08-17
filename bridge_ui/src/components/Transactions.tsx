@@ -1,11 +1,13 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ETH
+  CHAIN_ID_ETH,
+  getIsTransferCompletedEth
 } from "@certusone/wormhole-sdk";
 import {
   Box,
   Card,
+  CircularProgress,
   Collapse,
   Container,
   List,
@@ -21,8 +23,10 @@ import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../muiTheme";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   CHAINS,
-  CHAINS_WITH_NFT_SUPPORT
+  CHAINS_WITH_NFT_SUPPORT,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import { Transaction, transactionDB, TxStatus } from "../utils/db";
 import ChainSelect from "./ChainSelect";
@@ -32,6 +36,9 @@ import { NodeProvider } from "@alephium/web3"
 import { isAlphTxConfirmed, isAlphTxNotFound } from "../utils/alephium";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
+import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
+import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { Alert } from "@material-ui/lab";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -44,6 +51,13 @@ const useStyles = makeStyles((theme) => ({
   },
   nested: {
     paddingLeft: theme.spacing(4),
+  },
+  loader: {
+    marginLeft: theme.spacing(50)
+  },
+  error: {
+    marginTop: theme.spacing(1),
+    textAlign: "center",
   },
 }));
 
@@ -145,22 +159,10 @@ function ListTransaction({status, sourceChainId, targetChainId}: {
 }) {
   const classes = useStyles()
   const [open, setOpen] = useState(false)
-  const { signer: alphSigner } = useAlephiumWallet()
-
-  useEffect(() => {
-    if (alphSigner) {
-      const update = async () => {
-        await updateTxStatus(alphSigner.nodeProvider)
-      }
-
-      update()
-    }
-  }, [alphSigner])
 
   const handleClick = () => {
     setOpen(!open)
   }
-
   const transactions = useLiveQuery(
     async () => getTxsByStatus(status, sourceChainId, targetChainId),
     [status, sourceChainId]
@@ -205,6 +207,45 @@ export default function Transactions() {
 
   const { isReady: sourceChainReady } = useIsWalletReady(txSourceChain)
   const { isReady: targetChainReady } = useIsWalletReady(txTargetChain)
+
+  const { signer: alphSigner } = useAlephiumWallet()
+  const { provider: ethProvider } = useEthereumProvider()
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadingError, setLoadingError] = useState<any>(null)
+
+  useEffect(() => {
+    if (alphSigner && ethProvider) {
+      const update = async () => {
+        const isTransferCompleted = async (sequence: string): Promise<boolean> => {
+          const response = await getSignedVAAWithRetry(
+            CHAIN_ID_ALEPHIUM,
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            CHAIN_ID_ETH,
+            sequence
+          )
+          return getIsTransferCompletedEth(
+            getTokenBridgeAddressForChain(CHAIN_ID_ETH),
+            ethProvider,
+            response.vaaBytes
+          )
+        }
+
+        await updateTxDB(
+          alphSigner.nodeProvider,
+          alphSigner.account.address,
+          CHAIN_ID_ETH,
+          isTransferCompleted
+        )
+      }
+
+      update().then(_ => {
+        setIsLoading(false)
+      }).catch(error => {
+        setIsLoading(false)
+        setLoadingError(error)
+      })
+    }
+  }, [alphSigner, ethProvider])
 
   const handleTypeChange = useCallback((event: any) => {
     setTxSourceChain((prevChain) =>
@@ -265,20 +306,32 @@ export default function Transactions() {
         />
         <KeyAndBalance chainId={txTargetChain} />
         {
-          (sourceChainReady && targetChainReady)
-            ? (<>
-              <ListTransaction
-                status="Confirmed"
-                sourceChainId={txSourceChain}
-                targetChainId={txTargetChain}
+          (sourceChainReady && targetChainReady) ? (
+            isLoading ? (
+              <CircularProgress
+                size={24}
+                color="inherit"
+                className={classes.loader}
               />
-              <ListTransaction
-                status="Pending"
-                sourceChainId={txSourceChain}
-                targetChainId={txTargetChain}
-              />
-            </>)
-            : null
+            ) : loadingError ? (
+              <Alert severity="error" className={classes.error}>
+                Loading transactions error: {loadingError}
+              </Alert>
+            ) : (
+              <>
+                <ListTransaction
+                  status="Confirmed"
+                  sourceChainId={txSourceChain}
+                  targetChainId={txTargetChain}
+                />
+                <ListTransaction
+                  status="Pending"
+                  sourceChainId={txSourceChain}
+                  targetChainId={txTargetChain}
+                />
+              </>
+            )
+          ) : null
         }
       </Card>
     </Container>
