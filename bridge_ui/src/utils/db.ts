@@ -1,22 +1,24 @@
-// db.ts
 import { ChainId } from '@certusone/wormhole-sdk';
 import Dexie, { Table } from 'dexie';
 
+export const TxDBName = 'tx-db'
 export type TxStatus = "Completed" | "Confirmed" | "Pending"
 
-export interface Transaction {
+export class Transaction {
   txId: string
+  fromAddress: string
   sourceChainId: ChainId
   targetChainId: ChainId
+  sequence: string
   status: TxStatus
-}
 
-export function toConfirmedTx(tx: Transaction): Transaction {
-  return {
-    txId: tx.txId,
-    sourceChainId: tx.sourceChainId,
-    targetChainId: tx.targetChainId,
-    status: "Confirmed"
+  constructor(txId: string, fromAddress: string, sourceChainId: ChainId, targetChainId: ChainId, sequence: string, status: TxStatus) {
+    this.txId = txId
+    this.fromAddress = fromAddress
+    this.sourceChainId = sourceChainId
+    this.targetChainId = targetChainId
+    this.sequence = sequence
+    this.status = status
   }
 }
 
@@ -24,9 +26,9 @@ export class TransactionDB extends Dexie {
   txs!: Table<Transaction>; 
 
   constructor() {
-    super('transaction database');
+    super('tx-db');
     this.version(1).stores({
-      txs: '&txId, sourceChainId, targetChainId, sequence, status'
+      txs: '&txId, fromAddress, sourceChainId, targetChainId, sequence, status'
     });
   }
 }

@@ -22,9 +22,9 @@ import { COLORS } from "../muiTheme";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   CHAINS,
-  CHAINS_WITH_NFT_SUPPORT,
+  CHAINS_WITH_NFT_SUPPORT
 } from "../utils/consts";
-import { toConfirmedTx, Transaction, transactionDB, TxStatus } from "../utils/db";
+import { Transaction, transactionDB, TxStatus } from "../utils/db";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { useLiveQuery } from "dexie-react-hooks"
@@ -61,8 +61,60 @@ async function getTxsByStatus(
     .toArray()
 }
 
-async function updateTxStatus(nodeProvider: NodeProvider) {
-  const pendingTxs = await getTxsByStatus("Pending", CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH)
+async function getTxs(
+  nodeProvider: NodeProvider,
+  fromAddress: string,
+  targetChainId: ChainId,
+  txInfos: {txId: string, sequence: string}[],
+  isTransferCompleted: (sequence: string) => Promise<boolean>,
+): Promise<Transaction[]> {
+  const txsStatus = await Promise.all(
+    txInfos.map(tx => nodeProvider.transactions.getTransactionsStatus({txId: tx.txId}))
+  )
+  const txs: Transaction[] = []
+  const toTransaction = (txId: string, sequence: string, status: TxStatus): Transaction => {
+    return new Transaction(txId, fromAddress, CHAIN_ID_ALEPHIUM, targetChainId, sequence, status)
+  }
+
+  for (let index = 0; index < txInfos.length; index++) {
+    const tx = txInfos[index]
+    const status = txsStatus[index]
+    if (isAlphTxNotFound(status)) {
+      continue
+    }
+
+    if (isAlphTxConfirmed(status) && status.chainConfirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
+      txs.push(toTransaction(tx.txId, tx.sequence, "Pending"))
+      continue
+    }
+
+    const isCompleted = await isTransferCompleted(tx.sequence)
+    if (isCompleted) {
+      txs.push(toTransaction(tx.txId, tx.sequence, "Completed"))
+    } else {
+      txs.push(toTransaction(tx.txId, tx.sequence, "Confirmed"))
+    }
+  }
+
+  return txs
+}
+
+async function updateTxDB(
+  nodeProvider: NodeProvider,
+  fromAddress: string,
+  targetChainId: ChainId,
+  isTransferCompleted: (sequence: string) => Promise<boolean>
+) {
+  const count = await transactionDB.txs.count()
+  if (count === 0) {
+    // TODO: fetch txs from the explorer
+  } else {
+    updateTxStatus(nodeProvider, targetChainId)
+  }
+}
+
+async function updateTxStatus(nodeProvider: NodeProvider, targetChainId: ChainId) {
+  const pendingTxs = await getTxsByStatus("Pending", CHAIN_ID_ALEPHIUM, targetChainId)
   const pendingTxsStatus = await Promise.all(
     pendingTxs.map((tx) => nodeProvider.transactions.getTransactionsStatus({txId: tx.txId}))
   )
@@ -73,7 +125,8 @@ async function updateTxStatus(nodeProvider: NodeProvider) {
     if (isAlphTxNotFound(txStatus)) {
       removedTxs.push(tx.txId)
     } else if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-      confirmedTxs.push(toConfirmedTx(tx))
+      tx.status = "Confirmed"
+      confirmedTxs.push(tx)
     }
   })
   await transactionDB.transaction("rw", transactionDB.txs, () => {

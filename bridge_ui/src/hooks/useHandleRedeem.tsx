@@ -141,12 +141,7 @@ async function evm(
       setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
     if (sourceTxId && sourceChainId === CHAIN_ID_ALEPHIUM) {
-      await transactionDB.txs.put({
-        txId: sourceTxId,
-        sourceChainId: CHAIN_ID_ALEPHIUM,
-        targetChainId: targetChainId,
-        status: "Completed"
-      })
+      await transactionDB.txs.update(sourceTxId, {status: "Completed"})
     }
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
