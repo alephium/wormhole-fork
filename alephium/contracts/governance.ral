@@ -23,11 +23,12 @@ Contract Governance(
         TransferFee     = #04
     }
 
+    @using(permissionCheck = false)
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, permissionCheck = false)
     pub fn publishWormholeMessage(
         payer: Address,
         targetChainId: U256,

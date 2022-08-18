@@ -15,7 +15,7 @@ Contract LocalTokenPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        assert!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
         transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)
