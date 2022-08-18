@@ -272,7 +272,7 @@ export function loadContract(code: string): Contract {
         randomBytes(32).toString('hex'),
          code,
          Buffer.from(blake.blake2b(Buffer.from(code, 'hex'), undefined, 32)).toString('hex'),
-         {signature: '', names: [], types: []},
+         {names: [], types: [], isMutable: []},
          [],
          []
     )

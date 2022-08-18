@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, NodeWallet } from '@alephium/web3'
+import { Contract, NodeProvider, NodeWallet } from '@alephium/web3'
 
 export async function deployTestToken(provider: NodeProvider, signer: NodeWallet): Promise<string> {
     const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')

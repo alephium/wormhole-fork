@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, addressFromContractId } from "@alephium/web3";
+import { NodeProvider, addressFromContractId, Contract } from "@alephium/web3";
 import { ContractInfo, initAsset, randomAssetAddress, randomContractAddress, randomContractId } from "./wormhole-fixture";
 
 export async function createUndoneSequence(

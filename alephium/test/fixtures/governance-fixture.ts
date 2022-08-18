@@ -1,4 +1,4 @@
-import { NodeProvider, Contract, stringToHex } from '@alephium/web3'
+import { Contract, NodeProvider, stringToHex } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'
 

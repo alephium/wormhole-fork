@@ -1,8 +1,8 @@
 import {
     NodeProvider,
     Contract,
-    Number256,
     Script,
+    Number256,
     SignerWithNodeProvider,
     Fields,
     addressFromContractId,

@@ -1,6 +1,6 @@
 import { NodeProvider, Contract, ContractState, subContractId, Asset, stringToHex, addressFromContractId, Fields, contractIdFromAddress, binToHex } from '@alephium/web3'
 import { createGovernance } from './governance-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, oneAlph, alph } from './wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, alph } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
