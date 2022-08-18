@@ -1,4 +1,4 @@
-import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet } from '@alephium/web3'
+import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Script } from '@alephium/web3'
 import { testWallet } from '@alephium/web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
@@ -7,7 +7,6 @@ import { getCreatedContractAddress } from './get_contract_address'
 import { mine } from './mine'
 import * as consts from './consts'
 import * as dotenv from "dotenv"
-import { compileScript } from '../lib/utils'
 
 dotenv.config({ path: __dirname+'/../../.env' })
 
@@ -58,7 +57,7 @@ async function getToken(
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await compileScript(provider, 'tests/get_token.ral')
+    const script = await Script.fromSource(provider, 'tests/get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
         initialFields: {
             sender: from,

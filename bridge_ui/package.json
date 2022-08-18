@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@alephium/walletconnect-provider": "^0.2.0-rc.1",
-    "@alephium/web3": "^0.2.0-rc.3",
+    "@alephium/web3": "^0.2.0-rc.4",
     "@certusone/wormhole-sdk": "file:../sdk/js",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",

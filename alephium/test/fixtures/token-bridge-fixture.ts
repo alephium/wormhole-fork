@@ -1,7 +1,7 @@
 import { NodeProvider, Contract, ContractState, subContractId, Asset, stringToHex, addressFromContractId, Fields, contractIdFromAddress, binToHex } from '@alephium/web3'
 import { createGovernance } from './governance-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, alph } from './wormhole-fixture'
-import { compileContract, zeroPad } from '../../lib/utils'
+import { zeroPad } from '../../lib/utils'
 import { createUndoneSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
@@ -123,7 +123,7 @@ export class Transfer {
 }
 
 export async function createTestToken(provider: NodeProvider): Promise<ContractInfo> {
-    const token = await compileContract(provider, 'tests/test_token.ral')
+    const token = await Contract.fromSource(provider, 'tests/test_token.ral')
     const address = randomContractAddress()
     const state = token.toState({}, {alphAmount: minimalAlphInContract}, address)
     return new ContractInfo(token, state, [], address)
@@ -212,7 +212,7 @@ async function createContract(
     asset: Asset = initAsset,
     address?: string,
 ): Promise<ContractInfo> {
-    const contract = await compileContract(provider, path)
+    const contract = await Contract.fromSource(provider, path)
     const contractAddress = typeof address === 'undefined' ? randomContractAddress() : address
     const state = contract.toState(initFields, asset, address)
     return new ContractInfo(contract, state, deps, contractAddress)
@@ -290,7 +290,7 @@ async function createTokenBridgeForChainTemplate(provider: NodeProvider): Promis
 }
 
 export async function createTokenBridge(provider: NodeProvider, totalWrappedAlph: bigint = 0n, address?: string): Promise<TokenBridgeInfo> {
-    const tokenBridge = await compileContract(provider, 'token_bridge/token_bridge.ral')
+    const tokenBridge = await Contract.fromSource(provider, 'token_bridge/token_bridge.ral')
     const governance = await createGovernance(provider)
     const wrappedAlph = await createWrappedAlph(provider, totalWrappedAlph)
     const templateContracts = await createTemplateContracts(provider)
@@ -350,7 +350,7 @@ export async function createAttestTokenHandler(
     address?: string
 ): Promise<ContractInfo> {
     const contractAddress = typeof address === 'undefined' ? attestTokenHandlerAddress(tokenBridge.contractId, remoteChainId) : address
-    const attestTokenHandlerContract = await compileContract(provider, "token_bridge/attest_token_handler.ral")
+    const attestTokenHandlerContract = await Contract.fromSource(provider, "token_bridge/attest_token_handler.ral")
     const initFields = {
         'governanceContractId': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
@@ -370,7 +370,7 @@ export async function createTokenBridgeForChain(
     remoteTokenBridgeId: string
 ): Promise<TokenBridgeForChainInfo> {
     const contractAddress = tokenBridgeForChainAddress(tokenBridge.contractId, remoteChainId)
-    const tokenBridgeForChainContract = await compileContract(provider, "token_bridge/token_bridge_for_chain.ral")
+    const tokenBridgeForChainContract = await Contract.fromSource(provider, "token_bridge/token_bridge_for_chain.ral")
     const templateContracts = tokenBridge.templateContracts
     const initFields = {
         'governanceContractId': tokenBridge.governance.contractId,
