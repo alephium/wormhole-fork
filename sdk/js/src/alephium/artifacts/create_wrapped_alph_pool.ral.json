@@ -2,7 +2,6 @@
   "sourceCodeSha256": "2a101a69d74cfc0d7e5276f09300c110d7f8a709b2bbec355d1c4e87e754c360",
   "bytecodeTemplate": "0101030001000b{1}1700{0}{2}a2{0}{2}0e0c16000107",
   "fieldsSig": {
-    "signature": "TxScript Main(payer:Address,tokenBridgeId:ByteVec,alphAmount:U256)",
     "names": [
       "payer",
       "tokenBridgeId",
@@ -12,14 +11,22 @@
       "Address",
       "ByteVec",
       "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false
     ]
   },
   "functions": [
     {
       "name": "main",
-      "signature": "@using(preapprovedAssets=true) pub main()->()",
-      "argNames": [],
-      "argTypes": [],
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
       "returnTypes": []
     }
   ]

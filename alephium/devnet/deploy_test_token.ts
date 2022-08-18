@@ -1,8 +1,9 @@
-import { NodeProvider, Contract, NodeWallet } from '@alephium/web3'
+import { NodeProvider, NodeWallet } from '@alephium/web3'
+import { compileContract } from '../lib/utils'
 
 export async function deployTestToken(provider: NodeProvider, signer: NodeWallet): Promise<string> {
     const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-    const token = await Contract.fromSource(provider, 'tests/test_token.ral')
+    const token = await compileContract(provider, 'tests/test_token.ral')
     const deployTx = await token.transactionForDeployment(signer, {
         issueTokenAmount: tokenSupply.toString()
     })

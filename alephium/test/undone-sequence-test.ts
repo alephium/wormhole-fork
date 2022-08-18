@@ -1,4 +1,5 @@
-import { NodeProvider, Contract, Number256, addressFromContractId } from '@alephium/web3'
+import { NodeProvider, Number256, addressFromContractId } from '@alephium/web3'
+import { compileContract } from '../lib/utils'
 import { createUndoneSequence } from './fixtures/sequence-fixture'
 import { expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
@@ -10,7 +11,7 @@ describe("test undone sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         let sequences = 0n
         for (let seq = 0; seq < 255; seq++) {
             const undoneSequenceInfo = await createUndoneSequence(provider, parentId, startSequence, sequences, refundAddress)
@@ -31,7 +32,7 @@ describe("test undone sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         for (let seq = 0; seq < 256; seq++) {
             const sequences = 1n << BigInt(seq)
             const undoneSequenceInfo = await createUndoneSequence(provider, parentId, startSequence, sequences, refundAddress)
@@ -51,7 +52,7 @@ describe("test undone sequence", () => {
         const startSequence = 256
         const sequences = [0, startSequence - 1, startSequence * 2, startSequence * 10]
         const undoneSequenceInfo = await createUndoneSequence(provider, parentId, startSequence, 0n, refundAddress)
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         for (let seq of sequences) {
             expectAssertionFailed(async () => await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
@@ -70,7 +71,7 @@ describe("test undone sequence", () => {
         const undoneSequenceOffset = 1
         const sequences = allExecuted - (1n << BigInt(undoneSequenceOffset))
         const undoneSequenceInfo = await createUndoneSequence(provider, parentId, startSequence, sequences, refundAddress)
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         const testResult = await undoneSequenceTest.testPublicMethod(provider, 'check', {
             initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
             address: addressFromContractId(parentId),
@@ -90,7 +91,7 @@ describe("test undone sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const undoneSequenceInfo = await createUndoneSequence(provider, parentId, 0, 0n, refundAddress)
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         const testResult = await undoneSequenceTest.testPublicMethod(provider, 'destroy', {
             initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
             address: addressFromContractId(parentId),
@@ -109,7 +110,7 @@ describe("test undone sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const undoneSequenceInfo = await createUndoneSequence(provider, randomContractId(), 0, 0n, refundAddress)
-        const undoneSequenceTest = await Contract.fromSource(provider, 'tests/undone_sequence_test.ral')
+        const undoneSequenceTest = await compileContract(provider, 'tests/undone_sequence_test.ral')
         expectAssertionFailed(async () => {
             await undoneSequenceTest.testPublicMethod(provider, 'check', {
                 initialFields: { 'undoneSequenceId': undoneSequenceInfo.contractId },
