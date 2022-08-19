@@ -36,6 +36,7 @@ Contract TokenBridgeForChain(
         return checkSequence(msgSequence), payload
     }
 
+    @using(readonly = true)
     fn parseCompleteTransfer(payload: ByteVec) -> (U256, ByteVec, U256, Address, U256) {
         assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))

@@ -2,13 +2,14 @@ import "../math.ral"
 import "../constants.ral"
 import "token_pool.ral"
 import "token_bridge_constants.ral"
-import "token_bridge_for_chain.ral"
+import "token_bridge.ral"
 
 Abstract Contract BridgeTokenPool(
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
     decimals_: U256
 ) extends Math(), Constants(), TokenBridgeConstants() implements TokenPool {
+    @using(readonly = true)
     fn prepareTransfer(
         toAddress: ByteVec,
         amount: U256,
@@ -33,6 +34,7 @@ Abstract Contract BridgeTokenPool(
         return payload, totalAmount
     }
 
+    @using(readonly = true)
     fn prepareCompleteTransfer(
         callerContractId: ByteVec,
         emitterChainId: U256,
@@ -42,7 +44,7 @@ Abstract Contract BridgeTokenPool(
         normalizedArbiterFee: U256
     ) -> (U256, U256) {
         let expectedCallerContractId = subContractIdOf!(TokenBridge(tokenBridgeId), Path.TokenBridgeForChain ++ u256To2Byte!(emitterChainId))
-        assert!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
+        checkPermission!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
         assert!(vaaTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
         assert!(vaaTokenChainId == tokenChainId, ErrorCodes.InvalidTransferMessage)
 

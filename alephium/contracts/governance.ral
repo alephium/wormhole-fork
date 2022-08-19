@@ -23,7 +23,7 @@ Contract Governance(
         TransferFee     = #04
     }
 
-    @using(permissionCheck = false)
+    @using(readonly = true)
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
@@ -42,6 +42,7 @@ Contract Governance(
     }
 
     // return emitterChainId, targetChainId, emitterAddress, sequence, payload
+    @using(readonly = true)
     fn parseBody(body: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
         // skip the first 8 bytes(timestamp and nonce)
         let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
@@ -53,6 +54,7 @@ Contract Governance(
         return emitterChainId, targetChainId, emitterAddress, sequence, payload
     }
 
+    @using(readonly = true)
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
         let body = parseAndVerifySignatures(vaa, true)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseBody(body)
@@ -73,12 +75,14 @@ Contract Governance(
         return targetChainId, payload
     }
 
+    @using(readonly = true)
     pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
         let body = parseAndVerifySignatures(vaa, false)
         return parseBody(body)
     }
 
     // parse VAA and verify signatures, return body
+    @using(readonly = true)
     fn parseAndVerifySignatures(data: ByteVec, useLatestGuardianSetIndex: Bool) -> (ByteVec) {
         assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
@@ -122,6 +126,7 @@ Contract Governance(
         return body
     }
 
+    @using(readonly = true)
     fn getGuardiansInfo(guardianSetIndex: U256) -> ByteVec {
         if (guardianSetIndex == guardianSetIndexes[1]) {
             return guardianSets[1]

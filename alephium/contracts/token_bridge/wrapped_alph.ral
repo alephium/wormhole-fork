@@ -1,4 +1,3 @@
-import "token_bridge.ral"
 import "wrapped_alph_pool.ral"
 
 Contract WrappedAlph(
