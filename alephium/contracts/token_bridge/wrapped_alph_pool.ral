@@ -1,6 +1,3 @@
-import "bridge_token_pool.ral"
-import "wrapped_alph.ral"
-
 Contract WrappedAlphPool(
     tokenBridgeId: ByteVec,
     tokenChainId: U256, // local chain id

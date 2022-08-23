@@ -1,4 +1,4 @@
-import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Script } from '@alephium/web3'
+import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Script, Project } from '@alephium/web3'
 import { testWallet } from '@alephium/web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
@@ -11,6 +11,7 @@ import * as dotenv from "dotenv"
 dotenv.config({ path: __dirname+'/../../.env' })
 
 const provider = new NodeProvider("http://localhost:22973")
+Project.setNodeProvider(provider)
 
 async function createWallet() {
     const wallets = await provider.wallets.getWallets()
@@ -51,13 +52,12 @@ async function createWrappedAlphPool(
 }
 
 async function getToken(
-    provider: NodeProvider,
     signer: NodeWallet,
     tokenId: string,
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await Script.fromSource(provider, 'tests/get_token.ral')
+    const script = await Script.fromSource('tests/get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
         initialFields: {
             sender: from,
@@ -74,7 +74,7 @@ async function deploy() {
 
     const signer = await testWallet(provider)
     // deploy the test token first to make sure the contract id is deterministic
-    const testTokenId = await deployTestToken(provider, signer)
+    const testTokenId = await deployTestToken(signer)
 
     const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
     const wormhole = new Wormhole(
@@ -95,7 +95,7 @@ async function deploy() {
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
 
     const tokenAmount = consts.oneAlph * 10n
-    const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)
+    const getTokenTxId = await getToken(signer, testTokenId, consts.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
     await createLocalTokenPool(wormhole, testTokenId, contracts.tokenBridge.contractId)

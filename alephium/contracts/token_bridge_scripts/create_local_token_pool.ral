@@ -1,5 +1,3 @@
-import "../token_bridge/token_bridge.ral"
-
 TxScript Main(payer: Address, tokenBridgeId: ByteVec, localTokenId: ByteVec, alphAmount: U256) {
     let tokenBridge = TokenBridge(tokenBridgeId)
     tokenBridge.createLocalTokenPool{

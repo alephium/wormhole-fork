@@ -1,0 +1,14 @@
+// used to test upgrade contract
+Contract GovernanceV1(
+    @unused chainId: U256,
+    @unused governanceChainId: U256,
+    @unused governanceEmitterAddress: ByteVec,
+    @unused mut receivedSequence: U256,
+    @unused mut messageFee: U256,
+    @unused mut guardianSets: [ByteVec; 2],
+    @unused mut guardianSetIndexes: [U256; 2],
+    @unused mut previousGuardianSetExpirationTime: U256
+) {
+  @using(readonly = true)
+  pub fn foo() -> () {}
+}

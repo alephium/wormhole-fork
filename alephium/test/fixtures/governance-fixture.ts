@@ -67,9 +67,9 @@ export class SubmitTransferFee {
     }
 }
 
-export async function createGovernance(provider: NodeProvider): Promise<ContractInfo> {
+export async function createGovernance(): Promise<ContractInfo> {
     const address = randomContractAddress()
-    const governanceContract = await Contract.fromSource(provider, 'governance.ral')
+    const governanceContract = await Contract.fromSource('governance.ral')
     const initFields = {
         'chainId': CHAIN_ID_ALEPHIUM,
         'governanceChainId': governanceChainId,

@@ -1,5 +1,3 @@
-import "constants.ral"
-
 Contract Governance(
     chainId: U256,
     governanceChainId: U256,

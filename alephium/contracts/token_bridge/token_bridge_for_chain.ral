@@ -1,12 +1,3 @@
-import "../governance.ral"
-import "../math.ral"
-import "../constants.ral"
-import "../sequence/sequence.ral"
-import "../sequence/undone_sequence.ral"
-import "token_pool.ral"
-import "token_bridge_constants.ral"
-import "token_bridge.ral"
-
 Contract TokenBridgeForChain(
     governanceContractId: ByteVec,
     localChainId: U256,

@@ -1,9 +1,3 @@
-import "../math.ral"
-import "../constants.ral"
-import "token_pool.ral"
-import "token_bridge_constants.ral"
-import "token_bridge.ral"
-
 Abstract Contract BridgeTokenPool(
     tokenChainId: U256,
     bridgeTokenId: ByteVec,

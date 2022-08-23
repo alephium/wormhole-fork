@@ -1,12 +1,3 @@
-import "../governance.ral"
-import "../constants.ral"
-import "../sequence/sequence.ral"
-import "local_token_pool.ral"
-import "remote_token_pool.ral"
-import "wrapped_alph_pool.ral"
-import "token_bridge_for_chain.ral"
-import "token_bridge_constants.ral"
-
 Contract TokenBridge(
     governanceContractId: ByteVec,
     localChainId: U256,

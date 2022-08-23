@@ -1,0 +1,19 @@
+// used to test upgrade contract
+Contract TokenBridgeV1(
+    @unused governanceContractId: ByteVec,
+    @unused localChainId: U256,
+    @unused mut receivedSequence: U256,
+    @unused mut sendSequence: U256,
+    @unused wrappedAlphId: ByteVec,
+    @unused wrappedAlphPoolTemplateId: ByteVec,
+    @unused localTokenPoolTemplateId: ByteVec,
+    @unused remoteTokenPoolTemplateId: ByteVec,
+    @unused tokenBridgeForChainTemplateId: ByteVec,
+    @unused attestTokenHandlerTemplateId: ByteVec,
+    @unused undoneSequenceTemplateId: ByteVec,
+    @unused refundAddress: Address,
+    @unused mut minimalConsistencyLevel: U256
+) {
+  @using(readonly = true)
+  pub fn foo() -> () {}
+}

@@ -1,5 +1,3 @@
-import "../token_bridge/token_bridge_for_chain.ral"
-
 TxScript Main(tokenBridgeForChainId: ByteVec, vaa: ByteVec) {
     let caller = callerAddress!()
     let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)

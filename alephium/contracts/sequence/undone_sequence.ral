@@ -1,5 +1,3 @@
-import "../constants.ral"
-
 Contract UndoneSequence(
     parentId: ByteVec,
     begin: U256,

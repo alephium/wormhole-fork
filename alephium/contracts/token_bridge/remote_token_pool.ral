@@ -1,5 +1,3 @@
-import "bridge_token_pool.ral"
-
 Contract RemoteTokenPool(
     tokenBridgeId: ByteVec,
     tokenChainId: U256, // remote token chain id

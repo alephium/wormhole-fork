@@ -1,5 +1,3 @@
-import "bridge_token_pool.ral"
-
 Contract LocalTokenPool(
     tokenBridgeId: ByteVec,
     tokenChainId: U256, // local chain id
