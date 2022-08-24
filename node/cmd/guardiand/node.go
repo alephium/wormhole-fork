@@ -3,7 +3,6 @@ package guardiand
 import (
 	"context"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/alephium/wormhole-fork/node/pkg/notify/discord"
 	"github.com/alephium/wormhole-fork/node/pkg/telemetry"
 	"github.com/alephium/wormhole-fork/node/pkg/version"
+	"github.com/benbjohnson/clock"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/gorilla/mux"
@@ -610,23 +610,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
 
-	// Multiplex observation requests to the appropriate chain
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case req := <-obsvReqC:
-				if channel, ok := chainObsvReqC[vaa.ChainID(req.ChainId)]; ok {
-					channel <- req
-				} else {
-					logger.Error("unknown chain ID for reobservation request",
-						zap.Uint32("chain_id", req.ChainId),
-						zap.String("tx_hash", hex.EncodeToString(req.TxHash)))
-				}
-			}
-		}
-	}()
+	go handleReobservationRequests(rootCtx, clock.New(), logger, obsvReqC, chainObsvReqC)
 
 	var notifier *discord.DiscordNotifier
 	if *discordToken != "" {
