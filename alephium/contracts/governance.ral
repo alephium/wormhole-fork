@@ -21,7 +21,7 @@ Contract Governance(
         TransferFee     = #04
     }
 
-    @using(readonly = true)
+    @using(readonly = true, permissionCheck = false)
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
@@ -52,7 +52,7 @@ Contract Governance(
         return emitterChainId, targetChainId, emitterAddress, sequence, payload
     }
 
-    @using(readonly = true)
+    @using(readonly = true, permissionCheck = false)
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
         let body = parseAndVerifySignatures(vaa, true)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseBody(body)
@@ -73,7 +73,7 @@ Contract Governance(
         return targetChainId, payload
     }
 
-    @using(readonly = true)
+    @using(readonly = true, permissionCheck = false)
     pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
         let body = parseAndVerifySignatures(vaa, false)
         return parseBody(body)
