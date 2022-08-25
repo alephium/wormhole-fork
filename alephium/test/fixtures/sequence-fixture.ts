@@ -31,7 +31,7 @@ export async function createSequence(
     const undoneSequenceTemplate = await createUndoneSequence(
         randomContractId(), 0, 0n, randomAssetAddress()
     )
-    const contract = await Contract.fromSource('tests/sequence_test.ral')
+    const contract = await Contract.fromSource('tests/sequence_test.ral', false)
     const initField = {
         'next': next,
         'next1': next1,
