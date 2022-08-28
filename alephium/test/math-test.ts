@@ -1,9 +1,8 @@
-import { NodeProvider, Number256, Project } from "@alephium/web3"
-import { createMath } from "./fixtures/wormhole-fixture"
+import { NodeProvider, Number256 } from "@alephium/web3"
+import { buildProject, createMath } from "./fixtures/wormhole-fixture"
 
 describe('test math', () => {
     const provider = new NodeProvider('http://127.0.0.1:22973')
-    Project.setNodeProvider(provider)
 
     interface TestCase {
         decimals: number
@@ -13,6 +12,7 @@ describe('test math', () => {
     }
 
     it('should test math methods', async () => {
+        await buildProject(provider)
         const mathInfo = await createMath()
         const contract = mathInfo.contract
 
@@ -37,7 +37,7 @@ describe('test math', () => {
             }
         ]
         for (let tc of cases) {
-            let testResult = await contract.testPublicMethod(provider, 'normalizeAmount', {
+            let testResult = await contract.testPublicMethod('normalizeAmount', {
                 testArgs: {
                     'amount': tc.amount,
                     'decimals': tc.decimals
@@ -47,7 +47,7 @@ describe('test math', () => {
             const normalizedAmount = testResult.returns[0] as Number256
             expect(normalizedAmount).toEqual(Number(tc.normalizedAmount))
 
-            testResult = await contract.testPublicMethod(provider, 'deNormalizeAmount', {
+            testResult = await contract.testPublicMethod('deNormalizeAmount', {
                 testArgs: {
                     'amount': tc.normalizedAmount,
                     'decimals': tc.decimals

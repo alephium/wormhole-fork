@@ -1,4 +1,4 @@
-import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Script, Project } from '@alephium/web3'
+import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Project } from '@alephium/web3'
 import { testWallet } from '@alephium/web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
@@ -11,7 +11,6 @@ import * as dotenv from "dotenv"
 dotenv.config({ path: __dirname+'/../../.env' })
 
 const provider = new NodeProvider("http://localhost:22973")
-Project.setNodeProvider(provider)
 
 async function createWallet() {
     const wallets = await provider.wallets.getWallets()
@@ -57,7 +56,7 @@ async function getToken(
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await Script.fromSource('tests/get_token.ral')
+    const script = Project.script('tests/get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
         initialFields: {
             sender: from,
@@ -71,6 +70,7 @@ async function getToken(
 
 async function deploy() {
     await createWallet()
+    await Project.build(provider)
 
     const signer = await testWallet(provider)
     // deploy the test token first to make sure the contract id is deterministic

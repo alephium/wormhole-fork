@@ -1,12 +1,12 @@
 import {
     NodeProvider,
     Contract,
-    Script,
     Number256,
     SignerWithNodeProvider,
     Fields,
     addressFromContractId,
-    subContractId
+    subContractId,
+    Project
 } from '@alephium/web3'
 import { waitTxConfirmed, zeroPad } from './utils'
 
@@ -89,14 +89,14 @@ export class Wormhole {
         if (typeof this._remoteTokenPool !== 'undefined') {
             return this._remoteTokenPool as Contract
         }
-        const contract = await Contract.fromSource('token_bridge/remote_token_pool.ral')
+        const contract = Project.contract('token_bridge/remote_token_pool.ral')
         this._remoteTokenPool = contract
         return contract
     }
 
     private async getDevnetDeployerId(): Promise<string> {
         if (typeof this._devnetDeployerId === 'undefined') {
-            const devnetDeployerContract = await Contract.fromSource('devnet/devnet_deployer.ral')
+            const devnetDeployerContract = Project.contract('devnet/devnet_deployer.ral')
             const result = await this._deploy(devnetDeployerContract, {})
             this._devnetDeployerId = result.contractId
         }
@@ -129,7 +129,7 @@ export class Wormhole {
         initGuardianSetIndex: number,
         initMessageFee: bigint
     ): Promise<DeployResult> {
-        const governance = await Contract.fromSource('governance.ral')
+        const governance = Project.contract('governance.ral')
         const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
         const currentGuardianSet = sizePrefix + initGuardianSet.join('')
         const initFields = {
@@ -165,7 +165,7 @@ export class Wormhole {
             'sequences': 0n,
             'refundAddress': DummyRefundAddress
         }
-        const undoneSequence = await Contract.fromSource('sequence/undone_sequence.ral')
+        const undoneSequence = Project.contract('sequence/undone_sequence.ral')
         return await this._deploy(undoneSequence, initFields)
     }
 
@@ -177,7 +177,7 @@ export class Wormhole {
             'totalBridged': 0,
             'decimals_': 0
         }
-        const tokenPool = await Contract.fromSource('token_bridge/wrapped_alph_pool.ral')
+        const tokenPool = Project.contract('token_bridge/wrapped_alph_pool.ral')
         return await this._deploy(tokenPool, initFields)
     }
 
@@ -189,7 +189,7 @@ export class Wormhole {
             'totalBridged': 0,
             'decimals_': 0
         }
-        const tokenPool = await Contract.fromSource('token_bridge/local_token_pool.ral')
+        const tokenPool = Project.contract('token_bridge/local_token_pool.ral')
         return await this._deploy(tokenPool, initFields)
     }
 
@@ -221,7 +221,7 @@ export class Wormhole {
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0
         }
-        const tokenBridgeForChain = await Contract.fromSource('token_bridge/token_bridge_for_chain.ral')
+        const tokenBridgeForChain = Project.contract('token_bridge/token_bridge_for_chain.ral')
         return this._deploy(tokenBridgeForChain, initFields)
     }
 
@@ -234,7 +234,7 @@ export class Wormhole {
             'remoteTokenBridgeId': '',
             'receivedSequence': 0
         }
-        const attestTokenHandler = await Contract.fromSource('token_bridge/attest_token_handler.ral')
+        const attestTokenHandler = Project.contract('token_bridge/attest_token_handler.ral')
         return this._deploy(attestTokenHandler, initFields)
     }
 
@@ -245,7 +245,7 @@ export class Wormhole {
         path: string
     ): Promise<DeployResult> {
         const deployerId = await this.getDevnetDeployerId()
-        const script = await Script.fromSource(`devnet/${scriptFileName}`)
+        const script = Project.script(`devnet/${scriptFileName}`)
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 'deployerId': deployerId,
@@ -268,7 +268,7 @@ export class Wormhole {
 
     private async deployWrappedAlph(networkType: NetworkType): Promise<DeployResult> {
         const initFields = {'totalWrapped': 0}
-        const wrappedAlph = await Contract.fromSource('token_bridge/wrapped_alph.ral')
+        const wrappedAlph = Project.contract('token_bridge/wrapped_alph.ral')
         if (networkType === "devnet") {
             return this.deployOnDevnet(wrappedAlph, 'deploy_wrapped_alph.ral', initFields, '02')
         } else {
@@ -287,7 +287,7 @@ export class Wormhole {
         const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
         const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
         const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
-        const tokenBridge = await Contract.fromSource('token_bridge/token_bridge.ral')
+        const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
         const initFields = {
             'governanceContractId': governanceContractId,
             'localChainId': this.localChainId,
@@ -316,7 +316,7 @@ export class Wormhole {
         payer: string,
         alphAmount: Number256
     ): Promise<string> {
-        const script = await Script.fromSource("token_bridge_scripts/register_chain.ral")
+        const script = Project.script("token_bridge_scripts/register_chain.ral")
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 payer: payer,
@@ -335,7 +335,7 @@ export class Wormhole {
         payer: string,
         alphAmount: bigint
     ): Promise<string> {
-        const script = await Script.fromSource('token_bridge_scripts/create_local_token_pool.ral')
+        const script = Project.script('token_bridge_scripts/create_local_token_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 tokenBridgeId: tokenBridgeId,
@@ -353,7 +353,7 @@ export class Wormhole {
     }
 
     async createWrappedAlphPool(tokenBridgeId: string, payer: string, alphAmount: bigint): Promise<string> {
-        const script = await Script.fromSource('token_bridge_scripts/create_wrapped_alph_pool.ral')
+        const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 tokenBridgeId: tokenBridgeId,
