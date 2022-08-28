@@ -1,5 +1,4 @@
 {
-  "sourceCodeSha256": "4ef75d3bba1f2d3130af43cd97bfc59dbdaf58e16c0fe4b27c9355705901553a",
   "bytecodeTemplate": "01010300010010{1}1700{0}7a{3}a2{2}0da3{2}{0}{3}0f0c16000108",
   "fieldsSig": {
     "names": [

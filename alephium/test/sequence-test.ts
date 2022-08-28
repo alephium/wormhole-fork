@@ -1,6 +1,6 @@
 import { addressFromContractId, NodeProvider, subContractId } from '@alephium/web3'
 import { createSequence, createUndoneSequence } from './fixtures/sequence-fixture'
-import { defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
+import { buildProject, defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
     const provider = new NodeProvider('http://127.0.0.1:22973')
@@ -8,10 +8,11 @@ describe("test sequence", () => {
     const refundAddress = randomAssetAddress()
 
     it("should execute correctly", async () => {
-        const sequenceInfo = await createSequence(provider, 0, 0n, 0n, refundAddress)
+        await buildProject(provider)
+        const sequenceInfo = await createSequence(0, 0n, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
-            const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+            const testResult = await sequence.testPrivateMethod('checkSequence', {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: { 'seq': seq },
@@ -27,7 +28,7 @@ describe("test sequence", () => {
         }
 
         for (let seq = 256; seq < 512; seq++) {
-            const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+            const testResult = await sequence.testPrivateMethod('checkSequence', {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: { 'seq': seq },
@@ -44,9 +45,10 @@ describe("test sequence", () => {
     }, 90000)
 
     it("should increase executed sequence", async () => {
-        const sequenceInfo = await createSequence(provider, 512, allExecuted, allExecuted, refundAddress)
+        await buildProject(provider)
+        const sequenceInfo = await createSequence(512, allExecuted, allExecuted, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+        const testResult = await sequence.testPrivateMethod('checkSequence', {
             initialFields: sequenceInfo.selfState.fields,
             address: sequenceInfo.address,
             testArgs: { 'seq': 1025 },
@@ -61,9 +63,10 @@ describe("test sequence", () => {
     })
 
     it('should check sequence failed and create undone sequence subcontract', async () => {
-        const sequenceInfo = await createSequence(provider, 0, 1n, 1n, refundAddress)
+        await buildProject(provider)
+        const sequenceInfo = await createSequence(0, 1n, 1n, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+        const testResult = await sequence.testPrivateMethod('checkSequence', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 2n},
             address: sequenceInfo.address,
@@ -90,12 +93,13 @@ describe("test sequence", () => {
     })
 
     it("should failed when executed repeatedly", async () => {
+        await buildProject(provider)
         const undoneSequenceTemplateId = randomContractId()
-        const sequenceInfo = await createSequence(provider, 0, allExecuted, 0n, refundAddress)
+        const sequenceInfo = await createSequence(0, allExecuted, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
             await expectAssertionFailed(async() => {
-                return await sequence.testPrivateMethod(provider, "checkSequence", {
+                return await sequence.testPrivateMethod("checkSequence", {
                     initialFields: sequenceInfo.selfState.fields,
                     address: sequenceInfo.address,
                     testArgs: { 'seq': seq },
@@ -107,7 +111,7 @@ describe("test sequence", () => {
 
         for (let seq = 256; seq < 512; seq++) {
             await expectAssertionFailed(async() => {
-                return await sequence.testPrivateMethod(provider, "checkSequence", {
+                return await sequence.testPrivateMethod("checkSequence", {
                     initialFields: {
                         'next': 0,
                         'next1': 0,
@@ -126,11 +130,12 @@ describe("test sequence", () => {
     }, 120000)
 
     it('should check sequence succeed and create undone sequence subcontract', async () => {
+        await buildProject(provider)
         const next = 256
         const next1 = (BigInt(0xff) << 248n)
-        const sequenceInfo = await createSequence(provider, next, next1, 0n, refundAddress)
+        const sequenceInfo = await createSequence(next, next1, 0n, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+        const testResult = await sequence.testPrivateMethod('checkSequence', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,
@@ -151,16 +156,17 @@ describe("test sequence", () => {
     })
 
     it('should mark old sequence as done', async () => {
+        await buildProject(provider)
         const parentId = randomContractId()
-        const sequenceInfo = await createSequence(provider, 512, 0n, 0n, refundAddress, parentId)
+        const sequenceInfo = await createSequence(512, 0n, 0n, refundAddress, parentId)
         const undoneSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 0xffn
         const undoneSequenceInfo = await createUndoneSequence(
-            provider, parentId, 256, sequences, refundAddress, undoneSequenceContractId
+            parentId, 256, sequences, refundAddress, undoneSequenceContractId
         )
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 8; seq++) {
-            const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+            const testResult = await sequence.testPrivateMethod('checkSequence', {
                 initialFields: sequenceInfo.selfState.fields,
                 initialAsset: {alphAmount: oneAlph * 10n},
                 address: sequenceInfo.address,
@@ -179,17 +185,18 @@ describe("test sequence", () => {
     })
 
     it('should failed if old sequences executed', async () => {
+        await buildProject(provider)
         const parentId = randomContractId()
-        const sequenceInfo = await createSequence(provider, 512, 0n, 0n, refundAddress, parentId)
+        const sequenceInfo = await createSequence(512, 0n, 0n, refundAddress, parentId)
         const undoneSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 1n
         const undoneSequenceInfo = await createUndoneSequence(
-            provider, parentId, 256, sequences, refundAddress, undoneSequenceContractId
+            parentId, 256, sequences, refundAddress, undoneSequenceContractId
         )
         const sequence = sequenceInfo.contract
         for (let seq = 1; seq < 256; seq++) {
             await expectAssertionFailed(async () => {
-                await sequence.testPrivateMethod(provider, 'checkSequence', {
+                await sequence.testPrivateMethod('checkSequence', {
                     initialFields: sequenceInfo.selfState.fields,
                     initialAsset: {alphAmount: oneAlph * 10n},
                     address: sequenceInfo.address,
@@ -202,15 +209,16 @@ describe("test sequence", () => {
     }, 60000)
 
     it('should destroy sub contract if all old sequence executed', async () => {
+        await buildProject(provider)
         const parentId = randomContractId()
-        const sequenceInfo = await createSequence(provider, 512, 0n, 0n, refundAddress, parentId)
+        const sequenceInfo = await createSequence(512, 0n, 0n, refundAddress, parentId)
         const undoneSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 1n
         const undoneSequenceInfo = await createUndoneSequence(
-            provider, parentId, 256, sequences, refundAddress, undoneSequenceContractId
+            parentId, 256, sequences, refundAddress, undoneSequenceContractId
         )
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod(provider, 'checkSequence', {
+        const testResult = await sequence.testPrivateMethod('checkSequence', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,

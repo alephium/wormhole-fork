@@ -1,12 +1,3 @@
-import "../governance.ral"
-import "../constants.ral"
-import "../sequence/sequence.ral"
-import "local_token_pool.ral"
-import "remote_token_pool.ral"
-import "wrapped_alph_pool.ral"
-import "token_bridge_for_chain.ral"
-import "token_bridge_constants.ral"
-
 Contract TokenBridge(
     governanceContractId: ByteVec,
     localChainId: U256,
@@ -185,7 +176,7 @@ Contract TokenBridge(
         createContractAlphAmount: U256
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
-        assert!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         let encodedState = encodeToByteVec!(
             selfContractId!(),
             tokenChainId,

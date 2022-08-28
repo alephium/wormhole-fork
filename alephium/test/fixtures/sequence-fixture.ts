@@ -1,15 +1,14 @@
-import { NodeProvider, addressFromContractId, Contract } from "@alephium/web3";
+import { Project, addressFromContractId } from "@alephium/web3";
 import { ContractInfo, initAsset, randomAssetAddress, randomContractAddress, randomContractId } from "./wormhole-fixture";
 
 export async function createUndoneSequence(
-    provider: NodeProvider,
     parentId: string,
     begin: number,
     sequences: bigint,
     refundAddress: string,
     contractId?: string
 ): Promise<ContractInfo> {
-    const contract = await Contract.fromSource(provider, 'sequence/undone_sequence.ral')
+    const contract = Project.contract('sequence/undone_sequence.ral')
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
     const initFields = {
         "parentId": parentId,
@@ -22,7 +21,6 @@ export async function createUndoneSequence(
 }
 
 export async function createSequence(
-    provider: NodeProvider,
     next: number,
     next1: bigint,
     next2: bigint,
@@ -31,9 +29,9 @@ export async function createSequence(
 ): Promise<ContractInfo> {
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
     const undoneSequenceTemplate = await createUndoneSequence(
-        provider, randomContractId(), 0, 0n, randomAssetAddress()
+        randomContractId(), 0, 0n, randomAssetAddress()
     )
-    const contract = await Contract.fromSource(provider, 'sequence/sequence.ral')
+    const contract = Project.contract('tests/sequence_test.ral', false)
     const initField = {
         'next': next,
         'next1': next1,

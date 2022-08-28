@@ -1,10 +1,7 @@
-import "token_bridge.ral"
-import "wrapped_alph_pool.ral"
-
 Contract WrappedAlph(
     mut totalWrapped: U256
 ) {
-    @using(preapprovedAssets=true, assetsInContract=true)
+    @using(preapprovedAssets=true, assetsInContract=true, permissionCheck=false)
     pub fn wrapAndTransfer(
         fromAddress: Address,
         totalAmount: U256
@@ -17,7 +14,7 @@ Contract WrappedAlph(
         }(self, totalAmount)
     }
 
-    @using(preapprovedAssets=true, assetsInContract=true)
+    @using(preapprovedAssets=true, assetsInContract=true, permissionCheck=false)
     pub fn unwrapAndCompleteTransfer(
         fromAddress: Address,
         recipient: Address,

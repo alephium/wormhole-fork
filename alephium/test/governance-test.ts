@@ -1,5 +1,5 @@
-import { Asset, NodeProvider, InputAsset, TestContractResult, Val, binToHex } from '@alephium/web3'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody } from './fixtures/wormhole-fixture'
+import { Asset, NodeProvider, InputAsset, TestContractResult, Val, binToHex, Project } from '@alephium/web3'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody, buildProject } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { createGovernance, governanceChainId, governanceEmitterAddress, governanceModule, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
@@ -10,9 +10,10 @@ describe("test governance", () => {
     const testGuardianSet = GuardianSet.random(18, 1)
 
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {
-        const governanceInfo = await createGovernance(provider)
+        await buildProject(provider)
+        const governanceInfo = await createGovernance()
         const contract = governanceInfo.contract
-        return await contract.testPublicMethod(provider, method, {
+        return await contract.testPublicMethod(method, {
             initialFields: governanceInfo.selfState.fields,
             address: governanceInfo.address,
             existingContracts: governanceInfo.dependencies,
@@ -139,12 +140,13 @@ describe("test governance", () => {
     })
 
     it('should test upgrade contract', async () => {
-        const governanceInfo = await createGovernance(provider)
+        await buildProject(provider)
+        const governanceInfo = await createGovernance()
         const contract = governanceInfo.contract
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
             const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
             const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-            return await contract.testPublicMethod(provider, 'submitContractUpgrade', {
+            return await contract.testPublicMethod('submitContractUpgrade', {
                 initialFields: governanceInfo.selfState.fields,
                 address: governanceInfo.address,
                 existingContracts: governanceInfo.dependencies,
@@ -153,7 +155,8 @@ describe("test governance", () => {
         }
 
         {
-            const newContractCode = "0a0106010000000000"
+            const v1 = Project.contract("tests/governance_v1.ral")
+            const newContractCode = v1.bytecode
             loadContract(newContractCode)
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
@@ -162,9 +165,10 @@ describe("test governance", () => {
             expect(newContract.bytecode).toEqual(newContractCode)
         }
 
+        const v2 = Project.contract("tests/empty.ral")
         {
             await expectAssertionFailed(async () => {
-                const newContractCode = "000106010000000000"
+                const newContractCode = v2.bytecode
                 const prevStateHash = randomBytes(32).toString('hex')
                 const newState = "00"
                 const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
@@ -183,7 +187,7 @@ describe("test governance", () => {
                 encodeU256(guardianSetIndex0), encodeU256(guardianSetIndex1)
             ])
             const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
-            const newContractCode = "000106010000000000"
+            const newContractCode = v2.bytecode
             loadContract(newContractCode)
             const newState = "00"
             const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)

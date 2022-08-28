@@ -1,8 +1,3 @@
-import "token_bridge_constants.ral"
-import "token_bridge.ral"
-import "../governance.ral"
-import "../constants.ral"
-
 Contract AttestTokenHandler(
   governanceContractId: ByteVec,
   localChainId: U256,

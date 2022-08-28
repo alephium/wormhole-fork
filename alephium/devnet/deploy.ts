@@ -1,4 +1,4 @@
-import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Script } from '@alephium/web3'
+import { binToHex, NodeProvider, contractIdFromAddress, NodeWallet, Project } from '@alephium/web3'
 import { testWallet } from '@alephium/web3/test'
 import { Wormhole } from '../lib/wormhole'
 import { registerChains } from './register_chains'
@@ -51,13 +51,12 @@ async function createWrappedAlphPool(
 }
 
 async function getToken(
-    provider: NodeProvider,
     signer: NodeWallet,
     tokenId: string,
     from: string,
     amount: bigint
 ): Promise<string> {
-    const script = await Script.fromSource(provider, 'tests/get_token.ral')
+    const script = Project.script('tests/get_token.ral')
     const scriptTx = await script.transactionForDeployment(signer, {
         initialFields: {
             sender: from,
@@ -71,10 +70,11 @@ async function getToken(
 
 async function deploy() {
     await createWallet()
+    await Project.build(provider)
 
     const signer = await testWallet(provider)
     // deploy the test token first to make sure the contract id is deterministic
-    const testTokenId = await deployTestToken(provider, signer)
+    const testTokenId = await deployTestToken(signer)
 
     const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
     const wormhole = new Wormhole(
@@ -95,7 +95,7 @@ async function deploy() {
     console.log("remote chains: " + JSON.stringify(remoteChains, null, 2))
 
     const tokenAmount = consts.oneAlph * 10n
-    const getTokenTxId = await getToken(provider, signer, testTokenId, consts.payer, tokenAmount)
+    const getTokenTxId = await getToken(signer, testTokenId, consts.payer, tokenAmount)
     console.log('get token txId: ' + getTokenTxId)
 
     await createLocalTokenPool(wormhole, testTokenId, contracts.tokenBridge.contractId)

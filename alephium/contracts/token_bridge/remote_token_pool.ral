@@ -1,5 +1,3 @@
-import "bridge_token_pool.ral"
-
 Contract RemoteTokenPool(
     tokenBridgeId: ByteVec,
     tokenChainId: U256, // remote token chain id
@@ -9,14 +7,17 @@ Contract RemoteTokenPool(
     name_: ByteVec,
     decimals_: U256
 ) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
+    @using(readonly = true)
     pub fn name() -> ByteVec {
         return name_
     }
 
+    @using(readonly = true)
     pub fn symbol() -> ByteVec {
         return symbol_
     }
 
+    @using(readonly = true)
     pub fn decimals() -> U256 {
         return decimals_
     }
@@ -29,7 +30,7 @@ Contract RemoteTokenPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        assert!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
         transferTokenToSelf!(fromAddress, selfTokenId!(), totalAmount)

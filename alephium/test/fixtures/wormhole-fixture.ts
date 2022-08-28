@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { NodeProvider, Contract, ContractState, Asset, contractIdFromAddress, binToHex } from '@alephium/web3'
+import { Contract, ContractState, Asset, contractIdFromAddress, binToHex, Project, NodeProvider } from '@alephium/web3'
 import * as blake from 'blakejs'
 
 export const web3 = new Web3()
@@ -21,6 +21,12 @@ export const u256Max = 1n << 255n
 export const gasPrice = BigInt("100000000000")
 export const maxGasPerTx = BigInt("625000")
 export const defaultGasFee = gasPrice * maxGasPerTx
+
+export async function buildProject(provider: NodeProvider): Promise<void> {
+    if (typeof Project.currentProject === 'undefined') {
+        await Project.build(provider)
+    }
+}
 
 export class ContractInfo {
     contract: Contract
@@ -46,8 +52,8 @@ export class ContractInfo {
     }
 }
 
-export async function createMath(provider: NodeProvider): Promise<ContractInfo> {
-    const mathContract = await Contract.fromSource(provider, 'math.ral')
+export async function createMath(): Promise<ContractInfo> {
+    const mathContract = Project.contract('tests/math_test.ral')
     const address = randomContractAddress()
     const contractState = mathContract.toState(
         {}, {alphAmount: minimalAlphInContract}, address
@@ -269,7 +275,6 @@ export async function expectOneOfError<T>(func: () => Promise<T>, errors: string
 
 export function loadContract(code: string): Contract {
     const contract = new Contract(
-        randomBytes(32).toString('hex'),
          code,
          Buffer.from(blake.blake2b(Buffer.from(code, 'hex'), undefined, 32)).toString('hex'),
          {names: [], types: [], isMutable: []},

@@ -1,0 +1,4 @@
+Contract Empty() {
+  @using(readonly = true)
+  pub fn foo() -> () {}
+}

@@ -1,6 +1,3 @@
-import "undone_sequence.ral"
-import "../constants.ral"
-
 // sequence started from 0, set `next = 0` when init contract state
 Abstract Contract Sequence(
     mut next: U256,
@@ -9,6 +6,7 @@ Abstract Contract Sequence(
     undoneSequenceTemplateId: ByteVec,
     refundAddress: Address
 ) extends Constants() {
+    @using(readonly = true)
     fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
         assert!(current & flag == 0, ErrorCodes.InvalidSequence)

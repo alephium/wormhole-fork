@@ -1,5 +1,3 @@
-import "../sequence/undone_sequence.ral"
-
 Contract UndoneSequenceTest(
     undoneSequenceId: ByteVec
 ) {

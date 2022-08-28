@@ -1,6 +1,3 @@
-import "bridge_token_pool.ral"
-import "wrapped_alph.ral"
-
 Contract WrappedAlphPool(
     tokenBridgeId: ByteVec,
     tokenChainId: U256, // local chain id
@@ -16,7 +13,7 @@ Contract WrappedAlphPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        assert!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
         WrappedAlph(bridgeTokenId).wrapAndTransfer{
@@ -29,7 +26,7 @@ Contract WrappedAlphPool(
 
     @using(preapprovedAssets = true, assetsInContract = true)
     pub fn receiveWrappedAlph(fromAddress: Address, totalAmount: U256) -> () {
-        assert!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
         transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)
     }
 

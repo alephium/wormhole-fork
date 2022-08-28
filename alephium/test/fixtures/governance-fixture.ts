@@ -1,4 +1,4 @@
-import { Contract, NodeProvider, stringToHex } from '@alephium/web3'
+import { Project, stringToHex } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'
 
@@ -67,9 +67,9 @@ export class SubmitTransferFee {
     }
 }
 
-export async function createGovernance(provider: NodeProvider): Promise<ContractInfo> {
+export async function createGovernance(): Promise<ContractInfo> {
     const address = randomContractAddress()
-    const governanceContract = await Contract.fromSource(provider, 'governance.ral')
+    const governanceContract = Project.contract('governance.ral')
     const initFields = {
         'chainId': CHAIN_ID_ALEPHIUM,
         'governanceChainId': governanceChainId,

@@ -1,5 +1,3 @@
-import "devnet_deployer.ral"
-
 TxScript Main(
   deployerId: ByteVec,
   bytecode: ByteVec,

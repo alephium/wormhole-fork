@@ -1,12 +1,3 @@
-import "../governance.ral"
-import "../math.ral"
-import "../constants.ral"
-import "../sequence/sequence.ral"
-import "../sequence/undone_sequence.ral"
-import "token_pool.ral"
-import "token_bridge_constants.ral"
-import "token_bridge.ral"
-
 Contract TokenBridgeForChain(
     governanceContractId: ByteVec,
     localChainId: U256,
@@ -21,7 +12,7 @@ Contract TokenBridgeForChain(
     mut sendSequence: U256
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
-        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
         sendSequence = sendSequence + 1
         return msgSequence
@@ -36,6 +27,7 @@ Contract TokenBridgeForChain(
         return checkSequence(msgSequence), payload
     }
 
+    @using(readonly = true)
     fn parseCompleteTransfer(payload: ByteVec) -> (U256, ByteVec, U256, Address, U256) {
         assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
@@ -65,7 +57,7 @@ Contract TokenBridgeForChain(
     }
 
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
-        assert!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkPermission!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         let mut index = 0
         while (index < length) {
