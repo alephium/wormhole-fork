@@ -48,11 +48,12 @@ npm install && npm run start
 # Devnet accounts and contracts
 
 Alephium account address: 1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH
-Alephium test token id: 15f4388db058e5ce47f8c41ab95f7031b031fa805397111af235ef253c63e2b0
-Alephium test token address: vAefVqrkAePaCPBWT6e838XJyiqHe8fn7F7DESPyJmbd
+Alephium test token contract id: d3ca6210463e0ec3d56d8fc7b943c4d51462a3ca617d5359b69269b476e35d0f, address: 28wh8EY3bKieMekpAk91QoTTjoBzVUp2AcSsUwX7C4rtv
+Alephium wrapped alph contract id: 60507692e3b8f707b2d00d74b614a453d13b43171c808b4ecaad21e8b50d5a4a, address: 21AvQx2W29NsY2XttTZiqxSmYytAKHNi5kWZqtqax99ds
 
 Ethereum account private-key: 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
 Ethereum test token address: 0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A
+Ethereum weth address: 0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E
 
 # Cleanup the cluster
 
