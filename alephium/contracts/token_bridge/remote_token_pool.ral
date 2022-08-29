@@ -56,7 +56,7 @@ Contract RemoteTokenPool(
         if (caller != recipient) {
             transferAlph!(caller, recipient, dustAmount!())
         }
-        let tokenId = selfContractId!()
+        let tokenId = selfTokenId!()
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (arbiterFee > 0) {
             transferTokenFromSelf!(caller, tokenId, arbiterFee)

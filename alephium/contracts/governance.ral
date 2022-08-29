@@ -102,8 +102,7 @@ Contract Governance(
 
         let mut offset = 6
         let mut lastGuardianIndex = -1
-        let mut sigIndex = 0
-        while (sigIndex < signatureSize) {
+        for (let mut sigIndex = 0; sigIndex < signatureSize; sigIndex = sigIndex + 1) {
             // 1 byte `guardianIndex` and 65 bytes signature
             let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
 
@@ -119,7 +118,6 @@ Contract Governance(
             assert!(guardianKey == ethEcRecover!(hash, newSignature), ErrorCodes.InvalidSignature)
 
             offset = offset + 66
-            sigIndex = sigIndex + 1
         }
         return body
     }
