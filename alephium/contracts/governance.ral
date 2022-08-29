@@ -39,52 +39,12 @@ Contract Governance(
         emit WormholeMessage(callerContractId!(), targetChainId, sequence, nonce, payload, consistencyLevel)
     }
 
-    // return emitterChainId, targetChainId, emitterAddress, sequence, payload
-    @using(readonly = true)
-    fn parseBody(body: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
-        // skip the first 8 bytes(timestamp and nonce)
-        let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
-        let targetChainId = u256From2Byte!(byteVecSlice!(body, 10, 12))
-        let emitterAddress = byteVecSlice!(body, 12, 44)
-        let sequence = u256From8Byte!(byteVecSlice!(body, 44, 52))
-        // skip 1 byte of consistencyLevel
-        let payload = byteVecSlice!(body, 53, size!(body))
-        return emitterChainId, targetChainId, emitterAddress, sequence, payload
-    }
-
+    // parse VAA and verify signatures
     @using(readonly = true, externalCallCheck = false)
-    pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
-        let body = parseAndVerifySignatures(vaa, true)
-        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseBody(body)
-        assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
-        assert!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
-        assert!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
-
-        // check module and governance action
-        assert!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule, ErrorCodes.InvalidModule)
-        assert!(byteVecSlice!(payload, 32, 33) == action, ErrorCodes.InvalidActionId)
-
-        return targetChainId, payload
-    }
-
-    fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
-        let (targetChainId, payload) = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, CoreModule, action)
-        receivedSequence = receivedSequence + 1
-        return targetChainId, payload
-    }
-
-    @using(readonly = true, externalCallCheck = false)
-    pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
-        let body = parseAndVerifySignatures(vaa, false)
-        return parseBody(body)
-    }
-
-    // parse VAA and verify signatures, return body
-    @using(readonly = true)
-    fn parseAndVerifySignatures(data: ByteVec, useLatestGuardianSetIndex: Bool) -> (ByteVec) {
+    pub fn parseAndVerifyVAA(data: ByteVec, isGovernanceVAA: Bool) -> (U256, U256, ByteVec, U256, ByteVec) {
         assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
-        if (useLatestGuardianSetIndex) {
+        if (isGovernanceVAA) {
             assert!(guardianSetIndex == guardianSetIndexes[1], ErrorCodes.InvalidGuardianSetIndex)
         }
 
@@ -92,7 +52,7 @@ Contract Governance(
         let guardians = getGuardiansInfo(guardianSetIndex)
         let guardianSize = u256From1Byte!(byteVecSlice!(guardians, 0, 1))
 
-        // check signature quorum size
+        // - check signature quorum size
         assert!(guardianSize != 0, ErrorCodes.InvalidGuardianSetSize) // this is guaranteed, but let's double check
         let quorumSize = ((guardianSize * 2) / 3) + 1
         assert!(quorumSize <= signatureSize, ErrorCodes.InvalidSignatureSize)
@@ -119,7 +79,36 @@ Contract Governance(
 
             offset = offset + 66
         }
-        return body
+
+        // Parse the body
+        // - skip the first 8 bytes(timestamp and nonce)
+        let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
+        let targetChainId = u256From2Byte!(byteVecSlice!(body, 10, 12))
+        let emitterAddress = byteVecSlice!(body, 12, 44)
+        let sequence = u256From8Byte!(byteVecSlice!(body, 44, 52))
+        // - skip 1 byte of consistencyLevel
+        let payload = byteVecSlice!(body, 53, size!(body))
+        return emitterChainId, targetChainId, emitterAddress, sequence, payload
+    }
+
+    @using(readonly = true, externalCallCheck = false)
+    pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
+        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseAndVerifyVAA(vaa, true)
+        assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
+        assert!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
+        assert!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
+
+        // check module and governance action
+        assert!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule, ErrorCodes.InvalidModule)
+        assert!(byteVecSlice!(payload, 32, 33) == action, ErrorCodes.InvalidActionId)
+
+        return targetChainId, payload
+    }
+
+    fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, CoreModule, action)
+        receivedSequence = receivedSequence + 1
+        return targetChainId, payload
     }
 
     @using(readonly = true)
