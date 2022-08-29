@@ -6,7 +6,7 @@ Contract Governance(
     mut messageFee: U256,
     mut guardianSets: [ByteVec; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
-    mut previousGuardianSetExpirationTime: U256
+    mut previousGuardianSetExpirationTimeMS: U256
 ) extends Constants() {
     event WormholeMessage(sender: ByteVec, targetChainId: U256, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256)
 
@@ -128,7 +128,7 @@ Contract Governance(
             return guardianSets[1]
         }
         if (guardianSetIndex == guardianSetIndexes[0]) {
-            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTime, ErrorCodes.GuardianSetExpired)
+            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTimeMS, ErrorCodes.GuardianSetExpired)
             return guardianSets[0]
         }
         panic!(ErrorCodes.InvalidGuardianSetIndex)
@@ -146,24 +146,24 @@ Contract Governance(
         } else {
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
-            let currentEncodedState = u256To32Byte!(receivedSequence)
+            let currentEncodedFields = u256To32Byte!(receivedSequence)
                 ++ u256To32Byte!(messageFee)
                 ++ u256To32Byte!(guardianSetIndexes[0])
                 ++ u256To32Byte!(guardianSetIndexes[1])
-            assert!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
-            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+            assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
+            let fieldsEncodedLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
-            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
-            offset = offset + stateLength
+            let newContractFields = byteVecSlice!(payload, offset, offset + fieldsEncodedLength)
+            offset = offset + fieldsEncodedLength
             assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
-            migrateWithFields!(newContractCode, newContractState)
+            migrateWithFields!(newContractCode, newContractFields)
         }
     }
 
     fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
         guardianSetIndexes[0] = guardianSetIndexes[1]
-        previousGuardianSetExpirationTime = blockTimeStamp!() + GuardianSetExpireDuration
+        previousGuardianSetExpirationTimeMS = blockTimeStamp!() + GuardianSetExpireDuration
     }
 
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {

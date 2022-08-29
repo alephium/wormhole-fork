@@ -9,7 +9,7 @@ Contract DevnetDeployer() {
     messageFee: U256,
     guardianSets: [ByteVec; 2],
     guardianSetIndexes: [U256; 2],
-    previousGuardianSetExpirationTime: U256
+    previousGuardianSetExpirationTimeMS: U256
   ) -> () {
     let encodedState = encodeToByteVec!(
       chainId,
@@ -21,7 +21,7 @@ Contract DevnetDeployer() {
       guardianSets[1],
       guardianSetIndexes[0],
       guardianSetIndexes[1],
-      previousGuardianSetExpirationTime
+      previousGuardianSetExpirationTimeMS
     )
     createSubContract!{callerAddress!() -> 1 alph}(#00, bytecode, encodedState)
   }

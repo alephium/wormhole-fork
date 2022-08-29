@@ -142,7 +142,7 @@ export class Wormhole {
             'governanceEmitterAddress': governanceEmitterAddress,
             'receivedSequence': 0,
             'messageFee': initMessageFee,
-            'previousGuardianSetExpirationTime': 0
+            'previousGuardianSetExpirationTimeMS': 0
         }
         if (networkType === "devnet") {
             const fields = {
