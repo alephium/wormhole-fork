@@ -49,7 +49,7 @@ npm install && npm run start
 
 Alephium account address: 1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH
 Alephium test token contract id: d3ca6210463e0ec3d56d8fc7b943c4d51462a3ca617d5359b69269b476e35d0f, address: 28wh8EY3bKieMekpAk91QoTTjoBzVUp2AcSsUwX7C4rtv
-Alephium wrapped alph contract id: 60507692e3b8f707b2d00d74b614a453d13b43171c808b4ecaad21e8b50d5a4a, address: 21AvQx2W29NsY2XttTZiqxSmYytAKHNi5kWZqtqax99ds
+Alephium wrapped alph contract id: 8d43ff175aa5ee2c36c90ddab5267e713317c54da264e8f0f9f8988c5a55f3c7, address: 24CPjZ4rHocmhGsXP2w4n1GaP92dXQU4tTMPMGKZ5zypS
 
 Ethereum account private-key: 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
 Ethereum test token address: 0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A

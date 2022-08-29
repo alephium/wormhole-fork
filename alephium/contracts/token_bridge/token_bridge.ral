@@ -4,13 +4,7 @@ Contract TokenBridge(
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
     wrappedAlphId: ByteVec,
-    wrappedAlphPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
-    localTokenPoolTemplateId: ByteVec,       // used to create contract by copyCreateContract
-    remoteTokenPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
-    tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
-    attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
-    undoneSequenceTemplateId: ByteVec,       // used to create contract by copyCreateContract
-    refundAddress: Address,
+    tokenBridgeFactoryId: ByteVec,
     mut minimalConsistencyLevel: U256
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
@@ -51,6 +45,7 @@ Contract TokenBridge(
     @using(preapprovedAssets = true)
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
+        let tokenBridgeFactory = TokenBridgeFactory(tokenBridgeFactoryId)
 
         let remoteChainIdBytes = u256To2Byte!(remoteChainId)
         let attestTokenHandlerState = encodeToByteVec!(
@@ -64,7 +59,7 @@ Contract TokenBridge(
         let attestTokenHandlerPath = Path.AttestTokenHandler ++ remoteChainIdBytes
         copyCreateSubContract!{payer -> createContractAlphAmount}(
             attestTokenHandlerPath,
-            attestTokenHandlerTemplateId,
+            tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
             attestTokenHandlerState
         )
 
@@ -77,14 +72,14 @@ Contract TokenBridge(
             0,
             0,
             0,
-            undoneSequenceTemplateId,
-            refundAddress,
+            tokenBridgeFactory.getUndoneSequenceTemplateId(),
+            tokenBridgeFactory.getRefundAddress(),
             0
         )
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
         copyCreateSubContract!{payer -> createContractAlphAmount}(
             tokenBridgeForChainPath,
-            tokenBridgeForChainTemplateId,
+            tokenBridgeFactory.getTokenBridgeForChainTemplateId(),
             tokenBridgeForChainState
         )
     }
@@ -148,6 +143,7 @@ Contract TokenBridge(
             0
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ wrappedAlphId
+        let wrappedAlphPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getWrappedAlphPoolTemplateId()
         copyCreateSubContract!{payer -> createContractAlphAmount}(path, wrappedAlphPoolTemplateId, encodedState)
     }
 
@@ -162,6 +158,7 @@ Contract TokenBridge(
             0
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
+        let localTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getLocalTokenPoolTemplateId()
         copyCreateSubContract!{payer -> createContractAlphAmount}(path, localTokenPoolTemplateId, encodedState)
     }
 
@@ -188,6 +185,7 @@ Contract TokenBridge(
         )
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
+        let remoteTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getRemoteTokenPoolTemplateId()
         copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(path, remoteTokenPoolTemplateId, encodedState, tokenAmount)
     }
 

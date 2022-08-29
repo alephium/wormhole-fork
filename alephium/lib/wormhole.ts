@@ -109,8 +109,12 @@ export class Wormhole {
             this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
         )
         const wrappedAlphDeployResult = await this.deployWrappedAlph(networkType)
+        const tokenBridgeFactoryDeployResult = await this.deployTokenBridgeFactory()
         const tokenBridgeDeployResult = await this.deployTokenBridge(
-            networkType, governanceDeployResult.contractId, wrappedAlphDeployResult.contractId
+            networkType,
+            governanceDeployResult.contractId,
+            wrappedAlphDeployResult.contractId,
+            tokenBridgeFactoryDeployResult.contractId
         )
         const remoteTokenPool = await this.remotTokenPoolContract()
         return {
@@ -156,6 +160,26 @@ export class Wormhole {
                 ...initFields
             })
         }
+    }
+
+    private async deployTokenBridgeFactory(): Promise<DeployResult> {
+        const wrappedAlphPool = await this.deployWrappedAlphTokenPoolTemplate()
+        const localTokenPool = await this.deployLocalTokenPoolTemplate()
+        const remoteTokenPool = await this.deployRemoteTokenPoolTemplate()
+        const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
+        const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
+        const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
+        const tokenBridgeFactory = Project.contract('token_bridge/token_bridge_factory.ral')
+        const initFields = {
+            'wrappedAlphPoolTemplateId': wrappedAlphPool.contractId,
+            'localTokenPoolTemplateId': localTokenPool.contractId,
+            'remoteTokenPoolTemplateId': remoteTokenPool.contractId,
+            'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
+            'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
+            'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
+            'refundAddress': this.refundAddress
+        }
+        return this._deploy(tokenBridgeFactory, initFields)
     }
 
     private async deployUndoneSequenceTemplate(): Promise<DeployResult> {
@@ -279,14 +303,9 @@ export class Wormhole {
     private async deployTokenBridge(
         networkType: NetworkType,
         governanceContractId: string,
-        wrappedAlphId: string
+        wrappedAlphId: string,
+        tokenBridgeFactoryId: string
     ): Promise<DeployResult> {
-        const wrappedAlphPool = await this.deployWrappedAlphTokenPoolTemplate()
-        const localTokenPool = await this.deployLocalTokenPoolTemplate()
-        const remoteTokenPool = await this.deployRemoteTokenPoolTemplate()
-        const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
-        const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
-        const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
         const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
         const initFields = {
             'governanceContractId': governanceContractId,
@@ -294,13 +313,7 @@ export class Wormhole {
             'receivedSequence': 0,
             'sendSequence': 0,
             'wrappedAlphId': wrappedAlphId,
-            'wrappedAlphPoolTemplateId': wrappedAlphPool.contractId,
-            'localTokenPoolTemplateId': localTokenPool.contractId,
-            'remoteTokenPoolTemplateId': remoteTokenPool.contractId,
-            'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
-            'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
-            'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
-            'refundAddress': this.refundAddress,
+            'tokenBridgeFactoryId': tokenBridgeFactoryId,
             'minimalConsistencyLevel': networkConfigs[networkType].minimalConsistencyLevel
         }
         if (networkType === "devnet") {

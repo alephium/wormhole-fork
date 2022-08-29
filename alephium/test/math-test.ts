@@ -13,7 +13,7 @@ describe('test math', () => {
 
     it('should test math methods', async () => {
         await buildProject(provider)
-        const mathInfo = await createMath()
+        const mathInfo = createMath()
         const contract = mathInfo.contract
 
         const cases: TestCase[] = [
