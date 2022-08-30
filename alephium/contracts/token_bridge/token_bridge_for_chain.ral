@@ -18,7 +18,7 @@ Contract TokenBridgeForChain(
         return msgSequence
     }
 
-    fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
+    fn checkCompleteTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
         let governance = Governance(governanceContractId)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
         assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
@@ -42,7 +42,7 @@ Contract TokenBridgeForChain(
 
     @using(preapprovedAssets = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
-        let (sequenceReady, payload) = checkTransfer(vaa)
+        let (sequenceReady, payload) = checkCompleteTransfer(vaa)
         if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
             return
         }

@@ -48,7 +48,7 @@ Contract TokenBridge(
         let tokenBridgeFactory = TokenBridgeFactory(tokenBridgeFactoryId)
 
         let remoteChainIdBytes = u256To2Byte!(remoteChainId)
-        let attestTokenHandlerState = encodeToByteVec!(
+        let attestTokenHandlerFields = encodeToByteVec!(
             governanceContractId,
             localChainId,
             selfContractId!(),
@@ -60,10 +60,10 @@ Contract TokenBridge(
         copyCreateSubContract!{payer -> createContractAlphAmount}(
             attestTokenHandlerPath,
             tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
-            attestTokenHandlerState
+            attestTokenHandlerFields
         )
 
-        let tokenBridgeForChainState = encodeToByteVec!(
+        let tokenBridgeForChainFields = encodeToByteVec!(
             governanceContractId,
             localChainId,
             selfContractId!(),
@@ -80,7 +80,7 @@ Contract TokenBridge(
         copyCreateSubContract!{payer -> createContractAlphAmount}(
             tokenBridgeForChainPath,
             tokenBridgeFactory.getTokenBridgeForChainTemplateId(),
-            tokenBridgeForChainState
+            tokenBridgeForChainFields
         )
     }
 
@@ -96,14 +96,14 @@ Contract TokenBridge(
         } else {
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
-            let currentEncodedState = u256To32Byte!(receivedSequence) ++ u256To32Byte!(sendSequence)
-            assert!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
+            let currentencodedFields = u256To32Byte!(receivedSequence) ++ u256To32Byte!(sendSequence)
+            assert!(prevStateHash == blake2b!(currentencodedFields), ErrorCodes.ContractStateMismatch)
             let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
-            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
+            let newContractFields = byteVecSlice!(payload, offset, offset + stateLength)
             offset = offset + stateLength
             assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
-            migrateWithFields!(newContractCode, newContractState)
+            migrateWithFields!(newContractCode, newContractFields)
         }
     }
 
@@ -135,7 +135,7 @@ Contract TokenBridge(
 
     @using(preapprovedAssets = true)
     pub fn createWrappedAlphPool(payer: Address, createContractAlphAmount: U256) -> () {
-        let encodedState = encodeToByteVec!(
+        let encodedFields = encodeToByteVec!(
             selfContractId!(),
             localChainId,
             wrappedAlphId,
@@ -144,13 +144,13 @@ Contract TokenBridge(
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ wrappedAlphId
         let wrappedAlphPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getWrappedAlphPoolTemplateId()
-        copyCreateSubContract!{payer -> createContractAlphAmount}(path, wrappedAlphPoolTemplateId, encodedState)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(path, wrappedAlphPoolTemplateId, encodedFields)
     }
 
     @using(preapprovedAssets = true)
     pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         assert!(tokenRemaining!(payer, localTokenId) == 1, ErrorCodes.TokenNotExist) // make sure that the token exists
-        let encodedState = encodeToByteVec!(
+        let encodedFields = encodeToByteVec!(
             selfContractId!(),
             localChainId,
             localTokenId,
@@ -159,7 +159,7 @@ Contract TokenBridge(
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
         let localTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getLocalTokenPoolTemplateId()
-        copyCreateSubContract!{payer -> createContractAlphAmount}(path, localTokenPoolTemplateId, encodedState)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(path, localTokenPoolTemplateId, encodedFields)
     }
 
     @using(preapprovedAssets = true)
@@ -174,7 +174,7 @@ Contract TokenBridge(
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
-        let encodedState = encodeToByteVec!(
+        let encodedFields = encodeToByteVec!(
             selfContractId!(),
             tokenChainId,
             bridgeTokenId,
@@ -186,7 +186,7 @@ Contract TokenBridge(
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
         let remoteTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getRemoteTokenPoolTemplateId()
-        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(path, remoteTokenPoolTemplateId, encodedState, tokenAmount)
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(path, remoteTokenPoolTemplateId, encodedFields, tokenAmount)
     }
 
     @using(preapprovedAssets = true)
