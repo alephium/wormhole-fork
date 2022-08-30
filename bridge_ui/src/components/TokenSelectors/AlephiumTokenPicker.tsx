@@ -55,6 +55,9 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   let tokenAccounts = [alph]
   for (let [tokenId, amount] of tokenAmounts) {
     const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
+    if (typeof tokenInfo === 'undefined') {
+      continue
+    }
     const uiAmount = formatUnits(amount, tokenInfo.decimals)
     const tokenAccount = createParsedTokenAccount(
       address, tokenId, amount.toString(), tokenInfo.decimals, parseFloat(uiAmount), uiAmount

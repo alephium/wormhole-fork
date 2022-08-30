@@ -52,16 +52,21 @@ async function getAlephiumTargetAsset(address: string, targetAsset: string, prov
     });
   }
 
-  const tokenInfo = await getAlephiumTokenInfo(provider, targetAsset)
-  const uiAmount = formatUnits(balance, tokenInfo.decimals)
-  return createParsedTokenAccount(
-    address,
-    targetAsset,
-    balance.toString(),
-    tokenInfo.decimals,
-    parseFloat(uiAmount),
-    uiAmount
-  )
+  return getAlephiumTokenInfo(provider, targetAsset)
+    .then((tokenInfo) => {
+      if (typeof tokenInfo === 'undefined') {
+        throw Error("failed to get alephium token info")
+      }
+      const uiAmount = formatUnits(balance, tokenInfo.decimals)
+      return createParsedTokenAccount(
+        address,
+        targetAsset,
+        balance.toString(),
+        tokenInfo.decimals,
+        parseFloat(uiAmount),
+        uiAmount
+      )
+    })
 }
 
 function useGetTargetParsedTokenAccounts() {

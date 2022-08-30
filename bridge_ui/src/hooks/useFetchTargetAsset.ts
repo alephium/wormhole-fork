@@ -24,6 +24,7 @@ import algosdk from "algosdk";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   errorDataWrapper,
@@ -77,6 +78,7 @@ function useFetchTargetAsset(nft?: boolean) {
   );
   const setTargetAsset = nft ? setNFTTargetAsset : setTransferTargetAsset;
   const { provider, chainId: evmChainId } = useEthereumProvider();
+  const { signer: alphSigner} = useAlephiumWallet()
   const correctEvmNetwork = getEvmChainId(targetChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
   const [lastSuccessfulArgs, setLastSuccessfulArgs] = useState<{
@@ -253,7 +255,7 @@ function useFetchTargetAsset(nft?: boolean) {
       if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
-          const remoteTokenPoolId = getTokenPoolId(originAsset, originChain)
+          const remoteTokenPoolId = await getTokenPoolId(originAsset, originChain, alphSigner!.nodeProvider)
           if (!cancelled) {
             dispatch(
               setTargetAsset(
@@ -322,6 +324,7 @@ function useFetchTargetAsset(nft?: boolean) {
     originAsset,
     targetChain,
     provider,
+    alphSigner,
     nft,
     setTargetAsset,
     tokenId,
