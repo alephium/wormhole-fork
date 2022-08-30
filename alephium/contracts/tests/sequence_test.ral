@@ -2,7 +2,7 @@ Contract SequenceTest(
   mut next: U256,
   mut next1: U256,
   mut next2: U256,
-  undoneSequenceTemplateId: ByteVec,
+  unExecutedSequenceTemplateId: ByteVec,
   refundAddress: Address
-) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress) {
+) extends Sequence(next, next1, next2, unExecutedSequenceTemplateId, refundAddress) {
 }

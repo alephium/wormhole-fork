@@ -1,11 +1,11 @@
-Contract UndoneSequence(
+Contract UnExecutedSequence(
     parentId: ByteVec,
     begin: U256,
     mut sequences: U256,
     refundAddress: Address
 ) extends Constants() {
     @using(assetsInContract = true)
-    pub fn checkUndone(seq: U256) -> () {
+    pub fn checkSequence(seq: U256) -> () {
         checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         assert!(seq >= begin, ErrorCodes.InvalidSequence)
         let offset = seq - begin

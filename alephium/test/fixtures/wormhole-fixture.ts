@@ -273,18 +273,6 @@ export async function expectOneOfError<T>(func: () => Promise<T>, errors: string
     await expectFailed(func, errors)
 }
 
-export function loadContract(code: string): Contract {
-    const contract = new Contract(
-         code,
-         Buffer.from(blake.blake2b(Buffer.from(code, 'hex'), undefined, 32)).toString('hex'),
-         {names: [], types: [], isMutable: []},
-         [],
-         []
-    )
-    const json = JSON.parse(contract.toString())
-    return Contract.fromJson(json)
-}
-
 export function chainIdToBytes(chainId: number): Uint8Array {
     return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
 }

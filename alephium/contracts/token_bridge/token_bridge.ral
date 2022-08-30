@@ -12,7 +12,7 @@ Contract TokenBridge(
     enum ActionId {
         RegisterChain                 = #01
         ContractUpgrade               = #02
-        DestroyUndoneSequences        = #f0
+        DestroyUnExecutedSequences    = #f0
         UpdateMinimalConsistencyLevel = #f1
     }
 
@@ -70,7 +70,7 @@ Contract TokenBridge(
             0,
             0,
             0,
-            tokenBridgeFactory.getUndoneSequenceTemplateId(),
+            tokenBridgeFactory.getUnExecutedSequenceTemplateId(),
             tokenBridgeFactory.getRefundAddress(),
             0
         )
@@ -237,17 +237,17 @@ Contract TokenBridge(
         transferToken{fromAddress -> alphRemaining!(fromAddress)}(fromAddress, wrappedAlphId, localChainId, toChainId, toAddress, alphAmount, arbiterFee, nonce, consistencyLevel)
     }
 
-    pub fn destroyUndoneSequenceContracts(vaa: ByteVec) -> () {
-        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUndoneSequences)
+    pub fn destroyUnExecutedSequenceContracts(vaa: ByteVec) -> () {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnExecutedSequences)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
         let remoteChainIdBytes = byteVecSlice!(payload, 33, 35)
         let length = u256From2Byte!(byteVecSlice!(payload, 35, 37))
-        assert!(length > 0, ErrorCodes.InvalidDestroyUndoneSequenceMessage)
+        assert!(length > 0, ErrorCodes.InvalidDestroyUnExecutedSequenceMessage)
         let payloadSize = 37 + length * 8
         assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
         let paths = byteVecSlice!(payload, 37, payloadSize)
 
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ remoteChainIdBytes)
-        TokenBridgeForChain(tokenBridgeForChainId).destroyUndoneSequenceContracts(paths)
+        TokenBridgeForChain(tokenBridgeForChainId).destroyUnExecutedSequenceContracts(paths)
     }
 }

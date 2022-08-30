@@ -30,8 +30,8 @@ async function isSequenceExecuted(
   groupIndex: number
 ): Promise<boolean> {
   const path = zeroPad(Math.floor(Number(sequence) / 256).toString(16), 8)
-  const undoneSequenceId = subContractId(tokenBridgeForChainId, path)
-  const contractAddress = addressFromContractId(undoneSequenceId)
+  const contractId = subContractId(tokenBridgeForChainId, path)
+  const contractAddress = addressFromContractId(contractId)
   try {
     const state = await provider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
     const begin = BigInt((state.fields[1] as node.ValU256).value)

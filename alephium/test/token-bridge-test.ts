@@ -1,11 +1,11 @@
 import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, contractIdFromAddress, binToHex, addressFromContractId, Project } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, minimalConsistencyLevel, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer, UpdateMinimalConsistencyLevel } from './fixtures/token-bridge-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph, buildProject } from './fixtures/wormhole-fixture'
+import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUnExecutedSequenceContracts, minimalConsistencyLevel, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer, UpdateMinimalConsistencyLevel } from './fixtures/token-bridge-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph, buildProject } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
-import { createUndoneSequence } from './fixtures/sequence-fixture'
+import { createUnExecutedSequence } from './fixtures/sequence-fixture'
 
 describe("test token bridge", () => {
     const provider = new NodeProvider('http://127.0.0.1:22973')
@@ -738,7 +738,7 @@ describe("test token bridge", () => {
         }])
     })
 
-    it('should failed to complete transfer and create undone sequence contracts', async () => {
+    it('should failed to complete transfer and create unexecuted sequence contracts', async () => {
         await buildProject(provider)
         const testTokenInfo = createTestToken()
         const fixture = newLocalTokenPoolFixture(
@@ -779,10 +779,10 @@ describe("test token bridge", () => {
         expect(tokenPoolState.asset.alphAmount).toEqual(tokenPoolInitAsset.alphAmount)
         expect(tokenPoolState.asset.tokens).toEqual(tokenPoolInitAsset.tokens)
 
-        const undoneSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
-        const undoneSequenceState = testResult.contracts.filter(c => c.contractId === undoneSequenceContractId)[0]
-        expect(undoneSequenceState.fields['begin']).toEqual(0)
-        expect(undoneSequenceState.fields['sequences']).toEqual(0)
+        const unExecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
+        const unExecutedSequenceState = testResult.contracts.filter(c => c.contractId === unExecutedSequenceContractId)[0]
+        expect(unExecutedSequenceState.fields['begin']).toEqual(0)
+        expect(unExecutedSequenceState.fields['sequences']).toEqual(0)
 
         checkTxCallerBalance(testResult.txOutputs.filter(c => c.address === payer)[0], 0n)
     })
@@ -934,25 +934,25 @@ describe("test token bridge", () => {
         }])
     })
 
-    it('should destroy undone sequence contracts', async () => {
+    it('should destroy unexecuted sequence contracts', async () => {
         await buildProject(provider)
         const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
         const paths = [0, 1, 2, 5, 8]
         const refundAddress = randomAssetAddress()
         const subContracts: ContractState[] = []
         for (let path of paths) {
-            const undoneSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, zeroPad(path.toString(16), 8))
-            const contractInfo = createUndoneSequence(
-                fixture.tokenBridgeForChainInfo.contractId, path * 256, 0n, refundAddress, undoneSequenceContractId
+            const unExecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, zeroPad(path.toString(16), 8))
+            const contractInfo = createUnExecutedSequence(
+                fixture.tokenBridgeForChainInfo.contractId, path * 256, 0n, refundAddress, unExecutedSequenceContractId
             )
             subContracts.push(contractInfo.selfState)
         }
         const existingContracts = Array.prototype.concat(fixture.tokenBridgeForChainInfo.states(), subContracts) 
-        const destroyUndoneSequenceContracts = new DestroyUndoneSequenceContracts(remoteChainId, paths)
-        const vaaBody = new VAABody(destroyUndoneSequenceContracts.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
+        const destroyUnExecutedSequenceContracts = new DestroyUnExecutedSequenceContracts(remoteChainId, paths)
+        const vaaBody = new VAABody(destroyUnExecutedSequenceContracts.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const tokenBridge = fixture.tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod('destroyUndoneSequenceContracts', {
+        const testResult = await tokenBridge.testPublicMethod('destroyUnExecutedSequenceContracts', {
             address: fixture.tokenBridgeInfo.address,
             initialFields: fixture.tokenBridgeInfo.selfState.fields,
             testArgs: {'vaa': binToHex(vaa.encode())},

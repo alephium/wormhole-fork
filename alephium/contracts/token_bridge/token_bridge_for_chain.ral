@@ -7,10 +7,10 @@ Contract TokenBridgeForChain(
     mut next: U256,
     mut next1: U256,
     mut next2: U256,
-    undoneSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
+    unExecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
     refundAddress: Address,
     mut sendSequence: U256
-) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
+) extends Sequence(next, next1, next2, unExecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
@@ -42,7 +42,7 @@ Contract TokenBridgeForChain(
     @using(preapprovedAssets = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let (sequenceReady, payload) = checkCompleteTransfer(vaa)
-        if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
+        if (!sequenceReady) { // too many unexecuted sequences in between, compact those sequences first
             return
         }
 
@@ -55,12 +55,12 @@ Contract TokenBridgeForChain(
         )
     }
 
-    pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
+    pub fn destroyUnExecutedSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         for (let mut index = 0; index < length; index = index + 8) {
-            let undoneSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
-            UndoneSequence(undoneSequenceId).destroy()
+            let unExecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
+            UnExecutedSequence(unExecutedSequenceId).destroy()
         }
     }
 }

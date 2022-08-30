@@ -158,7 +158,7 @@ export class Wormhole {
         const remoteTokenPool = await this.deployRemoteTokenPoolTemplate()
         const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
         const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
-        const undoneSequenceDeployResult = await this.deployUndoneSequenceTemplate()
+        const unExecutedSequenceDeployResult = await this.deployUnExecutedSequenceTemplate()
         const tokenBridgeFactory = Project.contract('token_bridge/token_bridge_factory.ral')
         const initFields = {
             'wrappedAlphPoolTemplateId': wrappedAlphPool.contractId,
@@ -166,21 +166,21 @@ export class Wormhole {
             'remoteTokenPoolTemplateId': remoteTokenPool.contractId,
             'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
             'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
-            'undoneSequenceTemplateId': undoneSequenceDeployResult.contractId,
+            'unExecutedSequenceTemplateId': unExecutedSequenceDeployResult.contractId,
             'refundAddress': this.refundAddress
         }
         return this._deploy(tokenBridgeFactory, initFields)
     }
 
-    private async deployUndoneSequenceTemplate(): Promise<DeployResult> {
+    private async deployUnExecutedSequenceTemplate(): Promise<DeployResult> {
         const initFields = {
             'parentId': '',
             'begin': 0,
             'sequences': 0n,
             'refundAddress': DummyRefundAddress
         }
-        const undoneSequence = Project.contract('sequence/undone_sequence.ral')
-        return await this._deploy(undoneSequence, initFields)
+        const unExecutedSequence = Project.contract('sequence/unexecuted_sequence.ral')
+        return await this._deploy(unExecutedSequence, initFields)
     }
 
     private async deployWrappedAlphTokenPoolTemplate(): Promise<DeployResult> {
@@ -231,7 +231,7 @@ export class Wormhole {
             'next': 0,
             'next1': 0,
             'next2': 0,
-            'undoneSequenceTemplateId': '',
+            'unExecutedSequenceTemplateId': '',
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0
         }
