@@ -1,7 +1,7 @@
 Contract WrappedAlph(
     mut totalWrapped: U256
 ) {
-    @using(preapprovedAssets=true, assetsInContract=true, permissionCheck=false)
+    @using(preapprovedAssets=true, assetsInContract=true, externalCallCheck=false)
     pub fn wrapAndTransfer(
         fromAddress: Address,
         totalAmount: U256
@@ -14,7 +14,7 @@ Contract WrappedAlph(
         }(self, totalAmount)
     }
 
-    @using(preapprovedAssets=true, assetsInContract=true, permissionCheck=false)
+    @using(preapprovedAssets=true, assetsInContract=true, externalCallCheck=false)
     pub fn unwrapAndCompleteTransfer(
         fromAddress: Address,
         recipient: Address,

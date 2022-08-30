@@ -13,7 +13,7 @@ Contract WrappedAlphPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        checkPermission!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
         WrappedAlph(bridgeTokenId).wrapAndTransfer{
@@ -26,7 +26,7 @@ Contract WrappedAlphPool(
 
     @using(preapprovedAssets = true, assetsInContract = true)
     pub fn receiveWrappedAlph(fromAddress: Address, totalAmount: U256) -> () {
-        checkPermission!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
         transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)
     }
 

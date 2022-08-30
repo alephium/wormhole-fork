@@ -7,37 +7,37 @@ Contract TokenBridgeFactory(
   undoneSequenceTemplateId: ByteVec,       // used to create contract by copyCreateContract
   refundAddress: Address
 ) {
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getWrappedAlphPoolTemplateId() -> ByteVec {
     return wrappedAlphPoolTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getLocalTokenPoolTemplateId() -> ByteVec {
     return localTokenPoolTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getRemoteTokenPoolTemplateId() -> ByteVec {
     return remoteTokenPoolTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getTokenBridgeForChainTemplateId() -> ByteVec {
     return tokenBridgeForChainTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getAttestTokenHandlerTemplateId() -> ByteVec {
     return attestTokenHandlerTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getUndoneSequenceTemplateId() -> ByteVec {
     return undoneSequenceTemplateId
   }
 
-  @using(readonly = true, permissionCheck = false)
+  @using(readonly = true, externalCallCheck = false)
   pub fn getRefundAddress() -> Address {
     return refundAddress
   }

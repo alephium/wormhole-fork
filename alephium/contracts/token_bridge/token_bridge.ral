@@ -173,7 +173,7 @@ Contract TokenBridge(
         createContractAlphAmount: U256
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
-        checkPermission!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         let encodedState = encodeToByteVec!(
             selfContractId!(),
             tokenChainId,

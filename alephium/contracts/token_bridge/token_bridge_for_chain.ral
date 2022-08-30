@@ -12,7 +12,7 @@ Contract TokenBridgeForChain(
     mut sendSequence: U256
 ) extends Sequence(next, next1, next2, undoneSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
-        checkPermission!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
         sendSequence = sendSequence + 1
         return msgSequence
@@ -57,7 +57,7 @@ Contract TokenBridgeForChain(
     }
 
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
-        checkPermission!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         let mut index = 0
         while (index < length) {

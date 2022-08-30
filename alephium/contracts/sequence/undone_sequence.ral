@@ -6,7 +6,7 @@ Contract UndoneSequence(
 ) extends Constants() {
     @using(assetsInContract = true)
     pub fn checkUndone(seq: U256) -> () {
-        checkPermission!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         assert!(seq >= begin, ErrorCodes.InvalidSequence)
         let offset = seq - begin
         assert!(offset < 256, ErrorCodes.InvalidSequence)
@@ -20,7 +20,7 @@ Contract UndoneSequence(
 
     @using(assetsInContract = true)
     pub fn destroy() -> () {
-        checkPermission!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         destroySelf!(refundAddress)
     }
 }

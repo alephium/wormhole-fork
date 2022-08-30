@@ -31,7 +31,7 @@ export function createSequence(
     const undoneSequenceTemplate = createUndoneSequence(
         randomContractId(), 0, 0n, randomAssetAddress()
     )
-    const contract = Project.contract('tests/sequence_test.ral', false)
+    const contract = Project.contract('tests/sequence_test.ral', {errorOnWarnings: false})
     const initField = {
         'next': next,
         'next1': next1,
