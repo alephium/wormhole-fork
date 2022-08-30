@@ -11,7 +11,7 @@ describe("test governance", () => {
 
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {
         await buildProject(provider)
-        const governanceInfo = await createGovernance()
+        const governanceInfo = createGovernance()
         const contract = governanceInfo.contract
         return await contract.testPublicMethod(method, {
             initialFields: governanceInfo.selfState.fields,
@@ -141,7 +141,7 @@ describe("test governance", () => {
 
     it('should test upgrade contract', async () => {
         await buildProject(provider)
-        const governanceInfo = await createGovernance()
+        const governanceInfo = createGovernance()
         const contract = governanceInfo.contract
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
             const vaaBody = new VAABody(contractUpgrade.encode(governanceModule, 1), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)

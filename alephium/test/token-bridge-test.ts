@@ -53,9 +53,9 @@ describe("test token bridge", () => {
 
     it('should attest token', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
-        const testToken = await createTestToken()
+        const testToken = createTestToken()
         const nonceHex = nonce()
         const inputAsset = alphAndTokenInputAsset(payer, alph(2), testToken.contractId, 1n)
         const testResult = await tokenBridge.testPublicMethod('attestToken', {
@@ -97,7 +97,7 @@ describe("test token bridge", () => {
 
     it('should attest wrapped alph', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
         const nonceHex = nonce()
         const inputAsset = alphInputAsset(payer, alph(2))
@@ -140,7 +140,7 @@ describe("test token bridge", () => {
 
     it('should update minimal consistency level', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
         const newMinimalConsistencyLevel = 5
         const message = new UpdateMinimalConsistencyLevel(newMinimalConsistencyLevel)
@@ -162,7 +162,7 @@ describe("test token bridge", () => {
 
     it('should register chain', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
         const registerChain = new RegisterChain(remoteChainId, remoteTokenBridgeId)
         const vaaBody = new VAABody(registerChain.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
@@ -189,7 +189,7 @@ describe("test token bridge", () => {
 
     it('should register chain failed if sequence is invalid', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
         const registerChain = new RegisterChain(remoteChainId, randomContractId())
         const vaaBody = new VAABody(registerChain.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 1)
@@ -211,7 +211,7 @@ describe("test token bridge", () => {
 
     it('should create wrapped alph pool', async () => {
         await buildProject(provider)
-        const fixture = await newTokenBridgeFixture()
+        const fixture = newTokenBridgeFixture()
         const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
         const tokenBridge = fixture.tokenBridgeInfo.contract
         const testResult = await tokenBridge.testPublicMethod('createWrappedAlphPool', {
@@ -234,7 +234,7 @@ describe("test token bridge", () => {
 
     it('should transfer alph to remote chain', async () => {
         await buildProject(provider)
-        const fixture = await newWrappedAlphPoolFixture(
+        const fixture = newWrappedAlphPoolFixture(
             remoteChainId,
             remoteTokenBridgeId,
         )
@@ -310,7 +310,7 @@ describe("test token bridge", () => {
 
     it('should complete transfer alph', async () => {
         await buildProject(provider)
-        const fixture = await newWrappedAlphPoolFixture(
+        const fixture = newWrappedAlphPoolFixture(
             remoteChainId,
             remoteTokenBridgeId,
         )
@@ -370,8 +370,8 @@ describe("test token bridge", () => {
 
     it('should create local token pool', async () => {
         await buildProject(provider)
-        const fixture = await newTokenBridgeFixture()
-        const testToken = await createTestToken()
+        const fixture = newTokenBridgeFixture()
+        const testToken = createTestToken()
         const tokenBridge = fixture.tokenBridgeInfo.contract
         const inputAsset = alphAndTokenInputAsset(payer, alph(2), testToken.contractId, 1n)
         const testResult = await tokenBridge.testPublicMethod('createLocalTokenPool', {
@@ -395,8 +395,8 @@ describe("test token bridge", () => {
 
     it('should transfer local token', async () => {
         await buildProject(provider)
-        const testTokenInfo = await createTestToken()
-        const fixture = await newLocalTokenPoolFixture(
+        const testTokenInfo = createTestToken()
+        const fixture = newLocalTokenPoolFixture(
             remoteChainId,
             remoteTokenBridgeId,
             testTokenInfo.contractId
@@ -463,8 +463,8 @@ describe("test token bridge", () => {
 
     it('should complete local token transfer', async () => {
         await buildProject(provider)
-        const testTokenInfo = await createTestToken()
-        const fixture = await newLocalTokenPoolFixture(
+        const testTokenInfo = createTestToken()
+        const fixture = newLocalTokenPoolFixture(
             remoteChainId,
             remoteTokenBridgeId,
             testTokenInfo.contractId
@@ -542,11 +542,11 @@ describe("test token bridge", () => {
     it('should create remote token pool', async () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
-        const fixture = await newTokenBridgeFixture()
+        const fixture = newTokenBridgeFixture()
         const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
         const vaaBody = new VAABody(attestToken.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-        const attestTokenHandlerInfo = await createAttestTokenHandler(
+        const attestTokenHandlerInfo = createAttestTokenHandler(
             fixture.tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const attestTokenHandler = attestTokenHandlerInfo.contract
@@ -576,7 +576,7 @@ describe("test token bridge", () => {
     it('should transfer remote token', async () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
-        const fixture = await newRemoteTokenPoolFixture(
+        const fixture = newRemoteTokenPoolFixture(
             remoteChainId, remoteTokenBridgeId,
             remoteTokenId, symbol, name, decimals
         )
@@ -651,7 +651,7 @@ describe("test token bridge", () => {
     it('should transfer remote token failed if token wrapper id is invalid', async () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
-        const fixture = await newRemoteTokenPoolFixture(
+        const fixture = newRemoteTokenPoolFixture(
             remoteChainId, remoteTokenBridgeId,
             remoteTokenId, symbol, name, decimals, randomContractAddress()
         )
@@ -686,7 +686,7 @@ describe("test token bridge", () => {
     it('should complete remote token transfer', async () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
-        const fixture = await newRemoteTokenPoolFixture(
+        const fixture = newRemoteTokenPoolFixture(
             remoteChainId, remoteTokenBridgeId,
             remoteTokenId, symbol, name, decimals
         )
@@ -740,8 +740,8 @@ describe("test token bridge", () => {
 
     it('should failed to complete transfer and create undone sequence contracts', async () => {
         await buildProject(provider)
-        const testTokenInfo = await createTestToken()
-        const fixture = await newLocalTokenPoolFixture(
+        const testTokenInfo = createTestToken()
+        const fixture = newLocalTokenPoolFixture(
             remoteChainId,
             remoteTokenBridgeId,
             testTokenInfo.contractId,
@@ -792,12 +792,12 @@ describe("test token bridge", () => {
         const remoteTokenId = randomByte32Hex()
         const chainB = CHAIN_ID_ALEPHIUM + 1 // token chain id
         const chainC = CHAIN_ID_ALEPHIUM + 2 // to chain id
-        const fixture = await newRemoteTokenPoolFixture(
+        const fixture = newRemoteTokenPoolFixture(
             chainB, remoteTokenBridgeId,
             remoteTokenId, symbol, name, decimals
         )
         const chainCTokenBridgeId = randomByte32Hex()
-        const tokenBridgeForChainCInfo = await createTokenBridgeForChain(
+        const tokenBridgeForChainCInfo = createTokenBridgeForChain(
             fixture.tokenBridgeInfo, chainC, chainCTokenBridgeId
         )
         const fromAddress = randomAssetAddress()
@@ -874,12 +874,12 @@ describe("test token bridge", () => {
         const remoteTokenId = randomByte32Hex()
         const chainB = CHAIN_ID_ALEPHIUM + 1 // token chain id
         const chainC = CHAIN_ID_ALEPHIUM + 2 // emitter chain id
-        const fixture = await newRemoteTokenPoolFixture(
+        const fixture = newRemoteTokenPoolFixture(
             chainB, remoteTokenBridgeId,
             remoteTokenId, symbol, name, decimals
         )
         const chainCTokenBridgeId = randomByte32Hex()
-        const tokenBridgeForChainCInfo = await createTokenBridgeForChain(
+        const tokenBridgeForChainCInfo = createTokenBridgeForChain(
             fixture.tokenBridgeInfo, chainC, chainCTokenBridgeId
         )
         const toAddress = randomAssetAddress()
@@ -936,13 +936,13 @@ describe("test token bridge", () => {
 
     it('should destroy undone sequence contracts', async () => {
         await buildProject(provider)
-        const fixture = await newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
+        const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
         const paths = [0, 1, 2, 5, 8]
         const refundAddress = randomAssetAddress()
         const subContracts: ContractState[] = []
         for (let path of paths) {
             const undoneSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, zeroPad(path.toString(16), 8))
-            const contractInfo = await createUndoneSequence(
+            const contractInfo = createUndoneSequence(
                 fixture.tokenBridgeForChainInfo.contractId, path * 256, 0n, refundAddress, undoneSequenceContractId
             )
             subContracts.push(contractInfo.selfState)
@@ -972,7 +972,7 @@ describe("test token bridge", () => {
 
     it('should test upgrade contract', async () => {
         await buildProject(provider)
-        const tokenBridgeInfo = await createTokenBridge()
+        const tokenBridgeInfo = createTokenBridge()
         const tokenBridge = tokenBridgeInfo.contract
 
         async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {

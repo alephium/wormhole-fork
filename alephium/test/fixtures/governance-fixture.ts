@@ -67,7 +67,7 @@ export class SubmitTransferFee {
     }
 }
 
-export async function createGovernance(): Promise<ContractInfo> {
+export function createGovernance(): ContractInfo {
     const address = randomContractAddress()
     const governanceContract = Project.contract('governance.ral')
     const initFields = {

@@ -52,7 +52,7 @@ export class ContractInfo {
     }
 }
 
-export async function createMath(): Promise<ContractInfo> {
+export function createMath(): ContractInfo {
     const mathContract = Project.contract('tests/math_test.ral')
     const address = randomContractAddress()
     const contractState = mathContract.toState(
