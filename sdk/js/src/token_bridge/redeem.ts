@@ -31,7 +31,7 @@ export function redeemOnAlph(
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
   return script.buildByteCodeToDeploy({
-    tokenBridgeForChainId: tokenBridgeForChainId,
+    tokenBridgeForChain: tokenBridgeForChainId,
     vaa: vaaHex
   })
 }

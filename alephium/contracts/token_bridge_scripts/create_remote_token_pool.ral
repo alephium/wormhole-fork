@@ -1,9 +1,8 @@
 TxScript Main(
     payer: Address,
-    attestTokenHandlerId: ByteVec,
+    attestTokenHandler: AttestTokenHandler,
     vaa: ByteVec,
     alphAmount: U256
 ) {
-    let attestTokenHandler = AttestTokenHandler(attestTokenHandlerId)
     attestTokenHandler.handleAttestToken{payer -> alphAmount}(vaa, payer, alphAmount)
 }

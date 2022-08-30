@@ -61,7 +61,7 @@ async function getToken(
         initialFields: {
             sender: from,
             amount: amount,
-            tokenId: tokenId
+            token: tokenId
         }
     })
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)

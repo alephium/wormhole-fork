@@ -1,5 +1,5 @@
 Contract TokenBridgeForChain(
-    governanceContractId: ByteVec,
+    governance: Governance,
     localChainId: U256,
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
     remoteChainId: U256,
@@ -19,7 +19,6 @@ Contract TokenBridgeForChain(
     }
 
     fn checkCompleteTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
-        let governance = Governance(governanceContractId)
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
         assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)

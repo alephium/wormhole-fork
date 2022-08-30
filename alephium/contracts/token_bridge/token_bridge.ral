@@ -1,10 +1,10 @@
 Contract TokenBridge(
-    governanceContractId: ByteVec,
+    governance: Governance,
     localChainId: U256,
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
     wrappedAlphId: ByteVec,
-    tokenBridgeFactoryId: ByteVec,
+    tokenBridgeFactory: TokenBridgeFactory,
     mut minimalConsistencyLevel: U256
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
@@ -17,7 +17,6 @@ Contract TokenBridge(
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
-        let governance = Governance(governanceContractId)
         let (targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
         receivedSequence = receivedSequence + 1
         return targetChainId, payload
@@ -45,11 +44,10 @@ Contract TokenBridge(
     @using(preapprovedAssets = true)
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
-        let tokenBridgeFactory = TokenBridgeFactory(tokenBridgeFactoryId)
 
         let remoteChainIdBytes = u256To2Byte!(remoteChainId)
         let attestTokenHandlerFields = encodeToByteVec!(
-            governanceContractId,
+            governance,
             localChainId,
             selfContractId!(),
             remoteChainId,
@@ -64,7 +62,7 @@ Contract TokenBridge(
         )
 
         let tokenBridgeForChainFields = encodeToByteVec!(
-            governanceContractId,
+            governance,
             localChainId,
             selfContractId!(),
             remoteChainId,
@@ -123,7 +121,6 @@ Contract TokenBridge(
             zeros!(32) ++ // no symbol
             zeros!(32) // no name
 
-        let governance = Governance(governanceContractId)
         governance.publishWormholeMessage{payer -> governance.getMessageFee()}(payer, 0, nextSendSequence(), nonce, payload, consistencyLevel)
     }
 
@@ -143,8 +140,11 @@ Contract TokenBridge(
             0
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ wrappedAlphId
-        let wrappedAlphPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getWrappedAlphPoolTemplateId()
-        copyCreateSubContract!{payer -> createContractAlphAmount}(path, wrappedAlphPoolTemplateId, encodedFields)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(
+            path,
+            tokenBridgeFactory.getWrappedAlphPoolTemplateId(),
+            encodedFields
+        )
     }
 
     @using(preapprovedAssets = true)
@@ -158,8 +158,11 @@ Contract TokenBridge(
             0
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
-        let localTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getLocalTokenPoolTemplateId()
-        copyCreateSubContract!{payer -> createContractAlphAmount}(path, localTokenPoolTemplateId, encodedFields)
+        copyCreateSubContract!{payer -> createContractAlphAmount}(
+            path,
+            tokenBridgeFactory.getLocalTokenPoolTemplateId(),
+            encodedFields
+        )
     }
 
     @using(preapprovedAssets = true)
@@ -185,8 +188,12 @@ Contract TokenBridge(
         )
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
-        let remoteTokenPoolTemplateId = TokenBridgeFactory(tokenBridgeFactoryId).getRemoteTokenPoolTemplateId()
-        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(path, remoteTokenPoolTemplateId, encodedFields, tokenAmount)
+        copyCreateSubContractWithToken!{payer -> createContractAlphAmount}(
+            path,
+            tokenBridgeFactory.getRemoteTokenPoolTemplateId(),
+            encodedFields,
+            tokenAmount
+        )
     }
 
     @using(preapprovedAssets = true)
@@ -210,7 +217,6 @@ Contract TokenBridge(
             else if (isLocalToken) LocalTokenPool(tokenPoolId).transfer{fromAddress -> bridgeTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
             else RemoteTokenPool(tokenPoolId).transfer{fromAddress -> tokenPoolId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
 
-        let governance = Governance(governanceContractId)
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
         governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(

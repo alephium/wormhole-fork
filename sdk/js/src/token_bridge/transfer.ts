@@ -65,7 +65,7 @@ export function transferAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferAlphScript()
   return script.buildByteCodeToDeploy({
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     fromAddress: fromAddress,
     toChainId: toChainId,
     toAddress: toAddress,
@@ -92,7 +92,7 @@ export function transferLocalTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferLocalTokenScript()
   return script.buildByteCodeToDeploy({
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     fromAddress: fromAddress,
     localTokenId: localTokenId,
     alphChainId: CHAIN_ID_ALEPHIUM,
@@ -123,7 +123,7 @@ export function transferRemoteTokenFromAlph(
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferRemoteTokenScript()
   return script.buildByteCodeToDeploy({
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     fromAddress: fromAddress,
     tokenPoolId: tokenPoolId,
     remoteTokenId: remoteTokenId,

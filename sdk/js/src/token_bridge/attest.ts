@@ -33,7 +33,7 @@ export function attestFromAlph(
   const script = attestTokenScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     localTokenId: tokenId,
     messageFee: messageFee,
     nonce: nonceHex,
@@ -53,7 +53,7 @@ export function attestWrappedAlph(
   const script = attestWrappedAlphScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     wrappedAlphId: wrappedAlphId,
     messageFee: messageFee,
     nonce: nonceHex,

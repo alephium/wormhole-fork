@@ -1,8 +1,8 @@
 {
-  "bytecodeTemplate": "01010300010007{0}1700{1}0d0c1600010c",
+  "bytecodeTemplate": "01010300000005{1}0d0c{0}010c",
   "fieldsSig": {
     "names": [
-      "tokenBridgeId",
+      "tokenBridge",
       "vaa"
     ],
     "types": [

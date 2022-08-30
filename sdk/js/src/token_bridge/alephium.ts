@@ -8,7 +8,7 @@ export function destroyUndoneSequenceContracts(
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = destroyUndoneSequencesScript()
   return script.buildByteCodeToDeploy({
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     vaa: vaaHex
   })
 }

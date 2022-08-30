@@ -85,7 +85,7 @@ export class Wormhole {
         this.initMessageFee = initMessageFee
     }
 
-    private async remotTokenPoolContract(): Promise<Contract> {
+    private remoteTokenPoolContract(): Contract {
         if (typeof this._remoteTokenPool !== 'undefined') {
             return this._remoteTokenPool as Contract
         }
@@ -104,10 +104,7 @@ export class Wormhole {
     }
 
     async deployContracts(networkType: NetworkType): Promise<WormholeContracts> {
-        const governanceDeployResult = await this.deployGovernance(
-            networkType, this.governanceChainId, this.governanceEmitterAddress,
-            this.initGuardianSet, this.initGuardianSetIndex, this.initMessageFee
-        )
+        const governanceDeployResult = await this.deployGovernance(networkType)
         const wrappedAlphDeployResult = await this.deployWrappedAlph(networkType)
         const tokenBridgeFactoryDeployResult = await this.deployTokenBridgeFactory()
         const tokenBridgeDeployResult = await this.deployTokenBridge(
@@ -116,7 +113,7 @@ export class Wormhole {
             wrappedAlphDeployResult.contractId,
             tokenBridgeFactoryDeployResult.contractId
         )
-        const remoteTokenPool = await this.remotTokenPoolContract()
+        const remoteTokenPool = this.remoteTokenPoolContract()
         return {
             remoteTokenPoolCodeHash: remoteTokenPool.codeHash,
             wrappedAlph: wrappedAlphDeployResult,
@@ -125,23 +122,16 @@ export class Wormhole {
         }
     }
 
-    private async deployGovernance(
-        networkType: NetworkType,
-        governanceChainId: number,
-        governanceEmitterAddress: string,
-        initGuardianSet: string[],
-        initGuardianSetIndex: number,
-        initMessageFee: bigint
-    ): Promise<DeployResult> {
+    private async deployGovernance(networkType: NetworkType): Promise<DeployResult> {
         const governance = Project.contract('governance.ral')
-        const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
-        const currentGuardianSet = sizePrefix + initGuardianSet.join('')
+        const sizePrefix = zeroPad(this.initGuardianSet.length.toString(16), 1)
+        const currentGuardianSet = sizePrefix + this.initGuardianSet.join('')
         const initFields = {
             'chainId': this.localChainId,
-            'governanceChainId': governanceChainId,
-            'governanceEmitterAddress': governanceEmitterAddress,
+            'governanceChainId': this.governanceChainId,
+            'governanceEmitterAddress': this.governanceEmitterAddress,
             'receivedSequence': 0,
-            'messageFee': initMessageFee,
+            'messageFee': this.initMessageFee,
             'previousGuardianSetExpirationTimeMS': 0
         }
         if (networkType === "devnet") {
@@ -149,14 +139,14 @@ export class Wormhole {
                 'guardianSet0': '',
                 'guardianSet1': currentGuardianSet,
                 'guardianSetIndex0': 0,
-                'guardianSetIndex1': initGuardianSetIndex,
+                'guardianSetIndex1': this.initGuardianSetIndex,
                 ...initFields
             }
             return this.deployOnDevnet(governance, 'deploy_governance.ral', fields, '00')
         } else {
             return this._deploy(governance, {
                 'guardianSets': Array('', currentGuardianSet),
-                'guardianSetIndexes': Array(0, initGuardianSetIndex),
+                'guardianSetIndexes': Array(0, this.initGuardianSetIndex),
                 ...initFields
             })
         }
@@ -227,13 +217,13 @@ export class Wormhole {
             'name_': '',
             'decimals_': 0
         }
-        const tokenPool = await this.remotTokenPoolContract()
+        const tokenPool = this.remoteTokenPoolContract()
         return await this._deploy(tokenPool, initFields)
     }
 
     private async deployTokenBridgeForChainTemplate(): Promise<DeployResult> {
         const initFields = {
-            'governanceContractId': '',
+            'governance': '',
             'localChainId': 0,
             'localTokenBridgeId': '',
             'remoteChainId': 0,
@@ -251,9 +241,9 @@ export class Wormhole {
 
     private async deployAttestTokenHandlerTemplate(): Promise<DeployResult> {
         const initFields = {
-            'governanceContractId': '',
+            'governance': '',
             'localChainId': 0,
-            'localTokenBridgeId': '',
+            'localTokenBridge': '',
             'remoteChainId': 0,
             'remoteTokenBridgeId': '',
             'receivedSequence': 0
@@ -272,7 +262,7 @@ export class Wormhole {
         const script = Project.script(`devnet/${scriptFileName}`)
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
-                'deployerId': deployerId,
+                'deployer': deployerId,
                 'bytecode': contract.bytecode,
                 ...initFields
             }
@@ -308,12 +298,12 @@ export class Wormhole {
     ): Promise<DeployResult> {
         const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
         const initFields = {
-            'governanceContractId': governanceContractId,
+            'governance': governanceContractId,
             'localChainId': this.localChainId,
             'receivedSequence': 0,
             'sendSequence': 0,
             'wrappedAlphId': wrappedAlphId,
-            'tokenBridgeFactoryId': tokenBridgeFactoryId,
+            'tokenBridgeFactory': tokenBridgeFactoryId,
             'minimalConsistencyLevel': networkConfigs[networkType].minimalConsistencyLevel
         }
         if (networkType === "devnet") {
@@ -333,7 +323,7 @@ export class Wormhole {
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 payer: payer,
-                tokenBridgeId: tokenBridgeId,
+                tokenBridge: tokenBridgeId,
                 vaa: vaa,
                 alphAmount: alphAmount
             }
@@ -351,7 +341,7 @@ export class Wormhole {
         const script = Project.script('token_bridge_scripts/create_local_token_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
-                tokenBridgeId: tokenBridgeId,
+                tokenBridge: tokenBridgeId,
                 localTokenId: localTokenId,
                 payer: payer,
                 alphAmount: alphAmount
@@ -369,7 +359,7 @@ export class Wormhole {
         const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
-                tokenBridgeId: tokenBridgeId,
+                tokenBridge: tokenBridgeId,
                 payer: payer,
                 alphAmount: alphAmount
             }

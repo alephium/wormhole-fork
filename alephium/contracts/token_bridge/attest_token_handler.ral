@@ -1,7 +1,7 @@
 Contract AttestTokenHandler(
-  governanceContractId: ByteVec,
+  governance: Governance,
   localChainId: U256,
-  localTokenBridgeId: ByteVec,
+  localTokenBridge: TokenBridge,
   remoteChainId: U256,
   remoteTokenBridgeId: ByteVec,
   mut receivedSequence: U256
@@ -12,7 +12,6 @@ Contract AttestTokenHandler(
     payer: Address,
     createContractAlphAmount: U256
   ) -> () {
-    let governance = Governance(governanceContractId)
     let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
     assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
     assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
@@ -29,8 +28,7 @@ Contract AttestTokenHandler(
     let name = byteVecSlice!(payload, 68, 100)
     assert!(size!(payload) == 100, ErrorCodes.InvalidMessageSize)
 
-    let tokenBridge = TokenBridge(localTokenBridgeId)
-    tokenBridge.createRemoteTokenPool{payer -> createContractAlphAmount}(
+    localTokenBridge.createRemoteTokenPool{payer -> createContractAlphAmount}(
       tokenId, remoteChainId, decimals, symbol, name, payer, createContractAlphAmount
     )
   }

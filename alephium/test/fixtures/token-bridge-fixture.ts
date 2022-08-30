@@ -263,9 +263,9 @@ function createRemoteTokenPoolTemplate(): ContractInfo {
 
 function createAttestTokenHandlerTemplate(): ContractInfo {
     return createContract('token_bridge/attest_token_handler.ral', {
-        'governanceContractId': '',
+        'governance': '',
         'localChainId': 0,
-        'localTokenBridgeId': '',
+        'localTokenBridge': '',
         'remoteChainId': 0,
         'remoteTokenBridgeId': '',
         'receivedSequence': 0
@@ -274,7 +274,7 @@ function createAttestTokenHandlerTemplate(): ContractInfo {
 
 function createTokenBridgeForChainTemplate(): ContractInfo {
     return createContract('token_bridge/token_bridge_for_chain.ral', {
-        'governanceContractId': '',
+        'governance': '',
         'localChainId': 0,
         'localTokenBridgeId': '',
         'remoteChainId': 0,
@@ -312,12 +312,12 @@ export function createTokenBridge(totalWrappedAlph: bigint = 0n, address?: strin
     const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
     const tokenBridgeAddress = typeof address === 'undefined' ? randomContractAddress() : address
     const initFields = {
-        'governanceContractId': governance.contractId,
+        'governance': governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'receivedSequence': 0,
         'sendSequence': 0,
         'wrappedAlphId': wrappedAlph.contractId,
-        'tokenBridgeFactoryId': tokenBridgeFactory.contractId,
+        'tokenBridgeFactory': tokenBridgeFactory.contractId,
         'minimalConsistencyLevel': minimalConsistencyLevel
     }
     const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
@@ -361,9 +361,9 @@ export function createAttestTokenHandler(
     const contractAddress = typeof address === 'undefined' ? attestTokenHandlerAddress(tokenBridge.contractId, remoteChainId) : address
     const attestTokenHandlerContract = Project.contract("token_bridge/attest_token_handler.ral")
     const initFields = {
-        'governanceContractId': tokenBridge.governance.contractId,
+        'governance': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
-        'localTokenBridgeId': tokenBridge.contractId,
+        'localTokenBridge': tokenBridge.contractId,
         'remoteChainId': remoteChainId,
         'remoteTokenBridgeId': remoteTokenBridgeId,
         'receivedSequence': 0
@@ -381,7 +381,7 @@ export function createTokenBridgeForChain(
     const tokenBridgeForChainContract = Project.contract("token_bridge/token_bridge_for_chain.ral")
     const templateContracts = tokenBridge.templateContracts
     const initFields = {
-        'governanceContractId': tokenBridge.governance.contractId,
+        'governance': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'localTokenBridgeId': tokenBridge.contractId,
         'remoteChainId': remoteChainId,

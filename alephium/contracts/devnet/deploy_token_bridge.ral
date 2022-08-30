@@ -1,23 +1,22 @@
 TxScript Main(
-  deployerId: ByteVec,
+  deployer: DevnetDeployer,
   bytecode: ByteVec,
-  governanceContractId: ByteVec,
+  governance: Governance,
   localChainId: U256,
   receivedSequence: U256,
   sendSequence: U256,
   wrappedAlphId: ByteVec,
-  tokenBridgeFactoryId: ByteVec,
+  tokenBridgeFactory: TokenBridgeFactory,
   minimalConsistencyLevel: U256
 ) {
-  let deployer = DevnetDeployer(deployerId)
   deployer.deployTokenBridge{callerAddress!() -> 1 alph}(
     bytecode,
-    governanceContractId,
+    governance,
     localChainId,
     receivedSequence,
     sendSequence,
     wrappedAlphId,
-    tokenBridgeFactoryId,
+    tokenBridgeFactory,
     minimalConsistencyLevel
   )
 }

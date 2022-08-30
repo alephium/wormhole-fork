@@ -1,5 +1,4 @@
-TxScript Main(payer: Address, tokenBridgeId: ByteVec, wrappedAlphId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
-    let tokenBridge = TokenBridge(tokenBridgeId)
+TxScript Main(payer: Address, tokenBridge: TokenBridge, wrappedAlphId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
     tokenBridge.attestToken{
         payer -> messageFee
     }(payer, wrappedAlphId, nonce, consistencyLevel)

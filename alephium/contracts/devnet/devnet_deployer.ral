@@ -29,21 +29,21 @@ Contract DevnetDeployer() {
   @using(preapprovedAssets = true)
   pub fn deployTokenBridge(
     bytecode: ByteVec,
-    governanceContractId: ByteVec,
+    governance: Governance,
     localChainId: U256,
     receivedSequence: U256,
     sendSequence: U256,
     wrappedAlphId: ByteVec,
-    tokenBridgeFactoryId: ByteVec,
+    tokenBridgeFactory: TokenBridgeFactory,
     minimalConsistencyLevel: U256
   ) -> () {
     let encodedState = encodeToByteVec!(
-      governanceContractId,
+      governance,
       localChainId,
       receivedSequence,
       sendSequence,
       wrappedAlphId,
-      tokenBridgeFactoryId,
+      tokenBridgeFactory,
       minimalConsistencyLevel
     )
     createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedState)

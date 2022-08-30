@@ -1,5 +1,5 @@
 TxScript Main(
-  deployerId: ByteVec,
+  deployer: DevnetDeployer,
   bytecode: ByteVec,
   chainId: U256,
   governanceChainId: U256,
@@ -12,7 +12,6 @@ TxScript Main(
   guardianSetIndex1: U256,
   previousGuardianSetExpirationTimeMS: U256
 ) {
-  let deployer = DevnetDeployer(deployerId)
   deployer.deployGovernance{callerAddress!() -> 1 alph}(
     bytecode,
     chainId,

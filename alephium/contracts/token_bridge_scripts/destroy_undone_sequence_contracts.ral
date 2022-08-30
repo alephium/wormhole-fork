@@ -1,4 +1,3 @@
-TxScript Main(tokenBridgeId: ByteVec, vaa: ByteVec) {
-  let tokenBridge = TokenBridge(tokenBridgeId)
+TxScript Main(tokenBridge: TokenBridge, vaa: ByteVec) {
   tokenBridge.destroyUndoneSequenceContracts(vaa)
 }
