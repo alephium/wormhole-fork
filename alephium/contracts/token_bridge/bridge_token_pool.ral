@@ -38,7 +38,7 @@ Abstract Contract BridgeTokenPool(
         normalizedArbiterFee: U256
     ) -> (U256, U256) {
         let expectedCallerContractId = subContractIdOf!(TokenBridge(tokenBridgeId), Path.TokenBridgeForChain ++ u256To2Byte!(emitterChainId))
-        checkPermission!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
+        checkCaller!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
         assert!(vaaTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
         assert!(vaaTokenChainId == tokenChainId, ErrorCodes.InvalidTransferMessage)
 

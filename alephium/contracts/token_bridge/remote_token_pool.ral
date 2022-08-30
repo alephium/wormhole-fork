@@ -30,7 +30,7 @@ Contract RemoteTokenPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        checkPermission!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
 
         transferTokenToSelf!(fromAddress, selfTokenId!(), totalAmount)

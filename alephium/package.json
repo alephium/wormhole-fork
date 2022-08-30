@@ -16,7 +16,7 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^0.2.0-rc.5",
+    "@alephium/web3": "^0.2.0-rc.7",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",
