@@ -1,15 +1,19 @@
 Abstract Contract BridgeTokenPool(
+    tokenBridgeId: ByteVec,
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
+    mut totalBridged: U256,
     decimals_: U256
 ) extends Math(), Constants(), TokenBridgeConstants() implements TokenPool {
     @using(readonly = true)
     fn prepareTransfer(
+        callerContractId: ByteVec,
         toAddress: ByteVec,
         amount: U256,
         arbiterFee: U256,
         nonce: ByteVec
     ) -> (ByteVec, U256) {
+        checkCaller!(callerContractId == tokenBridgeId, ErrorCodes.InvalidCaller)
         assert!(size!(toAddress) == 32, ErrorCodes.InvalidTransferToAddress)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
 
