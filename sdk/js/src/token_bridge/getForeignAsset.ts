@@ -1,3 +1,4 @@
+import { binToHex, NodeProvider } from "@alephium/web3";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
@@ -16,6 +17,22 @@ import {
   CHAIN_ID_ALGORAND,
   coalesceChainId,
 } from "../utils";
+import { contractExists, getTokenPoolId } from "./alephium";
+
+export async function getForeignAssetAlephium(
+  tokenBridgeId: string,
+  provider: NodeProvider,
+  originChain: ChainId | ChainName,
+  originAsset: Uint8Array
+): Promise<string | null> {
+  const remoteTokenPoolId = getTokenPoolId(tokenBridgeId, coalesceChainId(originChain), binToHex(originAsset))
+  try {
+    const exists = await contractExists(remoteTokenPoolId, provider)
+    return exists ? remoteTokenPoolId : null
+  } catch (e) {
+    return null
+  }
+}
 
 /**
  * Returns a foreign asset address on Ethereum for a provided native chain and asset address, AddressZero if it does not exist

@@ -4,6 +4,7 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  getForeignAssetAlephium,
   getForeignAssetAlgorand,
   getForeignAssetEth,
   getForeignAssetSolana,
@@ -44,8 +45,8 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
-import { getTokenPoolId } from "../utils/alephium";
 import {
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
@@ -255,7 +256,12 @@ function useFetchTargetAsset(nft?: boolean) {
       if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
-          const remoteTokenPoolId = await getTokenPoolId(originAsset, originChain, alphSigner!.nodeProvider)
+          const remoteTokenPoolId = await getForeignAssetAlephium(
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            alphSigner!.nodeProvider,
+            originChain,
+            hexToUint8Array(originAsset)
+          )
           if (!cancelled) {
             dispatch(
               setTargetAsset(
