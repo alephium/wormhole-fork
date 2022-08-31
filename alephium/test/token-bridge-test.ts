@@ -1032,4 +1032,20 @@ describe("test token bridge", () => {
             expect(newContract.fields).toEqual({})
         }
     })
+
+    it('should check token bridge public functions', async () => {
+        await buildProject(provider)
+        const tokenBridge = Project.contract("token_bridge/token_bridge.ral")
+        expect(tokenBridge.publicFunctions()).toEqual([
+            'registerChain',
+            'upgradeContract',
+            'destroyUnExecutedSequenceContracts',
+            'updateMinimalConsistencyLevel',
+            'attestToken',
+            'createLocalTokenPool',
+            'createRemoteTokenPool',
+            'transferToken',
+            'transferAlph'
+        ])
+    })
 })
