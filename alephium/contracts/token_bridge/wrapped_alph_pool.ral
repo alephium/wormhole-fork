@@ -4,7 +4,7 @@ Contract WrappedAlphPool(
     bridgeTokenId: ByteVec, // wrapped ALPH id
     mut totalBridged: U256,
     decimals_: U256 // should be 0
-) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
+) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     @using(preapprovedAssets = true)
     pub fn transfer(
         fromAddress: Address,
@@ -13,8 +13,7 @@ Contract WrappedAlphPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
-        let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
+        let (payload, totalAmount) = prepareTransfer(callerContractId!(), toAddress, amount, arbiterFee, nonce)
 
         WrappedAlph(bridgeTokenId).wrapAndTransfer{
             fromAddress -> totalAmount

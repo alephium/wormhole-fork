@@ -18,9 +18,9 @@ Contract TokenBridgeForChain(
         return msgSequence
     }
 
-    fn checkTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
+    fn checkCompleteTransfer(vaa: ByteVec) -> (Bool, ByteVec) {
         let governance = Governance(governanceContractId)
-        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
+        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
         assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -42,7 +42,7 @@ Contract TokenBridgeForChain(
 
     @using(preapprovedAssets = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
-        let (sequenceReady, payload) = checkTransfer(vaa)
+        let (sequenceReady, payload) = checkCompleteTransfer(vaa)
         if (!sequenceReady) { // too many undone sequences in between, compact those sequences first
             return
         }
@@ -59,11 +59,9 @@ Contract TokenBridgeForChain(
     pub fn destroyUndoneSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
-        let mut index = 0
-        while (index < length) {
+        for (let mut index = 0; index < length; index = index + 8) {
             let undoneSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
             UndoneSequence(undoneSequenceId).destroy()
-            index = index + 8
         }
     }
 }

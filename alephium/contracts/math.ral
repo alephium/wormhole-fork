@@ -1,11 +1,9 @@
 Abstract Contract Math() {
     @using(readonly = true)
     pub fn pow(x: U256, y: U256) -> (U256) {
-        let mut i = 0
         let mut result = 1
-        while (i < y) {
+        for (let mut i = 0; i < y; i = i + 1) {
             result = result * x
-            i = i + 1
         }
         return result
     }

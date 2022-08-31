@@ -6,7 +6,7 @@ Contract Governance(
     mut messageFee: U256,
     mut guardianSets: [ByteVec; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
-    mut previousGuardianSetExpirationTime: U256
+    mut previousGuardianSetExpirationTimeMS: U256
 ) extends Constants() {
     event WormholeMessage(sender: ByteVec, targetChainId: U256, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256)
 
@@ -39,23 +39,61 @@ Contract Governance(
         emit WormholeMessage(callerContractId!(), targetChainId, sequence, nonce, payload, consistencyLevel)
     }
 
-    // return emitterChainId, targetChainId, emitterAddress, sequence, payload
-    @using(readonly = true)
-    fn parseBody(body: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
-        // skip the first 8 bytes(timestamp and nonce)
+    // parse VAA and verify signatures
+    @using(readonly = true, externalCallCheck = false)
+    pub fn parseAndVerifyVAA(data: ByteVec, isGovernanceVAA: Bool) -> (U256, U256, ByteVec, U256, ByteVec) {
+        assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
+        let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
+        if (isGovernanceVAA) {
+            assert!(guardianSetIndex == guardianSetIndexes[1], ErrorCodes.InvalidGuardianSetIndex)
+        }
+
+        let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
+        let guardians = getGuardiansInfo(guardianSetIndex)
+        let guardianSize = u256From1Byte!(byteVecSlice!(guardians, 0, 1))
+
+        // - check signature quorum size
+        assert!(guardianSize != 0, ErrorCodes.InvalidGuardianSetSize) // this is guaranteed, but let's double check
+        let quorumSize = ((guardianSize * 2) / 3) + 1
+        assert!(quorumSize <= signatureSize, ErrorCodes.InvalidSignatureSize)
+
+        let body = byteVecSlice!(data, 6 + signatureSize * 66, size!(data))
+        let hash = keccak256!(keccak256!(body))
+
+        let mut offset = 6
+        let mut lastGuardianIndex = -1
+        for (let mut sigIndex = 0; sigIndex < signatureSize; sigIndex = sigIndex + 1) {
+            // 1 byte `guardianIndex` and 65 bytes signature
+            let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
+
+            let guardianIndexI256 = toI256!(guardianIndex)
+            assert!(guardianIndexI256 > lastGuardianIndex, ErrorCodes.InvalidSignatureGuardianIndex)
+            lastGuardianIndex = guardianIndexI256
+
+            let signature = byteVecSlice!(data, offset + 1, offset + 66)
+            let recId = u256From1Byte!(byteVecSlice!(signature, 64, 65)) + 27
+            let newSignature = byteVecSlice!(signature, 0, 64) ++ u256To1Byte!(recId)
+            let guardianKeyIndex = 1 + guardianIndex * 20
+            let guardianKey = byteVecSlice!(guardians, guardianKeyIndex, guardianKeyIndex + 20)
+            assert!(guardianKey == ethEcRecover!(hash, newSignature), ErrorCodes.InvalidSignature)
+
+            offset = offset + 66
+        }
+
+        // Parse the body
+        // - skip the first 8 bytes(timestamp and nonce)
         let emitterChainId = u256From2Byte!(byteVecSlice!(body, 8, 10))
         let targetChainId = u256From2Byte!(byteVecSlice!(body, 10, 12))
         let emitterAddress = byteVecSlice!(body, 12, 44)
         let sequence = u256From8Byte!(byteVecSlice!(body, 44, 52))
-        // skip 1 byte of consistencyLevel
+        // - skip 1 byte of consistencyLevel
         let payload = byteVecSlice!(body, 53, size!(body))
         return emitterChainId, targetChainId, emitterAddress, sequence, payload
     }
 
     @using(readonly = true, externalCallCheck = false)
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
-        let body = parseAndVerifySignatures(vaa, true)
-        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseBody(body)
+        let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseAndVerifyVAA(vaa, true)
         assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
         assert!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
@@ -73,64 +111,13 @@ Contract Governance(
         return targetChainId, payload
     }
 
-    @using(readonly = true, externalCallCheck = false)
-    pub fn parseAndVerifyVAA(vaa: ByteVec) -> (U256, U256, ByteVec, U256, ByteVec) {
-        let body = parseAndVerifySignatures(vaa, false)
-        return parseBody(body)
-    }
-
-    // parse VAA and verify signatures, return body
-    @using(readonly = true)
-    fn parseAndVerifySignatures(data: ByteVec, useLatestGuardianSetIndex: Bool) -> (ByteVec) {
-        assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
-        let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
-        if (useLatestGuardianSetIndex) {
-            assert!(guardianSetIndex == guardianSetIndexes[1], ErrorCodes.InvalidGuardianSetIndex)
-        }
-
-        let signatureSize = u256From1Byte!(byteVecSlice!(data, 5, 6))
-        let guardians = getGuardiansInfo(guardianSetIndex)
-        let guardianSize = u256From1Byte!(byteVecSlice!(guardians, 0, 1))
-
-        // check signature quorum size
-        assert!(guardianSize != 0, ErrorCodes.InvalidGuardianSetSize) // this is guaranteed, but let's double check
-        let quorumSize = ((guardianSize * 2) / 3) + 1
-        assert!(quorumSize <= signatureSize, ErrorCodes.InvalidSignatureSize)
-
-        let body = byteVecSlice!(data, 6 + signatureSize * 66, size!(data))
-        let hash = keccak256!(keccak256!(body))
-
-        let mut offset = 6
-        let mut lastGuardianIndex = -1
-        let mut sigIndex = 0
-        while (sigIndex < signatureSize) {
-            // 1 byte `guardianIndex` and 65 bytes signature
-            let guardianIndex = u256From1Byte!(byteVecSlice!(data, offset, offset + 1))
-
-            let guardianIndexI256 = toI256!(guardianIndex)
-            assert!(guardianIndexI256 > lastGuardianIndex, ErrorCodes.InvalidSignatureGuardianIndex)
-            lastGuardianIndex = guardianIndexI256
-
-            let signature = byteVecSlice!(data, offset + 1, offset + 66)
-            let recId = u256From1Byte!(byteVecSlice!(signature, 64, 65)) + 27
-            let newSignature = byteVecSlice!(signature, 0, 64) ++ u256To1Byte!(recId)
-            let guardianKeyIndex = 1 + guardianIndex * 20
-            let guardianKey = byteVecSlice!(guardians, guardianKeyIndex, guardianKeyIndex + 20)
-            assert!(guardianKey == ethEcRecover!(hash, newSignature), ErrorCodes.InvalidSignature)
-
-            offset = offset + 66
-            sigIndex = sigIndex + 1
-        }
-        return body
-    }
-
     @using(readonly = true)
     fn getGuardiansInfo(guardianSetIndex: U256) -> ByteVec {
         if (guardianSetIndex == guardianSetIndexes[1]) {
             return guardianSets[1]
         }
         if (guardianSetIndex == guardianSetIndexes[0]) {
-            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTime, ErrorCodes.GuardianSetExpired)
+            assert!(blockTimeStamp!() <= previousGuardianSetExpirationTimeMS, ErrorCodes.GuardianSetExpired)
             return guardianSets[0]
         }
         panic!(ErrorCodes.InvalidGuardianSetIndex)
@@ -148,24 +135,24 @@ Contract Governance(
         } else {
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
-            let currentEncodedState = u256To32Byte!(receivedSequence)
+            let currentEncodedFields = u256To32Byte!(receivedSequence)
                 ++ u256To32Byte!(messageFee)
                 ++ u256To32Byte!(guardianSetIndexes[0])
                 ++ u256To32Byte!(guardianSetIndexes[1])
-            assert!(prevStateHash == blake2b!(currentEncodedState), ErrorCodes.ContractStateMismatch)
-            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+            assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
+            let fieldsEncodedLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
-            let newContractState = byteVecSlice!(payload, offset, offset + stateLength)
-            offset = offset + stateLength
+            let newContractFields = byteVecSlice!(payload, offset, offset + fieldsEncodedLength)
+            offset = offset + fieldsEncodedLength
             assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
-            migrateWithFields!(newContractCode, newContractState)
+            migrateWithFields!(newContractCode, newContractFields)
         }
     }
 
     fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
         guardianSetIndexes[0] = guardianSetIndexes[1]
-        previousGuardianSetExpirationTime = blockTimeStamp!() + GuardianSetExpireDuration
+        previousGuardianSetExpirationTimeMS = blockTimeStamp!() + GuardianSetExpireDuration
     }
 
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {

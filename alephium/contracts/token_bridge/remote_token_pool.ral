@@ -6,7 +6,7 @@ Contract RemoteTokenPool(
     symbol_: ByteVec,
     name_: ByteVec,
     decimals_: U256
-) extends BridgeTokenPool(tokenChainId, bridgeTokenId, decimals_) {
+) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     @using(readonly = true)
     pub fn name() -> ByteVec {
         return name_
@@ -30,8 +30,7 @@ Contract RemoteTokenPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
-        let (payload, totalAmount) = prepareTransfer(toAddress, amount, arbiterFee, nonce)
+        let (payload, totalAmount) = prepareTransfer(callerContractId!(), toAddress, amount, arbiterFee, nonce)
 
         transferTokenToSelf!(fromAddress, selfTokenId!(), totalAmount)
         totalBridged = totalBridged - totalAmount
@@ -56,7 +55,7 @@ Contract RemoteTokenPool(
         if (caller != recipient) {
             transferAlph!(caller, recipient, dustAmount!())
         }
-        let tokenId = selfContractId!()
+        let tokenId = selfTokenId!()
         transferTokenFromSelf!(recipient, tokenId, transferAmount)
         if (arbiterFee > 0) {
             transferTokenFromSelf!(caller, tokenId, arbiterFee)

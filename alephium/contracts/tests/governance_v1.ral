@@ -7,7 +7,7 @@ Contract GovernanceV1(
     @unused mut messageFee: U256,
     @unused mut guardianSets: [ByteVec; 2],
     @unused mut guardianSetIndexes: [U256; 2],
-    @unused mut previousGuardianSetExpirationTime: U256
+    @unused mut previousGuardianSetExpirationTimeMS: U256
 ) {
   @using(readonly = true)
   pub fn foo() -> () {}

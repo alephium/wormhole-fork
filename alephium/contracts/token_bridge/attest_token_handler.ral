@@ -13,7 +13,7 @@ Contract AttestTokenHandler(
     createContractAlphAmount: U256
   ) -> () {
     let governance = Governance(governanceContractId)
-    let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa)
+    let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
     assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
     assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
     assert!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)

@@ -10,7 +10,7 @@ TxScript Main(
   guardianSet1: ByteVec,
   guardianSetIndex0: U256,
   guardianSetIndex1: U256,
-  previousGuardianSetExpirationTime: U256
+  previousGuardianSetExpirationTimeMS: U256
 ) {
   let deployer = DevnetDeployer(deployerId)
   deployer.deployGovernance{callerAddress!() -> 1 alph}(
@@ -22,6 +22,6 @@ TxScript Main(
     messageFee,
     [guardianSet0, guardianSet1],
     [guardianSetIndex0, guardianSetIndex1],
-    previousGuardianSetExpirationTime
+    previousGuardianSetExpirationTimeMS
   )
 }

@@ -78,7 +78,7 @@ export function createGovernance(): ContractInfo {
         'messageFee': messageFee,
         'guardianSets': Array('', initGuardianSet.encodeAddresses()),
         'guardianSetIndexes': [0, initGuardianSet.index],
-        'previousGuardianSetExpirationTime': 0
+        'previousGuardianSetExpirationTimeMS': 0
     }
     const contractState = governanceContract.toState(initFields, initAsset, address)
     return new ContractInfo(governanceContract, contractState, [], address)
