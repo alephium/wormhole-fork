@@ -21,9 +21,9 @@ export function createUnExecutedSequence(
 }
 
 export function createSequence(
-    next: number,
-    next1: bigint,
-    next2: bigint,
+    start: number,
+    firstNext256: bigint,
+    secondNext256: bigint,
     refundAddress: string,
     contractId?: string
 ): ContractInfo {
@@ -33,9 +33,9 @@ export function createSequence(
     )
     const contract = Project.contract('tests/sequence_test.ral', {errorOnWarnings: false})
     const initField = {
-        'next': next,
-        'next1': next1,
-        'next2': next2,
+        'start': start,
+        'firstNext256': firstNext256,
+        'secondNext256': secondNext256,
         'unExecutedSequenceTemplateId': unExecutedSequenceTemplate.contractId,
         'refundAddress': refundAddress
     }

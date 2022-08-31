@@ -228,9 +228,9 @@ export class Wormhole {
             'localTokenBridgeId': '',
             'remoteChainId': 0,
             'remoteTokenBridgeId': '',
-            'next': 0,
-            'next1': 0,
-            'next2': 0,
+            'start': 0,
+            'firstNext256': 0,
+            'secondNext256': 0,
             'unExecutedSequenceTemplateId': '',
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0

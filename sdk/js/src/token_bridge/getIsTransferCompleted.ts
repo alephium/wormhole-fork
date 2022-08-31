@@ -53,25 +53,25 @@ export async function getIsTransferCompletedAlph(
   const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
   const contractState = await provider.contracts.getContractsAddressState(tokenBridgeForChainAddress, {group: groupIndex})
   const fields = contractState.fields
-  const next = BigInt((fields[5] as node.ValU256).value)
-  const next1 = BigInt((fields[6] as node.ValU256).value)
-  const next2 = BigInt((fields[7] as node.ValU256).value)
+  const start = BigInt((fields[5] as node.ValU256).value)
+  const firstNext256 = BigInt((fields[6] as node.ValU256).value)
+  const secondNext256 = BigInt((fields[7] as node.ValU256).value)
   const sequence = BigInt(VAA.from(signedVAA).body.sequence)
 
-  if (sequence < next) {
+  if (sequence < start) {
     return isSequenceExecuted(provider, tokenBridgeForChainId, sequence, groupIndex)
   }
 
-  let distance = sequence - next
+  let distance = sequence - start
   if (distance >= bigInt512) {
     return false
   }
   if (distance < bigInt256) {
-    return ((next1 >> distance) & bigInt1) === bigInt1
+    return ((firstNext256 >> distance) & bigInt1) === bigInt1
   }
 
   distance = distance - bigInt256
-  return ((next2 >> distance) & bigInt1) === bigInt1
+  return ((secondNext256 >> distance) & bigInt1) === bigInt1
 }
 
 export async function getIsTransferCompletedEth(

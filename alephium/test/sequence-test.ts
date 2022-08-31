@@ -20,10 +20,10 @@ describe("test sequence", () => {
             })
             expect(testResult.returns).toEqual([true])
             expect(testResult.contracts.length).toEqual(1)
-            expect(testResult.contracts[0].fields['next']).toEqual(0)
-            const next1 = BigInt(1) << BigInt(seq)
-            expect(testResult.contracts[0].fields['next1'].toString()).toEqual(next1.toString())
-            expect(testResult.contracts[0].fields['next2']).toEqual(0)
+            expect(testResult.contracts[0].fields['start']).toEqual(0)
+            const firstNext256 = BigInt(1) << BigInt(seq)
+            expect(testResult.contracts[0].fields['firstNext256'].toString()).toEqual(firstNext256.toString())
+            expect(testResult.contracts[0].fields['secondNext256']).toEqual(0)
             expect(testResult.events.length).toEqual(0)
         }
 
@@ -36,10 +36,10 @@ describe("test sequence", () => {
             })
             expect(testResult.returns).toEqual([true])
             expect(testResult.contracts.length).toEqual(1)
-            expect(testResult.contracts[0].fields['next']).toEqual(0)
-            expect(testResult.contracts[0].fields['next1']).toEqual(0)
-            const next2 = BigInt(1) << BigInt(seq - 256)
-            expect(testResult.contracts[0].fields['next2'].toString()).toEqual(next2.toString())
+            expect(testResult.contracts[0].fields['start']).toEqual(0)
+            expect(testResult.contracts[0].fields['firstNext256']).toEqual(0)
+            const secondNext256 = BigInt(1) << BigInt(seq - 256)
+            expect(testResult.contracts[0].fields['secondNext256'].toString()).toEqual(secondNext256.toString())
             expect(testResult.events.length).toEqual(0)
         }
     }, 90000)
@@ -56,9 +56,9 @@ describe("test sequence", () => {
         })
         expect(testResult.returns).toEqual([true])
         expect(testResult.contracts.length).toEqual(1)
-        expect(testResult.contracts[0].fields['next']).toEqual(512 + 256)
-        expect(testResult.contracts[0].fields['next1']).toEqual(allExecuted)
-        expect(testResult.contracts[0].fields['next2']).toEqual(2)
+        expect(testResult.contracts[0].fields['start']).toEqual(512 + 256)
+        expect(testResult.contracts[0].fields['firstNext256']).toEqual(allExecuted)
+        expect(testResult.contracts[0].fields['secondNext256']).toEqual(2)
         expect(testResult.events.length).toEqual(0)
     })
 
@@ -76,9 +76,9 @@ describe("test sequence", () => {
         })
         expect(testResult.returns).toEqual([false])
         const sequenceContractState = testResult.contracts[2]
-        expect(sequenceContractState.fields['next']).toEqual(256)
-        expect(sequenceContractState.fields['next1']).toEqual(1)
-        expect(sequenceContractState.fields['next2']).toEqual(0)
+        expect(sequenceContractState.fields['start']).toEqual(256)
+        expect(sequenceContractState.fields['firstNext256']).toEqual(1)
+        expect(sequenceContractState.fields['secondNext256']).toEqual(0)
 
         const unExecutedSequenceContractState = testResult.contracts[0]
         expect(unExecutedSequenceContractState.fields['begin']).toEqual(0)
@@ -113,9 +113,9 @@ describe("test sequence", () => {
             await expectAssertionFailed(async() => {
                 return await sequence.testPrivateMethod("checkSequence", {
                     initialFields: {
-                        'next': 0,
-                        'next1': 0,
-                        'next2': allExecuted,
+                        'start': 0,
+                        'firstNext256': 0,
+                        'secondNext256': allExecuted,
                         'unExecutedSequenceTemplateId': unExecutedSequenceTemplateId,
                         'refundAddress': refundAddress
                     },
@@ -130,27 +130,27 @@ describe("test sequence", () => {
 
     it('should check sequence succeed and create unexecuted sequence subcontract', async () => {
         await buildProject(provider)
-        const next = 256
-        const next1 = (BigInt(0xff) << 248n)
-        const sequenceInfo = createSequence(next, next1, 0n, refundAddress)
+        const start = 256
+        const firstNext256 = (BigInt(0xff) << 248n)
+        const sequenceInfo = createSequence(start, firstNext256, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         const testResult = await sequence.testPrivateMethod('checkSequence', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,
-            testArgs: { 'seq': next + 513 },
+            testArgs: { 'seq': start + 513 },
             existingContracts: sequenceInfo.dependencies,
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
         expect(testResult.returns).toEqual([true])
         const subContractOutput = testResult.contracts[0]
         expect(subContractOutput.fields['begin']).toEqual(256)
-        expect(subContractOutput.fields['sequences']).toEqual(next1)
+        expect(subContractOutput.fields['sequences']).toEqual(firstNext256)
         const expectedContractId = subContractId(sequenceInfo.contractId, '0000000000000001')
         expect(subContractOutput.contractId).toEqual(expectedContractId)
-        expect(testResult.contracts[2].fields['next']).toEqual(next + 256)
-        expect(testResult.contracts[2].fields['next1']).toEqual(0)
-        expect(testResult.contracts[2].fields['next2']).toEqual(2)
+        expect(testResult.contracts[2].fields['start']).toEqual(start + 256)
+        expect(testResult.contracts[2].fields['firstNext256']).toEqual(0)
+        expect(testResult.contracts[2].fields['secondNext256']).toEqual(2)
         expect(testResult.events.length).toEqual(1)
     })
 
@@ -176,9 +176,9 @@ describe("test sequence", () => {
             expect(testResult.returns).toEqual([true])
             const unExecutedSequenceContract = testResult.contracts[1]
             expect(unExecutedSequenceContract.fields['sequences']).toEqual(sequences + (1n << BigInt(seq)))
-            expect(testResult.contracts[2].fields['next']).toEqual(512)
-            expect(testResult.contracts[2].fields['next1']).toEqual(0)
-            expect(testResult.contracts[2].fields['next2']).toEqual(0)
+            expect(testResult.contracts[2].fields['start']).toEqual(512)
+            expect(testResult.contracts[2].fields['firstNext256']).toEqual(0)
+            expect(testResult.contracts[2].fields['secondNext256']).toEqual(0)
             expect(testResult.events.length).toEqual(0)
         }
     })

@@ -4,13 +4,13 @@ Contract TokenBridgeForChain(
     localTokenBridgeId: ByteVec, // local chain token bridge contract id
     remoteChainId: U256,
     remoteTokenBridgeId: ByteVec, // remote chain token bridge contract id
-    mut next: U256,
-    mut next1: U256,
-    mut next2: U256,
+    mut start: U256,
+    mut firstNext256: U256,
+    mut secondNext256: U256,
     unExecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
     refundAddress: Address,
     mut sendSequence: U256
-) extends Sequence(next, next1, next2, unExecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
+) extends Sequence(start, firstNext256, secondNext256, unExecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
