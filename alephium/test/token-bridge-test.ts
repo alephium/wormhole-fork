@@ -543,25 +543,29 @@ describe("test token bridge", () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
         const fixture = newTokenBridgeFixture()
-        const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
-        const vaaBody = new VAABody(attestToken.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
-        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+
         const attestTokenHandlerInfo = createAttestTokenHandler(
             fixture.tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const attestTokenHandler = attestTokenHandlerInfo.contract
-        const testResult = await attestTokenHandler.testPublicMethod('handleAttestToken', {
-            address: attestTokenHandlerInfo.address,
-            initialFields: attestTokenHandlerInfo.selfState.fields,
-            testArgs: {
-                'vaa': binToHex(vaa.encode()),
-                'payer': payer,
-                'createContractAlphAmount': minimalAlphInContract
-            },
-            inputAssets: [defaultInputAsset],
-            existingContracts: fixture.tokenBridgeInfo.states()
-        })
+        async function test(targetChainId: number) {
+            const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
+            const vaaBody = new VAABody(attestToken.encode(), remoteChainId, targetChainId, remoteTokenBridgeId, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            return attestTokenHandler.testPublicMethod('handleAttestToken', {
+                address: attestTokenHandlerInfo.address,
+                initialFields: attestTokenHandlerInfo.selfState.fields,
+                testArgs: {
+                    'vaa': binToHex(vaa.encode()),
+                    'payer': payer,
+                    'createContractAlphAmount': minimalAlphInContract
+                },
+                inputAssets: [defaultInputAsset],
+                existingContracts: fixture.tokenBridgeInfo.states()
+            })
+        }
 
+        const testResult = await test(0)
         const tokenPoolOutput = testResult.txOutputs[0]
         const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, remoteChainId, remoteTokenId)
         expect(tokenPoolOutput.address).toEqual(expectedAddress)
@@ -571,6 +575,8 @@ describe("test token bridge", () => {
             id: tokenPoolId,
             amount: u256Max
         }])
+
+        await expectAssertionFailed(async () => test(CHAIN_ID_ALEPHIUM))
     })
 
     it('should transfer remote token', async () => {

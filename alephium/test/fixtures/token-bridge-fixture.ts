@@ -264,7 +264,6 @@ function createRemoteTokenPoolTemplate(): ContractInfo {
 function createAttestTokenHandlerTemplate(): ContractInfo {
     return createContract('token_bridge/attest_token_handler.ral', {
         'governance': '',
-        'localChainId': 0,
         'localTokenBridge': '',
         'remoteChainId': 0,
         'remoteTokenBridgeId': '',

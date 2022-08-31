@@ -305,6 +305,34 @@ contract("Bridge", function () {
 
         const nativeContract = await initializedWrappedAsset.methods.nativeContract().call();
         assert.equal(nativeContract, "0x000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
+
+        let failed = false;
+        try {
+            const invalidVM = await signAndEncodeVM(
+                0,
+                0,
+                testForeignChainId,
+                2,
+                testForeignBridgeContract,
+                0,
+                data,
+                [
+                    testSigner1PK
+                ],
+                0,
+                0
+            );
+
+            await initialized.methods.createWrapped("0x" + invalidVM).send({
+                value: 0,
+                from: accounts[0],
+                gasLimit: 2000000
+            });
+        } catch (error) {
+            assert.equal(error.message, "Returned error: VM Exception while processing transaction: revert invalid target chain")
+            failed = true
+        }
+        assert.ok(failed)
     })
 
     it("should correctly update a wrapped asset for a token attestation", async function () {

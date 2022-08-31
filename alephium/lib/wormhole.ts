@@ -242,7 +242,6 @@ export class Wormhole {
     private async deployAttestTokenHandlerTemplate(): Promise<DeployResult> {
         const initFields = {
             'governance': '',
-            'localChainId': 0,
             'localTokenBridge': '',
             'remoteChainId': 0,
             'remoteTokenBridgeId': '',

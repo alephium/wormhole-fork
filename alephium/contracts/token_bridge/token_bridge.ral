@@ -48,7 +48,6 @@ Contract TokenBridge(
         let remoteChainIdBytes = u256To2Byte!(remoteChainId)
         let attestTokenHandlerFields = encodeToByteVec!(
             governance,
-            localChainId,
             selfContractId!(),
             remoteChainId,
             remoteTokenBridgeId,
