@@ -260,15 +260,11 @@ func toUint16(field sdk.Val) (*uint16, error) {
 	return nil, errors.New("invalid uint16")
 }
 
-func getConsistencyLevel(field sdk.Val, minConfirmations uint8) (*uint8, error) {
-	confirmation, err := toUint8(field)
-	if err != nil {
-		return nil, err
+func maxUint8(a, b uint8) uint8 {
+	if a > b {
+		return a
 	}
-	if *confirmation > minConfirmations {
-		return confirmation, nil
-	}
-	return &minConfirmations, nil
+	return b
 }
 
 func ToWormholeMessage(fields []sdk.Val, txId string) (*WormholeMessage, error) {
