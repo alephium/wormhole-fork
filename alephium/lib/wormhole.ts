@@ -354,11 +354,17 @@ export class Wormhole {
         return result.txId
     }
 
-    async createWrappedAlphPool(tokenBridgeId: string, payer: string, alphAmount: bigint): Promise<string> {
+    async createWrappedAlphPool(
+        tokenBridgeId: string,
+        wrappedAlphId: string,
+        payer: string,
+        alphAmount: bigint
+    ): Promise<string> {
         const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
         const scriptTx = await script.transactionForDeployment(this.signer, {
             initialFields: {
                 tokenBridge: tokenBridgeId,
+                wrappedAlphId: wrappedAlphId,
                 payer: payer,
                 alphAmount: alphAmount
             }

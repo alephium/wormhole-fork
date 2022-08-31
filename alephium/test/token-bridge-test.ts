@@ -214,10 +214,11 @@ describe("test token bridge", () => {
         const fixture = newTokenBridgeFixture()
         const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
         const tokenBridge = fixture.tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod('createWrappedAlphPool', {
+        const testResult = await tokenBridge.testPublicMethod('createLocalTokenPool', {
             address: fixture.tokenBridgeInfo.address,
             initialFields: fixture.tokenBridgeInfo.selfState.fields,
             testArgs: {
+                'localTokenId': wrappedAlphId,
                 'payer': payer,
                 'createContractAlphAmount': minimalAlphInContract
             },

@@ -42,12 +42,14 @@ export function createLocalTokenPoolOnAlph(
 
 export function createWrappedAlphPool(
   tokenBridgeId: string,
+  wrappedAlphId: string,
   payer: string,
   alphAmount: bigint
 ): string {
   const script = createWrappedAlphPoolScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
+    wrappedAlphId: wrappedAlphId,
     tokenBridge: tokenBridgeId,
     alphAmount: alphAmount
   })

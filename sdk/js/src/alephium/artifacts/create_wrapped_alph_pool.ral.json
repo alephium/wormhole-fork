@@ -1,17 +1,20 @@
 {
-  "bytecodeTemplate": "01010300000009{0}{2}a2{0}{2}0e0c{1}0107",
+  "bytecodeTemplate": "0101030000000a{0}{3}a2{2}{0}{3}0f0c{1}0107",
   "fieldsSig": {
     "names": [
       "payer",
       "tokenBridge",
+      "wrappedAlphId",
       "alphAmount"
     ],
     "types": [
       "Address",
       "ByteVec",
+      "ByteVec",
       "U256"
     ],
     "isMutable": [
+      false,
       false,
       false,
       false
