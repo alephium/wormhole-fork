@@ -62,7 +62,6 @@ Contract TokenBridgeForChain(
         for (let mut index = 0; index < length; index = index + 8) {
             let undoneSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
             UndoneSequence(undoneSequenceId).destroy()
-            index = index + 8
         }
     }
 }
