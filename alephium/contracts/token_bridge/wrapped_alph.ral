@@ -1,11 +1,13 @@
 Contract WrappedAlph(
+    wrappedAlphPoolCodeHash: ByteVec,
     mut totalWrapped: U256
-) {
-    @using(preapprovedAssets=true, assetsInContract=true, externalCallCheck=false)
+) extends Constants() {
+    @using(preapprovedAssets=true, assetsInContract=true)
     pub fn wrapAndTransfer(
         fromAddress: Address,
         totalAmount: U256
     ) -> () {
+        checkCaller!(callerCodeHash!() == wrappedAlphPoolCodeHash, ErrorCodes.InvalidCaller)
         totalWrapped = totalWrapped + totalAmount
         transferAlphToSelf!(fromAddress, totalAmount)
         let self = selfAddress!()
@@ -14,7 +16,7 @@ Contract WrappedAlph(
         }(self, totalAmount)
     }
 
-    @using(preapprovedAssets=true, assetsInContract=true, externalCallCheck=false)
+    @using(preapprovedAssets=true, assetsInContract=true)
     pub fn unwrapAndCompleteTransfer(
         fromAddress: Address,
         recipient: Address,
@@ -22,6 +24,7 @@ Contract WrappedAlph(
         arbiter: Address,
         arbiterFee: U256
     ) -> () {
+        checkCaller!(callerCodeHash!() == wrappedAlphPoolCodeHash, ErrorCodes.InvalidCaller)
         let totalAmount = transferAmount + arbiterFee
         totalWrapped = totalWrapped - totalAmount
 

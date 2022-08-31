@@ -280,7 +280,11 @@ export class Wormhole {
     }
 
     private async deployWrappedAlph(networkType: NetworkType): Promise<DeployResult> {
-        const initFields = {'totalWrapped': 0}
+        const wrappedAlphPoolCodeHash = Project.contract('token_bridge/wrapped_alph_pool.ral').codeHash
+        const initFields = {
+            'wrappedAlphPoolCodeHash': wrappedAlphPoolCodeHash,
+            'totalWrapped': 0
+        }
         const wrappedAlph = Project.contract('token_bridge/wrapped_alph.ral')
         if (networkType === "devnet") {
             return this.deployOnDevnet(wrappedAlph, 'deploy_wrapped_alph.ral', initFields, '02')

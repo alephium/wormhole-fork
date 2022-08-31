@@ -11,7 +11,7 @@ Contract DevnetDeployer() {
     guardianSetIndexes: [U256; 2],
     previousGuardianSetExpirationTimeMS: U256
   ) -> () {
-    let encodedState = encodeToByteVec!(
+    let encodedFields = encodeToByteVec!(
       chainId,
       governanceChainId,
       governanceEmitterAddress,
@@ -23,7 +23,7 @@ Contract DevnetDeployer() {
       guardianSetIndexes[1],
       previousGuardianSetExpirationTimeMS
     )
-    createSubContract!{callerAddress!() -> 1 alph}(#00, bytecode, encodedState)
+    createSubContract!{callerAddress!() -> 1 alph}(#00, bytecode, encodedFields)
   }
 
   @using(preapprovedAssets = true)
@@ -37,7 +37,7 @@ Contract DevnetDeployer() {
     tokenBridgeFactory: TokenBridgeFactory,
     minimalConsistencyLevel: U256
   ) -> () {
-    let encodedState = encodeToByteVec!(
+    let encodedFields = encodeToByteVec!(
       governance,
       localChainId,
       receivedSequence,
@@ -46,12 +46,12 @@ Contract DevnetDeployer() {
       tokenBridgeFactory,
       minimalConsistencyLevel
     )
-    createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedState)
+    createSubContract!{callerAddress!() -> 1 alph}(#01, bytecode, encodedFields)
   }
 
   @using(preapprovedAssets = true)
-  pub fn deployWrappedAlph(bytecode: ByteVec) -> () {
-    let encodedState = encodeToByteVec!(0)
-    createSubContractWithToken!{callerAddress!() -> 1 alph}(#02, bytecode, encodedState, 1e9 alph)
+  pub fn deployWrappedAlph(bytecode: ByteVec, wrappedAlphPoolCodeHash: ByteVec) -> () {
+    let encodedFields = encodeToByteVec!(wrappedAlphPoolCodeHash, 0)
+    createSubContractWithToken!{callerAddress!() -> 1 alph}(#02, bytecode, encodedFields, 1e9 alph)
   }
 }

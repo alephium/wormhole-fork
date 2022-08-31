@@ -217,7 +217,7 @@ function createContract(
     return new ContractInfo(contract, state, deps, contractAddress)
 }
 
-function createWrappedAlph(totalWrapped: bigint): ContractInfo {
+function createWrappedAlph(totalWrapped: bigint, wrappedAlphPoolCodeHash: string): ContractInfo {
     const contractId = randomContractId()
     const initAsset: Asset = {
         alphAmount: totalWrapped,
@@ -226,7 +226,11 @@ function createWrappedAlph(totalWrapped: bigint): ContractInfo {
             amount: totalWrapped
         }]
     }
-    return createContract('token_bridge/wrapped_alph.ral', {'totalWrapped': totalWrapped}, [], initAsset, addressFromContractId(contractId))
+    const initFields = {
+        'wrappedAlphPoolCodeHash': wrappedAlphPoolCodeHash,
+        'totalWrapped': totalWrapped
+    }
+    return createContract('token_bridge/wrapped_alph.ral', initFields, [], initAsset, addressFromContractId(contractId))
 }
 
 function createWrappedAlphPoolTemplate(): ContractInfo {
@@ -306,7 +310,8 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
 export function createTokenBridge(totalWrappedAlph: bigint = 0n, address?: string): TokenBridgeInfo {
     const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
     const governance = createGovernance()
-    const wrappedAlph = createWrappedAlph(totalWrappedAlph)
+    const wrappedAlphPoolCodeHash = Project.contract('token_bridge/wrapped_alph_pool.ral').codeHash
+    const wrappedAlph = createWrappedAlph(totalWrappedAlph, wrappedAlphPoolCodeHash)
     const templateContracts = createTemplateContracts()
     const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
     const tokenBridgeAddress = typeof address === 'undefined' ? randomContractAddress() : address
