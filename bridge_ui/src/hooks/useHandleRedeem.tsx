@@ -66,7 +66,7 @@ import {
 } from "../utils/alephium";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { transactionDB } from "../utils/db";
+import { TransactionDB } from "../utils/db";
 
 async function algo(
   dispatch: any,
@@ -141,7 +141,7 @@ async function evm(
       setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
     if (sourceTxId && sourceChainId === CHAIN_ID_ALEPHIUM) {
-      await transactionDB.txs.update(sourceTxId, {status: "Completed"})
+      await TransactionDB.getInstance().txs.update(sourceTxId, {status: "Completed"})
     }
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,

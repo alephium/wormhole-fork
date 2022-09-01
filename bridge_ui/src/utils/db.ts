@@ -23,14 +23,31 @@ export class Transaction {
 }
 
 export class TransactionDB extends Dexie {
-  txs!: Table<Transaction>; 
+  private static dbName = 'tx-db'
+  private static instance: TransactionDB | undefined = undefined
 
-  constructor() {
+  txs!: Table<Transaction>
+
+  static async exists(): Promise<boolean> {
+    return Dexie.exists(TransactionDB.dbName)
+  }
+
+  static async delete(): Promise<void> {
+    await Dexie.delete(TransactionDB.dbName)
+    TransactionDB.instance = undefined
+  }
+
+  static getInstance(): TransactionDB {
+    if (typeof TransactionDB.instance === 'undefined') {
+      TransactionDB.instance = new TransactionDB()
+    }
+    return TransactionDB.instance
+  }
+
+  private constructor() {
     super('tx-db');
     this.version(1).stores({
       txs: '&txId, fromAddress, sourceChainId, targetChainId, sequence, status'
     });
   }
 }
-
-export const transactionDB = new TransactionDB();

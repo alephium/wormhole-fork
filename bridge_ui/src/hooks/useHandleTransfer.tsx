@@ -90,7 +90,7 @@ import {
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
 import { SignExecuteScriptTxResult } from "@alephium/web3";
-import { Transaction, transactionDB } from "../utils/db";
+import { Transaction, TransactionDB } from "../utils/db";
 
 async function algo(
   dispatch: any,
@@ -395,7 +395,7 @@ async function alephium(
         return result.txId
       }
     )
-    await transactionDB.txs.put(new Transaction(
+    await TransactionDB.getInstance().txs.put(new Transaction(
       txInfo.txId,
       signer.account.address,
       CHAIN_ID_ALEPHIUM,
