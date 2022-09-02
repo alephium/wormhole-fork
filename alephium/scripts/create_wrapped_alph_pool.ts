@@ -1,0 +1,19 @@
+import { Project } from "@alephium/web3"
+import { Deployer, NetworkType } from "../lib/deployment"
+
+const oneAlph = BigInt("1000000000000000000")
+
+const createWrappedAlphPool = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+  const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
+  const initFields = {
+    'tokenBridge': deployer.getEnvironment("TokenBridge"),
+    'wrappedAlphId': deployer.getEnvironment("WrappedAlph"),
+    'payer': deployer.account.address,
+    'alphAmount': oneAlph
+  }
+  await deployer.runScript(script, {
+    initialFields: initFields
+  })
+}
+
+export default createWrappedAlphPool

@@ -33,3 +33,10 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
     }
     return status as node.Confirmed;
 }
+
+export async function getCreatedContractAddress(provider: NodeProvider, txId: string, outputIndex: number): Promise<string> {
+    const confirmed = await waitTxConfirmed(provider, txId)
+    const block = await provider.blockflow.getBlockflowBlocksBlockHash(confirmed.blockHash)
+    const tx = block.transactions[confirmed.txIndex]
+    return tx.generatedOutputs[outputIndex].address
+}
