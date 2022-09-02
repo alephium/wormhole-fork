@@ -8,7 +8,7 @@ import { default as transferRemoteToken } from './artifacts/transfer_remote.ral.
 import { default as completeTransfer } from './artifacts/complete_transfer.ral.json'
 import { default as attestToken } from './artifacts/attest_token.ral.json'
 import { default as attestWrappedAlph } from './artifacts/attest_wrapped_alph.ral.json'
-import { default as destroyUnExecutedSequences } from './artifacts/destroy_unexecuted_sequence_contracts.ral.json'
+import { default as destroyUnexecutedSequences } from './artifacts/destroy_unexecuted_sequence_contracts.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -46,6 +46,6 @@ export function attestWrappedAlphScript(): Script {
     return Script.fromJson(attestWrappedAlph)
 }
 
-export function destroyUnExecutedSequencesScript(): Script {
-    return Script.fromJson(destroyUnExecutedSequences)
+export function destroyUnexecutedSequencesScript(): Script {
+    return Script.fromJson(destroyUnexecutedSequences)
 }

@@ -158,7 +158,7 @@ export class Wormhole {
         const remoteTokenPool = await this.deployRemoteTokenPoolTemplate()
         const tokenBridgeForChainDeployResult = await this.deployTokenBridgeForChainTemplate()
         const attestTokenHandlerDeployResult = await this.deployAttestTokenHandlerTemplate()
-        const unExecutedSequenceDeployResult = await this.deployUnExecutedSequenceTemplate()
+        const unexecutedSequenceDeployResult = await this.deployUnexecutedSequenceTemplate()
         const tokenBridgeFactory = Project.contract('token_bridge/token_bridge_factory.ral')
         const initFields = {
             'wrappedAlphPoolTemplateId': wrappedAlphPool.contractId,
@@ -166,21 +166,21 @@ export class Wormhole {
             'remoteTokenPoolTemplateId': remoteTokenPool.contractId,
             'tokenBridgeForChainTemplateId': tokenBridgeForChainDeployResult.contractId,
             'attestTokenHandlerTemplateId': attestTokenHandlerDeployResult.contractId,
-            'unExecutedSequenceTemplateId': unExecutedSequenceDeployResult.contractId,
+            'unexecutedSequenceTemplateId': unexecutedSequenceDeployResult.contractId,
             'refundAddress': this.refundAddress
         }
         return this._deploy(tokenBridgeFactory, initFields)
     }
 
-    private async deployUnExecutedSequenceTemplate(): Promise<DeployResult> {
+    private async deployUnexecutedSequenceTemplate(): Promise<DeployResult> {
         const initFields = {
             'parentId': '',
             'begin': 0,
             'sequences': 0n,
             'refundAddress': DummyRefundAddress
         }
-        const unExecutedSequence = Project.contract('sequence/unexecuted_sequence.ral')
-        return await this._deploy(unExecutedSequence, initFields)
+        const unexecutedSequence = Project.contract('sequence/unexecuted_sequence.ral')
+        return await this._deploy(unexecutedSequence, initFields)
     }
 
     private async deployWrappedAlphTokenPoolTemplate(): Promise<DeployResult> {
@@ -231,7 +231,7 @@ export class Wormhole {
             'start': 0,
             'firstNext256': 0,
             'secondNext256': 0,
-            'unExecutedSequenceTemplateId': '',
+            'unexecutedSequenceTemplateId': '',
             'refundAddress': DummyRefundAddress,
             'sendSequence': 0
         }

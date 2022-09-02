@@ -3,7 +3,7 @@ Abstract Contract Sequence(
     mut start: U256,
     mut firstNext256: U256,
     mut secondNext256: U256,
-    unExecutedSequenceTemplateId: ByteVec,
+    unexecutedSequenceTemplateId: ByteVec,
     refundAddress: Address
 ) extends Constants() {
     @using(readonly = true)
@@ -22,7 +22,7 @@ Abstract Contract Sequence(
                 firstNext256,
                 refundAddress
             )
-            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(start / 256), unExecutedSequenceTemplateId, encodedState)
+            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
         }
         start = start + 256
         firstNext256 = secondNext256
@@ -31,8 +31,8 @@ Abstract Contract Sequence(
 
     fn checkSequence(seq: U256) -> Bool {
         if (seq < start) {
-            let unExecutedSequenceId = subContractId!(u256To8Byte!(seq / 256))
-            UnExecutedSequence(unExecutedSequenceId).checkSequence(seq)
+            let unexecutedSequenceId = subContractId!(u256To8Byte!(seq / 256))
+            UnexecutedSequence(unexecutedSequenceId).checkSequence(seq)
             return true
         }
 

@@ -69,7 +69,7 @@ message GovernanceMessage {
     BridgeUpgradeContract bridge_contract_upgrade = 13;
 
     // Extension
-    DestroyUnExecutedSequenceContracts destroy_unexecuted_sequence_contracts = 20;
+    DestroyUnexecutedSequenceContracts destroy_unexecuted_sequence_contracts = 20;
   }
 }
 
@@ -126,7 +126,7 @@ message BridgeUpgradeContract {
   string new_contract = 2;
 }
 
-message DestroyUnExecutedSequenceContracts {
+message DestroyUnexecutedSequenceContracts {
   bytes payload = 1;
 }
 

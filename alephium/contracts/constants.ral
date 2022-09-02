@@ -22,7 +22,7 @@ Abstract Contract Constants() {
     InvalidNonceSize                        = 17
     TokenNotExist                           = 18
     InvalidTransferTargetChain              = 19
-    InvalidDestroyUnExecutedSequenceMessage = 20
+    InvalidDestroyUnexecutedSequenceMessage = 20
     InvalidCaller                           = 21
     InvalidTransferToAddress                = 22
     ArbiterFeeLessThanAmount                = 23

@@ -1,13 +1,13 @@
 import { NodeProvider, subContractId } from "@alephium/web3"
-import { destroyUnExecutedSequencesScript } from "../alephium/token_bridge"
+import { destroyUnexecutedSequencesScript } from "../alephium/token_bridge"
 import { toAlphContractAddress } from "../utils"
 
-export function destroyUnExecutedSequenceContracts(
+export function destroyUnexecutedSequenceContracts(
   tokenBridgeId: string,
   signedVAA: Uint8Array
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = destroyUnExecutedSequencesScript()
+  const script = destroyUnexecutedSequencesScript()
   return script.buildByteCodeToDeploy({
     tokenBridge: tokenBridgeId,
     vaa: vaaHex

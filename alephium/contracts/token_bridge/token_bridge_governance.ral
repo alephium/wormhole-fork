@@ -11,7 +11,7 @@ Abstract Contract TokenBridgeGovernance(
     enum ActionId {
       RegisterChain                 = #01
       ContractUpgrade               = #02
-      DestroyUnExecutedSequences    = #f0
+      DestroyUnexecutedSequences    = #f0
       UpdateMinimalConsistencyLevel = #f1
     }
 
@@ -59,7 +59,7 @@ Abstract Contract TokenBridgeGovernance(
             0,
             0,
             0,
-            tokenBridgeFactory.getUnExecutedSequenceTemplateId(),
+            tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
             tokenBridgeFactory.getRefundAddress(),
             0
         )
@@ -94,18 +94,18 @@ Abstract Contract TokenBridgeGovernance(
         }
     }
 
-    pub fn destroyUnExecutedSequenceContracts(vaa: ByteVec) -> () {
-        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnExecutedSequences)
+    pub fn destroyUnexecutedSequenceContracts(vaa: ByteVec) -> () {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnexecutedSequences)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
         let remoteChainIdBytes = byteVecSlice!(payload, 33, 35)
         let length = u256From2Byte!(byteVecSlice!(payload, 35, 37))
-        assert!(length > 0, ErrorCodes.InvalidDestroyUnExecutedSequenceMessage)
+        assert!(length > 0, ErrorCodes.InvalidDestroyUnexecutedSequenceMessage)
         let payloadSize = 37 + length * 8
         assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
         let paths = byteVecSlice!(payload, 37, payloadSize)
 
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ remoteChainIdBytes)
-        TokenBridgeForChain(tokenBridgeForChainId).destroyUnExecutedSequenceContracts(paths)
+        TokenBridgeForChain(tokenBridgeForChainId).destroyUnexecutedSequenceContracts(paths)
     }
 
     pub fn updateMinimalConsistencyLevel(vaa: ByteVec) -> () {

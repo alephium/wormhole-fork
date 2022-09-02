@@ -408,7 +408,7 @@ func (s *nodePrivilegedService) GetDestroyContractsGovernanceMessage(ctx context
 	emitterChain := vaa.ChainID(req.EmitterChain)
 
 	payload := &nodev1.GovernanceMessage_DestroyUnexecutedSequenceContracts{
-		DestroyUnexecutedSequenceContracts: &nodev1.DestroyUnExecutedSequenceContracts{
+		DestroyUnexecutedSequenceContracts: &nodev1.DestroyUnexecutedSequenceContracts{
 			Payload: destroyContractsPayload(emitterChain, req.Sequences),
 		},
 	}

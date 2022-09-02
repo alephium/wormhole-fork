@@ -7,10 +7,10 @@ Contract TokenBridgeForChain(
     mut start: U256,
     mut firstNext256: U256,
     mut secondNext256: U256,
-    unExecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
+    unexecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
     refundAddress: Address,
     mut sendSequence: U256
-) extends Sequence(start, firstNext256, secondNext256, unExecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
+) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
@@ -55,12 +55,12 @@ Contract TokenBridgeForChain(
         )
     }
 
-    pub fn destroyUnExecutedSequenceContracts(paths: ByteVec) -> () {
+    pub fn destroyUnexecutedSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         for (let mut index = 0; index < length; index = index + 8) {
-            let unExecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
-            UnExecutedSequence(unExecutedSequenceId).destroy()
+            let unexecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
+            UnexecutedSequence(unexecutedSequenceId).destroy()
         }
     }
 }

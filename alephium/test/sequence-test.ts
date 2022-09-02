@@ -1,5 +1,5 @@
 import { addressFromContractId, NodeProvider, subContractId } from '@alephium/web3'
-import { createSequence, createUnExecutedSequence } from './fixtures/sequence-fixture'
+import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
 import { buildProject, defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
@@ -80,21 +80,21 @@ describe("test sequence", () => {
         expect(sequenceContractState.fields['firstNext256']).toEqual(1)
         expect(sequenceContractState.fields['secondNext256']).toEqual(0)
 
-        const unExecutedSequenceContractState = testResult.contracts[0]
-        expect(unExecutedSequenceContractState.fields['begin']).toEqual(0)
-        expect(unExecutedSequenceContractState.fields['sequences']).toEqual(1)
+        const unexecutedSequenceContractState = testResult.contracts[0]
+        expect(unexecutedSequenceContractState.fields['begin']).toEqual(0)
+        expect(unexecutedSequenceContractState.fields['sequences']).toEqual(1)
 
         const sequenceOutput = testResult.txOutputs[1]
         expect(sequenceOutput.alphAmount).toEqual(oneAlph)
-        const unExecutedSequenceOutput = testResult.txOutputs[0]
-        expect(unExecutedSequenceOutput.address).toEqual(
+        const unexecutedSequenceOutput = testResult.txOutputs[0]
+        expect(unexecutedSequenceOutput.address).toEqual(
             addressFromContractId(subContractId(sequenceInfo.contractId, '0000000000000000'))
         )
     })
 
     it("should failed when executed repeatedly", async () => {
         await buildProject(provider)
-        const unExecutedSequenceTemplateId = randomContractId()
+        const unexecutedSequenceTemplateId = randomContractId()
         const sequenceInfo = createSequence(0, allExecuted, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
@@ -116,7 +116,7 @@ describe("test sequence", () => {
                         'start': 0,
                         'firstNext256': 0,
                         'secondNext256': allExecuted,
-                        'unExecutedSequenceTemplateId': unExecutedSequenceTemplateId,
+                        'unexecutedSequenceTemplateId': unexecutedSequenceTemplateId,
                         'refundAddress': refundAddress
                     },
                     address: sequenceInfo.address,
@@ -158,10 +158,10 @@ describe("test sequence", () => {
         await buildProject(provider)
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
-        const unExecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+        const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 0xffn
-        const unExecutedSequenceInfo = createUnExecutedSequence(
-            parentId, 256, sequences, refundAddress, unExecutedSequenceContractId
+        const unexecutedSequenceInfo = createUnexecutedSequence(
+            parentId, 256, sequences, refundAddress, unexecutedSequenceContractId
         )
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 8; seq++) {
@@ -170,12 +170,12 @@ describe("test sequence", () => {
                 initialAsset: {alphAmount: oneAlph * 10n},
                 address: sequenceInfo.address,
                 testArgs: { 'seq': 256 + seq },
-                existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unExecutedSequenceInfo.states()),
+                existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
                 inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
             })
             expect(testResult.returns).toEqual([true])
-            const unExecutedSequenceContract = testResult.contracts[1]
-            expect(unExecutedSequenceContract.fields['sequences']).toEqual(sequences + (1n << BigInt(seq)))
+            const unexecutedSequenceContract = testResult.contracts[1]
+            expect(unexecutedSequenceContract.fields['sequences']).toEqual(sequences + (1n << BigInt(seq)))
             expect(testResult.contracts[2].fields['start']).toEqual(512)
             expect(testResult.contracts[2].fields['firstNext256']).toEqual(0)
             expect(testResult.contracts[2].fields['secondNext256']).toEqual(0)
@@ -187,10 +187,10 @@ describe("test sequence", () => {
         await buildProject(provider)
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
-        const unExecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+        const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 1n
-        const unExecutedSequenceInfo = createUnExecutedSequence(
-            parentId, 256, sequences, refundAddress, unExecutedSequenceContractId
+        const unexecutedSequenceInfo = createUnexecutedSequence(
+            parentId, 256, sequences, refundAddress, unexecutedSequenceContractId
         )
         const sequence = sequenceInfo.contract
         for (let seq = 1; seq < 256; seq++) {
@@ -200,7 +200,7 @@ describe("test sequence", () => {
                     initialAsset: {alphAmount: oneAlph * 10n},
                     address: sequenceInfo.address,
                     testArgs: { 'seq': 256 + seq },
-                    existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unExecutedSequenceInfo.states()),
+                    existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
                     inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
                 })
             })
@@ -211,10 +211,10 @@ describe("test sequence", () => {
         await buildProject(provider)
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
-        const unExecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+        const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
         const sequences = allExecuted - 1n
-        const unExecutedSequenceInfo = createUnExecutedSequence(
-            parentId, 256, sequences, refundAddress, unExecutedSequenceContractId
+        const unexecutedSequenceInfo = createUnexecutedSequence(
+            parentId, 256, sequences, refundAddress, unexecutedSequenceContractId
         )
         const sequence = sequenceInfo.contract
         const testResult = await sequence.testPrivateMethod('checkSequence', {
@@ -222,15 +222,15 @@ describe("test sequence", () => {
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,
             testArgs: { 'seq': 256 },
-            existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unExecutedSequenceInfo.states()),
+            existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
             inputAssets: [{address: refundAddress, asset: {alphAmount: oneAlph}}]
         })
         expect(testResult.returns).toEqual([true])
-        expect(testResult.contracts.map(c => c.address).includes(unExecutedSequenceInfo.address)).toEqual(false)
+        expect(testResult.contracts.map(c => c.address).includes(unexecutedSequenceInfo.address)).toEqual(false)
         expect(testResult.events.length).toEqual(1)
         const destroyEvent = testResult.events[0]
         expect(destroyEvent.name).toEqual('ContractDestroyed')
-        expect(destroyEvent.fields['address']).toEqual(unExecutedSequenceInfo.address)
+        expect(destroyEvent.fields['address']).toEqual(unexecutedSequenceInfo.address)
         const assetOutput = testResult.txOutputs[0]
         expect(assetOutput.alphAmount).toEqual(oneAlph * 2n - defaultGasFee)
     })
