@@ -119,18 +119,20 @@ func (w *Watcher) getGovernanceEventsByTxId(
 		if event.EventIndex != WormholeMessageEventIndex {
 			continue
 		}
+
 		header, err := client.GetBlockHeader(ctx, event.BlockHash)
 		if err != nil {
 			return nil, err
 		}
-		field := event.Fields[len(event.Fields)-1]
-		confirmations, err := getConsistencyLevel(field, w.minConfirmations)
+
+		msg, err := ToWormholeMessage(event.Fields, txId)
 		if err != nil {
 			return nil, err
 		}
+
 		reobservedEvents = append(reobservedEvents, &reobservedEvent{
 			&event,
-			*confirmations,
+			maxUint8(msg.consistencyLevel, w.minConfirmations),
 			header,
 			txId,
 		})

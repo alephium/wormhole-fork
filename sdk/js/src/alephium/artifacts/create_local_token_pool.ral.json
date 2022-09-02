@@ -1,9 +1,9 @@
 {
-  "bytecodeTemplate": "01010300010010{1}1700{0}7a{3}a2{2}0da3{2}{0}{3}0f0c16000108",
+  "bytecodeTemplate": "0101030000000e{0}7a{3}a2{2}0da3{2}{0}{3}0f0c{1}0108",
   "fieldsSig": {
     "names": [
       "payer",
-      "tokenBridgeId",
+      "tokenBridge",
       "localTokenId",
       "alphAmount"
     ],

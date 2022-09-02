@@ -19,7 +19,7 @@ export function createRemoteTokenPoolOnAlph(
   const script = createRemoteTokenPoolScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    attestTokenHandlerId: attestTokenHandlerId,
+    attestTokenHandler: attestTokenHandlerId,
     vaa: vaaHex,
     alphAmount: alphAmount
   })
@@ -34,7 +34,7 @@ export function createLocalTokenPoolOnAlph(
   const script = createLocalTokenPoolScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    tokenBridgeId: tokenBridgeId,
+    tokenBridge: tokenBridgeId,
     tokenId: localTokenId,
     alphAmount: alphAmount
   })
@@ -42,13 +42,15 @@ export function createLocalTokenPoolOnAlph(
 
 export function createWrappedAlphPool(
   tokenBridgeId: string,
+  wrappedAlphId: string,
   payer: string,
   alphAmount: bigint
 ): string {
   const script = createWrappedAlphPoolScript()
   return script.buildByteCodeToDeploy({
     payer: payer,
-    tokenBridgeId: tokenBridgeId,
+    wrappedAlphId: wrappedAlphId,
+    tokenBridge: tokenBridgeId,
     alphAmount: alphAmount
   })
 }

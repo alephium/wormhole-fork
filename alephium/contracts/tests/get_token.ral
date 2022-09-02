@@ -1,4 +1,3 @@
-TxScript Main(sender: Address, tokenId: ByteVec, amount: U256) {
-    let token = TestToken(tokenId)
+TxScript Main(sender: Address, token: TestToken, amount: U256) {
     token.buy{sender -> amount}(sender, amount)
 }

@@ -1,0 +1,15 @@
+Contract UnexecutedSequenceTest(
+    unexecutedSequenceId: ByteVec
+) {
+    @using(preapprovedAssets = true)
+    pub fn checkSequence(seq: U256) -> () {
+        let unexecutedSequence = UnexecutedSequence(unexecutedSequenceId)
+        unexecutedSequence.checkSequence(seq)
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn destroy() -> () {
+        let unexecutedSequence = UnexecutedSequence(unexecutedSequenceId)
+        unexecutedSequence.destroy()
+    }
+}

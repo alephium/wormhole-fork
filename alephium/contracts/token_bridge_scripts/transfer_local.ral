@@ -1,5 +1,5 @@
 TxScript Main(
-    tokenBridgeId: ByteVec,
+    tokenBridge: TokenBridge,
     fromAddress: Address,
     localTokenId: ByteVec,
     alphChainId: U256,
@@ -11,7 +11,6 @@ TxScript Main(
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
-    let tokenBridge = TokenBridge(tokenBridgeId)
     tokenBridge.transferToken{
         fromAddress -> messageFee,
             localTokenId: tokenAmount

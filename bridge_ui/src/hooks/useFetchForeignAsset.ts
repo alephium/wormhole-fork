@@ -4,6 +4,7 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
+  getForeignAssetAlephium,
   getForeignAssetAlgorand,
   getForeignAssetEth,
   getForeignAssetSolana,
@@ -19,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
@@ -29,7 +31,6 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { getTokenPoolId, contractExist } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 
@@ -121,9 +122,12 @@ function useFetchForeignAsset(
             )
         : foreignChain === CHAIN_ID_ALEPHIUM
         ? () => {
-          const tokenPoolId = getTokenPoolId(originAssetHex, originChain)
-          return contractExist(tokenPoolId, alphSigner!.nodeProvider)
-            .then(exist => exist ? tokenPoolId : null)
+          return getForeignAssetAlephium(
+            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            alphSigner!.nodeProvider,
+            originChain,
+            hexToUint8Array(originAssetHex)
+          )
         }
         : foreignChain === CHAIN_ID_TERRA
         ? () => {

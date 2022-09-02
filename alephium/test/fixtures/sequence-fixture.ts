@@ -1,14 +1,14 @@
 import { Project, addressFromContractId } from "@alephium/web3";
 import { ContractInfo, initAsset, randomAssetAddress, randomContractAddress, randomContractId } from "./wormhole-fixture";
 
-export function createUndoneSequence(
+export function createUnexecutedSequence(
     parentId: string,
     begin: number,
     sequences: bigint,
     refundAddress: string,
     contractId?: string
 ): ContractInfo {
-    const contract = Project.contract('sequence/undone_sequence.ral')
+    const contract = Project.contract('sequence/unexecuted_sequence.ral')
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
     const initFields = {
         "parentId": parentId,
@@ -21,24 +21,24 @@ export function createUndoneSequence(
 }
 
 export function createSequence(
-    next: number,
-    next1: bigint,
-    next2: bigint,
+    start: number,
+    firstNext256: bigint,
+    secondNext256: bigint,
     refundAddress: string,
     contractId?: string
 ): ContractInfo {
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
-    const undoneSequenceTemplate = createUndoneSequence(
+    const unexecutedSequenceTemplate = createUnexecutedSequence(
         randomContractId(), 0, 0n, randomAssetAddress()
     )
     const contract = Project.contract('tests/sequence_test.ral', {errorOnWarnings: false})
     const initField = {
-        'next': next,
-        'next1': next1,
-        'next2': next2,
-        'undoneSequenceTemplateId': undoneSequenceTemplate.contractId,
+        'start': start,
+        'firstNext256': firstNext256,
+        'secondNext256': secondNext256,
+        'unexecutedSequenceTemplateId': unexecutedSequenceTemplate.contractId,
         'refundAddress': refundAddress
     }
     const state = contract.toState(initField, initAsset, address)
-    return new ContractInfo(contract, state, undoneSequenceTemplate.states(), address)
+    return new ContractInfo(contract, state, unexecutedSequenceTemplate.states(), address)
 }

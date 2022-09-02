@@ -21,7 +21,7 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  attestWrappedAlph,
+  attestWrappedAlph
 } from "@certusone/wormhole-sdk";
 import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";

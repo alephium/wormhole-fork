@@ -11,9 +11,10 @@ import {
     CHAIN_ID_ALEPHIUM,
     WormholeWrappedInfo,
     parseTargetChainFromLogAlph,
-    zeroPad
+    getTokenPoolId,
+    contractExists
 } from '@certusone/wormhole-sdk';
-import { NodeProvider, node, subContractId } from '@alephium/web3';
+import { NodeProvider, node } from '@alephium/web3';
 import WalletConnectProvider from "@alephium/walletconnect-provider";
 
 const WormholeMessageEventIndex = 0
@@ -89,12 +90,13 @@ export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
     return emitterChainId as ChainId
 }
 
-export function getTokenPoolId(tokenId: string, tokenChainId: ChainId): string {
+async function getLocalTokenPoolId(nodeProvider: NodeProvider, tokenId: string): Promise<string | null> {
     if (tokenId.length !== 64) {
         throw Error("invalid token id " + tokenId)
     }
-    const path = '02' + zeroPad(Number(tokenChainId).toString(16), 2) + tokenId
-    return subContractId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, path)
+    const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId)
+    const tokenPoolCreated = await contractExists(localTokenPoolId, nodeProvider)
+    return tokenPoolCreated ? localTokenPoolId : null
 }
 
 export class TokenInfo {
@@ -109,22 +111,28 @@ export class TokenInfo {
     }
 }
 
-export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
     // TODO: get symbol and name from configs
     if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
         return new TokenInfo(0, 'wrapped-alph', 'wrapped-alph')
     }
 
     const tokenAddress = toAlphContractAddress(tokenId)
-    const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
-    const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
-    if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-        const symbol = (state.fields[4] as node.ValByteVec).value
-        const name = (state.fields[5] as node.ValByteVec).value
-        const decimals = parseInt((state.fields[6] as node.ValU256).value)
-        return new TokenInfo(decimals, symbol, name)
-    } else {
-        return new TokenInfo(0, 'token', 'token')
+    try {
+        const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
+        const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
+        if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
+            const symbol = (state.fields[4] as node.ValByteVec).value
+            const name = (state.fields[5] as node.ValByteVec).value
+            const decimals = parseInt((state.fields[6] as node.ValU256).value)
+            return new TokenInfo(decimals, symbol, name)
+        }
+
+        const localTokenPoolId = await getLocalTokenPoolId(provider, tokenId)
+        return localTokenPoolId ? new TokenInfo(0, 'token', 'token') : undefined
+    } catch (error) {
+        console.log("failed to get alephium token info, error: " + error)
+        return undefined
     }
 }
 
@@ -142,15 +150,6 @@ export async function submitAlphScriptTx(
     tokens: tokens,
     attoAlphAmount: attoAlphAmount
   })
-}
-
-export async function contractExist(contractId: string, provider: NodeProvider): Promise<boolean> {
-    const address = toAlphContractAddress(contractId)
-    return provider
-        .addresses
-        .getAddressesAddressGroup(address)
-        .then(_ => true)
-        .catch(_ => false)
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
@@ -176,4 +175,3 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
       }
     })
 }
-

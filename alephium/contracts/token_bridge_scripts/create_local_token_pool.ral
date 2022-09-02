@@ -1,5 +1,4 @@
-TxScript Main(payer: Address, tokenBridgeId: ByteVec, localTokenId: ByteVec, alphAmount: U256) {
-    let tokenBridge = TokenBridge(tokenBridgeId)
+TxScript Main(payer: Address, tokenBridge: TokenBridge, localTokenId: ByteVec, alphAmount: U256) {
     tokenBridge.createLocalTokenPool{
         payer -> alphAmount, localTokenId: 1
     }(localTokenId, payer, alphAmount)

@@ -222,6 +222,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
 
         require(valid, reason);
         require(verifyBridgeVM(vm), "invalid emitter");
+        require(vm.targetChainId == 0, "invalid target chain");
 
         BridgeStructs.AssetMeta memory meta = parseAssetMeta(vm.payload);
         return _createWrapped(meta, vm.sequence);

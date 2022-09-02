@@ -2,7 +2,7 @@ import { Project, Contract, ContractState, subContractId, Asset, stringToHex, ad
 import { createGovernance } from './governance-fixture'
 import { CHAIN_ID_ALEPHIUM, ContractInfo, minimalAlphInContract, initAsset, randomContractAddress, randomContractId, randomAssetAddress, alph } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
-import { createUndoneSequence } from './sequence-fixture'
+import { createUnexecutedSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
 export const minimalConsistencyLevel = 105
@@ -70,7 +70,7 @@ export class UpdateMinimalConsistencyLevel {
     }
 }
 
-export class DestroyUndoneSequenceContracts {
+export class DestroyUnexecutedSequenceContracts {
     remoteChainId: number
     paths: number[]
 
@@ -133,7 +133,7 @@ export interface TemplateContracts {
     wrappedAlphPoolTemplate: ContractInfo
     localTokenPoolTemplate: ContractInfo
     remoteTokenPoolTemplate: ContractInfo
-    undoneSequenceTemplate: ContractInfo
+    unexecutedSequenceTemplate: ContractInfo
     tokenBridgeForChainTemplate: ContractInfo
     attestTokenHandlerTemplate: ContractInfo
 
@@ -182,14 +182,14 @@ function createTemplateContracts(): TemplateContracts {
     const remoteTokenPool = createRemoteTokenPoolTemplate()
     const attestTokenHandler = createAttestTokenHandlerTemplate()
     const tokenBridgeForChain = createTokenBridgeForChainTemplate()
-    const undoneSequence = createUndoneSequence(randomContractId(), 0, 0n, randomAssetAddress())
+    const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0, 0n, randomAssetAddress())
     return {
         wrappedAlphPoolTemplate: wrappedAlphPool,
         localTokenPoolTemplate: localTokenPool,
         remoteTokenPoolTemplate: remoteTokenPool,
         attestTokenHandlerTemplate: attestTokenHandler,
         tokenBridgeForChainTemplate: tokenBridgeForChain,
-        undoneSequenceTemplate: undoneSequence,
+        unexecutedSequenceTemplate: unexecutedSequence,
 
         states(): ContractState[] {
             return [
@@ -198,7 +198,7 @@ function createTemplateContracts(): TemplateContracts {
                 remoteTokenPool.selfState,
                 attestTokenHandler.selfState,
                 tokenBridgeForChain.selfState,
-                undoneSequence.selfState
+                unexecutedSequence.selfState
             ]
         }
     }
@@ -217,7 +217,7 @@ function createContract(
     return new ContractInfo(contract, state, deps, contractAddress)
 }
 
-function createWrappedAlph(totalWrapped: bigint): ContractInfo {
+function createWrappedAlph(totalWrapped: bigint, wrappedAlphPoolCodeHash: string): ContractInfo {
     const contractId = randomContractId()
     const initAsset: Asset = {
         alphAmount: totalWrapped,
@@ -226,7 +226,11 @@ function createWrappedAlph(totalWrapped: bigint): ContractInfo {
             amount: totalWrapped
         }]
     }
-    return createContract('token_bridge/wrapped_alph.ral', {'totalWrapped': totalWrapped}, [], initAsset, addressFromContractId(contractId))
+    const initFields = {
+        'wrappedAlphPoolCodeHash': wrappedAlphPoolCodeHash,
+        'totalWrapped': totalWrapped
+    }
+    return createContract('token_bridge/wrapped_alph.ral', initFields, [], initAsset, addressFromContractId(contractId))
 }
 
 function createWrappedAlphPoolTemplate(): ContractInfo {
@@ -263,9 +267,8 @@ function createRemoteTokenPoolTemplate(): ContractInfo {
 
 function createAttestTokenHandlerTemplate(): ContractInfo {
     return createContract('token_bridge/attest_token_handler.ral', {
-        'governanceContractId': '',
-        'localChainId': 0,
-        'localTokenBridgeId': '',
+        'governance': '',
+        'localTokenBridge': '',
         'remoteChainId': 0,
         'remoteTokenBridgeId': '',
         'receivedSequence': 0
@@ -274,15 +277,15 @@ function createAttestTokenHandlerTemplate(): ContractInfo {
 
 function createTokenBridgeForChainTemplate(): ContractInfo {
     return createContract('token_bridge/token_bridge_for_chain.ral', {
-        'governanceContractId': '',
+        'governance': '',
         'localChainId': 0,
         'localTokenBridgeId': '',
         'remoteChainId': 0,
         'remoteTokenBridgeId': '',
-        'next': 0,
-        'next1': 0,
-        'next2': 0,
-        'undoneSequenceTemplateId': '',
+        'start': 0,
+        'firstNext256': 0,
+        'secondNext256': 0,
+        'unexecutedSequenceTemplateId': '',
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
     })
@@ -296,7 +299,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
         'remoteTokenPoolTemplateId': templateContracts.remoteTokenPoolTemplate.contractId,
         'tokenBridgeForChainTemplateId': templateContracts.tokenBridgeForChainTemplate.contractId,
         'attestTokenHandlerTemplateId': templateContracts.attestTokenHandlerTemplate.contractId,
-        'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
+        'unexecutedSequenceTemplateId': templateContracts.unexecutedSequenceTemplate.contractId,
         'refundAddress': randomAssetAddress(),
     }
     const address = randomContractAddress()
@@ -307,17 +310,18 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
 export function createTokenBridge(totalWrappedAlph: bigint = 0n, address?: string): TokenBridgeInfo {
     const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
     const governance = createGovernance()
-    const wrappedAlph = createWrappedAlph(totalWrappedAlph)
+    const wrappedAlphPoolCodeHash = Project.contract('token_bridge/wrapped_alph_pool.ral').codeHash
+    const wrappedAlph = createWrappedAlph(totalWrappedAlph, wrappedAlphPoolCodeHash)
     const templateContracts = createTemplateContracts()
     const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
     const tokenBridgeAddress = typeof address === 'undefined' ? randomContractAddress() : address
     const initFields = {
-        'governanceContractId': governance.contractId,
+        'governance': governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'receivedSequence': 0,
         'sendSequence': 0,
         'wrappedAlphId': wrappedAlph.contractId,
-        'tokenBridgeFactoryId': tokenBridgeFactory.contractId,
+        'tokenBridgeFactory': tokenBridgeFactory.contractId,
         'minimalConsistencyLevel': minimalConsistencyLevel
     }
     const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
@@ -361,9 +365,9 @@ export function createAttestTokenHandler(
     const contractAddress = typeof address === 'undefined' ? attestTokenHandlerAddress(tokenBridge.contractId, remoteChainId) : address
     const attestTokenHandlerContract = Project.contract("token_bridge/attest_token_handler.ral")
     const initFields = {
-        'governanceContractId': tokenBridge.governance.contractId,
+        'governance': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
-        'localTokenBridgeId': tokenBridge.contractId,
+        'localTokenBridge': tokenBridge.contractId,
         'remoteChainId': remoteChainId,
         'remoteTokenBridgeId': remoteTokenBridgeId,
         'receivedSequence': 0
@@ -381,15 +385,15 @@ export function createTokenBridgeForChain(
     const tokenBridgeForChainContract = Project.contract("token_bridge/token_bridge_for_chain.ral")
     const templateContracts = tokenBridge.templateContracts
     const initFields = {
-        'governanceContractId': tokenBridge.governance.contractId,
+        'governance': tokenBridge.governance.contractId,
         'localChainId': CHAIN_ID_ALEPHIUM,
         'localTokenBridgeId': tokenBridge.contractId,
         'remoteChainId': remoteChainId,
         'remoteTokenBridgeId': remoteTokenBridgeId,
-        'next': 0,
-        'next1': 0,
-        'next2': 0,
-        'undoneSequenceTemplateId': templateContracts.undoneSequenceTemplate.contractId,
+        'start': 0,
+        'firstNext256': 0,
+        'secondNext256': 0,
+        'unexecutedSequenceTemplateId': templateContracts.unexecutedSequenceTemplate.contractId,
         'refundAddress': randomAssetAddress(),
         'sendSequence': 0
     }

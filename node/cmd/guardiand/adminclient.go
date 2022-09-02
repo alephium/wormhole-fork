@@ -231,7 +231,7 @@ func runGetDestroyContractsGovernanceMessage(cmd *cobra.Command, args []string) 
 	}
 	resp, err := c.GetDestroyContractsGovernanceMessage(ctx, request)
 	if err != nil {
-		log.Fatalf("failed to run GenUndoneTransferGovernanceMsg rpc, error: %v", err)
+		log.Fatalf("failed to run GetDestroyContractsGovernanceMessage rpc, error: %v", err)
 	}
 
 	injectRequest := &nodev1.InjectGovernanceVAARequest{

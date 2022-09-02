@@ -42,9 +42,10 @@ async function createLocalTokenPool(
 
 async function createWrappedAlphPool(
     wormhole: Wormhole,
-    tokenBridgeId: string
+    tokenBridgeId: string,
+    wrappedAlphId: string
 ) {
-    let txId = await wormhole.createWrappedAlphPool(tokenBridgeId, consts.payer, consts.minimalAlphInContract)
+    let txId = await wormhole.createWrappedAlphPool(tokenBridgeId, wrappedAlphId, consts.payer, consts.minimalAlphInContract)
     let alphPoolAddress = await getCreatedContractAddress(provider, txId, 0)
     const alphPoolId = binToHex(contractIdFromAddress(alphPoolAddress))
     console.log('alph pool id: ' + alphPoolId)
@@ -61,7 +62,7 @@ async function getToken(
         initialFields: {
             sender: from,
             amount: amount,
-            tokenId: tokenId
+            token: tokenId
         }
     })
     const result = await signer.submitTransaction(scriptTx.unsignedTx, scriptTx.txId)
@@ -99,7 +100,7 @@ async function deploy() {
     console.log('get token txId: ' + getTokenTxId)
 
     await createLocalTokenPool(wormhole, testTokenId, contracts.tokenBridge.contractId)
-    await createWrappedAlphPool(wormhole, contracts.tokenBridge.contractId)
+    await createWrappedAlphPool(wormhole, contracts.tokenBridge.contractId, contracts.wrappedAlph.contractId)
 
     // start auto mining, used for check confirmations
     mine(provider)

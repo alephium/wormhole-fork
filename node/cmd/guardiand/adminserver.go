@@ -407,8 +407,8 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 func (s *nodePrivilegedService) GetDestroyContractsGovernanceMessage(ctx context.Context, req *nodev1.GetDestroyContractsGovernanceMessageRequest) (*nodev1.GetDestroyContractsGovernanceMessageResponse, error) {
 	emitterChain := vaa.ChainID(req.EmitterChain)
 
-	payload := &nodev1.GovernanceMessage_DestroyUndoneSequenceContracts{
-		DestroyUndoneSequenceContracts: &nodev1.DestroyUndoneSequenceContracts{
+	payload := &nodev1.GovernanceMessage_DestroyUnexecutedSequenceContracts{
+		DestroyUnexecutedSequenceContracts: &nodev1.DestroyUnexecutedSequenceContracts{
 			Payload: destroyContractsPayload(emitterChain, req.Sequences),
 		},
 	}

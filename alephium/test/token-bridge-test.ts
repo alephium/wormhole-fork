@@ -1,11 +1,11 @@
 import { Asset, NodeProvider, InputAsset, Output, TestContractResult, Token, subContractId, ContractState, contractIdFromAddress, binToHex, addressFromContractId, Project } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
-import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUndoneSequenceContracts, minimalConsistencyLevel, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer, UpdateMinimalConsistencyLevel } from './fixtures/token-bridge-fixture'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, loadContract, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph, buildProject } from './fixtures/wormhole-fixture'
+import { AttestToken, attestTokenHandlerAddress, createAttestTokenHandler, createTestToken, createTokenBridge, createTokenBridgeForChain, DestroyUnexecutedSequenceContracts, minimalConsistencyLevel, newLocalTokenPoolFixture, newRemoteTokenPoolFixture, newTokenBridgeFixture, newTokenBridgeForChainFixture, newWrappedAlphPoolFixture, RegisterChain, tokenBridgeForChainAddress, tokenBridgeModule, tokenPoolAddress, Transfer, UpdateMinimalConsistencyLevel } from './fixtures/token-bridge-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, minimalAlphInContract, encodeU256, expectAssertionFailed, oneAlph, randomAssetAddress, toRecipientId, u256Max, VAABody, dustAmount, defaultGasFee, randomContractId, randomContractAddress, expectNotEnoughBalance, alph, buildProject } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
-import { createUndoneSequence } from './fixtures/sequence-fixture'
+import { createUnexecutedSequence } from './fixtures/sequence-fixture'
 
 describe("test token bridge", () => {
     const provider = new NodeProvider('http://127.0.0.1:22973')
@@ -214,10 +214,11 @@ describe("test token bridge", () => {
         const fixture = newTokenBridgeFixture()
         const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
         const tokenBridge = fixture.tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod('createWrappedAlphPool', {
+        const testResult = await tokenBridge.testPublicMethod('createLocalTokenPool', {
             address: fixture.tokenBridgeInfo.address,
             initialFields: fixture.tokenBridgeInfo.selfState.fields,
             testArgs: {
+                'localTokenId': wrappedAlphId,
                 'payer': payer,
                 'createContractAlphAmount': minimalAlphInContract
             },
@@ -346,7 +347,7 @@ describe("test token bridge", () => {
         expect(wrappedAlphState.fields["totalWrapped"]).toEqual(fixture.totalWrappedAlph - transferAmount)
 
         const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
-        expect(tokenBridgeForChainState.fields["next1"]).toEqual(1)
+        expect(tokenBridgeForChainState.fields["firstNext256"]).toEqual(1)
 
         const wrappedAlphOutput = testResult.txOutputs.filter(c => c.address === addressFromContractId(wrappedAlphId))[0]
         expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph - transferAmount)
@@ -499,7 +500,7 @@ describe("test token bridge", () => {
             expect(localTokenPoolState.fields["totalBridged"]).toEqual(fixture.totalBridged - transferAmount)
 
             const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
-            expect(tokenBridgeForChainState.fields["next1"]).toEqual(1)
+            expect(tokenBridgeForChainState.fields["firstNext256"]).toEqual(1)
 
             const initAsset = fixture.localTokenPoolInfo.selfState.asset
             const contractOutput = testResult.txOutputs.filter(c => c.address === fixture.localTokenPoolInfo.address)[0]
@@ -543,25 +544,29 @@ describe("test token bridge", () => {
         await buildProject(provider)
         const remoteTokenId = randomByte32Hex()
         const fixture = newTokenBridgeFixture()
-        const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
-        const vaaBody = new VAABody(attestToken.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
-        const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+
         const attestTokenHandlerInfo = createAttestTokenHandler(
             fixture.tokenBridgeInfo, remoteChainId, remoteTokenBridgeId
         )
         const attestTokenHandler = attestTokenHandlerInfo.contract
-        const testResult = await attestTokenHandler.testPublicMethod('handleAttestToken', {
-            address: attestTokenHandlerInfo.address,
-            initialFields: attestTokenHandlerInfo.selfState.fields,
-            testArgs: {
-                'vaa': binToHex(vaa.encode()),
-                'payer': payer,
-                'createContractAlphAmount': minimalAlphInContract
-            },
-            inputAssets: [defaultInputAsset],
-            existingContracts: fixture.tokenBridgeInfo.states()
-        })
+        async function test(targetChainId: number) {
+            const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
+            const vaaBody = new VAABody(attestToken.encode(), remoteChainId, targetChainId, remoteTokenBridgeId, 0)
+            const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+            return attestTokenHandler.testPublicMethod('handleAttestToken', {
+                address: attestTokenHandlerInfo.address,
+                initialFields: attestTokenHandlerInfo.selfState.fields,
+                testArgs: {
+                    'vaa': binToHex(vaa.encode()),
+                    'payer': payer,
+                    'createContractAlphAmount': minimalAlphInContract
+                },
+                inputAssets: [defaultInputAsset],
+                existingContracts: fixture.tokenBridgeInfo.states()
+            })
+        }
 
+        const testResult = await test(0)
         const tokenPoolOutput = testResult.txOutputs[0]
         const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, remoteChainId, remoteTokenId)
         expect(tokenPoolOutput.address).toEqual(expectedAddress)
@@ -571,6 +576,8 @@ describe("test token bridge", () => {
             id: tokenPoolId,
             amount: u256Max
         }])
+
+        await expectAssertionFailed(async () => test(CHAIN_ID_ALEPHIUM))
     })
 
     it('should transfer remote token', async () => {
@@ -728,7 +735,7 @@ describe("test token bridge", () => {
         expect(remoteTokenPoolState.fields["totalBridged"]).toEqual(fixture.totalBridged + transferAmount)
 
         const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
-        expect(tokenBridgeForChainState.fields["next1"]).toEqual(1)
+        expect(tokenBridgeForChainState.fields["firstNext256"]).toEqual(1)
 
         const contractOutput = testResult.txOutputs.filter(c => c.address === fixture.remoteTokenPoolInfo.address)[0]
         expect(contractOutput.alphAmount).toEqual(fixture.remoteTokenPoolInfo.selfState.asset.alphAmount)
@@ -738,7 +745,7 @@ describe("test token bridge", () => {
         }])
     })
 
-    it('should failed to complete transfer and create undone sequence contracts', async () => {
+    it('should failed to complete transfer and create unexecuted sequence contracts', async () => {
         await buildProject(provider)
         const testTokenInfo = createTestToken()
         const fixture = newLocalTokenPoolFixture(
@@ -769,9 +776,9 @@ describe("test token bridge", () => {
         })
 
         const tokenBridgeForChainState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
-        expect(tokenBridgeForChainState.fields['next']).toEqual(256)
-        expect(tokenBridgeForChainState.fields['next1']).toEqual(0)
-        expect(tokenBridgeForChainState.fields['next2']).toEqual(0)
+        expect(tokenBridgeForChainState.fields['start']).toEqual(256)
+        expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(0)
+        expect(tokenBridgeForChainState.fields['secondNext256']).toEqual(0)
 
         // the locked assets have not changed
         const tokenPoolState = testResult.contracts.filter(c => c.address === fixture.localTokenPoolInfo.address)[0]
@@ -779,10 +786,10 @@ describe("test token bridge", () => {
         expect(tokenPoolState.asset.alphAmount).toEqual(tokenPoolInitAsset.alphAmount)
         expect(tokenPoolState.asset.tokens).toEqual(tokenPoolInitAsset.tokens)
 
-        const undoneSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
-        const undoneSequenceState = testResult.contracts.filter(c => c.contractId === undoneSequenceContractId)[0]
-        expect(undoneSequenceState.fields['begin']).toEqual(0)
-        expect(undoneSequenceState.fields['sequences']).toEqual(0)
+        const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
+        const unexecutedSequenceState = testResult.contracts.filter(c => c.contractId === unexecutedSequenceContractId)[0]
+        expect(unexecutedSequenceState.fields['begin']).toEqual(0)
+        expect(unexecutedSequenceState.fields['sequences']).toEqual(0)
 
         checkTxCallerBalance(testResult.txOutputs.filter(c => c.address === payer)[0], 0n)
     })
@@ -921,10 +928,10 @@ describe("test token bridge", () => {
 
         // check `TokenBridgeForChain` sequences
         const tokenBridgeForChainBState = testResult.contracts.filter(c => c.contractId === fixture.tokenBridgeForChainInfo.contractId)[0]
-        expect(tokenBridgeForChainBState.fields["next1"]).toEqual(0)
+        expect(tokenBridgeForChainBState.fields["firstNext256"]).toEqual(0)
 
         const tokenBridgeForChainCState = testResult.contracts.filter(c => c.contractId === tokenBridgeForChainCInfo.contractId)[0]
-        expect(tokenBridgeForChainCState.fields["next1"]).toEqual(1)
+        expect(tokenBridgeForChainCState.fields["firstNext256"]).toEqual(1)
 
         const contractOutput = testResult.txOutputs.filter(c => c.address === fixture.remoteTokenPoolInfo.address)[0]
         expect(contractOutput.alphAmount).toEqual(oneAlph)
@@ -934,25 +941,25 @@ describe("test token bridge", () => {
         }])
     })
 
-    it('should destroy undone sequence contracts', async () => {
+    it('should destroy unexecuted sequence contracts', async () => {
         await buildProject(provider)
         const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
         const paths = [0, 1, 2, 5, 8]
         const refundAddress = randomAssetAddress()
         const subContracts: ContractState[] = []
         for (let path of paths) {
-            const undoneSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, zeroPad(path.toString(16), 8))
-            const contractInfo = createUndoneSequence(
-                fixture.tokenBridgeForChainInfo.contractId, path * 256, 0n, refundAddress, undoneSequenceContractId
+            const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, zeroPad(path.toString(16), 8))
+            const contractInfo = createUnexecutedSequence(
+                fixture.tokenBridgeForChainInfo.contractId, path * 256, 0n, refundAddress, unexecutedSequenceContractId
             )
             subContracts.push(contractInfo.selfState)
         }
         const existingContracts = Array.prototype.concat(fixture.tokenBridgeForChainInfo.states(), subContracts) 
-        const destroyUndoneSequenceContracts = new DestroyUndoneSequenceContracts(remoteChainId, paths)
-        const vaaBody = new VAABody(destroyUndoneSequenceContracts.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
+        const destroyUnexecutedSequenceContracts = new DestroyUnexecutedSequenceContracts(remoteChainId, paths)
+        const vaaBody = new VAABody(destroyUnexecutedSequenceContracts.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
         const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
         const tokenBridge = fixture.tokenBridgeInfo.contract
-        const testResult = await tokenBridge.testPublicMethod('destroyUndoneSequenceContracts', {
+        const testResult = await tokenBridge.testPublicMethod('destroyUnexecutedSequenceContracts', {
             address: fixture.tokenBridgeInfo.address,
             initialFields: fixture.tokenBridgeInfo.selfState.fields,
             testArgs: {'vaa': binToHex(vaa.encode())},
@@ -1024,5 +1031,21 @@ describe("test token bridge", () => {
             expect(newContract.bytecode).toEqual(newContractCode)
             expect(newContract.fields).toEqual({})
         }
+    })
+
+    it('should check token bridge public functions', async () => {
+        await buildProject(provider)
+        const tokenBridge = Project.contract("token_bridge/token_bridge.ral")
+        expect(tokenBridge.publicFunctions()).toEqual([
+            'registerChain',
+            'upgradeContract',
+            'destroyUnexecutedSequenceContracts',
+            'updateMinimalConsistencyLevel',
+            'attestToken',
+            'createLocalTokenPool',
+            'createRemoteTokenPool',
+            'transferToken',
+            'transferAlph'
+        ])
     })
 })

@@ -1,5 +1,5 @@
 import { Asset, NodeProvider, InputAsset, TestContractResult, Val, binToHex, Project } from '@alephium/web3'
-import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, loadContract, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody, buildProject } from './fixtures/wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody, buildProject } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { createGovernance, governanceChainId, governanceEmitterAddress, governanceModule, initGuardianSet, messageFee, SetMessageFee, SubmitTransferFee, UpdateGuardianSet } from './fixtures/governance-fixture'
@@ -157,7 +157,6 @@ describe("test governance", () => {
         {
             const v1 = Project.contract("tests/governance_v1.ral")
             const newContractCode = v1.bytecode
-            loadContract(newContractCode)
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
             const newContract = testResult.contracts[testResult.contracts.length-1]
@@ -188,7 +187,6 @@ describe("test governance", () => {
             ])
             const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
             const newContractCode = v2.bytecode
-            loadContract(newContractCode)
             const newState = "00"
             const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
             const testResult = await upgrade(contractUpgrade)

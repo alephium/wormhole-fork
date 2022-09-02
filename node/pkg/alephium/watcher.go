@@ -37,7 +37,7 @@ type Watcher struct {
 
 type UnconfirmedEvent struct {
 	*sdk.ContractEvent
-	confirmations uint8
+	msg *WormholeMessage
 }
 
 type UnconfirmedEventsPerBlock struct {
@@ -102,16 +102,80 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	readiness.SetReady(w.readiness)
 	errC := make(chan error)
+	eventsC := make(chan []*UnconfirmedEvent)
 
+	go w.fetchEvents(ctx, logger, w.client, errC, eventsC)
 	go w.handleObsvRequest(ctx, logger, w.client)
 	go w.fetchHeight(ctx, logger, w.client, errC)
-	go w.subscribe(ctx, logger, w.client, errC)
+	go w.handleEvents(ctx, logger, w.client, errC, eventsC)
 
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	case err := <-errC:
 		return err
+	}
+}
+
+func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC chan<- []*UnconfirmedEvent) {
+	contractAddress := w.governanceContractAddress
+	currentEventCount, err := client.GetContractEventsCount(ctx, contractAddress)
+	if err != nil {
+		logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
+		errC <- err
+		return
+	}
+
+	fromIndex := *currentEventCount
+	eventTick := time.NewTicker(10 * time.Second)
+	defer eventTick.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-eventTick.C:
+			count, err := client.GetContractEventsCount(ctx, contractAddress)
+			if err != nil {
+				logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
+				errC <- err
+				return
+			}
+			logger.Info("alephium contract event count", zap.Int32("count", *count), zap.Int32("fromIndex", fromIndex))
+
+			if *count == fromIndex {
+				eventsC <- []*UnconfirmedEvent{}
+				continue
+			}
+
+			unconfirmedEvents := make([]*UnconfirmedEvent, 0)
+			for {
+				events, err := client.GetContractEvents(ctx, contractAddress, fromIndex, w.chainIndex.FromGroup)
+				if err != nil {
+					logger.Error("failed to get contract events", zap.Int32("fromIndex", fromIndex), zap.Error(err))
+					errC <- err
+					return
+				}
+
+				for _, event := range events.Events {
+					unconfirmed, err := w.toUnconfirmedEvent(&event)
+					if err != nil {
+						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+						errC <- err
+						return
+					}
+					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
+				}
+
+				fromIndex = events.NextStart
+				if events.NextStart == *count {
+					break
+				}
+			}
+
+			eventsC <- unconfirmedEvents
+		}
 	}
 }
 
@@ -142,7 +206,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
-func (w *Watcher) handleEvents(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
+func (w *Watcher) handleConfirmedEvents(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
 	if len(confirmed) == 0 {
 		return nil
 	}
@@ -152,16 +216,11 @@ func (w *Watcher) handleEvents(logger *zap.Logger, confirmed []*ConfirmedEvent) 
 
 		switch e.event.EventIndex {
 		case WormholeMessageEventIndex:
-			event, err := ToWormholeMessage(e.event.Fields, e.event.TxId)
-			if err != nil {
-				logger.Error("ignore invalid wormhole message", zap.Error(err), zap.String("event", marshalContractEvent(e.event.ContractEvent)))
-				continue
-			}
-			if !event.senderId.equalWith(w.tokenBridgeContractId) {
+			if !e.event.msg.senderId.equalWith(w.tokenBridgeContractId) {
 				logger.Error("invalid sender for wormhole message", zap.String("event", marshalContractEvent(e.event.ContractEvent)))
 				continue
 			}
-			w.msgChan <- event.toMessagePublication(e.header)
+			w.msgChan <- e.event.msg.toMessagePublication(e.header)
 
 		default:
 			return fmt.Errorf("unknown event index %v", e.event.EventIndex)
@@ -175,43 +234,35 @@ func (w *Watcher) toUnconfirmedEvent(event *sdk.ContractEvent) (*UnconfirmedEven
 		return nil, fmt.Errorf("invalid event index: %v", event.EventIndex)
 	}
 
-	field := event.Fields[len(event.Fields)-1]
-	confirmations, err := getConsistencyLevel(field, w.minConfirmations)
+	msg, err := ToWormholeMessage(event.Fields, event.TxId)
 	if err != nil {
 		return nil, err
 	}
-	return &UnconfirmedEvent{
-		event,
-		*confirmations,
-	}, err
+	return &UnconfirmedEvent{event, msg}, err
 }
 
-func (w *Watcher) subscribe(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error) {
-	w.subscribe_(ctx, logger, client, w.governanceContractAddress, w.toUnconfirmedEvent, w.handleEvents, 10*time.Second, errC)
-}
-
-func (w *Watcher) subscribe_(
-	ctx context.Context,
-	logger *zap.Logger,
-	client *Client,
-	contractAddress string,
-	toUnconfirmed func(*sdk.ContractEvent) (*UnconfirmedEvent, error),
-	handler func(*zap.Logger, []*ConfirmedEvent) error,
-	tickDuration time.Duration,
-	errC chan<- error,
-) {
-	currentEventCount, err := client.GetContractEventsCount(ctx, contractAddress)
-	if err != nil {
-		logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
-		errC <- err
-		return
+func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC <-chan []*UnconfirmedEvent) {
+	isBlockInMainChain := func(hash string) (*bool, error) {
+		return client.IsBlockInMainChain(ctx, hash)
+	}
+	getBlockHeader := func(hash string) (*sdk.BlockHeaderEntry, error) {
+		return client.GetBlockHeader(ctx, hash)
 	}
 
+	w.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, w.handleConfirmedEvents, errC, eventsC)
+}
+
+func (w *Watcher) handleEvents_(
+	ctx context.Context,
+	logger *zap.Logger,
+	isBlockInMainChain func(string) (*bool, error),
+	getBlockHeader func(string) (*sdk.BlockHeaderEntry, error),
+	handler func(*zap.Logger, []*ConfirmedEvent) error,
+	errC chan<- error,
+	eventsC <-chan []*UnconfirmedEvent,
+) {
 	pendingEvents := map[string]*UnconfirmedEventsPerBlock{}
 	lastHeight := atomic.LoadInt32(&w.currentHeight)
-	fromIndex := *currentEventCount
-	eventTick := time.NewTicker(tickDuration)
-	defer eventTick.Stop()
 
 	process := func() error {
 		height := atomic.LoadInt32(&w.currentHeight)
@@ -223,7 +274,7 @@ func (w *Watcher) subscribe_(
 		lastHeight = height
 		confirmedEvents := make([]*ConfirmedEvent, 0)
 		for blockHash, blockEvents := range pendingEvents {
-			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
+			isCanonical, err := isBlockInMainChain(blockHash)
 			if err != nil {
 				logger.Error("failed to check mainchain block", zap.Error(err))
 				return err
@@ -235,7 +286,7 @@ func (w *Watcher) subscribe_(
 			}
 
 			if blockEvents.header == nil {
-				blockHeader, err := client.GetBlockHeader(ctx, blockHash)
+				blockHeader, err := getBlockHeader(blockHash)
 				if err != nil {
 					logger.Error("failed to get block header", zap.Error(err))
 					return err
@@ -245,12 +296,13 @@ func (w *Watcher) subscribe_(
 
 			remain := make([]*UnconfirmedEvent, 0)
 			for _, event := range blockEvents.events {
-				if blockEvents.header.Height+int32(event.confirmations) > height {
+				eventConfirmations := maxUint8(event.msg.consistencyLevel, w.minConfirmations)
+				if blockEvents.header.Height+int32(eventConfirmations) > height {
 					logger.Debug(
 						"event not confirmed",
 						zap.String("txId", event.TxId),
 						zap.Int32("blockHeight", blockEvents.header.Height),
-						zap.Uint8("confirmations", event.confirmations),
+						zap.Uint8("confirmations", eventConfirmations),
 					)
 					remain = append(remain, event)
 					continue
@@ -273,7 +325,7 @@ func (w *Watcher) subscribe_(
 			return nil
 		}
 		if err := handler(logger, confirmedEvents); err != nil {
-			logger.Error("failed to handle confirmed events", zap.Error(err), zap.String("contractAddress", contractAddress))
+			logger.Error("failed to handle confirmed events", zap.Error(err))
 			return err
 		}
 		return nil
@@ -284,51 +336,15 @@ func (w *Watcher) subscribe_(
 		case <-ctx.Done():
 			return
 
-		case <-eventTick.C:
-			count, err := client.GetContractEventsCount(ctx, contractAddress)
-			if err != nil {
-				logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
-				errC <- err
-				return
-			}
-			logger.Info("alephium contract event count", zap.Int32("count", *count), zap.Int32("fromIndex", fromIndex))
-
-			if *count == fromIndex {
-				if err := process(); err != nil {
-					errC <- err
-					return
-				}
-				continue
-			}
-
-			for {
-				events, err := client.GetContractEvents(ctx, contractAddress, fromIndex, w.chainIndex.FromGroup)
-				if err != nil {
-					logger.Error("failed to get contract events", zap.Int32("fromIndex", fromIndex), zap.Error(err))
-					errC <- err
-					return
-				}
-
-				for _, event := range events.Events {
-					unconfirmed, err := toUnconfirmed(&event)
-					if err != nil {
-						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
-						errC <- err
-						return
+		case events := <-eventsC:
+			for _, event := range events {
+				blockHash := event.BlockHash
+				if lst, ok := pendingEvents[blockHash]; ok {
+					lst.events = append(lst.events, event)
+				} else {
+					pendingEvents[blockHash] = &UnconfirmedEventsPerBlock{
+						events: []*UnconfirmedEvent{event},
 					}
-					blockHash := unconfirmed.BlockHash
-					if lst, ok := pendingEvents[blockHash]; ok {
-						lst.events = append(lst.events, unconfirmed)
-					} else {
-						pendingEvents[blockHash] = &UnconfirmedEventsPerBlock{
-							events: []*UnconfirmedEvent{unconfirmed},
-						}
-					}
-				}
-
-				fromIndex = events.NextStart
-				if events.NextStart == *count {
-					break
 				}
 			}
 

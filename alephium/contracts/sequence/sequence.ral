@@ -1,9 +1,9 @@
-// sequence started from 0, set `next = 0` when init contract state
+// sequence started from 0, set `start = 0` when init contract state
 Abstract Contract Sequence(
-    mut next: U256,
-    mut next1: U256, // TODO: better name
-    mut next2: U256,
-    undoneSequenceTemplateId: ByteVec,
+    mut start: U256,
+    mut firstNext256: U256,
+    mut secondNext256: U256,
+    unexecutedSequenceTemplateId: ByteVec,
     refundAddress: Address
 ) extends Constants() {
     @using(readonly = true)
@@ -15,42 +15,42 @@ Abstract Contract Sequence(
 
     @using(assetsInContract = true)
     fn compact() -> () {
-        if (next1 != SequenceExecutedFlag) {
+        if (firstNext256 != SequenceExecutedFlag) {
             let encodedState = encodeToByteVec!(
                 selfContractId!(),
-                next,
-                next1,
+                start,
+                firstNext256,
                 refundAddress
             )
-            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(next / 256), undoneSequenceTemplateId, encodedState)
+            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
         }
-        next = next + 256
-        next1 = next2
-        next2 = 0
+        start = start + 256
+        firstNext256 = secondNext256
+        secondNext256 = 0
     }
 
     fn checkSequence(seq: U256) -> Bool {
-        if (seq < next) {
-            let undoneSequenceId = subContractId!(u256To8Byte!(seq / 256))
-            UndoneSequence(undoneSequenceId).checkUndone(seq)
+        if (seq < start) {
+            let unexecutedSequenceId = subContractId!(u256To8Byte!(seq / 256))
+            UnexecutedSequence(unexecutedSequenceId).checkSequence(seq)
             return true
         }
 
-        if (seq >= (next + 768)) {
+        if (seq >= (start + 768)) {
             compact()
             return false
         }
 
-        if (seq >= (next + 512)) {
+        if (seq >= (start + 512)) {
             compact()
         }
 
-        assert!(seq < (next + 512), ErrorCodes.InvalidSequence)
-        let offset = seq - next
+        assert!(seq < (start + 512), ErrorCodes.InvalidSequence)
+        let offset = seq - start
         if (offset < 256) {
-            next1 = setExecuted(offset, next1)
+            firstNext256 = setExecuted(offset, firstNext256)
         } else {
-            next2 = setExecuted(offset - 256, next2)
+            secondNext256 = setExecuted(offset - 256, secondNext256)
         }
         return true
     }
