@@ -35,9 +35,6 @@ Contract TokenBridge(
     @using(preapprovedAssets = true)
     pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let isWrappedAlph = localTokenId == wrappedAlphId
-        let templateContractId =
-            if (isWrappedAlph) tokenBridgeFactory.getWrappedAlphPoolTemplateId()
-            else tokenBridgeFactory.getLocalTokenPoolTemplateId()
         if (!isWrappedAlph) {
             assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
         }
@@ -49,6 +46,9 @@ Contract TokenBridge(
             0
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
+        let templateContractId =
+            if (isWrappedAlph) tokenBridgeFactory.getWrappedAlphPoolTemplateId()
+            else tokenBridgeFactory.getLocalTokenPoolTemplateId()
         copyCreateSubContract!{payer -> createContractAlphAmount}(
             path,
             templateContractId,
