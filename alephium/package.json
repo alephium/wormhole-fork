@@ -9,7 +9,8 @@
   "scripts": {
     "build": "rm -rf dist && npx tsc --build .",
     "jest": "jest --runInBand --detectOpenHandles --useStderr --silent=false --verbose=true --config jestconfig.json",
-    "test": "npm run build && npm run jest"
+    "test": "npm run build && npm run jest",
+    "deploy": "npx ts-node deploy.ts"
   },
   "engines": {
     "node": ">=14.0.0",

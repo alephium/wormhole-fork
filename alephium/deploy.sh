@@ -5,4 +5,4 @@ done
 
 cd /alephium
 npm run build
-npx ts-node deploy.ts -n devnet
+npm run deploy -- -n devnet
