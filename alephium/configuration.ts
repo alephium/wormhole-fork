@@ -8,6 +8,7 @@ const configuration: Configuration = {
     "devnet": {
       nodeUrl: "http://localhost:22973",
       mnemonic: "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
+      deploymentFile: ".deployments.json",
       scripts: [
         "scripts/deploy_test_token.ts",
         "scripts/deploy_devnet_deployer.ts",
@@ -18,8 +19,7 @@ const configuration: Configuration = {
         "scripts/register_chain.ts",
         "scripts/get_test_token.ts",
         "scripts/create_test_token_pool.ts",
-        "scripts/create_wrapped_alph_pool.ts",
-        "scripts/auto_mine.ts"
+        "scripts/create_wrapped_alph_pool.ts"
       ]
     },
 
@@ -27,6 +27,7 @@ const configuration: Configuration = {
       // TODO: update config
       nodeUrl: "http://localhost:22973",
       mnemonic: "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
+      deploymentFile: ".deployments.json",
       scripts: [
         "scripts/deploy_test_token.ts",
         "scripts/deploy_governance.ts",
@@ -44,6 +45,7 @@ const configuration: Configuration = {
       // TODO: update config
       nodeUrl: "http://localhost:22973",
       mnemonic: process.env.MNEMONIC as string,
+      deploymentFile: ".deployments.json",
       scripts: [
         "scripts/deploy_governance.ts",
         "scripts/deploy_wrapped_alph.ts",
