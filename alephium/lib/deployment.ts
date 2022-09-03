@@ -18,11 +18,13 @@ import { getWalletFromMnemonic } from "@alephium/sdk"
 import path from "path"
 import { ec as EC } from 'elliptic'
 import { waitTxConfirmed } from "./utils"
+import fs, { promises as fsPromises } from "fs"
 
 export interface Network {
   nodeUrl: string
   mnemonic: string
   scripts: string[] // script file path, execute by order
+  deploymentFile: string
   environments?: Record<string, string>
 }
 
@@ -45,6 +47,40 @@ type RunScriptParams = Omit<BuildExecuteScriptTx, 'signerAddress'>
 
 export interface RunScriptResult extends BuildScriptTxResult {
   blockHash: string
+}
+
+class Deployments {
+  lastFailedStep: number
+  environments: Map<string, string>
+
+  constructor(lastFailedStep: number, environments: Map<string, string>) {
+    this.lastFailedStep = lastFailedStep
+    this.environments = environments
+  }
+
+  async saveToFile(filepath: string): Promise<void> {
+    const dirpath = path.dirname(filepath)
+    if (!fs.existsSync(dirpath)) {
+      fs.mkdirSync(dirpath, {recursive: true})
+    }
+    const json = {
+      'lastFailedStep': this.lastFailedStep,
+      'environments': Object.fromEntries(this.environments)
+    }
+    const content = JSON.stringify(json, null, 2)
+    return fsPromises.writeFile(filepath, content)
+  }
+
+  static async from(filepath: string): Promise<Deployments | undefined> {
+    if (!fs.existsSync(filepath)) {
+      return undefined
+    }
+    const content = await fsPromises.readFile(filepath)
+    const json = JSON.parse(content.toString())
+    const lastFailedStep = json.lastFailedStep as number
+    const environments = new Map(Object.entries<string>(json.environments))
+    return new Deployments(lastFailedStep, environments)
+  }
 }
 
 export interface Deployer {
@@ -100,9 +136,8 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
   }
 }
 
-function createDeployer(network: Network): Deployer {
+function createDeployer(network: Network, environments: Map<string, string>): Deployer {
   const signer = PrivateKeySigner.from(network.mnemonic, network.nodeUrl)
-  const environment = new Map<string, string>()
   const account = signer.getAccountSync()
 
   const deployContract = async (contract: Contract, params: DeployContractParams): Promise<DeployContractResult> => {
@@ -120,11 +155,11 @@ function createDeployer(network: Network): Deployer {
   }
 
   const setEnvironment = (key: string, value: string) => {
-    environment.set(key, value)
+    environments.set(key, value)
   }
 
   const getEnvironment = (key: string) => {
-    const value = environment.get(key)
+    const value = environments.get(key)
     if (typeof value === 'undefined') {
       throw new Error(`${key} does not exist`)
     }
@@ -141,7 +176,15 @@ function createDeployer(network: Network): Deployer {
   }
 }
 
-// TODO: continue executing from the last failed step
+async function saveDeploymentsToFile(
+  lastFailedStep: number,
+  environments: Map<string, string>,
+  filepath: string
+) {
+  const deployments = new Deployments(lastFailedStep, environments)
+  await deployments.saveToFile(filepath)
+}
+
 export async function deploy(
   configuration: Configuration,
   networkType: NetworkType
@@ -151,11 +194,11 @@ export async function deploy(
     throw new Error(`no network ${networkType} config`)
   }
 
-  const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
   if (typeof network.scripts === 'undefined' || network.scripts.length === 0) {
     throw new Error("no deploy script")
   }
 
+  const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
   for (const filepath of network.scripts) {
     const scriptFilePath = path.resolve(filepath);
     let func: DeployFunction;
@@ -170,7 +213,15 @@ export async function deploy(
     }
   }
 
-  const deployer = createDeployer(network)
+  let lastFailedStep = 0
+  let environments = new Map<string, string>()
+  const deployments = await Deployments.from(network.deploymentFile)
+  if (typeof deployments !== 'undefined') {
+    lastFailedStep = deployments.lastFailedStep
+    environments = deployments.environments
+  }
+
+  const deployer = createDeployer(network, environments)
   if (typeof network.environments !== 'undefined') {
     for (const key in network.environments) {
       deployer.setEnvironment(key, network.environments[key])
@@ -179,13 +230,19 @@ export async function deploy(
 
   await Project.build(deployer.provider, configuration.sourcePath, configuration.artifactPath)
 
-  for (const f of funcs) {
+  const remainScripts = funcs.slice(lastFailedStep)
+  for (const script of remainScripts) {
     try {
-      await f.func(deployer, networkType)
+      await script.func(deployer, networkType)
+      lastFailedStep += 1
     } catch (error) {
-      throw new Error(`failed to execute deploy script, filepath: ${f.scriptFilePath}, error: ${error}`)
+      await saveDeploymentsToFile(lastFailedStep, environments, network.deploymentFile)
+      throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }
 
+  if (remainScripts.length > 0) {
+    await saveDeploymentsToFile(lastFailedStep, environments, network.deploymentFile)
+  }
   console.log("Deployment script execution completed")
 }
