@@ -20,7 +20,7 @@ import { ec as EC } from 'elliptic'
 import { waitTxConfirmed } from "./utils"
 
 export interface Network {
-  providerUrl: string
+  nodeUrl: string
   mnemonic: string
   scripts: string[] // script file path, execute by order
   environments?: Record<string, string>
@@ -59,7 +59,7 @@ export interface Deployer {
 
 export type DeployFunction = (deployer: Deployer, networkType: NetworkType) => Promise<void>
 
-class PrivateKeySigner extends SignerWithNodeProvider {
+export class PrivateKeySigner extends SignerWithNodeProvider {
   private static ec = new EC('secp256k1')
 
   private readonly privateKey: string
@@ -101,7 +101,7 @@ class PrivateKeySigner extends SignerWithNodeProvider {
 }
 
 function createDeployer(network: Network): Deployer {
-  const signer = PrivateKeySigner.from(network.mnemonic, network.providerUrl)
+  const signer = PrivateKeySigner.from(network.mnemonic, network.nodeUrl)
   const environment = new Map<string, string>()
   const account = signer.getAccountSync()
 
