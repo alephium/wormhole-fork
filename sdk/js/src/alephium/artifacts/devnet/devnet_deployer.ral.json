@@ -1,0 +1,108 @@
+{
+  "bytecode": "000340344062409301030b0c0015160116021603160416051606160716081609160a130a64170bb413c40de0b6b3a7640000a21401001600160bbf1801030809001216011602160316041605160616071307641708b413c40de0b6b3a7640000a214010116001608bf1801030203000e16010c1302641702b413c40de0b6b3a7640000a21401021600160213c8033b2e3c9fd0803ce8000000c018",
+  "codeHash": "3a247d56a9c6ab3db0a2d000b3bb753c7d41d8536a6053e58d38271e188186fb",
+  "fieldsSig": {
+    "names": [],
+    "types": [],
+    "isMutable": []
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "deployGovernance",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "bytecode",
+        "chainId",
+        "governanceChainId",
+        "governanceEmitterAddress",
+        "receivedSequence",
+        "messageFee",
+        "guardianSets",
+        "guardianSetIndexes",
+        "previousGuardianSetExpirationTimeMS"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "U256",
+        "[ByteVec;2]",
+        "[U256;2]",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "deployTokenBridge",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "bytecode",
+        "governance",
+        "localChainId",
+        "receivedSequence",
+        "sendSequence",
+        "wrappedAlphId",
+        "tokenBridgeFactory",
+        "minimalConsistencyLevel"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "ByteVec",
+        "U256",
+        "U256",
+        "U256",
+        "ByteVec",
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "deployWrappedAlph",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "bytecode",
+        "wrappedAlphPoolCodeHash"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    }
+  ]
+}

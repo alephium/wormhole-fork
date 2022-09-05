@@ -1,0 +1,130 @@
+{
+  "bytecode": "05061b407a409740f94104411600000203010f0d16003b170216011602380c2f0f7b16011602390200020001001da00113dcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff304c11b1a000a0011303641700b213c40de0b6b3a7640000a2a0001341002d69a0031600c118a0001341002aa100a002a1010ca10200020102001016001341002d69b17c444e4e17011600b20e0c16010100000001040140341600a000314c041600000203021600a0001343002a344c03000104021600a0001342002a344c0100011600a0001342002a310f7b1600a0002b17011601134100314c051601a0010000a1014a0616011341002ba0020000a102030201010202000316001601a9010201010008b4a0044513157ba0041600a8",
+  "codeHash": "9e30f075a8aab9d40d7460865bb8cb8b3a82ad49afeaa4d759cf94593cefc9c8",
+  "fieldsSig": {
+    "names": [
+      "start",
+      "firstNext256",
+      "secondNext256",
+      "unexecutedSequenceTemplateId",
+      "refundAddress"
+    ],
+    "types": [
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec",
+      "Address"
+    ],
+    "isMutable": [
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "setExecuted",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "offset",
+        "current"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "compact",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": false,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    },
+    {
+      "name": "checkSequenceInSubContract",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": false,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "checkSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "Bool"
+      ]
+    },
+    {
+      "name": "deposit",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "from",
+        "alphAmount"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "withdraw",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "alphAmount"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "bytecodeTemplate": "01010300000012b413c40de0b6b3a7640000a2{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}130b0c{0}0100",
+  "fieldsSig": {
+    "names": [
+      "deployer",
+      "bytecode",
+      "chainId",
+      "governanceChainId",
+      "governanceEmitterAddress",
+      "receivedSequence",
+      "messageFee",
+      "guardianSet0",
+      "guardianSet1",
+      "guardianSetIndex0",
+      "guardianSetIndex1",
+      "previousGuardianSetExpirationTimeMS"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256",
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

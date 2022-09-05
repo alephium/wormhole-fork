@@ -1,0 +1,50 @@
+{
+  "bytecodeTemplate": "0101030000000fb413c40de0b6b3a7640000a2{1}{2}{3}{4}{5}{6}{7}{8}13080c{0}0101",
+  "fieldsSig": {
+    "names": [
+      "deployer",
+      "bytecode",
+      "governance",
+      "localChainId",
+      "receivedSequence",
+      "sendSequence",
+      "wrappedAlphId",
+      "tokenBridgeFactory",
+      "minimalConsistencyLevel"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

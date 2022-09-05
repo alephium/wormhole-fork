@@ -1,0 +1,32 @@
+{
+  "bytecodeTemplate": "01010300000009b413c40de0b6b3a7640000a2{1}{2}0e0c{0}0102",
+  "fieldsSig": {
+    "names": [
+      "deployer",
+      "bytecode",
+      "wrappedAlphPoolCodeHash"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "ByteVec"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}
