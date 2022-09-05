@@ -63,4 +63,10 @@ Abstract Contract Sequence(
     pub fn deposit(from: Address, alphAmount: U256) -> () {
         transferAlphToSelf!(from, alphAmount)
     }
+
+    @using(assetsInContract = true)
+    pub fn withdraw(alphAmount: U256) -> () {
+        assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)
+        transferAlphFromSelf!(refundAddress, alphAmount)
+    }
 }

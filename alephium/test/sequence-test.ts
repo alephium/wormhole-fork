@@ -244,4 +244,32 @@ describe("test sequence", () => {
         const assetOutput = testResult.txOutputs[1]
         expect(assetOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
     })
+
+    it('should test deposit/withdraw', async () => {
+        await buildProject(provider)
+        const sequenceInfo = createSequence(512, 0n, 0n, refundAddress)
+        const sequence = sequenceInfo.contract
+        const testResult0 = await sequence.testPublicMethod('deposit', {
+            initialFields: sequenceInfo.selfState.fields,
+            initialAsset: {alphAmount: oneAlph},
+            address: sequenceInfo.address,
+            testArgs: {
+                'from': refundAddress,
+                'alphAmount': 3n * oneAlph
+            },
+            inputAssets: [{address: refundAddress, asset: {alphAmount: 4n * oneAlph}}]
+        })
+        expect(testResult0.contracts[0].asset).toEqual({alphAmount: 4n * oneAlph, tokens: []})
+        expect(testResult0.txOutputs[1].alphAmount).toEqual(oneAlph - defaultGasFee)
+
+        const testResult1 = await sequence.testPublicMethod('withdraw', {
+            initialFields: sequenceInfo.selfState.fields,
+            initialAsset: {alphAmount: 4n * oneAlph},
+            address: sequenceInfo.address,
+            testArgs: {'alphAmount': 3n * oneAlph},
+            inputAssets: inputAsset
+        })
+        expect(testResult1.contracts[0].asset).toEqual({alphAmount: oneAlph, tokens: []})
+        expect(testResult1.txOutputs[0].alphAmount).toEqual(4n * oneAlph - defaultGasFee)
+    })
 })
