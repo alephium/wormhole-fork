@@ -187,7 +187,8 @@ async function saveDeploymentsToFile(
 
 export async function deploy(
   configuration: Configuration,
-  networkType: NetworkType
+  networkType: NetworkType,
+  reset: boolean
 ) {
   const network = configuration.networks[networkType]
   if (typeof network === 'undefined') {
@@ -215,10 +216,12 @@ export async function deploy(
 
   let lastFailedStep = 0
   let environments = new Map<string, string>()
-  const deployments = await Deployments.from(network.deploymentFile)
-  if (typeof deployments !== 'undefined') {
-    lastFailedStep = deployments.lastFailedStep
-    environments = deployments.environments
+  if (!reset) {
+    const deployments = await Deployments.from(network.deploymentFile)
+    if (typeof deployments !== 'undefined') {
+      lastFailedStep = deployments.lastFailedStep
+      environments = deployments.environments
+    }
   }
 
   const deployer = createDeployer(network, environments)

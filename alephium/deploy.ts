@@ -13,11 +13,17 @@ const argv = yargs(hideBin(process.argv))
     describe: "Network Id",
     type: 'string'
   })
+  .options("reset", {
+    default: false,
+    required: false,
+    describe: "Reset",
+    type: 'boolean'
+  })
   .argv
 
 async function deployWormhole() {
   const params = await argv
-  await deploy(configuration, params.network as NetworkType)
+  await deploy(configuration, params.network as NetworkType, params.reset)
 }
 
 deployWormhole()
