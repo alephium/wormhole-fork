@@ -5,7 +5,6 @@ export function createUnexecutedSequence(
     parentId: string,
     begin: number,
     sequences: bigint,
-    refundAddress: string,
     contractId?: string
 ): ContractInfo {
     const contract = Project.contract('sequence/unexecuted_sequence.ral')
@@ -13,8 +12,7 @@ export function createUnexecutedSequence(
     const initFields = {
         "parentId": parentId,
         "begin": begin,
-        "sequences": sequences,
-        "refundAddress": refundAddress
+        "sequences": sequences
     }
     const state = contract.toState(initFields, initAsset, address)
     return new ContractInfo(contract, state, [], address)
@@ -28,9 +26,7 @@ export function createSequence(
     contractId?: string
 ): ContractInfo {
     const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
-    const unexecutedSequenceTemplate = createUnexecutedSequence(
-        randomContractId(), 0, 0n, randomAssetAddress()
-    )
+    const unexecutedSequenceTemplate = createUnexecutedSequence(randomContractId(), 0, 0n)
     const contract = Project.contract('tests/sequence_test.ral', {errorOnWarnings: false})
     const initField = {
         'start': start,
