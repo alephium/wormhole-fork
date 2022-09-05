@@ -55,12 +55,13 @@ Contract TokenBridgeForChain(
         )
     }
 
+    @using(assetsInContract = true)
     pub fn destroyUnexecutedSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         for (let mut index = 0; index < length; index = index + 8) {
             let unexecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
-            UnexecutedSequence(unexecutedSequenceId).destroy()
+            UnexecutedSequence(unexecutedSequenceId).destroy(selfAddress!())
         }
     }
 }

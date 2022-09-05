@@ -1056,7 +1056,6 @@ describe('test token bridge', () => {
     await buildProject()
     const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
     const paths = [0, 1, 2, 5, 8]
-    const refundAddress = randomAssetAddress()
     const subContracts: ContractState[] = []
     for (const path of paths) {
       const unexecutedSequenceContractId = subContractId(
@@ -1067,7 +1066,6 @@ describe('test token bridge', () => {
         fixture.tokenBridgeForChainInfo.contractId,
         path * 256,
         0n,
-        refundAddress,
         unexecutedSequenceContractId
       )
       subContracts.push(contractInfo.selfState)
@@ -1097,8 +1095,9 @@ describe('test token bridge', () => {
       expect(event.fields['address']).toEqual(subContracts[index].address)
     })
     const refundAlphAmount = BigInt(paths.length) * oneAlph
-    expect(testResult.txOutputs[0].address).toEqual(refundAddress)
-    expect(testResult.txOutputs[0].alphAmount).toEqual(refundAlphAmount)
+    const expectedAlphAmount = BigInt(fixture.tokenBridgeForChainInfo.selfState.asset.alphAmount) + refundAlphAmount
+    expect(testResult.txOutputs[0].address).toEqual(fixture.tokenBridgeForChainInfo.address)
+    expect(testResult.txOutputs[0].alphAmount).toEqual(expectedAlphAmount)
   })
 
   it('should test upgrade contract', async () => {

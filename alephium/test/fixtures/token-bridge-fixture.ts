@@ -202,7 +202,7 @@ function createTemplateContracts(): TemplateContracts {
   const remoteTokenPool = createRemoteTokenPoolTemplate()
   const attestTokenHandler = createAttestTokenHandlerTemplate()
   const tokenBridgeForChain = createTokenBridgeForChainTemplate()
-  const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0, 0n, randomAssetAddress())
+  const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0, 0n)
   return {
     wrappedAlphPoolTemplate: wrappedAlphPool,
     localTokenPoolTemplate: localTokenPool,

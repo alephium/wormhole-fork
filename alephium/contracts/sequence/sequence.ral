@@ -19,8 +19,7 @@ Abstract Contract Sequence(
             let encodedState = encodeToByteVec!(
                 selfContractId!(),
                 start,
-                firstNext256,
-                refundAddress
+                firstNext256
             )
             copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
         }
@@ -29,10 +28,15 @@ Abstract Contract Sequence(
         secondNext256 = 0
     }
 
+    @using(assetsInContract = true)
+    fn checkSequenceInSubContract(seq: U256) -> () {
+        let unexecutedSequenceId = subContractId!(u256To8Byte!(seq / 256))
+        UnexecutedSequence(unexecutedSequenceId).checkSequence(seq, selfAddress!())
+    }
+
     fn checkSequence(seq: U256) -> Bool {
         if (seq < start) {
-            let unexecutedSequenceId = subContractId!(u256To8Byte!(seq / 256))
-            UnexecutedSequence(unexecutedSequenceId).checkSequence(seq)
+            checkSequenceInSubContract(seq)
             return true
         }
 
@@ -58,5 +62,11 @@ Abstract Contract Sequence(
     @using(assetsInContract = true, preapprovedAssets = true)
     pub fn deposit(from: Address, alphAmount: U256) -> () {
         transferAlphToSelf!(from, alphAmount)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdraw(alphAmount: U256) -> () {
+        assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)
+        transferAlphFromSelf!(refundAddress, alphAmount)
     }
 }
