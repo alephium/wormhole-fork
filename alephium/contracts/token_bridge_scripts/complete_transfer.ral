@@ -1,4 +1,7 @@
-TxScript Main(tokenBridgeForChain: TokenBridgeForChain, vaa: ByteVec) {
+TxScript CompleteTransfer(
+    tokenBridgeForChain: TokenBridgeForChain,
+    vaa: ByteVec
+) {
     let caller = callerAddress!()
     tokenBridgeForChain.completeTransfer{caller -> dustAmount!()}(vaa, caller)
 }

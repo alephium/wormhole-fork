@@ -1,3 +1,3 @@
-TxScript Main(payer: Address, tokenBridge: TokenBridge, vaa: ByteVec, alphAmount: U256) {
+TxScript RegisterChain(payer: Address, tokenBridge: TokenBridge, vaa: ByteVec, alphAmount: U256) {
     tokenBridge.registerChain{payer -> alphAmount * 2}(vaa, payer, alphAmount)
 }

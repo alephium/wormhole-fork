@@ -1,4 +1,4 @@
-TxScript Main(
+TxScript CreateRemoteTokenPool(
     payer: Address,
     attestTokenHandler: AttestTokenHandler,
     vaa: ByteVec,
