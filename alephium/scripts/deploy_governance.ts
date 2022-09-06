@@ -22,7 +22,7 @@ const deployGovernance = async (deployer: Deployer, networkType: NetworkType): P
 
   // TODO: remove devnet deployer once the contracts finalized
   if (networkType === "devnet") {
-    const devnetDeployerId = deployer.getEnvironment('DevnetDeployer')
+    const devnetDeployer = deployer.getDeployContractResult('DevnetDeployer')
     const fields = {
       'guardianSet0': '',
       'guardianSet1': currentGuardianSet,
@@ -34,14 +34,13 @@ const deployGovernance = async (deployer: Deployer, networkType: NetworkType): P
     const script = Project.script('devnet/deploy_governance.ral')
     await deployer.runScript(script, {
       initialFields: {
-        'deployer': devnetDeployerId,
+        'deployer': devnetDeployer.contractId,
         'bytecode': governance.bytecode,
         ...fields
       }
     })
-    const contractId = subContractId(devnetDeployerId, "00")
+    const contractId = subContractId(devnetDeployer.contractId, "00")
     const contractAddress = addressFromContractId(contractId)
-    deployer.setEnvironment('Governance', contractId)
     console.log(`Governace contract address: ${contractAddress}, contract id: ${contractId}`)
   } else {
     const fields = {
@@ -52,7 +51,6 @@ const deployGovernance = async (deployer: Deployer, networkType: NetworkType): P
     const result = await deployer.deployContract(governance, {
       initialFields: fields
     })
-    deployer.setEnvironment('Governance', result.contractId)
     console.log(`Governace contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
   }
 }

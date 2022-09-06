@@ -11,18 +11,17 @@ const deployWrappedAlph = async (deployer: Deployer, networkType: NetworkType): 
 
   // TODO: remove devnet deployer once the contracts finalized
   if (networkType === 'devnet') {
-    const devnetDeployerId = deployer.getEnvironment('DevnetDeployer')
+    const devnetDeployer = deployer.getDeployContractResult('DevnetDeployer')
     const script = Project.script('devnet/deploy_wrapped_alph.ral')
     await deployer.runScript(script, {
       initialFields: {
-        'deployer': devnetDeployerId,
+        'deployer': devnetDeployer.contractId,
         'bytecode': wrappedAlph.bytecode,
         ...initFields
       }
     })
-    const contractId = subContractId(devnetDeployerId, "02")
+    const contractId = subContractId(devnetDeployer.contractId, "02")
     const contractAddress = addressFromContractId(contractId)
-    deployer.setEnvironment('WrappedAlph', contractId)
     console.log(`WrappedAlph contract address: ${contractAddress}, contract id: ${contractId}`)
   } else {
     const MaxALPHAmount = BigInt("1000000000") * BigInt("1000000000000000000")
@@ -30,7 +29,6 @@ const deployWrappedAlph = async (deployer: Deployer, networkType: NetworkType): 
       initialFields: initFields,
       issueTokenAmount: MaxALPHAmount
     })
-    deployer.setEnvironment('WrappedAlph', result.contractId)
     console.log(`WrappedAlph contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
   }
 }

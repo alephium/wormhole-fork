@@ -1,21 +1,25 @@
 import { Project } from "@alephium/web3"
 import { Deployer, NetworkType } from "../lib/deployment"
+import { getDevnetTokenBridgeId } from "./devnet"
 
 const oneAlph = BigInt("1000000000000000000")
 
-const createTestTokenPool = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const createTestTokenPool = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const script = Project.script('token_bridge_scripts/create_local_token_pool.ral')
-  const testTokenId = deployer.getEnvironment("TestToken")
+  const testToken = deployer.getDeployContractResult("TestToken")
+  const tokenBridgeId = networkType === 'devnet'
+    ? await getDevnetTokenBridgeId(deployer)
+    : deployer.getDeployContractResult("TokenBridge").contractId
   const initFields = {
-    'tokenBridge': deployer.getEnvironment("TokenBridge"),
-    'localTokenId': testTokenId,
+    'tokenBridge': tokenBridgeId,
+    'localTokenId': testToken.contractId,
     'payer': deployer.account.address,
     'alphAmount': oneAlph
   }
   await deployer.runScript(script, {
     initialFields: initFields,
     tokens: [{
-      id: testTokenId,
+      id: testToken.contractId,
       amount: 1
     }]
   })
