@@ -12,7 +12,8 @@ import {
   publicKeyFromPrivateKey,
   addressFromPublicKey,
   signatureEncode,
-  Project
+  Project,
+  setCurrentNodeProvider
 } from "@alephium/web3"
 import { getWalletFromMnemonic } from "@alephium/sdk"
 import path from "path"
@@ -103,18 +104,17 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
   private readonly address: string
   private readonly group: number
 
-  constructor(provider: NodeProvider, privateKey: string, alwaysSubmitTx = true) {
-    super(provider, alwaysSubmitTx)
+  constructor(privateKey: string, alwaysSubmitTx = true) {
+    super(alwaysSubmitTx)
     this.privateKey = privateKey
     this.publicKey = publicKeyFromPrivateKey(privateKey)
     this.address = addressFromPublicKey(this.publicKey)
     this.group = groupOfAddress(this.address)
   }
 
-  static from(mnemonic: string, providerUrl: string): PrivateKeySigner {
+  static from(mnemonic: string): PrivateKeySigner {
     const wallet = getWalletFromMnemonic(mnemonic)
-    const provider = new NodeProvider(providerUrl)
-    return new PrivateKeySigner(provider, wallet.privateKey)
+    return new PrivateKeySigner(wallet.privateKey)
   }
 
   getAccountSync(): Account {
@@ -137,7 +137,7 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
 }
 
 function createDeployer(network: Network, environments: Map<string, string>): Deployer {
-  const signer = PrivateKeySigner.from(network.mnemonic, network.nodeUrl)
+  const signer = PrivateKeySigner.from(network.mnemonic)
   const account = signer.getAccountSync()
 
   const deployContract = async (contract: Contract, params: DeployContractParams): Promise<DeployContractResult> => {
@@ -198,6 +198,7 @@ export async function deploy(
     throw new Error("no deploy script")
   }
 
+  setCurrentNodeProvider(network.nodeUrl)
   const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
   for (const filepath of network.scripts) {
     const scriptFilePath = path.resolve(filepath);
@@ -228,7 +229,7 @@ export async function deploy(
     }
   }
 
-  await Project.build(deployer.provider, configuration.sourcePath, configuration.artifactPath)
+  await Project.build(configuration.sourcePath, configuration.artifactPath)
 
   const remainScripts = funcs.slice(lastFailedStep)
   for (const script of remainScripts) {
