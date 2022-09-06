@@ -36,8 +36,8 @@ const deployTokenBridge = async (deployer: Deployer, networkType: NetworkType): 
   // TODO: remove devnet deployer once the contracts finalized
   if (networkType === "devnet") {
     const devnetDeployer = deployer.getDeployContractResult('DevnetDeployer')
-    const governanceId = await getDevnetGovernanceId(deployer)
-    const wrappedAlphId = await getDevnetWrappedAlphId(deployer)
+    const governanceId = getDevnetGovernanceId(deployer)
+    const wrappedAlphId = getDevnetWrappedAlphId(deployer)
     const script = Project.script('devnet/deploy_token_bridge.ral')
     await deployer.runScript(script, {
       initialFields: {

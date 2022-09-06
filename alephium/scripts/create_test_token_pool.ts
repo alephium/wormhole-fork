@@ -8,7 +8,7 @@ const createTestTokenPool = async (deployer: Deployer, networkType: NetworkType)
   const script = Project.script('token_bridge_scripts/create_local_token_pool.ral')
   const testToken = deployer.getDeployContractResult("TestToken")
   const tokenBridgeId = networkType === 'devnet'
-    ? await getDevnetTokenBridgeId(deployer)
+    ? getDevnetTokenBridgeId(deployer)
     : deployer.getDeployContractResult("TokenBridge").contractId
   const initFields = {
     'tokenBridge': tokenBridgeId,

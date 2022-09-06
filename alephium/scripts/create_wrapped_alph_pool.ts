@@ -7,10 +7,10 @@ const oneAlph = BigInt("1000000000000000000")
 const createWrappedAlphPool = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
   const tokenBridgeId = networkType === 'devnet'
-    ? await getDevnetTokenBridgeId(deployer)
+    ? getDevnetTokenBridgeId(deployer)
     : deployer.getDeployContractResult("TokenBridge").contractId
   const wrappedAlphId = networkType === 'devnet'
-    ? await getDevnetWrappedAlphId(deployer)
+    ? getDevnetWrappedAlphId(deployer)
     : deployer.getDeployContractResult("WrappedAlph").contractId
   const initFields = {
     'tokenBridge': tokenBridgeId,
