@@ -1,8 +1,8 @@
-import { NodeProvider, Number256 } from "@alephium/web3"
+import { Number256, setCurrentNodeProvider } from "@alephium/web3"
 import { buildProject, createMath } from "./fixtures/wormhole-fixture"
 
 describe('test math', () => {
-    const provider = new NodeProvider('http://127.0.0.1:22973')
+    setCurrentNodeProvider('http://127.0.0.1:22973')
 
     interface TestCase {
         decimals: number
@@ -12,7 +12,7 @@ describe('test math', () => {
     }
 
     it('should test math methods', async () => {
-        await buildProject(provider)
+        await buildProject()
         const mathInfo = createMath()
         const contract = mathInfo.contract
 

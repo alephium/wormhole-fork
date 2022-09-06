@@ -4,7 +4,6 @@ import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
 import { Contract, ContractState, Asset, contractIdFromAddress, binToHex, Project, NodeProvider } from '@alephium/web3'
-import * as blake from 'blakejs'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -22,9 +21,9 @@ export const gasPrice = BigInt("100000000000")
 export const maxGasPerTx = BigInt("625000")
 export const defaultGasFee = gasPrice * maxGasPerTx
 
-export async function buildProject(provider: NodeProvider): Promise<void> {
+export async function buildProject(): Promise<void> {
     if (typeof Project.currentProject === 'undefined') {
-        await Project.build(provider)
+        await Project.build()
     }
 }
 
