@@ -1,14 +1,14 @@
-import { addressFromContractId, NodeProvider, subContractId } from '@alephium/web3'
+import { addressFromContractId, setCurrentNodeProvider, subContractId } from '@alephium/web3'
 import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
 import { buildProject, defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
-    const provider = new NodeProvider('http://127.0.0.1:22973')
+    setCurrentNodeProvider('http://127.0.0.1:22973')
     const allExecuted = (BigInt(1) << BigInt(256)) - 1n
     const refundAddress = randomAssetAddress()
 
     it("should execute correctly", async () => {
-        await buildProject(provider)
+        await buildProject()
         const sequenceInfo = createSequence(0, 0n, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
@@ -45,7 +45,7 @@ describe("test sequence", () => {
     }, 90000)
 
     it("should increase executed sequence", async () => {
-        await buildProject(provider)
+        await buildProject()
         const sequenceInfo = createSequence(512, allExecuted, allExecuted, refundAddress)
         const sequence = sequenceInfo.contract
         const testResult = await sequence.testPrivateMethod('checkSequence', {
@@ -63,7 +63,7 @@ describe("test sequence", () => {
     })
 
     it('should check sequence failed and create unexecuted sequence subcontract', async () => {
-        await buildProject(provider)
+        await buildProject()
         const sequenceInfo = createSequence(0, 1n, 1n, refundAddress)
         const sequence = sequenceInfo.contract
         const testResult = await sequence.testPrivateMethod('checkSequence', {
@@ -93,7 +93,7 @@ describe("test sequence", () => {
     })
 
     it("should failed when executed repeatedly", async () => {
-        await buildProject(provider)
+        await buildProject()
         const unexecutedSequenceTemplateId = randomContractId()
         const sequenceInfo = createSequence(0, allExecuted, 0n, refundAddress)
         const sequence = sequenceInfo.contract
@@ -129,7 +129,7 @@ describe("test sequence", () => {
     }, 120000)
 
     it('should check sequence succeed and create unexecuted sequence subcontract', async () => {
-        await buildProject(provider)
+        await buildProject()
         const start = 256
         const firstNext256 = (BigInt(0xff) << 248n)
         const sequenceInfo = createSequence(start, firstNext256, 0n, refundAddress)
@@ -155,7 +155,7 @@ describe("test sequence", () => {
     })
 
     it('should mark old sequence as done', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
         const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
@@ -184,7 +184,7 @@ describe("test sequence", () => {
     })
 
     it('should failed if old sequences executed', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
         const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
@@ -208,7 +208,7 @@ describe("test sequence", () => {
     }, 60000)
 
     it('should destroy sub contract if all old sequence executed', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
         const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')

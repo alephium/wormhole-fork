@@ -1,13 +1,13 @@
-import { NodeProvider, Number256, addressFromContractId, Project } from '@alephium/web3'
+import { Number256, addressFromContractId, Project, setCurrentNodeProvider } from '@alephium/web3'
 import { createUnexecutedSequence } from './fixtures/sequence-fixture'
 import { buildProject, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test unexecuted sequence", () => {
-    const provider = new NodeProvider('http://127.0.0.1:22973')
+    setCurrentNodeProvider('http://127.0.0.1:22973')
     const allExecuted = (BigInt(1) << BigInt(256)) - 1n
 
     it('should check sequence passed', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
@@ -29,7 +29,7 @@ describe("test unexecuted sequence", () => {
     }, 50000)
 
     it('should check sequence failed if sequence executed', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
@@ -48,7 +48,7 @@ describe("test unexecuted sequence", () => {
     }, 60000)
 
     it('should check sequence failed if sequence is out of range', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
@@ -67,7 +67,7 @@ describe("test unexecuted sequence", () => {
     })
 
     it('should destroy contract if all sequences executed', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 0
@@ -91,7 +91,7 @@ describe("test unexecuted sequence", () => {
     })
 
     it('should destroy contract manually', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 0, 0n, refundAddress)
@@ -111,7 +111,7 @@ describe("test unexecuted sequence", () => {
     })
 
     it('should only parent contract can call these methods', async () => {
-        await buildProject(provider)
+        await buildProject()
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const unexecutedSequenceInfo = createUnexecutedSequence(randomContractId(), 0, 0n, refundAddress)
