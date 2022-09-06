@@ -1,4 +1,4 @@
-TxScript Main(
+TxScript TransferLocal(
     tokenBridge: TokenBridge,
     fromAddress: Address,
     localTokenId: ByteVec,

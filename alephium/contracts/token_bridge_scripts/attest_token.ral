@@ -1,4 +1,11 @@
-TxScript Main(payer: Address, tokenBridge: TokenBridge, localTokenId: ByteVec, messageFee: U256, nonce: ByteVec, consistencyLevel: U256) {
+TxScript AttestToken(
+    payer: Address,
+    tokenBridge: TokenBridge,
+    localTokenId: ByteVec,
+    messageFee: U256,
+    nonce: ByteVec,
+    consistencyLevel: U256
+) {
     tokenBridge.attestToken{
         payer -> messageFee, localTokenId: 1
     }(payer, localTokenId, nonce, consistencyLevel)

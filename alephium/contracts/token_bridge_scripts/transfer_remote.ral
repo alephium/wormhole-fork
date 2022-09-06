@@ -1,4 +1,4 @@
-TxScript Main(
+TxScript TransferRemote(
     tokenBridge: TokenBridge,
     fromAddress: Address,
     tokenPoolId: ByteVec,
