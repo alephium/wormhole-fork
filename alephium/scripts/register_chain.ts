@@ -21,7 +21,7 @@ async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: 
 
 const registerChain = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const tokenBridgeId = networkType === 'devnet'
-    ? await getDevnetTokenBridgeId(deployer)
+    ? getDevnetTokenBridgeId(deployer)
     : deployer.getDeployContractResult("TokenBridge").contractId
   const script = Project.script("token_bridge_scripts/register_chain.ral")
   const registerETHVAA = process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!
