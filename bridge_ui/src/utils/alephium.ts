@@ -14,7 +14,7 @@ import {
   getTokenPoolId,
   contractExists
 } from '@certusone/wormhole-sdk';
-import { NodeProvider, node, subContractId, SignerProvider } from '@alephium/web3';
+import { NodeProvider, node, SignerProvider } from '@alephium/web3';
 
 const WormholeMessageEventIndex = 0
 
