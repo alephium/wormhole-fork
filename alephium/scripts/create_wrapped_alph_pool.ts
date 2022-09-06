@@ -1,13 +1,20 @@
 import { Project } from "@alephium/web3"
 import { Deployer, NetworkType } from "../lib/deployment"
+import { getDevnetTokenBridgeId, getDevnetWrappedAlphId } from "./devnet"
 
 const oneAlph = BigInt("1000000000000000000")
 
-const createWrappedAlphPool = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const createWrappedAlphPool = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const script = Project.script('token_bridge_scripts/create_wrapped_alph_pool.ral')
+  const tokenBridgeId = networkType === 'devnet'
+    ? await getDevnetTokenBridgeId(deployer)
+    : deployer.getDeployContractResult("TokenBridge").contractId
+  const wrappedAlphId = networkType === 'devnet'
+    ? await getDevnetWrappedAlphId(deployer)
+    : deployer.getDeployContractResult("WrappedAlph").contractId
   const initFields = {
-    'tokenBridge': deployer.getEnvironment("TokenBridge"),
-    'wrappedAlphId': deployer.getEnvironment("WrappedAlph"),
+    'tokenBridge': tokenBridgeId,
+    'wrappedAlphId': wrappedAlphId,
     'payer': deployer.account.address,
     'alphAmount': oneAlph
   }

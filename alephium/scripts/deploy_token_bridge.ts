@@ -1,6 +1,7 @@
 import { addressFromContractId, Project, subContractId } from "@alephium/web3"
 import { Deployer, NetworkType } from "../lib/deployment"
 import * as dotenv from "dotenv"
+import { getDevnetGovernanceId, getDevnetWrappedAlphId } from "./devnet"
 
 dotenv.config({ path: __dirname+'/../.env' })
 
@@ -23,36 +24,43 @@ const networkConfigs: Record<NetworkType, NetworkConfigs> = {
 
 const deployTokenBridge = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
+  const tokenBridgeFactory = deployer.getDeployContractResult("TokenBridgeFactory")
   const initFields = {
-    'governance': deployer.getEnvironment("Governance"),
     'localChainId': parseInt(process.env.INIT_CHAIN_ID!),
     'receivedSequence': 0,
     'sendSequence': 0,
-    'wrappedAlphId': deployer.getEnvironment("WrappedAlph"),
-    'tokenBridgeFactory': deployer.getEnvironment("TokenBridgeFactory"),
+    'tokenBridgeFactory': tokenBridgeFactory.contractId,
     'minimalConsistencyLevel': networkConfigs[networkType].minimalConsistencyLevel
   }
 
   // TODO: remove devnet deployer once the contracts finalized
   if (networkType === "devnet") {
-    const devnetDeployerId = deployer.getEnvironment('DevnetDeployer')
+    const devnetDeployer = deployer.getDeployContractResult('DevnetDeployer')
+    const governanceId = await getDevnetGovernanceId(deployer)
+    const wrappedAlphId = await getDevnetWrappedAlphId(deployer)
     const script = Project.script('devnet/deploy_token_bridge.ral')
     await deployer.runScript(script, {
       initialFields: {
-        'deployer': devnetDeployerId,
+        'governance': governanceId,
+        'wrappedAlphId': wrappedAlphId,
+        'deployer': devnetDeployer.contractId,
         'bytecode': tokenBridge.bytecode,
         ...initFields
       }
     })
-    const contractId = subContractId(devnetDeployerId, "01")
+    const contractId = subContractId(devnetDeployer.contractId, "01")
     const contractAddress = addressFromContractId(contractId)
-    deployer.setEnvironment('TokenBridge', contractId)
     console.log(`TokenBridge contract address: ${contractAddress}, contract id: ${contractId}`)
   } else {
+    const governanceId = deployer.getDeployContractResult("Governance").contractId
+    const wrappedAlphId = deployer.getDeployContractResult("WrappedAlph").contractId
     const result = await deployer.deployContract(tokenBridge, {
-      initialFields: initFields
+      initialFields: {
+        'governance': governanceId,
+        'wrappedAlphId': wrappedAlphId,
+        ...initFields
+      }
     })
-    deployer.setEnvironment('TokenBridge', result.contractId)
     console.log(`TokenBridge contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
   }
 }

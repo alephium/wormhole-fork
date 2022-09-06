@@ -1,4 +1,4 @@
-import { NodeProvider, node } from '@alephium/web3'
+import { NodeProvider, node, contractIdFromAddress, binToHex } from '@alephium/web3'
 import { randomBytes } from 'crypto'
 
 export function toHex(bytes: Uint8Array): string {
@@ -34,9 +34,12 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
     return status as node.Confirmed;
 }
 
-export async function getCreatedContractAddress(provider: NodeProvider, txId: string, outputIndex: number): Promise<string> {
-    const confirmed = await waitTxConfirmed(provider, txId)
-    const block = await provider.blockflow.getBlockflowBlocksBlockHash(confirmed.blockHash)
-    const tx = block.transactions[confirmed.txIndex]
-    return tx.generatedOutputs[outputIndex].address
+export async function getCreatedContractId(provider: NodeProvider, blockHash: string, txId: string, outputIndex: number = 0): Promise<string> {
+    const block = await provider.blockflow.getBlockflowBlocksBlockHash(blockHash)
+    const tx = block.transactions.find(t => t.unsigned.txId === txId)
+    if (tx === undefined) {
+        throw new Error(`No transaction ${txId} in block ${blockHash}`)
+    }
+    const address = tx.generatedOutputs[outputIndex].address
+    return binToHex(contractIdFromAddress(address))
 }

@@ -1,8 +1,6 @@
 import {
   BuildDeployContractTx,
   BuildExecuteScriptTx,
-  BuildScriptTxResult,
-  DeployContractTransaction,
   NodeProvider,
   Contract,
   Script,
@@ -26,7 +24,6 @@ export interface Network {
   mnemonic: string
   scripts: string[] // script file path, execute by order
   deploymentFile: string
-  environments?: Record<string, string>
 }
 
 export type NetworkType = "mainnet" | "testnet" | "devnet"
@@ -40,23 +37,37 @@ export interface Configuration {
 
 type DeployContractParams = Omit<BuildDeployContractTx, 'signerAddress'>
 
-export interface DeployContractResult extends DeployContractTransaction {
+export interface DeployContractResult {
+  fromGroup: number
+  toGroup: number
+  txId: string
   blockHash: string
+  contractId: string
+  contractAddress: string
 }
 
 type RunScriptParams = Omit<BuildExecuteScriptTx, 'signerAddress'>
 
-export interface RunScriptResult extends BuildScriptTxResult {
+export interface RunScriptResult {
+  fromGroup: number
+  toGroup: number
+  txId: string
   blockHash: string
 }
 
 class Deployments {
   lastFailedStep: number
-  environments: Map<string, string>
+  deployContractResults: Map<string, DeployContractResult>
+  runScriptResults: Map<string, RunScriptResult>
 
-  constructor(lastFailedStep: number, environments: Map<string, string>) {
+  constructor(
+    lastFailedStep: number,
+    deployContractResults: Map<string, DeployContractResult>,
+    runScriptResults: Map<string, RunScriptResult>
+  ) {
     this.lastFailedStep = lastFailedStep
-    this.environments = environments
+    this.deployContractResults = deployContractResults
+    this.runScriptResults = runScriptResults
   }
 
   async saveToFile(filepath: string): Promise<void> {
@@ -66,7 +77,8 @@ class Deployments {
     }
     const json = {
       'lastFailedStep': this.lastFailedStep,
-      'environments': Object.fromEntries(this.environments)
+      'deployContractResults': Object.fromEntries(this.deployContractResults),
+      'runScriptResults': Object.fromEntries(this.runScriptResults)
     }
     const content = JSON.stringify(json, null, 2)
     return fsPromises.writeFile(filepath, content)
@@ -79,8 +91,9 @@ class Deployments {
     const content = await fsPromises.readFile(filepath)
     const json = JSON.parse(content.toString())
     const lastFailedStep = json.lastFailedStep as number
-    const environments = new Map(Object.entries<string>(json.environments))
-    return new Deployments(lastFailedStep, environments)
+    const deployContractResults = new Map(Object.entries<DeployContractResult>(json.deployContractResults))
+    const runScriptResults = new Map(Object.entries<RunScriptResult>(json.runScriptResults))
+    return new Deployments(lastFailedStep, deployContractResults, runScriptResults)
   }
 }
 
@@ -90,8 +103,9 @@ export interface Deployer {
 
   deployContract(contract: Contract, params: DeployContractParams): Promise<DeployContractResult>
   runScript(script: Script, params: RunScriptParams): Promise<RunScriptResult>
-  setEnvironment(key: string, value: string): void
-  getEnvironment(key: string): string
+
+  getDeployContractResult(typeId: string): DeployContractResult
+  getRunScriptResult(typeId: string): RunScriptResult
 }
 
 export type DeployFunction = (deployer: Deployer, networkType: NetworkType) => Promise<void>
@@ -136,7 +150,11 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
   }
 }
 
-function createDeployer(network: Network, environments: Map<string, string>): Deployer {
+function createDeployer(
+  network: Network,
+  deployContractResults: Map<string, DeployContractResult>,
+  runScriptResults: Map<string, RunScriptResult>
+): Deployer {
   const signer = PrivateKeySigner.from(network.mnemonic)
   const account = signer.getAccountSync()
 
@@ -144,26 +162,46 @@ function createDeployer(network: Network, environments: Map<string, string>): De
     const result = await contract.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx, result.txId)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId)
-    return {...result, blockHash: confirmed.blockHash}
+    const deployContractResult = {
+      fromGroup: result.fromGroup,
+      toGroup: result.toGroup,
+      txId: result.txId,
+      blockHash: confirmed.blockHash,
+      contractId: result.contractId,
+      contractAddress: result.contractAddress
+    }
+    deployContractResults.set(contract.typeId, deployContractResult)
+    return deployContractResult
   }
 
   const runScript = async (script: Script, params: RunScriptParams): Promise<RunScriptResult> => {
     const result = await script.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx, result.txId)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId)
-    return {...result, blockHash: confirmed.blockHash}
-  }
-
-  const setEnvironment = (key: string, value: string) => {
-    environments.set(key, value)
-  }
-
-  const getEnvironment = (key: string) => {
-    const value = environments.get(key)
-    if (typeof value === 'undefined') {
-      throw new Error(`${key} does not exist`)
+    const runScriptResult = {
+      fromGroup: result.fromGroup,
+      toGroup: result.toGroup,
+      txId: result.txId,
+      blockHash: confirmed.blockHash
     }
-    return value
+    runScriptResults.set(script.typeId, runScriptResult)
+    return runScriptResult
+  }
+
+  const getDeployContractResult = (typeId: string): DeployContractResult => {
+    const result = deployContractResults.get(typeId)
+    if (result === undefined) {
+      throw new Error(`Contract ${typeId} deployment result does not exist`)
+    }
+    return result
+  }
+
+  const getRunScriptResult = (typeId: string): RunScriptResult => {
+    const result = runScriptResults.get(typeId)
+    if (result === undefined) {
+      throw new Error(`Script ${typeId} execute result does not exist`)
+    }
+    return result
   }
 
   return {
@@ -171,17 +209,18 @@ function createDeployer(network: Network, environments: Map<string, string>): De
     account: account,
     deployContract: deployContract,
     runScript: runScript,
-    setEnvironment: setEnvironment,
-    getEnvironment: getEnvironment
+    getDeployContractResult: getDeployContractResult,
+    getRunScriptResult: getRunScriptResult
   }
 }
 
 async function saveDeploymentsToFile(
   lastFailedStep: number,
-  environments: Map<string, string>,
+  deployContractResults: Map<string, DeployContractResult>,
+  runScriptResults: Map<string, RunScriptResult>,
   filepath: string
 ) {
-  const deployments = new Deployments(lastFailedStep, environments)
+  const deployments = new Deployments(lastFailedStep, deployContractResults, runScriptResults)
   await deployments.saveToFile(filepath)
 }
 
@@ -198,7 +237,6 @@ export async function deploy(
     throw new Error("no deploy script")
   }
 
-  setCurrentNodeProvider(network.nodeUrl)
   const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
   for (const filepath of network.scripts) {
     const scriptFilePath = path.resolve(filepath);
@@ -215,20 +253,17 @@ export async function deploy(
   }
 
   let lastFailedStep = 0
-  let environments = new Map<string, string>()
+  let deployContractResults = new Map<string, DeployContractResult>()
+  let runScriptResults = new Map<string, RunScriptResult>()
   const deployments = await Deployments.from(network.deploymentFile)
   if (typeof deployments !== 'undefined') {
     lastFailedStep = deployments.lastFailedStep
-    environments = deployments.environments
+    deployContractResults = deployments.deployContractResults
+    runScriptResults = deployments.runScriptResults
   }
 
-  const deployer = createDeployer(network, environments)
-  if (typeof network.environments !== 'undefined') {
-    for (const key in network.environments) {
-      deployer.setEnvironment(key, network.environments[key])
-    }
-  }
-
+  setCurrentNodeProvider(network.nodeUrl)
+  const deployer = createDeployer(network, deployContractResults, runScriptResults)
   await Project.build(configuration.sourcePath, configuration.artifactPath)
 
   const remainScripts = funcs.slice(lastFailedStep)
@@ -237,13 +272,13 @@ export async function deploy(
       await script.func(deployer, networkType)
       lastFailedStep += 1
     } catch (error) {
-      await saveDeploymentsToFile(lastFailedStep, environments, network.deploymentFile)
+      await saveDeploymentsToFile(lastFailedStep, deployContractResults, runScriptResults, network.deploymentFile)
       throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }
 
   if (remainScripts.length > 0) {
-    await saveDeploymentsToFile(lastFailedStep, environments, network.deploymentFile)
+    await saveDeploymentsToFile(lastFailedStep, deployContractResults, runScriptResults, network.deploymentFile)
   }
   console.log("Deployment script execution completed")
 }

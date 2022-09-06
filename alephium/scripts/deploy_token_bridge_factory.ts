@@ -78,10 +78,9 @@ const deployTokenBridgeFactory = async (deployer: Deployer, networkType: Network
     'unexecutedSequenceTemplateId': unexecutedSequenceId,
     'refundAddress': deployer.account.address
   }
-  const result = await deployer.deployContract(tokenBridgeFactory, {
+  await deployer.deployContract(tokenBridgeFactory, {
     initialFields: initFields
   })
-  deployer.setEnvironment("TokenBridgeFactory", result.contractId)
 }
 
 export default deployTokenBridgeFactory
