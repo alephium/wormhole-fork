@@ -95,6 +95,16 @@ export const AlephiumWalletProvider = ({
         const accounts = await windowAlephium.getAccounts()
         setAccounts(accounts)
         setAlephiumWindowObject(windowAlephium)
+
+        windowAlephium.on("addressesChanged", (accounts) => {
+          setAccounts(accounts)
+        })
+
+        windowAlephium.on("networkChanged", (_networkId) => {
+          windowAlephium.getAccounts().then((accounts) => {
+            setAccounts(accounts)
+          })
+        })
       }
     }
   }, [])

@@ -28,7 +28,7 @@ const connections: Connection[] = [
   },
   {
     connectType: ConnectType.WEBEXTENSION,
-    name: "Web Extension",
+    name: "Browser Extension",
     icon: alephiumIcon
   }
 ]
@@ -92,13 +92,13 @@ const AlephiumConnectWalletDialog = ({
   const classes = useStyles();
 
   const availableWallets = connections.map((connection) => (
-      <WalletOptions
-        connection={connection}
-        connect={connect}
-        onClose={onClose}
-        key={connection.name}
-      />
-    ));
+    <WalletOptions
+      connection={connection}
+      connect={connect}
+      onClose={onClose}
+      key={connection.name}
+    />
+  ));
 
   return (
     <Dialog open={isOpen} onClose={onClose}>
