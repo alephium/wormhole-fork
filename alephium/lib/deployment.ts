@@ -18,6 +18,7 @@ import path from "path"
 import { ec as EC } from 'elliptic'
 import { waitTxConfirmed } from "./utils"
 import fs, { promises as fsPromises } from "fs"
+import * as cryptojs from 'crypto-js'
 
 export interface Network {
   nodeUrl: string
@@ -44,6 +45,10 @@ export interface DeployContractResult {
   blockHash: string
   contractId: string
   contractAddress: string
+  codeHash: string // hash of contract bytecode and initial fields
+  initialAttoAlphAmount?: string
+  initialTokenAmounts?: Record<string, string>
+  issueTokenAmount?: string
 }
 
 type RunScriptParams = Omit<BuildExecuteScriptTx, 'signerAddress'>
@@ -150,6 +155,49 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
   }
 }
 
+async function isTxExists(provider: NodeProvider, txId: string): Promise<boolean> {
+  const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
+  return txStatus.type !== "TxNotFound"
+}
+
+function recordEqual(left: Record<string, string>, right: Record<string, string>): boolean {
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) {
+    return false
+  }
+  for (const key of leftKeys) {
+    if (left[key] !== right[key]) {
+      return false
+    }
+  }
+  return true
+}
+
+async function needToDeploy(
+  provider: NodeProvider,
+  previous: DeployContractResult | undefined,
+  initialAttoAlphAmount: string | undefined,
+  initialTokenAmounts: Record<string, string> | undefined,
+  issueTokenAmount: string | undefined,
+  codeHash: string
+): Promise<boolean> {
+  if (previous === undefined || previous.codeHash !== codeHash) {
+    return true
+  }
+  const txExists = await isTxExists(provider, previous.txId)
+  if (!txExists) {
+    return true
+  }
+  const currentInitialTokenAmounts = initialTokenAmounts ? initialTokenAmounts : {}
+  const previousInitialTokenAmounts = previous.initialTokenAmounts ? previous.initialTokenAmounts : {}
+  const sameWithPrevious =
+    (initialAttoAlphAmount === previous.initialAttoAlphAmount) &&
+    (recordEqual(currentInitialTokenAmounts, previousInitialTokenAmounts)) &&
+    (issueTokenAmount === previous.issueTokenAmount)
+  return !sameWithPrevious
+}
+
 function createDeployer(
   network: Network,
   deployContractResults: Map<string, DeployContractResult>,
@@ -159,19 +207,47 @@ function createDeployer(
   const account = signer.getAccountSync()
 
   const deployContract = async (contract: Contract, params: DeployContractParams): Promise<DeployContractResult> => {
-    const result = await contract.transactionForDeployment(signer, params)
-    await signer.submitTransaction(result.unsignedTx, result.txId)
-    const confirmed = await waitTxConfirmed(signer.provider, result.txId)
-    const deployContractResult = {
-      fromGroup: result.fromGroup,
-      toGroup: result.toGroup,
-      txId: result.txId,
-      blockHash: confirmed.blockHash,
-      contractId: result.contractId,
-      contractAddress: result.contractAddress
+    // TODO: improve this after migrating to SDK
+    const bytecode = contract.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
+    const codeHash = cryptojs.SHA256(bytecode).toString()
+    const previous = deployContractResults.get(contract.typeId)
+    const initialTokenAmounts = params.initialTokenAmounts
+      ? params.initialTokenAmounts
+          .reduce<Record<string, string>>((acc, token) => {
+            acc[token.id] = token.amount.toString()
+            return acc
+          }, {})
+      : undefined
+    const issueTokenAmount: string | undefined = params.issueTokenAmount?.toString()
+    const deploy = await needToDeploy(
+      signer.provider,
+      previous,
+      params.initialAttoAlphAmount,
+      initialTokenAmounts,
+      issueTokenAmount,
+      codeHash
+    )
+    if (deploy) {
+      const result = await contract.transactionForDeployment(signer, params)
+      await signer.submitTransaction(result.unsignedTx, result.txId)
+      const confirmed = await waitTxConfirmed(signer.provider, result.txId)
+      const deployContractResult: DeployContractResult = {
+        fromGroup: result.fromGroup,
+        toGroup: result.toGroup,
+        txId: result.txId,
+        blockHash: confirmed.blockHash,
+        contractId: result.contractId,
+        contractAddress: result.contractAddress,
+        codeHash: codeHash,
+        initialAttoAlphAmount: params.initialAttoAlphAmount,
+        initialTokenAmounts: initialTokenAmounts,
+        issueTokenAmount: issueTokenAmount
+      }
+      deployContractResults.set(contract.typeId, deployContractResult)
+      return deployContractResult
     }
-    deployContractResults.set(contract.typeId, deployContractResult)
-    return deployContractResult
+    // we have checked in `needToDeploy`
+    return previous!
   }
 
   const runScript = async (script: Script, params: RunScriptParams): Promise<RunScriptResult> => {
