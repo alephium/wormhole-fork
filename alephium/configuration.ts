@@ -26,7 +26,7 @@ const configuration: Configuration = {
     "testnet": {
       // TODO: update config
       nodeUrl: "http://localhost:22973",
-      mnemonic: "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
+      mnemonic: process.env.MNEMONIC as string,
       deploymentFile: ".deployments.json",
       scripts: [
         "scripts/deploy_test_token.ts",

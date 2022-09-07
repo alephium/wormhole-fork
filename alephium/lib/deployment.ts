@@ -316,13 +316,16 @@ export async function deploy(
   const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
   for (const filepath of network.scripts) {
     const scriptFilePath = path.resolve(filepath);
-    let func: DeployFunction;
     try {
-      func = require(scriptFilePath);
-      if ((func as any).default) {
-        func = (func as any).default as DeployFunction;
+      const content = require(scriptFilePath)
+      if (content.default) {
+        funcs.push({
+          scriptFilePath: scriptFilePath,
+          func: content.default as DeployFunction
+        })
+      } else {
+        throw new Error(`no default deploy function exported from ${scriptFilePath}`)
       }
-      funcs.push({scriptFilePath, func})
     } catch (error) {
       throw new Error(`failed to load deploy script, filepath: ${scriptFilePath}, error: ${error}`)
     }
