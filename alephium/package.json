@@ -8,9 +8,9 @@
   ],
   "scripts": {
     "build": "rm -rf dist && npx tsc --build .",
-    "jest": "jest --runInBand --detectOpenHandles --useStderr --silent=false --verbose=true --config jestconfig.json",
-    "test": "npm run build && npm run jest",
-    "deploy": "npx ts-node deploy.ts",
+    "compile-contracts": "npx ts-node commands.ts compile",
+    "test": "npx ts-node commands.ts test -i -v",
+    "deploy:devnet": "npx ts-node commands.ts deploy -n devnet",
     "auto-mine": "npx ts-node scripts/auto_mine.ts"
   },
   "engines": {
@@ -19,17 +19,19 @@
   },
   "dependencies": {
     "@alephium/sdk": "^0.0.15",
-    "@alephium/web3": "^0.2.0-rc.7",
+    "@alephium/web3": "file:../../alephium-web3",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",
     "bs58": "^5.0.0",
+    "commander": "^9.4.0",
+    "crypto-js": "^4.1.1",
     "dotenv": "^16.0.1",
     "ethers": "5.4.4",
-    "web3": "^1.7.1",
-    "yargs": "^17.5.1"
+    "web3": "^1.7.1"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.12",
     "jest": "^27.5.1",
