@@ -5,7 +5,7 @@ import QRCodeModal from "@walletconnect/legacy-modal"
 import { NodeProvider, Account, SignerProvider } from '@alephium/web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'
 import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID } from '../utils/consts'
-import { connect as connectToExtension, IAlephiumWindowObject } from '@h0ngcha0/get-alephium'
+import { connect as connectToExtension, IAlephiumWindowObject } from '@alephium/get-alephium'
 
 export enum ConnectType {
   WALLETCONNECT,
