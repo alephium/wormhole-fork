@@ -19,7 +19,6 @@ import * as cryptojs from 'crypto-js'
 export interface Network {
   nodeUrl: string
   mnemonic: string
-  scripts: string[] // script file path, execute by order
   deploymentFile: string
 }
 
@@ -28,6 +27,8 @@ export type NetworkType = "mainnet" | "testnet" | "devnet"
 export interface Configuration {
   sourcePath?: string
   artifactPath?: string
+
+  deployScriptsPath: string
   compilerOptions: CompilerOptions
 
   networks: Record<NetworkType, Network>
@@ -288,6 +289,25 @@ async function saveDeploymentsToFile(
   const deployments = new Deployments(deployContractResults, runScriptResults)
   await deployments.saveToFile(filepath)
 }
+async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
+  const regex = "^([0-9]+)_.*\\.(ts|js)$"
+  const dirents = await fsPromises.readdir(rootPath, { withFileTypes: true })
+  const scripts: {filename: string, order: number}[] = []
+  for (const f of dirents) {
+    if (!f.isFile()) continue
+    const result = f.name.match(regex)
+    if (result === null) continue
+    const order = parseInt(result[1])
+    scripts.push({filename: f.name, order: order})
+  }
+  scripts.sort((a, b) => a.order - b.order)
+  for (let i = 0; i < scripts.length; i++) {
+    if (scripts[i].order !== i) {
+      throw new Error("Script shoud start with prefix 0, and increased one by one")
+    }
+  }
+  return scripts.map(f => path.join(rootPath, f.filename))
+}
 
 export async function deploy(
   configuration: Configuration,
@@ -298,13 +318,10 @@ export async function deploy(
     throw new Error(`no network ${networkType} config`)
   }
 
-  if (typeof network.scripts === 'undefined' || network.scripts.length === 0) {
-    throw new Error("no deploy script")
-  }
-
+  const scriptsRootPath = configuration.deployScriptsPath ? configuration.deployScriptsPath : "scripts"
+  const scriptFiles = await getDeployScriptFiles(path.resolve(scriptsRootPath))
   const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
-  for (const filepath of network.scripts) {
-    const scriptFilePath = path.resolve(filepath);
+  for (const scriptFilePath of scriptFiles) {
     try {
       const content = require(scriptFilePath)
       if (content.default) {
@@ -344,3 +361,4 @@ export async function deploy(
   await saveDeploymentsToFile(deployContractResults, runScriptResults, network.deploymentFile)
   console.log("Deployment script execution completed")
 }
+
