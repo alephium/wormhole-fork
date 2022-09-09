@@ -22,7 +22,7 @@ export function zeroPad(value: string, byteLength: number): string {
 }
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
-    return (txStatus as node.Confirmed).blockHash !== undefined
+    return txStatus.type === 'Confirmed'
 }
 
 export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {

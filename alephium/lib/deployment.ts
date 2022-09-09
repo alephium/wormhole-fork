@@ -4,19 +4,14 @@ import {
   NodeProvider,
   Contract,
   Script,
-  SignerWithNodeProvider,
-  groupOfAddress,
   Account,
-  publicKeyFromPrivateKey,
-  addressFromPublicKey,
-  signatureEncode,
   Project,
-  setCurrentNodeProvider,
-  Token
+  Token,
+  CompilerOptions,
+  web3
 } from "@alephium/web3"
-import { getWalletFromMnemonic } from "@alephium/sdk"
+import { PrivateKeyWallet } from "@alephium/web3-wallet"
 import path from "path"
-import { ec as EC } from 'elliptic'
 import { waitTxConfirmed } from "./utils"
 import fs, { promises as fsPromises } from "fs"
 import * as cryptojs from 'crypto-js'
@@ -33,6 +28,7 @@ export type NetworkType = "mainnet" | "testnet" | "devnet"
 export interface Configuration {
   sourcePath?: string
   artifactPath?: string
+  compilerOptions: CompilerOptions
 
   networks: Record<NetworkType, Network>
 }
@@ -104,51 +100,11 @@ export interface Deployer {
   deployContract(contract: Contract, params: DeployContractParams): Promise<DeployContractResult>
   runScript(script: Script, params: RunScriptParams, taskName?: string): Promise<RunScriptResult>
 
-  getDeployContractResult(typeId: string): DeployContractResult
-  getRunScriptResult(typeId: string): RunScriptResult
+  getDeployContractResult(name: string): DeployContractResult
+  getRunScriptResult(name: string): RunScriptResult
 }
 
 export type DeployFunction = (deployer: Deployer, networkType: NetworkType) => Promise<void>
-
-export class PrivateKeySigner extends SignerWithNodeProvider {
-  private static ec = new EC('secp256k1')
-
-  private readonly privateKey: string
-  private readonly publicKey: string
-  private readonly address: string
-  private readonly group: number
-
-  constructor(privateKey: string, alwaysSubmitTx = true) {
-    super(alwaysSubmitTx)
-    this.privateKey = privateKey
-    this.publicKey = publicKeyFromPrivateKey(privateKey)
-    this.address = addressFromPublicKey(this.publicKey)
-    this.group = groupOfAddress(this.address)
-  }
-
-  static from(mnemonic: string): PrivateKeySigner {
-    const wallet = getWalletFromMnemonic(mnemonic)
-    return new PrivateKeySigner(wallet.privateKey)
-  }
-
-  getAccountSync(): Account {
-    return { address: this.address, publicKey: this.publicKey, group: this.group }
-  }
-
-  async getAccounts(): Promise<Account[]> {
-    return [this.getAccountSync()]
-  }
-
-  async signRaw(signerAddress: string, hexString: string): Promise<string> {
-    if (signerAddress !== this.address) {
-      throw Error('Unmatched signer address')
-    }
-
-    const key = PrivateKeySigner.ec.keyFromPrivate(this.privateKey)
-    const signature = key.sign(hexString)
-    return signatureEncode(signature)
-  }
-}
 
 async function isTxExists(provider: NodeProvider, txId: string): Promise<boolean> {
   const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
@@ -224,19 +180,20 @@ function getTokenRecord(tokens: Token[]): Record<string, string> {
   }, {})
 }
 
-function createDeployer(
+async function createDeployer(
   network: Network,
   deployContractResults: Map<string, DeployContractResult>,
   runScriptResults: Map<string, RunScriptResult>
-): Deployer {
-  const signer = PrivateKeySigner.from(network.mnemonic)
-  const account = signer.getAccountSync()
+): Promise<Deployer> {
+  const signer = PrivateKeyWallet.FromMnemonic(network.mnemonic)
+  const accounts = await signer.getAccounts()
+  const account = accounts[0]
 
   const deployContract = async (contract: Contract, params: DeployContractParams): Promise<DeployContractResult> => {
     // TODO: improve this after migrating to SDK
     const bytecode = contract.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
     const codeHash = cryptojs.SHA256(bytecode).toString()
-    const previous = deployContractResults.get(contract.typeId)
+    const previous = deployContractResults.get(contract.name)
     const tokens = params.initialTokenAmounts ? getTokenRecord(params.initialTokenAmounts) : undefined
     const issueTokenAmount: string | undefined = params.issueTokenAmount?.toString()
     const needToDeploy = await needToDeployContract(
@@ -247,33 +204,33 @@ function createDeployer(
       issueTokenAmount,
       codeHash
     )
-    if (needToDeploy) {
-      const result = await contract.transactionForDeployment(signer, params)
-      await signer.submitTransaction(result.unsignedTx, result.txId)
-      const confirmed = await waitTxConfirmed(signer.provider, result.txId)
-      const deployContractResult: DeployContractResult = {
-        fromGroup: result.fromGroup,
-        toGroup: result.toGroup,
-        txId: result.txId,
-        blockHash: confirmed.blockHash,
-        contractId: result.contractId,
-        contractAddress: result.contractAddress,
-        codeHash: codeHash,
-        attoAlphAmount: params.initialAttoAlphAmount,
-        tokens: tokens,
-        issueTokenAmount: issueTokenAmount
-      }
-      deployContractResults.set(contract.typeId, deployContractResult)
-      return deployContractResult
+    if (!needToDeploy) {
+      // we have checked in `needToDeployContract`
+      return previous!
     }
-    // we have checked in `needToDeployContract`
-    return previous!
+    const result = await contract.transactionForDeployment(signer, params)
+    await signer.submitTransaction(result.unsignedTx, result.txId)
+    const confirmed = await waitTxConfirmed(signer.provider, result.txId)
+    const deployContractResult: DeployContractResult = {
+      fromGroup: result.fromGroup,
+      toGroup: result.toGroup,
+      txId: result.txId,
+      blockHash: confirmed.blockHash,
+      contractId: result.contractId,
+      contractAddress: result.contractAddress,
+      codeHash: codeHash,
+      attoAlphAmount: params.initialAttoAlphAmount,
+      tokens: tokens,
+      issueTokenAmount: issueTokenAmount
+    }
+    deployContractResults.set(contract.name, deployContractResult)
+    return deployContractResult
   }
 
   const runScript = async (script: Script, params: RunScriptParams, taskName?: string): Promise<RunScriptResult> => {
     const bytecode = script.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
     const codeHash = cryptojs.SHA256(bytecode).toString()
-    const key = taskName ? taskName : script.typeId
+    const key = taskName ? taskName : script.name
     const previous = runScriptResults.get(key)
     const tokens = params.tokens ? getTokenRecord(params.tokens) : undefined
     const needToRun = await needToRunScript(signer.provider, previous, params.attoAlphAmount?.toString(), tokens, codeHash)
@@ -297,18 +254,18 @@ function createDeployer(
     return previous!
   }
 
-  const getDeployContractResult = (typeId: string): DeployContractResult => {
-    const result = deployContractResults.get(typeId)
+  const getDeployContractResult = (name: string): DeployContractResult => {
+    const result = deployContractResults.get(name)
     if (result === undefined) {
-      throw new Error(`Contract ${typeId} deployment result does not exist`)
+      throw new Error(`Deployment result of contract "${name}" does not exist`)
     }
     return result
   }
 
-  const getRunScriptResult = (typeId: string): RunScriptResult => {
-    const result = runScriptResults.get(typeId)
+  const getRunScriptResult = (name: string): RunScriptResult => {
+    const result = runScriptResults.get(name)
     if (result === undefined) {
-      throw new Error(`Script ${typeId} execute result does not exist`)
+      throw new Error(`Execution result of script "${name}" does not exist`)
     }
     return result
   }
@@ -371,9 +328,9 @@ export async function deploy(
     runScriptResults = deployments.runScriptResults
   }
 
-  setCurrentNodeProvider(network.nodeUrl)
-  const deployer = createDeployer(network, deployContractResults, runScriptResults)
-  await Project.build(configuration.sourcePath, configuration.artifactPath)
+  web3.setCurrentNodeProvider(network.nodeUrl)
+  const deployer = await createDeployer(network, deployContractResults, runScriptResults)
+  await Project.build(configuration.compilerOptions, configuration.sourcePath, configuration.artifactPath)
 
   for (const script of funcs) {
     try {

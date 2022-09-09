@@ -1,4 +1,4 @@
-import { Asset, InputAsset, TestContractResult, Val, binToHex, Project, setCurrentNodeProvider } from '@alephium/web3'
+import { Asset, InputAsset, TestContractResult, Val, binToHex, Project, web3 } from '@alephium/web3'
 import { CHAIN_ID_ALEPHIUM, ContractUpgrade, encodeU256, expectAssertionFailed, expectOneOfError, GuardianSet, oneAlph, randomAssetAddress, VAA, VAABody, buildProject } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
@@ -6,7 +6,7 @@ import { createGovernance, governanceChainId, governanceEmitterAddress, governan
 import * as blake from 'blakejs'
 
 describe("test governance", () => {
-    setCurrentNodeProvider("http://127.0.0.1:22973")
+    web3.setCurrentNodeProvider("http://127.0.0.1:22973")
     const testGuardianSet = GuardianSet.random(18, 1)
 
     async function testCase(vaa: VAA, method: string, initialAsset?: Asset, inputAssets?: InputAsset[]): Promise<TestContractResult> {

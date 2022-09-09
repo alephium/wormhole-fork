@@ -1,8 +1,8 @@
-import { Number256, setCurrentNodeProvider } from "@alephium/web3"
+import { Number256, web3 } from "@alephium/web3"
 import { buildProject, createMath } from "./fixtures/wormhole-fixture"
 
 describe('test math', () => {
-    setCurrentNodeProvider('http://127.0.0.1:22973')
+    web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
     interface TestCase {
         decimals: number

@@ -1,9 +1,9 @@
-import { addressFromContractId, setCurrentNodeProvider, subContractId } from '@alephium/web3'
+import { addressFromContractId, web3, subContractId } from '@alephium/web3'
 import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
 import { buildProject, defaultGasFee, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test sequence", () => {
-    setCurrentNodeProvider('http://127.0.0.1:22973')
+    web3.setCurrentNodeProvider('http://127.0.0.1:22973')
     const allExecuted = (BigInt(1) << BigInt(256)) - 1n
     const refundAddress = randomAssetAddress()
 
@@ -12,7 +12,7 @@ describe("test sequence", () => {
         const sequenceInfo = createSequence(0, 0n, 0n, refundAddress)
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
-            const testResult = await sequence.testPrivateMethod('checkSequence', {
+            const testResult = await sequence.testPublicMethod('check', {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: { 'seq': seq },
@@ -28,7 +28,7 @@ describe("test sequence", () => {
         }
 
         for (let seq = 256; seq < 512; seq++) {
-            const testResult = await sequence.testPrivateMethod('checkSequence', {
+            const testResult = await sequence.testPublicMethod('check', {
                 initialFields: sequenceInfo.selfState.fields,
                 address: sequenceInfo.address,
                 testArgs: { 'seq': seq },
@@ -48,7 +48,7 @@ describe("test sequence", () => {
         await buildProject()
         const sequenceInfo = createSequence(512, allExecuted, allExecuted, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod('checkSequence', {
+        const testResult = await sequence.testPublicMethod('check', {
             initialFields: sequenceInfo.selfState.fields,
             address: sequenceInfo.address,
             testArgs: { 'seq': 1025 },
@@ -66,7 +66,7 @@ describe("test sequence", () => {
         await buildProject()
         const sequenceInfo = createSequence(0, 1n, 1n, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod('checkSequence', {
+        const testResult = await sequence.testPublicMethod('check', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 2n},
             address: sequenceInfo.address,
@@ -99,7 +99,7 @@ describe("test sequence", () => {
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 256; seq++) {
             await expectAssertionFailed(async() => {
-                return await sequence.testPrivateMethod("checkSequence", {
+                return await sequence.testPublicMethod("check", {
                     initialFields: sequenceInfo.selfState.fields,
                     address: sequenceInfo.address,
                     testArgs: { 'seq': seq },
@@ -111,7 +111,7 @@ describe("test sequence", () => {
 
         for (let seq = 256; seq < 512; seq++) {
             await expectAssertionFailed(async() => {
-                return await sequence.testPrivateMethod("checkSequence", {
+                return await sequence.testPublicMethod("check", {
                     initialFields: {
                         'start': 0,
                         'firstNext256': 0,
@@ -134,7 +134,7 @@ describe("test sequence", () => {
         const firstNext256 = (BigInt(0xff) << 248n)
         const sequenceInfo = createSequence(start, firstNext256, 0n, refundAddress)
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod('checkSequence', {
+        const testResult = await sequence.testPublicMethod('check', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,
@@ -165,7 +165,7 @@ describe("test sequence", () => {
         )
         const sequence = sequenceInfo.contract
         for (let seq = 0; seq < 8; seq++) {
-            const testResult = await sequence.testPrivateMethod('checkSequence', {
+            const testResult = await sequence.testPublicMethod('check', {
                 initialFields: sequenceInfo.selfState.fields,
                 initialAsset: {alphAmount: oneAlph * 10n},
                 address: sequenceInfo.address,
@@ -195,7 +195,7 @@ describe("test sequence", () => {
         const sequence = sequenceInfo.contract
         for (let seq = 1; seq < 256; seq++) {
             await expectAssertionFailed(async () => {
-                await sequence.testPrivateMethod('checkSequence', {
+                await sequence.testPublicMethod('check', {
                     initialFields: sequenceInfo.selfState.fields,
                     initialAsset: {alphAmount: oneAlph * 10n},
                     address: sequenceInfo.address,
@@ -217,7 +217,7 @@ describe("test sequence", () => {
             parentId, 256, sequences, refundAddress, unexecutedSequenceContractId
         )
         const sequence = sequenceInfo.contract
-        const testResult = await sequence.testPrivateMethod('checkSequence', {
+        const testResult = await sequence.testPublicMethod('check', {
             initialFields: sequenceInfo.selfState.fields,
             initialAsset: {alphAmount: oneAlph * 10n},
             address: sequenceInfo.address,

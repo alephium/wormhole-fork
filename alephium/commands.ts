@@ -1,10 +1,28 @@
 #!/usr/bin/env node
-import { Project, setCurrentNodeProvider } from "@alephium/web3"
+import { Project, NodeProvider, web3 } from "@alephium/web3"
 import { program } from "commander"
 import { run as runJestTests } from "jest"
 import fs from "fs"
 import { Configuration, deploy, NetworkType } from "./lib/deployment"
 import path from "path"
+
+async function loadConfig(filename: string): Promise<Configuration> {
+  const configPath = path.resolve(filename)
+  if (!fs.existsSync(configPath)) {
+    program.error(`${configPath} does not exist`)
+  }
+  let config: Configuration
+  try {
+    const content = require(path.resolve(configPath))
+    if (!content.default) {
+      program.error(`config file ${filename} have no default export`)
+    }
+    config = content.default as Configuration
+  } catch (error) {
+    program.error(`failed to read config file, error: ${error}`)
+  }
+  return config
+}
 
 program.command("test")
   .description("Test the contracts")
@@ -44,40 +62,27 @@ program.command("test")
     await runJestTests(jestOptions)
   })
 
-program.command("compile")
-  .description("Compile the project")
-  .option("-n, --nodeUrl <node-url>", "Alephium full node url", "http://127.0.0.1:22973")
-  .option("-c, --contractPath <contract-dir-path>", "Contract directory path", "contracts")
-  .option("-a, --artifactPath <artifact-dir-path>", "Artifact directory path", "artifacts")
-  .action(async (options) => {
-    const nodeProvider = options.nodeUrl as string
-    setCurrentNodeProvider(nodeProvider)
-    const contractPath = options.contractPath as string
-    const artifactPath = options.artifactPath as string
-    await Project.build(contractPath, artifactPath)
-    console.log("Compile completed!")
-  })
+program
+.command('compile')
+.description('Compile the project')
+.option('-c, --config <config-file>', 'Build config file', 'configuration.ts')
+.option('-n, --network <network-type>', 'Network type', 'devnet')
+.action(async (options) => {
+  const config = await loadConfig(options.config as string)
+  const networkType = options.network as NetworkType
+  const nodeUrl = config.networks[networkType].nodeUrl
+  const nodeProvider = new NodeProvider(nodeUrl)
+  web3.setCurrentNodeProvider(nodeProvider)
+  await Project.build(config.compilerOptions, config.sourcePath, config.artifactPath)
+  console.log('Compile completed!')
+})
 
 program.command("deploy")
   .description("Deploy contracts")
   .option("-c, --config <config-file>", "Deployment config file", "configuration.ts")
   .option("-n, --network <network-type>", "Specify the network to use")
   .action(async (options) => {
-    const configPath = options.config as string
-    if (!fs.existsSync(configPath)) {
-      program.error(`${configPath} does not exist`)
-    }
-    let config: Configuration
-    try {
-      const content = require(path.resolve(configPath))
-      if (content.default) {
-        config = content.default as Configuration
-      } else {
-        program.error(`no default configuration exported from ${configPath}`)
-      }
-    } catch (error) {
-      program.error(`failed to read config file, error: ${error}`)
-    }
+    const config = await loadConfig(options.config as string)
     await deploy(config, options.network as NetworkType)
   })
 

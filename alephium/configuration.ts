@@ -3,6 +3,10 @@ import { Configuration } from "./lib/deployment"
 const configuration: Configuration = {
   sourcePath: "contracts",
   artifactPath: "artifacts",
+  compilerOptions: {
+    errorOnWarnings: true,
+    ignoreUnusedConstantsWarnings: true
+  },
 
   networks: {
     "devnet": {

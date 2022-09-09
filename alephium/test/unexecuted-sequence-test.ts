@@ -1,9 +1,9 @@
-import { Number256, addressFromContractId, Project, setCurrentNodeProvider } from '@alephium/web3'
+import { Number256, addressFromContractId, Project, web3 } from '@alephium/web3'
 import { createUnexecutedSequence } from './fixtures/sequence-fixture'
 import { buildProject, expectAssertionFailed, oneAlph, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe("test unexecuted sequence", () => {
-    setCurrentNodeProvider('http://127.0.0.1:22973')
+    web3.setCurrentNodeProvider('http://127.0.0.1:22973')
     const allExecuted = (BigInt(1) << BigInt(256)) - 1n
 
     it('should check sequence passed', async () => {

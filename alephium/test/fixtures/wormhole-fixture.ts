@@ -23,7 +23,7 @@ export const defaultGasFee = gasPrice * maxGasPerTx
 
 export async function buildProject(): Promise<void> {
     if (typeof Project.currentProject === 'undefined') {
-        await Project.build()
+        await Project.build({ignoreUnusedConstantsWarnings: true})
     }
 }
 
