@@ -61,16 +61,13 @@ export interface RunScriptResult {
 }
 
 class Deployments {
-  lastFailedStep: number
   deployContractResults: Map<string, DeployContractResult>
   runScriptResults: Map<string, RunScriptResult>
 
   constructor(
-    lastFailedStep: number,
     deployContractResults: Map<string, DeployContractResult>,
     runScriptResults: Map<string, RunScriptResult>
   ) {
-    this.lastFailedStep = lastFailedStep
     this.deployContractResults = deployContractResults
     this.runScriptResults = runScriptResults
   }
@@ -81,7 +78,6 @@ class Deployments {
       fs.mkdirSync(dirpath, {recursive: true})
     }
     const json = {
-      'lastFailedStep': this.lastFailedStep,
       'deployContractResults': Object.fromEntries(this.deployContractResults),
       'runScriptResults': Object.fromEntries(this.runScriptResults)
     }
@@ -95,10 +91,9 @@ class Deployments {
     }
     const content = await fsPromises.readFile(filepath)
     const json = JSON.parse(content.toString())
-    const lastFailedStep = json.lastFailedStep as number
     const deployContractResults = new Map(Object.entries<DeployContractResult>(json.deployContractResults))
     const runScriptResults = new Map(Object.entries<RunScriptResult>(json.runScriptResults))
-    return new Deployments(lastFailedStep, deployContractResults, runScriptResults)
+    return new Deployments(deployContractResults, runScriptResults)
   }
 }
 
@@ -291,12 +286,11 @@ function createDeployer(
 }
 
 async function saveDeploymentsToFile(
-  lastFailedStep: number,
   deployContractResults: Map<string, DeployContractResult>,
   runScriptResults: Map<string, RunScriptResult>,
   filepath: string
 ) {
-  const deployments = new Deployments(lastFailedStep, deployContractResults, runScriptResults)
+  const deployments = new Deployments(deployContractResults, runScriptResults)
   await deployments.saveToFile(filepath)
 }
 
@@ -331,12 +325,10 @@ export async function deploy(
     }
   }
 
-  let lastFailedStep = 0
   let deployContractResults = new Map<string, DeployContractResult>()
   let runScriptResults = new Map<string, RunScriptResult>()
   const deployments = await Deployments.from(network.deploymentFile)
   if (typeof deployments !== 'undefined') {
-    lastFailedStep = deployments.lastFailedStep
     deployContractResults = deployments.deployContractResults
     runScriptResults = deployments.runScriptResults
   }
@@ -345,19 +337,15 @@ export async function deploy(
   const deployer = createDeployer(network, deployContractResults, runScriptResults)
   await Project.build(configuration.sourcePath, configuration.artifactPath)
 
-  const remainScripts = funcs.slice(lastFailedStep)
-  for (const script of remainScripts) {
+  for (const script of funcs) {
     try {
       await script.func(deployer, networkType)
-      lastFailedStep += 1
     } catch (error) {
-      await saveDeploymentsToFile(lastFailedStep, deployContractResults, runScriptResults, network.deploymentFile)
+      await saveDeploymentsToFile(deployContractResults, runScriptResults, network.deploymentFile)
       throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }
 
-  if (remainScripts.length > 0) {
-    await saveDeploymentsToFile(lastFailedStep, deployContractResults, runScriptResults, network.deploymentFile)
-  }
+  await saveDeploymentsToFile(deployContractResults, runScriptResults, network.deploymentFile)
   console.log("Deployment script execution completed")
 }
