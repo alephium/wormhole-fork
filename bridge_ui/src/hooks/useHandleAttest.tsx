@@ -22,8 +22,8 @@ import {
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
   attestWrappedAlph
-} from "@certusone/wormhole-sdk";
-import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
+} from "@h0ngcha0/wormhole-sdk";
+import { CHAIN_ID_UNSET } from "@h0ngcha0/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -316,6 +316,7 @@ async function alephium(
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         } else {
+          console.log("i m here with token bridge contract id", ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID)
           bytecode = attestFromAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             localTokenId,
@@ -323,7 +324,7 @@ async function alephium(
             alphMessageFee,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
-          tokens = [{id: localTokenId, amount: '1'}];
+          tokens = [{ id: localTokenId, amount: '1' }];
         }
         const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode, tokens)
         return result.txId;

@@ -2,7 +2,7 @@ import {
   canonicalAddress,
   isNativeDenom,
   isNativeTerra,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import { LCDClient, isTxError } from "@terra-money/terra.js";
 import { ConnectedWallet, TxResult } from "@terra-money/wallet-provider";

@@ -16,7 +16,7 @@ import {
   CHAIN_ID_TERRA,
   isNativeDenom,
   CHAIN_ID_ACALA,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
 import { FileCopy, OpenInNew } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";
@@ -99,89 +99,73 @@ export default function SmartAddress({
   const useableName = isNative
     ? "Native Currency"
     : parsedTokenAccount?.name
-    ? parsedTokenAccount.name
-    : tokenName
-    ? tokenName
-    : "";
+      ? parsedTokenAccount.name
+      : tokenName
+        ? tokenName
+        : "";
   const explorerAddress = isNative
     ? null
     : chainId === CHAIN_ID_ETH
-    ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/${
-        isAsset ? "token" : "address"
+      ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/${isAsset ? "token" : "address"
       }/${useableAddress}`
-    : chainId === CHAIN_ID_ETHEREUM_ROPSTEN
-    ? `https://${CLUSTER === "testnet" ? "ropsten." : ""}etherscan.io/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_BSC
-    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}bscscan.com/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_POLYGON
-    ? `https://${CLUSTER === "testnet" ? "mumbai." : ""}polygonscan.com/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_AVAX
-    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}snowtrace.io/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_OASIS
-    ? `https://${
-        CLUSTER === "testnet" ? "testnet." : ""
-      }explorer.emerald.oasis.dev/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_AURORA
-    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}aurorascan.dev/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_FANTOM
-    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}ftmscan.com/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_KLAYTN
-    ? `https://${CLUSTER === "testnet" ? "baobab." : ""}scope.klaytn.com/${
-        isAsset ? "token" : "address"
-      }/${useableAddress}`
-    : chainId === CHAIN_ID_CELO
-    ? `https://${
-        CLUSTER === "testnet"
-          ? "alfajores-blockscout.celo-testnet.org"
-          : "explorer.celo.org"
-      }/address/${useableAddress}`
-    : chainId === CHAIN_ID_KARURA
-    ? `https://${
-        CLUSTER === "testnet"
-          ? "blockscout.karura-dev.aca-dev.network"
-          : "blockscout.karura.network"
-      }/${isAsset ? "token" : "address"}/${useableAddress}`
-    : chainId === CHAIN_ID_ACALA
-    ? `https://${
-        CLUSTER === "testnet"
-          ? "blockscout.acala-dev.aca-dev.network"
-          : "blockscout.acala.network"
-      }/${isAsset ? "token" : "address"}/${useableAddress}`
-    : chainId === CHAIN_ID_SOLANA
-    ? `https://solscan.io/address/${useableAddress}${
-        CLUSTER === "testnet"
-          ? "?cluster=devnet"
-          : CLUSTER === "devnet"
-          ? "?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899"
-          : ""
-      }`
-    : chainId === CHAIN_ID_TERRA
-    ? `https://finder.terra.money/${
-        CLUSTER === "devnet"
-          ? "localterra"
-          : CLUSTER === "testnet"
-          ? "bombay-12"
-          : "columbus-5"
-      }/address/${useableAddress}`
-    : chainId === CHAIN_ID_ALGORAND
-    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}algoexplorer.io/${
-        isAsset ? "asset" : "address"
-      }/${useableAddress}`
-    : undefined;
+      : chainId === CHAIN_ID_ETHEREUM_ROPSTEN
+        ? `https://${CLUSTER === "testnet" ? "ropsten." : ""}etherscan.io/${isAsset ? "token" : "address"
+        }/${useableAddress}`
+        : chainId === CHAIN_ID_BSC
+          ? `https://${CLUSTER === "testnet" ? "testnet." : ""}bscscan.com/${isAsset ? "token" : "address"
+          }/${useableAddress}`
+          : chainId === CHAIN_ID_POLYGON
+            ? `https://${CLUSTER === "testnet" ? "mumbai." : ""}polygonscan.com/${isAsset ? "token" : "address"
+            }/${useableAddress}`
+            : chainId === CHAIN_ID_AVAX
+              ? `https://${CLUSTER === "testnet" ? "testnet." : ""}snowtrace.io/${isAsset ? "token" : "address"
+              }/${useableAddress}`
+              : chainId === CHAIN_ID_OASIS
+                ? `https://${CLUSTER === "testnet" ? "testnet." : ""
+                }explorer.emerald.oasis.dev/${isAsset ? "token" : "address"
+                }/${useableAddress}`
+                : chainId === CHAIN_ID_AURORA
+                  ? `https://${CLUSTER === "testnet" ? "testnet." : ""}aurorascan.dev/${isAsset ? "token" : "address"
+                  }/${useableAddress}`
+                  : chainId === CHAIN_ID_FANTOM
+                    ? `https://${CLUSTER === "testnet" ? "testnet." : ""}ftmscan.com/${isAsset ? "token" : "address"
+                    }/${useableAddress}`
+                    : chainId === CHAIN_ID_KLAYTN
+                      ? `https://${CLUSTER === "testnet" ? "baobab." : ""}scope.klaytn.com/${isAsset ? "token" : "address"
+                      }/${useableAddress}`
+                      : chainId === CHAIN_ID_CELO
+                        ? `https://${CLUSTER === "testnet"
+                          ? "alfajores-blockscout.celo-testnet.org"
+                          : "explorer.celo.org"
+                        }/address/${useableAddress}`
+                        : chainId === CHAIN_ID_KARURA
+                          ? `https://${CLUSTER === "testnet"
+                            ? "blockscout.karura-dev.aca-dev.network"
+                            : "blockscout.karura.network"
+                          }/${isAsset ? "token" : "address"}/${useableAddress}`
+                          : chainId === CHAIN_ID_ACALA
+                            ? `https://${CLUSTER === "testnet"
+                              ? "blockscout.acala-dev.aca-dev.network"
+                              : "blockscout.acala.network"
+                            }/${isAsset ? "token" : "address"}/${useableAddress}`
+                            : chainId === CHAIN_ID_SOLANA
+                              ? `https://solscan.io/address/${useableAddress}${CLUSTER === "testnet"
+                                ? "?cluster=devnet"
+                                : CLUSTER === "devnet"
+                                  ? "?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899"
+                                  : ""
+                              }`
+                              : chainId === CHAIN_ID_TERRA
+                                ? `https://finder.terra.money/${CLUSTER === "devnet"
+                                  ? "localterra"
+                                  : CLUSTER === "testnet"
+                                    ? "bombay-12"
+                                    : "columbus-5"
+                                }/address/${useableAddress}`
+                                : chainId === CHAIN_ID_ALGORAND
+                                  ? `https://${CLUSTER === "testnet" ? "testnet." : ""}algoexplorer.io/${isAsset ? "asset" : "address"
+                                  }/${useableAddress}`
+                                  : undefined;
   const explorerName = getExplorerName(chainId);
 
   const copyToClipboard = useCopyToClipboard(useableAddress);

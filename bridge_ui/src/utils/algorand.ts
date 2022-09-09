@@ -1,4 +1,4 @@
-import { TransactionSignerPair } from "@certusone/wormhole-sdk/lib/esm/algorand";
+import { TransactionSignerPair } from "@h0ngcha0/wormhole-sdk/lib/esm/algorand";
 import MyAlgoConnect from "@randlabs/myalgo-connect";
 import { Algodv2, assignGroupID, waitForConfirmation } from "algosdk";
 import { ALGORAND_WAIT_FOR_CONFIRMATIONS } from "./consts";

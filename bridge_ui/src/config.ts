@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "@h0ngcha0/wormhole-sdk";
 import {
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
@@ -14,7 +14,7 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_TERRA,
   CHAIN_ID_SOLANA
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 
 export type DisableTransfers = boolean | "to" | "from";
 

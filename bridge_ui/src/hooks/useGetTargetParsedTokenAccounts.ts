@@ -6,7 +6,7 @@ import {
   isEVMChain,
   isNativeDenom,
   TokenImplementation__factory,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { useConnectedWallet } from "@terra-money/wallet-provider";

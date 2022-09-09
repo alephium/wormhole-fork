@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "@h0ngcha0/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { useSelector } from "react-redux";
 import { useHandleNFTTransfer } from "../../hooks/useHandleNFTTransfer";

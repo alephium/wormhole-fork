@@ -10,7 +10,7 @@ WORKDIR /alephium
 COPY ./package.json ./package-lock.json ./tsconfig.json /alephium
 COPY ./contracts /alephium/contracts
 COPY ./configuration.ts /alephium/configuration.ts
-COPY ./deploy.ts /alephium/deploy.ts
+COPY ./commands.ts /alephium/commands.ts
 COPY ./lib /alephium/lib
 COPY ./scripts /alephium/scripts
 COPY ./deploy.sh /alephium

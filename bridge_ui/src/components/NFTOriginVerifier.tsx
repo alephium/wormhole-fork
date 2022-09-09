@@ -11,12 +11,12 @@ import {
   hexToNativeAssetString,
   isEVMChain,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import {
   getOriginalAssetEth,
   getOriginalAssetSol,
   WormholeWrappedNFTInfo,
-} from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
+} from "@h0ngcha0/wormhole-sdk/lib/esm/nft_bridge";
 import {
   Button,
   Card,

@@ -4,7 +4,7 @@ import {
   CHAIN_ID_TERRA,
   hexToNativeAssetString,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import {
   Card,
   Checkbox,
@@ -101,7 +101,7 @@ function FeeMethodSelector() {
         transferAmount,
         Math.min(sourceDecimals, 8)
       ).toString();
-    } catch (e) {}
+    } catch (e) { }
   }
   const sourceSymbol = sourceParsedTokenAccount?.symbol;
   const acalaRelayerInfo = useAcalaRelayerInfo(
@@ -236,9 +236,8 @@ function FeeMethodSelector() {
             <div>
               <Typography variant="body1">Automatic Payment</Typography>
               <Typography variant="body2" color="textSecondary">
-                {`Pay with additional ${
-                  sourceSymbol ? sourceSymbol : "tokens"
-                } and use a relayer`}
+                {`Pay with additional ${sourceSymbol ? sourceSymbol : "tokens"
+                  } and use a relayer`}
               </Typography>
             </div>
           ) : (
@@ -298,11 +297,10 @@ function FeeMethodSelector() {
         <div className={clsx(classes.inlineBlock, classes.alignLeft)}>
           <Typography variant="body1">{"Manual Payment"}</Typography>
           <Typography variant="body2" color="textSecondary">
-            {`Pay with your own ${
-              targetChain === CHAIN_ID_TERRA
+            {`Pay with your own ${targetChain === CHAIN_ID_TERRA
                 ? "funds"
                 : getDefaultNativeCurrencySymbol(targetChain)
-            } on ${CHAINS_BY_ID[targetChain]?.name || "target chain"}`}
+              } on ${CHAINS_BY_ID[targetChain]?.name || "target chain"}`}
           </Typography>
         </div>
       </div>

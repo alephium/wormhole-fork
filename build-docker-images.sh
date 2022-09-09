@@ -26,5 +26,12 @@ docker build . -t liuhongchao/eth-node:0.0.3
 popd
 
 # How to deploy contracts for ALPH?
+# npx ts-node commands.ts deploy -n devnet
+pushd alephium
+docker build -f Dockerfile.automine . -t liuhongchao/automine:0.0.2
+popd
 
 # Build Bridge UI
+pushd bridge_ui
+docker build . -t liuhongchao/bridge-ui:0.0.3
+popd

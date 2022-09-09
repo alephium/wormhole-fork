@@ -5,7 +5,7 @@ import {
   hexToNativeAssetString,
   hexToNativeString,
   hexToUint8Array,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { Button, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import {

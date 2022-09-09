@@ -17,7 +17,7 @@ import {
   createRemoteTokenPoolOnAlph,
   updateWrappedOnTerra,
   getAttestTokenHandlerId
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";

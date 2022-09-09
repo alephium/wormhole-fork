@@ -8,7 +8,7 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
 import { useMemo } from "react";
 import { COLORS } from "../../muiTheme";

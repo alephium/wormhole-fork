@@ -2,7 +2,7 @@ import {
   CHAIN_ID_SOLANA,
   hexToNativeString,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";

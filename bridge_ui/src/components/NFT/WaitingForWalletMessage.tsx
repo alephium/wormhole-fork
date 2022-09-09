@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA, isEVMChain } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA, isEVMChain } from "@h0ngcha0/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import {
@@ -34,8 +34,8 @@ export default function WaitingForWalletMessage() {
       {targetChain === CHAIN_ID_SOLANA && isRedeeming
         ? "Note: there will be several transactions"
         : isEVMChain(sourceChain) && isSending
-        ? "Note: there will be two transactions"
-        : null}
+          ? "Note: there will be two transactions"
+          : null}
     </Typography>
   ) : null;
 }

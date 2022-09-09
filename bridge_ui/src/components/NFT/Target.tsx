@@ -3,7 +3,7 @@ import {
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { makeStyles, TextField, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { PublicKey } from "@solana/web3.js";
@@ -69,8 +69,8 @@ function Target() {
     tokenId =
       originChain === CHAIN_ID_SOLANA && originAsset
         ? BigNumber.from(
-            new PublicKey(hexToUint8Array(originAsset)).toBytes()
-          ).toString()
+          new PublicKey(hexToUint8Array(originAsset)).toBytes()
+        ).toString()
         : originTokenId;
   } catch (e) {
     tokenId = originTokenId;

@@ -3,7 +3,7 @@ import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
 import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
 import { PublicKey } from "@solana/web3.js";
@@ -54,7 +54,7 @@ const SolanaRoot: React.FC<Migration> = (props) => {
     toMint = targetAsset && new PublicKey(targetAsset).toString();
     fromTokenAcct =
       fromTokenAccount && new PublicKey(fromTokenAccount).toString();
-  } catch (e) {}
+  } catch (e) { }
 
   let content = null;
 

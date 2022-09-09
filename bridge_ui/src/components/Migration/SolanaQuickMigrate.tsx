@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA } from "@h0ngcha0/wormhole-sdk";
 import {
   CircularProgress,
   Container,
@@ -210,10 +210,10 @@ function SolanaMigrationLineItem({
                 poolInfo.error
                   ? poolInfo.error
                   : migrationError
-                  ? migrationError
-                  : precheckError
-                  ? precheckError
-                  : ""
+                    ? migrationError
+                    : precheckError
+                      ? precheckError
+                      : ""
               }
               disabled={
                 !!poolInfo.error || !!precheckError || migrationIsProcessing
@@ -332,9 +332,8 @@ export default function SolanaQuickMigrate() {
   const content = (
     <div className={classes.containerDiv}>
       <Typography variant="h5">
-        {`This page allows you to convert certain wrapped tokens ${
-          chainName ? "on " + chainName : ""
-        } into
+        {`This page allows you to convert certain wrapped tokens ${chainName ? "on " + chainName : ""
+          } into
         Wormhole V2 tokens.`}
       </Typography>
       <SolanaWalletKey />

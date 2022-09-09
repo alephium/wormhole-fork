@@ -6,4 +6,4 @@ done
 cd /alephium
 npm run build
 npm run deploy:devnet
-npm run auto-mine
+# npm run auto-mine

@@ -14,7 +14,7 @@ import {
   selectTransferOriginChain,
   selectTransferTargetChain,
 } from "../../store/selectors";
-import { ChainId, hexToNativeAssetString } from "@certusone/wormhole-sdk";
+import { ChainId, hexToNativeAssetString } from "@h0ngcha0/wormhole-sdk";
 
 export function RegisterNowButtonCore({
   originChain,

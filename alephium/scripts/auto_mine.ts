@@ -1,4 +1,4 @@
-import { addressFromPublicKey } from "@alephium/web3"
+import { addressFromPublicKey, setCurrentNodeProvider } from "@alephium/web3"
 import { PrivateKeySigner } from "../lib/deployment"
 
 const fromPrivateKey = '71d640c34b25eedd8acd60be136012f77059836c095fbd02a7cb86a124cbbdae'
@@ -7,13 +7,15 @@ const fromAddress = addressFromPublicKey(fromPublicKey)
 const toAddress = '199QZVT8bLkYNZ7d2xoHbip29yD18tdeHDPjB7cyx9ofi'
 const transferAmount = "1000000000000000"
 
+setCurrentNodeProvider("http://localhost:22973")
+
 async function mine(): Promise<void> {
   const signer = new PrivateKeySigner(fromPrivateKey)
   const result = await signer.signTransferTx({
     signerAddress: fromAddress,
     destinations: [{
-        address: toAddress,
-        attoAlphAmount: transferAmount
+      address: toAddress,
+      attoAlphAmount: transferAmount
     }],
     submitTx: true
   })

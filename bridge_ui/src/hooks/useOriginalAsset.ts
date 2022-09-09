@@ -12,12 +12,12 @@ import {
   isEVMChain,
   uint8ArrayToHex,
   uint8ArrayToNative,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
   getOriginalAssetSol as getOriginalAssetSolNFT,
   WormholeWrappedNFTInfo,
-} from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
+} from "@h0ngcha0/wormhole-sdk/lib/esm/nft_bridge";
 import { Web3Provider } from "@ethersproject/providers";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";

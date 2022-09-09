@@ -1,4 +1,4 @@
-import { ChainId, CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { ChainId, CHAIN_ID_TERRA } from "@h0ngcha0/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { useSelector } from "react-redux";
@@ -30,8 +30,8 @@ function LowBalanceWarning({ chainId }: { chainId: ChainId }) {
     chainId === CHAIN_ID_TERRA
       ? "This wallet may not have sufficient funds to pay for the upcoming transaction fees."
       : `This wallet has a very low ${getDefaultNativeCurrencySymbol(
-          chainId
-        )} balance and may not be able to pay for the upcoming transaction fees.`;
+        chainId
+      )} balance and may not be able to pay for the upcoming transaction fees.`;
 
   const content = (
     <Alert severity="warning" variant="outlined" className={classes.alert}>

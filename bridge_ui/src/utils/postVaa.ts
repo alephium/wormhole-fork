@@ -1,5 +1,5 @@
-import { chunks, importCoreWasm, ixFromRust } from "@certusone/wormhole-sdk";
-import { sendAndConfirmTransactionsWithRetry } from "@certusone/wormhole-sdk/lib/esm/utils/solana";
+import { chunks, importCoreWasm, ixFromRust } from "@h0ngcha0/wormhole-sdk";
+import { sendAndConfirmTransactionsWithRetry } from "@h0ngcha0/wormhole-sdk/lib/esm/utils/solana";
 import {
   Connection,
   Keypair,

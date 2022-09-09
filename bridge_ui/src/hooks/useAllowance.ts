@@ -4,7 +4,7 @@ import {
   CHAIN_ID_KLAYTN,
   getAllowanceEth,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import { BigNumber } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

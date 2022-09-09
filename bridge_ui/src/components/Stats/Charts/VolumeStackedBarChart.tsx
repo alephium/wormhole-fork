@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "@h0ngcha0/wormhole-sdk";
 import {
   Typography,
   makeStyles,

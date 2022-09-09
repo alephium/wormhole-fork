@@ -15,7 +15,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
   WSOL_ADDRESS,
-} from "@certusone/wormhole-sdk";
+} from "@h0ngcha0/wormhole-sdk";
 import {
   Button,
   Checkbox,

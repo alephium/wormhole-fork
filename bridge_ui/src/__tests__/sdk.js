@@ -7,7 +7,7 @@ describe("SDK installation", () => {
     const packageObj = JSON.parse(packageFile.toString());
 
     const sdkInstallation =
-      packageObj?.dependencies?.["@certusone/wormhole-sdk"];
+      packageObj?.dependencies?.["@h0ngcha0/wormhole-sdk"];
     expect(sdkInstallation && !sdkInstallation.includes("file")).toBe(true);
   });
 });

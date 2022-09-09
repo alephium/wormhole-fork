@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectNFTTargetAddressHex } from "../store/selectors";
-import { hexToUint8Array } from "@certusone/wormhole-sdk";
+import { hexToUint8Array } from "@h0ngcha0/wormhole-sdk";
 
 export default function useNFTTargetAddressHex() {
   const targetAddressHex = useSelector(selectNFTTargetAddressHex);
