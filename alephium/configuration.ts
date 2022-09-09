@@ -6,7 +6,7 @@ const configuration: Configuration = {
 
   networks: {
     "devnet": {
-      nodeUrl: "http://localhost:22973",
+      nodeUrl: "https://alephium-dev.softfork.se",
       mnemonic: "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
       deploymentFile: ".deployments.json",
       scripts: [

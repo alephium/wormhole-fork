@@ -316,7 +316,6 @@ async function alephium(
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         } else {
-          console.log("i m here with token bridge contract id", ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID)
           bytecode = attestFromAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             localTokenId,

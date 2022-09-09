@@ -46,8 +46,6 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
 async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string): Promise<AlphTxInfo> {
   const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(blockHash)
   const events = await provider.events.getEventsTxIdTxid(txId, { group: blockHeader.chainFrom })
-  console.log("getting tx info from bridge address", ALEPHIUM_BRIDGE_ADDRESS)
-  console.log("events", events.events)
   const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
   if (typeof event === 'undefined') {
     return Promise.reject('failed to get event for tx: ' + txId)
@@ -71,7 +69,6 @@ async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
   const txId = await func()
   const confirmed = await waitTxConfirmed(provider, txId)
-  console.log("tx confirmed", txId, confirmed)
   return getTxInfo(provider, txId, confirmed.blockHash)
 }
 

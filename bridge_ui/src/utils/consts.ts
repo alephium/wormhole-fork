@@ -198,7 +198,7 @@ export const WORMHOLE_RPC_HOSTS =
     ]
     : CLUSTER === "testnet"
       ? ["https://wormhole-v2-testnet-api.certus.one"]
-      : ["http://localhost:7071"];
+      : ["https://alephium-wormhole.softfork.se"];
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1337;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
@@ -657,7 +657,7 @@ export const ALEPHIUM_BRIDGE_ADDRESS =
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
       ? "000000000000000000000000000000000000000000000"
-      : "28kGa4TYzjAidkkyKmrX7vYR3p2TDNKYwXQDJazV26NwR";
+      : "yrTVU5AdNicgYyaSySn87Jxo1ZzfWtMuskwedApx9FNK";
 //      : "22L2GQATSNS2xG11QKcKXvwvcxDVsZn9DG1pkN3yeWCWE";
 
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =

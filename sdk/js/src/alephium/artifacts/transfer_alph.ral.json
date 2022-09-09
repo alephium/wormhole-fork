@@ -1,4 +1,5 @@
 {
+  "typeId": "TransferAlph",
   "bytecodeTemplate": "01010300000010{1}{5}{4}2aa2{1}{2}{3}{4}{6}{7}{8}13070c{0}010b",
   "fieldsSig": {
     "names": [

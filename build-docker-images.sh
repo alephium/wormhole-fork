@@ -33,5 +33,5 @@ popd
 
 # Build Bridge UI
 pushd bridge_ui
-docker build . -t liuhongchao/bridge-ui:0.0.3
+docker build . -t liuhongchao/bridge-ui:0.0.4
 popd

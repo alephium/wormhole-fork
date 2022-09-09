@@ -1,4 +1,5 @@
 {
+  "typeId": "CreateWrappedAlphPool",
   "bytecodeTemplate": "0101030000000a{0}{3}a2{2}{0}{3}0f0c{1}0108",
   "fieldsSig": {
     "names": [
