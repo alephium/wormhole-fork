@@ -7,7 +7,13 @@ dotenv.config({ path: __dirname+'/../../.env' })
 
 const oneAlph = BigInt("1000000000000000000")
 
-async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: string, vaa: string) {
+async function registerWithVAA(
+  deployer: Deployer,
+  script: Script,
+  tokenBridge: string,
+  vaa: string,
+  taskName: string
+) {
   const initFields = {
     "payer": deployer.account.address,
     "tokenBridge": tokenBridge,
@@ -16,7 +22,7 @@ async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: 
   }
   await deployer.runScript(script, {
     initialFields: initFields
-  })
+  }, taskName)
 }
 
 const registerChain = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
@@ -25,9 +31,9 @@ const registerChain = async (deployer: Deployer, networkType: NetworkType): Prom
     : deployer.getDeployContractResult("TokenBridge").contractId
   const script = Project.script("token_bridge_scripts/register_chain.ral")
   const registerETHVAA = process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!
-  await registerWithVAA(deployer, script, tokenBridgeId, registerETHVAA)
+  await registerWithVAA(deployer, script, tokenBridgeId, registerETHVAA, "RegisterChainETH")
   const registerBSCVAA = process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!
-  await registerWithVAA(deployer, script, tokenBridgeId, registerBSCVAA)
+  await registerWithVAA(deployer, script, tokenBridgeId, registerBSCVAA, "RegisterChainBSC")
 }
 
 export default registerChain
