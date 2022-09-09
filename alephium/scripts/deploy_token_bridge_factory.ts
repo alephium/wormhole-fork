@@ -4,15 +4,15 @@ import { Deployer, NetworkType } from "../lib/deployment"
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = addressFromContractId(Byte32Zero)
 
-async function deployTemplateContract(deployer: Deployer, contractPath: string, initFields: Fields): Promise<string> {
+async function deployTemplateContract(deployer: Deployer, contractPath: string, initialFields: Fields): Promise<string> {
   const contract = Project.contract(contractPath)
   const result = await deployer.deployContract(contract, {
-    initialFields: initFields
+    initialFields: initialFields
   })
   return result.contractId
 }
 
-const deployTokenBridgeFactory = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
+const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Promise<void> => {
   const wrappedAlphPoolId = await deployTemplateContract(
     deployer, "token_bridge/wrapped_alph_pool.ral", {
       'tokenBridgeId': '',
@@ -69,7 +69,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, networkType: Network
       'refundAddress': DummyRefundAddress
     })
   const tokenBridgeFactory = Project.contract('token_bridge/token_bridge_factory.ral')
-  const initFields = {
+  const initialFields = {
     'wrappedAlphPoolTemplateId': wrappedAlphPoolId,
     'localTokenPoolTemplateId': localTokenPoolId,
     'remoteTokenPoolTemplateId': remoteTokenPoolId,
@@ -79,7 +79,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, networkType: Network
     'refundAddress': deployer.account.address
   }
   await deployer.deployContract(tokenBridgeFactory, {
-    initialFields: initFields
+    initialFields: initialFields
   })
 }
 

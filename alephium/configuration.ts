@@ -15,7 +15,6 @@ const configuration: Configuration = {
       deploymentFile: ".deployments.json",
       scripts: [
         "scripts/deploy_test_token.ts",
-        "scripts/deploy_devnet_deployer.ts",
         "scripts/deploy_governance.ts",
         "scripts/deploy_wrapped_alph.ts",
         "scripts/deploy_token_bridge_factory.ts",

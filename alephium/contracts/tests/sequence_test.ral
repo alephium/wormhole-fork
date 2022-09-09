@@ -5,4 +5,7 @@ Contract SequenceTest(
   unexecutedSequenceTemplateId: ByteVec,
   refundAddress: Address
 ) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId, refundAddress) {
+  pub fn check(seq: U256) -> Bool {
+    return checkSequence(seq)
+  }
 }
