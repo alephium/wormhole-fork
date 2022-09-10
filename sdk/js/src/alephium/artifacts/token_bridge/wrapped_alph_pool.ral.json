@@ -1,0 +1,242 @@
+{
+  "name": "WrappedAlphPool",
+  "bytecode": "0508405440b04101412641434160418e41a20101070a004028b31600160116021603160500021708170716061604464c041606160413c3038d7ea4c68000a7b217091609a002160716082aa316091604160716061608110ca0020101a00316072b16082ba103000005090240341600a0004113157b16014313202f13167b160443102f13117b1602a004000417051603a00400041706160616053113177b14010116056b44a00244a001674416014416066b4417071605a0040005170816071608020000060a02402ca00014010116016744444e4e1706160616004113157b1603a00241131a7b1604a0012f131a7b1602a004000517071605a00400051708160716083313177b160716082b170916091608020100020401130d17020c170316031601314c09160216002c170216030d2a17034a3316020201000202010e16011308334c081600130a160113082b00032d0216000201000202010e16011308334c081600130a160113082b00032c02160002010305070117b3160116021603160400011706170516001606a2160016060e0ca0020100a00316062aa103160502010102020009b3a0024113157b1600a0021601ac",
+  "codeHash": "ca099948aac0c0c6a98f47fa9dfd4236a84976d8f8f67d552e735602936873a5",
+  "fieldsSig": {
+    "names": [
+      "tokenBridgeId",
+      "tokenChainId",
+      "bridgeTokenId",
+      "totalBridged",
+      "decimals_"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "completeTransfer",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "emitterChainId",
+        "amount",
+        "vaaTokenId",
+        "vaaTokenChainId",
+        "recipient",
+        "normalizedArbiterFee",
+        "caller"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "Address",
+        "U256",
+        "Address"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "prepareTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "callerContractId",
+        "toAddress",
+        "amount",
+        "arbiterFee",
+        "nonce"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec",
+        "U256"
+      ]
+    },
+    {
+      "name": "prepareCompleteTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "callerContractId",
+        "emitterChainId",
+        "amount",
+        "vaaTokenId",
+        "vaaTokenChainId",
+        "normalizedArbiterFee"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256",
+        "U256"
+      ]
+    },
+    {
+      "name": "pow",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "x",
+        "y"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "normalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "deNormalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "transfer",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fromAddress",
+        "toAddress",
+        "amount",
+        "arbiterFee",
+        "nonce"
+      ],
+      "paramTypes": [
+        "Address",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "receiveWrappedAlph",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "fromAddress",
+        "totalAmount"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    }
+  ]
+}

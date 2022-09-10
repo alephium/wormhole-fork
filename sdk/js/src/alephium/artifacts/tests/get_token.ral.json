@@ -1,26 +1,18 @@
 {
-  "bytecodeTemplate": "0101030000000f{0}7a{3}a2{2}0da3{0}{2}{4}{5}100c{1}0106",
+  "name": "GetToken",
+  "bytecodeTemplate": "01010300000009{0}{2}a2{0}{2}0e0c{1}0100",
   "fieldsSig": {
     "names": [
-      "payer",
-      "tokenBridge",
-      "localTokenId",
-      "messageFee",
-      "nonce",
-      "consistencyLevel"
+      "sender",
+      "token",
+      "amount"
     ],
     "types": [
       "Address",
       "ByteVec",
-      "ByteVec",
-      "U256",
-      "ByteVec",
       "U256"
     ],
     "isMutable": [
-      false,
-      false,
-      false,
       false,
       false,
       false

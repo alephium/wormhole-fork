@@ -1,0 +1,53 @@
+{
+  "name": "AttestTokenHandler",
+  "bytecode": "050140a40103030d00405f1600040e11a0000102170717061705170417031603a0022f0c7b1605a003410d7b16040c2f130d7b1606a004340f7b16060d2aa10416070c0d621401024113197b16070d1321621708160713211323626d17091609a0022f13187b160713231324626c170a1607132413404462170b160713404413406462170c1607431340642f0e7b16011602a21608a002160a160b160c1601160213070ca0010109",
+  "codeHash": "ad813410ad5f862691b62e69a43c635c9fdad4909599c8f1fa770339774b21be",
+  "fieldsSig": {
+    "names": [
+      "governance",
+      "localTokenBridge",
+      "remoteChainId",
+      "remoteTokenBridgeId",
+      "receivedSequence"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "handleAttestToken",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa",
+        "payer",
+        "createContractAlphAmount"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    }
+  ]
+}

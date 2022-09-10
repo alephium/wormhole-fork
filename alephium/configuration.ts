@@ -2,7 +2,7 @@ import { Configuration } from "./lib/deployment"
 
 const configuration: Configuration = {
   sourcePath: "contracts",
-  artifactPath: "artifacts",
+  artifactPath: "../sdk/js/src/alephium/artifacts",
 
   deployScriptsPath: "scripts",
   compilerOptions: {

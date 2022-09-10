@@ -1,0 +1,54 @@
+{
+  "name": "UnexecutedSequence",
+  "bytecode": "04024064407401020103004028b3a0004113157b1600a001340f7b1600a0012b17011601134100310f7b0d16013b1702a0021602380c2f0f7ba002160239a102a00213dcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2f4c02a003b0010200000007b3a0004113157ba003b0",
+  "codeHash": "d1f841b8fa8eedcee2487da831ae5a4706e8ea1e4ad37a8c3c6bf7590b95c23b",
+  "fieldsSig": {
+    "names": [
+      "parentId",
+      "begin",
+      "sequences",
+      "refundAddress"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "U256",
+      "Address"
+    ],
+    "isMutable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "checkSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "destroy",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

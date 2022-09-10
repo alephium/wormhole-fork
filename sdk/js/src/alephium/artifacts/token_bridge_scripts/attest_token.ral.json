@@ -1,38 +1,24 @@
 {
-  "bytecodeTemplate": "01010300000014{1}7a{7}a2{2}{6}a3{1}{2}{3}{4}{5}{6}{8}{9}{10}13090c{0}010a",
+  "name": "AttestToken",
+  "bytecodeTemplate": "0101030000000f{0}7a{3}a2{2}0da3{0}{2}{4}{5}100c{1}0106",
   "fieldsSig": {
     "names": [
+      "payer",
       "tokenBridge",
-      "fromAddress",
       "localTokenId",
-      "alphChainId",
-      "toChainId",
-      "toAddress",
-      "tokenAmount",
       "messageFee",
-      "arbiterFee",
       "nonce",
       "consistencyLevel"
     ],
     "types": [
-      "ByteVec",
       "Address",
       "ByteVec",
-      "U256",
-      "U256",
       "ByteVec",
-      "U256",
-      "U256",
       "U256",
       "ByteVec",
       "U256"
     ],
     "isMutable": [
-      false,
-      false,
-      false,
-      false,
-      false,
       false,
       false,
       false,

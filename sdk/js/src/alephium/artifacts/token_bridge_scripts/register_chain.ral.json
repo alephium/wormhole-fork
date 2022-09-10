@@ -1,10 +1,11 @@
 {
-  "bytecodeTemplate": "0101030000000e{0}7a{3}a2{2}0da3{2}{0}{3}0f0c{1}0108",
+  "name": "RegisterChain",
+  "bytecodeTemplate": "0101030000000c{0}{3}0e2ca2{2}{0}{3}0f0c{1}0102",
   "fieldsSig": {
     "names": [
       "payer",
       "tokenBridge",
-      "localTokenId",
+      "vaa",
       "alphAmount"
     ],
     "types": [

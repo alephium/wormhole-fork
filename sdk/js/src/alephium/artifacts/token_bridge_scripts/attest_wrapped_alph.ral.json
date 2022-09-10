@@ -1,15 +1,28 @@
 {
-  "bytecodeTemplate": "01010300000005{1}0d0c{0}0104",
+  "name": "AttestWrappedAlph",
+  "bytecodeTemplate": "0101030000000b{0}{3}a2{0}{2}{4}{5}100c{1}0106",
   "fieldsSig": {
     "names": [
+      "payer",
       "tokenBridge",
-      "vaa"
+      "wrappedAlphId",
+      "messageFee",
+      "nonce",
+      "consistencyLevel"
     ],
     "types": [
+      "Address",
       "ByteVec",
-      "ByteVec"
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256"
     ],
     "isMutable": [
+      false,
+      false,
+      false,
+      false,
       false,
       false
     ]

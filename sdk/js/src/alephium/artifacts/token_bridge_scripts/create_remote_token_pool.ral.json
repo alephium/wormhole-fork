@@ -1,15 +1,22 @@
 {
-  "bytecodeTemplate": "0101030001000bb41700160013c3038d7ea4c68000a2{1}16000e0c{0}0107",
+  "name": "CreateRemoteTokenPool",
+  "bytecodeTemplate": "0101030000000a{0}{3}a2{2}{0}{3}0f0c{1}0100",
   "fieldsSig": {
     "names": [
-      "tokenBridgeForChain",
-      "vaa"
+      "payer",
+      "attestTokenHandler",
+      "vaa",
+      "alphAmount"
     ],
     "types": [
+      "Address",
       "ByteVec",
-      "ByteVec"
+      "ByteVec",
+      "U256"
     ],
     "isMutable": [
+      false,
+      false,
       false,
       false
     ]
