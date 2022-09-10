@@ -5,6 +5,9 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	node_common "github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"github.com/certusone/wormhole/node/pkg/version"
@@ -12,22 +15,20 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"strings"
-	"time"
 
-	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
 	"github.com/libp2p/go-libp2p"
-	connmgr "github.com/libp2p/go-libp2p-connmgr"
-	"github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/libp2p/go-libp2p-core/host"
-	"github.com/libp2p/go-libp2p-core/protocol"
-	"github.com/libp2p/go-libp2p-core/routing"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	libp2pquic "github.com/libp2p/go-libp2p-quic-transport"
-	libp2ptls "github.com/libp2p/go-libp2p-tls"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/core/routing"
+	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
+	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
+	libp2pquic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 
@@ -69,7 +70,16 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 	return func(ctx context.Context) (re error) {
 		logger := supervisor.Logger(ctx)
 
-		h, err := libp2p.New(ctx,
+		mgr, err := connmgr.NewConnManager(
+			100, // LowWater
+			400, // HighWater,
+			connmgr.WithGracePeriod(time.Minute),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create p2p connection manager: %w", err)
+		}
+
+		h, err := libp2p.New(
 			// Use the keypair we generated
 			libp2p.Identity(priv),
 
@@ -89,11 +99,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 
 			// Let's prevent our peer from having too many
 			// connections by attaching a connection manager.
-			libp2p.ConnectionManager(connmgr.NewConnManager(
-				100,         // Lowwater
-				400,         // HighWater,
-				time.Minute, // GracePeriod
-			)),
+			libp2p.ConnectionManager(mgr),
 
 			// Let this host use the DHT to find other hosts
 			libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
