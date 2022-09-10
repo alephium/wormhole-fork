@@ -21,7 +21,7 @@ async function mine(): Promise<void> {
       submitTx: true
     })
     console.log("tx submitted, tx id: " + result.txId)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 5000))
     await mine()
   } catch (err) {
     console.error("Error while mining", err)
