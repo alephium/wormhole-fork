@@ -18,8 +18,8 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/sdk": "^0.0.15",
-    "@alephium/web3": "file:../../alephium-web3",
+    "@alephium/web3": "^0.2.0-rc.11",
+    "@alephium/web3-wallet": "^0.2.0-rc.11",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",

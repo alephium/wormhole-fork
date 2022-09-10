@@ -11,7 +11,7 @@ describe("test unexecuted sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         let sequences = 0n
         for (let seq = 0; seq < 255; seq++) {
             const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences, refundAddress)
@@ -33,7 +33,7 @@ describe("test unexecuted sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const startSequence = 256
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         for (let seq = 0; seq < 256; seq++) {
             const sequences = 1n << BigInt(seq)
             const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences, refundAddress)
@@ -54,7 +54,7 @@ describe("test unexecuted sequence", () => {
         const startSequence = 256
         const sequences = [0, startSequence - 1, startSequence * 2, startSequence * 10]
         const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, 0n, refundAddress)
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         for (let seq of sequences) {
             await expectAssertionFailed(async () => await unexecutedSequenceTest.testPublicMethod('checkSequence', {
                 initialFields: { 'unexecutedSequenceId': unexecutedSequenceInfo.contractId },
@@ -74,7 +74,7 @@ describe("test unexecuted sequence", () => {
         const unexecutedSequenceOffset = 1
         const sequences = allExecuted - (1n << BigInt(unexecutedSequenceOffset))
         const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences, refundAddress)
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         const testResult = await unexecutedSequenceTest.testPublicMethod('checkSequence', {
             initialFields: { 'unexecutedSequenceId': unexecutedSequenceInfo.contractId },
             address: addressFromContractId(parentId),
@@ -95,7 +95,7 @@ describe("test unexecuted sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 0, 0n, refundAddress)
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         const testResult = await unexecutedSequenceTest.testPublicMethod('destroy', {
             initialFields: { 'unexecutedSequenceId': unexecutedSequenceInfo.contractId },
             address: addressFromContractId(parentId),
@@ -115,7 +115,7 @@ describe("test unexecuted sequence", () => {
         const parentId = randomContractId()
         const refundAddress = randomAssetAddress()
         const unexecutedSequenceInfo = createUnexecutedSequence(randomContractId(), 0, 0n, refundAddress)
-        const unexecutedSequenceTest = Project.contract('tests/unexecuted_sequence_test.ral')
+        const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
         expectAssertionFailed(async () => {
             await unexecutedSequenceTest.testPublicMethod('checkSequence', {
                 initialFields: { 'unexecutedSequenceId': unexecutedSequenceInfo.contractId },

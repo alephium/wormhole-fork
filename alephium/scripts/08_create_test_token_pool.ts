@@ -5,7 +5,7 @@ const oneAlph = BigInt("1000000000000000000")
 
 const createTestTokenPool = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   if (networkType === 'devnet') {
-    const script = Project.script('token_bridge_scripts/create_local_token_pool.ral')
+    const script = Project.script('CreateLocalTokenPool')
     const testToken = deployer.getDeployContractResult("TestToken")
     const tokenBridgeId = deployer.getDeployContractResult("TokenBridge").contractId
     const initialFields = {

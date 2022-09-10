@@ -5,7 +5,7 @@ const oneAlph = BigInt("1000000000000000000")
 
 const getTestToken = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   if (networkType === 'devnet') {
-    const script = Project.script('tests/get_token.ral')
+    const script = Project.script('GetToken')
     const token = deployer.getDeployContractResult("TestToken")
     const initialFields = {
       sender: deployer.account.address,

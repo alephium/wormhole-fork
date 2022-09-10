@@ -52,7 +52,7 @@ export class ContractInfo {
 }
 
 export function createMath(): ContractInfo {
-    const mathContract = Project.contract('tests/math_test.ral')
+    const mathContract = Project.contract('MathTest')
     const address = randomContractAddress()
     const contractState = mathContract.toState(
         {}, {alphAmount: minimalAlphInContract}, address

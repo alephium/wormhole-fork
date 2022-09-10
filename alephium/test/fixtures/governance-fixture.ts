@@ -69,7 +69,7 @@ export class SubmitTransferFee {
 
 export function createGovernance(): ContractInfo {
     const address = randomContractAddress()
-    const governanceContract = Project.contract('governance.ral')
+    const governanceContract = Project.contract('Governance')
     const initFields = {
         'chainId': CHAIN_ID_ALEPHIUM,
         'governanceChainId': governanceChainId,

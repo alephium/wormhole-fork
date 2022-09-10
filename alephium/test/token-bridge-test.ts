@@ -995,7 +995,7 @@ describe("test token bridge", () => {
         }
 
         {
-            const v1 = Project.contract("tests/token_bridge_v1.ral")
+            const v1 = Project.contract("TokenBridgeV1")
             const newContractCode = v1.bytecode
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
@@ -1004,7 +1004,7 @@ describe("test token bridge", () => {
             expect(newContract.bytecode).toEqual(newContractCode)
         }
 
-        const v2 = Project.contract("tests/empty.ral")
+        const v2 = Project.contract("Empty")
         {
             await expectAssertionFailed(async () => {
                 const newContractCode = v2.bytecode
@@ -1035,7 +1035,7 @@ describe("test token bridge", () => {
 
     it('should check token bridge public functions', async () => {
         await buildProject()
-        const tokenBridge = Project.contract("token_bridge/token_bridge.ral")
+        const tokenBridge = Project.contract("TokenBridge")
         expect(tokenBridge.publicFunctions()).toEqual([
             'registerChain',
             'upgradeContract',

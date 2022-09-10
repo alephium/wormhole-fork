@@ -4,8 +4,8 @@ import { Deployer, NetworkType } from "../lib/deployment"
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = addressFromContractId(Byte32Zero)
 
-async function deployTemplateContract(deployer: Deployer, contractPath: string, initialFields: Fields): Promise<string> {
-  const contract = Project.contract(contractPath)
+async function deployTemplateContract(deployer: Deployer, name: string, initialFields: Fields): Promise<string> {
+  const contract = Project.contract(name)
   const result = await deployer.deployContract(contract, {
     initialFields: initialFields
   })
@@ -14,7 +14,7 @@ async function deployTemplateContract(deployer: Deployer, contractPath: string, 
 
 const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Promise<void> => {
   const wrappedAlphPoolId = await deployTemplateContract(
-    deployer, "token_bridge/wrapped_alph_pool.ral", {
+    deployer, "WrappedAlphPool", {
       'tokenBridgeId': '',
       'tokenChainId': 0,
       'bridgeTokenId': '',
@@ -22,7 +22,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Pro
       'decimals_': 0
     })
   const localTokenPoolId = await deployTemplateContract(
-    deployer, "token_bridge/local_token_pool.ral", {
+    deployer, "LocalTokenPool", {
       'tokenBridgeId': '',
       'tokenChainId': 0,
       'bridgeTokenId': '',
@@ -30,7 +30,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Pro
       'decimals_': 0
     })
   const remoteTokenPoolId = await deployTemplateContract(
-    deployer, "token_bridge/remote_token_pool.ral", {
+    deployer, "RemoteTokenPool", {
       'tokenBridgeId': '',
       'tokenChainId': 0,
       'bridgeTokenId': '',
@@ -40,7 +40,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Pro
       'decimals_': 0
     })
   const tokenBridgeForChainId = await deployTemplateContract(
-    deployer, "token_bridge/token_bridge_for_chain.ral", {
+    deployer, "TokenBridgeForChain", {
       'governance': '',
       'localChainId': 0,
       'localTokenBridgeId': '',
@@ -54,7 +54,7 @@ const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Pro
       'sendSequence': 0
     })
   const attestTokenHandlerId = await deployTemplateContract(
-    deployer, "token_bridge/attest_token_handler.ral", {
+    deployer, "AttestTokenHandler", {
       'governance': '',
       'localTokenBridge': '',
       'remoteChainId': 0,
@@ -62,13 +62,13 @@ const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Pro
       'receivedSequence': 0
     })
   const unexecutedSequenceId = await deployTemplateContract(
-    deployer, "sequence/unexecuted_sequence.ral", {
+    deployer, "UnexecutedSequence", {
       'parentId': '',
       'begin': 0,
       'sequences': 0n,
       'refundAddress': DummyRefundAddress
     })
-  const tokenBridgeFactory = Project.contract('token_bridge/token_bridge_factory.ral')
+  const tokenBridgeFactory = Project.contract('TokenBridgeFactory')
   const initialFields = {
     'wrappedAlphPoolTemplateId': wrappedAlphPoolId,
     'localTokenPoolTemplateId': localTokenPoolId,

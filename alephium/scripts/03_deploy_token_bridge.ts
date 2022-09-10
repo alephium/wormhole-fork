@@ -22,7 +22,7 @@ const networkConfigs: Record<NetworkType, NetworkConfigs> = {
 }
 
 const deployTokenBridge = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
-  const tokenBridge = Project.contract('token_bridge/token_bridge.ral')
+  const tokenBridge = Project.contract('TokenBridge')
   const tokenBridgeFactory = deployer.getDeployContractResult("TokenBridgeFactory")
   const governanceId = deployer.getDeployContractResult("Governance").contractId
   const wrappedAlphId = deployer.getDeployContractResult("WrappedAlph").contractId

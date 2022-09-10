@@ -211,7 +211,7 @@ async function createDeployer(
       return previous!
     }
     const result = await contract.transactionForDeployment(signer, params)
-    await signer.submitTransaction(result.unsignedTx, result.txId)
+    await signer.submitTransaction(result.unsignedTx)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
     const deployContractResult: DeployContractResult = {
       fromGroup: result.fromGroup,
@@ -238,7 +238,7 @@ async function createDeployer(
     const needToRun = await needToRunScript(signer.provider, previous, params.attoAlphAmount?.toString(), tokens, codeHash)
     if (needToRun) {
       const result = await script.transactionForDeployment(signer, params)
-      await signer.submitTransaction(result.unsignedTx, result.txId)
+      await signer.submitTransaction(result.unsignedTx)
       const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
       const runScriptResult: RunScriptResult = {
         fromGroup: result.fromGroup,

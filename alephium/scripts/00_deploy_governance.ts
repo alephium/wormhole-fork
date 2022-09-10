@@ -6,7 +6,7 @@ import * as dotenv from "dotenv"
 dotenv.config({ path: __dirname+'/../.env' })
 
 const deployGovernance = async (deployer: Deployer, _: NetworkType): Promise<void> => {
-  const governance = Project.contract('governance.ral')
+  const governance = Project.contract("Governance")
   const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
   const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
   const currentGuardianSet = sizePrefix + initGuardianSet.join('')

@@ -155,7 +155,7 @@ describe("test governance", () => {
         }
 
         {
-            const v1 = Project.contract("tests/governance_v1.ral")
+            const v1 = Project.contract("GovernanceV1")
             const newContractCode = v1.bytecode
             const contractUpgrade = new ContractUpgrade(newContractCode)
             const testResult = await upgrade(contractUpgrade)
@@ -164,7 +164,7 @@ describe("test governance", () => {
             expect(newContract.bytecode).toEqual(newContractCode)
         }
 
-        const v2 = Project.contract("tests/empty.ral")
+        const v2 = Project.contract("Empty")
         {
             await expectAssertionFailed(async () => {
                 const newContractCode = v2.bytecode
