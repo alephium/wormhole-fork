@@ -1,7 +1,7 @@
 # Wait for node to start
 ALEPHIUM_HOST=${1:-localhost}
 
-while ! /bin/netcat -z $ALEPHIUM_HOST 22973; do
+while ! nc -z $ALEPHIUM_HOST 22973; do
   sleep 1
 done
 
