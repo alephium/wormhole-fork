@@ -25,13 +25,17 @@ function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
     return txStatus.type === 'Confirmed'
 }
 
-export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
+export async function waitTxConfirmed(
+    provider: NodeProvider,
+    txId: string,
+    confirmations: number
+): Promise<node.Confirmed> {
     const status = await provider.transactions.getTransactionsStatus({txId: txId})
-    if (!isConfirmed(status)) {
-        await new Promise(r => setTimeout(r, 10000))
-        return waitTxConfirmed(provider, txId)
+    if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
+        return status
     }
-    return status as node.Confirmed;
+    await new Promise(r => setTimeout(r, 1000))
+    return waitTxConfirmed(provider, txId, confirmations)
 }
 
 export async function getCreatedContractId(provider: NodeProvider, blockHash: string, txId: string, outputIndex: number = 0): Promise<string> {

@@ -20,6 +20,7 @@ export interface Network {
   nodeUrl: string
   mnemonic: string
   deploymentFile: string
+  confirmations: number
 }
 
 export type NetworkType = "mainnet" | "testnet" | "devnet"
@@ -211,7 +212,7 @@ async function createDeployer(
     }
     const result = await contract.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx, result.txId)
-    const confirmed = await waitTxConfirmed(signer.provider, result.txId)
+    const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
     const deployContractResult: DeployContractResult = {
       fromGroup: result.fromGroup,
       toGroup: result.toGroup,
@@ -238,7 +239,7 @@ async function createDeployer(
     if (needToRun) {
       const result = await script.transactionForDeployment(signer, params)
       await signer.submitTransaction(result.unsignedTx, result.txId)
-      const confirmed = await waitTxConfirmed(signer.provider, result.txId)
+      const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
       const runScriptResult: RunScriptResult = {
         fromGroup: result.fromGroup,
         toGroup: result.toGroup,

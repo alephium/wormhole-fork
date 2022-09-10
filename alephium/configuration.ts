@@ -14,21 +14,24 @@ const configuration: Configuration = {
     "devnet": {
       nodeUrl: "http://localhost:22973",
       mnemonic: "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
-      deploymentFile: ".deployments.json"
+      deploymentFile: ".deployments.json",
+      confirmations: 1,
     },
 
     "testnet": {
       // TODO: update config
       nodeUrl: "http://localhost:22973",
       mnemonic: process.env.MNEMONIC as string,
-      deploymentFile: ".deployments.json"
+      deploymentFile: ".deployments.json",
+      confirmations: 10,
     },
 
     "mainnet": {
       // TODO: update config
       nodeUrl: "http://localhost:22973",
       mnemonic: process.env.MNEMONIC as string,
-      deploymentFile: ".deployments.json"
+      deploymentFile: ".deployments.json",
+      confirmations: 10,
     },
   }
 }
