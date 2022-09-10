@@ -28,7 +28,7 @@ popd
 # How to deploy contracts for ALPH?
 # npx ts-node commands.ts deploy -n devnet
 pushd alephium
-docker build -f Dockerfile.automine . -t liuhongchao/automine:0.0.3
+docker build -f Dockerfile.automine . -t liuhongchao/automine:0.0.8
 popd
 
 # Build Bridge UI

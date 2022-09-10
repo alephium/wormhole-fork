@@ -2,9 +2,9 @@
 ALEPHIUM_HOST=${1:-localhost}
 
 while ! nc -z $ALEPHIUM_HOST 22973; do
+  echo "Waiting" $ALEPHIUM_HOST "to be up"
   sleep 1
 done
 
-cd /alephium
-npm run build
+cd /app
 npm run auto-mine

@@ -7,21 +7,25 @@ const fromAddress = addressFromPublicKey(fromPublicKey)
 const toAddress = '199QZVT8bLkYNZ7d2xoHbip29yD18tdeHDPjB7cyx9ofi'
 const transferAmount = "1000000000000000"
 
-setCurrentNodeProvider("http://localhost:22973")
+setCurrentNodeProvider("http://alephium:22973")
 
 async function mine(): Promise<void> {
-  const signer = new PrivateKeySigner(fromPrivateKey)
-  const result = await signer.signTransferTx({
-    signerAddress: fromAddress,
-    destinations: [{
-      address: toAddress,
-      attoAlphAmount: transferAmount
-    }],
-    submitTx: true
-  })
-  console.log("tx submitted, tx id: " + result.txId)
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  await mine()
+  try {
+    const signer = new PrivateKeySigner(fromPrivateKey)
+    const result = await signer.signTransferTx({
+      signerAddress: fromAddress,
+      destinations: [{
+        address: toAddress,
+        attoAlphAmount: transferAmount
+      }],
+      submitTx: true
+    })
+    console.log("tx submitted, tx id: " + result.txId)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    await mine()
+  } catch (err) {
+    console.error("Error while mining", err)
+  }
 }
 
 mine()

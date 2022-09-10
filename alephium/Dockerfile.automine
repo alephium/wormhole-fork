@@ -31,4 +31,4 @@ RUN apk add --update --no-cache netcat-openbsd
 
 USER node
 
-entrypoint ["sh", "/app/auto-mine.sh"]
+entrypoint ["sh", "/app/auto-mine.sh", "alephium"]
