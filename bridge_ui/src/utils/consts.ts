@@ -291,6 +291,13 @@ export const ALEPHIUM_HOST =
     ? "http://localhost:12973"
     : "http://localhost:22973"
 
+export const ALEPHIUM_EXPLORER_HOST =
+  CLUSTER === "mainnet"
+    ? "http://localhost:9090"
+    : CLUSTER === "testnet"
+    ? "http://localhost:9090"
+    : "http://localhost:9090"
+
 export const ALGORAND_HOST =
   CLUSTER === "mainnet"
     ? {

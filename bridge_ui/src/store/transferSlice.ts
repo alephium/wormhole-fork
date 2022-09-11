@@ -52,6 +52,7 @@ export interface TransferState {
   targetAsset: DataWrapper<ForeignAssetInfo>;
   targetParsedTokenAccount: ParsedTokenAccount | undefined;
   transferTx: Transaction | undefined;
+  recoverySourceTxId: string | undefined;
   signedVAAHex: string | undefined;
   isSending: boolean;
   isRedeeming: boolean;
@@ -79,6 +80,7 @@ const initialState: TransferState = {
   targetAsset: getEmptyDataWrapper(),
   targetParsedTokenAccount: undefined,
   transferTx: undefined,
+  recoverySourceTxId: undefined,
   signedVAAHex: undefined,
   isSending: false,
   isRedeeming: false,
@@ -211,6 +213,9 @@ export const transferSlice = createSlice({
     setTransferTx: (state, action: PayloadAction<Transaction>) => {
       state.transferTx = action.payload;
     },
+    setRecoverySourceTxId: (state, action: PayloadAction<string>) => {
+      state.recoverySourceTxId = action.payload
+    },
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
       state.signedVAAHex = action.payload;
       state.isSending = false;
@@ -240,6 +245,8 @@ export const transferSlice = createSlice({
         vaa: any;
         useRelayer: boolean;
         parsedPayload: {
+          sourceTxId: string;
+          sourceChain: ChainId;
           targetChain: ChainId;
           targetAddress: string;
           originChain: ChainId;
@@ -248,12 +255,10 @@ export const transferSlice = createSlice({
         };
       }>
     ) => {
-      const prevTargetChain = state.targetChain;
       state.signedVAAHex = action.payload.vaa;
       state.targetChain = action.payload.parsedPayload.targetChain;
-      if (state.sourceChain === action.payload.parsedPayload.targetChain) {
-        state.sourceChain = prevTargetChain;
-      }
+      state.recoverySourceTxId = action.payload.parsedPayload.sourceTxId;
+      state.sourceChain = action.payload.parsedPayload.sourceChain;
       state.sourceParsedTokenAccount = undefined;
       state.sourceParsedTokenAccounts = getEmptyDataWrapper();
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
@@ -266,6 +271,7 @@ export const transferSlice = createSlice({
       state.amount = action.payload.parsedPayload.amount;
       state.activeStep = 3;
       state.isRecovery = true;
+      state.redeemTx = undefined
       state.useRelayer = action.payload.useRelayer;
     },
     setGasPrice: (state, action: PayloadAction<number | undefined>) => {
@@ -323,6 +329,7 @@ export const {
   setTargetAsset,
   setTargetParsedTokenAccount,
   setTransferTx,
+  setRecoverySourceTxId,
   setSignedVAAHex,
   setIsSending,
   setIsRedeeming,

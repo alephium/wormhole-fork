@@ -37,7 +37,7 @@ export class AlphTxInfo {
 
 export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
     const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
-    if (isConfirmed(txStatus)) {
+    if (isAlphTxConfirmed(txStatus)) {
         return txStatus as node.Confirmed
     }
     await new Promise(r => setTimeout(r, 10000))
@@ -78,7 +78,11 @@ export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string):
     return getTxInfo(provider, txId, confirmed.blockHash)
 }
 
-function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+export function isAlphTxNotFound(txStatus: node.TxStatus): Boolean {
+    return txStatus.type === "TxNotFound"
+}
+
+export function isAlphTxConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
     return (txStatus as node.Confirmed).blockHash !== undefined
 }
 
