@@ -251,7 +251,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
     const bytecode = redeemOnAlph(tokenBridgeForChainId, signedVAA)
-    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
