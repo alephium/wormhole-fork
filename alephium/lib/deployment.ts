@@ -236,24 +236,24 @@ async function createDeployer(
     const previous = runScriptResults.get(key)
     const tokens = params.tokens ? getTokenRecord(params.tokens) : undefined
     const needToRun = await needToRunScript(signer.provider, previous, params.attoAlphAmount?.toString(), tokens, codeHash)
-    if (needToRun) {
-      const result = await script.transactionForDeployment(signer, params)
-      await signer.submitTransaction(result.unsignedTx)
-      const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
-      const runScriptResult: RunScriptResult = {
-        fromGroup: result.fromGroup,
-        toGroup: result.toGroup,
-        txId: result.txId,
-        blockHash: confirmed.blockHash,
-        codeHash: codeHash,
-        attoAlphAmount: params.attoAlphAmount?.toString(),
-        tokens: tokens
-      }
-      runScriptResults.set(key, runScriptResult)
-      return runScriptResult
+    if (!needToRun) {
+      // we have checked in `needToRunScript`
+      return previous!
     }
-    // we have checked in `needToRunScript`
-    return previous!
+    const result = await script.transactionForDeployment(signer, params)
+    await signer.submitTransaction(result.unsignedTx)
+    const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
+    const runScriptResult: RunScriptResult = {
+      fromGroup: result.fromGroup,
+      toGroup: result.toGroup,
+      txId: result.txId,
+      blockHash: confirmed.blockHash,
+      codeHash: codeHash,
+      attoAlphAmount: params.attoAlphAmount?.toString(),
+      tokens: tokens
+    }
+    runScriptResults.set(key, runScriptResult)
+    return runScriptResult
   }
 
   const getDeployContractResult = (name: string): DeployContractResult => {
