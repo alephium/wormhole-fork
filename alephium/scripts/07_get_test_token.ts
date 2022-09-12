@@ -1,21 +1,20 @@
 import { Project } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Configuration, Deployer, DeployFunction } from "../lib/deployment"
 
 const oneAlph = BigInt("1000000000000000000")
 
-const getTestToken = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
-  if (networkType === 'devnet') {
-    const script = Project.script('GetToken')
-    const token = deployer.getDeployContractResult("TestToken")
-    const initialFields = {
-      sender: deployer.account.address,
-      amount: oneAlph * 10n,
-      token: token.contractId
-    }
-    await deployer.runScript(script, {
-      initialFields: initialFields
-    })
+const getTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
+  const script = Project.script('GetToken')
+  const token = deployer.getDeployContractResult("TestToken")
+  const initialFields = {
+    sender: deployer.account.address,
+    amount: oneAlph * 10n,
+    token: token.contractId
   }
+  await deployer.runScript(script, {
+    initialFields: initialFields
+  })
 }
 
+getTestToken.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
 export default getTestToken

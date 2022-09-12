@@ -32,6 +32,7 @@ export interface Configuration {
   deployScriptsPath: string
   compilerOptions: CompilerOptions
 
+  defaultNetwork: NetworkType
   networks: Record<NetworkType, Network>
 }
 
@@ -61,13 +62,16 @@ export interface RunScriptResult extends ExecutionResult {
 class Deployments {
   deployContractResults: Map<string, DeployContractResult>
   runScriptResults: Map<string, RunScriptResult>
+  migrations: Map<string, number>
 
   constructor(
     deployContractResults: Map<string, DeployContractResult>,
-    runScriptResults: Map<string, RunScriptResult>
+    runScriptResults: Map<string, RunScriptResult>,
+    migrations: Map<string, number>
   ) {
     this.deployContractResults = deployContractResults
     this.runScriptResults = runScriptResults
+    this.migrations = migrations
   }
 
   async saveToFile(filepath: string): Promise<void> {
@@ -77,7 +81,8 @@ class Deployments {
     }
     const json = {
       'deployContractResults': Object.fromEntries(this.deployContractResults),
-      'runScriptResults': Object.fromEntries(this.runScriptResults)
+      'runScriptResults': Object.fromEntries(this.runScriptResults),
+      'migrations': Object.fromEntries(this.migrations)
     }
     const content = JSON.stringify(json, null, 2)
     return fsPromises.writeFile(filepath, content)
@@ -91,7 +96,8 @@ class Deployments {
     const json = JSON.parse(content.toString())
     const deployContractResults = new Map(Object.entries<DeployContractResult>(json.deployContractResults))
     const runScriptResults = new Map(Object.entries<RunScriptResult>(json.runScriptResults))
-    return new Deployments(deployContractResults, runScriptResults)
+    const migrations = new Map(Object.entries<number>(json.migrations))
+    return new Deployments(deployContractResults, runScriptResults, migrations)
   }
 }
 
@@ -106,7 +112,11 @@ export interface Deployer {
   getRunScriptResult(name: string): RunScriptResult
 }
 
-export type DeployFunction = (deployer: Deployer, networkType: NetworkType) => Promise<void>
+export interface DeployFunction {
+  (deployer: Deployer, config: Configuration): Promise<void | boolean>
+  skip?: (config: Configuration) => Promise<boolean>
+  id?: string
+}
 
 async function isTxExists(provider: NodeProvider, txId: string): Promise<boolean> {
   const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
@@ -289,9 +299,10 @@ async function createDeployer(
 async function saveDeploymentsToFile(
   deployContractResults: Map<string, DeployContractResult>,
   runScriptResults: Map<string, RunScriptResult>,
+  migrations: Map<string, number>,
   filepath: string
 ) {
-  const deployments = new Deployments(deployContractResults, runScriptResults)
+  const deployments = new Deployments(deployContractResults, runScriptResults, migrations)
   await deployments.saveToFile(filepath)
 }
 async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
@@ -344,26 +355,49 @@ export async function deploy(
 
   let deployContractResults = new Map<string, DeployContractResult>()
   let runScriptResults = new Map<string, RunScriptResult>()
+  let migrations = new Map<string, number>()
   const deployments = await Deployments.from(network.deploymentFile)
   if (typeof deployments !== 'undefined') {
     deployContractResults = deployments.deployContractResults
     runScriptResults = deployments.runScriptResults
+    migrations = deployments.migrations
   }
 
   web3.setCurrentNodeProvider(network.nodeUrl)
   const deployer = await createDeployer(network, deployContractResults, runScriptResults)
   await Project.build(configuration.compilerOptions, configuration.sourcePath, configuration.artifactPath)
+  configuration.defaultNetwork = networkType
 
   for (const script of funcs) {
     try {
-      await script.func(deployer, networkType)
+      if (script.func.id && (migrations.get(script.func.id) !== undefined)) {
+        console.log(`Skipping ${script.scriptFilePath} as the script already executed and complete`)
+        continue
+      }
+      let skip: boolean = false
+      if (script.func.skip !== undefined) {
+        skip = await script.func.skip(configuration)
+      }
+      if (skip) {
+        console.log(`Skip executing ${script.scriptFilePath}`)
+        continue
+      }
+      const result = await script.func(deployer, configuration)
+      if (result && typeof result === 'boolean') {
+        if (script.func.id === undefined) {
+          throw new Error(
+            `${script.scriptFilePath} return true to not be executed again, but does not provide an id. The script function needs to have the field "id" to be set`
+          )
+        }
+        migrations.set(script.func.id, Date.now())
+      }
     } catch (error) {
-      await saveDeploymentsToFile(deployContractResults, runScriptResults, network.deploymentFile)
+      await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
       throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }
 
-  await saveDeploymentsToFile(deployContractResults, runScriptResults, network.deploymentFile)
+  await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
   console.log("Deployment script execution completed")
 }
 

@@ -1,5 +1,5 @@
 import { addressFromContractId, Fields, Project } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Deployer, DeployFunction } from "../lib/deployment"
 
 const Byte32Zero = "0".repeat(64)
 const DummyRefundAddress = addressFromContractId(Byte32Zero)
@@ -12,7 +12,7 @@ async function deployTemplateContract(deployer: Deployer, name: string, initialF
   return result.contractId
 }
 
-const deployTokenBridgeFactory = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const wrappedAlphPoolId = await deployTemplateContract(
     deployer, "WrappedAlphPool", {
       'tokenBridgeId': '',

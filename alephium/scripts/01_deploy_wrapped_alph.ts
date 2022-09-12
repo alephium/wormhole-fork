@@ -1,7 +1,7 @@
 import { Project } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Deployer, DeployFunction } from "../lib/deployment"
 
-const deployWrappedAlph = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const deployWrappedAlph: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const wrappedAlph = Project.contract('WrappedAlph')
   const wrappedAlphPoolCodeHash = Project.contract('WrappedAlphPool').codeHash
   const initialFields = {

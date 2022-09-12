@@ -1,5 +1,5 @@
 import { Project, Script } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Deployer, DeployFunction } from "../lib/deployment"
 import * as dotenv from "dotenv"
 
 dotenv.config({ path: __dirname+'/../../.env' })
@@ -24,7 +24,7 @@ async function registerWithVAA(
   }, taskName)
 }
 
-const registerChain = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const registerChain: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const tokenBridgeId = deployer.getDeployContractResult("TokenBridge").contractId
   const script = Project.script("RegisterChain")
   const registerETHVAA = process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!

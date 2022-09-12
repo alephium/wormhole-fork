@@ -1,11 +1,11 @@
 import { Project } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Deployer, DeployFunction } from "../lib/deployment"
 import { zeroPad } from "../lib/utils"
 import * as dotenv from "dotenv"
 
 dotenv.config({ path: __dirname+'/../.env' })
 
-const deployGovernance = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const deployGovernance: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const governance = Project.contract("Governance")
   const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
   const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)

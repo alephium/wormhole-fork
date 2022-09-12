@@ -1,9 +1,9 @@
 import { Project } from "@alephium/web3"
-import { Deployer, NetworkType } from "../lib/deployment"
+import { Deployer, DeployFunction } from "../lib/deployment"
 
 const oneAlph = BigInt("1000000000000000000")
 
-const createWrappedAlphPool = async (deployer: Deployer, _: NetworkType): Promise<void> => {
+const createWrappedAlphPool: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const script = Project.script('CreateWrappedAlphPool')
   const tokenBridgeId = deployer.getDeployContractResult("TokenBridge").contractId
   const wrappedAlphId = deployer.getDeployContractResult("WrappedAlph").contractId

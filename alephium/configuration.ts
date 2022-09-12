@@ -10,6 +10,7 @@ const configuration: Configuration = {
     ignoreUnusedConstantsWarnings: true
   },
 
+  defaultNetwork: "devnet",
   networks: {
     "devnet": {
       nodeUrl: "http://localhost:22973",
