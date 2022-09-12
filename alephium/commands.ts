@@ -71,8 +71,7 @@ program
   const config = await loadConfig(options.config as string)
   const networkType = options.network as NetworkType
   const nodeUrl = config.networks[networkType].nodeUrl
-  const nodeProvider = new NodeProvider(nodeUrl)
-  web3.setCurrentNodeProvider(nodeProvider)
+  web3.setCurrentNodeProvider(nodeUrl)
   await Project.build(config.compilerOptions, config.sourcePath, config.artifactPath)
   console.log('Compile completed!')
 })

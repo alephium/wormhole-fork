@@ -208,8 +208,10 @@ async function createDeployer(
     )
     if (!needToDeploy) {
       // we have checked in `needToDeployContract`
+      console.log(`The deployment of contract ${contract.name} is skipped as it has been deployed`)
       return previous!
     }
+    console.log(`Deploying contract ${contract.name}...`)
     const result = await contract.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
@@ -229,17 +231,19 @@ async function createDeployer(
     return deployContractResult
   }
 
-  const runScript = async (script: Script, params: RunScriptParams, taskName?: string): Promise<RunScriptResult> => {
+  const runScript = async (script: Script, params: RunScriptParams, taskTag?: string): Promise<RunScriptResult> => {
     const bytecode = script.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
     const codeHash = cryptojs.SHA256(bytecode).toString()
-    const key = taskName ? taskName : script.name
-    const previous = runScriptResults.get(key)
+    const taskId = taskTag ? `${script.name} -> ${taskTag}` : script.name
+    const previous = runScriptResults.get(taskId)
     const tokens = params.tokens ? getTokenRecord(params.tokens) : undefined
     const needToRun = await needToRunScript(signer.provider, previous, params.attoAlphAmount?.toString(), tokens, codeHash)
     if (!needToRun) {
       // we have checked in `needToRunScript`
+      console.log(`The execution of script ${taskId} is skipped as it has been executed`)
       return previous!
     }
+    console.log(`Executing script ${taskId}`)
     const result = await script.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
@@ -252,7 +256,7 @@ async function createDeployer(
       attoAlphAmount: params.attoAlphAmount?.toString(),
       tokens: tokens
     }
-    runScriptResults.set(key, runScriptResult)
+    runScriptResults.set(taskId, runScriptResult)
     return runScriptResult
   }
 
