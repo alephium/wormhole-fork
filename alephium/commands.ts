@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Project, NodeProvider, web3 } from "@alephium/web3"
+import { Project, web3 } from "@alephium/web3"
 import { program } from "commander"
 import { run as runJestTests } from "jest"
 import fs from "fs"
@@ -66,10 +66,10 @@ program
 .command('compile')
 .description('Compile the project')
 .option('-c, --config <config-file>', 'Build config file', 'configuration.ts')
-.option('-n, --network <network-type>', 'Network type', 'devnet')
+.option('-n, --network <network-type>', 'Network type')
 .action(async (options) => {
   const config = await loadConfig(options.config as string)
-  const networkType = options.network as NetworkType
+  const networkType = options.network ? options.network as NetworkType : config.defaultNetwork
   const nodeUrl = config.networks[networkType].nodeUrl
   web3.setCurrentNodeProvider(nodeUrl)
   await Project.build(config.compilerOptions, config.sourcePath, config.artifactPath)
@@ -82,7 +82,8 @@ program.command("deploy")
   .option("-n, --network <network-type>", "Specify the network to use")
   .action(async (options) => {
     const config = await loadConfig(options.config as string)
-    await deploy(config, options.network as NetworkType)
+    const networkType = options.network ? options.network as NetworkType : config.defaultNetwork
+    await deploy(config, networkType)
   })
 
 // TODO: use SDK `start-devnet/stop-devnet` scripts
