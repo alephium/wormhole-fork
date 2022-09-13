@@ -241,18 +241,12 @@ export function encodeU256(value: bigint): Uint8Array {
   return Buffer.from(zeroPad(value.toString(16), 32), 'hex')
 }
 
-interface Failed {
-  error: {
-    detail: string
-  }
-}
-
 async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
   try {
     await func()
-  } catch (exp) {
-    const detail = (exp as Failed).error.detail
-    expect(details).toContain(detail)
+  } catch (err) {
+    const message = (err as Error).message
+    expect(details.some((e) => message.indexOf(e) !== -1)).toEqual(true)
   }
 }
 
