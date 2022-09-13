@@ -394,16 +394,9 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
         }
         migrations.set(script.func.id, Date.now())
       }
-    } catch (error: any) {
+    } catch (error) {
       await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
-
-      const errorMsg =
-        error instanceof Error
-          ? error.message
-          : error.error.detail // SDK can't return error, TODO: fix in SDK
-          ? error.error.detail
-          : `${error}`
-      throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${errorMsg}`)
+      throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }
 
