@@ -1,22 +1,16 @@
 {
-  "name": "CreateRemoteTokenPool",
-  "bytecodeTemplate": "0101030000000a{0}{3}a2{2}{0}{3}0f0c{1}0101",
+  "name": "UpdateRemoteTokenPool",
+  "bytecodeTemplate": "01010300000005{1}0d0c{0}0102",
   "fieldsSig": {
     "names": [
-      "payer",
       "attestTokenHandler",
-      "vaa",
-      "alphAmount"
+      "vaa"
     ],
     "types": [
-      "Address",
       "ByteVec",
-      "ByteVec",
-      "U256"
+      "ByteVec"
     ],
     "isMutable": [
-      false,
-      false,
       false,
       false
     ]

@@ -283,7 +283,8 @@ function createRemoteTokenPoolTemplate(): ContractInfo {
     totalBridged: 0,
     symbol_: '',
     name_: '',
-    decimals_: 0
+    decimals_: 0,
+    sequence_: 0
   })
 }
 
@@ -550,6 +551,7 @@ export function newRemoteTokenPoolFixture(
   symbol: string,
   name: string,
   decimals: number,
+  sequence: number,
   address?: string,
   totalBridged: bigint = alph(10)
 ): RemoteTokenPoolTestFixture {
@@ -578,7 +580,8 @@ export function newRemoteTokenPoolFixture(
       totalBridged: totalBridged,
       symbol_: symbol,
       name_: name,
-      decimals_: decimals
+      decimals_: decimals,
+      sequence_: sequence
     },
     tokenBridgeForChainInfo.states(),
     asset,

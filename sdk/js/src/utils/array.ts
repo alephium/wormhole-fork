@@ -19,14 +19,7 @@ import {
   coalesceChainId,
   isEVMChain,
 } from "./consts";
-import * as base58 from 'bs58';
-import { tokenIdFromAddress } from "@alephium/web3";
-
-export function toAlphContractAddress(contractId: string): string {
-    const prefix = Buffer.from([0x03])
-    const bytes = Buffer.concat([prefix, Buffer.from(contractId, 'hex')])
-    return base58.encode(bytes)
-}
+import { addressFromContractId, tokenIdFromAddress } from "@alephium/web3";
 
 /**
  *
@@ -85,7 +78,7 @@ export const tryUint8ArrayToNative = (
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("uint8ArrayToNative: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {
-    return toAlphContractAddress(uint8ArrayToHex(a))
+    return addressFromContractId(uint8ArrayToHex(a))
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("uint8ArrayToNative: Chain id unset");
   } else {

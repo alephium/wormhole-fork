@@ -1,6 +1,5 @@
-import { NodeProvider, subContractId } from "@alephium/web3"
+import { addressFromContractId, NodeProvider, subContractId } from "@alephium/web3"
 import { destroyUnexecutedSequencesScript } from "../alephium/token_bridge"
-import { toAlphContractAddress } from "../utils"
 
 export function destroyUnexecutedSequenceContracts(
   tokenBridgeId: string,
@@ -49,14 +48,13 @@ export function getTokenPoolId(
 }
 
 export async function contractExists(contractId: string, provider: NodeProvider): Promise<boolean> {
-  const address = toAlphContractAddress(contractId)
+  const address = addressFromContractId(contractId)
   return provider
       .addresses
       .getAddressesAddressGroup(address)
       .then(_ => true)
       .catch((e: any) => {
-        const detail = e.error.detail as string
-        if (detail.startsWith("Group not found")) {
+        if (e instanceof Error && e.message.indexOf("Group not found") !== -1) {
           return false
         }
         throw e

@@ -63,6 +63,7 @@ Contract TokenBridge(
         decimals: U256,
         symbol: ByteVec,
         name: ByteVec,
+        msgSequence: U256,
         payer: Address,
         createContractAlphAmount: U256
     ) -> () {
@@ -75,7 +76,8 @@ Contract TokenBridge(
             0,
             symbol,
             name,
-            decimals
+            decimals,
+            msgSequence
         )
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
@@ -85,6 +87,20 @@ Contract TokenBridge(
             encodedFields,
             tokenAmount
         )
+    }
+
+    pub fn updateRemoteTokenPool(
+        bridgeTokenId: ByteVec,
+        tokenChainId: U256,
+        symbol: ByteVec,
+        name: ByteVec,
+        msgSequence: U256
+    ) -> () {
+        let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
+        checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
+        let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
+        let remoteTokenPool = RemoteTokenPool(subContractId!(path))
+        remoteTokenPool.updateDetails(symbol, name, msgSequence)
     }
 
     @using(preapprovedAssets = true)

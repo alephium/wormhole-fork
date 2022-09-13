@@ -34,7 +34,8 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     totalBridged: 0,
     symbol_: '',
     name_: '',
-    decimals_: 0
+    decimals_: 0,
+    sequence_: 0
   })
   const tokenBridgeForChainId = await deployTemplateContract(deployer, 'TokenBridgeForChain', {
     governance: '',
