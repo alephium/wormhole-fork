@@ -1,24 +1,26 @@
-import { Project } from "@alephium/web3"
-import { Configuration, Deployer, DeployFunction } from "../lib/deployment"
+import { Project } from '@alephium/web3'
+import { Configuration, Deployer, DeployFunction } from '../lib/deployment'
 
-const oneAlph = BigInt("1000000000000000000")
+const oneAlph = BigInt('1000000000000000000')
 
 const createTestTokenPool: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const script = Project.script('CreateLocalTokenPool')
-  const testToken = deployer.getDeployContractResult("TestToken")
-  const tokenBridgeId = deployer.getDeployContractResult("TokenBridge").contractId
+  const testToken = deployer.getDeployContractResult('TestToken')
+  const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractId
   const initialFields = {
-    'tokenBridge': tokenBridgeId,
-    'localTokenId': testToken.contractId,
-    'payer': deployer.account.address,
-    'alphAmount': oneAlph
+    tokenBridge: tokenBridgeId,
+    localTokenId: testToken.contractId,
+    payer: deployer.account.address,
+    alphAmount: oneAlph
   }
   await deployer.runScript(script, {
     initialFields: initialFields,
-    tokens: [{
-      id: testToken.contractId,
-      amount: 1
-    }]
+    tokens: [
+      {
+        id: testToken.contractId,
+        amount: 1
+      }
+    ]
   })
 }
 

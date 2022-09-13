@@ -1,11 +1,11 @@
-import { Project } from "@alephium/web3"
-import { Configuration, Deployer, DeployFunction } from "../lib/deployment"
+import { Project } from '@alephium/web3'
+import { Configuration, Deployer, DeployFunction } from '../lib/deployment'
 
-const oneAlph = BigInt("1000000000000000000")
+const oneAlph = BigInt('1000000000000000000')
 
 const getTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const script = Project.script('GetToken')
-  const token = deployer.getDeployContractResult("TestToken")
+  const token = deployer.getDeployContractResult('TestToken')
   const initialFields = {
     sender: deployer.account.address,
     amount: oneAlph * 10n,

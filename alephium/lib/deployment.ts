@@ -9,11 +9,11 @@ import {
   Token,
   CompilerOptions,
   web3
-} from "@alephium/web3"
-import { PrivateKeyWallet } from "@alephium/web3-wallet"
-import path from "path"
-import { waitTxConfirmed } from "./utils"
-import fs, { promises as fsPromises } from "fs"
+} from '@alephium/web3'
+import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import path from 'path'
+import { waitTxConfirmed } from './utils'
+import fs, { promises as fsPromises } from 'fs'
 import * as cryptojs from 'crypto-js'
 
 export interface Network {
@@ -23,7 +23,7 @@ export interface Network {
   confirmations: number
 }
 
-export type NetworkType = "mainnet" | "testnet" | "devnet"
+export type NetworkType = 'mainnet' | 'testnet' | 'devnet'
 
 export interface Configuration {
   sourcePath?: string
@@ -56,8 +56,7 @@ export interface DeployContractResult extends ExecutionResult {
 
 type RunScriptParams = Omit<BuildExecuteScriptTx, 'signerAddress'>
 
-export interface RunScriptResult extends ExecutionResult {
-}
+export type RunScriptResult = ExecutionResult
 
 class Deployments {
   deployContractResults: Map<string, DeployContractResult>
@@ -77,12 +76,12 @@ class Deployments {
   async saveToFile(filepath: string): Promise<void> {
     const dirpath = path.dirname(filepath)
     if (!fs.existsSync(dirpath)) {
-      fs.mkdirSync(dirpath, {recursive: true})
+      fs.mkdirSync(dirpath, { recursive: true })
     }
     const json = {
-      'deployContractResults': Object.fromEntries(this.deployContractResults),
-      'runScriptResults': Object.fromEntries(this.runScriptResults),
-      'migrations': Object.fromEntries(this.migrations)
+      deployContractResults: Object.fromEntries(this.deployContractResults),
+      runScriptResults: Object.fromEntries(this.runScriptResults),
+      migrations: Object.fromEntries(this.migrations)
     }
     const content = JSON.stringify(json, null, 2)
     return fsPromises.writeFile(filepath, content)
@@ -119,8 +118,8 @@ export interface DeployFunction {
 }
 
 async function isTxExists(provider: NodeProvider, txId: string): Promise<boolean> {
-  const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
-  return txStatus.type !== "TxNotFound"
+  const txStatus = await provider.transactions.getTransactionsStatus({ txId: txId })
+  return txStatus.type !== 'TxNotFound'
 }
 
 function recordEqual(left: Record<string, string>, right: Record<string, string>): boolean {
@@ -153,9 +152,7 @@ async function needToRetry(
   }
   const currentTokens = tokens ? tokens : {}
   const previousTokens = previous.tokens ? previous.tokens : {}
-  const sameWithPrevious =
-    (attoAlphAmount === previous.attoAlphAmount) &&
-    (recordEqual(currentTokens, previousTokens))
+  const sameWithPrevious = attoAlphAmount === previous.attoAlphAmount && recordEqual(currentTokens, previousTokens)
   return !sameWithPrevious
 }
 
@@ -247,7 +244,13 @@ async function createDeployer(
     const taskId = taskTag ? `${script.name} -> ${taskTag}` : script.name
     const previous = runScriptResults.get(taskId)
     const tokens = params.tokens ? getTokenRecord(params.tokens) : undefined
-    const needToRun = await needToRunScript(signer.provider, previous, params.attoAlphAmount?.toString(), tokens, codeHash)
+    const needToRun = await needToRunScript(
+      signer.provider,
+      previous,
+      params.attoAlphAmount?.toString(),
+      tokens,
+      codeHash
+    )
     if (!needToRun) {
       // we have checked in `needToRunScript`
       console.log(`The execution of script ${taskId} is skipped as it has been executed`)
@@ -307,40 +310,39 @@ async function saveDeploymentsToFile(
 }
 
 async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
-  const regex = "^([0-9]+)_.*\\.(ts|js)$"
+  const regex = '^([0-9]+)_.*\\.(ts|js)$'
   const dirents = await fsPromises.readdir(rootPath, { withFileTypes: true })
-  const scripts: {filename: string, order: number}[] = []
+  const scripts: { filename: string; order: number }[] = []
   for (const f of dirents) {
     if (!f.isFile()) continue
     const result = f.name.match(regex)
     if (result === null) continue
     const order = parseInt(result[1])
-    scripts.push({filename: f.name, order: order})
+    scripts.push({ filename: f.name, order: order })
   }
   scripts.sort((a, b) => a.order - b.order)
   for (let i = 0; i < scripts.length; i++) {
     if (scripts[i].order !== i) {
-      throw new Error("Script shoud start with prefix 0, and increased one by one")
+      throw new Error('Script shoud start with prefix 0, and increased one by one')
     }
   }
-  return scripts.map(f => path.join(rootPath, f.filename))
+  return scripts.map((f) => path.join(rootPath, f.filename))
 }
 
-export async function deploy(
-  configuration: Configuration,
-  networkType: NetworkType
-) {
+export async function deploy(configuration: Configuration, networkType: NetworkType) {
   const network = configuration.networks[networkType]
   if (typeof network === 'undefined') {
     throw new Error(`no network ${networkType} config`)
   }
 
-  const scriptsRootPath = configuration.deployScriptsPath ? configuration.deployScriptsPath : "scripts"
+  const scriptsRootPath = configuration.deployScriptsPath ? configuration.deployScriptsPath : 'scripts'
   const scriptFiles = await getDeployScriptFiles(path.resolve(scriptsRootPath))
-  const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
+  const funcs: { scriptFilePath: string; func: DeployFunction }[] = []
   for (const scriptFilePath of scriptFiles) {
     try {
+      /* eslint-disable @typescript-eslint/no-var-requires */
       const content = require(scriptFilePath)
+      /* eslint-enable @typescript-eslint/no-var-requires */
       if (content.default) {
         funcs.push({
           scriptFilePath: scriptFilePath,
@@ -371,11 +373,11 @@ export async function deploy(
 
   for (const script of funcs) {
     try {
-      if (script.func.id && (migrations.get(script.func.id) !== undefined)) {
+      if (script.func.id && migrations.get(script.func.id) !== undefined) {
         console.log(`Skipping ${script.scriptFilePath} as the script already executed and complete`)
         continue
       }
-      let skip: boolean = false
+      let skip = false
       if (script.func.skip !== undefined) {
         skip = await script.func.skip(configuration)
       }
@@ -395,15 +397,16 @@ export async function deploy(
     } catch (error: any) {
       await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
 
-      const errorMsg = error instanceof Error
-        ? error.message
-        : error.error.detail // SDK can't return error, TODO: fix in SDK
-        ? error.error.detail
-        : `${error}`
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : error.error.detail // SDK can't return error, TODO: fix in SDK
+          ? error.error.detail
+          : `${error}`
       throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${errorMsg}`)
     }
   }
 
   await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
-  console.log("Deployment script execution completed")
+  console.log('Deployment script execution completed')
 }
