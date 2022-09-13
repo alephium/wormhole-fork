@@ -253,7 +253,7 @@ async function createDeployer(
       console.log(`The execution of script ${taskId} is skipped as it has been executed`)
       return previous!
     }
-    console.log(`Executing script ${taskId}`)
+    console.log(`Executing script ${taskId}...`)
     const result = await script.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
@@ -305,6 +305,7 @@ async function saveDeploymentsToFile(
   const deployments = new Deployments(deployContractResults, runScriptResults, migrations)
   await deployments.saveToFile(filepath)
 }
+
 async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
   const regex = "^([0-9]+)_.*\\.(ts|js)$"
   const dirents = await fsPromises.readdir(rootPath, { withFileTypes: true })
@@ -391,13 +392,18 @@ export async function deploy(
         }
         migrations.set(script.func.id, Date.now())
       }
-    } catch (error) {
+    } catch (error: any) {
       await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
-      throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
+
+      const errorMsg = error instanceof Error
+        ? error.message
+        : error.error.detail // SDK can't return error, TODO: fix in SDK
+        ? error.error.detail
+        : `${error}`
+      throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${errorMsg}`)
     }
   }
 
   await saveDeploymentsToFile(deployContractResults, runScriptResults, migrations, network.deploymentFile)
   console.log("Deployment script execution completed")
 }
-
