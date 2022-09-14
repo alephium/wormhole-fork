@@ -3,23 +3,26 @@ import { Deployer, NetworkType } from "../lib/deployment"
 import * as dotenv from "dotenv"
 import { getDevnetGovernanceId, getDevnetWrappedAlphId } from "./devnet"
 
-dotenv.config({ path: __dirname+'/../.env' })
+dotenv.config({ path: __dirname + '/../.env' })
 
 interface NetworkConfigs {
-    minimalConsistencyLevel: number
+  minimalConsistencyLevel: number
 }
 
 // TODO: update this once we release the SDK
 const networkConfigs: Record<NetworkType, NetworkConfigs> = {
-    "mainnet": {
-        minimalConsistencyLevel: 105
-    },
-    "testnet": {
-        minimalConsistencyLevel: 10
-    },
-    "devnet": {
-        minimalConsistencyLevel: 10
-    }
+  "mainnet": {
+    minimalConsistencyLevel: 105
+  },
+  "testnet": {
+    minimalConsistencyLevel: 10
+  },
+  "devnet": {
+    minimalConsistencyLevel: 10
+  },
+  "softfork": {
+    minimalConsistencyLevel: 10
+  }
 }
 
 const deployTokenBridge = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {

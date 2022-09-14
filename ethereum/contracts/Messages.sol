@@ -55,13 +55,11 @@ contract Messages is Getters {
             return (false, "no quorum");
         }
 
-        // TODO: Figure out how to generate valid signatures for VAA so that I can change the address in REGISTER_ALPH_TOKEN_BRIDGE_VAA
-        /// @dev Verify the proposed vm.signatures against the guardianSet
-        //(bool signaturesValid, string memory invalidReason) = verifySignatures(vm.hash, vm.signatures, guardianSet);
+        (bool signaturesValid, string memory invalidReason) = verifySignatures(vm.hash, vm.signatures, guardianSet);
 
-        //if(!signaturesValid){
-        //    return (false, invalidReason);
-        //}
+        if(!signaturesValid){
+            return (false, invalidReason);
+        }
 
         /// If we are here, we've validated the VM is a valid multi-sig that matches the guardianSet.
         return (true, "");

@@ -27,7 +27,7 @@ export interface Network {
   deploymentFile: string
 }
 
-export type NetworkType = "mainnet" | "testnet" | "devnet"
+export type NetworkType = "mainnet" | "testnet" | "devnet" | "softfork"
 
 export interface Configuration {
   sourcePath?: string
@@ -78,7 +78,7 @@ class Deployments {
   async saveToFile(filepath: string): Promise<void> {
     const dirpath = path.dirname(filepath)
     if (!fs.existsSync(dirpath)) {
-      fs.mkdirSync(dirpath, {recursive: true})
+      fs.mkdirSync(dirpath, { recursive: true })
     }
     const json = {
       'lastFailedStep': this.lastFailedStep,
@@ -156,7 +156,7 @@ export class PrivateKeySigner extends SignerWithNodeProvider {
 }
 
 async function isTxExists(provider: NodeProvider, txId: string): Promise<boolean> {
-  const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
+  const txStatus = await provider.transactions.getTransactionsStatus({ txId: txId })
   return txStatus.type !== "TxNotFound"
 }
 
@@ -213,10 +213,10 @@ function createDeployer(
     const previous = deployContractResults.get(contract.typeId)
     const initialTokenAmounts = params.initialTokenAmounts
       ? params.initialTokenAmounts
-          .reduce<Record<string, string>>((acc, token) => {
-            acc[token.id] = token.amount.toString()
-            return acc
-          }, {})
+        .reduce<Record<string, string>>((acc, token) => {
+          acc[token.id] = token.amount.toString()
+          return acc
+        }, {})
       : undefined
     const issueTokenAmount: string | undefined = params.issueTokenAmount?.toString()
     const deploy = await needToDeploy(
@@ -313,7 +313,7 @@ export async function deploy(
     throw new Error("no deploy script")
   }
 
-  const funcs: {scriptFilePath: string, func: DeployFunction}[] = []
+  const funcs: { scriptFilePath: string, func: DeployFunction }[] = []
   for (const filepath of network.scripts) {
     const scriptFilePath = path.resolve(filepath);
     try {
@@ -352,6 +352,7 @@ export async function deploy(
       lastFailedStep += 1
     } catch (error) {
       await saveDeploymentsToFile(lastFailedStep, deployContractResults, runScriptResults, network.deploymentFile)
+      console.log("deploy error", error)
       throw new Error(`failed to execute deploy script, filepath: ${script.scriptFilePath}, error: ${error}`)
     }
   }

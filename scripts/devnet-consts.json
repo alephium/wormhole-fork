@@ -209,8 +209,8 @@
             "rpcPort": "22973",
             "contracts": {
                 "coreEmitterAddress": "7fafc904bbe1ce503ee50fe744218a452619471410d8d1b73b6939b76fcdc8ff",
-                "coreNativeAddress": "23HPMahEAbQRqiA9jyoJKaU7gdZMtP9f2ggwPzekSidFk",
-                "tokenBridgeEmitterAddress": "7ac4a2997d0adc76ba989d3db7730af318a550351a01323a70a6eb624db2c3e8",
+                "coreNativeAddress": "2662Guh8z8MfoPV4Kj12GSRQvqBJdq7U2E9S45f5APsaR",
+                "tokenBridgeEmitterAddress": "4dba028b92ce7817e9d0ebeffe68b1d4b85b36665f7d9772601b264ebab962c0",
                 "tokenBridgeNativeAddress": "22xBkre1qD43BGfqZtb86UbfksLNkCM36tsNofquragMm"
             }
         }
