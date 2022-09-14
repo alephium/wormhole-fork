@@ -51,7 +51,7 @@ const configuration: Configuration<Settings> = {
       mnemonic: process.env.MNEMONIC as string,
       deploymentFile: '.deployments.json',
       confirmations: 2,
-      settings: { ...settingsTemplate, minimalConsistencyLevel: 100 }
+      settings: { ...settingsTemplate, minimalConsistencyLevel: 105 }
     }
   }
 }
