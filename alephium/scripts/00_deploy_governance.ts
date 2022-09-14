@@ -25,7 +25,7 @@ const deployGovernance: DeployFunction = async (deployer: Deployer): Promise<voi
   const result = await deployer.deployContract(governance, {
     initialFields: initialFields
   })
-  console.log(`Governace contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
+  console.log(`Governance contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
 }
 
 export default deployGovernance

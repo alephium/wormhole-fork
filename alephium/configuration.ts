@@ -13,6 +13,7 @@ const configuration: Configuration = {
   defaultNetwork: 'devnet',
   networks: {
     devnet: {
+      networkId: 4,
       nodeUrl: 'http://localhost:22973',
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
@@ -21,19 +22,21 @@ const configuration: Configuration = {
     },
 
     testnet: {
+      networkId: 1,
       // TODO: update config
       nodeUrl: 'http://localhost:22973',
       mnemonic: process.env.MNEMONIC as string,
       deploymentFile: '.deployments.json',
-      confirmations: 10
+      confirmations: 2
     },
 
     mainnet: {
+      networkId: 0,
       // TODO: update config
       nodeUrl: 'http://localhost:22973',
       mnemonic: process.env.MNEMONIC as string,
       deploymentFile: '.deployments.json',
-      confirmations: 10
+      confirmations: 2
     }
   }
 }

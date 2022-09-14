@@ -11,7 +11,6 @@ async function loadConfig(filename: string): Promise<Configuration> {
   if (!fs.existsSync(configPath)) {
     program.error(`${configPath} does not exist`)
   }
-  let config: Configuration
   try {
     /* eslint-disable @typescript-eslint/no-var-requires */
     const content = require(path.resolve(configPath))
@@ -19,11 +18,10 @@ async function loadConfig(filename: string): Promise<Configuration> {
     if (!content.default) {
       program.error(`config file ${filename} have no default export`)
     }
-    config = content.default as Configuration
+    return content.default as Configuration
   } catch (error) {
     program.error(`failed to read config file, error: ${error}`)
   }
-  return config
 }
 
 program
