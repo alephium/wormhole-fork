@@ -114,7 +114,7 @@ export interface Deployer {
 }
 
 export interface DeployFunction<Settings = unknown> {
-  (deployer: Deployer, network: Network<Settings>, config: Configuration<Settings>): Promise<void | boolean>
+  (deployer: Deployer, network: Network<Settings>): Promise<void | boolean>
   skip?: (config: Configuration<Settings>) => Promise<boolean>
   id?: string
 }
@@ -403,7 +403,7 @@ export async function deploy<Settings = unknown>(configuration: Configuration<Se
         console.log(`Skip executing ${script.scriptFilePath}`)
         continue
       }
-      const result = await script.func(deployer, network, configuration)
+      const result = await script.func(deployer, network)
       if (result && typeof result === 'boolean') {
         if (script.func.id === undefined) {
           throw new Error(
