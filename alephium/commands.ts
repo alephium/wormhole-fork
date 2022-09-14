@@ -2,29 +2,7 @@
 import { Project, web3 } from '@alephium/web3'
 import { program } from 'commander'
 import { run as runJestTests } from 'jest'
-import fs from 'fs'
-import { Configuration, deploy, NetworkType } from './lib/deployment'
-import path from 'path'
-
-async function loadConfig(filename: string): Promise<Configuration> {
-  const configPath = path.resolve(filename)
-  if (!fs.existsSync(configPath)) {
-    program.error(`${configPath} does not exist`)
-  }
-  let config: Configuration
-  try {
-    /* eslint-disable @typescript-eslint/no-var-requires */
-    const content = require(path.resolve(configPath))
-    /* eslint-enable @typescript-eslint/no-var-requires */
-    if (!content.default) {
-      program.error(`config file ${filename} have no default export`)
-    }
-    config = content.default as Configuration
-  } catch (error) {
-    program.error(`failed to read config file, error: ${error}`)
-  }
-  return config
-}
+import { deploy, loadConfig, NetworkType } from './lib/deployment'
 
 program
   .command('test')
@@ -71,12 +49,16 @@ program
   .option('-c, --config <config-file>', 'Build config file', 'configuration.ts')
   .option('-n, --network <network-type>', 'Network type')
   .action(async (options) => {
-    const config = await loadConfig(options.config as string)
-    const networkType = options.network ? (options.network as NetworkType) : config.defaultNetwork
-    const nodeUrl = config.networks[networkType].nodeUrl
-    web3.setCurrentNodeProvider(nodeUrl)
-    await Project.build(config.compilerOptions, config.sourcePath, config.artifactPath)
-    console.log('Compile completed!')
+    try {
+      const config = await loadConfig(options.config as string)
+      const networkType = options.network ? (options.network as NetworkType) : config.defaultNetwork
+      const nodeUrl = config.networks[networkType].nodeUrl
+      web3.setCurrentNodeProvider(nodeUrl)
+      await Project.build(config.compilerOptions, config.sourcePath, config.artifactPath)
+      console.log('Compile completed!')
+    } catch (error) {
+      program.error(`${error}`)
+    }
   })
 
 program
@@ -85,9 +67,13 @@ program
   .option('-c, --config <config-file>', 'Deployment config file', 'configuration.ts')
   .option('-n, --network <network-type>', 'Specify the network to use')
   .action(async (options) => {
-    const config = await loadConfig(options.config as string)
-    const networkType = options.network ? (options.network as NetworkType) : config.defaultNetwork
-    await deploy(config, networkType)
+    try {
+      const config = await loadConfig(options.config as string)
+      const networkType = options.network ? (options.network as NetworkType) : config.defaultNetwork
+      await deploy(config, networkType)
+    } catch (error) {
+      program.error(`${error}`)
+    }
   })
 
 // TODO: use SDK `start-devnet/stop-devnet` scripts
