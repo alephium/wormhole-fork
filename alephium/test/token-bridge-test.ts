@@ -1265,8 +1265,7 @@ describe('test token bridge', () => {
   it('should update refund address', async () => {
     await buildProject()
     const tokenBridgeFixture = newTokenBridgeFixture()
-    // const newRefundAddressHex = '00' + randomByte32Hex()
-    const newRefundAddressHex = '008955cf8e1593887f8b7a1e4b5a9b4f2b685f2983e72081543fd151bba59925ac'
+    const newRefundAddressHex = '00' + randomByte32Hex()
     const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
     const remoteChainIds = [1, 2, 3, 4, 5].map((i) => CHAIN_ID_ALEPHIUM + i)
     const existingContracts = tokenBridgeFixture.tokenBridgeInfo.dependencies
