@@ -115,6 +115,31 @@ export class DestroyUnexecutedSequenceContracts {
   }
 }
 
+export class UpdateRefundAddress {
+  newRefundAddressHex: string // 33 bytes hex string
+  chainIds: number[]
+
+  constructor(newRefundAddressHex: string, chainIds: number[]) {
+    this.newRefundAddressHex = newRefundAddressHex
+    this.chainIds = chainIds
+  }
+
+  encode(): Uint8Array {
+    const chainSize = this.chainIds.length
+    const buffer = Buffer.allocUnsafe(33 + 33 + 1 + 2 * chainSize)
+    buffer.write(tokenBridgeModule, 0, 'hex')
+    buffer.writeUint8(242, 32) // actionId, #f2
+    buffer.write(this.newRefundAddressHex, 33, 'hex')
+    buffer.writeUint8(chainSize, 66)
+    let index = 67
+    this.chainIds.forEach((chainId) => {
+      buffer.writeUint16BE(chainId, index)
+      index += 2
+    })
+    return buffer
+  }
+}
+
 export class Transfer {
   amount: bigint
   tokenId: string

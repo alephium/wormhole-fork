@@ -29,7 +29,7 @@
       "warnings": []
     },
     "contracts/tests/sequence_test.ral": {
-      "sourceCodeHash": "995e8b19bd7dac57f96815999031447f836d543dc64e99f119551a0b438d5382",
+      "sourceCodeHash": "66d69a8087e698388f073c9437ea5eaa1155a1598e309b016d80820ea17063eb",
       "warnings": []
     },
     "contracts/tests/test_token.ral": {
@@ -65,7 +65,7 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_for_chain.ral": {
-      "sourceCodeHash": "c8e3e41964bed4c60c22000d54fb213f0c11af8a5bea4b1fabc6e459b36b40e3",
+      "sourceCodeHash": "1b28e3461a01d92d587fa2aa280d8ddb41ee1dca98b9c4702cbef56871fb8f8b",
       "warnings": []
     },
     "contracts/token_bridge/wrapped_alph.ral": {
@@ -124,12 +124,16 @@
       "sourceCodeHash": "1477749d1bbe7bf9d65279d49cac0087c562d9e69a2d310e485a6e06c91244d9",
       "warnings": []
     },
+    "contracts/token_bridge_scripts/update_refund_address.ral": {
+      "sourceCodeHash": "aa42f09902cdf4dd3f3c865ae084345b6f85193229ea495e9f859962429d3bee",
+      "warnings": []
+    },
     "contracts/token_bridge_scripts/update_remote_token_pool.ral": {
       "sourceCodeHash": "2878bf1e43d43594ad89571eab41bf190155f8a24ae01cf4a92ae82d6c631779",
       "warnings": []
     },
     "contracts/constants.ral": {
-      "sourceCodeHash": "9cc3f4a17803c4507350c7407c5e1fe475f94c5c0eec771e957c7fa4fc64d502",
+      "sourceCodeHash": "db2c81b53ef74d137cb67790167a32aeacf93ce4c3576b15c20c66a9b5e31002",
       "warnings": []
     },
     "contracts/math.ral": {
@@ -137,7 +141,7 @@
       "warnings": []
     },
     "contracts/sequence/sequence.ral": {
-      "sourceCodeHash": "e079fed7424086fb27cda65e9326e61e377eee2241cfbe31bccd58463996ab2e",
+      "sourceCodeHash": "98cefe2a74389b5d770ea05cc40c5200e5ac0058407541ad91a539cf030491da",
       "warnings": []
     },
     "contracts/token_bridge/bridge_token_pool.ral": {
@@ -149,7 +153,7 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_governance.ral": {
-      "sourceCodeHash": "e204bd5cd1ef3b6798fbd7441a526c2ab9764a2d7e4723bff620a8b89162cf9f",
+      "sourceCodeHash": "88a58c5d7e16aec6ec71a0ded075e86d0ca6d077027e2ef8244ab4c954f105fe",
       "warnings": []
     },
     "contracts/token_bridge/token_pool.ral": {

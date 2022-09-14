@@ -10,6 +10,7 @@ import { default as completeTransfer } from './artifacts/token_bridge_scripts/co
 import { default as attestToken } from './artifacts/token_bridge_scripts/attest_token.ral.json'
 import { default as attestWrappedAlph } from './artifacts/token_bridge_scripts/attest_wrapped_alph.ral.json'
 import { default as destroyUnexecutedSequences } from './artifacts/token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral.json'
+import { default as updateRefundAddress } from './artifacts/token_bridge_scripts/update_refund_address.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -53,4 +54,8 @@ export function attestWrappedAlphScript(): Script {
 
 export function destroyUnexecutedSequencesScript(): Script {
     return Script.fromJson(destroyUnexecutedSequences)
+}
+
+export function updateRefundAddressScript(): Script {
+    return Script.fromJson(updateRefundAddress)
 }

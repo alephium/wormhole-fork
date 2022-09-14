@@ -1,6 +1,6 @@
 {
   "name": "AttestWrappedAlph",
-  "bytecodeTemplate": "0101030000000b{0}{3}a2{0}{2}{4}{5}100c{1}0106",
+  "bytecodeTemplate": "0101030000000b{0}{3}a2{0}{2}{4}{5}100c{1}0107",
   "fieldsSig": {
     "names": [
       "payer",

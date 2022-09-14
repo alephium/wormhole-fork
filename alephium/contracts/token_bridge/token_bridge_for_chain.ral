@@ -8,7 +8,7 @@ Contract TokenBridgeForChain(
     mut firstNext256: U256,
     mut secondNext256: U256,
     unexecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
-    refundAddress: Address,
+    mut refundAddress: Address,
     mut sendSequence: U256
 ) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
@@ -63,5 +63,10 @@ Contract TokenBridgeForChain(
             let unexecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
             UnexecutedSequence(unexecutedSequenceId).destroy(selfAddress!())
         }
+    }
+
+    pub fn updateRefundAddress(newRefundAddress: Address) -> () {
+        checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        refundAddress = newRefundAddress
     }
 }

@@ -4,7 +4,7 @@ Abstract Contract Sequence(
     mut firstNext256: U256,
     mut secondNext256: U256,
     unexecutedSequenceTemplateId: ByteVec,
-    refundAddress: Address
+    mut refundAddress: Address
 ) extends Constants() {
     @using(readonly = true)
     fn setExecuted(offset: U256, current: U256) -> U256 {

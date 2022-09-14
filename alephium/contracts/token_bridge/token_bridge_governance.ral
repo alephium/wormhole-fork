@@ -13,6 +13,7 @@ Abstract Contract TokenBridgeGovernance(
       ContractUpgrade               = #02
       DestroyUnexecutedSequences    = #f0
       UpdateMinimalConsistencyLevel = #f1
+      UpdateRefundAddress           = #f2
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
@@ -114,5 +115,24 @@ Abstract Contract TokenBridgeGovernance(
         assert!(size!(payload) == 34, ErrorCodes.InvalidMessageSize)
         let consistencyLevel = u256From1Byte!(byteVecSlice!(payload, 33, 34))
         minimalConsistencyLevel = consistencyLevel
+    }
+
+    pub fn updateRefundAddress(vaa: ByteVec) -> () {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        let addressBytes = byteVecSlice!(payload, 33, 66)
+        // only support P2PKH address
+        assert!(byteVecSlice!(addressBytes, 0, 1) == #00, ErrorCodes.InvalidUpdateRefundAddressMessage)
+        let newRefundAddress = byteVecToAddress!(addressBytes)
+        let chainSize = u256From1Byte!(byteVecSlice!(payload, 66, 67))
+        assert!(size!(payload) == 67 + chainSize * 2, ErrorCodes.InvalidMessageSize)
+
+        let mut offset = 67
+        for (let mut i = 0; i < chainSize; i = i + 1) {
+            let chainIdBytes = byteVecSlice!(payload, offset, offset + 2)
+            let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ chainIdBytes)
+            TokenBridgeForChain(tokenBridgeForChainId).updateRefundAddress(newRefundAddress)
+            offset = offset + 2
+        }
     }
 }

@@ -33,7 +33,8 @@ import {
   tokenBridgeModule,
   tokenPoolAddress,
   Transfer,
-  UpdateMinimalConsistencyLevel
+  UpdateMinimalConsistencyLevel,
+  UpdateRefundAddress
 } from './fixtures/token-bridge-fixture'
 import {
   CHAIN_ID_ALEPHIUM,
@@ -58,6 +59,7 @@ import {
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
 import { createUnexecutedSequence } from './fixtures/sequence-fixture'
+import * as base58 from 'bs58'
 
 describe('test token bridge', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -1250,6 +1252,7 @@ describe('test token bridge', () => {
       'upgradeContract',
       'destroyUnexecutedSequenceContracts',
       'updateMinimalConsistencyLevel',
+      'updateRefundAddress',
       'attestToken',
       'createLocalTokenPool',
       'createRemoteTokenPool',
@@ -1257,5 +1260,43 @@ describe('test token bridge', () => {
       'transferToken',
       'transferAlph'
     ])
+  })
+
+  it('should update refund address', async () => {
+    await buildProject()
+    const tokenBridgeFixture = newTokenBridgeFixture()
+    // const newRefundAddressHex = '00' + randomByte32Hex()
+    const newRefundAddressHex = '008955cf8e1593887f8b7a1e4b5a9b4f2b685f2983e72081543fd151bba59925ac'
+    const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
+    const remoteChainIds = [1, 2, 3, 4, 5].map((i) => CHAIN_ID_ALEPHIUM + i)
+    const existingContracts = tokenBridgeFixture.tokenBridgeInfo.dependencies
+    const tokenBridgeForChains = remoteChainIds.map((remoteChainId) => {
+      const info = createTokenBridgeForChain(tokenBridgeFixture.tokenBridgeInfo, remoteChainId, randomByte32Hex())
+      expect(info.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
+      existingContracts.push(...info.states())
+      return info
+    })
+
+    const updateRefundAddress = new UpdateRefundAddress(newRefundAddressHex, remoteChainIds)
+    const vaaBody = new VAABody(
+      updateRefundAddress.encode(),
+      governanceChainId,
+      CHAIN_ID_ALEPHIUM,
+      governanceEmitterAddress,
+      0
+    )
+    const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+    const tokenBridge = tokenBridgeFixture.tokenBridgeInfo.contract
+    const result = await tokenBridge.testPublicMethod('updateRefundAddress', {
+      address: tokenBridgeFixture.tokenBridgeInfo.address,
+      initialFields: tokenBridgeFixture.tokenBridgeInfo.selfState.fields,
+      testArgs: { vaa: binToHex(vaa.encode()) },
+      initialAsset: { alphAmount: oneAlph },
+      existingContracts: existingContracts
+    })
+    tokenBridgeForChains.forEach((info) => {
+      const state = result.contracts.find((c) => c.address === info.address)!
+      expect(state.fields['refundAddress']).toEqual(newRefundAddress)
+    })
   })
 })

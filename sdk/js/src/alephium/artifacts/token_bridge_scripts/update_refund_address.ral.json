@@ -1,28 +1,16 @@
 {
-  "name": "AttestToken",
-  "bytecodeTemplate": "0101030000000f{0}7a{3}a2{2}0da3{0}{2}{4}{5}100c{1}0107",
+  "name": "UpdateRefundAddress",
+  "bytecodeTemplate": "01010300000005{1}0d0c{0}0106",
   "fieldsSig": {
     "names": [
-      "payer",
       "tokenBridge",
-      "localTokenId",
-      "messageFee",
-      "nonce",
-      "consistencyLevel"
+      "vaa"
     ],
     "types": [
-      "Address",
       "ByteVec",
-      "ByteVec",
-      "U256",
-      "ByteVec",
-      "U256"
+      "ByteVec"
     ],
     "isMutable": [
-      false,
-      false,
-      false,
-      false,
       false,
       false
     ]
