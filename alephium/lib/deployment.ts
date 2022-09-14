@@ -16,17 +16,18 @@ import { waitTxConfirmed } from './utils'
 import fs, { promises as fsPromises } from 'fs'
 import * as cryptojs from 'crypto-js'
 
-export interface Network {
+export interface Network<Settings = unknown> {
   networkId: number
   nodeUrl: string
   mnemonic: string
   deploymentFile: string
   confirmations: number
+  settings: Settings
 }
 
 export type NetworkType = 'mainnet' | 'testnet' | 'devnet'
 
-export interface Configuration {
+export interface Configuration<Settings = unknown> {
   sourcePath?: string
   artifactPath?: string
 
@@ -34,7 +35,7 @@ export interface Configuration {
   compilerOptions: CompilerOptions
 
   defaultNetwork: NetworkType
-  networks: Record<NetworkType, Network>
+  networks: Record<NetworkType, Network<Settings>>
 }
 
 type DeployContractParams = Omit<BuildDeployContractTx, 'signerAddress'>
@@ -112,9 +113,9 @@ export interface Deployer {
   getRunScriptResult(name: string): RunScriptResult
 }
 
-export interface DeployFunction {
-  (deployer: Deployer, config: Configuration): Promise<void | boolean>
-  skip?: (config: Configuration) => Promise<boolean>
+export interface DeployFunction<Settings = unknown> {
+  (deployer: Deployer, network: Network<Settings>, config: Configuration<Settings>): Promise<void | boolean>
+  skip?: (config: Configuration<Settings>) => Promise<boolean>
   id?: string
 }
 
@@ -194,8 +195,8 @@ function getTaskId(code: Contract | Script, taskTag?: string): string {
   return taskTag ? `${code.name}:${taskTag}` : code.name
 }
 
-async function createDeployer(
-  network: Network,
+async function createDeployer<Settings = unknown>(
+  network: Network<Settings>,
   deployContractResults: Map<string, DeployContractResult>,
   runScriptResults: Map<string, RunScriptResult>
 ): Promise<Deployer> {
@@ -339,7 +340,7 @@ async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
   return scripts.map((f) => path.join(rootPath, f.filename))
 }
 
-export async function deploy(configuration: Configuration, networkType: NetworkType) {
+export async function deploy<Settings = unknown>(configuration: Configuration<Settings>, networkType: NetworkType) {
   const network = configuration.networks[networkType]
   if (typeof network === 'undefined') {
     throw new Error(`no network ${networkType} config`)
@@ -347,7 +348,7 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
 
   const scriptsRootPath = configuration.deployScriptsPath ? configuration.deployScriptsPath : 'scripts'
   const scriptFiles = await getDeployScriptFiles(path.resolve(scriptsRootPath))
-  const scripts: { scriptFilePath: string; func: DeployFunction }[] = []
+  const scripts: { scriptFilePath: string; func: DeployFunction<Settings> }[] = []
   for (const scriptFilePath of scriptFiles) {
     try {
       /* eslint-disable @typescript-eslint/no-var-requires */
@@ -356,7 +357,7 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
       if (content.default) {
         scripts.push({
           scriptFilePath: scriptFilePath,
-          func: content.default as DeployFunction
+          func: content.default as DeployFunction<Settings>
         })
       } else {
         throw new Error(`no default deploy function exported from ${scriptFilePath}`)
@@ -402,7 +403,7 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
         console.log(`Skip executing ${script.scriptFilePath}`)
         continue
       }
-      const result = await script.func(deployer, configuration)
+      const result = await script.func(deployer, network, configuration)
       if (result && typeof result === 'boolean') {
         if (script.func.id === undefined) {
           throw new Error(

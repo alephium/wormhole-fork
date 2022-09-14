@@ -1,22 +1,26 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction } from '../lib/deployment'
+import { Deployer, DeployFunction, Network } from '../lib/deployment'
 import { zeroPad } from '../lib/utils'
 import * as dotenv from 'dotenv'
+import { Settings } from '../configuration'
 
 dotenv.config({ path: __dirname + '/../.env' })
 
-const deployGovernance: DeployFunction = async (deployer: Deployer): Promise<void> => {
+const deployGovernance: DeployFunction<Settings> = async (
+  deployer: Deployer,
+  network: Network<Settings>
+): Promise<void> => {
   const governance = Project.contract('Governance')
-  const initGuardianSet = JSON.parse(process.env.INIT_SIGNERS!) as string[]
+  const initGuardianSet = network.settings.initSigners
   const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
   const currentGuardianSet = sizePrefix + initGuardianSet.join('')
   const messageFee = BigInt('100000000000000')
   const initialFields = {
     guardianSets: ['', currentGuardianSet],
     guardianSetIndexes: [0, 0],
-    chainId: parseInt(process.env.INIT_CHAIN_ID!),
-    governanceChainId: parseInt(process.env.INIT_GOV_CHAIN_ID!),
-    governanceEmitterAddress: process.env.INIT_GOV_CONTRACT!,
+    chainId: network.settings.initChainId,
+    governanceChainId: network.settings.initGovChainId,
+    governanceEmitterAddress: network.settings.initGovContract,
     receivedSequence: 0,
     messageFee: messageFee,
     previousGuardianSetExpirationTimeMS: 0
