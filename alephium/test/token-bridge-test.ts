@@ -1291,7 +1291,7 @@ describe('test token bridge', () => {
     const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
     expect(fixture.tokenBridgeInfo.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
     const result = await updateRefundAddress(CHAIN_ID_ALEPHIUM, newRefundAddressHex)
-    const tokenBridgeState = result.contracts.find(c => c.address === fixture.tokenBridgeInfo.address)!
+    const tokenBridgeState = result.contracts.find((c) => c.address === fixture.tokenBridgeInfo.address)!
     expect(tokenBridgeState.fields['refundAddress']).toEqual(newRefundAddress)
 
     await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM + 1, newRefundAddressHex))
@@ -1318,9 +1318,9 @@ describe('test token bridge', () => {
       inputAssets: [{ address: payer, asset: { alphAmount: alph(4) } }],
       existingContracts: fixture.tokenBridgeForChainInfo.dependencies
     })
-    const contractState0 = testResult0.contracts.find(c => c.address === fixture.tokenBridgeForChainInfo.address)!
+    const contractState0 = testResult0.contracts.find((c) => c.address === fixture.tokenBridgeForChainInfo.address)!
     expect(contractState0.asset).toEqual({ alphAmount: alph(4), tokens: [] })
-    const payerOutput = testResult0.txOutputs.find(c => c.address === payer)!
+    const payerOutput = testResult0.txOutputs.find((c) => c.address === payer)!
     expect(payerOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
 
     const refundAddress = fixture.tokenBridgeInfo.selfState.fields['refundAddress'] as string
@@ -1332,9 +1332,9 @@ describe('test token bridge', () => {
       inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }],
       existingContracts: fixture.tokenBridgeForChainInfo.dependencies
     })
-    const contractState1 = testResult1.contracts.find(c => c.address === fixture.tokenBridgeForChainInfo.address)!
+    const contractState1 = testResult1.contracts.find((c) => c.address === fixture.tokenBridgeForChainInfo.address)!
     expect(contractState1.asset).toEqual({ alphAmount: oneAlph, tokens: [] })
-    const refundAddressOutput = testResult1.txOutputs.find(c => c.address === refundAddress)!
+    const refundAddressOutput = testResult1.txOutputs.find((c) => c.address === refundAddress)!
     expect(refundAddressOutput.alphAmount).toEqual(alph(4) - defaultGasFee)
   })
 })
