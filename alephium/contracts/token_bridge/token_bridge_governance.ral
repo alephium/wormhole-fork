@@ -4,7 +4,8 @@ Abstract Contract TokenBridgeGovernance(
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
     tokenBridgeFactory: TokenBridgeFactory,
-    mut minimalConsistencyLevel: U256
+    mut minimalConsistencyLevel: U256,
+    mut refundAddress: Address
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
 
@@ -61,7 +62,6 @@ Abstract Contract TokenBridgeGovernance(
             0,
             0,
             tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
-            tokenBridgeFactory.getRefundAddress(),
             0
         )
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
@@ -117,6 +117,11 @@ Abstract Contract TokenBridgeGovernance(
         minimalConsistencyLevel = consistencyLevel
     }
 
+    @using(readonly = true, externalCallCheck = false)
+    pub fn getRefundAddress() -> Address {
+        return refundAddress
+    }
+
     pub fn updateRefundAddress(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -124,15 +129,7 @@ Abstract Contract TokenBridgeGovernance(
         // only support P2PKH address
         assert!(byteVecSlice!(addressBytes, 0, 1) == #00, ErrorCodes.InvalidUpdateRefundAddressMessage)
         let newRefundAddress = byteVecToAddress!(addressBytes)
-        let chainSize = u256From1Byte!(byteVecSlice!(payload, 66, 67))
-        assert!(size!(payload) == 67 + chainSize * 2, ErrorCodes.InvalidMessageSize)
-
-        let mut offset = 67
-        for (let mut i = 0; i < chainSize; i = i + 1) {
-            let chainIdBytes = byteVecSlice!(payload, offset, offset + 2)
-            let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ chainIdBytes)
-            TokenBridgeForChain(tokenBridgeForChainId).updateRefundAddress(newRefundAddress)
-            offset = offset + 2
-        }
+        assert!(size!(payload) == 66, ErrorCodes.InvalidMessageSize)
+        refundAddress = newRefundAddress
     }
 }

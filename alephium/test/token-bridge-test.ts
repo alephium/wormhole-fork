@@ -728,9 +728,9 @@ describe('test token bridge', () => {
     expect(remoteTokenPoolState.fields['sequence_']).toEqual(2)
     expect(remoteTokenPoolState.fields['decimals_']).toEqual(decimals) // decimals never change
 
-    expectAssertionFailed(async () => update(CHAIN_ID_ALEPHIUM, 3)) // invalid chain id
-    expectAssertionFailed(async () => update(0, 1)) // invalid sequence
-    expectAssertionFailed(async () => update(0, 0)) // invalid sequence
+    await expectAssertionFailed(async () => update(CHAIN_ID_ALEPHIUM, 3)) // invalid chain id
+    await expectAssertionFailed(async () => update(0, 1)) // invalid sequence
+    await expectAssertionFailed(async () => update(0, 0)) // invalid sequence
   })
 
   it('should transfer remote token', async () => {
@@ -1252,6 +1252,7 @@ describe('test token bridge', () => {
       'upgradeContract',
       'destroyUnexecutedSequenceContracts',
       'updateMinimalConsistencyLevel',
+      'getRefundAddress',
       'updateRefundAddress',
       'attestToken',
       'createLocalTokenPool',
@@ -1264,38 +1265,76 @@ describe('test token bridge', () => {
 
   it('should update refund address', async () => {
     await buildProject()
-    const tokenBridgeFixture = newTokenBridgeFixture()
+    const fixture = newTokenBridgeFixture()
+
+    async function updateRefundAddress(targetChainId: number, newRefundAddressHex: string) {
+      const updateRefundAddress = new UpdateRefundAddress(newRefundAddressHex)
+      const vaaBody = new VAABody(
+        updateRefundAddress.encode(),
+        governanceChainId,
+        targetChainId,
+        governanceEmitterAddress,
+        0
+      )
+      const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+      const tokenBridge = fixture.tokenBridgeInfo.contract
+      return tokenBridge.testPublicMethod('updateRefundAddress', {
+        address: fixture.tokenBridgeInfo.address,
+        initialFields: fixture.tokenBridgeInfo.selfState.fields,
+        testArgs: { vaa: binToHex(vaa.encode()) },
+        initialAsset: { alphAmount: oneAlph },
+        existingContracts: fixture.tokenBridgeInfo.dependencies
+      })
+    }
+
     const newRefundAddressHex = '00' + randomByte32Hex()
     const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
-    const remoteChainIds = [1, 2, 3, 4, 5].map((i) => CHAIN_ID_ALEPHIUM + i)
-    const existingContracts = tokenBridgeFixture.tokenBridgeInfo.dependencies
-    const tokenBridgeForChains = remoteChainIds.map((remoteChainId) => {
-      const info = createTokenBridgeForChain(tokenBridgeFixture.tokenBridgeInfo, remoteChainId, randomByte32Hex())
-      expect(info.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
-      existingContracts.push(...info.states())
-      return info
-    })
+    expect(fixture.tokenBridgeInfo.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
+    const result = await updateRefundAddress(CHAIN_ID_ALEPHIUM, newRefundAddressHex)
+    const tokenBridgeState = result.contracts.find(c => c.address === fixture.tokenBridgeInfo.address)!
+    expect(tokenBridgeState.fields['refundAddress']).toEqual(newRefundAddress)
 
-    const updateRefundAddress = new UpdateRefundAddress(newRefundAddressHex, remoteChainIds)
-    const vaaBody = new VAABody(
-      updateRefundAddress.encode(),
-      governanceChainId,
-      CHAIN_ID_ALEPHIUM,
-      governanceEmitterAddress,
-      0
-    )
-    const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const tokenBridge = tokenBridgeFixture.tokenBridgeInfo.contract
-    const result = await tokenBridge.testPublicMethod('updateRefundAddress', {
-      address: tokenBridgeFixture.tokenBridgeInfo.address,
-      initialFields: tokenBridgeFixture.tokenBridgeInfo.selfState.fields,
-      testArgs: { vaa: binToHex(vaa.encode()) },
+    await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM + 1, newRefundAddressHex))
+
+    const invalidPrefix: string[] = ['01', '02', '03']
+    for (const prefix of invalidPrefix) {
+      const invalidRefundAddress = prefix + randomByte32Hex()
+      await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM, invalidRefundAddress))
+    }
+  })
+
+  it('should test deposit/withdraw', async () => {
+    await buildProject()
+    const fixture = newTokenBridgeForChainFixture(remoteChainId, randomByte32Hex())
+    const tokenBridgeForChain = fixture.tokenBridgeForChainInfo.contract
+    const testResult0 = await tokenBridgeForChain.testPublicMethod('deposit', {
+      initialFields: fixture.tokenBridgeForChainInfo.selfState.fields,
       initialAsset: { alphAmount: oneAlph },
-      existingContracts: existingContracts
+      address: fixture.tokenBridgeForChainInfo.address,
+      testArgs: {
+        from: payer,
+        alphAmount: alph(3)
+      },
+      inputAssets: [{ address: payer, asset: { alphAmount: alph(4) } }],
+      existingContracts: fixture.tokenBridgeForChainInfo.dependencies
     })
-    tokenBridgeForChains.forEach((info) => {
-      const state = result.contracts.find((c) => c.address === info.address)!
-      expect(state.fields['refundAddress']).toEqual(newRefundAddress)
+    const contractState0 = testResult0.contracts.find(c => c.address === fixture.tokenBridgeForChainInfo.address)!
+    expect(contractState0.asset).toEqual({ alphAmount: alph(4), tokens: [] })
+    const payerOutput = testResult0.txOutputs.find(c => c.address === payer)!
+    expect(payerOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
+
+    const refundAddress = fixture.tokenBridgeInfo.selfState.fields['refundAddress'] as string
+    const testResult1 = await tokenBridgeForChain.testPublicMethod('withdraw', {
+      initialFields: fixture.tokenBridgeForChainInfo.selfState.fields,
+      initialAsset: { alphAmount: alph(4) },
+      address: fixture.tokenBridgeForChainInfo.address,
+      testArgs: { alphAmount: alph(3) },
+      inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }],
+      existingContracts: fixture.tokenBridgeForChainInfo.dependencies
     })
+    const contractState1 = testResult1.contracts.find(c => c.address === fixture.tokenBridgeForChainInfo.address)!
+    expect(contractState1.asset).toEqual({ alphAmount: oneAlph, tokens: [] })
+    const refundAddressOutput = testResult1.txOutputs.find(c => c.address === refundAddress)!
+    expect(refundAddressOutput.alphAmount).toEqual(alph(4) - defaultGasFee)
   })
 })

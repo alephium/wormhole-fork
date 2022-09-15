@@ -33,7 +33,8 @@ const deployTokenBridge: DeployFunction = async (deployer: Deployer, config: Con
     receivedSequence: 0,
     sendSequence: 0,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
-    minimalConsistencyLevel: networkConfigs[config.defaultNetwork].minimalConsistencyLevel
+    minimalConsistencyLevel: networkConfigs[config.defaultNetwork].minimalConsistencyLevel,
+    refundAddress: deployer.account.address
   }
 
   const result = await deployer.deployContract(tokenBridge, {

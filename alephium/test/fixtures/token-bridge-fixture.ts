@@ -116,26 +116,17 @@ export class DestroyUnexecutedSequenceContracts {
 }
 
 export class UpdateRefundAddress {
-  newRefundAddressHex: string // 33 bytes hex string
-  chainIds: number[]
+  newRefundAddressHex: string
 
-  constructor(newRefundAddressHex: string, chainIds: number[]) {
+  constructor(newRefundAddressHex: string) {
     this.newRefundAddressHex = newRefundAddressHex
-    this.chainIds = chainIds
   }
 
   encode(): Uint8Array {
-    const chainSize = this.chainIds.length
-    const buffer = Buffer.allocUnsafe(33 + 33 + 1 + 2 * chainSize)
+    const buffer = Buffer.allocUnsafe(33 + 33)
     buffer.write(tokenBridgeModule, 0, 'hex')
     buffer.writeUint8(242, 32) // actionId, #f2
     buffer.write(this.newRefundAddressHex, 33, 'hex')
-    buffer.writeUint8(chainSize, 66)
-    let index = 67
-    this.chainIds.forEach((chainId) => {
-      buffer.writeUint16BE(chainId, index)
-      index += 2
-    })
     return buffer
   }
 }
@@ -334,7 +325,6 @@ function createTokenBridgeForChainTemplate(): ContractInfo {
     firstNext256: 0,
     secondNext256: 0,
     unexecutedSequenceTemplateId: '',
-    refundAddress: randomAssetAddress(),
     sendSequence: 0
   })
 }
@@ -347,8 +337,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
     remoteTokenPoolTemplateId: templateContracts.remoteTokenPoolTemplate.contractId,
     tokenBridgeForChainTemplateId: templateContracts.tokenBridgeForChainTemplate.contractId,
     attestTokenHandlerTemplateId: templateContracts.attestTokenHandlerTemplate.contractId,
-    unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId,
-    refundAddress: randomAssetAddress()
+    unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId
   }
   const address = randomContractAddress()
   const state = tokenBridgeFactory.toState(initFields, initAsset, address)
@@ -370,7 +359,8 @@ export function createTokenBridge(totalWrappedAlph = 0n, address?: string): Toke
     sendSequence: 0,
     wrappedAlphId: wrappedAlph.contractId,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
-    minimalConsistencyLevel: minimalConsistencyLevel
+    minimalConsistencyLevel: minimalConsistencyLevel,
+    refundAddress: randomAssetAddress()
   }
   const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
   const deps = Array.prototype.concat(governance.states(), wrappedAlph.states(), tokenBridgeFactory.states())
@@ -445,7 +435,6 @@ export function createTokenBridgeForChain(
     firstNext256: 0,
     secondNext256: 0,
     unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId,
-    refundAddress: randomAssetAddress(),
     sendSequence: 0
   }
   const contractAsset: Asset = { alphAmount: alph(2) }

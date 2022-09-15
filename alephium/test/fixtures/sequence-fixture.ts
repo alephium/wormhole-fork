@@ -22,7 +22,6 @@ export function createSequence(
   start: number,
   firstNext256: bigint,
   secondNext256: bigint,
-  refundAddress: string,
   contractId?: string
 ): ContractInfo {
   const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
@@ -32,8 +31,7 @@ export function createSequence(
     start: start,
     firstNext256: firstNext256,
     secondNext256: secondNext256,
-    unexecutedSequenceTemplateId: unexecutedSequenceTemplate.contractId,
-    refundAddress: refundAddress
+    unexecutedSequenceTemplateId: unexecutedSequenceTemplate.contractId
   }
   const state = contract.toState(initField, initAsset, address)
   return new ContractInfo(contract, state, unexecutedSequenceTemplate.states(), address)

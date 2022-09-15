@@ -1,7 +1,7 @@
 {
   "name": "TokenBridgeV1",
-  "bytecode": "070106010000000000",
-  "codeHash": "0778af62d0feb156513decbaaa86999da11a1b7fd7aaaecc767a25155b33d15c",
+  "bytecode": "080106010000000000",
+  "codeHash": "af07f3c40a2caad1034d5a3bfd905cdd26bcbf1c44882d017b895c06f833cbae",
   "fieldsSig": {
     "names": [
       "governanceContractId",
@@ -10,7 +10,8 @@
       "sendSequence",
       "wrappedAlphId",
       "tokenBridgeFactory",
-      "minimalConsistencyLevel"
+      "minimalConsistencyLevel",
+      "refundAddress"
     ],
     "types": [
       "ByteVec",
@@ -19,7 +20,8 @@
       "U256",
       "ByteVec",
       "ByteVec",
-      "U256"
+      "U256",
+      "Address"
     ],
     "isMutable": [
       false,
@@ -28,6 +30,7 @@
       true,
       false,
       false,
+      true,
       true
     ]
   },

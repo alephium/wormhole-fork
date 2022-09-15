@@ -2,9 +2,8 @@ Contract SequenceTest(
   mut start: U256,
   mut firstNext256: U256,
   mut secondNext256: U256,
-  unexecutedSequenceTemplateId: ByteVec,
-  mut refundAddress: Address
-) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId, refundAddress) {
+  unexecutedSequenceTemplateId: ByteVec
+) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId) {
   pub fn check(seq: U256) -> Bool {
     return checkSequence(seq)
   }

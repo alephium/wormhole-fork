@@ -5,8 +5,9 @@ Contract TokenBridge(
     mut sendSequence: U256,     // the sequence of next message published by self
     wrappedAlphId: ByteVec,
     tokenBridgeFactory: TokenBridgeFactory,
-    mut minimalConsistencyLevel: U256
-) extends TokenBridgeGovernance(governance, localChainId, receivedSequence, sendSequence, tokenBridgeFactory, minimalConsistencyLevel) {
+    mut minimalConsistencyLevel: U256,
+    mut refundAddress: Address
+) extends TokenBridgeGovernance(governance, localChainId, receivedSequence, sendSequence, tokenBridgeFactory, minimalConsistencyLevel, refundAddress) {
     @using(preapprovedAssets = true)
     pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)

@@ -12,17 +12,17 @@ import {
 describe('test sequence', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')
   const allExecuted = (BigInt(1) << BigInt(256)) - 1n
-  const refundAddress = randomAssetAddress()
+  const caller = randomAssetAddress()
   const inputAsset: InputAsset[] = [
     {
-      address: refundAddress,
+      address: caller,
       asset: { alphAmount: oneAlph }
     }
   ]
 
   it('should execute correctly', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(0, 0n, 0n, refundAddress)
+    const sequenceInfo = createSequence(0, 0n, 0n)
     const sequence = sequenceInfo.contract
     for (let seq = 0; seq < 256; seq++) {
       const testResult = await sequence.testPublicMethod('check', {
@@ -59,7 +59,7 @@ describe('test sequence', () => {
 
   it('should increase executed sequence', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(512, allExecuted, allExecuted, refundAddress)
+    const sequenceInfo = createSequence(512, allExecuted, allExecuted)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
@@ -77,7 +77,7 @@ describe('test sequence', () => {
 
   it('should check sequence failed and create unexecuted sequence subcontract', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(0, 1n, 1n, refundAddress)
+    const sequenceInfo = createSequence(0, 1n, 1n)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
@@ -108,7 +108,7 @@ describe('test sequence', () => {
   it('should failed when executed repeatedly', async () => {
     await buildProject()
     const unexecutedSequenceTemplateId = randomContractId()
-    const sequenceInfo = createSequence(0, allExecuted, 0n, refundAddress)
+    const sequenceInfo = createSequence(0, allExecuted, 0n)
     const sequence = sequenceInfo.contract
     for (let seq = 0; seq < 256; seq++) {
       await expectAssertionFailed(async () => {
@@ -129,8 +129,7 @@ describe('test sequence', () => {
             start: 0,
             firstNext256: 0,
             secondNext256: allExecuted,
-            unexecutedSequenceTemplateId: unexecutedSequenceTemplateId,
-            refundAddress: refundAddress
+            unexecutedSequenceTemplateId: unexecutedSequenceTemplateId
           },
           address: sequenceInfo.address,
           testArgs: { seq: seq },
@@ -145,7 +144,7 @@ describe('test sequence', () => {
     await buildProject()
     const start = 256
     const firstNext256 = BigInt(0xff) << 248n
-    const sequenceInfo = createSequence(start, firstNext256, 0n, refundAddress)
+    const sequenceInfo = createSequence(start, firstNext256, 0n)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
@@ -173,7 +172,7 @@ describe('test sequence', () => {
   it('should mark old sequence as done', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 0xffn
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
@@ -200,7 +199,7 @@ describe('test sequence', () => {
   it('should failed if old sequences executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 1n
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
@@ -222,7 +221,7 @@ describe('test sequence', () => {
   it('should destroy sub contract if all old sequence executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 1n
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
@@ -246,33 +245,5 @@ describe('test sequence', () => {
     expect(destroyEvent.fields['address']).toEqual(unexecutedSequenceInfo.address)
     const assetOutput = testResult.txOutputs[1]
     expect(assetOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
-  })
-
-  it('should test deposit/withdraw', async () => {
-    await buildProject()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress)
-    const sequence = sequenceInfo.contract
-    const testResult0 = await sequence.testPublicMethod('deposit', {
-      initialFields: sequenceInfo.selfState.fields,
-      initialAsset: { alphAmount: oneAlph },
-      address: sequenceInfo.address,
-      testArgs: {
-        from: refundAddress,
-        alphAmount: 3n * oneAlph
-      },
-      inputAssets: [{ address: refundAddress, asset: { alphAmount: 4n * oneAlph } }]
-    })
-    expect(testResult0.contracts[0].asset).toEqual({ alphAmount: 4n * oneAlph, tokens: [] })
-    expect(testResult0.txOutputs[1].alphAmount).toEqual(oneAlph - defaultGasFee)
-
-    const testResult1 = await sequence.testPublicMethod('withdraw', {
-      initialFields: sequenceInfo.selfState.fields,
-      initialAsset: { alphAmount: 4n * oneAlph },
-      address: sequenceInfo.address,
-      testArgs: { alphAmount: 3n * oneAlph },
-      inputAssets: inputAsset
-    })
-    expect(testResult1.contracts[0].asset).toEqual({ alphAmount: oneAlph, tokens: [] })
-    expect(testResult1.txOutputs[0].alphAmount).toEqual(4n * oneAlph - defaultGasFee)
   })
 })

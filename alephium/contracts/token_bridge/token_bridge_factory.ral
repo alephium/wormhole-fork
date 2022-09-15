@@ -4,8 +4,7 @@ Contract TokenBridgeFactory(
   remoteTokenPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
   tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
   attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
-  unexecutedSequenceTemplateId: ByteVec,   // used to create contract by copyCreateContract
-  refundAddress: Address
+  unexecutedSequenceTemplateId: ByteVec    // used to create contract by copyCreateContract
 ) {
   @using(readonly = true, externalCallCheck = false)
   pub fn getWrappedAlphPoolTemplateId() -> ByteVec {
@@ -35,10 +34,5 @@ Contract TokenBridgeFactory(
   @using(readonly = true, externalCallCheck = false)
   pub fn getUnexecutedSequenceTemplateId() -> ByteVec {
     return unexecutedSequenceTemplateId
-  }
-
-  @using(readonly = true, externalCallCheck = false)
-  pub fn getRefundAddress() -> Address {
-    return refundAddress
   }
 }
