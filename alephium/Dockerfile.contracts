@@ -9,11 +9,8 @@ WORKDIR /alephium
 
 COPY ./package.json ./package-lock.json ./tsconfig.json /alephium
 COPY ./contracts /alephium/contracts
-COPY ./configuration.ts /alephium/configuration.ts
-COPY ./deploy.ts /alephium/deploy.ts
+COPY ./configuration.ts ./commands.ts ./deploy.sh ./.env /alephium
 COPY ./lib /alephium/lib
 COPY ./scripts /alephium/scripts
-COPY ./deploy.sh /alephium
-COPY .env /alephium
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
     npm ci

@@ -11,4 +11,5 @@ const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void
 }
 
 deployTestToken.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
+
 export default deployTestToken

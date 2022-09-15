@@ -16,16 +16,18 @@ import { waitTxConfirmed } from './utils'
 import fs, { promises as fsPromises } from 'fs'
 import * as cryptojs from 'crypto-js'
 
-export interface Network {
+export interface Network<Settings = unknown> {
+  networkId: number
   nodeUrl: string
   mnemonic: string
   deploymentFile: string
   confirmations: number
+  settings: Settings
 }
 
 export type NetworkType = 'mainnet' | 'testnet' | 'devnet'
 
-export interface Configuration {
+export interface Configuration<Settings = unknown> {
   sourcePath?: string
   artifactPath?: string
 
@@ -33,7 +35,7 @@ export interface Configuration {
   compilerOptions: CompilerOptions
 
   defaultNetwork: NetworkType
-  networks: Record<NetworkType, Network>
+  networks: Record<NetworkType, Network<Settings>>
 }
 
 type DeployContractParams = Omit<BuildDeployContractTx, 'signerAddress'>
@@ -104,16 +106,16 @@ export interface Deployer {
   provider: NodeProvider
   account: Account
 
-  deployContract(contract: Contract, params: DeployContractParams): Promise<DeployContractResult>
-  runScript(script: Script, params: RunScriptParams, taskName?: string): Promise<RunScriptResult>
+  deployContract(contract: Contract, params: DeployContractParams, taskTag?: string): Promise<DeployContractResult>
+  runScript(script: Script, params: RunScriptParams, taskTag?: string): Promise<RunScriptResult>
 
   getDeployContractResult(name: string): DeployContractResult
   getRunScriptResult(name: string): RunScriptResult
 }
 
-export interface DeployFunction {
-  (deployer: Deployer, config: Configuration): Promise<void | boolean>
-  skip?: (config: Configuration) => Promise<boolean>
+export interface DeployFunction<Settings = unknown> {
+  (deployer: Deployer, network: Network<Settings>): Promise<void | boolean>
+  skip?: (config: Configuration<Settings>) => Promise<boolean>
   id?: string
 }
 
@@ -189,8 +191,12 @@ function getTokenRecord(tokens: Token[]): Record<string, string> {
   }, {})
 }
 
-async function createDeployer(
-  network: Network,
+function getTaskId(code: Contract | Script, taskTag?: string): string {
+  return taskTag ? `${code.name}:${taskTag}` : code.name
+}
+
+async function createDeployer<Settings = unknown>(
+  network: Network<Settings>,
   deployContractResults: Map<string, DeployContractResult>,
   runScriptResults: Map<string, RunScriptResult>
 ): Promise<Deployer> {
@@ -198,11 +204,16 @@ async function createDeployer(
   const accounts = await signer.getAccounts()
   const account = accounts[0]
 
-  const deployContract = async (contract: Contract, params: DeployContractParams): Promise<DeployContractResult> => {
+  const deployContract = async (
+    contract: Contract,
+    params: DeployContractParams,
+    taskTag?: string
+  ): Promise<DeployContractResult> => {
     // TODO: improve this after migrating to SDK
     const bytecode = contract.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
     const codeHash = cryptojs.SHA256(bytecode).toString()
-    const previous = deployContractResults.get(contract.name)
+    const taskId = getTaskId(contract, taskTag)
+    const previous = deployContractResults.get(taskId)
     const tokens = params.initialTokenAmounts ? getTokenRecord(params.initialTokenAmounts) : undefined
     const issueTokenAmount: string | undefined = params.issueTokenAmount?.toString()
     const needToDeploy = await needToDeployContract(
@@ -215,10 +226,10 @@ async function createDeployer(
     )
     if (!needToDeploy) {
       // we have checked in `needToDeployContract`
-      console.log(`The deployment of contract ${contract.name} is skipped as it has been deployed`)
+      console.log(`The deployment of contract ${taskId} is skipped as it has been deployed`)
       return previous!
     }
-    console.log(`Deploying contract ${contract.name}...`)
+    console.log(`Deploying contract ${taskId}...`)
     const result = await contract.transactionForDeployment(signer, params)
     await signer.submitTransaction(result.unsignedTx)
     const confirmed = await waitTxConfirmed(signer.provider, result.txId, network.confirmations)
@@ -234,14 +245,14 @@ async function createDeployer(
       tokens: tokens,
       issueTokenAmount: issueTokenAmount
     }
-    deployContractResults.set(contract.name, deployContractResult)
+    deployContractResults.set(taskId, deployContractResult)
     return deployContractResult
   }
 
   const runScript = async (script: Script, params: RunScriptParams, taskTag?: string): Promise<RunScriptResult> => {
     const bytecode = script.buildByteCodeToDeploy(params.initialFields ? params.initialFields : {})
     const codeHash = cryptojs.SHA256(bytecode).toString()
-    const taskId = taskTag ? `${script.name} -> ${taskTag}` : script.name
+    const taskId = getTaskId(script, taskTag)
     const previous = runScriptResults.get(taskId)
     const tokens = params.tokens ? getTokenRecord(params.tokens) : undefined
     const needToRun = await needToRunScript(
@@ -323,13 +334,13 @@ async function getDeployScriptFiles(rootPath: string): Promise<string[]> {
   scripts.sort((a, b) => a.order - b.order)
   for (let i = 0; i < scripts.length; i++) {
     if (scripts[i].order !== i) {
-      throw new Error('Script shoud start with prefix 0, and increased one by one')
+      throw new Error('Script should begin with number prefix that consecutively starts from 0')
     }
   }
   return scripts.map((f) => path.join(rootPath, f.filename))
 }
 
-export async function deploy(configuration: Configuration, networkType: NetworkType) {
+export async function deploy<Settings = unknown>(configuration: Configuration<Settings>, networkType: NetworkType) {
   const network = configuration.networks[networkType]
   if (typeof network === 'undefined') {
     throw new Error(`no network ${networkType} config`)
@@ -337,16 +348,16 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
 
   const scriptsRootPath = configuration.deployScriptsPath ? configuration.deployScriptsPath : 'scripts'
   const scriptFiles = await getDeployScriptFiles(path.resolve(scriptsRootPath))
-  const funcs: { scriptFilePath: string; func: DeployFunction }[] = []
+  const scripts: { scriptFilePath: string; func: DeployFunction<Settings> }[] = []
   for (const scriptFilePath of scriptFiles) {
     try {
       /* eslint-disable @typescript-eslint/no-var-requires */
       const content = require(scriptFilePath)
       /* eslint-enable @typescript-eslint/no-var-requires */
       if (content.default) {
-        funcs.push({
+        scripts.push({
           scriptFilePath: scriptFilePath,
-          func: content.default as DeployFunction
+          func: content.default as DeployFunction<Settings>
         })
       } else {
         throw new Error(`no default deploy function exported from ${scriptFilePath}`)
@@ -367,11 +378,18 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
   }
 
   web3.setCurrentNodeProvider(network.nodeUrl)
+  const chainParams = await web3.getCurrentNodeProvider().infos.getInfosChainParams()
+  if (chainParams.networkId !== network.networkId) {
+    throw new Error(
+      `The node chain id ${chainParams.networkId} is different from configured chain id ${network.networkId}`
+    )
+  }
+
   const deployer = await createDeployer(network, deployContractResults, runScriptResults)
   await Project.build(configuration.compilerOptions, configuration.sourcePath, configuration.artifactPath)
   configuration.defaultNetwork = networkType
 
-  for (const script of funcs) {
+  for (const script of scripts) {
     try {
       if (script.func.id && migrations.get(script.func.id) !== undefined) {
         console.log(`Skipping ${script.scriptFilePath} as the script already executed and complete`)
@@ -385,7 +403,7 @@ export async function deploy(configuration: Configuration, networkType: NetworkT
         console.log(`Skip executing ${script.scriptFilePath}`)
         continue
       }
-      const result = await script.func(deployer, configuration)
+      const result = await script.func(deployer, network)
       if (result && typeof result === 'boolean') {
         if (script.func.id === undefined) {
           throw new Error(

@@ -1,12 +1,13 @@
 import { Project, Script } from '@alephium/web3'
-import { Deployer, DeployFunction } from '../lib/deployment'
+import { Deployer, DeployFunction, Network } from '../lib/deployment'
 import * as dotenv from 'dotenv'
+import { Settings } from '../configuration'
 
 dotenv.config({ path: __dirname + '/../../.env' })
 
 const oneAlph = BigInt('1000000000000000000')
 
-async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: string, vaa: string, taskName: string) {
+async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: string, vaa: string, taskTag: string) {
   const initialFields = {
     payer: deployer.account.address,
     tokenBridge: tokenBridge,
@@ -18,16 +19,19 @@ async function registerWithVAA(deployer: Deployer, script: Script, tokenBridge: 
     {
       initialFields: initialFields
     },
-    taskName
+    taskTag
   )
 }
 
-const registerChain: DeployFunction = async (deployer: Deployer): Promise<void> => {
+const registerChain: DeployFunction<Settings> = async (
+  deployer: Deployer,
+  network: Network<Settings>
+): Promise<void> => {
   const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractId
   const script = Project.script('RegisterChain')
-  const registerETHVAA = process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!
+  const registerETHVAA = network.settings.registerETHVAA
   await registerWithVAA(deployer, script, tokenBridgeId, registerETHVAA, 'ETH')
-  const registerBSCVAA = process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!
+  const registerBSCVAA = network.settings.registerBSCVAA
   await registerWithVAA(deployer, script, tokenBridgeId, registerBSCVAA, 'BSC')
 }
 
