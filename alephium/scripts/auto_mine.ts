@@ -25,6 +25,8 @@ async function mine(): Promise<void> {
     await mine()
   } catch (err) {
     console.error("Error while mining", err)
+    await new Promise(resolve => setTimeout(resolve, 15000))
+    await mine()
   }
 }
 
