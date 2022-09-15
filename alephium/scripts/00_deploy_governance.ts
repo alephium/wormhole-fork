@@ -1,10 +1,7 @@
 import { Project } from '@alephium/web3'
 import { Deployer, DeployFunction, Network } from '../lib/deployment'
 import { zeroPad } from '../lib/utils'
-import * as dotenv from 'dotenv'
 import { Settings } from '../configuration'
-
-dotenv.config({ path: __dirname + '/../.env' })
 
 const deployGovernance: DeployFunction<Settings> = async (
   deployer: Deployer,

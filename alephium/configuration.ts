@@ -1,4 +1,7 @@
 import { Configuration } from './lib/deployment'
+import * as dotenv from 'dotenv'
+
+dotenv.config({ path: __dirname + '/.env' })
 
 const settingsTemplate = {
   initSigners: JSON.parse(process.env.INIT_SIGNERS!) as string[],
