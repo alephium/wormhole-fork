@@ -106,7 +106,7 @@ data:
     alephium.consensus.uncle-dependency-gap-time = 0 seconds
 
     alephium.wallet.secret-dir = "/alephium-home/.alephium-wallet"
-    alephium.network.network-id = 2
+    alephium.network.network-id = 4
     alephium.discovery.bootstrap = []
     alephium.wallet.locking-timeout = 99999 minutes
     alephium.mempool.auto-mine-for-dev = true

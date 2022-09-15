@@ -1,6 +1,7 @@
 import { Project } from '@alephium/web3'
-import { Configuration, Deployer, DeployFunction, NetworkType } from '../lib/deployment'
+import { Configuration, Deployer, DeployFunction, Network, NetworkType } from '../lib/deployment'
 import * as dotenv from 'dotenv'
+import { Settings } from '../configuration'
 
 dotenv.config({ path: __dirname + '/../.env' })
 
@@ -8,20 +9,10 @@ interface NetworkConfigs {
   minimalConsistencyLevel: number
 }
 
-// TODO: update this once we release the SDK
-const networkConfigs: Record<NetworkType, NetworkConfigs> = {
-  mainnet: {
-    minimalConsistencyLevel: 105
-  },
-  testnet: {
-    minimalConsistencyLevel: 10
-  },
-  devnet: {
-    minimalConsistencyLevel: 10
-  }
-}
-
-const deployTokenBridge: DeployFunction = async (deployer: Deployer, config: Configuration): Promise<void> => {
+const deployTokenBridge: DeployFunction<Settings> = async (
+  deployer: Deployer,
+  network: Network<Settings>
+): Promise<void> => {
   const tokenBridge = Project.contract('TokenBridge')
   const tokenBridgeFactory = deployer.getDeployContractResult('TokenBridgeFactory')
   const governanceId = deployer.getDeployContractResult('Governance').contractId
@@ -29,11 +20,11 @@ const deployTokenBridge: DeployFunction = async (deployer: Deployer, config: Con
   const initialFields = {
     governance: governanceId,
     wrappedAlphId: wrappedAlphId,
-    localChainId: parseInt(process.env.INIT_CHAIN_ID!),
+    localChainId: network.settings.initChainId,
     receivedSequence: 0,
     sendSequence: 0,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
-    minimalConsistencyLevel: networkConfigs[config.defaultNetwork].minimalConsistencyLevel,
+    minimalConsistencyLevel: network.settings.minimalConsistencyLevel,
     refundAddress: deployer.account.address
   }
 
