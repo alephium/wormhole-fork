@@ -43,7 +43,7 @@ spec:
             - name: BLOCKFLOW_PORT
               value: "22973"
             - name: BLOCKFLOW_NETWORK_ID
-              value: "2"
+              value: "4"
             - name: DB_NAME
               value: "explorer"
             - name: DB_HOST
