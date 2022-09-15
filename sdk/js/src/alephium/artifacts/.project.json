@@ -153,7 +153,7 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_governance.ral": {
-      "sourceCodeHash": "f4b58020b607392930e7095dec4ff4c91a42f1511565268f211eb4b1e5bd21fa",
+      "sourceCodeHash": "62ca3af20b7c0621b640f2962283a12a6f97791900166f09dfddae82951bb189",
       "warnings": []
     },
     "contracts/token_bridge/token_pool.ral": {

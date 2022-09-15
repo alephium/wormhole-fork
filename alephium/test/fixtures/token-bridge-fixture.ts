@@ -123,10 +123,12 @@ export class UpdateRefundAddress {
   }
 
   encode(): Uint8Array {
-    const buffer = Buffer.allocUnsafe(33 + 33)
+    const addressSize = this.newRefundAddressHex.length / 2
+    const buffer = Buffer.allocUnsafe(33 + 2 + addressSize)
     buffer.write(tokenBridgeModule, 0, 'hex')
     buffer.writeUint8(242, 32) // actionId, #f2
-    buffer.write(this.newRefundAddressHex, 33, 'hex')
+    buffer.writeUint16BE(addressSize, 33)
+    buffer.write(this.newRefundAddressHex, 35, 'hex')
     return buffer
   }
 }

@@ -10,7 +10,8 @@ import {
   binToHex,
   addressFromContractId,
   Project,
-  web3
+  web3,
+  encodeI256
 } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import { governanceChainId, governanceEmitterAddress, initGuardianSet, messageFee } from './fixtures/governance-fixture'
@@ -69,6 +70,26 @@ describe('test token bridge', () => {
 
   function randomByte32Hex(): string {
     return binToHex(randomBytes(32))
+  }
+
+  function randomP2PKHAddressHex(): string {
+    return '00' + randomByte32Hex()
+  }
+
+  function randomP2MPKHAddressHex(m: number, n: number): string {
+    let hex: string = '01' + binToHex(encodeI256(BigInt(n)))
+    for (let i = 0; i < n; i += 1) {
+      hex += randomByte32Hex()
+    }
+    return hex + binToHex(encodeI256(BigInt(m)))
+  }
+
+  function randomP2SHAddressHex(): string {
+    return '02' + randomByte32Hex()
+  }
+
+  function randomP2CAddressHex(): string {
+    return '03' + randomByte32Hex()
   }
 
   function checkTxCallerBalance(output: Output, spent: bigint, tokens: Token[] = []) {
@@ -1268,6 +1289,8 @@ describe('test token bridge', () => {
     const fixture = newTokenBridgeFixture()
 
     async function updateRefundAddress(targetChainId: number, newRefundAddressHex: string) {
+      const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
+      expect(fixture.tokenBridgeInfo.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
       const updateRefundAddress = new UpdateRefundAddress(newRefundAddressHex)
       const vaaBody = new VAABody(
         updateRefundAddress.encode(),
@@ -1278,29 +1301,24 @@ describe('test token bridge', () => {
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       const tokenBridge = fixture.tokenBridgeInfo.contract
-      return tokenBridge.testPublicMethod('updateRefundAddress', {
+      const result = await tokenBridge.testPublicMethod('updateRefundAddress', {
         address: fixture.tokenBridgeInfo.address,
         initialFields: fixture.tokenBridgeInfo.selfState.fields,
         testArgs: { vaa: binToHex(vaa.encode()) },
         initialAsset: { alphAmount: oneAlph },
         existingContracts: fixture.tokenBridgeInfo.dependencies
       })
+      const tokenBridgeState = result.contracts.find((c) => c.address === fixture.tokenBridgeInfo.address)!
+      expect(tokenBridgeState.fields['refundAddress']).toEqual(newRefundAddress)
     }
 
-    const newRefundAddressHex = '00' + randomByte32Hex()
-    const newRefundAddress = base58.encode(Buffer.from(newRefundAddressHex, 'hex'))
-    expect(fixture.tokenBridgeInfo.selfState.fields['refundAddress']).not.toEqual(newRefundAddress)
-    const result = await updateRefundAddress(CHAIN_ID_ALEPHIUM, newRefundAddressHex)
-    const tokenBridgeState = result.contracts.find((c) => c.address === fixture.tokenBridgeInfo.address)!
-    expect(tokenBridgeState.fields['refundAddress']).toEqual(newRefundAddress)
+    const p2pkhAddressHex = randomP2PKHAddressHex()
+    await updateRefundAddress(CHAIN_ID_ALEPHIUM, p2pkhAddressHex)
+    await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM + 1, p2pkhAddressHex)) // invalid chain id
 
-    await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM + 1, newRefundAddressHex))
-
-    const invalidPrefix: string[] = ['01', '02', '03']
-    for (const prefix of invalidPrefix) {
-      const invalidRefundAddress = prefix + randomByte32Hex()
-      await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM, invalidRefundAddress))
-    }
+    await updateRefundAddress(CHAIN_ID_ALEPHIUM, randomP2MPKHAddressHex(3, 5))
+    await updateRefundAddress(CHAIN_ID_ALEPHIUM, randomP2SHAddressHex())
+    await expectAssertionFailed(async () => updateRefundAddress(CHAIN_ID_ALEPHIUM, randomP2CAddressHex())) // p2c address
   })
 
   it('should test deposit/withdraw', async () => {

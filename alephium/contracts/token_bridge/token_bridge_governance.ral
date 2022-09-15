@@ -125,11 +125,11 @@ Abstract Contract TokenBridgeGovernance(
     pub fn updateRefundAddress(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-        let addressBytes = byteVecSlice!(payload, 33, 66)
-        // only support P2PKH address
-        assert!(byteVecSlice!(addressBytes, 0, 1) == #00, ErrorCodes.InvalidUpdateRefundAddressMessage)
-        let newRefundAddress = byteVecToAddress!(addressBytes)
-        assert!(size!(payload) == 66, ErrorCodes.InvalidMessageSize)
+        let addressSize = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        let payloadSize = 35 + addressSize
+        assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
+        let newRefundAddress = byteVecToAddress!(byteVecSlice!(payload, 35, payloadSize))
+        assert!(isAssetAddress!(newRefundAddress), ErrorCodes.InvalidUpdateRefundAddressMessage)
         refundAddress = newRefundAddress
     }
 }
