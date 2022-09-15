@@ -17,7 +17,7 @@ func requestWithMetric[T any](req Request[T], timestamp *time.Time, label string
 	result, response, err := req.Execute()
 	queryLatency.WithLabelValues(label).Observe(time.Since(*timestamp).Seconds())
 	if err != nil {
-		alphRequestErrors.WithLabelValues(label).Inc()
+		alphConnectionErrors.WithLabelValues(label).Inc()
 	}
 	return result, response, err
 }

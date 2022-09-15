@@ -19,10 +19,10 @@ import (
 )
 
 var (
-	alphRequestErrors = promauto.NewCounterVec(
+	alphConnectionErrors = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "wormhole_alph_request_errors_total",
-			Help: "Total number of Alephium request errors",
+			Name: "wormhole_alph_connection_errors_total",
+			Help: "Total number of Alephium connection errors",
 		}, []string{"operation"})
 	alphMessagesObserved = promauto.NewCounter(
 		prometheus.CounterOpts{
