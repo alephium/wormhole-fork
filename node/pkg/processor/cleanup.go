@@ -65,13 +65,11 @@ func (p *Processor) handleCleanup(ctx context.Context) {
 	for hash, s := range p.state.vaaSignatures {
 		delta := time.Since(s.firstObserved)
 
-		switch {
-		case !s.submitted && s.ourVAA != nil && delta > settlementTime:
+		if !s.submitted && s.ourVAA != nil && delta > settlementTime {
 			// Expire pending VAAs post settlement time if we have a stored quorum VAA.
 			//
 			// This occurs when we observed a message after the cluster has already reached
 			// consensus on it, causing us to never achieve quorum.
-
 			if _, err := p.db.GetSignedVAABytes(*db.VaaIDFromVAA(s.ourVAA)); err == nil {
 				// If we have a stored quorum VAA, we can safely expire the state.
 				//
@@ -80,15 +78,16 @@ func (p *Processor) handleCleanup(ctx context.Context) {
 				p.logger.Info("Expiring late VAA", zap.String("digest", hash), zap.Duration("delta", delta))
 				aggregationStateLate.Inc()
 				delete(p.state.vaaSignatures, hash)
-				break
+				continue
 			} else if err != db.ErrVAANotFound {
 				p.logger.Error("failed to look up VAA in database",
 					zap.String("digest", hash),
 					zap.Error(err),
 				)
 			}
+		}
 
-			fallthrough
+		switch {
 		case !s.settled && delta > settlementTime:
 			// After 30 seconds, the VAA is considered settled - it's unlikely that more observations will
 			// arrive, barring special circumstances. This is a better time to count misses than submission,
