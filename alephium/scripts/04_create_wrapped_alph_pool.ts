@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction } from '../lib/deployment'
+import { Deployer, DeployFunction } from 'alph-cli/types'
 
 const oneAlph = BigInt('1000000000000000000')
 

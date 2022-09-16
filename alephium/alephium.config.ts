@@ -1,7 +1,8 @@
-import { Configuration } from './lib/deployment'
+import { Configuration } from 'alph-cli/types'
+import path from 'path'
 import * as dotenv from 'dotenv'
 
-dotenv.config({ path: __dirname + '/.env' })
+dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 const settingsTemplate = {
   initSigners: JSON.parse(process.env.INIT_SIGNERS!) as string[],

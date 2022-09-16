@@ -1,9 +1,10 @@
 import { Project, Script } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '../lib/deployment'
+import { Deployer, DeployFunction, Network } from 'alph-cli/types'
+import path from 'path'
 import * as dotenv from 'dotenv'
-import { Settings } from '../configuration'
+import { Settings } from '../alephium.config'
 
-dotenv.config({ path: __dirname + '/../../.env' })
+dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 const oneAlph = BigInt('1000000000000000000')
 

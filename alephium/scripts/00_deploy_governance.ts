@@ -1,7 +1,7 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '../lib/deployment'
+import { Deployer, DeployFunction, Network } from 'alph-cli/types'
 import { zeroPad } from '../lib/utils'
-import { Settings } from '../configuration'
+import { Settings } from '../alephium.config'
 
 const deployGovernance: DeployFunction<Settings> = async (
   deployer: Deployer,
