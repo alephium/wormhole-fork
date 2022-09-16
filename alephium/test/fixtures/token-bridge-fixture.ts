@@ -115,6 +115,24 @@ export class DestroyUnexecutedSequenceContracts {
   }
 }
 
+export class UpdateRefundAddress {
+  newRefundAddressHex: string
+
+  constructor(newRefundAddressHex: string) {
+    this.newRefundAddressHex = newRefundAddressHex
+  }
+
+  encode(): Uint8Array {
+    const addressSize = this.newRefundAddressHex.length / 2
+    const buffer = Buffer.allocUnsafe(33 + 2 + addressSize)
+    buffer.write(tokenBridgeModule, 0, 'hex')
+    buffer.writeUint8(242, 32) // actionId, #f2
+    buffer.writeUint16BE(addressSize, 33)
+    buffer.write(this.newRefundAddressHex, 35, 'hex')
+    return buffer
+  }
+}
+
 export class Transfer {
   amount: bigint
   tokenId: string
@@ -202,7 +220,7 @@ function createTemplateContracts(): TemplateContracts {
   const remoteTokenPool = createRemoteTokenPoolTemplate()
   const attestTokenHandler = createAttestTokenHandlerTemplate()
   const tokenBridgeForChain = createTokenBridgeForChainTemplate()
-  const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0, 0n, randomAssetAddress())
+  const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0, 0n)
   return {
     wrappedAlphPoolTemplate: wrappedAlphPool,
     localTokenPoolTemplate: localTokenPool,
@@ -283,7 +301,8 @@ function createRemoteTokenPoolTemplate(): ContractInfo {
     totalBridged: 0,
     symbol_: '',
     name_: '',
-    decimals_: 0
+    decimals_: 0,
+    sequence_: 0
   })
 }
 
@@ -308,7 +327,6 @@ function createTokenBridgeForChainTemplate(): ContractInfo {
     firstNext256: 0,
     secondNext256: 0,
     unexecutedSequenceTemplateId: '',
-    refundAddress: randomAssetAddress(),
     sendSequence: 0
   })
 }
@@ -321,8 +339,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
     remoteTokenPoolTemplateId: templateContracts.remoteTokenPoolTemplate.contractId,
     tokenBridgeForChainTemplateId: templateContracts.tokenBridgeForChainTemplate.contractId,
     attestTokenHandlerTemplateId: templateContracts.attestTokenHandlerTemplate.contractId,
-    unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId,
-    refundAddress: randomAssetAddress()
+    unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId
   }
   const address = randomContractAddress()
   const state = tokenBridgeFactory.toState(initFields, initAsset, address)
@@ -344,7 +361,8 @@ export function createTokenBridge(totalWrappedAlph = 0n, address?: string): Toke
     sendSequence: 0,
     wrappedAlphId: wrappedAlph.contractId,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
-    minimalConsistencyLevel: minimalConsistencyLevel
+    minimalConsistencyLevel: minimalConsistencyLevel,
+    refundAddress: randomAssetAddress()
   }
   const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
   const deps = Array.prototype.concat(governance.states(), wrappedAlph.states(), tokenBridgeFactory.states())
@@ -419,7 +437,6 @@ export function createTokenBridgeForChain(
     firstNext256: 0,
     secondNext256: 0,
     unexecutedSequenceTemplateId: templateContracts.unexecutedSequenceTemplate.contractId,
-    refundAddress: randomAssetAddress(),
     sendSequence: 0
   }
   const contractAsset: Asset = { alphAmount: alph(2) }
@@ -550,6 +567,7 @@ export function newRemoteTokenPoolFixture(
   symbol: string,
   name: string,
   decimals: number,
+  sequence: number,
   address?: string,
   totalBridged: bigint = alph(10)
 ): RemoteTokenPoolTestFixture {
@@ -578,7 +596,8 @@ export function newRemoteTokenPoolFixture(
       totalBridged: totalBridged,
       symbol_: symbol,
       name_: name,
-      decimals_: decimals
+      decimals_: decimals,
+      sequence_: sequence
     },
     tokenBridgeForChainInfo.states(),
     asset,

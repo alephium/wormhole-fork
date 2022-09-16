@@ -1,6 +1,7 @@
 import { Script } from '@alephium/web3'
 import { default as createLocalTokenPool } from './artifacts/token_bridge_scripts/create_local_token_pool.ral.json'
 import { default as createRemoteTokenPool } from './artifacts/token_bridge_scripts/create_remote_token_pool.ral.json'
+import { default as updateRemoteTokenPool } from './artifacts/token_bridge_scripts/update_remote_token_pool.ral.json'
 import { default as createWrappedAlphPool } from './artifacts/token_bridge_scripts/create_wrapped_alph_pool.ral.json'
 import { default as transferAlph } from './artifacts/token_bridge_scripts/transfer_alph.ral.json'
 import { default as transferLocalToken } from './artifacts/token_bridge_scripts/transfer_local.ral.json'
@@ -9,6 +10,7 @@ import { default as completeTransfer } from './artifacts/token_bridge_scripts/co
 import { default as attestToken } from './artifacts/token_bridge_scripts/attest_token.ral.json'
 import { default as attestWrappedAlph } from './artifacts/token_bridge_scripts/attest_wrapped_alph.ral.json'
 import { default as destroyUnexecutedSequences } from './artifacts/token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral.json'
+import { default as updateRefundAddress } from './artifacts/token_bridge_scripts/update_refund_address.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -16,6 +18,10 @@ export function createLocalTokenPoolScript(): Script {
 
 export function createRemoteTokenPoolScript(): Script {
     return Script.fromJson(createRemoteTokenPool)
+}
+
+export function updateRemoteTokenPoolScript(): Script {
+    return Script.fromJson(updateRemoteTokenPool)
 }
 
 export function createWrappedAlphPoolScript(): Script {
@@ -48,4 +54,8 @@ export function attestWrappedAlphScript(): Script {
 
 export function destroyUnexecutedSequencesScript(): Script {
     return Script.fromJson(destroyUnexecutedSequences)
+}
+
+export function updateRefundAddressScript(): Script {
+    return Script.fromJson(updateRefundAddress)
 }

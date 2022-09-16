@@ -38,6 +38,20 @@ export interface Configuration<Settings = unknown> {
   networks: Record<NetworkType, Network<Settings>>
 }
 
+export async function loadConfig(filename: string): Promise<Configuration> {
+  const configPath = path.resolve(filename)
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`${configPath} does not exist`)
+  }
+  /* eslint-disable @typescript-eslint/no-var-requires */
+  const content = require(path.resolve(configPath))
+  /* eslint-enable @typescript-eslint/no-var-requires */
+  if (!content.default) {
+    throw new Error(`config file ${filename} have no default export`)
+  }
+  return content.default as Configuration
+}
+
 type DeployContractParams = Omit<BuildDeployContractTx, 'signerAddress'>
 
 export interface ExecutionResult {

@@ -1,8 +1,5 @@
-import { addressFromContractId, Fields, Project } from '@alephium/web3'
+import { Fields, Project } from '@alephium/web3'
 import { Deployer, DeployFunction } from '../lib/deployment'
-
-const Byte32Zero = '0'.repeat(64)
-const DummyRefundAddress = addressFromContractId(Byte32Zero)
 
 async function deployTemplateContract(deployer: Deployer, name: string, initialFields: Fields): Promise<string> {
   const contract = Project.contract(name)
@@ -34,7 +31,8 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     totalBridged: 0,
     symbol_: '',
     name_: '',
-    decimals_: 0
+    decimals_: 0,
+    sequence_: 0
   })
   const tokenBridgeForChainId = await deployTemplateContract(deployer, 'TokenBridgeForChain', {
     governance: '',
@@ -46,7 +44,6 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     firstNext256: 0,
     secondNext256: 0,
     unexecutedSequenceTemplateId: '',
-    refundAddress: DummyRefundAddress,
     sendSequence: 0
   })
   const attestTokenHandlerId = await deployTemplateContract(deployer, 'AttestTokenHandler', {
@@ -59,8 +56,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
   const unexecutedSequenceId = await deployTemplateContract(deployer, 'UnexecutedSequence', {
     parentId: '',
     begin: 0,
-    sequences: 0n,
-    refundAddress: DummyRefundAddress
+    sequences: 0n
   })
   const tokenBridgeFactory = Project.contract('TokenBridgeFactory')
   const initialFields = {
@@ -69,8 +65,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     remoteTokenPoolTemplateId: remoteTokenPoolId,
     tokenBridgeForChainTemplateId: tokenBridgeForChainId,
     attestTokenHandlerTemplateId: attestTokenHandlerId,
-    unexecutedSequenceTemplateId: unexecutedSequenceId,
-    refundAddress: deployer.account.address
+    unexecutedSequenceTemplateId: unexecutedSequenceId
   }
   await deployer.deployContract(tokenBridgeFactory, {
     initialFields: initialFields

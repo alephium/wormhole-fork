@@ -1,0 +1,6 @@
+TxScript UpdateRemoteTokenPool(
+  attestTokenHandler: AttestTokenHandler,
+  vaa: ByteVec
+) {
+  attestTokenHandler.updateRemoteTokenPool(vaa)
+}

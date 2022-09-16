@@ -351,6 +351,21 @@ contract("Bridge", function () {
             // name
             "5472656500000000000000000000000000000000000000000000000000000000";
 
+        async function updateWrappedError(vm, expectedError) {
+            let failed = false;
+            try {
+                await initialized.methods.updateWrapped("0x" + vm).send({
+                    value: 0,
+                    from: accounts[0],
+                    gasLimit: 2000000
+                });
+            } catch (error) {
+                assert.equal(error.message, `Returned error: VM Exception while processing transaction: ${expectedError}`)
+                failed = true
+            }
+            assert.ok(failed)
+        }
+
         let vm = await signAndEncodeVM(
             0,
             0,
@@ -365,19 +380,23 @@ contract("Bridge", function () {
             0,
             0
         );
+        await updateWrappedError(vm, "revert current metadata is up to date")
 
-        let failed = false;
-        try {
-            await initialized.methods.updateWrapped("0x" + vm).send({
-                value: 0,
-                from: accounts[0],
-                gasLimit: 2000000
-            });
-        } catch (error) {
-            assert.equal(error.message, "Returned error: VM Exception while processing transaction: revert current metadata is up to date")
-            failed = true
-        }
-        assert.ok(failed)
+        vm = await signAndEncodeVM(
+            0,
+            0,
+            testForeignChainId,
+            2,
+            testForeignBridgeContract,
+            1,
+            data,
+            [
+                testSigner1PK
+            ],
+            0,
+            0
+        )
+        await updateWrappedError(vm, "revert invalid target chain")
 
         vm = await signAndEncodeVM(
             0,

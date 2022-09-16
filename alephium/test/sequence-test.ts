@@ -1,4 +1,4 @@
-import { addressFromContractId, web3, subContractId } from '@alephium/web3'
+import { addressFromContractId, web3, subContractId, InputAsset } from '@alephium/web3'
 import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
 import {
   buildProject,
@@ -12,18 +12,24 @@ import {
 describe('test sequence', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')
   const allExecuted = (BigInt(1) << BigInt(256)) - 1n
-  const refundAddress = randomAssetAddress()
+  const caller = randomAssetAddress()
+  const inputAsset: InputAsset[] = [
+    {
+      address: caller,
+      asset: { alphAmount: oneAlph }
+    }
+  ]
 
   it('should execute correctly', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(0, 0n, 0n, refundAddress)
+    const sequenceInfo = createSequence(0, 0n, 0n)
     const sequence = sequenceInfo.contract
     for (let seq = 0; seq < 256; seq++) {
       const testResult = await sequence.testPublicMethod('check', {
         initialFields: sequenceInfo.selfState.fields,
         address: sequenceInfo.address,
         testArgs: { seq: seq },
-        inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+        inputAssets: inputAsset
       })
       expect(testResult.returns).toEqual([true])
       expect(testResult.contracts.length).toEqual(1)
@@ -39,7 +45,7 @@ describe('test sequence', () => {
         initialFields: sequenceInfo.selfState.fields,
         address: sequenceInfo.address,
         testArgs: { seq: seq },
-        inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+        inputAssets: inputAsset
       })
       expect(testResult.returns).toEqual([true])
       expect(testResult.contracts.length).toEqual(1)
@@ -53,13 +59,13 @@ describe('test sequence', () => {
 
   it('should increase executed sequence', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(512, allExecuted, allExecuted, refundAddress)
+    const sequenceInfo = createSequence(512, allExecuted, allExecuted)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
       address: sequenceInfo.address,
       testArgs: { seq: 1025 },
-      inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+      inputAssets: inputAsset
     })
     expect(testResult.returns).toEqual([true])
     expect(testResult.contracts.length).toEqual(1)
@@ -71,14 +77,14 @@ describe('test sequence', () => {
 
   it('should check sequence failed and create unexecuted sequence subcontract', async () => {
     await buildProject()
-    const sequenceInfo = createSequence(0, 1n, 1n, refundAddress)
+    const sequenceInfo = createSequence(0, 1n, 1n)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
       initialAsset: { alphAmount: oneAlph * 2n },
       address: sequenceInfo.address,
       testArgs: { seq: 768 },
-      inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }],
+      inputAssets: inputAsset,
       existingContracts: sequenceInfo.dependencies
     })
     expect(testResult.returns).toEqual([false])
@@ -102,7 +108,7 @@ describe('test sequence', () => {
   it('should failed when executed repeatedly', async () => {
     await buildProject()
     const unexecutedSequenceTemplateId = randomContractId()
-    const sequenceInfo = createSequence(0, allExecuted, 0n, refundAddress)
+    const sequenceInfo = createSequence(0, allExecuted, 0n)
     const sequence = sequenceInfo.contract
     for (let seq = 0; seq < 256; seq++) {
       await expectAssertionFailed(async () => {
@@ -111,7 +117,7 @@ describe('test sequence', () => {
           address: sequenceInfo.address,
           testArgs: { seq: seq },
           existingContracts: sequenceInfo.dependencies,
-          inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+          inputAssets: inputAsset
         })
       })
     }
@@ -123,13 +129,12 @@ describe('test sequence', () => {
             start: 0,
             firstNext256: 0,
             secondNext256: allExecuted,
-            unexecutedSequenceTemplateId: unexecutedSequenceTemplateId,
-            refundAddress: refundAddress
+            unexecutedSequenceTemplateId: unexecutedSequenceTemplateId
           },
           address: sequenceInfo.address,
           testArgs: { seq: seq },
           existingContracts: sequenceInfo.dependencies,
-          inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+          inputAssets: inputAsset
         })
       })
     }
@@ -139,41 +144,38 @@ describe('test sequence', () => {
     await buildProject()
     const start = 256
     const firstNext256 = BigInt(0xff) << 248n
-    const sequenceInfo = createSequence(start, firstNext256, 0n, refundAddress)
+    const sequenceInfo = createSequence(start, firstNext256, 0n)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
-      initialAsset: { alphAmount: oneAlph * 10n },
+      initialAsset: { alphAmount: oneAlph * 2n },
       address: sequenceInfo.address,
       testArgs: { seq: start + 513 },
       existingContracts: sequenceInfo.dependencies,
-      inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+      inputAssets: inputAsset
     })
     expect(testResult.returns).toEqual([true])
+    const sequenceContractState = testResult.contracts[2]
+    expect(sequenceContractState.fields['start']).toEqual(start + 256)
+    expect(sequenceContractState.fields['firstNext256']).toEqual(0)
+    expect(sequenceContractState.fields['secondNext256']).toEqual(2)
+    expect(sequenceContractState.asset).toEqual({ alphAmount: oneAlph, tokens: [] })
+
     const subContractOutput = testResult.contracts[0]
     expect(subContractOutput.fields['begin']).toEqual(256)
     expect(subContractOutput.fields['sequences']).toEqual(firstNext256)
     const expectedContractId = subContractId(sequenceInfo.contractId, '0000000000000001')
     expect(subContractOutput.contractId).toEqual(expectedContractId)
-    expect(testResult.contracts[2].fields['start']).toEqual(start + 256)
-    expect(testResult.contracts[2].fields['firstNext256']).toEqual(0)
-    expect(testResult.contracts[2].fields['secondNext256']).toEqual(2)
     expect(testResult.events.length).toEqual(1)
   })
 
   it('should mark old sequence as done', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 0xffn
-    const unexecutedSequenceInfo = createUnexecutedSequence(
-      parentId,
-      256,
-      sequences,
-      refundAddress,
-      unexecutedSequenceContractId
-    )
+    const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract
     for (let seq = 0; seq < 8; seq++) {
       const testResult = await sequence.testPublicMethod('check', {
@@ -182,7 +184,7 @@ describe('test sequence', () => {
         address: sequenceInfo.address,
         testArgs: { seq: 256 + seq },
         existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
-        inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+        inputAssets: inputAsset
       })
       expect(testResult.returns).toEqual([true])
       const unexecutedSequenceContract = testResult.contracts[1]
@@ -197,16 +199,10 @@ describe('test sequence', () => {
   it('should failed if old sequences executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 1n
-    const unexecutedSequenceInfo = createUnexecutedSequence(
-      parentId,
-      256,
-      sequences,
-      refundAddress,
-      unexecutedSequenceContractId
-    )
+    const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract
     for (let seq = 1; seq < 256; seq++) {
       await expectAssertionFailed(async () => {
@@ -216,7 +212,7 @@ describe('test sequence', () => {
           address: sequenceInfo.address,
           testArgs: { seq: 256 + seq },
           existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
-          inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+          inputAssets: inputAsset
         })
       })
     }
@@ -225,32 +221,29 @@ describe('test sequence', () => {
   it('should destroy sub contract if all old sequence executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const sequenceInfo = createSequence(512, 0n, 0n, refundAddress, parentId)
+    const sequenceInfo = createSequence(512, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
     const sequences = allExecuted - 1n
-    const unexecutedSequenceInfo = createUnexecutedSequence(
-      parentId,
-      256,
-      sequences,
-      refundAddress,
-      unexecutedSequenceContractId
-    )
+    const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract
     const testResult = await sequence.testPublicMethod('check', {
       initialFields: sequenceInfo.selfState.fields,
-      initialAsset: { alphAmount: oneAlph * 10n },
+      initialAsset: { alphAmount: oneAlph },
       address: sequenceInfo.address,
       testArgs: { seq: 256 },
       existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
-      inputAssets: [{ address: refundAddress, asset: { alphAmount: oneAlph } }]
+      inputAssets: inputAsset
     })
     expect(testResult.returns).toEqual([true])
     expect(testResult.contracts.map((c) => c.address).includes(unexecutedSequenceInfo.address)).toEqual(false)
     expect(testResult.events.length).toEqual(1)
+
+    const sequenceContractAssets = testResult.txOutputs.find((o) => o.address === sequenceInfo.address)!
+    expect(sequenceContractAssets.alphAmount).toEqual(oneAlph * 2n)
     const destroyEvent = testResult.events[0]
     expect(destroyEvent.name).toEqual('ContractDestroyed')
     expect(destroyEvent.fields['address']).toEqual(unexecutedSequenceInfo.address)
-    const assetOutput = testResult.txOutputs[0]
-    expect(assetOutput.alphAmount).toEqual(oneAlph * 2n - defaultGasFee)
+    const assetOutput = testResult.txOutputs[1]
+    expect(assetOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
   })
 })

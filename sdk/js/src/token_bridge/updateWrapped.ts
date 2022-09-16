@@ -4,7 +4,20 @@ import {
   createWrappedOnSolana,
   createWrappedOnTerra,
 } from ".";
+import { updateRemoteTokenPoolScript } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
+
+export function updateRemoteTokenPoolOnAlph(
+  attestTokenHandlerId: string,
+  signedVAA: Uint8Array
+): string {
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
+  const script = updateRemoteTokenPoolScript()
+  return script.buildByteCodeToDeploy({
+    attestTokenHandler: attestTokenHandlerId,
+    vaa: vaaHex
+  })
+}
 
 export async function updateWrappedOnEth(
   tokenBridgeAddress: string,

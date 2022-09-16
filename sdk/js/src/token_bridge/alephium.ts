@@ -1,6 +1,5 @@
-import { NodeProvider, subContractId } from "@alephium/web3"
-import { destroyUnexecutedSequencesScript } from "../alephium/token_bridge"
-import { toAlphContractAddress } from "../utils"
+import { addressFromContractId, NodeProvider, subContractId } from "@alephium/web3"
+import { destroyUnexecutedSequencesScript, updateRefundAddressScript } from "../alephium/token_bridge"
 
 export function destroyUnexecutedSequenceContracts(
   tokenBridgeId: string,
@@ -8,6 +7,18 @@ export function destroyUnexecutedSequenceContracts(
 ): string {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = destroyUnexecutedSequencesScript()
+  return script.buildByteCodeToDeploy({
+    tokenBridge: tokenBridgeId,
+    vaa: vaaHex
+  })
+}
+
+export function updateRefundAddress(
+  tokenBridgeId: string,
+  signedVAA: Uint8Array
+): string {
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
+  const script = updateRefundAddressScript()
   return script.buildByteCodeToDeploy({
     tokenBridge: tokenBridgeId,
     vaa: vaaHex
@@ -49,14 +60,13 @@ export function getTokenPoolId(
 }
 
 export async function contractExists(contractId: string, provider: NodeProvider): Promise<boolean> {
-  const address = toAlphContractAddress(contractId)
+  const address = addressFromContractId(contractId)
   return provider
       .addresses
       .getAddressesAddressGroup(address)
       .then(_ => true)
       .catch((e: any) => {
-        const detail = e.error.detail as string
-        if (detail.startsWith("Group not found")) {
+        if (e instanceof Error && e.message.indexOf("Group not found") !== -1) {
           return false
         }
         throw e

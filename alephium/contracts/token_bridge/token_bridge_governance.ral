@@ -4,7 +4,8 @@ Abstract Contract TokenBridgeGovernance(
     mut receivedSequence: U256,
     mut sendSequence: U256,     // the sequence of next message published by self
     tokenBridgeFactory: TokenBridgeFactory,
-    mut minimalConsistencyLevel: U256
+    mut minimalConsistencyLevel: U256,
+    mut refundAddress: Address
 ) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
 
@@ -13,6 +14,7 @@ Abstract Contract TokenBridgeGovernance(
       ContractUpgrade               = #02
       DestroyUnexecutedSequences    = #f0
       UpdateMinimalConsistencyLevel = #f1
+      UpdateRefundAddress           = #f2
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
@@ -60,7 +62,6 @@ Abstract Contract TokenBridgeGovernance(
             0,
             0,
             tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
-            tokenBridgeFactory.getRefundAddress(),
             0
         )
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
@@ -114,5 +115,21 @@ Abstract Contract TokenBridgeGovernance(
         assert!(size!(payload) == 34, ErrorCodes.InvalidMessageSize)
         let consistencyLevel = u256From1Byte!(byteVecSlice!(payload, 33, 34))
         minimalConsistencyLevel = consistencyLevel
+    }
+
+    @using(readonly = true, externalCallCheck = false)
+    pub fn getRefundAddress() -> Address {
+        return refundAddress
+    }
+
+    pub fn updateRefundAddress(vaa: ByteVec) -> () {
+        let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
+        assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
+        let addressSize = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+        let payloadSize = 35 + addressSize
+        assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
+        let newRefundAddress = byteVecToAddress!(byteVecSlice!(payload, 35, payloadSize))
+        assert!(isAssetAddress!(newRefundAddress), ErrorCodes.InvalidUpdateRefundAddressMessage)
+        refundAddress = newRefundAddress
     }
 }

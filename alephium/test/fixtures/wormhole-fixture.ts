@@ -262,6 +262,10 @@ export async function expectOneOfError<T>(func: () => Promise<T>, errors: string
   await expectFailed(func, errors)
 }
 
+export async function expectError<T>(func: () => Promise<T>, error: string) {
+  await expectFailed(func, [error])
+}
+
 export function chainIdToBytes(chainId: number): Uint8Array {
   return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
 }

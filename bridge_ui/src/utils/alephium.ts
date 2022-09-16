@@ -6,7 +6,6 @@ import {
 } from "./consts";
 import {
     ChainId,
-    toAlphContractAddress,
     parseSequenceFromLogAlph,
     CHAIN_ID_ALEPHIUM,
     WormholeWrappedInfo,
@@ -14,7 +13,7 @@ import {
     getTokenPoolId,
     contractExists
 } from '@certusone/wormhole-sdk';
-import { NodeProvider, node } from '@alephium/web3';
+import { NodeProvider, node, addressFromContractId } from '@alephium/web3';
 import WalletConnectProvider from "@alephium/walletconnect-provider";
 
 const WormholeMessageEventIndex = 0
@@ -117,7 +116,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
         return new TokenInfo(0, 'wrapped-alph', 'wrapped-alph')
     }
 
-    const tokenAddress = toAlphContractAddress(tokenId)
+    const tokenAddress = addressFromContractId(tokenId)
     try {
         const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
         const state = await provider.contracts.getContractsAddressState(tokenAddress, {group: group.group})
@@ -153,7 +152,7 @@ export async function submitAlphScriptTx(
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
-  const tokenAddress = toAlphContractAddress(tokenId)
+  const tokenAddress = addressFromContractId(tokenId)
   const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
   return provider
     .contracts

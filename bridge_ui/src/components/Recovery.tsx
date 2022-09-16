@@ -770,7 +770,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Emitter Chain"
                   disabled
-                  value={recoveryParsedVAA?.emitter_chain || ""}
+                  value={recoveryParsedVAA?.body.emitterChainId || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -781,8 +781,8 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       hexToNativeString(
-                        recoveryParsedVAA.emitter_address,
-                        recoveryParsedVAA.emitter_chain
+                        recoveryParsedVAA.body.emitterAddress,
+                        recoveryParsedVAA.body.emitterChainId
                       )) ||
                     ""
                   }
@@ -793,7 +793,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Sequence"
                   disabled
-                  value={recoveryParsedVAA?.sequence || ""}
+                  value={recoveryParsedVAA?.body.sequence || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -804,7 +804,7 @@ export default function Recovery() {
                   value={
                     (recoveryParsedVAA &&
                       new Date(
-                        recoveryParsedVAA.timestamp * 1000
+                        recoveryParsedVAA.body.timestamp * 1000
                       ).toLocaleString()) ||
                     ""
                   }
@@ -815,7 +815,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Guardian Set"
                   disabled
-                  value={recoveryParsedVAA?.guardian_set_index || ""}
+                  value={recoveryParsedVAA?.guardianSetIndex || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -851,7 +851,7 @@ export default function Recovery() {
                     label="Origin Token ID"
                     disabled
                     // @ts-ignore
-                    value={parsedPayload?.tokenId || ""}
+                    value={parsedPayload?.originAddress || ""}
                     fullWidth
                     margin="normal"
                   />

@@ -3,9 +3,10 @@ Contract RemoteTokenPool(
     tokenChainId: U256, // remote token chain id
     bridgeTokenId: ByteVec, // remote token id
     mut totalBridged: U256,
-    symbol_: ByteVec,
-    name_: ByteVec,
-    decimals_: U256
+    mut symbol_: ByteVec,
+    mut name_: ByteVec,
+    decimals_: U256,
+    mut sequence_: U256
 ) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     @using(readonly = true)
     pub fn name() -> ByteVec {
@@ -20,6 +21,14 @@ Contract RemoteTokenPool(
     @using(readonly = true)
     pub fn decimals() -> U256 {
         return decimals_
+    }
+
+    pub fn updateDetails(symbol: ByteVec, name: ByteVec, sequence: U256) -> () {
+        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        assert!(sequence_ < sequence, ErrorCodes.InvalidSequence)
+        symbol_ = symbol
+        name_ = name
+        sequence_ = sequence
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)

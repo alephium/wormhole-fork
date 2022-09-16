@@ -1,0 +1,3 @@
+TxScript UpdateRefundAddress(tokenBridge: TokenBridge, vaa: ByteVec) {
+  tokenBridge.updateRefundAddress(vaa)
+}

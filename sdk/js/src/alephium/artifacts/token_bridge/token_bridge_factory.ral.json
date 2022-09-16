@@ -1,7 +1,7 @@
 {
   "name": "TokenBridgeFactory",
-  "bytecode": "070709121b4024402d4036403f010000000102a00002010000000102a00102010000000102a00202010000000102a00302010000000102a00402010000000102a00502010000000102a00602",
-  "codeHash": "0c4016236c27c0d337dfaa41e053f17dbcd4b1c25eeeac4874223277a5544e34",
+  "bytecode": "060609121b4024402d4036010000000102a00002010000000102a00102010000000102a00202010000000102a00302010000000102a00402010000000102a00502",
+  "codeHash": "d005675bb5cf65bb18feaffa7af50dba13512689f76681c70f743dda1a47a50c",
   "fieldsSig": {
     "names": [
       "wrappedAlphPoolTemplateId",
@@ -9,8 +9,7 @@
       "remoteTokenPoolTemplateId",
       "tokenBridgeForChainTemplateId",
       "attestTokenHandlerTemplateId",
-      "unexecutedSequenceTemplateId",
-      "refundAddress"
+      "unexecutedSequenceTemplateId"
     ],
     "types": [
       "ByteVec",
@@ -18,11 +17,9 @@
       "ByteVec",
       "ByteVec",
       "ByteVec",
-      "ByteVec",
-      "Address"
+      "ByteVec"
     ],
     "isMutable": [
-      false,
       false,
       false,
       false,
@@ -103,18 +100,6 @@
       "paramIsMutable": [],
       "returnTypes": [
         "ByteVec"
-      ]
-    },
-    {
-      "name": "getRefundAddress",
-      "usePreapprovedAssets": false,
-      "useAssetsInContract": false,
-      "isPublic": true,
-      "paramNames": [],
-      "paramTypes": [],
-      "paramIsMutable": [],
-      "returnTypes": [
-        "Address"
       ]
     }
   ]

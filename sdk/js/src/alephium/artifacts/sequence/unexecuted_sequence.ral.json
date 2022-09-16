@@ -1,25 +1,22 @@
 {
   "name": "UnexecutedSequence",
-  "bytecode": "04024064407401020103004028b3a0004113157b1600a001340f7b1600a0012b17011601134100310f7b0d16013b1702a0021602380c2f0f7ba002160239a102a00213dcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2f4c02a003b0010200000007b3a0004113157ba003b0",
-  "codeHash": "d1f841b8fa8eedcee2487da831ae5a4706e8ea1e4ad37a8c3c6bf7590b95c23b",
+  "bytecode": "03024064407401020204004028b3a0004113157b1600a001340f7b1600a0012b17021602134100310f7b0d16023b1703a0021603380c2f0f7ba002160339a102a00213dcffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2f4c021601b0010201010007b3a0004113157b1600b0",
+  "codeHash": "c220481ed209a31e4c7726be3866ae8eecd6f571f26425ffc9885973b3d8dfe0",
   "fieldsSig": {
     "names": [
       "parentId",
       "begin",
-      "sequences",
-      "refundAddress"
+      "sequences"
     ],
     "types": [
       "ByteVec",
       "U256",
-      "U256",
-      "Address"
+      "U256"
     ],
     "isMutable": [
       false,
       false,
-      true,
-      false
+      true
     ]
   },
   "eventsSig": [],
@@ -30,12 +27,15 @@
       "useAssetsInContract": true,
       "isPublic": true,
       "paramNames": [
-        "seq"
+        "seq",
+        "refundAddress"
       ],
       "paramTypes": [
-        "U256"
+        "U256",
+        "Address"
       ],
       "paramIsMutable": [
+        false,
         false
       ],
       "returnTypes": []
@@ -45,9 +45,15 @@
       "usePreapprovedAssets": false,
       "useAssetsInContract": true,
       "isPublic": true,
-      "paramNames": [],
-      "paramTypes": [],
-      "paramIsMutable": [],
+      "paramNames": [
+        "refundAddress"
+      ],
+      "paramTypes": [
+        "Address"
+      ],
+      "paramIsMutable": [
+        false
+      ],
       "returnTypes": []
     }
   ]
