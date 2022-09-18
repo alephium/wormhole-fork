@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/pubsub v1.17.1
 	cloud.google.com/go/storage v1.18.2
 	github.com/certusone/wormhole/node v0.0.0-20220413222417-6e58ae511d52
-	github.com/cosmos/cosmos-sdk v0.44.0
+	github.com/cosmos/cosmos-sdk v0.44.5
 	github.com/gagliardetto/solana-go v1.0.2
 	github.com/holiman/uint256 v1.2.0
 )

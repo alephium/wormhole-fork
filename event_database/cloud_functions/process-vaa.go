@@ -70,6 +70,8 @@ var tokenTransferEmitters = map[string]string{
 	"00000000000000000000000061E44E506Ca5659E6c0bba9b678586fA2d729756": "0x61E44E506Ca5659E6c0bba9b678586fA2d729756",   // avalanche
 	"00000000000000000000000088d8004A9BdbfD9D28090A02010C19897a29605c": "0x88d8004A9BdbfD9D28090A02010C19897a29605c",   // oasis
 	"000000000000000000000000F174F9A837536C449321df1Ca093Bb96948D5386": "0xF174F9A837536C449321df1Ca093Bb96948D5386",   // ethereum ropesten
+	//	"0002d886e73f9b763dbb82bd019c0c12758eacb489e2719dc0bae104a0aa5926": "29GBV4QkN2acJiRdKvmGFVMvGJpXgZnt16eYqqxVg49as", // alephium
+	"d886e73f9b763dbb82bd019c0c12758eacb489e2719dc0bae104a0aa59265bf4": "29GBV4QkN2acJiRdKvmGFVMvGJpXgZnt16eYqqxVg49as", // alephium
 	// TODO "": "",  // fantom
 }
 
@@ -227,6 +229,7 @@ func makeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, sequence u
 	return fmt.Sprintf("%d:%s:%016d", emitterChain, emitterAddress, sequence)
 }
 func writePayloadToBigTable(ctx context.Context, rowKey string, colFam string, mutation *bigtable.Mutation, forceWrite bool) error {
+	log.Println("Writing to big table, key: %v, col: %v", rowKey, colFam)
 	mut := mutation
 	if !forceWrite {
 		filter := bigtable.ChainFilters(
@@ -234,14 +237,15 @@ func writePayloadToBigTable(ctx context.Context, rowKey string, colFam string, m
 			bigtable.ColumnFilter("PayloadId"))
 		mut = bigtable.NewCondMutation(filter, nil, mutation)
 	}
-
 	err := tbl.Apply(ctx, rowKey, mut)
 	if err != nil {
 		log.Printf("Failed to write payload for %v to BigTable. err: %v", rowKey, err)
 		return err
 	}
+	log.Println("Wrote to big table")
 	return nil
 }
+
 func TrimUnicodeFromByteArray(b []byte) []byte {
 	// Escaped Unicode that has been observed in payload's token names and symbol:
 	null := "\u0000"
@@ -264,6 +268,7 @@ func addReceiverAddressToMutation(mut *bigtable.Mutation, ts bigtable.Timestamp,
 
 // ProcessVAA is triggered by a PubSub message, emitted after row is saved to BigTable by guardiand
 func ProcessVAA(ctx context.Context, m PubSubMessage) error {
+	log.Println("Start ProcessVAA")
 	muNFTEmitters.Lock()
 	if len(NFTEmitters) == 0 {
 		for k, v := range nftEmitters {
@@ -293,16 +298,19 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 	// create the bigtable identifier from the VAA data
 	rowKey := makeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.Sequence)
 	emitterHex := strings.ToLower(signedVaa.EmitterAddress.String())
+	log.Println("emitterHex: %v", emitterHex)
 	payloadId := int(signedVaa.Payload[0])
-
+	log.Println("payload id: %v", payloadId)
 	// BSC and Polygon have the same contract address: "0x5a58505a96d1dbf8df91cb21b54419fc36e93fde".
 	// The BSC contract is the NFT emitter address.
 	// The Polygon contract is the token transfer emitter address.
 	// Due to that, ensure that the block below only runs for token transfers by checking for chain == 4 and emitter addaress.
 	if _, ok := TokenTransferEmitters[emitterHex]; ok && !(signedVaa.EmitterChain == 4 && signedVaa.EmitterAddress.String() == sharedEmitterAddress) {
+		log.Println("Token Transfer Emitter Matched")
 		// figure out if it's a transfer or asset metadata
 
 		if payloadId == 1 {
+			log.Println("Token Transfer payload id is 1")
 			// token transfer
 			payload, decodeErr := DecodeTokenTransfer(signedVaa.Payload)
 			if decodeErr != nil {
@@ -422,6 +430,8 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			log.Println("encountered unknown payload type for row ", rowKey)
 			return nil
 		}
+	} else {
+		log.Println("Nothing matched")
 	}
 
 	// this is not a payload we are ready to decode & save. return success
