@@ -121,7 +121,7 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex, int32(*groupIndex))
+		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, batchSize, int32(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
