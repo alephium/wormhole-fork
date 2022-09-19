@@ -37,3 +37,8 @@ popd
 pushd bridge_ui
 docker build . -t liuhongchao/bridge-ui:$VERSION
 popd
+
+# Build Wormhole Explorer
+pushd explorer
+docker build . -t liuhongchao/wormhole-explorer:$VERSION
+popd
