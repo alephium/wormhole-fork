@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction } from '../lib/deployment'
+import { Deployer, DeployFunction } from '@alephium/cli/types'
 
 const deployWrappedAlph: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const wrappedAlph = Project.contract('WrappedAlph')

@@ -10,9 +10,9 @@
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
     "build": "rm -rf dist && npx tsc --build .",
-    "compile-contracts": "npx ts-node commands.ts compile",
-    "test": "npx ts-node commands.ts test -i -v",
-    "deploy:devnet": "npx ts-node commands.ts deploy -n devnet",
+    "compile-contracts": "npx @alephium/cli compile",
+    "test": "npx @alephium/cli test -i -v",
+    "deploy:devnet": "npx @alephium/cli deploy -n devnet",
     "auto-mine": "npx ts-node scripts/auto_mine.ts"
   },
   "prettier": {
@@ -29,8 +29,9 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^0.2.0-rc.12",
-    "@alephium/web3-wallet": "^0.2.0-rc.12",
+    "@alephium/web3": "^0.2.0-rc.14",
+    "@alephium/web3-wallet": "^0.2.0-rc.14",
+    "@alephium/cli": "^0.2.0-rc.14",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",
@@ -44,14 +45,14 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
-    "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.12",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-security": "^1.5.0",
-    "jest": "^27.5.1",
-    "ts-jest": "^27.1.3",
+    "jest": "^28.1.0",
+    "@types/jest": "^27.5.1",
+    "ts-jest": "^28.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^4.6.3"
   }

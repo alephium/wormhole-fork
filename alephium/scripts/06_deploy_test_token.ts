@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Configuration, Deployer, DeployFunction } from '../lib/deployment'
+import { Configuration, Deployer, DeployFunction } from '@alephium/cli/types'
 
 const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
