@@ -36,6 +36,8 @@ import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
   selectTerraFeeDenom,
   selectTransferIsRedeeming,
+  selectTransferRecoverySourceTxId,
+  selectTransferSourceChain,
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
@@ -64,6 +66,7 @@ import {
 } from "../utils/alephium";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
+import { TransactionDB } from "../utils/db";
 
 async function algo(
   dispatch: any,
@@ -110,24 +113,26 @@ async function evm(
   signer: Signer,
   signedVAA: Uint8Array,
   isNative: boolean,
-  chainId: ChainId
+  targetChainId: ChainId,
+  sourceChainId: ChainId,
+  sourceTxId: string | undefined
 ) {
   dispatch(setIsRedeeming(true));
   try {
     // Klaytn requires specifying gasPrice
     const overrides =
-      chainId === CHAIN_ID_KLAYTN
+      targetChainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
     const receipt = isNative
       ? await redeemOnEthNative(
-          getTokenBridgeAddressForChain(chainId),
+          getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         )
       : await redeemOnEth(
-          getTokenBridgeAddressForChain(chainId),
+          getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
@@ -135,6 +140,9 @@ async function evm(
     dispatch(
       setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
+    if (sourceTxId && sourceChainId === CHAIN_ID_ALEPHIUM) {
+      await TransactionDB.getInstance().txs.update(sourceTxId, {status: "Completed"})
+    }
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -243,7 +251,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
     const bytecode = redeemOnAlph(tokenBridgeForChainId, signedVAA)
-    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
@@ -276,6 +284,8 @@ export function useHandleRedeem() {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
   const targetChain = useSelector(selectTransferTargetChain);
+  const sourceChain = useSelector(selectTransferSourceChain);
+  const recoverySourceTxId = useSelector(selectTransferRecoverySourceTxId);
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const { signer } = useEthereumProvider();
@@ -287,7 +297,7 @@ export function useHandleRedeem() {
   const isRedeeming = useSelector(selectTransferIsRedeeming);
   const handleRedeemClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && signedVAA) {
-      evm(dispatch, enqueueSnackbar, signer, signedVAA, false, targetChain);
+      evm(dispatch, enqueueSnackbar, signer, signedVAA, false, targetChain, sourceChain, recoverySourceTxId);
     } else if (
       targetChain === CHAIN_ID_SOLANA &&
       !!solanaWallet &&
@@ -317,6 +327,8 @@ export function useHandleRedeem() {
   }, [
     dispatch,
     enqueueSnackbar,
+    sourceChain,
+    recoverySourceTxId,
     targetChain,
     signer,
     signedVAA,
@@ -330,7 +342,7 @@ export function useHandleRedeem() {
 
   const handleRedeemNativeClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && signedVAA) {
-      evm(dispatch, enqueueSnackbar, signer, signedVAA, true, targetChain);
+      evm(dispatch, enqueueSnackbar, signer, signedVAA, true, targetChain, sourceChain, recoverySourceTxId);
     } else if (
       targetChain === CHAIN_ID_SOLANA &&
       !!solanaWallet &&
@@ -359,6 +371,8 @@ export function useHandleRedeem() {
     dispatch,
     enqueueSnackbar,
     targetChain,
+    sourceChain,
+    recoverySourceTxId,
     signer,
     signedVAA,
     solanaWallet,

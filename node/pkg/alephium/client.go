@@ -2,12 +2,25 @@ package alephium
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
 )
+
+type Request[T any] interface {
+	Execute() (T, *http.Response, error)
+}
+
+func requestWithMetric[T any](req Request[T], timestamp *time.Time, label string) (T, *http.Response, error) {
+	result, response, err := req.Execute()
+	queryLatency.WithLabelValues(label).Observe(time.Since(*timestamp).Seconds())
+	if err != nil {
+		alphConnectionErrors.WithLabelValues(label).Inc()
+	}
+	return result, response, err
+}
 
 type Client struct {
 	timeout time.Duration
@@ -34,11 +47,18 @@ func NewClient(endpoint string, apiKey string, timeout int) *Client {
 	}
 }
 
+func (c *Client) timeoutContext(ctx context.Context) (*time.Time, context.Context, context.CancelFunc) {
+	timestamp := time.Now()
+	timeoutCtx, cancel := context.WithDeadline(ctx, timestamp.Add(c.timeout))
+	return &timestamp, timeoutCtx, cancel
+}
+
 func (c *Client) GetCurrentHeight(ctx context.Context, chainIndex *ChainIndex) (*int32, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.BlockflowApi.GetBlockflowChainInfo(timeoutCtx).FromGroup(chainIndex.FromGroup).ToGroup(chainIndex.ToGroup).Execute()
+	request := c.impl.BlockflowApi.GetBlockflowChainInfo(timeoutCtx).FromGroup(chainIndex.FromGroup).ToGroup(chainIndex.ToGroup)
+	response, _, err := requestWithMetric[*sdk.ChainInfo](request, timestamp, "get_height")
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +66,11 @@ func (c *Client) GetCurrentHeight(ctx context.Context, chainIndex *ChainIndex) (
 }
 
 func (c *Client) GetBlockHeader(ctx context.Context, hash string) (*sdk.BlockHeaderEntry, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.BlockflowApi.GetBlockflowHeadersBlockHash(timeoutCtx, hash).Execute()
+	request := c.impl.BlockflowApi.GetBlockflowHeadersBlockHash(timeoutCtx, hash)
+	response, _, err := requestWithMetric[*sdk.BlockHeaderEntry](request, timestamp, "get_block_header")
 	if err != nil {
 		return nil, err
 	}
@@ -57,10 +78,11 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash string) (*sdk.BlockHea
 }
 
 func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (*bool, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.BlockflowApi.GetBlockflowIsBlockInMainChain(timeoutCtx).BlockHash(hash).Execute()
+	request := c.impl.BlockflowApi.GetBlockflowIsBlockInMainChain(timeoutCtx).BlockHash(hash)
+	response, _, err := requestWithMetric[bool](request, timestamp, "check_block_in_main_chain")
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +90,11 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (*bool, er
 }
 
 func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress string, from, to, group int32) (*sdk.ContractEvents, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).End(to).Group(group).Execute()
+	request := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).End(to).Group(group)
+	response, _, err := requestWithMetric[*sdk.ContractEvents](request, timestamp, "get_contract_events")
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +102,11 @@ func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress s
 }
 
 func (c *Client) GetContractEvents(ctx context.Context, contractAddress string, from, group int32) (*sdk.ContractEvents, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).Group(group).Execute()
+	request := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).Group(group)
+	response, _, err := requestWithMetric[*sdk.ContractEvents](request, timestamp, "get_contract_events")
 	if err != nil {
 		return nil, err
 	}
@@ -90,25 +114,23 @@ func (c *Client) GetContractEvents(ctx context.Context, contractAddress string, 
 }
 
 func (c *Client) GetEventsByTxId(ctx context.Context, txId string) (*sdk.ContractEventsByTxId, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.EventsApi.GetEventsTxIdTxid(timeoutCtx, txId).Execute()
+	request := c.impl.EventsApi.GetEventsTxIdTxid(timeoutCtx, txId)
+	response, _, err := requestWithMetric[*sdk.ContractEventsByTxId](request, timestamp, "get_events_by_tx_id")
 	if err != nil {
 		return nil, err
 	}
 	return response, nil
 }
 
-func eventCountURI(contractAddress string) string {
-	return fmt.Sprintf("/events/contract/%s/current-count", contractAddress)
-}
-
 func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress string) (*int32, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, r, err := c.impl.EventsApi.GetEventsContractContractaddressCurrentCount(timeoutCtx, contractAddress).Execute()
+	request := c.impl.EventsApi.GetEventsContractContractaddressCurrentCount(timeoutCtx, contractAddress)
+	response, r, err := requestWithMetric[int32](request, timestamp, "get_contract_events_count")
 	if r.StatusCode == 404 {
 		// subscribe event from 0 if contract count not found
 		count := int32(0)
@@ -121,10 +143,11 @@ func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress str
 }
 
 func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*sdk.TxStatus, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.TransactionsApi.GetTransactionsStatus(timeoutCtx).TxId(txId).Execute()
+	request := c.impl.TransactionsApi.GetTransactionsStatus(timeoutCtx).TxId(txId)
+	response, _, err := requestWithMetric[*sdk.TxStatus](request, timestamp, "get_tx_status")
 	if err != nil {
 		return nil, err
 	}
@@ -132,10 +155,11 @@ func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*sdk.Tx
 }
 
 func (c *Client) GetNodeInfo(ctx context.Context) (*sdk.NodeInfo, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	response, _, err := c.impl.InfosApi.GetInfosNode(timeoutCtx).Execute()
+	request := c.impl.InfosApi.GetInfosNode(timeoutCtx)
+	response, _, err := requestWithMetric[*sdk.NodeInfo](request, timestamp, "get_node_info")
 	if err != nil {
 		return nil, err
 	}

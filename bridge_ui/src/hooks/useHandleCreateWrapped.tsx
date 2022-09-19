@@ -257,7 +257,7 @@ async function alephium(
     const bytecode = shouldUpdate
       ? updateRemoteTokenPoolOnAlph(attestTokenHandlerId, signedVAA)
       : createRemoteTokenPoolOnAlph(attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
-    const result = await submitAlphScriptTx(signer.walletProvider, signer.account.address, bytecode)
+    const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(

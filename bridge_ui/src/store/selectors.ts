@@ -199,6 +199,8 @@ export const selectTransferTargetBalanceString = (state: RootState) =>
   state.transfer.targetParsedTokenAccount?.uiAmountString || "";
 export const selectTransferTransferTx = (state: RootState) =>
   state.transfer.transferTx;
+export const selectTransferRecoverySourceTxId = (state: RootState) =>
+  state.transfer.recoverySourceTxId
 export const selectTransferSignedVAAHex = (state: RootState) =>
   state.transfer.signedVAAHex;
 export const selectTransferIsSending = (state: RootState) =>

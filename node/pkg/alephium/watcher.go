@@ -13,7 +13,42 @@ import (
 	"github.com/certusone/wormhole/node/pkg/readiness"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
+)
+
+var (
+	alphConnectionErrors = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "wormhole_alph_connection_errors_total",
+			Help: "Total number of Alephium connection errors",
+		}, []string{"operation"})
+	alphMessagesObserved = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "wormhole_alph_messages_observed_total",
+			Help: "Total number of Alephium messages observed (pre-confirmation)",
+		})
+	alphMessagesOrphaned = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "wormhole_alph_messages_orphaned_total",
+			Help: "Total number of Alephium messages dropped (orphaned)",
+		})
+	alphMessagesConfirmed = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "wormhole_alph_messages_confirmed_total",
+			Help: "Total number of Alephium messages verified (post-confirmation)",
+		})
+	currentAlphHeight = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "wormhole_alph_current_height",
+			Help: "Current Alephium block height",
+		})
+	queryLatency = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "wormhole_alph_query_latency",
+			Help: "Latency histogram for Alephium calls",
+		}, []string{"operation"})
 )
 
 type Watcher struct {
@@ -174,6 +209,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 				}
 			}
 
+			alphMessagesObserved.Add(float64(len(unconfirmedEvents)))
 			eventsC <- unconfirmedEvents
 		}
 	}
@@ -201,6 +237,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 				zap.Int32("toGroup", w.chainIndex.ToGroup),
 			)
 
+			currentAlphHeight.Set(float64(*height))
 			atomic.StoreInt32(&w.currentHeight, *height)
 		}
 	}
@@ -211,6 +248,7 @@ func (w *Watcher) handleConfirmedEvents(logger *zap.Logger, confirmed []*Confirm
 		return nil
 	}
 
+	alphMessagesConfirmed.Add(float64(len(confirmed)))
 	for _, e := range confirmed {
 		logger.Debug("new confirmed event received", zap.String("event", marshalContractEvent(e.event.ContractEvent)))
 
@@ -280,6 +318,7 @@ func (w *Watcher) handleEvents_(
 				return err
 			}
 			if !*isCanonical {
+				alphMessagesOrphaned.Add(float64(len(blockEvents.events)))
 				// it's safe to update map in range loop
 				delete(pendingEvents, blockHash)
 				continue

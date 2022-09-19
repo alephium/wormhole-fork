@@ -38,6 +38,7 @@ import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
 import CustodyAddresses from "./components/Stats/CustodyAddresses";
 import TokenOriginVerifier from "./components/TokenOriginVerifier";
+import Transactions from "./components/Transactions";
 import Transfer from "./components/Transfer";
 import UnwrapNative from "./components/UnwrapNative";
 import WithdrawTokensTerra from "./components/WithdrawTokensTerra";
@@ -265,7 +266,7 @@ function App() {
           </Typography>
         </AppBar>
       ) : null}
-      {["/transfer", "/nft", "/redeem"].includes(pathname) ? (
+      {["/transfer", "/nft", "/redeem", "/transactions"].includes(pathname) ? (
         <Container maxWidth="md" style={{ paddingBottom: 24 }}>
           <HeaderText
             white
@@ -293,6 +294,7 @@ function App() {
             <Tab label="Tokens" value="/transfer" />
             <Tab label="NFTs" value="/nft" />
             <Tab label="Redeem" value="/redeem" to="/redeem" />
+            <Tab label="Transactions" value="/transactions" to="/transactions" />
           </Tabs>
         </Container>
       ) : null}
@@ -305,6 +307,9 @@ function App() {
         </Route>
         <Route exact path="/redeem">
           <Recovery />
+        </Route>
+        <Route exact path="/transactions">
+          <Transactions />
         </Route>
         <Route exact path="/nft-origin-verifier">
           <NFTOriginVerifier />

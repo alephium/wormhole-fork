@@ -35,24 +35,25 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 
+			events, err := w.getGovernanceEventsByTxId(ctx, client, w.governanceContractAddress, blockHash, txId)
+			if err != nil {
+				logger.Error("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
+				continue
+			}
+			alphMessagesObserved.Add(float64(len(events)))
+
 			isCanonical, err := client.IsBlockInMainChain(ctx, blockHash)
 			if err != nil {
 				logger.Error("failed to check mainchain block", zap.String("blockHash", blockHash), zap.Error(err))
 				continue
 			}
 			if !*isCanonical {
+				alphMessagesOrphaned.Add(float64(len(events)))
 				logger.Info("ignore orphan block", zap.String("blockHash", blockHash))
 				continue
 			}
 
 			currentHeight := atomic.LoadInt32(&w.currentHeight)
-
-			events, err := w.getGovernanceEventsByTxId(ctx, client, w.governanceContractAddress, blockHash, txId)
-			if err != nil {
-				logger.Error("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
-				continue
-			}
-
 			confirmed := make([]*reobservedEvent, 0)
 			for _, event := range events {
 				if event.header.Height+int32(event.confirmations) <= currentHeight {
@@ -63,6 +64,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 						zap.Int32("currentHeight", currentHeight),
 						zap.Uint8("confirmations", event.confirmations),
 					)
+					alphMessagesConfirmed.Add(float64(len(events)))
 					confirmed = append(confirmed, event)
 				} else {
 					logger.Info("ignore unconfirmed re-observed event",
