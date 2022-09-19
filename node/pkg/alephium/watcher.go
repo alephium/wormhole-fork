@@ -138,11 +138,12 @@ func (w *Watcher) Run(ctx context.Context) error {
 	readiness.SetReady(w.readiness)
 	errC := make(chan error)
 	eventsC := make(chan []*UnconfirmedEvent)
+	heightC := make(chan int32)
 
 	go w.fetchEvents(ctx, logger, w.client, errC, eventsC)
 	go w.handleObsvRequest(ctx, logger, w.client)
-	go w.fetchHeight(ctx, logger, w.client, errC)
-	go w.handleEvents(ctx, logger, w.client, errC, eventsC)
+	go w.fetchHeight(ctx, logger, w.client, errC, heightC)
+	go w.handleEvents(ctx, logger, w.client, errC, eventsC, heightC)
 
 	select {
 	case <-ctx.Done():
@@ -180,7 +181,6 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 			logger.Info("alephium contract event count", zap.Int32("count", *count), zap.Int32("fromIndex", fromIndex))
 
 			if *count == fromIndex {
-				eventsC <- []*UnconfirmedEvent{}
 				continue
 			}
 
@@ -215,7 +215,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 	}
 }
 
-func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error) {
+func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
 	t := time.NewTicker(10 * time.Second)
 	defer t.Stop()
 
@@ -237,8 +237,12 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 				zap.Int32("toGroup", w.chainIndex.ToGroup),
 			)
 
-			currentAlphHeight.Set(float64(*height))
-			atomic.StoreInt32(&w.currentHeight, *height)
+			previousHeight := atomic.LoadInt32(&w.currentHeight)
+			if *height != previousHeight {
+				currentAlphHeight.Set(float64(*height))
+				atomic.StoreInt32(&w.currentHeight, *height)
+				heightC <- *height
+			}
 		}
 	}
 }
@@ -279,7 +283,7 @@ func (w *Watcher) toUnconfirmedEvent(event *sdk.ContractEvent) (*UnconfirmedEven
 	return &UnconfirmedEvent{event, msg}, err
 }
 
-func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC <-chan []*UnconfirmedEvent) {
+func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC <-chan []*UnconfirmedEvent, heightC <-chan int32) {
 	isBlockInMainChain := func(hash string) (*bool, error) {
 		return client.IsBlockInMainChain(ctx, hash)
 	}
@@ -287,7 +291,7 @@ func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *
 		return client.GetBlockHeader(ctx, hash)
 	}
 
-	w.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, w.handleConfirmedEvents, errC, eventsC)
+	w.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, w.handleConfirmedEvents, errC, eventsC, heightC)
 }
 
 func (w *Watcher) handleEvents_(
@@ -298,18 +302,12 @@ func (w *Watcher) handleEvents_(
 	handler func(*zap.Logger, []*ConfirmedEvent) error,
 	errC chan<- error,
 	eventsC <-chan []*UnconfirmedEvent,
+	heightC <-chan int32,
 ) {
 	pendingEvents := map[string]*UnconfirmedEventsPerBlock{}
-	lastHeight := atomic.LoadInt32(&w.currentHeight)
 
-	process := func() error {
-		height := atomic.LoadInt32(&w.currentHeight)
-		logger.Debug("processing events", zap.Int32("height", height), zap.Int32("lastHeight", lastHeight))
-		if height <= lastHeight {
-			return nil
-		}
-
-		lastHeight = height
+	process := func(height int32) error {
+		logger.Debug("processing events", zap.Int32("height", height))
 		confirmedEvents := make([]*ConfirmedEvent, 0)
 		for blockHash, blockEvents := range pendingEvents {
 			isCanonical, err := isBlockInMainChain(blockHash)
@@ -387,7 +385,8 @@ func (w *Watcher) handleEvents_(
 				}
 			}
 
-			if err := process(); err != nil {
+		case height := <-heightC:
+			if err := process(height); err != nil {
 				errC <- err
 				return
 			}
