@@ -24,6 +24,7 @@ jobs:
         run: |
           npm ci
           npm run build
+          cp .env.test .env
           npm run lint
           npx @alephium/cli devnet start
           npm test
