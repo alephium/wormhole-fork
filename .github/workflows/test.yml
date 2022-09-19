@@ -25,7 +25,7 @@ jobs:
           npm ci
           npm run build
           npm run lint
-          npm explore @alephium/web3 -- npm run start-devnet
+          npx @alephium/cli devnet start
           npm test
-          npm explore @alephium/web3 -- npm run stop-devnet
+          npx @alephium/cli devnet stop
 
