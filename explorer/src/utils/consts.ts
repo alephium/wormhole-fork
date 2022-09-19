@@ -1,28 +1,28 @@
 import {
-  ChainId,
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
 } from "@certusone/wormhole-sdk";
 
-export const chainEnums = [
-  "",
-  "Solana",
-  "Ethereum",
-  "Terra",
-  "BSC",
-  "Polygon",
-  "Avalanche",
-  "Oasis",
-  "Algorand",
-  "Aurora",
-  "Fantom",
-  "Karura",
-  "Acala",
-];
+export const chainEnums = {
+  [0]: "",
+  [1]: "Solana",
+  [2]: "Ethereum",
+  [3]: "Terra",
+  [4]: "BSC",
+  [5]: "Polygon",
+  [6]: "Avalanche",
+  [7]: "Oasis",
+  [8]: "Algorand",
+  [9]: "Aurora",
+  [10]: "Fantom",
+  [11]: "Karura",
+  [12]: "Acala",
+  [255]: "Alephium",
+};
 
 export interface ChainIDs {
-  [index: string]: ChainId;
+  [index: string]: number;  // TODO: Update to ChainId when we publish our own @certusone/wormhole-sdk
 }
 
 export const chainIDs: ChainIDs = {
@@ -39,6 +39,7 @@ export const chainIDs: ChainIDs = {
   fantom: 10,
   // kurura: 11,
   // acala: 12,
+  alephium: 255,
 };
 
 export const chainIDStrings: { [chainIDString: string]: string } = {
@@ -54,6 +55,7 @@ export const chainIDStrings: { [chainIDString: string]: string } = {
   "10": "fantom",
   "11": "karura",
   "12": "acala",
+  "255": "alephium",
 };
 
 export enum ChainID {
@@ -70,6 +72,7 @@ export enum ChainID {
   Fantom,
   Karura,
   Acala,
+  Alephium,
 }
 export type ChainName = keyof ChainIDs;
 export type ChainIDNumber = ChainIDs[ChainName];
@@ -124,6 +127,11 @@ const envVarMap: { [name: string]: string | undefined } = {
   GATSBY_DEVNET_AURORA_TOKEN_BRIDGE:
     process.env.GATSBY_DEVNET_AURORA_TOKEN_BRIDGE,
   GATSBY_DEVNET_AURORA_NFT_BRIDGE: process.env.GATSBY_DEVNET_AURORA_NFT_BRIDGE,
+  GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE:
+    process.env.GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE,
+  GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE:
+    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
+  GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE,
 
   // testnet
   GATSBY_TESTNET_SOLANA_CORE_BRIDGE:
@@ -175,6 +183,11 @@ const envVarMap: { [name: string]: string | undefined } = {
     process.env.GATSBY_TESTNET_AURORA_TOKEN_BRIDGE,
   GATSBY_TESTNET_AURORA_NFT_BRIDGE:
     process.env.GATSBY_TESTNET_AURORA_NFT_BRIDGE,
+  GATSBY_TESTNET_ALEPHIUM_CORE_BRIDGE:
+    process.env.GATSBY_TESTNET_ALEPHIUM_CORE_BRIDGE,
+  GATSBY_TESTNET_ALEPHIUM_TOKEN_BRIDGE:
+    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
+  GATSBY_TESTNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE,
 
   // mainnet
   GATSBY_MAINNET_SOLANA_CORE_BRIDGE:
@@ -226,6 +239,12 @@ const envVarMap: { [name: string]: string | undefined } = {
     process.env.GATSBY_MAINNET_AURORA_TOKEN_BRIDGE,
   GATSBY_MAINNET_AURORA_NFT_BRIDGE:
     process.env.GATSBY_MAINNET_AURORA_NFT_BRIDGE,
+  GATSBY_MAINNET_ALEPHIUM_CORE_BRIDGE:
+    process.env.GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE,
+  GATSBY_MAINNET_ALEPHIUM_TOKEN_BRIDGE:
+    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
+  GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE
+  ,
 };
 
 export interface KnownContracts {
@@ -245,6 +264,8 @@ export interface NetworkChains {
 
 const getEmitterAddressEVM = (address: string) =>
   Promise.resolve(getEmitterAddressEth(address));
+const getEmitterAddressAlephium = (address: string) =>
+  Promise.resolve(address);
 const getEmitterAddress: {
   [chainName: string]: (address: string) => Promise<string>;
 } = {
@@ -257,12 +278,13 @@ const getEmitterAddress: {
   oasis: getEmitterAddressEVM,
   fantom: getEmitterAddressEVM,
   aurora: getEmitterAddressEVM,
+  alephium: getEmitterAddressAlephium,
 };
 
 // the keys used for creating the map of contract addresses of each chain, on each network.
 export type Network = keyof NetworkChains;
 export const networks: Array<Network> = ["devnet", "testnet", "mainnet"];
-const contractTypes = ["Core", "Token", "NFT"];
+const contractTypes = ["Core", "Token"];
 const chainNames = Object.keys(chainIDs);
 
 export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(

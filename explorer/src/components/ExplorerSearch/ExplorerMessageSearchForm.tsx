@@ -25,15 +25,8 @@ interface ExplorerMessageSearchValues {
 }
 
 const emitterChains = [
-  { label: ChainID[1], value: chainIDs["solana"] },
   { label: ChainID[2], value: chainIDs["ethereum"] },
-  { label: ChainID[3], value: chainIDs["terra"] },
-  { label: ChainID[4], value: chainIDs["bsc"] },
-  { label: ChainID[5], value: chainIDs["polygon"] },
-  { label: ChainID[6], value: chainIDs["avalanche"] },
-  { label: ChainID[7], value: chainIDs["oasis"] },
-  { label: ChainID[9], value: chainIDs["aurora"] },
-  { label: ChainID[10], value: chainIDs["fantom"] },
+  { label: ChainID[13], value: chainIDs["alephium"] },
 ];
 
 interface ExplorerMessageSearchProps {
@@ -150,7 +143,7 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
           // Filter out keys that are not human readable names, by checking for a space in the key.
           options={Object.entries(
             activeNetwork.chains[
-              chainEnums[emitterChain || 1]?.toLowerCase()
+            chainEnums[emitterChain || 1]?.toLowerCase()
             ] || {}
           )
             .filter(([key]) => key.includes(" "))

@@ -259,36 +259,38 @@ type (
 	}
 )
 
-func chainIdStringToType(chainId string) vaa.ChainID {
+func chainIdStringToType(chainId string) ChainID {
 	switch chainId {
 	case "1":
-		return vaa.ChainIDSolana
+		return ChainIDSolana
 	case "2":
-		return vaa.ChainIDEthereum
+		return ChainIDEthereum
 	case "3":
-		return vaa.ChainIDTerra
+		return ChainIDTerra
 	case "4":
-		return vaa.ChainIDBSC
+		return ChainIDBSC
 	case "5":
-		return vaa.ChainIDPolygon
+		return ChainIDPolygon
 	case "6":
-		return vaa.ChainIDAvalanche
+		return ChainIDAvalanche
 	case "7":
-		return vaa.ChainIDOasis
+		return ChainIDOasis
 	case "8":
-		return vaa.ChainIDAlgorand
+		return ChainIDAlgorand
 	case "9":
-		return vaa.ChainIDAurora
+		return ChainIDAurora
 	case "10":
-		return vaa.ChainIDFantom
+		return ChainIDFantom
 	case "11":
-		return vaa.ChainIDKarura
+		return ChainIDKarura
 	case "12":
-		return vaa.ChainIDAcala
+		return ChainIDAcala
+	case "255":
+		return ChainIDAlephium
 	case "10001":
-		return vaa.ChainIDEthereumRopsten
+		return ChainIDEthereumRopsten
 	}
-	return vaa.ChainIDUnset
+	return ChainIDUnset
 }
 
 func makeSummary(row bigtable.Row) *Summary {

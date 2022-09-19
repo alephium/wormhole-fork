@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"net/http"
-
-	"github.com/certusone/wormhole/node/pkg/vaa"
 )
 
 const cgBaseUrl = "https://api.coingecko.com/api/v3/"
@@ -77,39 +75,41 @@ func fetchCoinGeckoCoins() map[string][]CoinGeckoCoin {
 
 }
 
-func chainIdToCoinGeckoPlatform(chain vaa.ChainID) string {
+func chainIdToCoinGeckoPlatform(chain ChainID) string {
 	switch chain {
-	case vaa.ChainIDSolana:
+	case ChainIDSolana:
 		return "solana"
-	case vaa.ChainIDEthereum:
+	case ChainIDEthereum:
 		return "ethereum"
-	case vaa.ChainIDTerra:
+	case ChainIDTerra:
 		return "terra"
-	case vaa.ChainIDBSC:
+	case ChainIDBSC:
 		return "binance-smart-chain"
-	case vaa.ChainIDPolygon:
+	case ChainIDPolygon:
 		return "polygon-pos"
-	case vaa.ChainIDAvalanche:
+	case ChainIDAvalanche:
 		return "avalanche"
-	case vaa.ChainIDOasis:
+	case ChainIDOasis:
 		return "oasis"
-	case vaa.ChainIDAlgorand:
+	case ChainIDAlgorand:
 		return "algorand"
-	case vaa.ChainIDAurora:
+	case ChainIDAurora:
 		return "aurora"
-	case vaa.ChainIDFantom:
+	case ChainIDFantom:
 		return "fantom"
-	case vaa.ChainIDKarura:
+	case ChainIDKarura:
 		return "" // no platform_id for karura on CG
-	case vaa.ChainIDAcala:
+	case ChainIDAcala:
 		return "polkadot"
-	case vaa.ChainIDEthereumRopsten:
+	case ChainIDEthereumRopsten:
 		return "ethereum"
+	case ChainIDAlephium:
+		return "alephium"
 	}
 	return ""
 }
 
-func fetchCoinGeckoCoinFromContract(chainId vaa.ChainID, address string) CoinGeckoCoin {
+func fetchCoinGeckoCoinFromContract(chainId ChainID, address string) CoinGeckoCoin {
 	baseUrl := cgBaseUrl
 	cgApiKey := os.Getenv("COINGECKO_API_KEY")
 	if cgApiKey != "" {
@@ -154,7 +154,7 @@ func fetchCoinGeckoCoinFromContract(chainId vaa.ChainID, address string) CoinGec
 	return parsed
 }
 
-func fetchCoinGeckoCoinId(chainId vaa.ChainID, address, symbol, name string) (coinId, foundSymbol, foundName string) {
+func fetchCoinGeckoCoinId(chainId ChainID, address, symbol, name string) (coinId, foundSymbol, foundName string) {
 	// try coingecko, return if good
 	// if coingecko does not work, try chain-specific options
 
@@ -163,7 +163,7 @@ func fetchCoinGeckoCoinId(chainId vaa.ChainID, address, symbol, name string) (co
 	newSymbol := ""
 	newName := ""
 
-	if symbol == "" && chainId == vaa.ChainIDSolana {
+	if symbol == "" && chainId == ChainIDSolana {
 		// try to lookup the symbol in solana token list, from the address
 		if token, ok := solanaTokens[address]; ok {
 			symbol = token.Symbol

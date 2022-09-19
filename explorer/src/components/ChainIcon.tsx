@@ -9,6 +9,7 @@ import oasisIcon from "../images/oasis.svg";
 import fantomIcon from "../images/fantom.svg";
 import auroraIcon from "../images/aurora.svg";
 import karuraIcon from "../images/karura.svg"
+import alephiumIcon from "../images/alephium.svg"
 import {
   ChainId,
   CHAIN_ID_AVAX,
@@ -36,6 +37,7 @@ const chainIdToSrc = {
   [CHAIN_ID_FANTOM]: fantomIcon,
   [CHAIN_ID_AURORA]: auroraIcon,
   [CHAIN_ID_KARURA]: karuraIcon,
+  [255]: alephiumIcon
 };
 
 const ChainIcon = ({ chainId }: { chainId: ChainId }) =>

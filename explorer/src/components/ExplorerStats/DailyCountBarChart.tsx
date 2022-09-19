@@ -45,7 +45,7 @@ const DailyCountBarChart = (props: DailyCountProps) => {
     setData(datum);
   }, [props.dailyCount, activeNetwork]);
 
-  const keys = chainEnums.slice(1);
+  const keys = Object.keys(chainEnums)
   const today = new Date().toISOString().slice(0, 10);
 
   return (

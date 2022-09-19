@@ -12,7 +12,6 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
-	"github.com/certusone/wormhole/node/pkg/vaa"
 	"github.com/holiman/uint256"
 )
 
@@ -224,7 +223,7 @@ func DecodeAssetMeta(data []byte) (*AssetMeta, error) {
 }
 
 // TEMP: until this https://forge.certus.one/c/wormhole/+/1850 lands
-func makeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, sequence uint64) string {
+func makeRowKey(emitterChain ChainID, emitterAddress Address, sequence uint64) string {
 	// left-pad the sequence with zeros to 16 characters, because bigtable keys are stored lexicographically
 	return fmt.Sprintf("%d:%s:%016d", emitterChain, emitterAddress, sequence)
 }
@@ -257,8 +256,8 @@ func TrimUnicodeFromByteArray(b []byte) []byte {
 }
 
 func addReceiverAddressToMutation(mut *bigtable.Mutation, ts bigtable.Timestamp, chainID uint16, hexAddress string) {
-	nativeAddress := transformHexAddressToNative(vaa.ChainID(chainID), hexAddress)
-	if vaa.ChainID(chainID) == vaa.ChainIDSolana {
+	nativeAddress := transformHexAddressToNative(ChainID(chainID), hexAddress)
+	if ChainID(chainID) == ChainIDSolana {
 		nativeAddress = fetchSolanaAccountOwner(nativeAddress)
 	}
 	if nativeAddress != "" {
@@ -289,7 +288,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 		return fmt.Errorf("no data to process in message")
 	}
 
-	signedVaa, err := vaa.Unmarshal(m.Data)
+	signedVaa, err := Unmarshal(m.Data)
 	if err != nil {
 		log.Println("failed Unmarshaling VAA")
 		return err
@@ -356,7 +355,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			}
 
 			addressHex := hex.EncodeToString(payload.TokenAddress[:])
-			chainID := vaa.ChainID(payload.TokenChain)
+			chainID := ChainID(payload.TokenChain)
 			nativeAddress := transformHexAddressToNative(chainID, addressHex)
 			name := string(TrimUnicodeFromByteArray(payload.Name[:]))
 			symbol := string(TrimUnicodeFromByteArray(payload.Symbol[:]))

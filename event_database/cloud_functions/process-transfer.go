@@ -31,9 +31,9 @@ func rangeFromTime(t time.Time, hours int) (start time.Time, end time.Time) {
 	return t.Add(-duration), t.Add(duration)
 }
 
-func transformHexAddressToNative(chain vaa.ChainID, address string) string {
+func transformHexAddressToNative(chain ChainID, address string) string {
 	switch chain {
-	case vaa.ChainIDSolana:
+	case ChainIDSolana:
 		addr, err := hex.DecodeString(address)
 		if err != nil {
 			log.Fatalf("failed to decode solana string: %v", err)
@@ -43,19 +43,19 @@ func transformHexAddressToNative(chain vaa.ChainID, address string) string {
 		}
 		solPk := solana.PublicKeyFromBytes(addr[:])
 		return solPk.String()
-	case vaa.ChainIDEthereum,
-		vaa.ChainIDBSC,
-		vaa.ChainIDPolygon,
-		vaa.ChainIDAvalanche,
-		vaa.ChainIDOasis,
-		vaa.ChainIDEthereumRopsten,
-		vaa.ChainIDAurora,
-		vaa.ChainIDFantom,
-		vaa.ChainIDKarura,
-		vaa.ChainIDAcala:
+	case ChainIDEthereum,
+		ChainIDBSC,
+		ChainIDPolygon,
+		ChainIDAvalanche,
+		ChainIDOasis,
+		ChainIDEthereumRopsten,
+		ChainIDAurora,
+		ChainIDFantom,
+		ChainIDKarura,
+		ChainIDAcala:
 		addr := fmt.Sprintf("0x%v", address[(len(address)-40):])
 		return addr
-	case vaa.ChainIDTerra:
+	case ChainIDTerra:
 		// handle terra native assets manually
 		if val, ok := tokenAddressExceptions[address]; ok {
 			return val
@@ -71,9 +71,12 @@ func transformHexAddressToNative(chain vaa.ChainID, address string) string {
 			fmt.Println("convert error from cosmos bech32. err", convertErr)
 		}
 		return encodedAddr
-	case vaa.ChainIDAlgorand:
+	case ChainIDAlgorand:
 		// TODO
 		return ""
+	case ChainIDAlephium:
+		addr := fmt.Sprintf("0x%v", address[(len(address)-40):])
+		return addr
 	default:
 		log.Println("cannot process address for unknown chain: ", chain)
 		return ""
@@ -87,7 +90,7 @@ func ProcessTransfer(ctx context.Context, m PubSubMessage) error {
 		return fmt.Errorf("no data to process in message")
 	}
 
-	signedVaa, err := vaa.Unmarshal(m.Data)
+	signedVaa, err := Unmarshal(m.Data)
 	if err != nil {
 		log.Println("failed Unmarshaling VAA")
 		return err
