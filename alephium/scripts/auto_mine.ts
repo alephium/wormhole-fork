@@ -1,26 +1,16 @@
-import { addressFromPublicKey, web3 } from '@alephium/web3'
-import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { NodeProvider } from '@alephium/web3'
 
-const fromPrivateKey = '71d640c34b25eedd8acd60be136012f77059836c095fbd02a7cb86a124cbbdae'
-const fromPublicKey = '03034a46d0028a725e27fd24b9142eef856f2ce01d590732744bde0d7553638cd6'
-const fromAddress = addressFromPublicKey(fromPublicKey)
-const toAddress = '199QZVT8bLkYNZ7d2xoHbip29yD18tdeHDPjB7cyx9ofi'
-const transferAmount = '1000000000000000'
+const devnetGroupIndex = 0
 
 async function mine(): Promise<void> {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-  const signer = new PrivateKeyWallet(fromPrivateKey)
-  const result = await signer.signTransferTx({
-    signerAddress: fromAddress,
-    destinations: [
-      {
-        address: toAddress,
-        attoAlphAmount: transferAmount
-      }
-    ],
-    submitTx: true
-  })
-  console.log('tx submitted, tx id: ' + result.txId)
+  const nodeProvider = new NodeProvider('http://127.0.0.1:22973')
+  const chainIndex = {
+    fromGroup: devnetGroupIndex,
+    toGroup: devnetGroupIndex
+  }
+  await nodeProvider.miners.postMinersCpuMiningMineOneBlock(chainIndex)
+  const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo(chainIndex)
+  console.log(`chain index: ${chainIndex.fromGroup} -> ${chainIndex.toGroup}, height: ${chainInfo.currentHeight}`)
   await new Promise((resolve) => setTimeout(resolve, 1000))
   await mine()
 }
