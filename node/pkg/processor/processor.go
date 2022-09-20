@@ -27,6 +27,8 @@ type (
 		firstObserved time.Time
 		// Copy of the VAA we constructed when we made our own observation.
 		ourVAA *vaa.VAA
+		// The most recent time that a re-observation request was sent to the guardian network.
+		lastRetry time.Time
 		// Map of signatures seen by guardian. During guardian set updates, this may contain signatures belonging
 		// to either the old or new guardian set.
 		signatures map[ethcommon.Address][]byte
