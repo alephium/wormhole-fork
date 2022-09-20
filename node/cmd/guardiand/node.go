@@ -289,6 +289,9 @@ var NodeCmd = &cobra.Command{
 	Run:   runNode,
 }
 
+// observationRequestBufferSize is the buffer size of the per-network reobservation channel
+const observationRequestBufferSize = 25
+
 func runNode(cmd *cobra.Command, args []string) {
 	if *network != "devnet" && *network != "testnet" && *network != "mainnet" {
 		fmt.Printf("invalid network type %s\n", *network)
@@ -605,10 +608,9 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
 
 	// Observation request channel for each chain supporting observation requests.
-	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
+	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
+	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
+	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
 
 	go handleReobservationRequests(rootCtx, clock.New(), logger, obsvReqC, chainObsvReqC)
 
