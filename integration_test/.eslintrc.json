@@ -1,0 +1,18 @@
+{
+  "plugins": ["security"],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended",
+    "plugin:security/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off"
+      }
+    }
+  ]
+}
