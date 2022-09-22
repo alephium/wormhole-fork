@@ -1,0 +1,61 @@
+name: Integration Test
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18.6'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: proto-gen
+        run: cd tools && npm install && cd .. && make generate-proto-sdk
+      - name: alephium
+        working-directory: ./alephium
+        run: |
+          npm install && cp .env.test .env && npx @alephium/cli devnet start
+          npm run compile-contracts && npm run deploy:devnet
+          nohup npm run auto-mine &
+      - name: ethereum
+        working-directory: ./ethereum
+        run: |
+          npm install && npm run build && cp .env.test .env
+          npx ganache-cli -e 10000 --deterministic --time="1970-01-01T00:00:00+00:00" > ganache.log &
+          sleep 5
+          npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_solana_chain.js && npx truffle exec scripts/register_terra_chain.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_algo_chain.js && npx truffle exec scripts/register_alph_chain.js
+          npx truffle exec mine.js &
+      - name: sdk
+        working-directory: ./sdk/js
+        run: npm install && npm run build
+      - name: guardian
+        run: |
+          git tag v0.0.0-integration-test
+          make node
+          nohup build/bin/guardiand node \
+            --ethRPC ws://127.0.0.1:8545 \
+            --alphRPC http://127.0.0.1:22973 \
+            --alphContractIds "26v7DJHTsgtGar18M47KnY7f47WzKCm2oNmLsC3CgpGUb,yZzMeJJ32RVMawpDoBbRqRCRmiCvoLQyw5ho2JmyhMXU" \
+            --alphGroupIndex "0" \
+            --alphMinConfirmations "10" \
+            --devnetGuardianIndex "0" \
+            --integrationTest \
+            --unsafeDevMode \
+            --guardianKey ./bridge.key \
+            --publicRPC "[::]:7070" \
+            --publicWeb "[::]:7071" \
+            --adminSocket /tmp/admin.sock \
+            --dataDir ./data \
+            --logLevel=debug &
+      - name: it
+        working-directory: ./integration_test
+        run: npm install && npm run it
