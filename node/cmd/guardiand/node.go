@@ -62,8 +62,8 @@ var (
 	ethRPC      *string
 	ethContract *string
 
-	bscRPC      *string
-	bscContract *string
+	// bscRPC      *string
+	// bscContract *string
 
 	// polygonRPC      *string
 	// polygonContract *string
@@ -122,6 +122,9 @@ var (
 
 	logLevel *string
 
+	devnetGuardianIndex *int
+	integrationTest     *bool
+
 	unsafeDevMode   *bool
 	testnetMode     *bool
 	devNumGuardians *uint
@@ -168,8 +171,8 @@ func init() {
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
 	ethContract = NodeCmd.Flags().String("ethContract", "", "Ethereum contract address")
 
-	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
-	bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
+	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
+	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
 
 	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
 	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
@@ -227,6 +230,9 @@ func init() {
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 10, "The min confirmations for alephium tx")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
+
+	devnetGuardianIndex = NodeCmd.Flags().Int("devnetGuardianIndex", 0, "Specify devnet guardian index")
+	integrationTest = NodeCmd.Flags().Bool("integrationTest", false, "Launch node for integration testing")
 
 	unsafeDevMode = NodeCmd.Flags().Bool("unsafeDevMode", false, "Launch node in unsafe, deterministic devnet mode")
 	testnetMode = NodeCmd.Flags().Bool("testnetMode", false, "Launch node in testnet mode (enables testnet-only features like Ropsten)")
@@ -289,7 +295,14 @@ func runNode(cmd *cobra.Command, args []string) {
 		fmt.Print(devwarning)
 	}
 
-	common.LockMemory()
+	if *integrationTest && !*unsafeDevMode {
+		fmt.Println("Integration tests can only be run in devnet mode")
+		os.Exit(1)
+	}
+
+	if !*integrationTest {
+		common.LockMemory()
+	}
 	common.SetRestrictiveUmask()
 
 	// Refuse to run as root in production mode.
@@ -391,7 +404,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		// Deterministic ganache ETH devnet address.
 		*ethContract = devnet.GanacheWormholeContractAddress.Hex()
-		*bscContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *bscContract = devnet.GanacheWormholeContractAddress.Hex()
 		// *polygonContract = devnet.GanacheWormholeContractAddress.Hex()
 		// *avalancheContract = devnet.GanacheWormholeContractAddress.Hex()
 		// *oasisContract = devnet.GanacheWormholeContractAddress.Hex()
@@ -425,12 +438,12 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *ethContract == "" {
 		logger.Fatal("Please specify --ethContract")
 	}
-	if *bscRPC == "" {
-		logger.Fatal("Please specify --bscRPC")
-	}
-	if *bscContract == "" {
-		logger.Fatal("Please specify --bscContract")
-	}
+	// if *bscRPC == "" {
+	// 	logger.Fatal("Please specify --bscRPC")
+	// }
+	// if *bscContract == "" {
+	// 	logger.Fatal("Please specify --bscContract")
+	// }
 	// if *polygonRPC == "" {
 	// 	logger.Fatal("Please specify --polygonRPC")
 	// }
@@ -618,14 +631,19 @@ func runNode(cmd *cobra.Command, args []string) {
 	// 	logger.Fatal("invalid Solana contract address", zap.Error(err))
 	// }
 
+	if *unsafeDevMode {
+		idx, err := devnet.GetDevnetIndex()
+		if err == nil {
+			*devnetGuardianIndex = idx
+		} else if err != nil && cmd.Flags().Lookup("devnetGuardianIndex") == nil {
+			logger.Fatal("Failed to parse hostname - are we running in devnet?", zap.Error(err))
+		}
+	}
+
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
-		gk, err := generateDevnetGuardianKey()
-		if err != nil {
-			logger.Fatal("failed to generate devnet guardian key", zap.Error(err))
-		}
-
-		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		gk := devnet.InsecureDeterministicEcdsaKeyByIndex(ethcrypto.S256(), uint64(*devnetGuardianIndex))
+		err := writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
 		if err != nil {
 			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
 		}
@@ -742,11 +760,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// Load p2p private key
 	var priv crypto.PrivKey
 	if *unsafeDevMode {
-		idx, err := devnet.GetDevnetIndex()
-		if err != nil {
-			logger.Fatal("Failed to parse hostname - are we running in devnet?")
-		}
-		priv = devnet.DeterministicP2PPrivKeyByIndex(int64(idx))
+		priv = devnet.DeterministicP2PPrivKeyByIndex(int64(*devnetGuardianIndex))
 	} else {
 		priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
 		if err != nil {
