@@ -45,9 +45,9 @@ fi
 echo "generating guardian set addresses"
 # create an array of strings containing the ECDSA public keys of the devnet guardians in the guardianset:
 # guardiansPublicEth has the leading "0x" that Eth scripts expect.
-guardiansPublicEth=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public]' $addressesJson)
+guardiansPublicEth=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].public]' $addressesJson)
 # guardiansPublicHex does not have a leading "0x", just hex strings.
-guardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
+guardiansPublicHex=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
 # also make a CSV string of the hex addresses, so the client scripts that need that format don't have to.
 guardiansPublicHexCSV=$(echo ${guardiansPublicHex} | jq --raw-output -c  '. | join(",")')
 
@@ -62,7 +62,7 @@ upsert_env_file $envFile "INIT_SIGNERS_CSV" $guardiansPublicHexCSV
 # 2) guardian private keys - used for generating the initial governance VAAs (register token bridge & nft bridge contracts on each chain).
 echo "generating guardian set keys"
 # create an array of strings containing the private keys of the devnet guardians in the guardianset
-guardiansPrivate=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].private]' $addressesJson)
+guardiansPrivate=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].private]' $addressesJson)
 # create a CSV string with the private keys of the guardians in the guardianset, that will be used to create registration VAAs
 guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(",")')
 
@@ -70,6 +70,17 @@ guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate
 upsert_env_file $envFile "INIT_SIGNERS_KEYS_CSV"  $guardiansPrivateCSV
 
+# create update guardian set vaa if the numGuardians > 1
+if [[ "${numGuardians}" -gt "1" ]]; then
+    echo "creating update guardian set vaa"
+    newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
+    newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
+    updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
+    updateGuardianSet="UPDATE_GUARDIAN_SET_VAA"
+    upsert_env_file $ethFile $updateGuardianSet $updateGuardianSetVAA
+    upsert_env_file $envFile $updateGuardianSet $updateGuardianSetVAA
+    upsert_env_file $alphFile $updateGuardianSet $updateGuardianSetVAA
+fi
 
 # 3) fetch and store the contract addresses that we need to make contract registration governance VAAs for:
 echo "getting contract addresses for chain registrations from $addressesJson"
