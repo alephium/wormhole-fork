@@ -11,7 +11,8 @@ const settingsTemplate = {
   initGovContract: process.env.INIT_GOV_CONTRACT!,
   minimalConsistencyLevel: -1, // to be overwritten
   registerETHVAA: process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!,
-  registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!
+  registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!,
+  updateGuardianSetVAA: process.env.UPDATE_GUARDIAN_SET_VAA
 }
 
 export type Settings = typeof settingsTemplate
