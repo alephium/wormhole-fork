@@ -1,5 +1,5 @@
 import { Project, Script } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '@alephium/cli/types'
+import { Configuration, Deployer, DeployFunction, Network } from '@alephium/cli/types'
 import { Settings } from '../alephium.config'
 
 const oneAlph = BigInt('1000000000000000000')
@@ -31,5 +31,7 @@ const registerChain: DeployFunction<Settings> = async (
   const registerBSCVAA = network.settings.registerBSCVAA
   await registerWithVAA(deployer, script, tokenBridgeId, registerBSCVAA, 'BSC')
 }
+
+registerChain.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
 
 export default registerChain
