@@ -1,0 +1,3 @@
+TxScript TransferFee(governance: Governance, vaa: ByteVec) {
+  governance.submitTransferFees(vaa)
+}

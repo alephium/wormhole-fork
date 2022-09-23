@@ -11,6 +11,8 @@ import { default as attestToken } from './artifacts/token_bridge_scripts/attest_
 import { default as attestWrappedAlph } from './artifacts/token_bridge_scripts/attest_wrapped_alph.ral.json'
 import { default as destroyUnexecutedSequences } from './artifacts/token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral.json'
 import { default as updateRefundAddress } from './artifacts/token_bridge_scripts/update_refund_address.ral.json'
+import { default as upgradeContract } from './artifacts/token_bridge_scripts/upgrade_token_bridge_contract.ral.json'
+import { default as updateMinimalConsistencyLevel } from './artifacts/token_bridge_scripts/update_minimal_consistency_level.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -58,4 +60,12 @@ export function destroyUnexecutedSequencesScript(): Script {
 
 export function updateRefundAddressScript(): Script {
     return Script.fromJson(updateRefundAddress)
+}
+
+export function upgraeTokenBridgeContractScript(): Script {
+    return Script.fromJson(upgradeContract)
+}
+
+export function updateMinimalConsistencyLevelScript(): Script {
+    return Script.fromJson(updateMinimalConsistencyLevel)
 }
