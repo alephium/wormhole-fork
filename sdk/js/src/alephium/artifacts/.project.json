@@ -76,6 +76,22 @@
       "sourceCodeHash": "e9ce4f947692096537ffdcc7aafd68a2dcc5931b925f1ff451b0ed6eb83b547d",
       "warnings": []
     },
+    "contracts/governance_scripts/set_message_fee.ral": {
+      "sourceCodeHash": "fb342e042b491a9279634da4848bd54e065857cb3903bb0dd78707b13fd2f442",
+      "warnings": []
+    },
+    "contracts/governance_scripts/transfer_fee.ral": {
+      "sourceCodeHash": "f90acc004e17f048fbba3d3a32b8b92f5f8cae8e2940fddf2178f3d72c56f58f",
+      "warnings": []
+    },
+    "contracts/governance_scripts/update_guardian_set.ral": {
+      "sourceCodeHash": "e9910001120816862e553fcf9e7f91ab7033f2cf650987baa2db7fc58aed4ef6",
+      "warnings": []
+    },
+    "contracts/governance_scripts/upgrade_governance_contract.ral": {
+      "sourceCodeHash": "c9e700d63277e02d0682450408fa19da4e3ce2e1b28d987badea6379ba304dd7",
+      "warnings": []
+    },
     "contracts/tests/get_token.ral": {
       "sourceCodeHash": "e90661e2edc7c5c7b07326356a396d1c1505077d41e43730a52c35a57d8f4edd",
       "warnings": []
@@ -124,12 +140,20 @@
       "sourceCodeHash": "1477749d1bbe7bf9d65279d49cac0087c562d9e69a2d310e485a6e06c91244d9",
       "warnings": []
     },
+    "contracts/token_bridge_scripts/update_minimal_consistency_level.ral": {
+      "sourceCodeHash": "b1c1cff4c9e901dee7352a322f1dd1c20c57797bf33832e1c7f915695135bd00",
+      "warnings": []
+    },
     "contracts/token_bridge_scripts/update_refund_address.ral": {
       "sourceCodeHash": "aa42f09902cdf4dd3f3c865ae084345b6f85193229ea495e9f859962429d3bee",
       "warnings": []
     },
     "contracts/token_bridge_scripts/update_remote_token_pool.ral": {
       "sourceCodeHash": "2878bf1e43d43594ad89571eab41bf190155f8a24ae01cf4a92ae82d6c631779",
+      "warnings": []
+    },
+    "contracts/token_bridge_scripts/upgrade_token_bridge_contract.ral": {
+      "sourceCodeHash": "33faa7a56f2d182c462c937a5e90fd7e0ab5244a12489e70d13d8c0a4de918c6",
       "warnings": []
     },
     "contracts/constants.ral": {
