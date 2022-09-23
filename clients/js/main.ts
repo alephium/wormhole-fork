@@ -179,6 +179,58 @@ yargs(hideBin(process.argv))
               console.log(serialiseVAA(v));
             }
           )
+          // Update guardian set
+          .command(
+            'update-guardian-set',
+            'Generate update guardian set vaa',
+            (yargs) => {
+              return yargs
+                .option('index', {
+                  alias: 'i',
+                  describe: 'New guardian set index',
+                  type: 'number',
+                  required: true,
+                })
+                .option('keys', {
+                  alias: 'k',
+                  describe: 'New guardian set keys',
+                  type: 'string',
+                  required: true
+                })
+            },
+            (argv) => {
+              const sequence = argv['sequence']
+              if (sequence === undefined) {
+                throw new Error('please specify sequence')
+              }
+              const index = argv['index']
+              const keys = argv['keys'].split(',').map(key => {
+                if (key.startsWith('0x') || key.startsWith('0X')) {
+                  return key.slice(2)
+                }
+                return key
+              })
+              if (keys.length === 0) {
+                throw new Error('new guardian set cannot be empty')
+              }
+              const payload: vaa.GuardianSetUpgrade = {
+                module: 'Core',
+                type: 'GuardianSetUpgrade',
+                newGuardianSetIndex: index,
+                newGuardianSetLength: keys.length,
+                newGuardianSet: keys
+              }
+              const vaa = makeVAA(
+                GOVERNANCE_CHAIN,
+                0,
+                GOVERNANCE_EMITTER,
+                argv["guardian-secret"].split(","),
+                sequence,
+                payload
+              )
+              console.log(serialiseVAA(vaa))
+            }
+          )
       );
     },
     (_) => {
