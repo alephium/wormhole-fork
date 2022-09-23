@@ -98,13 +98,16 @@ func main() {
 	}
 
 	log.Printf("Starting search for missing sequence numbers...")
+	alphEmitterAddress, err := alephium.ToContractAddress(GovernanceContractId)
+	if err != nil {
+		log.Fatalf("invalid governance contract id, err: %v", err)
+	}
 	var (
-		alphEmitterAddress string = alephium.ToContractAddress(alephium.HexToByte32(GovernanceContractId))
-		batchSize          int32  = 100
-		remain             int    = missingMessageSize
+		batchSize int32 = 100
+		remain    int   = missingMessageSize
 	)
 	client := alephium.NewClient(*alphRPC, *apiKey, 10)
-	eventCount, err := client.GetContractEventsCount(ctx, alphEmitterAddress)
+	eventCount, err := client.GetContractEventsCount(ctx, *alphEmitterAddress)
 	if err != nil {
 		log.Fatalf("Failed to get event count, err: %v", err)
 	}
@@ -123,7 +126,7 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, batchSize, int32(*groupIndex))
+		events, err := client.GetContractEventsByRange(ctx, *alphEmitterAddress, fromIndex, batchSize, int32(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
@@ -144,12 +147,16 @@ func main() {
 			missingMessages[wormholeMsg.Sequence] = false
 			remain -= 1
 
+			txIdBytes, err := alephium.HexToFixedSizeBytes(event.TxId, 32)
+			if err != nil {
+				log.Fatalf("Invalid tx id %s, err: %v", event.TxId, err)
+			}
 			_, err = admin.SendObservationRequest(
 				ctx,
 				&nodev1.SendObservationRequestRequest{
 					ObservationRequest: &gossipv1.ObservationRequest{
 						ChainId: uint32(vaa.ChainIDAlephium),
-						TxHash:  alephium.HexToFixedSizeBytes(event.TxId, 32),
+						TxHash:  txIdBytes,
 					},
 				},
 			)

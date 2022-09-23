@@ -2,13 +2,13 @@ package alephium
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"testing"
 
 	sdk "github.com/alephium/go-sdk"
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,17 +32,8 @@ func byteVecField(hex string) sdk.Val {
 
 func randomByte32() Byte32 {
 	var byte32 Byte32
-	size, err := rand.Read(byte32[:])
-	assume(size == 32)
-	assume(err == nil)
+	rand.Read(byte32[:])
 	return byte32
-}
-
-func randomAddress() string {
-	var bytes []byte
-	byte32 := randomByte32()
-	bytes = append([]byte{3}, byte32[:]...)
-	return base58.Encode(bytes)
 }
 
 func TestField(t *testing.T) {
@@ -167,9 +158,16 @@ func TestTransferEvent(t *testing.T) {
 	assert.Equal(t, wormholeMessage.consistencyLevel, uint8(1))
 }
 
+func hexToBytes(str string) []byte {
+	bytes, _ := hex.DecodeString(str)
+	return bytes
+}
+
 func TestContractConversion(t *testing.T) {
 	bytes := randomByte32()
-	address := ToContractAddress(bytes)
-	id := toContractId(address)
+	address, err := ToContractAddress(hex.EncodeToString(bytes[:]))
+	assert.Nil(t, err)
+	id, err := ToContractId(*address)
+	assert.Nil(t, err)
 	assert.Equal(t, bytes, id)
 }
