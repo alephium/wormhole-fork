@@ -55,7 +55,8 @@ import {
   expectNotEnoughBalance,
   alph,
   buildProject,
-  expectError
+  expectError,
+  encodeUint8
 } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
@@ -1260,7 +1261,14 @@ describe('test token bridge', () => {
       const newContractCode = v2.bytecode
       const receivedSequence = tokenBridgeInfo.selfState.fields['receivedSequence'] as bigint
       const sendSequence = tokenBridgeInfo.selfState.fields['sendSequence'] as bigint
-      const prevEncodedState = Buffer.concat([encodeU256(BigInt(receivedSequence) + 1n), encodeU256(sendSequence)])
+      const consistency = tokenBridgeInfo.selfState.fields['minimalConsistencyLevel'] as number
+      const refundAddress = tokenBridgeInfo.selfState.fields['refundAddress'] as string
+      const prevEncodedState = Buffer.concat([
+        encodeU256(BigInt(receivedSequence) + 1n),
+        encodeU256(sendSequence),
+        encodeUint8(consistency),
+        base58.decode(refundAddress)
+      ])
       const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
       const newState = '00'
       const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
