@@ -67,14 +67,14 @@ export class SubmitTransferFee {
   }
 }
 
-export function createGovernance(): ContractInfo {
+export function createGovernance(receivedSequence?: number): ContractInfo {
   const address = randomContractAddress()
   const governanceContract = Project.contract('Governance')
   const initFields = {
     chainId: CHAIN_ID_ALEPHIUM,
     governanceChainId: governanceChainId,
     governanceEmitterAddress: governanceEmitterAddress,
-    receivedSequence: 0,
+    receivedSequence: receivedSequence ?? 0,
     messageFee: messageFee,
     guardianSets: ['', initGuardianSet.encodeAddresses()],
     guardianSetIndexes: [0, initGuardianSet.index],

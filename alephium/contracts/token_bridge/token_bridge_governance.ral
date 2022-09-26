@@ -18,8 +18,8 @@ Abstract Contract TokenBridgeGovernance(
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
-        let (targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
-        receivedSequence = receivedSequence + 1
+        let (msgSequence, targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
+        receivedSequence = msgSequence + 1
         return targetChainId, payload
     }
 

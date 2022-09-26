@@ -92,22 +92,22 @@ Contract Governance(
     }
 
     @using(readonly = true, externalCallCheck = false)
-    pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, ByteVec) {
+    pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, U256, ByteVec) {
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseAndVerifyVAA(vaa, true)
         assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
         assert!(emitterAddress == governanceEmitterAddress, ErrorCodes.InvalidEmitAddress)
-        assert!(msgSequence == targetSequence, ErrorCodes.InvalidSequence)
+        assert!(msgSequence >= targetSequence, ErrorCodes.InvalidSequence)
 
         // check module and governance action
         assert!(u256From32Byte!(byteVecSlice!(payload, 0, 32)) == coreModule, ErrorCodes.InvalidModule)
         assert!(byteVecSlice!(payload, 32, 33) == action, ErrorCodes.InvalidActionId)
 
-        return targetChainId, payload
+        return msgSequence, targetChainId, payload
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
-        let (targetChainId, payload) = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, CoreModule, action)
-        receivedSequence = receivedSequence + 1
+        let (msgSequence, targetChainId, payload) = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, CoreModule, action)
+        receivedSequence = msgSequence + 1
         return targetChainId, payload
     }
 

@@ -346,7 +346,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
   return new ContractInfo(tokenBridgeFactory, state, templateContracts.states(), address)
 }
 
-export function createTokenBridge(totalWrappedAlph = 0n, address?: string): TokenBridgeInfo {
+export function createTokenBridge(totalWrappedAlph = 0n, address?: string, receivedSequence?: number): TokenBridgeInfo {
   const tokenBridge = Project.contract('TokenBridge')
   const governance = createGovernance()
   const wrappedAlphPoolCodeHash = Project.contract('WrappedAlphPool').codeHash
@@ -357,7 +357,7 @@ export function createTokenBridge(totalWrappedAlph = 0n, address?: string): Toke
   const initFields = {
     governance: governance.contractId,
     localChainId: CHAIN_ID_ALEPHIUM,
-    receivedSequence: 0,
+    receivedSequence: receivedSequence ?? 0,
     sendSequence: 0,
     wrappedAlphId: wrappedAlph.contractId,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
