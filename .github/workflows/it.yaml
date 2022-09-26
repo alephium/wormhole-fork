@@ -44,7 +44,7 @@ jobs:
           nohup build/bin/guardiand node \
             --ethRPC ws://127.0.0.1:8545 \
             --alphRPC http://127.0.0.1:22973 \
-            --alphContractIds "26v7DJHTsgtGar18M47KnY7f47WzKCm2oNmLsC3CgpGUb,yZzMeJJ32RVMawpDoBbRqRCRmiCvoLQyw5ho2JmyhMXU" \
+            --alphContractIds "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg" \
             --alphGroupIndex "0" \
             --alphMinConfirmations "10" \
             --devnetGuardianIndex "0" \

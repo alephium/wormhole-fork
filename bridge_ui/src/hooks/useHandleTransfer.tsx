@@ -358,7 +358,6 @@ async function alephium(
             targetChain,
             uint8ArrayToHex(targetAddress),
             amountParsed,
-            alphMessageFee,
             alphArbiterFee,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
