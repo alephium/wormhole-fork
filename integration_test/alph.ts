@@ -169,7 +169,6 @@ export async function createAlephium(): Promise<BridgeChain> {
       toChainId,
       validateToAddress(toAddress),
       amount,
-      defaultMessageFee,
       defaultArbiterFee,
       defaultConfirmations
     )
@@ -177,7 +176,7 @@ export async function createAlephium(): Promise<BridgeChain> {
       signerAddress: accountAddress,
       bytecode: bytecode,
       submitTx: true,
-      attoAlphAmount: (amount + defaultMessageFee).toString()
+      attoAlphAmount: amount.toString()
     })
     console.log(`transfer walph to ${coalesceChainName(toChainId)} succeed, amount: ${amount}, tx id: ${result.txId}`)
     await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)

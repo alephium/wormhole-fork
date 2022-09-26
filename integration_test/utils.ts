@@ -124,10 +124,10 @@ export class TransferTokenTest {
       this.fromChain.chainId
     )
 
-    const extraFee = transferResult.txFee + this.fromChain.messageFee
-    assert(amount + extraFee + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
-    assert(amount + lockedBalanceBeforeTransfer === lockedBalanceAfterTransfer)
-    assert(amount + balanceBeforeTransferOnTargetChain === balanceAfterTransferOnTargetChain)
+    const realTransferAmount = amount - this.fromChain.messageFee
+    assert(amount + transferResult.txFee + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
+    assert(realTransferAmount + lockedBalanceBeforeTransfer === lockedBalanceAfterTransfer)
+    assert(realTransferAmount + balanceBeforeTransferOnTargetChain === balanceAfterTransferOnTargetChain)
   }
 
   async transferWrappedTestToken(amount: bigint): Promise<void> {
