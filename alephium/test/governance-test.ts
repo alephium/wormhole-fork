@@ -35,10 +35,11 @@ describe('test governance', () => {
     vaa: VAA,
     method: string,
     initialAsset?: Asset,
-    inputAssets?: InputAsset[]
+    inputAssets?: InputAsset[],
+    receivedSequence?: number
   ): Promise<TestContractResult> {
     await buildProject()
-    const governanceInfo = createGovernance()
+    const governanceInfo = createGovernance(receivedSequence)
     const contract = governanceInfo.contract
     return await contract.testPublicMethod(method, {
       initialFields: governanceInfo.selfState.fields,
@@ -83,17 +84,24 @@ describe('test governance', () => {
 
   it('should update guardian set failed if sequence is invalid', async () => {
     const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
-    const invalidSequenceVaaBody = new VAABody(
-      updateGuardianSet.encode(),
-      governanceChainId,
-      CHAIN_ID_ALEPHIUM,
-      governanceEmitterAddress,
-      1
-    )
-    const invalidSequenceVaa = initGuardianSet.sign(initGuardianSet.quorumSize(), invalidSequenceVaaBody)
-    await expectAssertionFailed(async () => {
-      await testCase(invalidSequenceVaa, 'submitNewGuardianSet')
-    })
+    async function test(sequence: number) {
+      const body = new VAABody(
+        updateGuardianSet.encode(),
+        governanceChainId,
+        CHAIN_ID_ALEPHIUM,
+        governanceEmitterAddress,
+        sequence
+      )
+      const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), body)
+      return testCase(vaa, 'submitNewGuardianSet', undefined, undefined, 3)
+    }
+    for (let seq = 0; seq < 3; seq += 1) {
+      await expectAssertionFailed(async () => await test(seq))
+    }
+    for (let seq = 3; seq < 5; seq += 1) {
+      // we have checked the results in previous tests
+      await test(seq)
+    }
   })
 
   it('should update guardian set failed if new guardian set is empty', async () => {

@@ -265,19 +265,19 @@ describe('test token bridge', () => {
 
   it('should register chain failed if sequence is invalid', async () => {
     await buildProject()
-    const tokenBridgeInfo = createTokenBridge()
+    const tokenBridgeInfo = createTokenBridge(0n, undefined, 3)
     const tokenBridge = tokenBridgeInfo.contract
     const registerChain = new RegisterChain(remoteChainId, randomContractId())
-    const vaaBody = new VAABody(
-      registerChain.encode(),
-      governanceChainId,
-      CHAIN_ID_ALEPHIUM,
-      governanceEmitterAddress,
-      1
-    )
-    const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    await expectAssertionFailed(async () => {
-      await tokenBridge.testPublicMethod('registerChain', {
+    async function test(sequence: number) {
+      const vaaBody = new VAABody(
+        registerChain.encode(),
+        governanceChainId,
+        CHAIN_ID_ALEPHIUM,
+        governanceEmitterAddress,
+        sequence
+      )
+      const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+      return tokenBridge.testPublicMethod('registerChain', {
         address: tokenBridgeInfo.address,
         initialFields: tokenBridgeInfo.selfState.fields,
         testArgs: {
@@ -288,7 +288,14 @@ describe('test token bridge', () => {
         inputAssets: [defaultInputAsset],
         existingContracts: tokenBridgeInfo.dependencies
       })
-    })
+    }
+    for (let seq = 0; seq < 3; seq += 1) {
+      await expectAssertionFailed(async () => await test(seq))
+    }
+    for (let seq = 3; seq < 5; seq += 1) {
+      // we have checked the results in previous tests
+      await test(seq)
+    }
   })
 
   it('should create wrapped alph pool', async () => {
