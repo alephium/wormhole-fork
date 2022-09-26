@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const GovernanceContractId = "b5ab154d4f655ed3b237d29986d3d6cd43402e981b1f4d076cec47af6e2dfc04"
+const GovernanceContractId = "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c"
 
 var (
 	alphRPC     = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")

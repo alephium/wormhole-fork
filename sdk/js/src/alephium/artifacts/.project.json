@@ -9,9 +9,9 @@
   },
   "infos": {
     "contracts/governance.ral": {
-      "sourceCodeHash": "8ef55cfdc6eeddb51e1690e59a6c5aa4f327a00a6f9af72e452759e42c4351e1",
+      "sourceCodeHash": "6c189c6957475254f93b1304d7c3dd2ba2434f3b62a2e0b5d171f3c9d84bc088",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "8242b9a3c0a38113df4e2acd883e8d7f1e2d6357638ada95cfc2ea3f4642700b",
+      "codeHashDebug": "75a1ae06e2bf44eb5ac8006149467d7d87edf6bf02ff768643ffcb9c99ff7e68",
       "warnings": []
     },
     "contracts/sequence/unexecuted_sequence.ral": {
@@ -81,9 +81,9 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
-      "sourceCodeHash": "6a1adcd95fcae716091da14f27257c06d7d015bbd46b1b8a49e7fb03b79dc1e3",
+      "sourceCodeHash": "a9042b242b83dc01bac0ca4f1b3d3180e42eb4deb1fa10bdfcc9ddc60b90de0f",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "0211a5f969fef57bd5f6f72f136ce9d8c5ee381d1ae7a52ffe32a9e6d08a336b",
+      "codeHashDebug": "2587b2ac1233f1bb1c08022fdfaf39e5d60a43f7b6f4070137b674d29e854fc3",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
@@ -105,25 +105,33 @@
       "warnings": []
     },
     "contracts/token_bridge/wrapped_alph_pool.ral": {
-      "sourceCodeHash": "e9ce4f947692096537ffdcc7aafd68a2dcc5931b925f1ff451b0ed6eb83b547d",
+      "sourceCodeHash": "7d92e4177e019c06a2ddec16b6430937e656a8800f0a88a067001c1e06e1b27c",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "ca099948aac0c0c6a98f47fa9dfd4236a84976d8f8f67d552e735602936873a5",
+      "codeHashDebug": "6e245deec6a4ee15a8240f5d4d63ac4e8f54a119776cffe15c65155935b14e26",
       "warnings": []
     },
     "contracts/governance_scripts/set_message_fee.ral": {
       "sourceCodeHash": "fb342e042b491a9279634da4848bd54e065857cb3903bb0dd78707b13fd2f442",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/governance_scripts/transfer_fee.ral": {
       "sourceCodeHash": "f90acc004e17f048fbba3d3a32b8b92f5f8cae8e2940fddf2178f3d72c56f58f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/governance_scripts/update_guardian_set.ral": {
       "sourceCodeHash": "e9910001120816862e553fcf9e7f91ab7033f2cf650987baa2db7fc58aed4ef6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/governance_scripts/upgrade_governance_contract.ral": {
       "sourceCodeHash": "c9e700d63277e02d0682450408fa19da4e3ce2e1b28d987badea6379ba304dd7",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/tests/get_token.ral": {
@@ -181,7 +189,7 @@
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_alph.ral": {
-      "sourceCodeHash": "c94cc4bd9f30aaab5dac8a5ff3c51e8618c2d3ebb95101a093f5970c3aa4e6ae",
+      "sourceCodeHash": "25b893898cedd2732635e0e5447e2a18ea40f068cf5e4f4570954ffb787fbb6d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -200,6 +208,8 @@
     },
     "contracts/token_bridge_scripts/update_minimal_consistency_level.ral": {
       "sourceCodeHash": "b1c1cff4c9e901dee7352a322f1dd1c20c57797bf33832e1c7f915695135bd00",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/update_refund_address.ral": {
@@ -216,10 +226,12 @@
     },
     "contracts/token_bridge_scripts/upgrade_token_bridge_contract.ral": {
       "sourceCodeHash": "33faa7a56f2d182c462c937a5e90fd7e0ab5244a12489e70d13d8c0a4de918c6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/constants.ral": {
-      "sourceCodeHash": "db2c81b53ef74d137cb67790167a32aeacf93ce4c3576b15c20c66a9b5e31002",
+      "sourceCodeHash": "fe7072e55a841ccee6e2e76d8c8b9dff720f525f31ec4666b7095187e2b3642f",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -249,7 +261,7 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_governance.ral": {
-      "sourceCodeHash": "62ca3af20b7c0621b640f2962283a12a6f97791900166f09dfddae82951bb189",
+      "sourceCodeHash": "2cef2a5fd13539e612fc65f7ab4bb1dfadd8525a4091e29c70b571208a67108f",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []

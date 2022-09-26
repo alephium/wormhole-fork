@@ -57,7 +57,6 @@ export function transferAlph(
   toChainId: ChainId,
   toAddress: string,
   alphAmount: bigint,
-  messageFee: bigint,
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
@@ -70,7 +69,6 @@ export function transferAlph(
     toChainId: toChainId,
     toAddress: toAddress,
     alphAmount: alphAmount,
-    messageFee: messageFee,
     arbiterFee: arbiterFee,
     nonce: nonceHex,
     consistencyLevel: consistencyLevel,
