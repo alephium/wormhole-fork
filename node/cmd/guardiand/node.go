@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/db"
@@ -640,10 +641,25 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// the first guardian node is the bootstrap node on the devnet
+	if *unsafeDevMode && *devnetGuardianIndex != 0 {
+		logger.Info("wait for the bootstrap node to establish networking", zap.Int("index", *devnetGuardianIndex))
+		time.Sleep(15 * time.Second)
+	}
+
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
 		gk := devnet.InsecureDeterministicEcdsaKeyByIndex(ethcrypto.S256(), uint64(*devnetGuardianIndex))
-		err := writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		keyPath := fmt.Sprintf("%s-%d", *guardianKeyPath, *devnetGuardianIndex)
+		guardianKeyPath = &keyPath
+		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", keyPath, true)
+		if err != nil {
+			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
+		}
+
+		dbPath := fmt.Sprintf("%s-%d", *dataDir, *devnetGuardianIndex)
+		dataDir = &dbPath
+		logger.Info("devnet guardian", zap.Int("index", *devnetGuardianIndex), zap.String("keyPath", keyPath), zap.String("dbPath", *dataDir))
 		if err != nil {
 			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
 		}
