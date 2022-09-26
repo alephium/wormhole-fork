@@ -28,7 +28,7 @@ async function test() {
   await alphToEth.transferTestToken(1111n)
   await ethToAlph.transferWrappedTestToken(1111n)
 
-  await alphToEth.transferNativeToken(2222n)
+  await alphToEth.transferNativeToken(2222n + alph.messageFee)
   await ethToAlph.transferWrappedNativeToken(2222n)
 
   const unit = BigInt(Math.pow(10, 10)) // mul unit because of normalization

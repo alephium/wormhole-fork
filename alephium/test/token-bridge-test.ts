@@ -359,18 +359,19 @@ describe('test token bridge', () => {
     const tokenPoolState = testResult.contracts.filter(
       (c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId
     )[0]
-    expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
+    const realTransferAmount = transferAmount - messageFee
+    expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + realTransferAmount)
 
     // check `totalWrapped`
     const wrappedAlphState = testResult.contracts.filter((c) => c.contractId === wrappedAlphId)[0]
-    expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalBridged + transferAmount)
+    expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalBridged + realTransferAmount)
 
     const wrappedAlphOutput = testResult.txOutputs.filter((c) => c.address === addressFromContractId(wrappedAlphId))[0]
-    expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph + transferAmount)
+    expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph + realTransferAmount)
     expect(wrappedAlphOutput.tokens).toEqual([
       {
         id: wrappedAlphId,
-        amount: fixture.totalWrappedAlph - transferAmount
+        amount: fixture.totalWrappedAlph - realTransferAmount
       }
     ])
 
@@ -378,7 +379,7 @@ describe('test token bridge', () => {
     expect(tokenPoolOutput.tokens).toEqual([
       {
         id: wrappedAlphId,
-        amount: fixture.totalBridged + transferAmount
+        amount: fixture.totalBridged + realTransferAmount
       }
     ])
     const governanceOutput = testResult.txOutputs.filter(
@@ -386,7 +387,7 @@ describe('test token bridge', () => {
     )[0]
     expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
 
-    const transferMessage = new Transfer(transferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
+    const transferMessage = new Transfer(realTransferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
     expect(testResult.events.length).toEqual(1)
     const event = testResult.events[0]
     expect(event.name).toEqual('WormholeMessage')
