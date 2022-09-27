@@ -24,12 +24,12 @@ service NodePrivilegedService {
   // An error is returned if more than 1000 gaps are found.
   rpc FindMissingMessages (FindMissingMessagesRequest) returns (FindMissingMessagesResponse);
 
-  rpc GetDestroyContractsGovernanceMessage (GetDestroyContractsGovernanceMessageRequest) returns (GetDestroyContractsGovernanceMessageResponse);
-
   // SendObservationRequest broadcasts a signed observation request to the gossip network
   // using the node's guardian key. The network rate limits these requests to one per second.
   // Requests at higher rates will fail silently.
   rpc SendObservationRequest (SendObservationRequestRequest) returns (SendObservationRequestResponse);
+
+  rpc GetNextGovernanceVAASequence (GetNextGovernanceVAASequenceRequest) returns (GetNextGovernanceVAASequenceResponse);
 }
 
 message InjectGovernanceVAARequest {
@@ -60,6 +60,8 @@ message GovernanceMessage {
   oneof payload{
     // Core module
 
+    UpdateMessageFee update_message_fee = 8;
+    TransferFee transfer_fee = 9;
     GuardianSetUpdate guardian_set = 10;
     ContractUpgrade contract_upgrade = 11;
 
@@ -68,14 +70,28 @@ message GovernanceMessage {
     BridgeRegisterChain bridge_register_chain = 12;
     BridgeUpgradeContract bridge_contract_upgrade = 13;
 
-    // Extension
-    DestroyUnexecutedSequenceContracts destroy_unexecuted_sequence_contracts = 20;
+    // Alephium TokenBridge Extensions
+    TokenBridgeDestroyUnexecutedSequenceContracts destroy_unexecuted_sequence_contracts = 20;
+    TokenBridgeUpdateMinimalConsistencyLevel update_minimal_consistency_level = 21;
+    TokenBridgeUpdateRefundAddress update_refund_address = 22;
   }
 }
 
 message InjectGovernanceVAAResponse {
   // Canonical digests of the submitted VAAs.
   repeated bytes digests = 1;
+}
+
+message UpdateMessageFee {
+  // 32 bytes hex string
+  string new_message_fee = 1;
+}
+
+message TransferFee {
+  // 32 bytes hex string
+  string amount = 1;
+  // 32 bytes hex string
+  string recipient = 2;
 }
 
 // GuardianSet represents a new guardian set to be submitted to and signed by the node.
@@ -114,20 +130,30 @@ message BridgeRegisterChain {
 
 // ContractUpgrade represents a Wormhole contract update to be submitted to and signed by the node.
 message ContractUpgrade {
-  // Hex-encoded address (without leading 0x) address of the new program/contract.
-  string new_contract = 1;
+  // hex string
+  string payload = 1;
 }
 
 message BridgeUpgradeContract {
   // Module identifier of the token or NFT bridge (typically "TokenBridge" or "NFTBridge").
   string module = 1;
 
-  // Hex-encoded address (without leading 0x) of the new program/contract.
-  string new_contract = 2;
+  // hex string
+  string payload = 2;
 }
 
-message DestroyUnexecutedSequenceContracts {
-  bytes payload = 1;
+message TokenBridgeDestroyUnexecutedSequenceContracts {
+  uint32 emitter_chain = 1;
+  repeated uint64 sequences = 2;
+}
+
+message TokenBridgeUpdateMinimalConsistencyLevel {
+  uint32 new_consistency_level = 1;
+}
+
+message TokenBridgeUpdateRefundAddress {
+  // hex string
+  string new_refund_address = 1;
 }
 
 message FindMissingMessagesRequest {
@@ -158,14 +184,8 @@ message SendObservationRequestRequest {
 
 message SendObservationRequestResponse {}
 
-message GetDestroyContractsGovernanceMessageRequest {
-  uint32 emitter_chain = 1;
-  // The sequence of generated governance message
-  uint64 sequence = 2;
-  repeated uint64 sequences = 3;
-}
+message GetNextGovernanceVAASequenceRequest {}
 
-message GetDestroyContractsGovernanceMessageResponse {
-  GovernanceMessage msg = 1;
+message GetNextGovernanceVAASequenceResponse {
+  uint64 sequence = 1;
 }
-
