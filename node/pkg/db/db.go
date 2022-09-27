@@ -121,6 +121,42 @@ func (d *Database) StoreSignedVAA(v *vaa.VAA) error {
 	return nil
 }
 
+func (d *Database) MaxGovernanceVAASequence(targetChainId vaa.ChainID) (*uint64, error) {
+	maxSequence := uint64(0)
+	vaaId := &VAAID{
+		EmitterChain:   vaa.GovernanceChain,
+		EmitterAddress: vaa.GovernanceEmitter,
+		TargetChain:    targetChainId,
+	}
+	prefixBytes := vaaId.EmitterPrefixBytes()
+	if err := d.db.View(func(txn *badger.Txn) error {
+		iteratorOpts := badger.DefaultIteratorOptions
+		iteratorOpts.PrefetchValues = false
+		iteratorOpts.Prefix = prefixBytes
+		it := txn.NewIterator(iteratorOpts)
+		defer it.Close()
+
+		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
+			keyStr := string(it.Item().Key())
+			index := strings.LastIndex(keyStr, "/")
+			if index == -1 {
+				return fmt.Errorf("invalid vaa key: %s", keyStr)
+			}
+			sequence, err := strconv.ParseUint(keyStr[index+1:], 10, 64)
+			if err != nil {
+				return err
+			}
+			if sequence > maxSequence {
+				maxSequence = sequence
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return &maxSequence, nil
+}
+
 func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
 	if err := d.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id.Bytes())
