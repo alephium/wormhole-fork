@@ -50,6 +50,11 @@ export function createEth(): BridgeChain {
     return toAddress
   }
 
+  const normalizeTransferAmount = (amount: bigint): bigint => {
+    const unit = 10n ** 10n
+    return (amount / unit) * unit
+  }
+
   const getTransactionFee = async (txId: string): Promise<bigint> => {
     const receipt = await wallet.provider.getTransactionReceipt(txId)
     const tx = await wallet.provider.getTransaction(txId)
@@ -223,7 +228,9 @@ export function createEth(): BridgeChain {
     wrappedNativeTokenId: wethAddress,
     recipientAddress: recipientAddress,
     messageFee: 0n,
+    oneCoin: 10n ** 18n,
 
+    normalizeTransferAmount: normalizeTransferAmount,
     getTransactionFee: getTransactionFee,
 
     getNativeTokenBalance: getNativeTokenBalance,

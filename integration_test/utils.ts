@@ -10,8 +10,10 @@ export interface BridgeChain {
   wrappedNativeTokenId: string
   recipientAddress: Uint8Array
   messageFee: bigint
+  oneCoin: bigint
 
   getTransactionFee(txId: string): Promise<bigint>
+  normalizeTransferAmount(amount: bigint): bigint
 
   getNativeTokenBalance(): Promise<bigint>
   getTokenBalance(tokenId: string): Promise<bigint>
