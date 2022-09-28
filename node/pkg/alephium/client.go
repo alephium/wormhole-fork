@@ -89,11 +89,11 @@ func (c *Client) IsBlockInMainChain(ctx context.Context, hash string) (*bool, er
 	return &response, nil
 }
 
-func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress string, from, to, group int32) (*sdk.ContractEvents, error) {
+func (c *Client) GetContractEventsByRange(ctx context.Context, contractAddress string, from, limit, group int32) (*sdk.ContractEvents, error) {
 	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	request := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).End(to).Group(group)
+	request := c.impl.EventsApi.GetEventsContractContractaddress(timeoutCtx, contractAddress).Start(from).Limit(limit).Group(group)
 	response, _, err := requestWithMetric[*sdk.ContractEvents](request, timestamp, "get_contract_events")
 	if err != nil {
 		return nil, err

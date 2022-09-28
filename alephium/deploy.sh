@@ -5,4 +5,5 @@ done
 
 cd /alephium
 npm run build
-node dist/devnet/deploy.js
+npm run deploy:devnet
+npm run auto-mine

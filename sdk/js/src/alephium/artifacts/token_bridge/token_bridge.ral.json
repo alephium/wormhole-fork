@@ -1,0 +1,377 @@
+{
+  "name": "TokenBridge",
+  "bytecode": "080f402e407740e2417e41e24211421a426142bd42d04325437a43b7446c448c0000020402111600a00213c7546f6b656e4272696467651601100ea000010317031702a0020d2aa10216021603020000010502402716001401010000170217011601a0012f16010c2f1b130d7b160213211323626d17031603a00130130f7b160213231340436217041602431340432f0e7b16031604020103030a00403d16000001170417031603671705a000b1160316040c1305641706140100160544170716011602a216070c0da00501041606c118a000a001b1160316040c0c0c0c0da00501050c130a641708140101160544170916011602a216090c0da00501031608c1180100010b00405916001401020000170217011601a0012f130d7b160213211323626d1703132316032a17041602132316046217051602431706160616042f4c031605ba4a403616021604160413202a621707160413202a1704a0026ba0036b441708160716084e41130e7b1602160416040e2a626d170916040e2a170416021604160416092a62170a160416092a1704160616042f0e7b1605160abb0100010800403916001401f00000170217011601a0012f130d7b160213211323621703160213231325626d170416040c3313147b1325160413082c2a170516024316052f0e7b160213251605621706140101160344b17c444e4e170716060d0c1607010801000104001816001401f10000170217011601a0012f130d7b16024313222f0e7b160213211322626c17031603a106010000000102a007020100010600402616001401f20000170217011601a0012f130d7b160213211323626d1703132316032a170416024316042f0e7b16021323160462631705160548131d7b1605a1070103040500403616014313202f13107b160243102f13117b1601a004424c0716001601a50c3313127b140102160144a0016744140100441320654413206544170416000c0da0000100a216000c000916021604160313060ca0000101000000010108a0031700a0030d2aa103160002010303070040301600a00441170316034b0716011600a50c3313127bb1a00116000c0c1305641704140102a0016744160044170516034c050c0da00501004a040c0da0050101170616011602a2160516061604c1180103080c00403114010016016744b17c444e4e1708b316084113157bb1160116000c1603160416021605130864170914010216016744160044170a0d1340ff3b170b16061607a2160a0c0da00501021609160bc2180100050800402414010016016744b17c444e4e1705b316054113157b1401021601674416004417061606b17c444e4e17071602160316040f0c160701090103090e0040681608a00634131c7b1603a0013013137b1602a0012f170914010216026744160144b17c444e4e170a1601a004414c0d16001605a216001604160516061607110d160a01064a1d16094c0e160016011605a316001604160516061607110d160a01064a0d1600160a1605a316001604160516061607110d160a010a170b14010116036744b17c444e4e170c160c170d16000c0da0000100a2160016030c0d160d01041607160b160813060ca000010101030707000e16001600a4a21600a004a001160116021603160416051606000d",
+  "codeHash": "0211a5f969fef57bd5f6f72f136ce9d8c5ee381d1ae7a52ffe32a9e6d08a336b",
+  "fieldsSig": {
+    "names": [
+      "governance",
+      "localChainId",
+      "receivedSequence",
+      "sendSequence",
+      "wrappedAlphId",
+      "tokenBridgeFactory",
+      "minimalConsistencyLevel",
+      "refundAddress"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "Address"
+    ],
+    "isMutable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "parseAndVerifyGovernanceVAA",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "vaa",
+        "action"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256",
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "parseAndVerifyRegisterChain",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "U256",
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "registerChain",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa",
+        "payer",
+        "createContractAlphAmount"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "upgradeContract",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "destroyUnexecutedSequenceContracts",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "updateMinimalConsistencyLevel",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "getRefundAddress",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "Address"
+      ]
+    },
+    {
+      "name": "updateRefundAddress",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "attestToken",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "payer",
+        "localTokenId",
+        "nonce",
+        "consistencyLevel"
+      ],
+      "paramTypes": [
+        "Address",
+        "ByteVec",
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "nextSendSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "createLocalTokenPool",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "localTokenId",
+        "payer",
+        "createContractAlphAmount"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "createRemoteTokenPool",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "bridgeTokenId",
+        "tokenChainId",
+        "decimals",
+        "symbol",
+        "name",
+        "msgSequence",
+        "payer",
+        "createContractAlphAmount"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "ByteVec",
+        "U256",
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "updateRemoteTokenPool",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "bridgeTokenId",
+        "tokenChainId",
+        "symbol",
+        "name",
+        "msgSequence"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256",
+        "ByteVec",
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "transferToken",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fromAddress",
+        "bridgeTokenId",
+        "tokenChainId",
+        "toChainId",
+        "toAddress",
+        "tokenAmount",
+        "arbiterFee",
+        "nonce",
+        "consistencyLevel"
+      ],
+      "paramTypes": [
+        "Address",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "transferAlph",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fromAddress",
+        "toChainId",
+        "toAddress",
+        "alphAmount",
+        "arbiterFee",
+        "nonce",
+        "consistencyLevel"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    }
+  ]
+}

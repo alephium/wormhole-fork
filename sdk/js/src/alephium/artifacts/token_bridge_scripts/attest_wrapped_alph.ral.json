@@ -1,0 +1,42 @@
+{
+  "name": "AttestWrappedAlph",
+  "bytecodeTemplate": "0101030000000b{0}{3}a2{0}{2}{4}{5}100c{1}0108",
+  "fieldsSig": {
+    "names": [
+      "payer",
+      "tokenBridge",
+      "wrappedAlphId",
+      "messageFee",
+      "nonce",
+      "consistencyLevel"
+    ],
+    "types": [
+      "Address",
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

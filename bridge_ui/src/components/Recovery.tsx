@@ -799,7 +799,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Sequence"
                   disabled
-                  value={recoveryParsedVAA?.body.sequence || ""}
+                  value={recoveryParsedVAA?.body.sequence.toString() || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -821,7 +821,7 @@ export default function Recovery() {
                   variant="outlined"
                   label="Guardian Set"
                   disabled
-                  value={recoveryParsedVAA?.guardianSetIndex || ""}
+                  value={recoveryParsedVAA?.guardianSetIndex.toString() || ""}
                   fullWidth
                   margin="normal"
                 />
@@ -857,7 +857,7 @@ export default function Recovery() {
                     label="Origin Token ID"
                     disabled
                     // @ts-ignore
-                    value={parsedPayload?.tokenId || ""}
+                    value={parsedPayload?.originAddress || ""}
                     fullWidth
                     margin="normal"
                   />

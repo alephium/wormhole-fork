@@ -1,4 +1,4 @@
-TxScript Main(
+TxScript TransferAlph(
     tokenBridge: TokenBridge,
     fromAddress: Address,
     toChainId: U256,

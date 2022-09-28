@@ -8,9 +8,8 @@ Contract TokenBridgeForChain(
     mut firstNext256: U256,
     mut secondNext256: U256,
     unexecutedSequenceTemplateId: ByteVec, // used for create contract by copyCreateContract
-    refundAddress: Address,
     mut sendSequence: U256
-) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId, refundAddress), Constants(), TokenBridgeConstants() {
+) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId), Constants(), TokenBridgeConstants() {
     pub fn nextSendSequence() -> U256 {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
@@ -55,12 +54,25 @@ Contract TokenBridgeForChain(
         )
     }
 
+    @using(assetsInContract = true)
     pub fn destroyUnexecutedSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
         for (let mut index = 0; index < length; index = index + 8) {
             let unexecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
-            UnexecutedSequence(unexecutedSequenceId).destroy()
+            UnexecutedSequence(unexecutedSequenceId).destroy(selfAddress!())
         }
+    }
+
+    @using(assetsInContract = true, preapprovedAssets = true)
+    pub fn deposit(from: Address, alphAmount: U256) -> () {
+        transferAlphToSelf!(from, alphAmount)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdraw(alphAmount: U256) -> () {
+        let refundAddress = TokenBridge(localTokenBridgeId).getRefundAddress()
+        assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)
+        transferAlphFromSelf!(refundAddress, alphAmount)
     }
 }

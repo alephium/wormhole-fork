@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14, 16]
+        node-version: [16]
 
     steps:
       - uses: actions/checkout@v2
@@ -23,7 +23,10 @@ jobs:
         working-directory: ./alephium
         run: |
           npm ci
-          npm explore @alephium/web3 -- npm run start-devnet
+          npm run build
+          cp .env.test .env
+          npm run lint
+          npx @alephium/cli devnet start
           npm test
-          npm explore @alephium/web3 -- npm run stop-devnet
+          npx @alephium/cli devnet stop
 

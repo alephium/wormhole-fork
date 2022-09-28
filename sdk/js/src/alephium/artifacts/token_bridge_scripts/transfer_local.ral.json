@@ -1,0 +1,57 @@
+{
+  "name": "TransferLocal",
+  "bytecodeTemplate": "01010300000014{1}7a{7}a2{2}{6}a3{1}{2}{3}{4}{5}{6}{8}{9}{10}13090c{0}010d",
+  "fieldsSig": {
+    "names": [
+      "tokenBridge",
+      "fromAddress",
+      "localTokenId",
+      "alphChainId",
+      "toChainId",
+      "toAddress",
+      "tokenAmount",
+      "messageFee",
+      "arbiterFee",
+      "nonce",
+      "consistencyLevel"
+    ],
+    "types": [
+      "ByteVec",
+      "Address",
+      "ByteVec",
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

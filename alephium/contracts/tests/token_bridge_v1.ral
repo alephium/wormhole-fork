@@ -6,7 +6,8 @@ Contract TokenBridgeV1(
     @unused mut sendSequence: U256,
     @unused wrappedAlphId: ByteVec,
     @unused tokenBridgeFactory: ByteVec,
-    @unused mut minimalConsistencyLevel: U256
+    @unused mut minimalConsistencyLevel: U256,
+    @unused mut refundAddress: Address
 ) {
   @using(readonly = true)
   pub fn foo() -> () {}

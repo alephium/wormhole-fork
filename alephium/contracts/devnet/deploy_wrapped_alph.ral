@@ -1,3 +1,0 @@
-TxScript Main(deployer: DevnetDeployer, bytecode: ByteVec, wrappedAlphPoolCodeHash: ByteVec) {
-  deployer.deployWrappedAlph{callerAddress!() -> 1 alph}(bytecode, wrappedAlphPoolCodeHash)
-}
