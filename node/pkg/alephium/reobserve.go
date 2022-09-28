@@ -25,6 +25,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 
+			logger.Debug("handling re-observe request", zap.String("txId", txId))
 			if txStatus.Confirmed == nil {
 				logger.Error("tx is not confirmed", zap.Error(err), zap.String("txId", txId))
 				continue

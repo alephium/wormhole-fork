@@ -51,7 +51,7 @@ require (
 require (
 	cloud.google.com/go/logging v1.4.2
 	cloud.google.com/go/pubsub v1.17.1
-	github.com/alephium/go-sdk v0.0.0-20220620033700-91be3edb8c32
+	github.com/alephium/go-sdk v0.0.0-20220919082855-4fb3b6e48fc7
 	github.com/algorand/go-algorand-sdk v1.15.0
 	github.com/blendle/zapdriver v1.3.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce

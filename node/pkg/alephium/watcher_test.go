@@ -52,6 +52,7 @@ func TestSubscribeEvents(t *testing.T) {
 	assert.Nil(t, err)
 	errC := make(chan error)
 	eventsC := make(chan []*UnconfirmedEvent)
+	heightC := make(chan int32)
 
 	isBlockInMainChain := func(hash string) (*bool, error) {
 		b := true
@@ -67,14 +68,15 @@ func TestSubscribeEvents(t *testing.T) {
 		}, nil
 	}
 
-	go watcher.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, handler, errC, eventsC)
+	go watcher.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, handler, errC, eventsC, heightC)
 
-	eventsC <- []*UnconfirmedEvent{}
+	heightC <- 0
 	assert.True(t, len(confirmedEvents) == 0)
 
 	// event0 confirmed
 	atomic.StoreInt32(&watcher.currentHeight, 1)
 	eventsC <- []*UnconfirmedEvent{event0, event1}
+	heightC <- 1
 	time.Sleep(500 * time.Millisecond)
 	fmt.Println(len(confirmedEvents))
 	assert.True(t, len(confirmedEvents) == 1)
@@ -83,13 +85,13 @@ func TestSubscribeEvents(t *testing.T) {
 
 	// event1 not confirmed
 	atomic.StoreInt32(&watcher.currentHeight, 2)
-	eventsC <- []*UnconfirmedEvent{}
+	heightC <- 2
 	time.Sleep(500 * time.Millisecond)
 	assert.True(t, len(confirmedEvents) == 1)
 
 	// event1 confirmed
 	atomic.StoreInt32(&watcher.currentHeight, 4)
-	eventsC <- []*UnconfirmedEvent{}
+	heightC <- 4
 	time.Sleep(500 * time.Millisecond)
 	assert.True(t, len(confirmedEvents) == 2)
 	diff = deep.Equal(confirmedEvents[1].event.ContractEvent, event1.ContractEvent)
@@ -98,6 +100,7 @@ func TestSubscribeEvents(t *testing.T) {
 	// event2
 	atomic.StoreInt32(&watcher.currentHeight, 8)
 	eventsC <- []*UnconfirmedEvent{event2}
+	heightC <- 8
 	time.Sleep(500 * time.Millisecond)
 	assert.True(t, len(confirmedEvents) == 2)
 }

@@ -1,5 +1,5 @@
 import { Fields, Project } from '@alephium/web3'
-import { Deployer, DeployFunction } from '../lib/deployment'
+import { Deployer, DeployFunction } from '@alephium/cli'
 
 async function deployTemplateContract(deployer: Deployer, name: string, initialFields: Fields): Promise<string> {
   const contract = Project.contract(name)

@@ -1,7 +1,8 @@
-import { Configuration } from './lib/deployment'
+import { Configuration } from '@alephium/cli'
 import * as dotenv from 'dotenv'
+import path from 'path'
 
-dotenv.config({ path: __dirname + '/.env' })
+dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 const settingsTemplate = {
   initSigners: JSON.parse(process.env.INIT_SIGNERS!) as string[],
@@ -16,10 +17,9 @@ const settingsTemplate = {
 export type Settings = typeof settingsTemplate
 
 const configuration: Configuration<Settings> = {
-  sourcePath: 'contracts',
-  artifactPath: '../sdk/js/src/alephium/artifacts',
+  artifactDir: '../sdk/js/src/alephium/artifacts',
 
-  deployScriptsPath: 'scripts',
+  deploymentScriptDir: 'scripts',
   compilerOptions: {
     errorOnWarnings: true,
     ignoreUnusedConstantsWarnings: true
@@ -32,7 +32,6 @@ const configuration: Configuration<Settings> = {
       nodeUrl: 'http://localhost:22973',
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
-      deploymentFile: '.deployments.json',
       confirmations: 1,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
     },
@@ -42,7 +41,6 @@ const configuration: Configuration<Settings> = {
       // TODO: update config
       nodeUrl: 'http://localhost:22973',
       mnemonic: process.env.MNEMONIC as string,
-      deploymentFile: '.deployments.json',
       confirmations: 2,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
     },
@@ -52,7 +50,6 @@ const configuration: Configuration<Settings> = {
       // TODO: update config
       nodeUrl: 'http://localhost:22973',
       mnemonic: process.env.MNEMONIC as string,
-      deploymentFile: '.deployments.json',
       confirmations: 2,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 105 }
     }

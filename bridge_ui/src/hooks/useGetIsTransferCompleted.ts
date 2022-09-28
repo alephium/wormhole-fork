@@ -19,7 +19,7 @@ import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   selectTransferIsRecovery,
-  selectTransferOriginChain,
+  selectTransferSourceChain,
   selectTransferTargetAddressHex,
   selectTransferTargetChain,
 } from "../store/selectors";
@@ -53,7 +53,7 @@ export default function useGetIsTransferCompleted(
   const isRecovery = useSelector(selectTransferIsRecovery);
   const targetAddress = useSelector(selectTransferTargetAddressHex);
   const targetChain = useSelector(selectTransferTargetChain);
-  const sourceChain = useSelector(selectTransferOriginChain)
+  const sourceChain = useSelector(selectTransferSourceChain)
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();

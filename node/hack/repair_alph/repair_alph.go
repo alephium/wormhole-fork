@@ -16,6 +16,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const GovernanceContractId = "0a504e7b96ebf75d28ca7cf06402ec543ad7e2fd14dba051e7df18500f9980a6"
+
 var (
 	alphRPC     = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
 	apiKey      = flag.String("apiKey", "", "Alephium RPC api key")
@@ -97,7 +99,7 @@ func main() {
 
 	log.Printf("Starting search for missing sequence numbers...")
 	var (
-		alphEmitterAddress string = alephium.ToContractAddress(alephium.HexToByte32(alphEmitter))
+		alphEmitterAddress string = alephium.ToContractAddress(alephium.HexToByte32(GovernanceContractId))
 		batchSize          int32  = 100
 		remain             int    = missingMessageSize
 	)
@@ -121,7 +123,7 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, toIndex, int32(*groupIndex))
+		events, err := client.GetContractEventsByRange(ctx, alphEmitterAddress, fromIndex, batchSize, int32(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
@@ -146,7 +148,7 @@ func main() {
 				ctx,
 				&nodev1.SendObservationRequestRequest{
 					ObservationRequest: &gossipv1.ObservationRequest{
-						ChainId: uint32(vaa.ChainIDTerra),
+						ChainId: uint32(vaa.ChainIDAlephium),
 						TxHash:  alephium.HexToFixedSizeBytes(event.TxId, 32),
 					},
 				},
@@ -173,5 +175,7 @@ func main() {
 			missingSeqs = append(missingSeqs, seq)
 		}
 	}
-	log.Printf("Can't find missing messages for sequences: %v\n", missingSeqs)
+	if len(missingSeqs) != 0 {
+		log.Printf("Can't find missing messages for sequences: %v\n", missingSeqs)
+	}
 }

@@ -1,13 +1,6 @@
 import { Project } from '@alephium/web3'
-import { Configuration, Deployer, DeployFunction, Network, NetworkType } from '../lib/deployment'
-import * as dotenv from 'dotenv'
-import { Settings } from '../configuration'
-
-dotenv.config({ path: __dirname + '/../.env' })
-
-interface NetworkConfigs {
-  minimalConsistencyLevel: number
-}
+import { Deployer, DeployFunction, Network } from '@alephium/cli'
+import { Settings } from '../alephium.config'
 
 const deployTokenBridge: DeployFunction<Settings> = async (
   deployer: Deployer,
