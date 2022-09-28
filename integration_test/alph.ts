@@ -37,7 +37,7 @@ export async function createAlephium(): Promise<BridgeChain> {
   const sequence = new Sequence()
   const defaultMessageFee = BigInt('100000000000000')
   const defaultArbiterFee = 0n
-  const defaultConfirmations = 10
+  const defaultConfirmations = 1
   const oneAlph = 10n ** 18n
 
   const validateToAddress = (toAddress: Uint8Array): string => {

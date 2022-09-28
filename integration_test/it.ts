@@ -1,6 +1,7 @@
 import { createAlephium } from './alph'
 import { createEth } from './eth'
 import { BridgeChain, TransferTokenTest } from './utils'
+import { execSync } from 'child_process'
 
 async function attestTokens(alph: BridgeChain, eth: BridgeChain) {
   const signedVaa0 = await alph.attestToken(alph.testTokenId)
@@ -74,11 +75,18 @@ async function test() {
     transferWETHFromEthToAlph
   ]
 
-  const transferTimes = 30
+  const transferTimes = 100
   for (let i = 0; i < transferTimes; i++) {
     const index = Math.floor(Math.random() * 4)
     const func = transfers[index]
-    await func()
+    try {
+      await func()
+    } catch (error) {
+      console.log(`ERROR: ${error}`)
+      const alphErrorLog = execSync('cat ~/.alephium-dev/logs/alephium-errors.log')
+      console.log(alphErrorLog.toString())
+      process.exit(-1)
+    }
   }
 }
 
