@@ -1,4 +1,4 @@
-import { Configuration } from '@alephium/cli/types'
+import { Configuration } from '@alephium/cli'
 import * as dotenv from 'dotenv'
 import path from 'path'
 

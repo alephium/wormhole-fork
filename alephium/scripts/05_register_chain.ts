@@ -1,5 +1,5 @@
 import { Project, Script } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '@alephium/cli/types'
+import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { Settings } from '../alephium.config'
 
 const oneAlph = BigInt('1000000000000000000')

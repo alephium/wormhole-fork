@@ -1,7 +1,7 @@
 import { Project } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { program } from 'commander'
-import { getEnv } from '@alephium/cli/dist/types'
+import { getEnv } from '@alephium/cli'
 import { waitTxConfirmed } from '../lib/utils'
 import { Settings } from '../alephium.config'
 
