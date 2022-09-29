@@ -9,7 +9,6 @@ echo "number of guardians to initialize: ${numGuardians}"
 addressesJson="./scripts/devnet-consts.json"
 
 # working files for accumulating state
-envFile="./scripts/.env.hex" # for generic hex data, for solana, terra, etc
 ethFile="./scripts/.env.0x" # for "0x" prefixed data, for ethereum scripts
 alphFile="./scripts/.env.alph"
 
@@ -54,9 +53,7 @@ guardiansPublicHexCSV=$(echo ${guardiansPublicHex} | jq --raw-output -c  '. | jo
 # write the lists of addresses to the env files
 initSigners="INIT_SIGNERS"
 upsert_env_file $ethFile $initSigners $guardiansPublicEth
-upsert_env_file $envFile $initSigners $guardiansPublicHex
 upsert_env_file $alphFile $initSigners $guardiansPublicHex
-upsert_env_file $envFile "INIT_SIGNERS_CSV" $guardiansPublicHexCSV
 
 
 # 2) guardian private keys - used for generating the initial governance VAAs (register token bridge & nft bridge contracts on each chain).
@@ -68,7 +65,6 @@ guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(
 
 # write the lists of keys to the env files
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate
-upsert_env_file $envFile "INIT_SIGNERS_KEYS_CSV"  $guardiansPrivateCSV
 
 # create update guardian set vaa if the numGuardians > 1
 if [[ "${numGuardians}" -gt "1" ]]; then
@@ -78,7 +74,6 @@ if [[ "${numGuardians}" -gt "1" ]]; then
     updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
     updateGuardianSet="UPDATE_GUARDIAN_SET_VAA"
     upsert_env_file $ethFile $updateGuardianSet $updateGuardianSetVAA
-    upsert_env_file $envFile $updateGuardianSet $updateGuardianSetVAA
     upsert_env_file $alphFile $updateGuardianSet $updateGuardianSetVAA
 fi
 
@@ -105,15 +100,9 @@ if [[ ! -d ./clients/js/node_modules ]]; then
     npm ci --prefix clients/js
 fi
 # invoke clients/token_bridge commands to create registration VAAs
-solTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c solana -a ${solTokenBridge} -g ${guardiansPrivateCSV})
-ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV})
-terraTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c terra -a ${terraTokenBridge} -g ${guardiansPrivateCSV})
-bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV})
-algoTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c algorand -a ${algoTokenBridge} -g ${guardiansPrivateCSV})
-alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV})
-
-ethTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
-bscTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
+ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
+bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
+alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV} -s 2)
 
 
 # 5) create nft bridge registration VAAs
@@ -139,44 +128,14 @@ ethNFTBridge="REGISTER_ETH_NFT_BRIDGE_VAA"
 terraNFTBridge="REGISTER_TERRA_NFT_BRIDGE_VAA"
 
 
-# solana token bridge
-upsert_env_file $ethFile $solTokenBridge $solTokenBridgeVAA
-upsert_env_file $envFile $solTokenBridge $solTokenBridgeVAA
-# solana nft bridge
-upsert_env_file $ethFile $solNFTBridge $solNFTBridgeVAA
-upsert_env_file $envFile $solNFTBridge $solNFTBridgeVAA
-
-
-# ethereum token bridge
-upsert_env_file $ethFile $ethTokenBridge $ethTokenBridgeVAA
-upsert_env_file $envFile $ethTokenBridge $ethTokenBridgeVAA
-# ethereum nft bridge
-upsert_env_file $ethFile $ethNFTBridge $ethNFTBridgeVAA
-upsert_env_file $envFile $ethNFTBridge $ethNFTBridgeVAA
-
-
-# terra token bridge
-upsert_env_file $ethFile $terraTokenBridge $terraTokenBridgeVAA
-upsert_env_file $envFile $terraTokenBridge $terraTokenBridgeVAA
-# terra nft bridge
-upsert_env_file $ethFile $terraNFTBridge $terraNFTBridgeVAA
-upsert_env_file $envFile $terraNFTBridge $terraNFTBridgeVAA
-
-
 # bsc token bridge
 upsert_env_file $ethFile $bscTokenBridge $bscTokenBridgeVAA
-upsert_env_file $envFile $bscTokenBridge $bscTokenBridgeVAA
-
-# algo token bridge
-upsert_env_file $ethFile $algoTokenBridge $algoTokenBridgeVAA
-upsert_env_file $envFile $algoTokenBridge $algoTokenBridgeVAA
 
 # alph token bridge
 upsert_env_file $ethFile $alphTokenBridge $alphTokenBridgeVAA
-upsert_env_file $envFile $alphTokenBridge $alphTokenBridgeVAA
 
-upsert_env_file $alphFile $ethTokenBridge $ethTokenBridgeVAAForAlph
-upsert_env_file $alphFile $bscTokenBridge $bscTokenBridgeVAAForAlph
+upsert_env_file $alphFile $ethTokenBridge $ethTokenBridgeVAA
+upsert_env_file $alphFile $bscTokenBridge $bscTokenBridgeVAA
 
 # 7) copy the local .env file to the solana & terra dirs, if the script is running on the host machine
 # chain dirs will not exist if running in docker for Tilt, only if running locally. check before copying.
@@ -191,14 +150,5 @@ if [[ -d ./alephium ]]; then
     echo "copying $alphFile to /alephium/.env"
     cp $alphFile ./alephium/.env
 fi
-
-# copy the hex envFile to each of the non-EVM chains
-for envDest in ./solana/.env ./terra/tools/.env ./algorand/.env; do
-    dirname=$(dirname $envDest)
-    if [[ -d "$dirname" ]]; then
-        echo "copying $envFile to $envDest"
-        cp $envFile $envDest
-    fi
-done
 
 echo "guardian set init complete!"
