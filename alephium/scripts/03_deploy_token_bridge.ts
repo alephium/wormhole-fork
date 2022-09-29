@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '@alephium/cli/types'
+import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { Settings } from '../alephium.config'
 
 const deployTokenBridge: DeployFunction<Settings> = async (

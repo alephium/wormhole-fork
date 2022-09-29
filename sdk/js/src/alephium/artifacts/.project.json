@@ -10,154 +10,230 @@
   "infos": {
     "contracts/governance.ral": {
       "sourceCodeHash": "8ef55cfdc6eeddb51e1690e59a6c5aa4f327a00a6f9af72e452759e42c4351e1",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "8242b9a3c0a38113df4e2acd883e8d7f1e2d6357638ada95cfc2ea3f4642700b",
       "warnings": []
     },
     "contracts/sequence/unexecuted_sequence.ral": {
       "sourceCodeHash": "c02623aee5605651ac31a48e3b8955cd9328d5796fbc2af7dd47dfdc789b8d54",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "c220481ed209a31e4c7726be3866ae8eecd6f571f26425ffc9885973b3d8dfe0",
       "warnings": []
     },
     "contracts/tests/empty.ral": {
       "sourceCodeHash": "a5d1bbd2618807b66563e9bcbcabd15626cef026c8ab34d8e64210020d961f03",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "928360bf58942dd1fdd8d197e0e2ef59ecddbf71a6e8fe25d2c0665274f80ce3",
       "warnings": []
     },
     "contracts/tests/governance_v1.ral": {
       "sourceCodeHash": "847dfb466b225b035e8d42c7772a02d6c6987858d04d7d3e70b778f8f1bc06d0",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "351ea4360d2b31bf059c790536801450128a88d1ed1ce5c0d6c0f0eee8d313ac",
       "warnings": []
     },
     "contracts/tests/math_test.ral": {
       "sourceCodeHash": "7f307735569bf071f47a34a3abfe87c9529c53890765d90c1aabf6bdb8494a81",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "649e6f9fd0e73759cd506bc05aa80bfbf709748f2782aaa83001634ed978b4b0",
       "warnings": []
     },
     "contracts/tests/sequence_test.ral": {
       "sourceCodeHash": "a3dd5ac4993e22baae3924d1af272dd4c89dcffe610bb1b64eaaf3fafa867c98",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "c3ab4130fec00086eb4bbb4956ee092f9a7642530dfd8cbc6fb6b64738fc5d39",
       "warnings": []
     },
     "contracts/tests/test_token.ral": {
       "sourceCodeHash": "9c55ab629e526910c8880aa95de31366c48402b0d374a342f5d4f40c16d3ffae",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "b37ae73cd83366adde170b1e4e4269060b6063860898967980ad4ac61f18cfbd",
       "warnings": []
     },
     "contracts/tests/token_bridge_v1.ral": {
       "sourceCodeHash": "c3250017464c3c49033ef1868dc12c993131fe3372f2a1d14535b6fe0ffb4bad",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "af07f3c40a2caad1034d5a3bfd905cdd26bcbf1c44882d017b895c06f833cbae",
       "warnings": []
     },
     "contracts/tests/unexecuted_sequence_test.ral": {
       "sourceCodeHash": "1a7f46c78cac9eafedc046739c66c616d19324b43a4464f354bfa5ae5d2b1754",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "b851c8ea03a4921bceabb2ddf9dbbcae6c2dfa075bab8d3086c2fcdfe64d483d",
       "warnings": []
     },
     "contracts/token_bridge/attest_token_handler.ral": {
       "sourceCodeHash": "dd3cafffb71df97133695ae689cb05249dcd3ed17d80b30f6e94359d19d466e5",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "113e26b76fc08189a93bed727f899d57172fcc66c3b39e729d59a0ff9b4a2d57",
       "warnings": []
     },
     "contracts/token_bridge/local_token_pool.ral": {
       "sourceCodeHash": "a92a4b71bae391eefab5ff22eae7ea1f9d25cae7ff8a69c2ee5134795520e105",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "35d24f1633ef61799a74ea5ee49ed2fcca3f0830113cc3626f81f27e540ba926",
       "warnings": []
     },
     "contracts/token_bridge/remote_token_pool.ral": {
       "sourceCodeHash": "8e77992f4af4f831d1dfea7b2f0a505113f368aa4b8a0a8fb0e27fc08a249099",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "b6bc0625f2f11afca9b1e7e7c092ed59aa6b8b53f668e167e1f7bcdca0cfcc44",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
       "sourceCodeHash": "6a1adcd95fcae716091da14f27257c06d7d015bbd46b1b8a49e7fb03b79dc1e3",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "0211a5f969fef57bd5f6f72f136ce9d8c5ee381d1ae7a52ffe32a9e6d08a336b",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
       "sourceCodeHash": "69073807959d7b51a902b6067266950f0c1e393a98479a9af9e9bc8a97a5952c",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "d005675bb5cf65bb18feaffa7af50dba13512689f76681c70f743dda1a47a50c",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_for_chain.ral": {
       "sourceCodeHash": "1e90b237871c57f9abf76ab100d3526ef25be0d8e4fa9ed722e06cdb223b744a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "0fce08915d811dbb34f4be4a5eb8c44286d1524b940237775129f1853fcc3069",
       "warnings": []
     },
     "contracts/token_bridge/wrapped_alph.ral": {
       "sourceCodeHash": "c94b009ad49b6a6bb924a16148580761056141410c213b6f32d95271dc6bf85a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "99b788995cb84e75dcf04551d5e14917c7bafdc222d0b2a67406835c60ebfb64",
       "warnings": []
     },
     "contracts/token_bridge/wrapped_alph_pool.ral": {
       "sourceCodeHash": "e9ce4f947692096537ffdcc7aafd68a2dcc5931b925f1ff451b0ed6eb83b547d",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "ca099948aac0c0c6a98f47fa9dfd4236a84976d8f8f67d552e735602936873a5",
       "warnings": []
     },
     "contracts/tests/get_token.ral": {
       "sourceCodeHash": "e90661e2edc7c5c7b07326356a396d1c1505077d41e43730a52c35a57d8f4edd",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/attest_token.ral": {
       "sourceCodeHash": "dcec2f10b659d495ba6ec37360b081179ba5a56264aaa53681c19bdfe49c7608",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/attest_wrapped_alph.ral": {
       "sourceCodeHash": "904bfe0274ce89dde71ff1cabc6177b2587ac92188dc3877ef568833135d1cb7",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/complete_transfer.ral": {
       "sourceCodeHash": "919a097a1c37cbd04f9c968e636acaf3f681f4bf0e7fa8114a9c165aa93ad762",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/create_local_token_pool.ral": {
       "sourceCodeHash": "3c83036ba10b711681506b2ccbc2643cd3c1fadfd26f0df89d9908b51c334d12",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/create_remote_token_pool.ral": {
       "sourceCodeHash": "d50fed588ddd0eb20854c49ace6457c536235080cf359bb3d0db18464e741f7a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/create_wrapped_alph_pool.ral": {
       "sourceCodeHash": "f59633563830af173ab140db34a3b6b36249c8c74c6388229bbc9c055f426f79",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral": {
       "sourceCodeHash": "dbf50c01bdd07bb247a858e2e7488ccb6ec8f323cdcef891db29d2b2875fbd3e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/register_chain.ral": {
       "sourceCodeHash": "34489e30b821971f301b93d1fb676ce1869f86268eea5507bfe67295763991e1",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_alph.ral": {
       "sourceCodeHash": "c94cc4bd9f30aaab5dac8a5ff3c51e8618c2d3ebb95101a093f5970c3aa4e6ae",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_local.ral": {
       "sourceCodeHash": "123d914d917ea30fad8f4d1464a37e713f569cbee949f75ec1bfdc6c704369b6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_remote.ral": {
       "sourceCodeHash": "1477749d1bbe7bf9d65279d49cac0087c562d9e69a2d310e485a6e06c91244d9",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/update_refund_address.ral": {
       "sourceCodeHash": "aa42f09902cdf4dd3f3c865ae084345b6f85193229ea495e9f859962429d3bee",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/update_remote_token_pool.ral": {
       "sourceCodeHash": "2878bf1e43d43594ad89571eab41bf190155f8a24ae01cf4a92ae82d6c631779",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/constants.ral": {
       "sourceCodeHash": "db2c81b53ef74d137cb67790167a32aeacf93ce4c3576b15c20c66a9b5e31002",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/math.ral": {
       "sourceCodeHash": "3e5bd74194d966e0939103d48223a50245ade0772bab1f1a489eb6345c9596a7",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/sequence/sequence.ral": {
       "sourceCodeHash": "be6957abd33fa693b4b2cd35263d599d58c7a1a5d620bac9e547eba33b542ca9",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge/bridge_token_pool.ral": {
       "sourceCodeHash": "7e377d15a74288a6122fd8a58aed229ef043208cc7fbb683e245adb2ec072627",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_constants.ral": {
       "sourceCodeHash": "364e2a165476432c561700e706a750d87e82ac898ba95b296d9e4e6499031024",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_governance.ral": {
       "sourceCodeHash": "62ca3af20b7c0621b640f2962283a12a6f97791900166f09dfddae82951bb189",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge/token_pool.ral": {
       "sourceCodeHash": "93794118424a1945faa2cb8e5363d04c054cc7ea8656e0269375792bd0cda8cf",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     }
   }

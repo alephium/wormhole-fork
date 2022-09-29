@@ -1,5 +1,5 @@
 {
-  "include": ["lib", "scripts", "deploy.ts", "configuration.ts", "commands.ts"],
+  "include": ["lib", "scripts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "target": "es2020",

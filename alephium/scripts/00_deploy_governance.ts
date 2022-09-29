@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Deployer, DeployFunction, Network } from '@alephium/cli/types'
+import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { zeroPad } from '../lib/utils'
 import { Settings } from '../alephium.config'
 
