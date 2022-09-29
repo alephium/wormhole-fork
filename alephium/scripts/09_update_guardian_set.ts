@@ -1,5 +1,5 @@
 import { Project } from '@alephium/web3'
-import { Configuration, Deployer, DeployFunction, Network } from '@alephium/cli/types'
+import { Configuration, Deployer, DeployFunction, Network } from '@alephium/cli'
 import { Settings } from '../alephium.config'
 
 const updateGuardianSet: DeployFunction<Settings> = async (
