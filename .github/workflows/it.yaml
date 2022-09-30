@@ -25,7 +25,7 @@ jobs:
         # TODO: improve this
         run: |
           npm install && cp .env.test .env && npx @alephium/cli devnet start && npx @alephium/cli devnet stop
-          echo "alephium.api.ask-timeout = 15 seconds" >> ~/.alephium-dev/user.conf
+          echo "alephium.consensus.block-target-time = 10 millis" >> ~/.alephium-dev/user.conf
           cat ~/.alephium-dev/user.conf
           ALEPHIUM_HOME=~/.alephium-dev nohup java -jar ~/.alephium-dev/*.jar &
           sleep 10
