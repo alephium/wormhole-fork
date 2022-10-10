@@ -2,9 +2,9 @@ import * as web3s from '@solana/web3.js'
 import { NETWORKS } from "./networks";
 import { impossible, Payload, VAA } from "./vaa";
 import base58 from "bs58";
-import { importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "@certusone/wormhole-sdk";
-import { CONTRACTS } from "@certusone/wormhole-sdk"
-import { postVaaSolanaWithRetry } from "@certusone/wormhole-sdk"
+import { importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "alephium-wormhole-sdk";
+import { CONTRACTS } from "alephium-wormhole-sdk"
+import { postVaaSolanaWithRetry } from "alephium-wormhole-sdk"
 
 export async function execute_governance_solana(
   v: VAA<Payload>,
