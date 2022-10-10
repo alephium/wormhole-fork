@@ -1,9 +1,9 @@
 {
-  "name": "wormhole-client",
+  "name": "alephium-wormhole-client",
   "version": "1.0.0",
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
-    "@certusone/wormhole-sdk": "^0.3.8",
+    "alephium-wormhole-sdk": "^0.0.1-rc0",
     "@solana/web3.js": "^1.22.0",
     "@terra-money/terra.js": "^1.8.9",
     "axios": "^0.24.0",

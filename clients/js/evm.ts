@@ -1,8 +1,8 @@
-import { BridgeImplementation__factory, Implementation__factory, NFTBridgeImplementation__factory } from "@certusone/wormhole-sdk"
+import { BridgeImplementation__factory, Implementation__factory, NFTBridgeImplementation__factory } from "alephium-wormhole-sdk"
 import { ethers } from "ethers"
 import { NETWORKS } from "./networks"
 import { impossible, Payload } from "./vaa"
-import { Contracts, CONTRACTS, EVMChainName } from "@certusone/wormhole-sdk"
+import { Contracts, CONTRACTS, EVMChainName } from "alephium-wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 

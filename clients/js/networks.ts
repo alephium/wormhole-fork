@@ -1,4 +1,4 @@
-import { ChainName } from "@certusone/wormhole-sdk";
+import { ChainName } from "alephium-wormhole-sdk";
 
 require("dotenv").config({ path: `${process.env.HOME}/.wormhole/.env` });
 
@@ -94,6 +94,10 @@ const MAINNET = {
     rpc: `https://ropsten.infura.io/v3/${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
   },
+  alephium: {
+    rpc: undefined,
+    key: undefined
+  }
 };
 
 const TESTNET = {
@@ -174,6 +178,10 @@ const TESTNET = {
     rpc: `https://ropsten.infura.io/v3/${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
   },
+  alephium: {
+    rpc: undefined,
+    key: undefined
+  }
 };
 
 const DEVNET = {
@@ -254,6 +262,10 @@ const DEVNET = {
     rpc: undefined,
     key: undefined,
   },
+  alephium: {
+    rpc: 'http://localhost:22973',
+    key: undefined
+  }
 };
 
 /**

@@ -2,7 +2,7 @@ import { LCDClient, MnemonicKey, MsgExecuteContract } from "@terra-money/terra.j
 import { fromUint8Array } from "js-base64";
 import { impossible, Payload } from "./vaa";
 import { NETWORKS } from "./networks"
-import { CONTRACTS } from "@certusone/wormhole-sdk"
+import { CONTRACTS } from "alephium-wormhole-sdk"
 
 export async function execute_governance_terra(
   payload: Payload,

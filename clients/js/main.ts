@@ -3,7 +3,7 @@ import yargs from "yargs";
 
 import { hideBin } from "yargs/helpers";
 
-import { setDefaultWasm } from "@certusone/wormhole-sdk";
+import { setDefaultWasm } from "alephium-wormhole-sdk";
 import { execute_governance_solana } from "./solana";
 import { execute_governance_evm } from "./evm";
 import { execute_governance_terra } from "./terra";
@@ -16,7 +16,7 @@ import {
   toChainName,
   isEVMChain,
   toChainId,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 
 setDefaultWasm("node");
 
@@ -98,16 +98,10 @@ yargs(hideBin(process.argv))
                 })
             },
             (argv) => {
-              let module = argv["module"] as "NFTBridge" | "TokenBridge";
-              // TODO: remove this once we release our sdk
-              let emitterChainId = 0
-              if (argv["chain"] === "alephium") {
-                emitterChainId = 255
-              } else {
-                assertChain(argv["chain"])
-                emitterChainId = toChainId(argv["chain"])
-              }
-              let payload: vaa.PortalRegisterChain<typeof module> = {
+              const module = argv["module"] as "NFTBridge" | "TokenBridge";
+              assertChain(argv["chain"])
+              const emitterChainId = toChainId(argv["chain"])
+              const payload: vaa.PortalRegisterChain<typeof module> = {
                 module,
                 type: "RegisterChain",
                 emitterChain: emitterChainId,
@@ -116,7 +110,7 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              let v = makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 0,
                 GOVERNANCE_EMITTER,
@@ -156,11 +150,11 @@ yargs(hideBin(process.argv))
             },
             (argv) => {
               assertChain(argv["chain"]);
-              let module = argv["module"] as
+              const module = argv["module"] as
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              let payload: Payload = {
+              const payload: Payload = {
                 module,
                 type: "ContractUpgrade",
                 address: Buffer.from(
@@ -168,7 +162,7 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              let v = makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
