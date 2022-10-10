@@ -1,4 +1,4 @@
-import { ChainId } from '@certusone/wormhole-sdk';
+import { ChainId } from 'alephium-wormhole-sdk';
 import Dexie, { Table } from 'dexie';
 
 export const TxDBName = 'tx-db'

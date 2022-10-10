@@ -19,7 +19,7 @@ import {
   transferAlph,
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph
-} from '@certusone/wormhole-sdk'
+} from 'alephium-wormhole-sdk'
 
 export async function createAlephium(): Promise<BridgeChain> {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')

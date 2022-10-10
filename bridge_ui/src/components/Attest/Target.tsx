@@ -1,4 +1,4 @@
-import { isEVMChain } from "@certusone/wormhole-sdk";
+import { isEVMChain } from "alephium-wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { useCallback, useMemo } from "react";

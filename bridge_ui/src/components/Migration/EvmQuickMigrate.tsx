@@ -1,4 +1,4 @@
-import { ChainId, TokenImplementation__factory } from "@certusone/wormhole-sdk";
+import { ChainId, TokenImplementation__factory } from "alephium-wormhole-sdk";
 import { Signer } from "@ethersproject/abstract-signer";
 import { getAddress } from "@ethersproject/address";
 import { BigNumber } from "@ethersproject/bignumber";

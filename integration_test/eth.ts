@@ -15,7 +15,7 @@ import {
   transferFromEth,
   transferFromEthNative,
   zeroPad
-} from '@certusone/wormhole-sdk'
+} from 'alephium-wormhole-sdk'
 import { BridgeChain, getSignedVAA, normalizeTokenId, Sequence, TransferResult } from './utils'
 import { Wallet as ETHWallet, providers } from 'ethers'
 

@@ -1,4 +1,4 @@
-import { ChainId, CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { ChainId, CHAIN_ID_TERRA } from "alephium-wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { useSelector } from "react-redux";

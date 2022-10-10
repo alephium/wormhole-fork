@@ -3,7 +3,7 @@ import {
   Migrator__factory,
   TokenImplementation,
   TokenImplementation__factory,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Signer } from "@ethersproject/abstract-signer";
 import { formatUnits } from "@ethersproject/units";
 import { useEffect, useMemo, useState } from "react";

@@ -1,4 +1,4 @@
-import { CHAIN_ID_TERRA, isNativeDenom } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_TERRA, isNativeDenom } from "alephium-wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import { LCDClient } from "@terra-money/terra.js";
 import React, { useCallback, useMemo, useRef } from "react";
