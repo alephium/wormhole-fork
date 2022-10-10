@@ -1,4 +1,4 @@
-import { testNodeWallet } from '@alephium/web3-wallet'
+import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
 import { BridgeChain, TransferResult, getSignedVAA, normalizeTokenId, Sequence, waitAlphTxConfirmed } from './utils'
 import path from 'path'
@@ -50,21 +50,21 @@ export async function createAlephium(): Promise<BridgeChain> {
   const normalizeTransferAmount = (amount: bigint): bigint => amount
 
   const getTransactionFee = async (txId: string): Promise<bigint> => {
-    const status = await nodeWallet.provider.transactions.getTransactionsStatus({ txId: txId })
+    const status = await nodeWallet.nodeProvider.transactions.getTransactionsStatus({ txId: txId })
     // the transaction has been confirmed
     const blockHash = (status as node.Confirmed).blockHash
-    const block = await nodeWallet.provider.blockflow.getBlockflowBlocksBlockHash(blockHash)
+    const block = await nodeWallet.nodeProvider.blockflow.getBlockflowBlocksBlockHash(blockHash)
     const tx = block.transactions.find((t) => t.unsigned.txId === txId)!
     return BigInt(tx.unsigned.gasPrice) * BigInt(tx.unsigned.gasAmount)
   }
 
   const getNativeTokenBalance = async (): Promise<bigint> => {
-    const balance = await nodeWallet.provider.addresses.getAddressesAddressBalance(accountAddress)
+    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(accountAddress)
     return BigInt(balance.balance)
   }
 
   const getTokenBalance = async (tokenId: string): Promise<bigint> => {
-    const balance = await nodeWallet.provider.addresses.getAddressesAddressBalance(accountAddress)
+    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(accountAddress)
     const tokenBalance = balance.tokenBalances?.find((t) => t.id === tokenId)
     return tokenBalance === undefined ? 0n : BigInt(tokenBalance.amount)
   }
@@ -78,7 +78,7 @@ export async function createAlephium(): Promise<BridgeChain> {
   const getLocalLockedTokenBalance = async (tokenId: string): Promise<bigint> => {
     const localTokenPoolId = getTokenPoolId(tokenBridgeContractId, CHAIN_ID_ALEPHIUM, tokenId)
     const contractAddress = addressFromContractId(localTokenPoolId)
-    const contractState = await nodeWallet.provider.contracts.getContractsAddressState(contractAddress, {
+    const contractState = await nodeWallet.nodeProvider.contracts.getContractsAddressState(contractAddress, {
       group: groupIndex
     })
     const balance = contractState.asset.tokens?.find((t) => t.id === tokenId)?.amount
@@ -99,10 +99,9 @@ export async function createAlephium(): Promise<BridgeChain> {
         ? attestWrappedAlph(tokenBridgeContractId, tokenId, accountAddress, defaultMessageFee, 1)
         : attestFromAlph(tokenBridgeContractId, tokenId, accountAddress, defaultMessageFee, 1)
     const tokens = tokenId === wrappedAlphContractId ? [] : [{ id: tokenId, amount: 1 }]
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
       bytecode: bytecode,
-      submitTx: true,
       tokens: tokens
     })
     console.log(`attest alph token, token id: ${tokenId}, tx id: ${result.txId}`)
@@ -113,12 +112,11 @@ export async function createAlephium(): Promise<BridgeChain> {
     const vaa = parseVAA(signedVaa)
     const attestTokenHandlerId = getAttestTokenHandlerId(tokenBridgeContractId, vaa.body.emitterChainId)
     const bytecode = createRemoteTokenPoolOnAlph(attestTokenHandlerId, signedVaa, accountAddress, oneAlph)
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
-      bytecode: bytecode,
-      submitTx: true
+      bytecode: bytecode
     })
-    await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`create wrapped token on alph succeed, tx id: ${result.txId}`)
   }
 
@@ -140,10 +138,9 @@ export async function createAlephium(): Promise<BridgeChain> {
       defaultArbiterFee,
       defaultConfirmations
     )
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
       bytecode: bytecode,
-      submitTx: true,
       tokens: [{ id: tokenId, amount: amount }]
     })
     console.log(
@@ -151,7 +148,7 @@ export async function createAlephium(): Promise<BridgeChain> {
         toChainId
       )} succeed, token id: ${tokenId}, amount: ${amount}, tx id: ${result.txId}`
     )
-    await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     const txFee = await getTransactionFee(result.txId)
     const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, toChainId, sequence)
     return { signedVaa, txFee }
@@ -172,14 +169,13 @@ export async function createAlephium(): Promise<BridgeChain> {
       defaultArbiterFee,
       defaultConfirmations
     )
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
       bytecode: bytecode,
-      submitTx: true,
       attoAlphAmount: amount.toString()
     })
     console.log(`transfer walph to ${coalesceChainName(toChainId)} succeed, amount: ${amount}, tx id: ${result.txId}`)
-    await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     const txFee = await getTransactionFee(result.txId)
     const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, toChainId, sequence)
     return { signedVaa, txFee }
@@ -208,10 +204,9 @@ export async function createAlephium(): Promise<BridgeChain> {
       defaultArbiterFee,
       defaultConfirmations
     )
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
       bytecode: bytecode,
-      submitTx: true,
       tokens: [{ id: tokenPoolId, amount: amount }],
       attoAlphAmount: (amount + defaultMessageFee).toString()
     })
@@ -220,7 +215,7 @@ export async function createAlephium(): Promise<BridgeChain> {
         toChainId
       )} succeed, origin token id: ${originTokenId}, amount: ${amount}, tx id: ${result.txId}`
     )
-    await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     const txFee = await getTransactionFee(result.txId)
     const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, toChainId, sequence)
     return { signedVaa, txFee }
@@ -230,12 +225,11 @@ export async function createAlephium(): Promise<BridgeChain> {
     const vaa = parseVAA(signedVaa)
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId)
     const bytecode = redeemOnAlph(tokenBridgeForChainId, signedVaa)
-    const result = await nodeWallet.signExecuteScriptTx({
+    const result = await nodeWallet.signAndSubmitExecuteScriptTx({
       signerAddress: accountAddress,
-      bytecode: bytecode,
-      submitTx: true
+      bytecode: bytecode
     })
-    await waitAlphTxConfirmed(nodeWallet.provider, result.txId, 1)
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`redeem on alph succeed, tx id: ${result.txId}`)
     return await getTransactionFee(result.txId)
   }
