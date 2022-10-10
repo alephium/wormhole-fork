@@ -24,7 +24,7 @@ import {
   parseVAA,
   parseTargetChainFromLogEth,
   CHAIN_ID_ETH,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   Accordion,
   AccordionDetails,
@@ -84,7 +84,7 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
-import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
+import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {

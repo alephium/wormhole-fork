@@ -10,7 +10,7 @@ import {
   getIsTransferCompletedAlph,
   isEVMChain,
   getTokenBridgeForChainId,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import algosdk from "algosdk";

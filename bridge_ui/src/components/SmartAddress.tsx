@@ -16,7 +16,7 @@ import {
   CHAIN_ID_TERRA,
   isNativeDenom,
   CHAIN_ID_ACALA,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
 import { FileCopy, OpenInNew } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";

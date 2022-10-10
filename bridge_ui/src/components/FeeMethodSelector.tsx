@@ -4,7 +4,7 @@ import {
   CHAIN_ID_TERRA,
   hexToNativeAssetString,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   Card,
   Checkbox,

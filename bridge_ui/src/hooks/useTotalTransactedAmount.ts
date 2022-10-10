@@ -1,7 +1,7 @@
 import {
   hexToNativeString,
   parseTransferPayload,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";

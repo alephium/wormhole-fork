@@ -11,11 +11,11 @@ import {
   isEVMChain,
   uint8ArrayToHex,
   WormholeWrappedInfo,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
   getOriginalAssetSol as getOriginalAssetSolNFT,
-} from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
+} from "alephium-wormhole-sdk/lib/esm/nft_bridge";
 import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { useEffect } from "react";

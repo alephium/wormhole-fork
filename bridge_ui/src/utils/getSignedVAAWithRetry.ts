@@ -1,4 +1,4 @@
-import { ChainId, getSignedVAA } from "@certusone/wormhole-sdk";
+import { ChainId, getSignedVAA } from "alephium-wormhole-sdk";
 import { WORMHOLE_RPC_HOSTS } from "./consts";
 
 export let CURRENT_WORMHOLE_RPC_HOST = -1;

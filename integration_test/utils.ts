@@ -1,5 +1,5 @@
 import { NodeProvider, node } from '@alephium/web3'
-import { ChainId, getSignedVAAWithRetry, zeroPad } from '@certusone/wormhole-sdk'
+import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 
 export type TransferResult = { signedVaa: Uint8Array; txFee: bigint }

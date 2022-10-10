@@ -3,7 +3,7 @@ import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ETH,
   getIsTransferCompletedEth
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   Box,
   Card,

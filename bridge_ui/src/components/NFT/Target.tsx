@@ -3,7 +3,7 @@ import {
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { makeStyles, TextField, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { PublicKey } from "@solana/web3.js";

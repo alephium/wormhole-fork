@@ -3,8 +3,8 @@ import {
   CHAIN_ID_ETH,
   NFTImplementation,
   TokenImplementation,
-} from "@certusone/wormhole-sdk";
-import { WormholeAbi__factory } from "@certusone/wormhole-sdk/lib/esm/ethers-contracts/abi";
+} from "alephium-wormhole-sdk";
+import { WormholeAbi__factory } from "alephium-wormhole-sdk/lib/esm/ethers-contracts/abi";
 import { getAddress as getEthAddress } from "@ethersproject/address";
 import React, { useCallback } from "react";
 import { useSelector } from "react-redux";

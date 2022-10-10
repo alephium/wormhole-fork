@@ -5,7 +5,7 @@ import {
   CHAIN_ID_ETH,
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   AccountInfo,

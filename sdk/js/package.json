@@ -1,6 +1,6 @@
 {
-  "name": "@certusone/wormhole-sdk",
-  "version": "0.3.8",
+  "name": "alephium-wormhole-sdk",
+  "version": "0.0.1-rc0",
   "description": "SDK for interacting with Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",

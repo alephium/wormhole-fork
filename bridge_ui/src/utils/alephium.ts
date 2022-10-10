@@ -12,7 +12,7 @@ import {
   parseTargetChainFromLogAlph,
   getTokenPoolId,
   contractExists
-} from '@certusone/wormhole-sdk';
+} from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
   node,
