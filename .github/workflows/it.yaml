@@ -22,13 +22,8 @@ jobs:
         run: cd tools && npm install && cd .. && make generate-proto-sdk
       - name: alephium
         working-directory: ./alephium
-        # TODO: improve this
         run: |
-          npm install && cp .env.test .env && npx @alephium/cli devnet start && npx @alephium/cli devnet stop
-          echo "alephium.consensus.block-target-time = 10 millis" >> ~/.alephium-dev/user.conf
-          cat ~/.alephium-dev/user.conf
-          ALEPHIUM_HOME=~/.alephium-dev nohup java -jar ~/.alephium-dev/*.jar &
-          sleep 10
+          npm install && cp .env.test .env && npx @alephium/cli devnet start
           npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
           nohup npm run auto-mine &
       - name: ethereum
