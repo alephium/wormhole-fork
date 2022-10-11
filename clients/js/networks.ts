@@ -264,7 +264,7 @@ const DEVNET = {
   },
   alephium: {
     rpc: 'http://localhost:22973',
-    key: undefined
+    key: 'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava'
   }
 };
 

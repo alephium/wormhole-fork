@@ -56,17 +56,36 @@ class P<T> {
 // All the different types of payloads
 export type Payload =
     GuardianSetUpgrade
+    | UpdateMessageFee
+    | TransferFee
     | CoreContractUpgrade
+    | AlphContractUpgrade<'Core'>
+    | AlphContractUpgrade<'TokenBridge'>
     | PortalContractUpgrade<"TokenBridge">
     | PortalContractUpgrade<"NFTBridge">
     | PortalRegisterChain<"TokenBridge">
     | PortalRegisterChain<"NFTBridge">
 // TODO: add other types of payloads
 
+export function contractUpgradeVAA(
+    module: 'Core' | 'TokenBridge' | 'NFTBridge',
+    address: Uint8Array
+): CoreContractUpgrade | PortalContractUpgrade<'TokenBridge'> | PortalContractUpgrade<'NFTBridge'> {
+    return {
+        module: module,
+        type: 'ContractUpgrade',
+        address: address
+    }
+}
+
 export function parse(buffer: Buffer): VAA<Payload | null> {
     const vaa = parseEnvelope(buffer)
     const parser = guardianSetUpgradeParser
+        .or(updateMessageFeeParser)
+        .or(transferFeeParser)
         .or(coreContractUpgradeParser)
+        .or(alphContractUpgradeParser('Core'))
+        .or(alphContractUpgradeParser('TokenBridge'))
         .or(portalContractUpgradeParser("TokenBridge"))
         .or(portalContractUpgradeParser("NFTBridge"))
         .or(portalRegisterChainParser("TokenBridge"))
@@ -159,8 +178,18 @@ function vaaBody(vaa: VAA<Payload>) {
                 case "GuardianSetUpgrade":
                     payload_str = serialiseGuardianSetUpgrade(payload)
                     break
+                case 'UpdateMessageFee':
+                    payload_str = serialiseUpdateMessageFee(payload)
+                    break
+                case 'TransferFee':
+                    payload_str = serialiseTransferFee(payload)
+                    break
                 case "ContractUpgrade":
-                    payload_str = serialiseCoreContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialiseCoreContractUpgrade(payload)
+                    }
                     break
             }
             break
@@ -168,7 +197,11 @@ function vaaBody(vaa: VAA<Payload>) {
         case "TokenBridge":
             switch (payload.type) {
                 case "ContractUpgrade":
-                    payload_str = serialisePortalContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialisePortalContractUpgrade(payload)
+                    }
                     break
                 case "RegisterChain":
                     payload_str = serialisePortalRegisterChain(payload)
@@ -217,6 +250,79 @@ const addressParser = (length: number) => new Parser()
         lengthInBytes: length,
         formatter: (arr) => Buffer.from(arr).toString("hex")
     })
+
+export interface TransferFee {
+    module: 'Core'
+    type: 'TransferFee'
+    amount: bigint
+    recipient: string
+}
+
+const transferFeeParser: P<TransferFee> = new P(new Parser()
+    .endianess('big')
+    .string('module', {
+        length: 32,
+        encoding: 'hex',
+        assert: Buffer.from('Core').toString('hex').padStart(64, '0'),
+        formatter: (_str) => 'Core'
+    })
+    .uint8('type', {
+        assert: 4,
+        formatter: (_action) => 'TransferFee'
+    })
+    .array('amount', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => BigInt(`0x${Buffer.from(bytes).toString('hex')}`)
+    })
+    .array('amount', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => Buffer.from(bytes).toString('hex').padStart(64, '0')
+    }))
+
+function serialiseTransferFee(payload: TransferFee): string {
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', 4),
+        payload.amount.toString(16).padStart(64, '0'),
+        payload.recipient
+    ]
+    return body.join('')
+}
+
+export interface UpdateMessageFee {
+    module: 'Core'
+    type: 'UpdateMessageFee'
+    newMessageFee: bigint
+}
+
+const updateMessageFeeParser: P<UpdateMessageFee> = new P(new Parser()
+    .endianess('big')
+    .string('module', {
+        length: 32,
+        encoding: 'hex',
+        assert: Buffer.from('Core').toString('hex').padStart(64, '0'),
+        formatter: (_str) => 'Core'
+    })
+    .uint8('type', {
+        assert: 3,
+        formatter: (_action) => 'UpdateMessageFee'
+    })
+    .array('newMessageFee', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => BigInt(`0x${Buffer.from(bytes).toString('hex')}`)
+    }))
+
+function serialiseUpdateMessageFee(payload: UpdateMessageFee): string {
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', 3),
+        payload.newMessageFee.toString(16).padStart(64, '0')
+    ]
+    return body.join('')
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Guardian set upgrade
@@ -305,6 +411,50 @@ function serialiseCoreContractUpgrade(payload: CoreContractUpgrade): string {
         encode("bytes32", payload.address)
     ]
     return body.join("")
+}
+
+export interface AlphContractUpgrade<Module extends 'Core' | 'TokenBridge'> {
+    module: Module
+    type: 'ContractUpgrade'
+    code: Uint8Array
+    state: Uint8Array
+}
+
+function alphContractUpgradeParser<Module extends 'Core' | 'TokenBridge'>(module: Module): P<AlphContractUpgrade<Module>> {
+    return new P(new Parser()
+        .endianess('big')
+        .string('module', {
+            length: 32,
+            encoding: 'hex',
+            assert: Buffer.from(module).toString('hex').padStart(64, '0'),
+            formatter: (_str) => module
+        })
+        .uint8('type', {
+            assert: module === 'Core' ? 1 : 2,
+            formatter: (_action) => 'ContractUpgrade'
+        })
+        .uint16('codeLength')
+        .array('code', {
+            type: 'uint8',
+            lengthInBytes: 'codeLength'
+        })
+        .array('state', {
+            type: 'uint8',
+            readUntil: 'eof'
+        })
+    )
+}
+
+function serialiseAlphContractUpgrade<Module extends 'Core' | 'TokenBridge'>(payload: AlphContractUpgrade<Module>): string {
+    const payloadId = payload.module === 'Core' ? 1 : 2
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', payloadId),
+        encode('uint16', payload.code.length),
+        Buffer.from(payload.code).toString('hex'),
+        Buffer.from(payload.state).toString('hex')
+    ]
+    return body.join('')
 }
 
 export interface PortalContractUpgrade<Module extends "NFTBridge" | "TokenBridge"> {

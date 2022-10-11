@@ -41,6 +41,9 @@ export async function execute_governance_terra(
         case "ContractUpgrade":
           console.log("Upgrading core contract")
           break
+        case 'UpdateMessageFee':
+        case 'TransferFee':
+          throw new Error('Not supported')
         default:
           impossible(payload)
       }

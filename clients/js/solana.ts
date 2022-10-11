@@ -31,6 +31,9 @@ export async function execute_governance_solana(
           console.log("Upgrading core contract")
           ix = bridge.upgrade_contract_ix(bridge_id.toString(), from.publicKey.toString(), from.publicKey.toString(), vaa);
           break
+        case 'UpdateMessageFee':
+        case 'TransferFee':
+          throw new Error('Not supported')
         default:
           ix = impossible(v.payload)
       }

@@ -17,6 +17,7 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
+import { execute_governance_alph } from "./alph";
 
 setDefaultWasm("node");
 
@@ -154,14 +155,8 @@ yargs(hideBin(process.argv))
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              const payload: Payload = {
-                module,
-                type: "ContractUpgrade",
-                address: Buffer.from(
-                  argv["contract-address"].padStart(64, "0"),
-                  "hex"
-                ),
-              };
+              const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
+              const payload = vaa.contractUpgradeVAA(module, address)
               const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
@@ -195,7 +190,7 @@ yargs(hideBin(process.argv))
             (argv) => {
               const sequence = argv['sequence']
               if (sequence === undefined) {
-                throw new Error('please specify sequence')
+                exitOnError('sequence is required for this command')
               }
               const index = argv['index']
               const keys = argv['keys'].split(',').map(key => {
@@ -344,11 +339,16 @@ yargs(hideBin(process.argv))
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        throw Error("Alephium is not supported yet")
+        await execute_governance_alph(parsed_vaa.payload, buf, network)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled
         impossible(chain);
       }
     }
-  ).argv;
+  ).argv
+
+function exitOnError(msg: string) {
+  console.log(msg)
+  process.exit(1)
+}

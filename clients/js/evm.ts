@@ -63,6 +63,14 @@ export async function execute_governance_evm(
           console.log("Submitting new guardian set")
           console.log("Hash: " + (await cb.submitNewGuardianSet(vaa, overrides)).hash)
           break
+        case 'UpdateMessageFee':
+          console.log('Submitting update message fee')
+          console.log(`Hash: ${(await cb.submitSetMessageFee(vaa, overrides)).hash}`)
+          break
+        case 'TransferFee':
+          console.log('Submitting transfer fee')
+          console.log(`Hash: ${(await cb.submitTransferFees(vaa, overrides)).hash}`)
+          break
         case "ContractUpgrade":
           console.log("Upgrading core contract")
           console.log("Hash: " + (await cb.submitContractUpgrade(vaa, overrides)).hash)
