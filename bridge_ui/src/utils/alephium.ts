@@ -150,10 +150,9 @@ export async function submitAlphScriptTx(
   tokens?: node.Token[],
   attoAlphAmount?: string
 ) {
-  return provider.signExecuteScriptTx({
+  return provider.signAndSubmitExecuteScriptTx({
     signerAddress: fromAddress,
     bytecode: bytecode,
-    submitTx: true,
     tokens: tokens,
     attoAlphAmount: attoAlphAmount
   })

@@ -89,7 +89,7 @@ import {
   submitAlphScriptTx,
   waitTxConfirmedAndGetTxInfo,
 } from "../utils/alephium";
-import { SignExecuteScriptTxResult } from "@alephium/web3";
+import { SubmissionResult } from "@alephium/web3";
 import { Transaction, TransactionDB } from "../utils/db";
 
 async function algo(
@@ -350,7 +350,7 @@ async function alephium(
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
-        let result: SignExecuteScriptTxResult
+        let result: SubmissionResult
         if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
           const bytecode = transferAlph(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
