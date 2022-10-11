@@ -3,7 +3,7 @@ import yargs from "yargs";
 
 import { hideBin } from "yargs/helpers";
 
-import { setDefaultWasm } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, coalesceChainId, setDefaultWasm } from "alephium-wormhole-sdk";
 import { execute_governance_solana } from "./solana";
 import { execute_governance_evm } from "./evm";
 import { execute_governance_terra } from "./terra";
@@ -17,6 +17,7 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
+import { execute_governance_alph } from "./alph";
 
 setDefaultWasm("node");
 
@@ -150,21 +151,70 @@ yargs(hideBin(process.argv))
             },
             (argv) => {
               assertChain(argv["chain"]);
+              if (coalesceChainId(argv['chain']) === CHAIN_ID_ALEPHIUM) {
+                exitOnError('Please use `upgrade-alph` command to generate Alephium contract upgrade VAA')
+              }
               const module = argv["module"] as
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              const payload: Payload = {
-                module,
-                type: "ContractUpgrade",
-                address: Buffer.from(
-                  argv["contract-address"].padStart(64, "0"),
-                  "hex"
-                ),
-              };
+              const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
+              const payload = vaa.contractUpgradeVAA(module, address)
               const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
+                GOVERNANCE_EMITTER,
+                argv["guardian-secret"].split(","),
+                argv["sequence"],
+                payload
+              );
+              console.log(serialiseVAA(v));
+            }
+          )
+          .command(
+            'upgrade-alph',
+            'Generate Alephium contract upgrade VAA',
+            (yargs) => {
+              return yargs
+                .options('module', {
+                  alias: 'm',
+                  describe: 'Module to upgrade',
+                  type: 'string',
+                  choices: ['Core', 'TokenBridge'],
+                  required: true
+                })
+                .options('code', {
+                  alias: 'c',
+                  describe: 'New contract code',
+                  type: 'string',
+                  required: true
+                })
+                .options('prevStateHash', {
+                  alias: 'p',
+                  describe: 'Previous contract state hash',
+                  type: 'string',
+                  required: false
+                })
+                .options('state', {
+                  alias: 'n',
+                  describe: 'New contract state',
+                  type: 'string',
+                  required: false
+                })
+            },
+            (argv) => {
+              const module = argv['module'] as 'Core' | 'TokenBridge'
+              const sequence = argv['sequence']
+              if (sequence === undefined) {
+                exitOnError('sequence is required for this command')
+              }
+              const code = Buffer.from(argv['code'], 'hex')
+              const prevStateHash = argv['prevStateHash'] === undefined ? undefined : Buffer.from(argv['prevStateHash'], 'hex')
+              const newState = argv['state'] === undefined ? undefined : Buffer.from(argv['state'], 'hex')
+              const payload = vaa.alphContractUpgradeVAA(module, code, prevStateHash, newState)
+              const v = makeVAA(
+                GOVERNANCE_CHAIN,
+                CHAIN_ID_ALEPHIUM,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
@@ -195,7 +245,7 @@ yargs(hideBin(process.argv))
             (argv) => {
               const sequence = argv['sequence']
               if (sequence === undefined) {
-                throw new Error('please specify sequence')
+                exitOnError('sequence is required for this command')
               }
               const index = argv['index']
               const keys = argv['keys'].split(',').map(key => {
@@ -344,11 +394,16 @@ yargs(hideBin(process.argv))
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        throw Error("Alephium is not supported yet")
+        await execute_governance_alph(parsed_vaa.payload, buf, network)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled
         impossible(chain);
       }
     }
-  ).argv;
+  ).argv
+
+function exitOnError(msg: string) {
+  console.log(msg)
+  process.exit(1)
+}

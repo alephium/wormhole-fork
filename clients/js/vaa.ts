@@ -57,16 +57,61 @@ class P<T> {
 export type Payload =
     GuardianSetUpgrade
     | CoreContractUpgrade
+    | AlphContractUpgrade<'Core'>
+    | AlphContractUpgrade<'TokenBridge'>
     | PortalContractUpgrade<"TokenBridge">
     | PortalContractUpgrade<"NFTBridge">
     | PortalRegisterChain<"TokenBridge">
     | PortalRegisterChain<"NFTBridge">
 // TODO: add other types of payloads
 
+export function contractUpgradeVAA(
+    module: 'Core' | 'TokenBridge' | 'NFTBridge',
+    address: Uint8Array
+): CoreContractUpgrade | PortalContractUpgrade<'TokenBridge'> | PortalContractUpgrade<'NFTBridge'> {
+    return {
+        module: module,
+        type: 'ContractUpgrade',
+        address: address
+    }
+}
+
+export function alphContractUpgradeVAA(
+    module: 'Core' | 'TokenBridge',
+    code: Uint8Array,
+    prevStateHash: Uint8Array | undefined,
+    newState: Uint8Array | undefined
+): AlphContractUpgrade<'Core'> | AlphContractUpgrade<'TokenBridge'> {
+    if (prevStateHash === undefined) {
+        return {
+            module: module,
+            type: 'ContractUpgrade',
+            code: code,
+            state: new Uint8Array(),
+        }
+    }
+    if (prevStateHash.length !== 32) {
+        throw Error('Invalid previous state hash, expect 32 bytes')
+    }
+    if (newState === undefined) {
+        throw Error('Invalid new contract state')
+    }
+    const newStateLength = Buffer.alloc(2)
+    newStateLength.writeUInt16BE(newState.length, 0)
+    return {
+        module: module,
+        type: 'ContractUpgrade',
+        code: code,
+        state: Buffer.concat([prevStateHash, newStateLength, newState])
+    }
+}
+
 export function parse(buffer: Buffer): VAA<Payload | null> {
     const vaa = parseEnvelope(buffer)
     const parser = guardianSetUpgradeParser
         .or(coreContractUpgradeParser)
+        .or(alphContractUpgradeParser('Core'))
+        .or(alphContractUpgradeParser('TokenBridge'))
         .or(portalContractUpgradeParser("TokenBridge"))
         .or(portalContractUpgradeParser("NFTBridge"))
         .or(portalRegisterChainParser("TokenBridge"))
@@ -160,7 +205,11 @@ function vaaBody(vaa: VAA<Payload>) {
                     payload_str = serialiseGuardianSetUpgrade(payload)
                     break
                 case "ContractUpgrade":
-                    payload_str = serialiseCoreContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialiseCoreContractUpgrade(payload)
+                    }
                     break
             }
             break
@@ -168,7 +217,11 @@ function vaaBody(vaa: VAA<Payload>) {
         case "TokenBridge":
             switch (payload.type) {
                 case "ContractUpgrade":
-                    payload_str = serialisePortalContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialisePortalContractUpgrade(payload)
+                    }
                     break
                 case "RegisterChain":
                     payload_str = serialisePortalRegisterChain(payload)
@@ -305,6 +358,50 @@ function serialiseCoreContractUpgrade(payload: CoreContractUpgrade): string {
         encode("bytes32", payload.address)
     ]
     return body.join("")
+}
+
+export interface AlphContractUpgrade<Module extends 'Core' | 'TokenBridge'> {
+    module: Module
+    type: 'ContractUpgrade'
+    code: Uint8Array
+    state: Uint8Array
+}
+
+function alphContractUpgradeParser<Module extends 'Core' | 'TokenBridge'>(module: Module): P<AlphContractUpgrade<Module>> {
+    return new P(new Parser()
+        .endianess('big')
+        .string('module', {
+            length: 32,
+            encoding: 'hex',
+            assert: Buffer.from(module).toString('hex').padStart(64, '0'),
+            formatter: (_str) => module
+        })
+        .uint8('type', {
+            assert: module === 'Core' ? 1 : 2,
+            formatter: (_action) => 'ContractUpgrade'
+        })
+        .uint16('codeLength')
+        .array('code', {
+            type: 'uint8',
+            lengthInBytes: 'codeLength'
+        })
+        .array('state', {
+            type: 'uint8',
+            readUntil: 'eof'
+        })
+    )
+}
+
+function serialiseAlphContractUpgrade<Module extends 'Core' | 'TokenBridge'>(payload: AlphContractUpgrade<Module>): string {
+    const payloadId = payload.module === 'Core' ? 1 : 2
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', payloadId),
+        encode('uint16', payload.code.length),
+        Buffer.from(payload.code).toString('hex'),
+        Buffer.from(payload.state).toString('hex')
+    ]
+    return body.join('')
 }
 
 export interface PortalContractUpgrade<Module extends "NFTBridge" | "TokenBridge"> {
