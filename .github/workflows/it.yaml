@@ -35,9 +35,6 @@ jobs:
           sleep 5
           npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_alph_chain.js
           npx truffle exec mine.js &
-      - name: sdk
-        working-directory: ./sdk/js
-        run: npm install && npm run build
       - name: guardian
         run: |
           git tag v0.0.0-integration-test
