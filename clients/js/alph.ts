@@ -6,7 +6,7 @@ import {
   Contracts,
   CONTRACTS,
   updateGuardianSetScript,
-  upgradeGovernanceContract,
+  upgradeGovernanceContractScript,
   createRemoteTokenPoolOnAlph,
   upgradeTokenBridgeContractScript,
   setMessageFeeScript,
@@ -91,7 +91,7 @@ export async function execute_governance_alph(
           break
         case 'ContractUpgrade':
           console.log(`Upgrading core contract`)
-          console.log(`Hash: ${(await executeGovernanceScript(upgradeGovernanceContract())).txId}`)
+          console.log(`Hash: ${(await executeGovernanceScript(upgradeGovernanceContractScript())).txId}`)
           break
         default:
           impossible(payload)

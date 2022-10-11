@@ -15,18 +15,20 @@ program
     try {
       const env = await getEnv<Settings>()
       const signer = PrivateKeyWallet.FromMnemonic(env.network.mnemonic)
-      const accounts = await signer.getAccounts()
       const script = Project.script('CreateLocalTokenPool')
       const result = await script.transactionForDeployment(signer, {
         initialFields: {
-          payer: accounts[0].address,
+          payer: signer.account.address,
           tokenBridge: options.tokenBridgeId as string,
           localTokenId: options.localTokenId as string,
           alphAmount: oneAlph
         }
       })
-      await signer.submitTransaction(result.unsignedTx)
-      await waitTxConfirmed(signer.provider, result.txId, env.network.confirmations!)
+      await signer.signAndSubmitUnsignedTx({
+        signerAddress: signer.account.address,
+        unsignedTx: result.unsignedTx
+      })
+      await waitTxConfirmed(signer.nodeProvider, result.txId, env.network.confirmations!)
       console.log(`Create local token pool succeed, tx id: ${result.txId}`)
     } catch (error) {
       program.error(`failed to create local token pool, error: ${error}`)

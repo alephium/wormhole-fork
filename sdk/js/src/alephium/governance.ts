@@ -16,6 +16,6 @@ export function updateGuardianSetScript(): Script {
   return Script.fromJson(updateGuardianSet)
 }
 
-export function upgradeGovernanceContract(): Script {
+export function upgradeGovernanceContractScript(): Script {
   return Script.fromJson(upgradeContract)
 }
