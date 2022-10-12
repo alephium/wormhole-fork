@@ -148,7 +148,7 @@ describe('test token bridge', () => {
         payer: payer,
         localTokenId: testToken.contractId,
         nonce: nonceHex,
-        consistencyLevel: 0
+        consistencyLevel: 0n
       },
       inputAssets: [inputAsset],
       existingContracts: tokenBridgeInfo.dependencies.concat(testToken.states())
@@ -164,11 +164,11 @@ describe('test token bridge', () => {
     expect(events[0].name).toEqual('WormholeMessage')
     expect(events[0].fields).toEqual({
       sender: tokenBridgeInfo.contractId,
-      targetChainId: 0,
-      sequence: 0,
+      targetChainId: 0n,
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(message.encode()),
-      consistencyLevel: 0
+      consistencyLevel: 0n
     })
   })
 
@@ -185,7 +185,7 @@ describe('test token bridge', () => {
         payer: payer,
         localTokenId: tokenBridgeInfo.wrappedAlphId,
         nonce: nonceHex,
-        consistencyLevel: 0
+        consistencyLevel: 0n
       },
       inputAssets: [inputAsset],
       existingContracts: tokenBridgeInfo.dependencies
@@ -201,11 +201,11 @@ describe('test token bridge', () => {
     expect(events[0].name).toEqual('WormholeMessage')
     expect(events[0].fields).toEqual({
       sender: tokenBridgeInfo.contractId,
-      targetChainId: 0,
-      sequence: 0,
+      targetChainId: 0n,
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(message.encode()),
-      consistencyLevel: 0
+      consistencyLevel: 0n
     })
   })
 
@@ -228,7 +228,7 @@ describe('test token bridge', () => {
     })
 
     const tokenBridgeState = testResult.contracts.filter((c) => c.contractId === tokenBridgeInfo.contractId)[0]
-    expect(tokenBridgeState.fields['minimalConsistencyLevel']).toEqual(newMinimalConsistencyLevel)
+    expect(tokenBridgeState.fields['minimalConsistencyLevel']).toEqual(BigInt(newMinimalConsistencyLevel))
   })
 
   it('should register chain', async () => {
@@ -266,7 +266,7 @@ describe('test token bridge', () => {
 
   it('should register chain failed if sequence is invalid', async () => {
     await buildProject()
-    const tokenBridgeInfo = createTokenBridge(0n, undefined, 3)
+    const tokenBridgeInfo = createTokenBridge(0n, undefined, 3n)
     const tokenBridge = tokenBridgeInfo.contract
     const registerChain = new RegisterChain(remoteChainId, randomContractId())
     async function test(sequence: number) {
@@ -339,7 +339,7 @@ describe('test token bridge', () => {
       initialFields: fixture.tokenBridgeInfo.selfState.fields,
       testArgs: {
         fromAddress: fromAddress,
-        toChainId: remoteChainId,
+        toChainId: BigInt(remoteChainId),
         toAddress: toAddress,
         alphAmount: transferAmount,
         arbiterFee: arbiterFee,
@@ -353,7 +353,7 @@ describe('test token bridge', () => {
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1)
+    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
     const tokenPoolState = testResult.contracts.filter(
@@ -393,8 +393,8 @@ describe('test token bridge', () => {
     expect(event.name).toEqual('WormholeMessage')
     expect(event.fields).toEqual({
       sender: fixture.tokenBridgeInfo.contractId,
-      targetChainId: remoteChainId,
-      sequence: 0,
+      targetChainId: BigInt(remoteChainId),
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(transferMessage.encode()),
       consistencyLevel: minimalConsistencyLevel
@@ -444,7 +444,7 @@ describe('test token bridge', () => {
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1)
+    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
     const wrappedAlphOutput = testResult.txOutputs.filter((c) => c.address === addressFromContractId(wrappedAlphId))[0]
     expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph - transferAmount)
@@ -516,8 +516,8 @@ describe('test token bridge', () => {
       testArgs: {
         fromAddress: fromAddress,
         bridgeTokenId: testTokenInfo.contractId,
-        tokenChainId: CHAIN_ID_ALEPHIUM,
-        toChainId: remoteChainId,
+        tokenChainId: BigInt(CHAIN_ID_ALEPHIUM),
+        toChainId: BigInt(remoteChainId),
         toAddress: toAddress,
         tokenAmount: transferAmount,
         arbiterFee: arbiterFee,
@@ -531,7 +531,7 @@ describe('test token bridge', () => {
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1)
+    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
     const localTokenPoolState = testResult.contracts.filter(
@@ -561,8 +561,8 @@ describe('test token bridge', () => {
     expect(event.name).toEqual('WormholeMessage')
     expect(event.fields).toEqual({
       sender: fixture.tokenBridgeInfo.contractId,
-      targetChainId: remoteChainId,
-      sequence: 0,
+      targetChainId: BigInt(remoteChainId),
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(transferMessage.encode()),
       consistencyLevel: minimalConsistencyLevel
@@ -611,7 +611,7 @@ describe('test token bridge', () => {
       const tokenBridgeForChainState = testResult.contracts.filter(
         (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
       )[0]
-      expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1)
+      expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
       const initAsset = fixture.localTokenPoolInfo.selfState.asset
       const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.localTokenPoolInfo.address)[0]
@@ -639,7 +639,7 @@ describe('test token bridge', () => {
     checkTxCallerBalance(testResult0.txOutputs[1], dustAmount, [
       {
         id: testTokenInfo.contractId,
-        amount: Number(arbiterFee)
+        amount: arbiterFee
       }
     ])
 
@@ -724,7 +724,7 @@ describe('test token bridge', () => {
           testArgs: {
             symbol: newSymbol,
             name: newName,
-            sequence: 2
+            sequence: 2n
           },
           inputAssets: [defaultInputAsset],
           existingContracts: fixture.remoteTokenPoolInfo.dependencies
@@ -755,8 +755,8 @@ describe('test token bridge', () => {
     const remoteTokenPoolState = result.contracts.find((c) => c.contractId === fixture.remoteTokenPoolInfo.contractId)!
     expect(remoteTokenPoolState.fields['symbol_']).toEqual(newSymbol)
     expect(remoteTokenPoolState.fields['name_']).toEqual(newName)
-    expect(remoteTokenPoolState.fields['sequence_']).toEqual(2)
-    expect(remoteTokenPoolState.fields['decimals_']).toEqual(decimals) // decimals never change
+    expect(remoteTokenPoolState.fields['sequence_']).toEqual(2n)
+    expect(remoteTokenPoolState.fields['decimals_']).toEqual(BigInt(decimals)) // decimals never change
 
     await expectAssertionFailed(async () => update(CHAIN_ID_ALEPHIUM, 3)) // invalid chain id
     await expectAssertionFailed(async () => update(0, 1)) // invalid sequence
@@ -788,15 +788,15 @@ describe('test token bridge', () => {
     )
     const tokenBridge = fixture.tokenBridgeInfo.contract
 
-    async function transferToken(consistencyLevel: number) {
+    async function transferToken(consistencyLevel: bigint) {
       return tokenBridge.testPublicMethod('transferToken', {
         address: fixture.tokenBridgeInfo.address,
         initialFields: fixture.tokenBridgeInfo.selfState.fields,
         testArgs: {
           fromAddress: fromAddress,
           bridgeTokenId: remoteTokenId,
-          tokenChainId: remoteChainId,
-          toChainId: remoteChainId,
+          tokenChainId: BigInt(remoteChainId),
+          toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
           arbiterFee: arbiterFee,
@@ -808,14 +808,14 @@ describe('test token bridge', () => {
       })
     }
 
-    await expectAssertionFailed(async () => transferToken(minimalConsistencyLevel - 1))
+    await expectAssertionFailed(async () => transferToken(minimalConsistencyLevel - 1n))
 
     const testResult = await transferToken(minimalConsistencyLevel)
 
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1)
+    expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
     const remoteTokenPoolState = testResult.contracts.filter(
@@ -840,8 +840,8 @@ describe('test token bridge', () => {
     expect(event.name).toEqual('WormholeMessage')
     expect(event.fields).toEqual({
       sender: fixture.tokenBridgeInfo.contractId,
-      targetChainId: remoteChainId,
-      sequence: 0,
+      targetChainId: BigInt(remoteChainId),
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(transfer.encode()),
       consistencyLevel: minimalConsistencyLevel
@@ -880,8 +880,8 @@ describe('test token bridge', () => {
         testArgs: {
           fromAddress: fromAddress,
           bridgeTokenId: remoteTokenId,
-          tokenChainId: remoteChainId,
-          toChainId: remoteChainId,
+          tokenChainId: BigInt(remoteChainId),
+          toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
           arbiterFee: arbiterFee,
@@ -937,7 +937,7 @@ describe('test token bridge', () => {
     checkTxCallerBalance(testResult.txOutputs[1], dustAmount, [
       {
         id: fixture.remoteTokenPoolInfo.contractId,
-        amount: Number(arbiterFee)
+        amount: arbiterFee
       }
     ])
 
@@ -950,7 +950,7 @@ describe('test token bridge', () => {
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1)
+    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
     const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.remoteTokenPoolInfo.address)[0]
     expect(contractOutput.alphAmount).toEqual(fixture.remoteTokenPoolInfo.selfState.asset.alphAmount)
@@ -994,9 +994,9 @@ describe('test token bridge', () => {
     const tokenBridgeForChainState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainState.fields['start']).toEqual(256)
-    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(0)
-    expect(tokenBridgeForChainState.fields['secondNext256']).toEqual(0)
+    expect(tokenBridgeForChainState.fields['start']).toEqual(256n)
+    expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(0n)
+    expect(tokenBridgeForChainState.fields['secondNext256']).toEqual(0n)
 
     // the locked assets have not changed
     const tokenPoolState = testResult.contracts.filter((c) => c.address === fixture.localTokenPoolInfo.address)[0]
@@ -1006,8 +1006,8 @@ describe('test token bridge', () => {
 
     const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
     const unexecutedSequenceState = testResult.contracts.filter((c) => c.contractId === unexecutedSequenceContractId)[0]
-    expect(unexecutedSequenceState.fields['begin']).toEqual(0)
-    expect(unexecutedSequenceState.fields['sequences']).toEqual(0)
+    expect(unexecutedSequenceState.fields['begin']).toEqual(0n)
+    expect(unexecutedSequenceState.fields['sequences']).toEqual(0n)
 
     checkTxCallerBalance(testResult.txOutputs.filter((c) => c.address === payer)[0], 0n)
   })
@@ -1033,15 +1033,15 @@ describe('test token bridge', () => {
     )
     const tokenBridge = fixture.tokenBridgeInfo.contract
 
-    async function transferToken(consistencyLevel: number) {
+    async function transferToken(consistencyLevel: bigint) {
       return tokenBridge.testPublicMethod('transferToken', {
         address: fixture.tokenBridgeInfo.address,
         initialFields: fixture.tokenBridgeInfo.selfState.fields,
         testArgs: {
           fromAddress: fromAddress,
           bridgeTokenId: remoteTokenId,
-          tokenChainId: chainB,
-          toChainId: chainC,
+          tokenChainId: BigInt(chainB),
+          toChainId: BigInt(chainC),
           toAddress: toAddress,
           tokenAmount: transferAmount,
           arbiterFee: arbiterFee,
@@ -1058,12 +1058,12 @@ describe('test token bridge', () => {
     const tokenBridgeForChainBState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainBState.fields['sendSequence']).toEqual(0)
+    expect(tokenBridgeForChainBState.fields['sendSequence']).toEqual(0n)
 
     const tokenBridgeForChainCState = testResult.contracts.filter(
       (c) => c.contractId === tokenBridgeForChainCInfo.contractId
     )[0]
-    expect(tokenBridgeForChainCState.fields['sendSequence']).toEqual(1)
+    expect(tokenBridgeForChainCState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
     const remoteTokenPoolState = testResult.contracts.filter(
@@ -1088,8 +1088,8 @@ describe('test token bridge', () => {
     expect(event.name).toEqual('WormholeMessage')
     expect(event.fields).toEqual({
       sender: fixture.tokenBridgeInfo.contractId,
-      targetChainId: chainC,
-      sequence: 0,
+      targetChainId: BigInt(chainC),
+      sequence: 0n,
       nonce: nonceHex,
       payload: binToHex(transfer.encode()),
       consistencyLevel: minimalConsistencyLevel
@@ -1135,7 +1135,7 @@ describe('test token bridge', () => {
     checkTxCallerBalance(testResult.txOutputs[1], dustAmount, [
       {
         id: fixture.remoteTokenPoolInfo.contractId,
-        amount: Number(arbiterFee)
+        amount: arbiterFee
       }
     ])
 
@@ -1149,12 +1149,12 @@ describe('test token bridge', () => {
     const tokenBridgeForChainBState = testResult.contracts.filter(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
     )[0]
-    expect(tokenBridgeForChainBState.fields['firstNext256']).toEqual(0)
+    expect(tokenBridgeForChainBState.fields['firstNext256']).toEqual(0n)
 
     const tokenBridgeForChainCState = testResult.contracts.filter(
       (c) => c.contractId === tokenBridgeForChainCInfo.contractId
     )[0]
-    expect(tokenBridgeForChainCState.fields['firstNext256']).toEqual(1)
+    expect(tokenBridgeForChainCState.fields['firstNext256']).toEqual(1n)
 
     const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.remoteTokenPoolInfo.address)[0]
     expect(contractOutput.alphAmount).toEqual(oneAlph)
@@ -1178,7 +1178,7 @@ describe('test token bridge', () => {
       )
       const contractInfo = createUnexecutedSequence(
         fixture.tokenBridgeForChainInfo.contractId,
-        path * 256,
+        BigInt(path * 256),
         0n,
         unexecutedSequenceContractId
       )
@@ -1262,7 +1262,7 @@ describe('test token bridge', () => {
       const newContractCode = v2.bytecode
       const receivedSequence = tokenBridgeInfo.selfState.fields['receivedSequence'] as bigint
       const sendSequence = tokenBridgeInfo.selfState.fields['sendSequence'] as bigint
-      const consistency = tokenBridgeInfo.selfState.fields['minimalConsistencyLevel'] as number
+      const consistency = Number(tokenBridgeInfo.selfState.fields['minimalConsistencyLevel'] as bigint)
       const refundAddress = tokenBridgeInfo.selfState.fields['refundAddress'] as string
       const prevEncodedState = Buffer.concat([
         encodeU256(BigInt(receivedSequence) + 1n),

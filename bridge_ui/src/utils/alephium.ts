@@ -16,7 +16,6 @@ import {
 import {
   NodeProvider,
   node,
-  SignerProvider,
   addressFromContractId
 } from '@alephium/web3';
 
@@ -141,21 +140,6 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     console.log("failed to get alephium token info, error: " + error)
     return undefined
   }
-}
-
-export async function submitAlphScriptTx(
-  provider: SignerProvider,
-  fromAddress: string,
-  bytecode: string,
-  tokens?: node.Token[],
-  attoAlphAmount?: string
-) {
-  return provider.signAndSubmitExecuteScriptTx({
-    signerAddress: fromAddress,
-    bytecode: bytecode,
-    tokens: tokens,
-    attoAlphAmount: attoAlphAmount
-  })
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {

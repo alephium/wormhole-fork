@@ -3,7 +3,7 @@ import { ContractInfo, initAsset, randomContractAddress, randomContractId } from
 
 export function createUnexecutedSequence(
   parentId: string,
-  begin: number,
+  begin: bigint,
   sequences: bigint,
   contractId?: string
 ): ContractInfo {
@@ -19,13 +19,13 @@ export function createUnexecutedSequence(
 }
 
 export function createSequence(
-  start: number,
+  start: bigint,
   firstNext256: bigint,
   secondNext256: bigint,
   contractId?: string
 ): ContractInfo {
   const address = typeof contractId === 'undefined' ? randomContractAddress() : addressFromContractId(contractId)
-  const unexecutedSequenceTemplate = createUnexecutedSequence(randomContractId(), 0, 0n)
+  const unexecutedSequenceTemplate = createUnexecutedSequence(randomContractId(), 0n, 0n)
   const contract = Project.contract('SequenceTest')
   const initField = {
     start: start,

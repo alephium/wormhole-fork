@@ -36,24 +36,20 @@ export async function execute_governance_alph(
   const wallet = PrivateKeyWallet.FromMnemonicWithGroup(n.key, 0)
 
   const executeGovernanceScript = async (script: Script): Promise<SubmissionResult> => {
-    const bytecode = script.buildByteCodeToDeploy({
-      'governance': contracts.core,
-      'vaa': vaa.toString('hex')
-    })
-    return wallet.signAndSubmitExecuteScriptTx({
-      signerAddress: wallet.account.address,
-      bytecode: bytecode
+    return script.execute(wallet, {
+      initialFields: {
+        'governance': contracts.core,
+        'vaa': vaa.toString('hex')
+      }
     })
   }
 
   const executeTokenBridgeScript = async (script: Script): Promise<SubmissionResult> => {
-    const bytecode = script.buildByteCodeToDeploy({
-      'tokenBridge': contracts.token_bridge,
-      'vaa': vaa.toString('hex')
-    })
-    return wallet.signAndSubmitExecuteScriptTx({
-      signerAddress: wallet.account.address,
-      bytecode: bytecode
+    return script.execute(wallet, {
+      initialFields: {
+        'tokenBridge': contracts.token_bridge,
+        'vaa': vaa.toString('hex')
+      }
     })
   }
 
@@ -109,16 +105,13 @@ export async function execute_governance_alph(
         case 'RegisterChain':
           console.log('Registering chain')
           const attestTokenHandlerId = subContractId(contracts.token_bridge, '00')
-          const bytecode = createRemoteTokenPoolOnAlph(
+          const result = await createRemoteTokenPoolOnAlph(
+            wallet,
             attestTokenHandlerId,
             vaa,
             wallet.account.address,
             BigInt(1e18)
           )
-          const result = await wallet.signAndSubmitExecuteScriptTx({
-            signerAddress: wallet.account.address,
-            bytecode: bytecode
-          })
           console.log(`Hash: ${result.txId}`)
           break
         case 'Extension':

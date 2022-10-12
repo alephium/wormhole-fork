@@ -63,7 +63,7 @@ import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { submitAlphScriptTx, waitTxConfirmed } from "../utils/alephium";
+import { waitTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 
 async function algo(
@@ -254,10 +254,9 @@ async function alephium(
   dispatch(setIsCreating(true));
   try {
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
-    const bytecode = shouldUpdate
-      ? updateRemoteTokenPoolOnAlph(attestTokenHandlerId, signedVAA)
-      : createRemoteTokenPoolOnAlph(attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
-    const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode)
+    const result = shouldUpdate
+      ? await updateRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA)
+      : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(

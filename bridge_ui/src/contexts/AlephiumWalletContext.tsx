@@ -1,6 +1,5 @@
-import SignerClient from '@walletconnect/sign-client'
 import QRCodeModal from '@walletconnect/qrcode-modal'
-import WalletConnectProvider, { signerMethods, PROVIDER_EVENTS } from 'alph-walletconnect-provider-for-test'
+import { WalletConnectProvider } from '@alephium/walletconnect-provider'
 import { NodeProvider, Account, SignerProvider } from '@alephium/web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'
 import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID, WALLET_CONNECT_ALPH_PROJECT_ID } from '../utils/consts'
@@ -51,7 +50,8 @@ export const AlephiumWalletProvider = ({
   const [account, setAccount] = useState<Account | undefined>(undefined)
   const connect = useCallback(async (connectType: ConnectType) => {
     if (connectType === ConnectType.WALLETCONNECT) {
-      const signerClient = await SignerClient.init({
+      const provider = await WalletConnectProvider.init({
+        networkId: ALEPHIUM_NETWORK_ID,
         logger: 'info',
         projectId: WALLET_CONNECT_ALPH_PROJECT_ID,
         relayUrl: 'wss://relay.walletconnect.com',
@@ -63,36 +63,21 @@ export const AlephiumWalletProvider = ({
         }
       })
 
-      const provider = new WalletConnectProvider({
-        networkId: ALEPHIUM_NETWORK_ID,
-        chainGroup: undefined, // undefined means all groups, 0/1/2/3 means only the specific group is allowed
-        methods: signerMethods,
-        client: signerClient,
-      })
-
-      provider.on(PROVIDER_EVENTS.connect, (e: any) => {
-        QRCodeModal.close()
-      })
-
-      provider.on(PROVIDER_EVENTS.displayUri, async (uri: string) => {
+      provider.on('displayUri', async (uri: string) => {
         setUri(uri)
         QRCodeModal.open(uri, () => {
           console.log('QR code modal closed')
         })
       })
 
-      provider.on(PROVIDER_EVENTS.accountChanged, (accounts: Account[]) => {
+      provider.on('accountChanged', (account: Account) => {
         setUri(undefined)
-        setAccount(accounts[0])
-      })
-
-      provider.on(PROVIDER_EVENTS.disconnect, (code: number, reason: string) => {
-        setUri(undefined)
-        setAccount(undefined)
+        setAccount(account)
       })
 
       await provider.connect()
       setWalletConnectProvider(provider)
+      QRCodeModal.close()
     } else if (connectType === ConnectType.WEBEXTENSION) {
       const windowAlephium = await connectToExtension({ include: ["alephium"] })
       if (typeof windowAlephium !== 'undefined') {
@@ -101,12 +86,13 @@ export const AlephiumWalletProvider = ({
         setAccount(account)
         setAlephiumWindowObject(windowAlephium)
 
-        windowAlephium.on("addressesChanged", (_) => {
-          // TODO: await windowAlephium.getSelectedAccount()
-        })
-
-        windowAlephium.on("networkChanged", (_) => {
-          // TODO: await windowAlephium.getSelectedAccount()
+        windowAlephium.on("addressesChanged", async (addresses: string[]) => {
+          if (addresses.length === 0) {
+            setAccount(undefined)
+          } else {
+            const account = await windowAlephium.getSelectedAccount()
+            setAccount(account)
+          }
         })
       }
     }

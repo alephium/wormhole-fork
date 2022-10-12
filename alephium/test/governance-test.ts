@@ -36,7 +36,7 @@ describe('test governance', () => {
     method: string,
     initialAsset?: Asset,
     inputAssets?: InputAsset[],
-    receivedSequence?: number
+    receivedSequence?: bigint
   ): Promise<TestContractResult> {
     await buildProject()
     const governanceInfo = createGovernance(receivedSequence)
@@ -64,8 +64,8 @@ describe('test governance', () => {
         updateGuardianSet.newGuardianSet.encodeAddresses().toLowerCase()
       ])
       expect(governanceState.fields['guardianSetIndexes']).toEqual([
-        initGuardianSet.index,
-        updateGuardianSet.newGuardianSet.index
+        BigInt(initGuardianSet.index),
+        BigInt(updateGuardianSet.newGuardianSet.index)
       ])
     }
   })
@@ -93,7 +93,7 @@ describe('test governance', () => {
         sequence
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), body)
-      return testCase(vaa, 'submitNewGuardianSet', undefined, undefined, 3)
+      return testCase(vaa, 'submitNewGuardianSet', undefined, undefined, 3n)
     }
     for (let seq = 0; seq < 3; seq += 1) {
       await expectAssertionFailed(async () => await test(seq))
@@ -178,7 +178,7 @@ describe('test governance', () => {
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     const testResult = await testCase(vaa, 'submitSetMessageFee')
     const governanceState = testResult.contracts[0]
-    expect(governanceState.fields['messageFee']).toEqual(Number(setMessageFee.newMessageFee))
+    expect(governanceState.fields['messageFee']).toEqual(setMessageFee.newMessageFee)
   })
 
   it('should transfer message fee to recipient', async () => {

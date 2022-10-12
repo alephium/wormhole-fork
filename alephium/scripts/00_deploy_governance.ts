@@ -14,13 +14,13 @@ const deployGovernance: DeployFunction<Settings> = async (
   const messageFee = BigInt('100000000000000')
   const initialFields = {
     guardianSets: ['', currentGuardianSet],
-    guardianSetIndexes: [0, 0],
-    chainId: network.settings.initChainId,
-    governanceChainId: network.settings.initGovChainId,
+    guardianSetIndexes: [0n, 0n],
+    chainId: BigInt(network.settings.initChainId),
+    governanceChainId: BigInt(network.settings.initGovChainId),
     governanceEmitterAddress: network.settings.initGovContract,
-    receivedSequence: 0,
+    receivedSequence: 0n,
     messageFee: messageFee,
-    previousGuardianSetExpirationTimeMS: 0
+    previousGuardianSetExpirationTimeMS: 0n
   }
 
   const result = await deployer.deployContract(governance, {
