@@ -204,7 +204,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(alephium_block_current_height{}[$__rate_interval])",
+          "expr": "rate(wormhole_alph_current_height{}[$__rate_interval])",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -548,7 +548,7 @@
       "reverseYBuckets": false,
       "targets": [
         {
-          "expr": "",
+          "expr": "sum(increase(wormhole_alph_query_latency_bucket{}[$__interval])) by (le)",
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -1545,5 +1545,5 @@
   "timezone": "",
   "title": "Wormhole (V2)",
   "uid": "-GcztLMnz",
-  "version": 4
+  "version": 2
 }
