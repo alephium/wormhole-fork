@@ -27,13 +27,17 @@
   "scripts": {
     "start": "ts-node main.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "jest": "jest --useStderr --silent=false --verbose=true --config jestconfig.json",
+    "test": "npm run build && npm run jest"
   },
   "devDependencies": {
     "@truffle/hdwallet-provider": "^1.4.1",
     "@types/bn.js": "^5.1.0",
     "@types/bs58": "^4.0.1",
     "@types/yargs": "^17.0.2",
+    "jest": "^28.1.0",
+    "@types/jest": "^27.5.1",
+    "ts-jest": "^28.0.2",
     "copy-dir": "^1.3.0",
     "ts-node": "^10.7.0",
     "typescript": "^4.6"
