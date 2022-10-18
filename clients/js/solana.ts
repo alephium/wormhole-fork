@@ -65,6 +65,8 @@ export async function execute_governance_solana(
           console.log("Registering chain")
           ix = token_bridge.register_chain_ix(token_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), vaa)
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           ix = impossible(v.payload)
 

@@ -2,6 +2,15 @@ import { Parser } from "binary-parser"
 import { ethers } from "ethers"
 import { solidityKeccak256 } from "ethers/lib/utils"
 import * as elliptic from "elliptic"
+import { ChainId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk"
+import {
+    AlphTokenBridgeExtensions,
+    alphTokenBridgeExtensionsParser,
+    serialiseAlphTokenBridgeExtensions
+} from './alph'
+import { P } from './parser'
+
+type Modules = 'Core' | 'TokenBridge' | 'NFTBridge'
 
 export interface Signature {
     guardianSetIndex: number
@@ -22,37 +31,6 @@ export interface VAA<T> {
     payload: T
 }
 
-class P<T> {
-    private parser: Parser
-    constructor(parser: Parser) {
-        this.parser = parser
-    }
-
-    // Try to parse a buffer with a parser, and return null if it failed due to an
-    // assertion error.
-    parse(buffer: Buffer): T | null {
-        try {
-            let result = this.parser.parse(buffer)
-            delete result['end']
-            return result
-        } catch (e: any) {
-            if (e.message?.includes("Assertion error")) {
-                return null
-            } else {
-                throw e
-            }
-        }
-    }
-
-    or<U>(other: P<U>): P<T | U> {
-        let p = new P<T | U>(other.parser);
-        p.parse = (buffer: Buffer): T | U | null => {
-            return this.parse(buffer) ?? other.parse(buffer)
-        }
-        return p
-    }
-}
-
 // All the different types of payloads
 export type Payload =
     GuardianSetUpgrade
@@ -65,6 +43,7 @@ export type Payload =
     | PortalContractUpgrade<"NFTBridge">
     | PortalRegisterChain<"TokenBridge">
     | PortalRegisterChain<"NFTBridge">
+    | GovernanceExtension<typeof CHAIN_ID_ALEPHIUM, 'TokenBridge', AlphTokenBridgeExtensions>
 // TODO: add other types of payloads
 
 export function contractUpgradeVAA(
@@ -90,6 +69,7 @@ export function parse(buffer: Buffer): VAA<Payload | null> {
         .or(portalContractUpgradeParser("NFTBridge"))
         .or(portalRegisterChainParser("TokenBridge"))
         .or(portalRegisterChainParser("NFTBridge"))
+        .or(governanceExtensionParser(CHAIN_ID_ALEPHIUM, 'TokenBridge', alphTokenBridgeExtensionsParser))
     const payload = parser.parse(vaa.payload)
     var myVAA = { ...vaa, payload }
 
@@ -206,6 +186,11 @@ function vaaBody(vaa: VAA<Payload>) {
                 case "RegisterChain":
                     payload_str = serialisePortalRegisterChain(payload)
                     break
+                case 'Extension':
+                    if (payload.chainId === CHAIN_ID_ALEPHIUM && payload.module === 'TokenBridge') {
+                        payload_str = serialiseGovernanceExtension(payload, serialiseAlphTokenBridgeExtensions)
+                    }
+                    break
             }
             break
     }
@@ -255,7 +240,7 @@ export interface TransferFee {
     module: 'Core'
     type: 'TransferFee'
     amount: bigint
-    recipient: string
+    recipient: Uint8Array
 }
 
 const transferFeeParser: P<TransferFee> = new P(new Parser()
@@ -275,10 +260,10 @@ const transferFeeParser: P<TransferFee> = new P(new Parser()
         lengthInBytes: 32,
         formatter: (bytes) => BigInt(`0x${Buffer.from(bytes).toString('hex')}`)
     })
-    .array('amount', {
+    .array('recipient', {
         type: 'uint8',
         lengthInBytes: 32,
-        formatter: (bytes) => Buffer.from(bytes).toString('hex').padStart(64, '0')
+        formatter: (bytes) => Uint8Array.from(bytes)
     }))
 
 function serialiseTransferFee(payload: TransferFee): string {
@@ -286,7 +271,7 @@ function serialiseTransferFee(payload: TransferFee): string {
         encode('bytes32', encodeString(payload.module)),
         encode('uint8', 4),
         payload.amount.toString(16).padStart(64, '0'),
-        payload.recipient
+        Buffer.from(payload.recipient).toString('hex').padStart(64, '0')
     ]
     return body.join('')
 }
@@ -335,7 +320,6 @@ export interface GuardianSetUpgrade {
     newGuardianSet: string[]
 }
 
-// Parse a guardian set upgrade payload
 const guardianSetUpgradeParser: P<GuardianSetUpgrade> = new P(new Parser()
     .endianess("big")
     .string("module", {
@@ -362,7 +346,7 @@ const guardianSetUpgradeParser: P<GuardianSetUpgrade> = new P(new Parser()
 
 function serialiseGuardianSetUpgrade(payload: GuardianSetUpgrade): string {
     const body = [
-        encode("bytes32", Buffer.from(Buffer.from(payload.module).toString("hex").padStart(64, "0"), "hex")),
+        encode("bytes32", encodeString(payload.module)),
         encode("uint8", 2),
         encode("uint32", payload.newGuardianSetIndex),
         encode("uint8", payload.newGuardianSet.length),
@@ -388,7 +372,7 @@ const coreContractUpgradeParser: P<CoreContractUpgrade> =
             length: 32,
             encoding: "hex",
             assert: Buffer.from("Core").toString("hex").padStart(64, "0"),
-            formatter: (_str) => module
+            formatter: (_str) => 'Core'
         })
         .uint8("type", {
             assert: 1,
@@ -397,7 +381,7 @@ const coreContractUpgradeParser: P<CoreContractUpgrade> =
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
-            // formatter: (arr) => Buffer.from(arr).toString("hex")
+            formatter: (arr) => Uint8Array.from(arr)
         })
         .string("end", {
             greedy: true,
@@ -436,11 +420,17 @@ function alphContractUpgradeParser<Module extends 'Core' | 'TokenBridge'>(module
         .uint16('codeLength')
         .array('code', {
             type: 'uint8',
-            lengthInBytes: 'codeLength'
+            lengthInBytes: 'codeLength',
+            formatter: (arr) => Uint8Array.from(arr)
         })
         .array('state', {
             type: 'uint8',
-            readUntil: 'eof'
+            readUntil: 'eof',
+            formatter: (arr) => Uint8Array.from(arr)
+        })
+        .string("end", {
+            greedy: true,
+            assert: str => str === ""
         })
     )
 }
@@ -457,6 +447,47 @@ function serialiseAlphContractUpgrade<Module extends 'Core' | 'TokenBridge'>(pay
     return body.join('')
 }
 
+export interface GovernanceExtension<Chain extends ChainId, Module extends Modules, T> {
+    chainId: Chain
+    module: Module
+    type: 'Extension'
+    action: T
+}
+
+export function governanceExtensionParser<Chain extends ChainId, Module extends Modules, Action>(
+    chain: Chain,
+    module: Module,
+    actionParser: P<Action>
+): P<GovernanceExtension<Chain, Module, Action>> {
+    return new P(new Parser()
+        .endianess('big')
+        .buffer('chainId', {
+            length: () => 0,
+            formatter: (_) => chain
+        })
+        .string('module', {
+            length: 32,
+            encoding: 'hex',
+            assert: Buffer.from(module).toString('hex').padStart(64, '0'),
+            formatter: (_str) => module
+        })
+        .string('type', {
+            length: () => 0,
+            formatter: (_) => 'Extension'
+        })
+        .buffer('action', {
+            readUntil: 'eof',
+            formatter: (bytes) => actionParser.parse(bytes)
+        }))
+}
+
+function serialiseGovernanceExtension<Chain extends ChainId, Module extends Modules, Action>(
+    payload: GovernanceExtension<Chain, Module, Action>,
+    actionSerializer: (a: Action) => string
+): string {
+    return encode('bytes32', encodeString(payload.module)) + actionSerializer(payload.action)
+}
+
 export interface PortalContractUpgrade<Module extends "NFTBridge" | "TokenBridge"> {
     module: Module
     type: "ContractUpgrade"
@@ -471,16 +502,16 @@ function portalContractUpgradeParser<Module extends "NFTBridge" | "TokenBridge">
             length: 32,
             encoding: "hex",
             assert: Buffer.from(module).toString("hex").padStart(64, "0"),
-            formatter: (_str: string) => module
+            formatter: (_str) => module
         })
         .uint8("type", {
             assert: 2,
-            formatter: (_action: number) => "ContractUpgrade"
+            formatter: (_action) => "ContractUpgrade"
         })
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
-            // formatter: (arr) => Buffer.from(arr).toString("hex")
+            formatter: (arr) => Uint8Array.from(arr)
         })
         .string("end", {
             greedy: true,

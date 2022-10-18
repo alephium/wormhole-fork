@@ -10,8 +10,13 @@ import {
   createRemoteTokenPoolOnAlph,
   upgradeTokenBridgeContractScript,
   setMessageFeeScript,
-  transferFeeScript
+  transferFeeScript,
+  destroyUnexecutedSequencesScript,
+  updateMinimalConsistencyLevelScript,
+  updateRefundAddressScript
 } from 'alephium-wormhole-sdk'
+import { P } from './parser'
+import { Parser } from 'binary-parser'
 
 export async function execute_governance_alph(
   payload: Payload,
@@ -50,6 +55,20 @@ export async function execute_governance_alph(
       signerAddress: wallet.account.address,
       bytecode: bytecode
     })
+  }
+
+  const executeTokenBridgeExtensions = async (payloadId: typeof PayloadIds[PayloadIdName]): Promise<SubmissionResult> => {
+    switch (payloadId) {
+      case PayloadIds.DestroyUnexecutedSequencesId:
+        console.log('Submitting destroy unexecuted sequences')
+        return executeTokenBridgeScript(destroyUnexecutedSequencesScript())
+      case PayloadIds.UpdateMinimalConsistencyLevelId:
+        console.log('Submitting update minimal consistency level')
+        return executeTokenBridgeScript(updateMinimalConsistencyLevelScript())
+      case PayloadIds.UpdateRefundAddressId:
+        console.log('Submitting update refund address')
+        return executeTokenBridgeScript(updateRefundAddressScript())
+    }
   }
 
   switch (payload.module) {
@@ -102,6 +121,10 @@ export async function execute_governance_alph(
           })
           console.log(`Hash: ${result.txId}`)
           break
+        case 'Extension':
+          console.log(`Action: ${payload.action}`)
+          console.log(`Hash: ${(await executeTokenBridgeExtensions(payload.action.payloadId)).txId}`)
+          break
         default:
           impossible(payload)
 
@@ -112,4 +135,121 @@ export async function execute_governance_alph(
     default:
       impossible(payload)
   }
+}
+
+export const PayloadIds = {
+  DestroyUnexecutedSequencesId: 240,
+  UpdateMinimalConsistencyLevelId: 241,
+  UpdateRefundAddressId: 242
+} as const
+
+type PayloadIdName = keyof typeof PayloadIds
+type PayloadId<Name extends PayloadIdName> = typeof PayloadIds[Name]
+
+export interface DestroyUnexecutedSequences {
+  payloadId: PayloadId<'DestroyUnexecutedSequencesId'>
+  sequences: number[]
+}
+
+const destroyUnexecutedSequencesParser: P<DestroyUnexecutedSequences> = new P(
+  new Parser()
+    .endianess('big')
+    .uint8('payloadId', {
+      assert: PayloadIds.DestroyUnexecutedSequencesId
+    })
+    .uint16('length')
+    .array('sequences', {
+      length: 'length',
+      type: 'uint64be',
+      formatter: (sequences: bigint[]) => sequences.map(s => Number(s))
+    })
+    .string("end", {
+      greedy: true,
+      assert: str => str === ""
+    })
+)
+
+function serialiseDestroyUnexecutedSequences(action: DestroyUnexecutedSequences): string {
+  const body = [
+    encodeNumber(action.payloadId, 1),
+    encodeNumber(action.sequences.length, 2),
+    action.sequences.map(s => encodeNumber(s, 8)).join('')
+  ]
+  return body.join('')
+}
+
+export interface UpdateMinimalConsistencyLevel {
+  payloadId: PayloadId<'UpdateMinimalConsistencyLevelId'>
+  newConsistencyLevel: number
+}
+
+const updateMinimalConsistencyLevelParser: P<UpdateMinimalConsistencyLevel> = new P(
+  new Parser()
+    .endianess('big')
+    .uint8('payloadId', {
+      assert: PayloadIds.UpdateMinimalConsistencyLevelId
+    })
+    .uint8('newConsistencyLevel')
+    .string("end", {
+      greedy: true,
+      assert: str => str === ""
+    })
+)
+
+function serialiseUpdateMinimalConsistencyLevel(action: UpdateMinimalConsistencyLevel): string {
+  return encodeNumber(action.payloadId, 1) + encodeNumber(action.newConsistencyLevel, 1)
+}
+
+export interface UpdateRefundAddress {
+  payloadId: PayloadId<'UpdateRefundAddressId'>
+  newRefundAddress: Uint8Array
+}
+
+const updateRefundAddressParser: P<UpdateRefundAddress> = new P(
+  new Parser()
+    .endianess('big')
+    .uint8('payloadId', {
+      assert: PayloadIds.UpdateRefundAddressId
+    })
+    .uint16('length')
+    .array('newRefundAddress', {
+      type: 'uint8',
+      length: 'length',
+      formatter: (arr) => Uint8Array.from(arr)
+    })
+    .string("end", {
+      greedy: true,
+      assert: str => str === ""
+    })
+)
+
+function serialiseUpdateRefundAddress(action: UpdateRefundAddress): string {
+  const body = [
+    encodeNumber(action.payloadId, 1),
+    encodeNumber(action.newRefundAddress.length, 2),
+    Buffer.from(action.newRefundAddress).toString('hex')
+  ]
+  return body.join('')
+}
+
+export type AlphTokenBridgeExtensions = DestroyUnexecutedSequences | UpdateMinimalConsistencyLevel | UpdateRefundAddress
+
+export const alphTokenBridgeExtensionsParser: P<AlphTokenBridgeExtensions> =
+  destroyUnexecutedSequencesParser
+    .or(updateMinimalConsistencyLevelParser)
+    .or(updateRefundAddressParser)
+
+export const serialiseAlphTokenBridgeExtensions = function(action: AlphTokenBridgeExtensions): string {
+  switch (action.payloadId) {
+    case PayloadIds.DestroyUnexecutedSequencesId:
+      return serialiseDestroyUnexecutedSequences(action)
+    case PayloadIds.UpdateMinimalConsistencyLevelId:
+      return serialiseUpdateMinimalConsistencyLevel(action)
+    case PayloadIds.UpdateRefundAddressId:
+      return serialiseUpdateRefundAddress(action)
+  }
+}
+
+function encodeNumber(n: number, bytesLength: number): string {
+  return n.toString(16).padStart(bytesLength * 2, '0')
 }

@@ -87,6 +87,8 @@ export async function execute_governance_terra(
         case "RegisterChain":
           console.log("Registering chain")
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           impossible(payload)
           execute_msg = impossible(payload)

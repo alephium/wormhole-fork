@@ -116,6 +116,8 @@ export async function execute_governance_evm(
           console.log("Registering chain")
           console.log("Hash: " + (await tb.registerChain(vaa, overrides)).hash)
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           impossible(payload)
 
