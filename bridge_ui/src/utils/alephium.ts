@@ -1,5 +1,6 @@
 import {
   ALEPHIUM_BRIDGE_ADDRESS,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID
@@ -16,8 +17,10 @@ import {
 import {
   NodeProvider,
   node,
-  addressFromContractId
+  addressFromContractId,
+  groupOfAddress
 } from '@alephium/web3';
+import * as base58 from 'bs58'
 
 const WormholeMessageEventIndex = 0
 
@@ -164,4 +167,12 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
         }
       }
     })
+}
+
+export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
+  if (recipient.length !== 32) {
+    return false
+  }
+  const address = base58.encode(Buffer.concat([Buffer.from([0x00]), recipient]))
+  return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
 }

@@ -682,6 +682,13 @@ export const ALEPHIUM_NETWORK_ID =
     : CLUSTER === "testnet"
     ? 1
     : 4;
+// TODO: update this after contract deployed to mainnet and testnet
+export const ALEPHIUM_BRIDGE_GROUP_INDEX =
+  CLUSTER === 'mainnet'
+    ? 1
+    : CLUSTER === 'testnet'
+    ? 1
+    : 0
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

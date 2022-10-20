@@ -78,6 +78,7 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
   ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
@@ -85,7 +86,7 @@ import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { validateAlephiumRecipientAddress, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { BuildScriptTxResult } from "@alephium/web3";
 import { Transaction, TransactionDB } from "../utils/db";
 
@@ -182,6 +183,9 @@ async function evm(
       "total",
       transferAmountParsed
     );
+    if (recipientChain === CHAIN_ID_ALEPHIUM && !validateAlephiumRecipientAddress(recipientAddress)) {
+      throw new Error(`Invalid recipient address, please connect to an address on group ${ALEPHIUM_BRIDGE_GROUP_INDEX}`)
+    }
     // Klaytn requires specifying gasPrice
     const overrides =
       chainId === CHAIN_ID_KLAYTN
