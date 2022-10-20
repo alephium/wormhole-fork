@@ -6,6 +6,7 @@
     "@alephium/web3-wallet": "^0.2.0-rc.36",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
     "alephium-wormhole-sdk": "^0.0.1-rc5",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@solana/web3.js": "^1.22.0",
     "@terra-money/terra.js": "^1.8.9",
     "axios": "^0.24.0",

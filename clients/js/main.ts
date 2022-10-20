@@ -3,7 +3,8 @@ import yargs from "yargs";
 
 import { hideBin } from "yargs/helpers";
 
-import { setDefaultWasm } from "alephium-wormhole-sdk";
+import { setDefaultWasm, getSignedVAAWithRetry, ChainId } from "alephium-wormhole-sdk";
+import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { execute_governance_solana } from "./solana";
 import { execute_governance_evm } from "./evm";
 import { execute_governance_terra } from "./terra";
@@ -224,6 +225,48 @@ yargs(hideBin(process.argv))
     },
     (_) => {
       yargs.showHelp();
+    }
+  )
+  .command(
+    'fetch',
+    'Fetch a signed VAA from given VAA ID',
+    (yargs) => {
+      return yargs
+        .option('id', {
+          describe: 'VAA ID (emitterChainId/emitterAddress/targetChainId/sequence)',
+          type: 'string',
+          required: true
+        })
+        .option('url', {
+          describe: 'url, e.g. http://localhost:7071',
+          type: 'string',
+          required: true
+        })
+        .option('timeout', {
+          describe: 'timeout in seconds',
+          type: 'number'
+        })
+        .option('times', {
+          describe: 'retry times',
+          type: 'number'
+        })
+    },
+    async (argv) => {
+      const parts = argv.id.split('/')
+      if (parts.length !== 4) {
+        throw Error('Invalid VAA ID')
+      }
+      const response = await getSignedVAAWithRetry(
+        [argv.url],
+        parseInt(parts[0]) as ChainId,
+        parts[1],
+        parseInt(parts[2]) as ChainId,
+        parts[3],
+        { transport: NodeHttpTransport() },
+        (argv.timeout ?? 5) * 1000,
+        argv.times ?? 3
+      )
+      console.log(`Signed VAA: ${Buffer.from(response.vaaBytes).toString('hex')}`)
     }
   )
   ////////////////////////////////////////////////////////////////////////////////
