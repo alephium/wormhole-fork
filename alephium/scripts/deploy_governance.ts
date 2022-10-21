@@ -3,7 +3,7 @@ import { Deployer, NetworkType } from "../lib/deployment"
 import { zeroPad } from "../lib/utils"
 import * as dotenv from "dotenv"
 
-dotenv.config({ path: __dirname+'/../.env' })
+dotenv.config({ path: __dirname + '/../.env' })
 
 const deployGovernance = async (deployer: Deployer, networkType: NetworkType): Promise<void> => {
   const governance = Project.contract('governance.ral')

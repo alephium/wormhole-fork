@@ -6,7 +6,7 @@ NUM_GUARDIANS=1
 
 export DOCKER_BUILDKIT=1
 
-VERSION=0.2.1
+VERSION=0.2.39
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -22,23 +22,23 @@ pushd node
 docker build . -t liuhongchao/guardiand:$VERSION
 popd
 
-# Build eth-node image
+## Build eth-node image
 pushd ethereum
 docker build . -t liuhongchao/eth-node:$VERSION
 popd
 
-# How to deploy contracts for ALPH?
-# npx ts-node commands.ts deploy -n devnet
+## How to deploy contracts for ALPH?
+## npx ts-node commands.ts deploy -n devnet
 pushd alephium
 docker build -f Dockerfile.automine . -t liuhongchao/automine:$VERSION
 popd
 
-# Build Bridge UI
+## Build Bridge UI
 pushd bridge_ui
 docker build . -t liuhongchao/bridge-ui:$VERSION
 popd
 
-# Build Wormhole Explorer
+## Build Wormhole Explorer
 pushd explorer
 docker build . -t liuhongchao/wormhole-explorer:$VERSION
 popd

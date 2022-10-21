@@ -2,6 +2,9 @@ import { Parser } from "binary-parser"
 import { ethers } from "ethers"
 import { solidityKeccak256 } from "ethers/lib/utils"
 import * as elliptic from "elliptic"
+import { KeyManagementServiceClient } from "@google-cloud/kms"
+import { signatureImport, signatureNormalize } from 'secp256k1'
+import { createPublicKey } from 'crypto'
 
 export interface Signature {
     guardianSetIndex: number
@@ -209,6 +212,69 @@ export function sign(signers: string[], vaa: VAA<Payload>): Signature[] {
     })
 }
 
+const kmsClient = new KeyManagementServiceClient({
+    keyFile: "/tmp/credentials-file.json"
+})
+const versionName = kmsClient.cryptoKeyVersionPath(
+    "alephium-wormhole",
+    "global",
+    "alephium-wormhole-guardian-0-keyring",
+    "alephium-wormhole-guardian-0-signing-key",
+    "1"
+)
+
+export async function signWithKMS(vaa: VAA<Payload>): Promise<Signature[]> {
+    const body = vaaBody(vaa)
+    const hash = solidityKeccak256(["bytes"], [solidityKeccak256(["bytes"], ["0x" + body])])
+    const digest = Buffer.from(hash.substr(2), "hex")
+    const [signResponse] = await kmsClient.asymmetricSign({
+        name: versionName,
+        digest: {
+            sha256: digest
+        }
+    })
+    const pubKey = await kmsClient.getPublicKey({ name: versionName })
+    const p2 = createPublicKey(pubKey[0].pem)
+    let pubKeyBuf = p2.export({ format: "der", type: "spki" });
+    pubKeyBuf = pubKeyBuf.slice(pubKeyBuf.length - 65)
+
+    let _64 = signatureImport(signResponse.signature as Uint8Array);
+    const normalized = signatureNormalize(_64);
+
+    const r = normalized.slice(0, 32)
+    const s = normalized.slice(32, 64)
+
+    const v = calculateV(normalized, digest, pubKeyBuf);
+
+    const packed = [
+        Buffer.from(r).toString("hex").padStart(64, "0"),
+        Buffer.from(s).toString("hex").padStart(64, "0"),
+        encode("uint8", v)
+    ].join("")
+
+    return [{
+        guardianSetIndex: 0,
+        signature: packed
+    }]
+}
+
+
+function calculateV(signature: Uint8Array, hash: Buffer, uncompressPubKey: Buffer): number {
+    const { ecdsaRecover } = require("secp256k1");
+    let recId = -1;
+
+    for (let i = 0; i < 4; i++) {
+        const rec = ecdsaRecover(signature, i, hash, false);
+        if (Buffer.compare(rec, uncompressPubKey) == 0) {
+            recId = i;
+            break;
+        }
+    }
+    if (recId == -1)
+        throw new Error("Impossible to calculare the recovery id. should not happen");
+    return recId;
+}
+
 // Parse an address of given length, and render it as hex
 const addressParser = (length: number) => new Parser()
     .endianess("big")
@@ -381,7 +447,7 @@ function portalRegisterChainParser<Module extends "NFTBridge" | "TokenBridge">(m
             greedy: true,
             assert: str => str === ""
         })
-)
+    )
 }
 
 function serialisePortalRegisterChain<Module extends "NFTBridge" | "TokenBridge">(payload: PortalRegisterChain<Module>): string {

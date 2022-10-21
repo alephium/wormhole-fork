@@ -41,14 +41,15 @@ require (
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	google.golang.org/api v0.58.0
-	google.golang.org/genproto v0.0.0-20211019152133-63b7e35f4404
-	google.golang.org/grpc v1.42.0
+	google.golang.org/api v0.70.0
+	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.28.1
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
 require (
+	cloud.google.com/go/kms v1.4.0
 	cloud.google.com/go/logging v1.4.2
 	cloud.google.com/go/pubsub v1.17.1
 	github.com/alephium/go-sdk v0.0.0-20220620033700-91be3edb8c32
@@ -56,14 +57,15 @@ require (
 	github.com/blendle/zapdriver v1.3.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.44.5
-	github.com/go-delve/delve v1.9.1
 	github.com/go-test/deep v1.0.8
 	github.com/google/uuid v1.3.0
 	github.com/libp2p/go-libp2p-core v0.20.0
 )
 
 require (
-	cloud.google.com/go v0.97.0 // indirect
+	cloud.google.com/go v0.100.2 // indirect
+	cloud.google.com/go/compute v1.3.0 // indirect
+	cloud.google.com/go/iam v0.1.0 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.4 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
@@ -83,23 +85,19 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
-	github.com/cilium/ebpf v0.7.0 // indirect
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
-	github.com/cosiner/argv v0.1.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
 	github.com/cosmos/ibc-go v1.1.3 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/danieljoos/wincred v1.0.2 // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
-	github.com/derekparker/trie v0.0.0-20200317170641-1fdf38b7b0e9 // indirect
 	github.com/dfuse-io/binary v0.0.0-20210216024852-4ae6830a495d // indirect
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
@@ -116,7 +114,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff // indirect
 	github.com/gin-gonic/gin v1.7.7 // indirect
-	github.com/go-delve/liner v1.2.3-0.20220127212407-d32d89dd2a5d // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
@@ -134,7 +131,6 @@ require (
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
-	github.com/google/go-dap v0.6.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
@@ -236,15 +232,12 @@ require (
 	github.com/raulk/go-watchdog v1.3.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
@@ -270,11 +263,9 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.starlark.net v0.0.0-20220816155156-cfacd8902214 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
-	golang.org/x/arch v0.0.0-20190927153633-4e8777c89be4 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect

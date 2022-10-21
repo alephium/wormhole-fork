@@ -2,7 +2,6 @@ package processor
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/notify/discord"
@@ -68,8 +67,8 @@ type Processor struct {
 	// injectC is a channel of VAAs injected locally.
 	injectC chan *vaa.VAA
 
-	// gk is the node's guardian private key
-	gk *ecdsa.PrivateKey
+	// Node's guardian signer
+	guardianSigner *common.ECDSASigner
 
 	// devnetMode specified whether to submit transactions to the hardcoded Ethereum devnet
 	devnetMode         bool
@@ -109,7 +108,7 @@ func NewProcessor(
 	obsvC chan *gossipv1.SignedObservation,
 	injectC chan *vaa.VAA,
 	signedInC chan *gossipv1.SignedVAAWithQuorum,
-	gk *ecdsa.PrivateKey,
+	guardianSigner *common.ECDSASigner,
 	gst *common.GuardianSetState,
 	devnetMode bool,
 	devnetNumGuardians uint,
@@ -125,7 +124,7 @@ func NewProcessor(
 		obsvC:              obsvC,
 		signedInC:          signedInC,
 		injectC:            injectC,
-		gk:                 gk,
+		guardianSigner:     guardianSigner,
 		gst:                gst,
 		devnetMode:         devnetMode,
 		devnetNumGuardians: devnetNumGuardians,
@@ -138,7 +137,7 @@ func NewProcessor(
 
 		logger:  supervisor.Logger(ctx),
 		state:   &aggregationState{vaaMap{}},
-		ourAddr: crypto.PubkeyToAddress(gk.PublicKey),
+		ourAddr: crypto.PubkeyToAddress((*guardianSigner).PublicKey()),
 	}
 }
 

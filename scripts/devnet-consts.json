@@ -208,10 +208,10 @@
             "rpcUrlLocal": "http://localhost:22973",
             "rpcPort": "22973",
             "contracts": {
-                "coreEmitterAddress": "0f7777265b66036ad23284bdb794bacb1564cc6e2aff32f6531596db7a7b0979",
-                "coreNativeAddress": "ujKtE1eXzYqppji5wTAwGnok61chmWGvA8pmTXzQ7LFa",
-                "tokenBridgeEmitterAddress": "d886e73f9b763dbb82bd019c0c12758eacb489e2719dc0bae104a0aa59265bf4",
-                "tokenBridgeNativeAddress": "29GBV4QkN2acJiRdKvmGFVMvGJpXgZnt16eYqqxVg49as"
+                "coreEmitterAddress": "f468429db64df4db14a7fe7bc752df61dfb9e3f960a2004ec96f64d99fb88ded",
+                "coreNativeAddress": "2B91oJpYB5EDD8MNHkGgCFnE9cTaNQ9K2oVXY1uU7TzCU",
+                "tokenBridgeEmitterAddress": "d8de2eb2841a99c2f56084c15c961127d69911224f907ebe9d3fc53b3e94a4a3",
+                "tokenBridgeNativeAddress": "29HWg5pr1KaJJUX213pKBmUyDYoksVUfzhojxyxb7a7Az"
             }
         }
     },
@@ -270,8 +270,8 @@
     "devnetGuardians": [
         {
             "name": "guardian-0",
-            "public": "0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
-            "private": "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0"
+            "public": "0xAC6769233A8ADB8c90280C9B4485Cb36e2761bD4",
+            "private": "n/a"
         },
         {
             "name": "guardian-1",

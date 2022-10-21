@@ -19,13 +19,17 @@ export async function getSignedVAAWithRetry(
     attempts++;
     await new Promise((resolve) => setTimeout(resolve, 1000));
     try {
+      const host = WORMHOLE_RPC_HOSTS[getNextRpcHost()]
+      console.log("wormhole host", host)
+      console.log("wormhole params", emitterChain, emitterAddress, targetChain, sequence)
       result = await getSignedVAA(
-        WORMHOLE_RPC_HOSTS[getNextRpcHost()],
+        host,
         emitterChain,
         emitterAddress,
         targetChain,
         sequence
       );
+      console.log("result", result)
     } catch (e) {
       if (retryAttempts !== undefined && attempts > retryAttempts) {
         throw e;

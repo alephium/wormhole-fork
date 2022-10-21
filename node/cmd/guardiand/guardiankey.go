@@ -30,6 +30,10 @@ func init() {
 	keyDescription = KeygenCmd.Flags().String("desc", "", "Human-readable key description (optional)")
 }
 
+type ECDSAPrivateKey struct {
+	value *ecdsa.PrivateKey
+}
+
 var KeygenCmd = &cobra.Command{
 	Use:   "keygen [KEYFILE]",
 	Short: "Create guardian key at the specified path",
@@ -81,9 +85,9 @@ func loadGuardianKey(filename string) (*ecdsa.PrivateKey, error) {
 		return nil, fmt.Errorf("failed to deserialize protobuf: %w", err)
 	}
 
-	if !*unsafeDevMode && m.UnsafeDeterministicKey {
-		return nil, errors.New("refusing to use deterministic key in production")
-	}
+	//	if !*unsafeDevMode && m.UnsafeDeterministicKey {
+	//		return nil, errors.New("refusing to use deterministic key in production")
+	//	}
 
 	gk, err := ethcrypto.ToECDSA(m.Data)
 	if err != nil {
@@ -150,4 +154,12 @@ func generateDevnetGuardianKey() (*ecdsa.PrivateKey, error) {
 
 	// Generate guardian key
 	return devnet.InsecureDeterministicEcdsaKeyByIndex(ethcrypto.S256(), uint64(idx)), nil
+}
+
+func (k ECDSAPrivateKey) Sign(digestHash []byte) (sig []byte, err error) {
+	return ethcrypto.Sign(digestHash, k.value)
+}
+
+func (k ECDSAPrivateKey) PublicKey() ecdsa.PublicKey {
+	return k.value.PublicKey
 }

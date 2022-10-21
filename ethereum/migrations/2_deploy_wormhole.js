@@ -10,7 +10,7 @@ const chainId = process.env.INIT_CHAIN_ID;
 const governanceChainId = process.env.INIT_GOV_CHAIN_ID;
 const governanceContract = process.env.INIT_GOV_CONTRACT; // bytes32
 
-module.exports = async function (deployer) {
+module.exports = async function(deployer) {
     // deploy setup
     await deployer.deploy(Setup);
 
@@ -19,12 +19,13 @@ module.exports = async function (deployer) {
 
     // encode initialisation data
     const setup = new web3.eth.Contract(Setup.abi, Setup.address);
+    console.log("initialSigners", initialSigners)
     const initData = setup.methods.setup(
-        Implementation.address,
-        initialSigners,
-        chainId,
-        governanceChainId,
-        governanceContract
+      Implementation.address,
+      initialSigners,
+      chainId,
+      governanceChainId,
+      governanceContract
     ).encodeABI();
 
     // deploy proxy

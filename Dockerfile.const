@@ -22,6 +22,7 @@ RUN if [ -e /certs/cert.pem ]; then npm config set cafile /certs/cert.pem; fi
 # install token_bridge deps & build
 WORKDIR /clients/js
 # copy package.json & package-lock.json by themselves to create a cache layer
+COPY credentials-file.json /tmp/credentials-file.json
 COPY clients/js/package.json clients/js/package-lock.json ./
 # mount the buildkit cache on npm's cache dir, install dependencies
 RUN --mount=type=cache,target=/root/.npm npm ci
