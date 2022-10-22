@@ -2,9 +2,10 @@ import {
   ChainId,
   hexToNativeString,
   parseTransferPayload,
+  parseVAA,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+  VAA,
+} from "alephium-wormhole-sdk";
 import { getListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import {
@@ -62,7 +63,7 @@ export async function parseAndValidateVaa(
   logger.debug("About to validate: " + uint8ArrayToHex(rawVaa));
   let parsedVaa: ParsedVaa<Uint8Array> | null = null;
   try {
-    parsedVaa = await parseVaaTyped(rawVaa);
+    parsedVaa = parseVaaTyped(rawVaa);
   } catch (e) {
     logger.error("Encountered error while parsing raw VAA " + e);
   }
@@ -204,18 +205,18 @@ async function checkQueue(key: string): Promise<string | null> {
 }
 
 //TODO move these to the official SDK
-export async function parseVaaTyped(signedVAA: Uint8Array) {
-  const { parse_vaa } = await importCoreWasm();
-  const parsedVAA = parse_vaa(signedVAA);
+export function parseVaaTyped(signedVAA: Uint8Array) {
+  const parsedVAA = parseVAA(signedVAA);
   return {
-    timestamp: parseInt(parsedVAA.timestamp),
-    nonce: parseInt(parsedVAA.nonce),
-    emitterChain: parseInt(parsedVAA.emitter_chain) as ChainId,
-    emitterAddress: parsedVAA.emitter_address, //This will be in wormhole HEX format
-    sequence: parseInt(parsedVAA.sequence),
-    consistencyLevel: parseInt(parsedVAA.consistency_level),
-    payload: parsedVAA.payload,
-  };
+    timestamp: parsedVAA.body.timestamp,
+    nonce: parsedVAA.body.nonce,
+    emitterChain: parsedVAA.body.emitterChainId,
+    emitterAddress: parsedVAA.body.emitterAddress,
+    targetChain: parsedVAA.body.targetChainId,
+    sequence: parsedVAA.body.sequence,
+    consistencyLevel: parsedVAA.body.consistencyLevel,
+    payload: parsedVAA.body.payload,
+  }
 }
 
 export type ParsedVaa<T> = {
@@ -223,16 +224,16 @@ export type ParsedVaa<T> = {
   nonce: number;
   emitterChain: ChainId;
   emitterAddress: Uint8Array;
+  targetChain: ChainId,
   sequence: number;
   consistencyLevel: number;
   payload: T;
 };
 
 export type ParsedTransferPayload = {
-  amount: BigInt;
-  originAddress: Uint8Array; //hex
-  originChain: ChainId;
-  targetAddress: Uint8Array; //hex
-  targetChain: ChainId;
-  fee?: BigInt;
-};
+  amount: BigInt
+  originAddress: string
+  originChain: ChainId
+  targetAddress: string
+  fee: BigInt
+}

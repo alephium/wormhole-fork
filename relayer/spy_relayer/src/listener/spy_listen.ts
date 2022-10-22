@@ -7,7 +7,7 @@ import {
   getEmitterAddressTerra,
   hexToUint8Array,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   createSpyRPCServiceClient,
   subscribeSignedVAA,

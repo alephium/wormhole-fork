@@ -3,7 +3,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   nativeToHexString,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { getLogger } from "./helpers/logHelper";
 
 export type SupportedToken = {

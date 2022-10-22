@@ -1,5 +1,3 @@
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
-
 import {
   ChainId,
   CHAIN_ID_SOLANA,
@@ -8,7 +6,8 @@ import {
   hexToUint8Array,
   isEVMChain,
   parseTransferPayload,
-} from "@certusone/wormhole-sdk";
+  parseVAA,
+} from "alephium-wormhole-sdk";
 
 import { relayEVM } from "./evm";
 import { relaySolana } from "./solana";
@@ -33,28 +32,28 @@ export async function relay(
   metrics: PromHelper
 ): Promise<RelayResult> {
   const logger = getScopedLogger(["relay"], relayLogger);
-  const { parse_vaa } = await importCoreWasm();
-  const parsedVAA = parse_vaa(hexToUint8Array(signedVAA));
-  if (parsedVAA.payload[0] === 1) {
+  const parsedVAA = parseVAA(hexToUint8Array(signedVAA));
+  if (parsedVAA.body.payload[0] === 1) {
     const transferPayload = parseTransferPayload(
-      Buffer.from(parsedVAA.payload)
+      Buffer.from(parsedVAA.body.payload)
     );
 
-    const chainConfigInfo = getChainConfigInfo(transferPayload.targetChain);
+    const targetChainId = parsedVAA.body.targetChainId
+    const chainConfigInfo = getChainConfigInfo(targetChainId);
     if (!chainConfigInfo) {
-      logger.error("relay: improper chain ID: " + transferPayload.targetChain);
+      logger.error("relay: improper chain ID: " + targetChainId);
       return {
         status: Status.FatalError,
         result:
           "Fatal Error: target chain " +
-          transferPayload.targetChain +
+          targetChainId +
           " not supported",
       };
     }
 
-    if (isEVMChain(transferPayload.targetChain)) {
+    if (isEVMChain(targetChainId)) {
       const unwrapNative =
-        transferPayload.originChain === transferPayload.targetChain &&
+        transferPayload.originChain === targetChainId &&
         hexToNativeString(
           transferPayload.originAddress,
           transferPayload.originChain
@@ -82,7 +81,7 @@ export async function relay(
       };
     }
 
-    if (transferPayload.targetChain === CHAIN_ID_SOLANA) {
+    if (targetChainId === CHAIN_ID_SOLANA) {
       let rResult: RelayResult = { status: Status.Error, result: "" };
       const retVal = await relaySolana(
         chainConfigInfo,
@@ -99,7 +98,7 @@ export async function relay(
       return rResult;
     }
 
-    if (transferPayload.targetChain === CHAIN_ID_TERRA) {
+    if (targetChainId === CHAIN_ID_TERRA) {
       let rResult: RelayResult = { status: Status.Error, result: "" };
       const retVal = await relayTerra(
         chainConfigInfo,
@@ -118,7 +117,7 @@ export async function relay(
 
     logger.error(
       "relay: target chain ID: " +
-        transferPayload.targetChain +
+        targetChainId +
         " is invalid, this is a program bug!"
     );
 
@@ -126,7 +125,7 @@ export async function relay(
       status: Status.FatalError,
       result:
         "Fatal Error: target chain " +
-        transferPayload.targetChain +
+        targetChainId +
         " is invalid, this is a program bug!",
     };
   }

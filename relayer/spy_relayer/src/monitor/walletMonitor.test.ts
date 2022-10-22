@@ -1,7 +1,7 @@
 require("../helpers/loadConfig");
 process.env.LOG_DIR = ".";
 
-import { CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_TERRA } from "alephium-wormhole-sdk";
 import { jest, test } from "@jest/globals";
 import { LCDClient } from "@terra-money/terra.js";
 import { ChainConfigInfo } from "../configureEnv";

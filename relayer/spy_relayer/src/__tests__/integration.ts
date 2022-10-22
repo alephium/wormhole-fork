@@ -23,10 +23,10 @@ import {
   transferFromEth,
   transferFromSolana,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 
-import getSignedVAAWithRetry from "@certusone/wormhole-sdk/lib/cjs/rpc/getSignedVAAWithRetry";
-import { setDefaultWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import getSignedVAAWithRetry from "alephium-wormhole-sdk/lib/cjs/rpc/getSignedVAAWithRetry";
+import { setDefaultWasm } from "alephium-wormhole-sdk/lib/cjs/solana/wasm";
 
 import { parseUnits } from "@ethersproject/units";
 import { NodeHttpTransport } from "@improbable-eng/grpc-web-node-http-transport";

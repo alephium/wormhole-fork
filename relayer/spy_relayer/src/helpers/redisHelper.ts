@@ -1,10 +1,9 @@
 import {
   ChainId,
   hexToUint8Array,
-  importCoreWasm,
-  parseTransferPayload,
-  uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+  parseVAA,
+  uint8ArrayToHex
+} from "alephium-wormhole-sdk";
 import { Mutex } from "async-mutex";
 import { createClient, RedisClientType } from "redis";
 import { getCommonEnvironment } from "../configureEnv";
@@ -253,7 +252,7 @@ export async function pushVaaToRedis(
       ":" +
       transferPayload.originAddress +
       "], target: [" +
-      transferPayload.targetChain +
+      parsedVAA.targetChain +
       ":" +
       transferPayload.targetAddress +
       "],  amount: " +
@@ -339,7 +338,6 @@ export function createSourceToTargetMap(
 export async function incrementSourceToTargetMap(
   key: string,
   redisClient: RedisClientType<any>,
-  parse_vaa: Function,
   sourceToTargetMap: SourceToTargetMap
 ): Promise<void> {
   const parsedKey = storeKeyFromJson(key);
@@ -347,19 +345,15 @@ export async function incrementSourceToTargetMap(
   if (!si_value) {
     return;
   }
-  const parsedPayload = parseTransferPayload(
-    Buffer.from(
-      parse_vaa(hexToUint8Array(storePayloadFromJson(si_value).vaa_bytes))
-        .payload
-    )
-  );
+  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(si_value).vaa_bytes))
+  
   if (
     sourceToTargetMap[parsedKey.chain_id as ChainId]?.[
-      parsedPayload.targetChain
+      vaa.body.targetChainId
     ] !== undefined
   ) {
     sourceToTargetMap[parsedKey.chain_id as ChainId][
-      parsedPayload.targetChain
+      vaa.body.targetChainId
     ]++;
   }
 }
@@ -367,7 +361,6 @@ export async function incrementSourceToTargetMap(
 export async function monitorRedis(metrics: PromHelper) {
   const scopedLogger = getScopedLogger(["monitorRedis"], logger);
   const TEN_SECONDS: number = 10000;
-  const { parse_vaa } = await importCoreWasm();
   const knownChainIds = Object.keys(chainIDStrings).map(
     (c) => Number(c) as ChainId
   );
@@ -384,7 +377,6 @@ export async function monitorRedis(metrics: PromHelper) {
           incrementSourceToTargetMap(
             si_key,
             redisClient,
-            parse_vaa,
             incomingSourceToTargetMap
           );
         }
@@ -404,7 +396,6 @@ export async function monitorRedis(metrics: PromHelper) {
           incrementSourceToTargetMap(
             si_key,
             redisClient,
-            parse_vaa,
             workingSourceToTargetMap
           );
         }

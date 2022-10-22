@@ -4,11 +4,11 @@ import {
   getIsTransferCompletedSolana,
   hexToNativeString,
   hexToUint8Array,
-  importCoreWasm,
   parseTransferPayload,
+  parseVAA,
   postVaaSolanaWithRetry,
   redeemOnSolana,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -67,9 +67,8 @@ export async function relaySolana(
   }
 
   // determine fee destination address - an associated token account
-  const { parse_vaa } = await importCoreWasm();
-  const parsedVAA = parse_vaa(signedVaaArray);
-  const payloadBuffer = Buffer.from(parsedVAA.payload);
+  const parsedVAA = parseVAA(signedVaaArray);
+  const payloadBuffer = Buffer.from(parsedVAA.body.payload);
   const transferPayload = parseTransferPayload(payloadBuffer);
   logger.debug("Calculating the fee destination address");
   const solanaMintAddress =

@@ -8,7 +8,7 @@ import {
   isEVMChain,
   nativeToHexString,
   WSOL_DECIMALS,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair } from "@solana/web3.js";
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";

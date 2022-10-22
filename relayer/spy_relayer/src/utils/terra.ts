@@ -1,4 +1,4 @@
-import { isNativeTerra } from "@certusone/wormhole-sdk";
+import { isNativeTerra } from "alephium-wormhole-sdk";
 
 // inspired by https://github.com/terra-money/station/blob/dca7de43958ce075c6e46605622203b9859b0e14/src/lib/utils/format.ts#L38
 export const formatNativeDenom = (denom = ""): string => {

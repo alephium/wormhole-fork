@@ -1,5 +1,4 @@
-import { hexToUint8Array, parseTransferPayload } from "@certusone/wormhole-sdk";
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import { hexToUint8Array, parseTransferPayload, parseVAA } from "alephium-wormhole-sdk";
 import { getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -138,13 +137,8 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
 
         const storePayload: StorePayload = storePayloadFromJson(si_value);
         try {
-          const { parse_vaa } = await importCoreWasm();
-          const parsedVAA = parse_vaa(hexToUint8Array(storePayload.vaa_bytes));
-          const payloadBuffer: Buffer = Buffer.from(parsedVAA.payload);
-          const transferPayload = parseTransferPayload(payloadBuffer);
-
-          const chain = transferPayload.targetChain;
-          if (chain !== workerInfo.targetChainId) {
+          const parsedVAA = parseVAA(hexToUint8Array(storePayload.vaa_bytes));
+          if (parsedVAA.body.targetChainId !== workerInfo.targetChainId) {
             continue;
           }
         } catch (e) {
@@ -319,12 +313,8 @@ async function processRequest(
     const MAX_RETRIES = 10;
     let targetChain: any = 0; // 0 is unspecified, but not covered by the SDK
     try {
-      const { parse_vaa } = await importCoreWasm();
-      const parsedVAA = parse_vaa(hexToUint8Array(payload.vaa_bytes));
-      const transferPayload = parseTransferPayload(
-        Buffer.from(parsedVAA.payload)
-      );
-      targetChain = transferPayload.targetChain;
+      const parsedVAA = parseVAA(hexToUint8Array(payload.vaa_bytes));
+      targetChain = parsedVAA.body.targetChainId;
     } catch (e) {}
     let retry: boolean = false;
     if (relayResult.status !== Status.Completed) {
@@ -386,11 +376,8 @@ async function findWorkableItems(
         let storePayload: StorePayload = storePayloadFromJson(si_value);
         // Check to see if this worker should handle this VAA
         if (workerInfo.targetChainId !== 0) {
-          const { parse_vaa } = await importCoreWasm();
-          const parsedVAA = parse_vaa(hexToUint8Array(storePayload.vaa_bytes));
-          const payloadBuffer: Buffer = Buffer.from(parsedVAA.payload);
-          const transferPayload = parseTransferPayload(payloadBuffer);
-          const tgtChainId = transferPayload.targetChain;
+          const parsedVAA = parseVAA(hexToUint8Array(storePayload.vaa_bytes));
+          const tgtChainId = parsedVAA.body.targetChainId;
           if (tgtChainId !== workerInfo.targetChainId) {
             // Skipping mismatched chainId
             continue;

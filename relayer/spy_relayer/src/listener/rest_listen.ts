@@ -1,5 +1,5 @@
-import { uint8ArrayToHex } from "@certusone/wormhole-sdk";
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import { uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { importCoreWasm } from "alephium-wormhole-sdk/lib/cjs/solana/wasm";
 import { Request, Response } from "express";
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";

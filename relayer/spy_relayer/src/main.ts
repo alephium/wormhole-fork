@@ -1,7 +1,7 @@
 //This has to run first so that the process variables are set up when the other modules are instantiated.
 require("./helpers/loadConfig");
 
-import { setDefaultWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import { setDefaultWasm } from "alephium-wormhole-sdk/lib/cjs/solana/wasm";
 import { getCommonEnvironment } from "./configureEnv";
 import { getLogger } from "./helpers/logHelper";
 import { PromHelper, PromMode } from "./helpers/promHelpers";

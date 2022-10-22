@@ -8,7 +8,7 @@ import {
   hexToUint8Array,
   redeemOnEth,
   redeemOnEthNative,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { ChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
