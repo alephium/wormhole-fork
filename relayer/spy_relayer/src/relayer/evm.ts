@@ -5,9 +5,7 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_POLYGON,
   getIsTransferCompletedEth,
-  hexToUint8Array,
-  redeemOnEth,
-  redeemOnEthNative,
+  hexToUint8Array
 } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { ChainConfigInfo } from "../configureEnv";

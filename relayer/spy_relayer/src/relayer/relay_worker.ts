@@ -1,5 +1,6 @@
-import { hexToUint8Array, parseTransferPayload, parseVAA } from "alephium-wormhole-sdk";
-import { getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
+import { NodeProvider, web3 } from "@alephium/web3";
+import { CHAIN_ID_ALEPHIUM, hexToUint8Array, parseVAA } from "alephium-wormhole-sdk";
+import { ChainConfigInfo, getChainConfigInfo, getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import {
@@ -440,8 +441,28 @@ async function spawnWorkerThread(workerInfo: WorkerInfo) {
   return workerPromise;
 }
 
+async function validateAlephiumChainConfig(chainConfigInfo: ChainConfigInfo | undefined) {
+  if (chainConfigInfo === undefined) {
+    throw new Error('Chain config for Alephium does not exist')
+  }
+  const groupIndex = chainConfigInfo.groupIndex
+  if (groupIndex === undefined) {
+    throw new Error('No group index specified')
+  }
+  const nodeProvider = new NodeProvider(chainConfigInfo.nodeUrl)
+  const chainParams = await nodeProvider.infos.getInfosChainParams()
+  if (groupIndex < 0 || groupIndex >= chainParams.groups) {
+    throw new Error(`Invalid chain group: ${groupIndex}`)
+  }
+  web3.setCurrentNodeProvider(nodeProvider)
+}
+
 async function doWorkerThread(workerInfo: WorkerInfo) {
   const relayLogger = getScopedLogger([`relay-worker-${workerInfo.index}`]);
+  if (workerInfo.targetChainId === CHAIN_ID_ALEPHIUM) {
+    const chainConfigInfo = getChainConfigInfo(workerInfo.targetChainId)
+    validateAlephiumChainConfig(chainConfigInfo)
+  }
   while (true) {
     // relayLogger.debug("Finding workable items.");
     const workableItems: WorkableItem[] = await findWorkableItems(

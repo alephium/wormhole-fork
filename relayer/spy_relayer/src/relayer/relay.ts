@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   hexToNativeString,
@@ -12,17 +13,11 @@ import {
 import { relayEVM } from "./evm";
 import { relaySolana } from "./solana";
 import { relayTerra } from "./terra";
-import { getRelayerEnvironment } from "../configureEnv";
+import { getChainConfigInfo } from "../configureEnv";
 import { RelayResult, Status } from "../helpers/redisHelper";
-import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
+import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
-
-const logger = getLogger();
-
-function getChainConfigInfo(chainId: ChainId) {
-  const env = getRelayerEnvironment();
-  return env.supportedChains.find((x) => x.chainId === chainId);
-}
+import { relayAlph } from "./alph";
 
 export async function relay(
   signedVAA: string,
@@ -113,6 +108,20 @@ export async function relay(
       }
       rResult.result = retVal.result;
       return rResult;
+    }
+
+    if (targetChainId === CHAIN_ID_ALEPHIUM) {
+      const redeemResult = await relayAlph(
+        chainConfigInfo,
+        signedVAA,
+        checkOnly,
+        walletPrivateKey,
+        logger,
+        metrics
+      )
+      return redeemResult.redeemed
+        ? { status: Status.Completed, result: redeemResult.result }
+        : { status: Status.Error, result: redeemResult.result }
     }
 
     logger.error(

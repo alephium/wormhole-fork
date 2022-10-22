@@ -102,6 +102,7 @@ export type ChainConfigInfo = {
   terraCoin?: string;
   terraGasPriceUrl?: string;
   wrappedAsset?: string | null;
+  groupIndex?: number // only for Alephium
 };
 
 export type ListenerEnvironment = {
@@ -222,6 +223,11 @@ export const getRelayerEnvironment: () => RelayerEnvironment = () => {
     return relayerEnv;
   }
 };
+
+export function getChainConfigInfo(chainId: ChainId) {
+  const env = getRelayerEnvironment()
+  return env.supportedChains.find((x) => x.chainId === chainId)
+}
 
 const createRelayerEnvironment: () => RelayerEnvironment = () => {
   let supportedChains: ChainConfigInfo[] = [];
