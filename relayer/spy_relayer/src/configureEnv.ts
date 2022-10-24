@@ -1,5 +1,7 @@
+import { NodeProvider, web3 } from "@alephium/web3";
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   nativeToHexString,
@@ -226,7 +228,24 @@ export const getRelayerEnvironment: () => RelayerEnvironment = () => {
 
 export function getChainConfigInfo(chainId: ChainId) {
   const env = getRelayerEnvironment()
-  return env.supportedChains.find((x) => x.chainId === chainId)
+  return env.supportedChains.find((x) => x.chainId === chainId) 
+}
+
+export async function validateAlephiumChainConfig() {
+  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM)
+  if (chainConfigInfo === undefined) {
+    throw new Error('Chain config for Alephium does not exist')
+  }
+  const groupIndex = chainConfigInfo.groupIndex
+  if (groupIndex === undefined) {
+    throw new Error('No group index specified')
+  }
+  const nodeProvider = new NodeProvider(chainConfigInfo.nodeUrl)
+  const chainParams = await nodeProvider.infos.getInfosChainParams()
+  if (groupIndex < 0 || groupIndex >= chainParams.groups) {
+    throw new Error(`Invalid chain group: ${groupIndex}`)
+  }
+  web3.setCurrentNodeProvider(nodeProvider)
 }
 
 const createRelayerEnvironment: () => RelayerEnvironment = () => {

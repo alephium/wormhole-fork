@@ -1,6 +1,7 @@
 import {
   Bridge__factory,
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getForeignAssetTerra,
@@ -8,6 +9,7 @@ import {
   isEVMChain,
   nativeToHexString,
   WSOL_DECIMALS,
+  getTokenPoolId
 } from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair } from "@solana/web3.js";
@@ -18,7 +20,7 @@ import {
   ChainConfigInfo,
   getRelayerEnvironment,
   RelayerEnvironment,
-  SupportedToken,
+  SupportedToken
 } from "../configureEnv";
 import { getScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -27,6 +29,9 @@ import { getEthereumToken } from "../utils/ethereum";
 import { getMultipleAccountsRPC } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
+import { addressFromContractId, NodeProvider, web3 } from "@alephium/web3"
+import { PrivateKeyWallet } from "@alephium/web3-wallet";
+import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
 
 let env: RelayerEnvironment;
 const logger = getScopedLogger(["walletMonitor"]);
@@ -100,6 +105,8 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
         // TODO one day this will spin up independent watchers that time themselves
         // purposefully not awaited
         pullAllTerraBalances(env.supportedTokens, chainInfo, metrics);
+      } else if (chainInfo.chainId === CHAIN_ID_ALEPHIUM) {
+        pullAllAlephiumBalances(env.supportedTokens, chainInfo, metrics)
       } else {
         logger.error("Invalid chain ID in wallet monitor " + chainInfo.chainId);
       }
@@ -533,4 +540,70 @@ async function pullAllTerraBalances(
   }
 
   metrics.handleWalletBalances(balances);
+}
+
+async function pullAllAlephiumBalances(
+  supportedTokens: SupportedToken[],
+  chainConfig: ChainConfigInfo,
+  metrics: PromHelper
+) {
+  if (chainConfig.walletPrivateKey === undefined) {
+    return
+  }
+
+  const groupIndex = chainConfig.groupIndex!
+  const nodeProvider = new NodeProvider(chainConfig.nodeUrl)
+  web3.setCurrentNodeProvider(nodeProvider)
+  const walletBalances: WalletBalance[] = []
+  for (const mnemonic of chainConfig.walletPrivateKey) {
+    const wallet = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
+    const account = await wallet.getSelectedAccount()
+    const balances = await nodeProvider.addresses.getAddressesAddressBalance(account.address)
+    walletBalances.push({
+      chainId: chainConfig.chainId,
+      balanceAbs: balances.balance,
+      balanceFormatted: balances.balanceHint.slice(0, -5),
+      currencyName: 'ALPH',
+      currencyAddressNative: '',
+      isNative: true,
+      walletAddress: account.address
+    })
+
+    for (const token of supportedTokens) {
+      if (token.chainId === CHAIN_ID_ALEPHIUM) {
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === token.address)
+        const amount = tokenBalance?.amount ?? '0'
+        walletBalances.push({
+          chainId: chainConfig.chainId,
+          balanceAbs: amount,
+          balanceFormatted: amount,
+          currencyName: '', // TODO: get token name from config
+          currencyAddressNative: addressFromContractId(token.address),
+          isNative: false,
+          walletAddress: account.address
+        })
+      } else {
+        const hasPrefix = token.address.startsWith('0x') || token.address.startsWith('0X')
+        const originTokenId = hasPrefix ? token.address.slice(2) : token.address
+        const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+        const amount = tokenBalance?.amount ?? '0'
+        const contractAddress = addressFromContractId(tokenId)
+        // TODO: move this to SDK
+        const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
+        const name = (contractState.fields[5] as ValByteVec).value
+        const decimals = parseInt((contractState.fields[6] as ValU256).value)
+        walletBalances.push({
+          chainId: chainConfig.chainId,
+          balanceAbs: amount,
+          balanceFormatted: formatUnits(amount, decimals),
+          currencyName: name,
+          currencyAddressNative: contractAddress,
+          isNative: false,
+          walletAddress: account.address
+        })
+      }
+    }
+  }
+  metrics.handleWalletBalances(walletBalances)
 }
