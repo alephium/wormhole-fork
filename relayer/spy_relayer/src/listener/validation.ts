@@ -166,9 +166,7 @@ export async function parseAndValidateVaa(
 async function checkQueue(key: string): Promise<string | null> {
   try {
     const backupQueue = getBackupQueue();
-    const queuedRecord = backupQueue.find((record) => {
-      record[0] === key;
-    });
+    const queuedRecord = backupQueue.find((record) => record[0] === key)
 
     if (queuedRecord) {
       logger.debug("VAA was already in the listener queue");
