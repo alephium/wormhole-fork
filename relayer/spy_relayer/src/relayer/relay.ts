@@ -1,5 +1,4 @@
 import {
-  ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
@@ -13,7 +12,13 @@ import {
 import { relayEVM } from "./evm";
 import { relaySolana } from "./solana";
 import { relayTerra } from "./terra";
-import { getChainConfigInfo } from "../configureEnv";
+import {
+  getChainConfigInfo,
+  AlephiumChainConfigInfo,
+  EthereumChainConfigInfo,
+  SolanaChainConfigInfo,
+  TerraChainConfigInfo
+} from "../configureEnv";
 import { RelayResult, Status } from "../helpers/redisHelper";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -47,22 +52,23 @@ export async function relay(
     }
 
     if (isEVMChain(targetChainId)) {
+      const evmConfigInfo = chainConfigInfo as EthereumChainConfigInfo
       const unwrapNative =
         transferPayload.originChain === targetChainId &&
         hexToNativeString(
           transferPayload.originAddress,
           transferPayload.originChain
-        )?.toLowerCase() === chainConfigInfo.wrappedAsset?.toLowerCase();
+        )?.toLowerCase() === evmConfigInfo.wrappedNativeAsset.toLowerCase();
       logger.debug(
         "isEVMChain: originAddress: [" +
           transferPayload.originAddress +
           "], wrappedAsset: [" +
-          chainConfigInfo.wrappedAsset +
+          evmConfigInfo.wrappedNativeAsset +
           "], unwrapNative: " +
           unwrapNative
       );
       let evmResult = await relayEVM(
-        chainConfigInfo,
+        evmConfigInfo,
         signedVAA,
         unwrapNative,
         checkOnly,
@@ -77,9 +83,10 @@ export async function relay(
     }
 
     if (targetChainId === CHAIN_ID_SOLANA) {
+      const solanaConfigInfo = chainConfigInfo as SolanaChainConfigInfo
       let rResult: RelayResult = { status: Status.Error, result: "" };
       const retVal = await relaySolana(
-        chainConfigInfo,
+        solanaConfigInfo,
         signedVAA,
         checkOnly,
         walletPrivateKey,
@@ -94,9 +101,10 @@ export async function relay(
     }
 
     if (targetChainId === CHAIN_ID_TERRA) {
+      const terraConfigInfo = chainConfigInfo as TerraChainConfigInfo
       let rResult: RelayResult = { status: Status.Error, result: "" };
       const retVal = await relayTerra(
-        chainConfigInfo,
+        terraConfigInfo,
         signedVAA,
         checkOnly,
         walletPrivateKey,
@@ -111,8 +119,9 @@ export async function relay(
     }
 
     if (targetChainId === CHAIN_ID_ALEPHIUM) {
+      const alphConfigInfo = chainConfigInfo as AlephiumChainConfigInfo
       const redeemResult = await relayAlph(
-        chainConfigInfo,
+        alphConfigInfo,
         signedVAA,
         checkOnly,
         walletPrivateKey,

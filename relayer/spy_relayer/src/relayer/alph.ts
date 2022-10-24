@@ -3,14 +3,13 @@ import {
   hexToUint8Array,
   redeemOnAlph
 } from "alephium-wormhole-sdk";
-import { web3, NodeProvider } from "@alephium/web3"
 import { PrivateKeyWallet } from "@alephium/web3-wallet"
-import { ChainConfigInfo } from "../configureEnv";
+import { AlephiumChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 
 export async function relayAlph(
-  chainConfigInfo: ChainConfigInfo,
+  chainConfigInfo: AlephiumChainConfigInfo,
   signedVAA: string,
   checkOnly: boolean,
   mnemonic: string,

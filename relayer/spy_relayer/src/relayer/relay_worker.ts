@@ -59,15 +59,7 @@ function createWorkerInfos(metrics: PromHelper) {
     metrics.incConfirmed(chain.chainId, 0);
     metrics.incFailures(chain.chainId, 0);
     metrics.incRollback(chain.chainId, 0);
-    chain.walletPrivateKey?.forEach((key) => {
-      workerArray.push({
-        walletPrivateKey: key,
-        index: index,
-        targetChainId: chain.chainId,
-      });
-      index++;
-    });
-    chain.solanaPrivateKey?.forEach((key) => {
+    chain.walletPrivateKeys.forEach((key) => {
       workerArray.push({
         walletPrivateKey: key,
         index: index,

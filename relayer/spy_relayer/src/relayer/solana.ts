@@ -15,14 +15,14 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { ChainConfigInfo } from "../configureEnv";
+import { SolanaChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 
 const MAX_VAA_UPLOAD_RETRIES_SOLANA = 5;
 
 export async function relaySolana(
-  chainConfigInfo: ChainConfigInfo,
+  chainConfigInfo: SolanaChainConfigInfo,
   signedVAAString: string,
   checkOnly: boolean,
   walletPrivateKey: Uint8Array,

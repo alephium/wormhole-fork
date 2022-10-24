@@ -90,22 +90,34 @@ export type RelayerEnvironment = {
   supportedTokens: { chainId: ChainId; address: string }[];
 };
 
-export type ChainConfigInfo = {
-  chainId: ChainId;
-  chainName: string;
-  nativeCurrencySymbol: string;
-  nodeUrl: string;
-  tokenBridgeAddress: string;
-  walletPrivateKey?: string[];
-  solanaPrivateKey?: Uint8Array[];
-  bridgeAddress?: string;
-  terraName?: string;
-  terraChainId?: string;
-  terraCoin?: string;
-  terraGasPriceUrl?: string;
-  wrappedAsset?: string | null;
-  groupIndex?: number // only for Alephium
-};
+export interface ChainConfigInfo {
+  chainId: ChainId
+  chainName: string
+  nativeCurrencySymbol: string
+  nodeUrl: string
+  tokenBridgeAddress: string
+  walletPrivateKeys: Uint8Array[] | string[]
+}
+
+export interface SolanaChainConfigInfo extends ChainConfigInfo {
+  bridgeAddress: string
+  wrappedNativeAsset: string
+}
+
+export interface EthereumChainConfigInfo extends ChainConfigInfo {
+  wrappedNativeAsset: string
+}
+
+export interface TerraChainConfigInfo extends ChainConfigInfo {
+  terraName: string
+  terraChainId: string
+  terraCoin: string
+  terraGasPriceUrl: string
+}
+
+export interface AlephiumChainConfigInfo extends ChainConfigInfo {
+  groupIndex: number
+}
 
 export type ListenerEnvironment = {
   spyServiceHost: string;
@@ -232,7 +244,7 @@ export function getChainConfigInfo(chainId: ChainId) {
 }
 
 export async function validateAlephiumChainConfig() {
-  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM)
+  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM) as AlephiumChainConfigInfo
   if (chainConfigInfo === undefined) {
     throw new Error('Chain config for Alephium does not exist')
   }
@@ -335,14 +347,10 @@ export function loadChainConfig(): ChainConfigInfo[] {
   }
 
   const unformattedChains = JSON.parse(process.env.SUPPORTED_CHAINS);
-  const unformattedPrivateKeys = JSON.parse(process.env.PRIVATE_KEYS);
   const supportedChains: ChainConfigInfo[] = [];
 
   if (!unformattedChains.forEach) {
     throw new Error("SUPPORTED_CHAINS arg was not an array.");
-  }
-  if (!unformattedPrivateKeys.forEach) {
-    throw new Error("PRIVATE_KEYS arg was not an array.");
   }
 
   unformattedChains.forEach((element: any) => {
@@ -350,239 +358,93 @@ export function loadChainConfig(): ChainConfigInfo[] {
       throw new Error("Invalid chain config: " + element);
     }
 
-    const privateKeyObj = unformattedPrivateKeys.find(
-      (x: any) => x.chainId === element.chainId
-    );
-    if (!privateKeyObj) {
-      throw new Error(
-        "Failed to find private key object for configured chain ID: " +
-          element.chainId
-      );
-    }
-
     if (element.chainId === CHAIN_ID_SOLANA) {
-      supportedChains.push(
-        createSolanaChainConfig(element, privateKeyObj.privateKeys)
-      );
+      supportedChains.push(createSolanaChainConfig(element))
     } else if (element.chainId === CHAIN_ID_TERRA) {
-      supportedChains.push(
-        createTerraChainConfig(element, privateKeyObj.privateKeys)
-      );
+      supportedChains.push(createTerraChainConfig(element))
+    } else if (element.chainId === CHAIN_ID_ALEPHIUM) {
+      supportedChains.push(createAlephiumChainConfig(element))
     } else {
-      supportedChains.push(
-        createEvmChainConfig(element, privateKeyObj.privateKeys)
-      );
+      supportedChains.push(createEvmChainConfig(element))
     }
   });
 
   return supportedChains;
 }
 
-function createSolanaChainConfig(
-  config: any,
-  privateKeys: any[]
-): ChainConfigInfo {
-  let chainId: ChainId;
-  let chainName: string;
-  let nativeCurrencySymbol: string;
-  let nodeUrl: string;
-  let tokenBridgeAddress: string;
-  let solanaPrivateKey: Uint8Array[] = [];
-  let bridgeAddress: string;
-  let wrappedAsset: string | null;
-
-  if (!config.chainId) {
-    throw new Error("Missing required field in chain config: chainId");
-  }
-  if (!config.chainName) {
-    throw new Error("Missing required field in chain config: chainName");
-  }
-  if (!config.nativeCurrencySymbol) {
-    throw new Error(
-      "Missing required field in chain config: nativeCurrencySymbol"
-    );
-  }
-  if (!config.nodeUrl) {
-    throw new Error("Missing required field in chain config: nodeUrl");
-  }
-  if (!config.tokenBridgeAddress) {
-    throw new Error(
-      "Missing required field in chain config: tokenBridgeAddress"
-    );
-  }
-  if (!(privateKeys && privateKeys.length && privateKeys.forEach)) {
-    throw new Error(
-      "Ill formatted object received as private keys for Solana."
-    );
-  }
-  if (!config.bridgeAddress) {
-    throw new Error("Missing required field in chain config: bridgeAddress");
-  }
-  if (!config.wrappedAsset) {
-    throw new Error("Missing required field in chain config: wrappedAsset");
-  }
-
-  chainId = config.chainId;
-  chainName = config.chainName;
-  nativeCurrencySymbol = config.nativeCurrencySymbol;
-  nodeUrl = config.nodeUrl;
-  tokenBridgeAddress = config.tokenBridgeAddress;
-  bridgeAddress = config.bridgeAddress;
-  wrappedAsset = config.wrappedAsset;
-
-  privateKeys.forEach((item: any) => {
-    try {
-      const uint = Uint8Array.from(item);
-      solanaPrivateKey.push(uint);
-    } catch (e) {
-      throw new Error(
-        "Failed to coerce Solana private keys into a uint array. ENV JSON is possibly incorrect."
-      );
-    }
-  });
+function createSolanaChainConfig(config: any): SolanaChainConfigInfo {
+  const chainConfig = createChainConfig(config)
+  const bridgeAddress = config.bridgeAddress ?? invalidConfigField('bridgeAddress')
+  const wrappedNativeAsset = config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')
 
   return {
-    chainId,
-    chainName,
-    nativeCurrencySymbol,
-    nodeUrl,
-    tokenBridgeAddress,
+    ...chainConfig,
     bridgeAddress,
-    solanaPrivateKey,
-    wrappedAsset,
-  };
+    wrappedNativeAsset
+  }
 }
 
-function createTerraChainConfig(
-  config: any,
-  privateKeys: any[]
-): ChainConfigInfo {
-  let chainId: ChainId;
-  let chainName: string;
-  let nativeCurrencySymbol: string;
-  let nodeUrl: string;
-  let tokenBridgeAddress: string;
-  let walletPrivateKey: string[];
-  let terraName: string;
-  let terraChainId: string;
-  let terraCoin: string;
-  let terraGasPriceUrl: string;
-
-  if (!config.chainId) {
-    throw new Error("Missing required field in chain config: chainId");
-  }
-  if (!config.chainName) {
-    throw new Error("Missing required field in chain config: chainName");
-  }
-  if (!config.nativeCurrencySymbol) {
-    throw new Error(
-      "Missing required field in chain config: nativeCurrencySymbol"
-    );
-  }
-  if (!config.nodeUrl) {
-    throw new Error("Missing required field in chain config: nodeUrl");
-  }
-  if (!config.tokenBridgeAddress) {
-    throw new Error(
-      "Missing required field in chain config: tokenBridgeAddress"
-    );
-  }
-  if (!(privateKeys && privateKeys.length && privateKeys.forEach)) {
-    throw new Error("Private keys for Terra are length zero or not an array.");
-  }
-  if (!config.terraName) {
-    throw new Error("Missing required field in chain config: terraName");
-  }
-  if (!config.terraChainId) {
-    throw new Error("Missing required field in chain config: terraChainId");
-  }
-  if (!config.terraCoin) {
-    throw new Error("Missing required field in chain config: terraCoin");
-  }
-  if (!config.terraGasPriceUrl) {
-    throw new Error("Missing required field in chain config: terraGasPriceUrl");
-  }
-
-  chainId = config.chainId;
-  chainName = config.chainName;
-  nativeCurrencySymbol = config.nativeCurrencySymbol;
-  nodeUrl = config.nodeUrl;
-  tokenBridgeAddress = config.tokenBridgeAddress;
-  walletPrivateKey = privateKeys;
-  terraName = config.terraName;
-  terraChainId = config.terraChainId;
-  terraCoin = config.terraCoin;
-  terraGasPriceUrl = config.terraGasPriceUrl;
-
+function createTerraChainConfig(config: any): TerraChainConfigInfo {
+  const chainConfig = createChainConfig(config)
+  const terraName = (config.terraName ?? invalidConfigField('terraName')) as string
+  const terraChainId = (config.terraChainId ?? invalidConfigField('terraChainId')) as string
+  const terraCoin = (config.terraCoin ?? invalidConfigField('terraCoin')) as string
+  const terraGasPriceUrl = (config.terraGasPriceUrl ?? invalidConfigField('terraGasPriceUrl')) as string
   return {
-    chainId,
-    chainName,
-    nativeCurrencySymbol,
-    nodeUrl,
-    tokenBridgeAddress,
-    walletPrivateKey,
+    ...chainConfig,
     terraName,
     terraChainId,
     terraCoin,
-    terraGasPriceUrl,
-  };
+    terraGasPriceUrl
+  }
 }
 
-function createEvmChainConfig(
-  config: any,
-  privateKeys: any[]
-): ChainConfigInfo {
-  let chainId: ChainId;
-  let chainName: string;
-  let nativeCurrencySymbol: string;
-  let nodeUrl: string;
-  let tokenBridgeAddress: string;
-  let walletPrivateKey: string[];
-  let wrappedAsset: string;
+function createEvmChainConfig(config: any): EthereumChainConfigInfo {
+  const chainConfig = createChainConfig(config)
+  const wrappedNativeAsset = (config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')) as string
+  return {
+    ...chainConfig,
+    wrappedNativeAsset
+  }
+}
 
-  if (!config.chainId) {
-    throw new Error("Missing required field in chain config: chainId");
+function createAlephiumChainConfig(config: any): AlephiumChainConfigInfo {
+  const chainConfig = createChainConfig(config)
+  const groupIndex = (config.groupIndex ?? invalidConfigField('groupIndex')) as number
+  return {
+    ...chainConfig,
+    groupIndex
   }
-  if (!config.chainName) {
-    throw new Error("Missing required field in chain config: chainName");
-  }
-  if (!config.nativeCurrencySymbol) {
-    throw new Error(
-      "Missing required field in chain config: nativeCurrencySymbol"
-    );
-  }
-  if (!config.nodeUrl) {
-    throw new Error("Missing required field in chain config: nodeUrl");
-  }
-  if (!config.tokenBridgeAddress) {
-    throw new Error(
-      "Missing required field in chain config: tokenBridgeAddress"
-    );
-  }
-  if (!(privateKeys && privateKeys.length && privateKeys.forEach)) {
-    throw new Error(
-      `Private keys for chain id ${config.chainId} are length zero or not an array.`
-    );
-  }
+}
 
-  if (!config.wrappedAsset) {
-    throw new Error("Missing required field in chain config: wrappedAsset");
-  }
-  chainId = config.chainId;
-  chainName = config.chainName;
-  nativeCurrencySymbol = config.nativeCurrencySymbol;
-  nodeUrl = config.nodeUrl;
-  tokenBridgeAddress = config.tokenBridgeAddress;
-  walletPrivateKey = privateKeys;
-  wrappedAsset = config.wrappedAsset;
-
+function createChainConfig(config: any): ChainConfigInfo {
+  const chainId = (config.chainId ?? invalidConfigField('chainId')) as ChainId
+  const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
+  const nativeCurrencySymbol = (config.nativeCurrencySymbol ?? invalidConfigField('nativeCurrencySymbol')) as string
+  const nodeUrl = (config.nodeUrl ?? invalidConfigField('nodeUrl')) as string
+  const tokenBridgeAddress = (config.tokenBridgeAddress ?? invalidConfigField('tokenBridgeAddress')) as string
+  const privateKeys = config.walletPrivateKeys ?? invalidConfigField('walletPrivateKeys')
+  const walletPrivateKeys = chainId === CHAIN_ID_SOLANA
+    ? (privateKeys as any[]).map((item: any) => {
+      try {
+        return Uint8Array.from(item)
+      } catch (e) {
+        throw new Error(
+          'Failed to coerce Solana private keys into a uint array. ENV JSON is possibly incorrect.'
+        )
+      }
+    })
+    : privateKeys as string[]
   return {
     chainId,
     chainName,
     nativeCurrencySymbol,
     nodeUrl,
     tokenBridgeAddress,
-    walletPrivateKey,
-    wrappedAsset,
-  };
+    walletPrivateKeys
+  }
+}
+
+function invalidConfigField(field: string) {
+  throw new Error(`Missing or invalid field in chain config: ${field}`)
 }

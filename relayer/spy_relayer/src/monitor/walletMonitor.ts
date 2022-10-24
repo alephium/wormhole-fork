@@ -17,10 +17,13 @@ import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import { ethers, Signer } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import {
-  ChainConfigInfo,
+  AlephiumChainConfigInfo,
+  EthereumChainConfigInfo,
   getRelayerEnvironment,
   RelayerEnvironment,
-  SupportedToken
+  SolanaChainConfigInfo,
+  SupportedToken,
+  TerraChainConfigInfo
 } from "../configureEnv";
 import { getScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -73,17 +76,18 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
     if (!chainInfo) continue;
     try {
       if (chainInfo.chainId === CHAIN_ID_SOLANA) {
-        for (const solanaPrivateKey of chainInfo.solanaPrivateKey || []) {
+        const solanaChainConfig = chainInfo as SolanaChainConfigInfo
+        for (const solanaPrivateKey of solanaChainConfig.walletPrivateKeys as Uint8Array[] || []) {
           try {
             balancePromises.push(
-              pullSolanaNativeBalance(chainInfo, solanaPrivateKey)
+              pullSolanaNativeBalance(solanaChainConfig, solanaPrivateKey)
             );
             balancePromises.push(
-              pullSolanaTokenBalances(chainInfo, solanaPrivateKey)
+              pullSolanaTokenBalances(solanaChainConfig, solanaPrivateKey)
             );
           } catch (e: any) {
             logger.error(
-              "pulling balances failed failed for chain: " + chainInfo.chainName
+              "pulling balances failed failed for chain: " + solanaChainConfig.chainName
             );
             if (e && e.stack) {
               logger.error(e.stack);
@@ -91,22 +95,23 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
           }
         }
       } else if (isEVMChain(chainInfo.chainId)) {
-        for (const privateKey of chainInfo.walletPrivateKey || []) {
+        const ethChainInfo = chainInfo as EthereumChainConfigInfo
+        for (const privateKey of ethChainInfo.walletPrivateKeys as string[] || []) {
           try {
-            balancePromises.push(pullEVMNativeBalance(chainInfo, privateKey));
+            balancePromises.push(pullEVMNativeBalance(ethChainInfo, privateKey));
           } catch (e) {
             logger.error("pullEVMNativeBalance() failed: " + e);
           }
         }
         // TODO one day this will spin up independent watchers that time themselves
         // purposefully not awaited
-        pullAllEVMTokens(env.supportedTokens, chainInfo, metrics);
+        pullAllEVMTokens(env.supportedTokens, ethChainInfo, metrics);
       } else if (chainInfo.chainId === CHAIN_ID_TERRA) {
         // TODO one day this will spin up independent watchers that time themselves
         // purposefully not awaited
-        pullAllTerraBalances(env.supportedTokens, chainInfo, metrics);
+        pullAllTerraBalances(env.supportedTokens, chainInfo as TerraChainConfigInfo, metrics);
       } else if (chainInfo.chainId === CHAIN_ID_ALEPHIUM) {
-        pullAllAlephiumBalances(env.supportedTokens, chainInfo, metrics)
+        pullAllAlephiumBalances(env.supportedTokens, chainInfo as AlephiumChainConfigInfo, metrics)
       } else {
         logger.error("Invalid chain ID in wallet monitor " + chainInfo.chainId);
       }
@@ -166,7 +171,7 @@ export async function pullTerraBalance(
 }
 
 async function pullSolanaTokenBalances(
-  chainInfo: ChainConfigInfo,
+  chainInfo: SolanaChainConfigInfo,
   privateKey: Uint8Array
 ): Promise<WalletBalance[]> {
   const keyPair = Keypair.fromSecretKey(privateKey);
@@ -215,7 +220,7 @@ async function pullSolanaTokenBalances(
 }
 
 async function pullEVMNativeBalance(
-  chainInfo: ChainConfigInfo,
+  chainInfo: EthereumChainConfigInfo,
   privateKey: string
 ): Promise<WalletBalance[]> {
   if (!privateKey || !chainInfo.nodeUrl) {
@@ -244,7 +249,7 @@ async function pullEVMNativeBalance(
 
 async function pullTerraNativeBalance(
   lcd: LCDClient,
-  chainInfo: ChainConfigInfo,
+  chainInfo: TerraChainConfigInfo,
   walletAddress: string
 ): Promise<WalletBalance[]> {
   try {
@@ -278,7 +283,7 @@ async function pullTerraNativeBalance(
 }
 
 async function pullSolanaNativeBalance(
-  chainInfo: ChainConfigInfo,
+  chainInfo: SolanaChainConfigInfo,
   privateKey: Uint8Array
 ): Promise<WalletBalance[]> {
   const keyPair = Keypair.fromSecretKey(privateKey);
@@ -343,7 +348,7 @@ export async function collectWallets(metrics: PromHelper) {
 async function calcLocalAddressesEVM(
   provider: ethers.providers.JsonRpcBatchProvider,
   supportedTokens: SupportedToken[],
-  chainConfigInfo: ChainConfigInfo
+  chainConfigInfo: EthereumChainConfigInfo
 ): Promise<string[]> {
   const tokenBridge = Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
@@ -384,7 +389,7 @@ async function calcLocalAddressesEVM(
 export async function calcLocalAddressesTerra(
   lcd: LCDClient,
   supportedTokens: SupportedToken[],
-  chainConfigInfo: ChainConfigInfo
+  chainConfigInfo: TerraChainConfigInfo
 ) {
   const output: string[] = [];
   for (const supportedToken of supportedTokens) {
@@ -426,7 +431,7 @@ export async function calcLocalAddressesTerra(
 
 async function pullAllEVMTokens(
   supportedTokens: SupportedToken[],
-  chainConfig: ChainConfigInfo,
+  chainConfig: EthereumChainConfigInfo,
   metrics: PromHelper
 ) {
   try {
@@ -439,10 +444,10 @@ async function pullAllEVMTokens(
       supportedTokens,
       chainConfig
     );
-    if (!chainConfig.walletPrivateKey) {
+    if (!chainConfig.walletPrivateKeys) {
       return;
     }
-    for (const privateKey of chainConfig.walletPrivateKey) {
+    for (const privateKey of chainConfig.walletPrivateKeys) {
       try {
         const publicAddress = await new ethers.Wallet(privateKey).getAddress();
         const tokens = await Promise.all(
@@ -492,24 +497,10 @@ async function pullAllEVMTokens(
 
 async function pullAllTerraBalances(
   supportedTokens: SupportedToken[],
-  chainConfig: ChainConfigInfo,
+  chainConfig: TerraChainConfigInfo,
   metrics: PromHelper
 ) {
   let balances: WalletBalance[] = [];
-  if (!chainConfig.walletPrivateKey) {
-    return balances;
-  }
-  if (
-    !(
-      chainConfig.terraChainId &&
-      chainConfig.terraCoin &&
-      chainConfig.terraGasPriceUrl &&
-      chainConfig.terraName
-    )
-  ) {
-    logger.error("Terra relay was called without proper instantiation.");
-    throw new Error("Terra relay was called without proper instantiation.");
-  }
   const lcdConfig = {
     URL: chainConfig.nodeUrl,
     chainID: chainConfig.terraChainId,
@@ -521,7 +512,7 @@ async function pullAllTerraBalances(
     supportedTokens,
     chainConfig
   );
-  for (const privateKey of chainConfig.walletPrivateKey) {
+  for (const privateKey of chainConfig.walletPrivateKeys as string[]) {
     const mk = new MnemonicKey({
       mnemonic: privateKey,
     });
@@ -544,18 +535,14 @@ async function pullAllTerraBalances(
 
 async function pullAllAlephiumBalances(
   supportedTokens: SupportedToken[],
-  chainConfig: ChainConfigInfo,
+  chainConfig: AlephiumChainConfigInfo,
   metrics: PromHelper
 ) {
-  if (chainConfig.walletPrivateKey === undefined) {
-    return
-  }
-
   const groupIndex = chainConfig.groupIndex!
   const nodeProvider = new NodeProvider(chainConfig.nodeUrl)
   web3.setCurrentNodeProvider(nodeProvider)
   const walletBalances: WalletBalance[] = []
-  for (const mnemonic of chainConfig.walletPrivateKey) {
+  for (const mnemonic of chainConfig.walletPrivateKeys as string[]) {
     const wallet = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
     const account = await wallet.getSelectedAccount()
     const balances = await nodeProvider.addresses.getAddressesAddressBalance(account.address)
