@@ -6,7 +6,6 @@ import {
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
-  hexToUint8Array,
   uint8ArrayToHex,
 } from "alephium-wormhole-sdk";
 import {
@@ -16,14 +15,7 @@ import {
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
-import {
-  initPayloadWithVAA,
-  pushVaaToRedis,
-  storeInRedis,
-  storeKeyFromParsedVAA,
-  storeKeyToJson,
-  storePayloadToJson,
-} from "../helpers/redisHelper";
+import { pushVaaToRedis } from "../helpers/redisHelper";
 import { sleep } from "../helpers/utils";
 import {
   parseAndValidateVaa,
@@ -140,7 +132,9 @@ export async function run(ph: PromHelper) {
       logger.error("spy service threw an exception: %o", e);
     }
 
-    stream.end;
+    if (stream !== undefined) {
+      stream.destroy()
+    }
     await sleep(5 * 1000);
     logger.info("attempting to reconnect to the spy service");
   }
