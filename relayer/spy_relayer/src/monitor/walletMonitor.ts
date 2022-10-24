@@ -360,10 +360,9 @@ async function calcLocalAddressesEVM(
       tokenAddressPromises.push(Promise.resolve(supportedToken.address));
       continue;
     }
-    const hexAddress = nativeToHexString(
-      supportedToken.address,
-      supportedToken.chainId
-    );
+    const hexAddress = supportedToken.chainId === CHAIN_ID_ALEPHIUM
+      ? supportedToken.address
+      : nativeToHexString(supportedToken.address, supportedToken.chainId)
     if (!hexAddress) {
       logger.debug(
         "calcLocalAddressesEVM() - no hexAddress for chainId: " +

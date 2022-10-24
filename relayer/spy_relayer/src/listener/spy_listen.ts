@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
@@ -29,6 +30,7 @@ import {
   ParsedTransferPayload,
   ParsedVaa,
 } from "./validation";
+import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 let metrics: PromHelper;
 let env: ListenerEnvironment;
@@ -174,6 +176,10 @@ async function encodeEmitterAddress(
 
   if (myChainId === CHAIN_ID_TERRA) {
     return await getEmitterAddressTerra(emitterAddressStr);
+  }
+
+  if (myChainId === CHAIN_ID_ALEPHIUM) {
+    return emitterAddressStr
   }
 
   return getEmitterAddressEth(emitterAddressStr);

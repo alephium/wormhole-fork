@@ -158,28 +158,20 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
     throw new Error(
       "Missing required environment variable: SPY_SERVICE_FILTERS"
     );
-  } else {
-    const array = JSON.parse(process.env.SPY_SERVICE_FILTERS);
-    // if (!array.foreach) {
-    if (!array || !Array.isArray(array)) {
-      throw new Error("Spy service filters is not an array.");
-    } else {
-      array.forEach((filter: any) => {
-        if (filter.chainId && filter.emitterAddress) {
-          logger.info(
-            "nativeToHexString: " +
-              nativeToHexString(filter.emitterAddress, filter.chainId)
-          );
-          spyServiceFilters.push({
-            chainId: filter.chainId as ChainId,
-            emitterAddress: filter.emitterAddress,
-          });
-        } else {
-          throw new Error("Invalid filter record. " + filter.toString());
-        }
-      });
-    }
   }
+  const array = JSON.parse(process.env.SPY_SERVICE_FILTERS);
+  if (!array || !Array.isArray(array)) {
+    throw new Error('Spy service filters is not an array.');
+  }
+  array.forEach((filter: any) => {
+    if (filter.chainId === undefined || filter.emitterAddress === undefined) {
+      throw new Error(`Invalid filter record: ${filter}`);
+    }
+    spyServiceFilters.push({
+      chainId: filter.chainId as ChainId,
+      emitterAddress: filter.emitterAddress as string,
+    })
+  })
 
   logger.info("Getting REST_PORT...");
   if (!process.env.REST_PORT) {
@@ -341,9 +333,6 @@ const createRelayerEnvironment: () => RelayerEnvironment = () => {
 export function loadChainConfig(): ChainConfigInfo[] {
   if (!process.env.SUPPORTED_CHAINS) {
     throw new Error("Missing required environment variable: SUPPORTED_CHAINS");
-  }
-  if (!process.env.PRIVATE_KEYS) {
-    throw new Error("Missing required environment variable: PRIVATE_KEYS");
   }
 
   const unformattedChains = JSON.parse(process.env.SUPPORTED_CHAINS);

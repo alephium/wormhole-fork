@@ -44,7 +44,7 @@
     "async-mutex": "^0.3.2",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "prom-client": "^14.0.1",
     "redis": "^4.0.1",
