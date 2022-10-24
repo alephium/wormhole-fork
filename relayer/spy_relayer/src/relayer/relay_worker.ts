@@ -211,10 +211,10 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
       }
       redisClient.quit();
       // metrics.setDemoWalletBalance(now.getUTCSeconds());
-      await sleep(AUDIT_INTERVAL_MS);
     } catch (e) {
       auditLogger.error("spawnAuditorThread: caught exception: " + e);
     }
+    await sleep(AUDIT_INTERVAL_MS);
   }
 }
 
