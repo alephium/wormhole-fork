@@ -11,6 +11,7 @@ import {
   RelayResult,
   resetPayload,
   Status,
+  storeKeyFromJson,
   StorePayload,
   storePayloadFromJson,
   storePayloadToJson,
@@ -365,18 +366,17 @@ async function findWorkableItems(
     for await (const si_key of redisClient.scanIterator()) {
       const si_value = await redisClient.get(si_key);
       if (si_value) {
-        let storePayload: StorePayload = storePayloadFromJson(si_value);
         // Check to see if this worker should handle this VAA
         if (workerInfo.targetChainId !== 0) {
-          const parsedVAA = parseVAA(hexToUint8Array(storePayload.vaa_bytes));
-          const tgtChainId = parsedVAA.body.targetChainId;
-          if (tgtChainId !== workerInfo.targetChainId) {
+          const storeKey = storeKeyFromJson(si_key)
+          if (storeKey.target_chain_id !== workerInfo.targetChainId) {
             // Skipping mismatched chainId
             continue;
           }
         }
 
         // Check to see if this is a retry and if it is time to retry
+        let storePayload: StorePayload = storePayloadFromJson(si_value);
         if (storePayload.retries > 0) {
           const BACKOFF_TIME = 1000; // 1 second in milliseconds
           const MAX_BACKOFF_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
@@ -443,7 +443,7 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
       workerInfo,
       relayLogger
     );
-    // relayLogger.debug("Found items: %o", workableItems);
+    relayLogger.debug("Found items: %o", workableItems);
     let i: number = 0;
     for (i = 0; i < workableItems.length; i++) {
       const workItem: WorkableItem = workableItems[i];

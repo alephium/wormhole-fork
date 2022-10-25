@@ -178,7 +178,8 @@ export type WorkerInfo = {
 };
 
 export type StoreKey = {
-  chain_id: number;
+  emitter_chain_id: number;
+  target_chain_id: number;
   emitter_address: string;
   sequence: number;
 };
@@ -208,8 +209,9 @@ export function storeKeyFromParsedVAA(
   parsedVAA: ParsedVaa<ParsedTransferPayload>
 ): StoreKey {
   return {
-    chain_id: parsedVAA.emitterChain as number,
+    emitter_chain_id: parsedVAA.emitterChain as number,
     emitter_address: uint8ArrayToHex(parsedVAA.emitterAddress),
+    target_chain_id: parsedVAA.targetChain as number,
     sequence: parsedVAA.sequence,
   };
 }
@@ -266,9 +268,11 @@ export async function pushVaaToRedis(
 
   logger.debug(
     "storing: key: [" +
-      storeKey.chain_id +
+      storeKey.emitter_chain_id +
       "/" +
       storeKey.emitter_address +
+      "/" +
+      storeKey.target_chain_id +
       "/" +
       storeKey.sequence +
       "], payload: [" +
@@ -348,11 +352,11 @@ export async function incrementSourceToTargetMap(
   const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(si_value).vaa_bytes))
   
   if (
-    sourceToTargetMap[parsedKey.chain_id as ChainId]?.[
+    sourceToTargetMap[parsedKey.emitter_chain_id as ChainId]?.[
       vaa.body.targetChainId
     ] !== undefined
   ) {
-    sourceToTargetMap[parsedKey.chain_id as ChainId][
+    sourceToTargetMap[parsedKey.emitter_chain_id as ChainId][
       vaa.body.targetChainId
     ]++;
   }
