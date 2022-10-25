@@ -23,3 +23,5 @@ bigtable-writer.json
 /solana/artifacts-testnet/
 /solana/artifacts-devnet/
 /solana/artifacts-mainnet/
+go.work
+go.work.sum
