@@ -1,7 +1,5 @@
 package ecdsasigner
 
-import "C"
-
 import (
 	"context"
 	"crypto/ecdsa"

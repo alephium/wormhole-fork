@@ -24,14 +24,15 @@ const GOVERNANCE_CHAIN = 1;
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
 
-function makeVAA(
+async function makeVAA(
   emitterChain: number,
   targetChain: number,
   emitterAddress: string,
   signers: string[],
   sequence: string | undefined,
-  p: Payload
-): VAA<Payload> {
+  p: Payload,
+  useKMS: boolean
+): Promise<VAA<Payload>> {
   let v: VAA<Payload> = {
     version: 1,
     guardianSetIndex: 0,
@@ -45,7 +46,13 @@ function makeVAA(
     consistencyLevel: 0,
     payload: p,
   };
-  v.signatures = vaa.sign(signers, v);
+
+  if (useKMS) {
+    v.signatures = await vaa.signWithKMS(signers, v);
+  } else {
+    v.signatures = vaa.signWithKey(signers, v);
+  }
+
   return v;
 }
 
@@ -116,15 +123,17 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              let v = makeVAA(
+              makeVAA(
                 GOVERNANCE_CHAIN,
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
-                payload
+                payload,
+                true
+              ).then((v) =>
+                console.log(serialiseVAA(v))
               );
-              console.log(serialiseVAA(v));
             }
           )
           // Upgrade
@@ -168,15 +177,17 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              let v = makeVAA(
+              makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
-                payload
-              );
-              console.log(serialiseVAA(v));
+                payload,
+                true
+              ).then((v) => {
+                console.log(serialiseVAA(v));
+              });
             }
           )
       );
