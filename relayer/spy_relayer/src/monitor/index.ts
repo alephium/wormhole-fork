@@ -1,4 +1,4 @@
-import { getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
+import { getRelayerEnvironment, RelayerEnvironment, validateRelayerConfig } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { collectWallets } from "./walletMonitor";
@@ -8,9 +8,7 @@ let metrics: PromHelper;
 const logger = getLogger();
 let relayerEnv: RelayerEnvironment;
 
-export function init(runWorker: boolean): boolean {
-  if (!runWorker) return true;
-
+export function init(): boolean {
   try {
     relayerEnv = getRelayerEnvironment();
   } catch (e) {
@@ -25,6 +23,7 @@ export function init(runWorker: boolean): boolean {
 
 export async function run(ph: PromHelper) {
   metrics = ph;
+  await validateRelayerConfig()
 
   try {
     collectWallets(metrics);

@@ -1,5 +1,6 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
   hexToNativeString,
   parseTransferPayload,
   parseVAA,
@@ -72,42 +73,21 @@ export async function parseAndValidateVaa(
   }
   const env = getListenerEnvironment();
 
-  //You have to derive all the emitter addresses from the native addresses, because emitter addresses cannot be mapped backwards to native.
-  //This is especially important because they are only uninvertible on Solana, and if you convert the emitter addresses to native,
-  //It will work for all chains except Solana.
-
-  //TODO calc emitter addresses, and compare against those, rather than getting the natives from the emitter
-
-  // const nativeAddress = hexToNativeString(
-  //   uint8ArrayToHex(parsedVaa.emitterAddress),
-  //   parsedVaa.emitterChain
-  // );
-
-  // logger.info("nativeAddress format for emitter address in validator:" + nativeAddress);
-
-  // const isApprovedAddress = env.spyServiceFilters.find((allowedContract) => {
-  //   console.log(
-  //     parsedVaa,
-  //     nativeAddress,
-  //     allowedContract.emitterAddress,
-  //     "in approved address"
-  //   );
-  //   return (
-  //     parsedVaa &&
-  //     nativeAddress &&
-  //     allowedContract.chainId === parsedVaa.emitterChain &&
-  //     allowedContract.emitterAddress.toLowerCase() ===
-  //       nativeAddress.toLowerCase()
-  //   );
-  // });
-
-  // if (!isApprovedAddress) {
-  //   logger.debug("Specified vaa is not from an approved address.");
-  //   return "VAA is not from a monitored contract.";
-  // }
+  const nativeAddress = parsedVaa.emitterChain === CHAIN_ID_ALEPHIUM
+    ? uint8ArrayToHex(parsedVaa.emitterAddress)
+    : hexToNativeString(uint8ArrayToHex(parsedVaa.emitterAddress), parsedVaa.emitterChain)
+  const isApprovedAddress = env.spyServiceFilters.some((allowedContract) =>
+    parsedVaa &&
+    nativeAddress &&
+    allowedContract.chainId === parsedVaa.emitterChain &&
+    allowedContract.emitterAddress.toLowerCase() === nativeAddress.toLowerCase()
+  )
+  if (!isApprovedAddress) {
+    logger.debug("Specified vaa is not from an approved address.");
+    return "VAA is not from a monitored contract.";
+  }
 
   const isCorrectPayloadType = parsedVaa.payload[0] === 1;
-
   if (!isCorrectPayloadType) {
     logger.debug("Specified vaa is not payload type 1.");
     return "Specified vaa is not payload type 1..";

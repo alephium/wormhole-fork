@@ -223,16 +223,17 @@ export function getChainConfigInfo(chainId: ChainId) {
   return env.supportedChains.find((x) => x.chainId === chainId) 
 }
 
-export async function validateAlephiumChainConfig() {
-  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM) as AlephiumChainConfigInfo
+export async function validateRelayerConfig() {
+  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM)
   if (chainConfigInfo === undefined) {
-    throw new Error('Chain config for Alephium does not exist')
+    return
   }
-  const groupIndex = chainConfigInfo.groupIndex
+  const alphConfigInfo = chainConfigInfo as AlephiumChainConfigInfo
+  const groupIndex = alphConfigInfo.groupIndex
   if (groupIndex === undefined) {
     throw new Error('No group index specified')
   }
-  const nodeProvider = new NodeProvider(chainConfigInfo.nodeUrl)
+  const nodeProvider = new NodeProvider(alphConfigInfo.nodeUrl)
   const chainParams = await nodeProvider.infos.getInfosChainParams()
   if (groupIndex < 0 || groupIndex >= chainParams.groups) {
     throw new Error(`Invalid chain group: ${groupIndex}`)

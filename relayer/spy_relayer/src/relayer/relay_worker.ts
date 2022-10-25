@@ -1,5 +1,5 @@
 import { CHAIN_ID_ALEPHIUM, hexToUint8Array, parseVAA } from "alephium-wormhole-sdk";
-import { getRelayerEnvironment, RelayerEnvironment, validateAlephiumChainConfig } from "../configureEnv";
+import { getRelayerEnvironment, RelayerEnvironment, validateRelayerConfig } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import {
@@ -36,9 +36,7 @@ type WorkableItem = {
   value: string;
 };
 
-export function init(runWorker: boolean): boolean {
-  if (!runWorker) return true;
-
+export function init(): boolean {
   try {
     relayerEnv = getRelayerEnvironment();
   } catch (e) {
@@ -221,6 +219,7 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
 
 export async function run(ph: PromHelper) {
   metrics = ph;
+  await validateRelayerConfig()
 
   if (relayerEnv.clearRedisOnInit) {
     logger.info("Clearing REDIS as per tunable...");
@@ -434,9 +433,6 @@ async function spawnWorkerThread(workerInfo: WorkerInfo) {
 
 async function doWorkerThread(workerInfo: WorkerInfo) {
   const relayLogger = getScopedLogger([`relay-worker-${workerInfo.index}`]);
-  if (workerInfo.targetChainId === CHAIN_ID_ALEPHIUM) {
-    await validateAlephiumChainConfig()
-  }
   while (true) {
     // relayLogger.debug("Finding workable items.");
     const workableItems: WorkableItem[] = await findWorkableItems(
