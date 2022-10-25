@@ -130,7 +130,7 @@ export async function parseAndValidateVaa(
     parsedPayload.originChain
   );
 
-  const isApprovedToken = env.supportedTokens.find((token) => {
+  const approvedToken = env.supportedTokens.find((token) => {
     return (
       originAddressNative &&
       token.address.toLowerCase() === originAddressNative.toLowerCase() &&
@@ -138,17 +138,15 @@ export async function parseAndValidateVaa(
     );
   });
 
-  if (!isApprovedToken) {
+  if (approvedToken === undefined) {
     logger.debug("Token transfer is not for an approved token.");
     return "Token transfer is not for an approved token.";
   }
 
-  //TODO configurable
-  const sufficientFee = parsedPayload.fee && parsedPayload.fee > 0;
-
-  if (!sufficientFee) {
-    logger.debug("Token transfer does not have a sufficient fee.");
-    return "Token transfer does not have a sufficient fee.";
+  if (parsedPayload.fee < approvedToken.minimalFee) {
+    const errorMessage = `Token transfer does not have a sufficient fee, tranfer fee: ${parsedPayload.fee}, minimal fee: ${approvedToken.minimalFee}`
+    logger.debug(errorMessage)
+    return errorMessage
   }
 
   const key = getKey(parsedPayload.originChain, originAddressNative as string); //was null checked above

@@ -3,8 +3,7 @@ import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  nativeToHexString,
+  CHAIN_ID_TERRA
 } from "alephium-wormhole-sdk";
 import { getLogger } from "./helpers/logHelper";
 
@@ -124,7 +123,7 @@ export type ListenerEnvironment = {
   spyServiceFilters: { chainId: ChainId; emitterAddress: string }[];
   restPort: number;
   numSpyWorkers: number;
-  supportedTokens: { chainId: ChainId; address: string }[];
+  supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[];
 };
 
 let listenerEnv: ListenerEnvironment | undefined = undefined;
@@ -144,7 +143,7 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   let spyServiceFilters: { chainId: ChainId; emitterAddress: string }[] = [];
   let restPort: number;
   let numSpyWorkers: number;
-  let supportedTokens: { chainId: ChainId; address: string }[] = [];
+  let supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[] = [];
   const logger = getLogger();
 
   if (!process.env.SPY_SERVICE_HOST) {
@@ -159,11 +158,11 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
       "Missing required environment variable: SPY_SERVICE_FILTERS"
     );
   }
-  const array = JSON.parse(process.env.SPY_SERVICE_FILTERS);
-  if (!array || !Array.isArray(array)) {
+  const filters = JSON.parse(process.env.SPY_SERVICE_FILTERS);
+  if (!filters || !Array.isArray(filters)) {
     throw new Error('Spy service filters is not an array.');
   }
-  array.forEach((filter: any) => {
+  filters.forEach((filter: any) => {
     if (filter.chainId === undefined || filter.emitterAddress === undefined) {
       throw new Error(`Invalid filter record: ${filter}`);
     }
@@ -183,31 +182,29 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   logger.info("Getting SPY_NUM_WORKERS...");
   if (!process.env.SPY_NUM_WORKERS) {
     throw new Error("Missing required environment variable: SPY_NUM_WORKERS");
-  } else {
-    numSpyWorkers = parseInt(process.env.SPY_NUM_WORKERS);
   }
+  numSpyWorkers = parseInt(process.env.SPY_NUM_WORKERS);
 
   logger.info("Getting SUPPORTED_TOKENS...");
   if (!process.env.SUPPORTED_TOKENS) {
     throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
-  } else {
-    // const array = JSON.parse(process.env.SUPPORTED_TOKENS);
-    const array = eval(process.env.SUPPORTED_TOKENS);
-    if (!array || !Array.isArray(array)) {
-      throw new Error("SUPPORTED_TOKENS is not an array.");
-    } else {
-      array.forEach((token: any) => {
-        if (token.chainId && token.address) {
-          supportedTokens.push({
-            chainId: token.chainId,
-            address: token.address,
-          });
-        } else {
-          throw new Error("Invalid token record. " + token.toString());
-        }
-      });
-    }
   }
+  // const array = JSON.parse(process.env.SUPPORTED_TOKENS);
+  const tokens = eval(process.env.SUPPORTED_TOKENS);
+  if (!tokens || !Array.isArray(tokens)) {
+    throw new Error("SUPPORTED_TOKENS is not an array.");
+  }
+  tokens.forEach((token: any) => {
+    if (token.chainId && token.address && token.minimalFee) {
+      supportedTokens.push({
+        chainId: token.chainId,
+        address: token.address,
+        minimalFee: BigInt(token.minimalFee)
+      });
+    } else {
+      throw new Error("Invalid token record: " + JSON.stringify(token));
+    }
+  })
 
   return {
     spyServiceHost,
