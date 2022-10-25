@@ -24,7 +24,7 @@ type KMSClient struct {
 	keyId     string
 	ctx       context.Context
 	publicKey *ecdsa.PublicKey
-	client    *kms.KeyManagementClient
+	Client    *kms.KeyManagementClient
 }
 
 func NewKMSClient(ctx context.Context, keyId string, opts ...option.ClientOption) (*KMSClient, error) {
@@ -42,7 +42,7 @@ func NewKMSClient(ctx context.Context, keyId string, opts ...option.ClientOption
 		keyId:     keyId,
 		ctx:       ctx,
 		publicKey: pubKey,
-		client:    client,
+		Client:    client,
 	}, nil
 }
 
@@ -57,7 +57,7 @@ func (c KMSClient) Sign(digest []byte) ([]byte, error) {
 		},
 	}
 
-	signResult, err := c.client.AsymmetricSign(c.ctx, req)
+	signResult, err := c.Client.AsymmetricSign(c.ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to sign with KMS: %w", err)
 	}

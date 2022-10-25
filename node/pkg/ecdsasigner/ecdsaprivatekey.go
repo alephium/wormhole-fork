@@ -6,13 +6,13 @@ import (
 )
 
 type ECDSAPrivateKey struct {
-	value *ecdsa.PrivateKey
+	Value *ecdsa.PrivateKey
 }
 
 func (k ECDSAPrivateKey) Sign(digestHash []byte) (sig []byte, err error) {
-	return crypto.Sign(digestHash, k.value)
+	return crypto.Sign(digestHash, k.Value)
 }
 
 func (k ECDSAPrivateKey) PublicKey() ecdsa.PublicKey {
-	return k.value.PublicKey
+	return k.Value.PublicKey
 }
