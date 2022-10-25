@@ -122,7 +122,6 @@ export type ListenerEnvironment = {
   spyServiceHost: string;
   spyServiceFilters: { chainId: ChainId; emitterAddress: string }[];
   restPort: number;
-  numSpyWorkers: number;
   supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[];
 };
 
@@ -142,7 +141,6 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   let spyServiceHost: string;
   let spyServiceFilters: { chainId: ChainId; emitterAddress: string }[] = [];
   let restPort: number;
-  let numSpyWorkers: number;
   let supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[] = [];
   const logger = getLogger();
 
@@ -179,12 +177,6 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
     restPort = parseInt(process.env.REST_PORT);
   }
 
-  logger.info("Getting SPY_NUM_WORKERS...");
-  if (!process.env.SPY_NUM_WORKERS) {
-    throw new Error("Missing required environment variable: SPY_NUM_WORKERS");
-  }
-  numSpyWorkers = parseInt(process.env.SPY_NUM_WORKERS);
-
   logger.info("Getting SUPPORTED_TOKENS...");
   if (!process.env.SUPPORTED_TOKENS) {
     throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
@@ -210,7 +202,6 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
     spyServiceHost,
     spyServiceFilters,
     restPort,
-    numSpyWorkers,
     supportedTokens,
   };
 };

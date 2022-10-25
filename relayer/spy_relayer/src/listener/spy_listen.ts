@@ -1,6 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
@@ -22,7 +23,6 @@ import {
   ParsedTransferPayload,
   ParsedVaa,
 } from "./validation";
-import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 let metrics: PromHelper;
 let env: ListenerEnvironment;
@@ -74,7 +74,6 @@ export async function run(ph: PromHelper) {
         ),
       },
     };
-    logger.info("Getting spyServiceFilterc " + i);
     logger.info(
       "adding filter: chainId: [" +
         typedFilter.emitterFilter.chainId +
@@ -82,9 +81,7 @@ export async function run(ph: PromHelper) {
         typedFilter.emitterFilter.emitterAddress +
         "]"
     );
-    logger.info("Getting spyServiceFilterd " + i);
     typedFilters.push(typedFilter);
-    logger.info("Getting spyServiceFiltere " + i);
   }
 
   logger.info(
@@ -161,20 +158,24 @@ async function processVaa(rawVaa: Uint8Array) {
 }
 
 async function encodeEmitterAddress(
-  myChainId: ChainId,
-  emitterAddressStr: string
+  emitterChainId: ChainId,
+  emitterAddress: string
 ): Promise<string> {
-  if (myChainId === CHAIN_ID_SOLANA) {
-    return await getEmitterAddressSolana(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_ALEPHIUM) {
+    return emitterAddress
   }
 
-  if (myChainId === CHAIN_ID_TERRA) {
-    return await getEmitterAddressTerra(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_ETH) {
+    return getEmitterAddressEth(emitterAddress)
   }
 
-  if (myChainId === CHAIN_ID_ALEPHIUM) {
-    return emitterAddressStr
+  if (emitterChainId === CHAIN_ID_SOLANA) {
+    return await getEmitterAddressSolana(emitterAddress);
   }
 
-  return getEmitterAddressEth(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_TERRA) {
+    return await getEmitterAddressTerra(emitterAddress);
+  }
+
+  throw new Error(`Unsupported chain: ${emitterChainId}`)
 }
