@@ -7,9 +7,9 @@ import {
   getForeignAssetTerra,
   hexToUint8Array,
   isEVMChain,
-  nativeToHexString,
   WSOL_DECIMALS,
-  getTokenPoolId
+  getTokenPoolId,
+  tryNativeToHexString
 } from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair } from "@solana/web3.js";
@@ -32,7 +32,7 @@ import { getEthereumToken } from "../utils/ethereum";
 import { getMultipleAccountsRPC } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
-import { addressFromContractId, NodeProvider, web3 } from "@alephium/web3"
+import { addressFromContractId, binToHex, NodeProvider, tokenIdFromAddress, web3 } from "@alephium/web3"
 import { PrivateKeyWallet } from "@alephium/web3-wallet";
 import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
 
@@ -360,9 +360,7 @@ async function calcLocalAddressesEVM(
       tokenAddressPromises.push(Promise.resolve(supportedToken.address));
       continue;
     }
-    const hexAddress = supportedToken.chainId === CHAIN_ID_ALEPHIUM
-      ? supportedToken.address
-      : nativeToHexString(supportedToken.address, supportedToken.chainId)
+    const hexAddress = tryNativeToHexString(supportedToken.address, supportedToken.chainId)
     if (!hexAddress) {
       logger.debug(
         "calcLocalAddressesEVM() - no hexAddress for chainId: " +
@@ -399,7 +397,7 @@ export async function calcLocalAddressesTerra(
       }
       continue;
     }
-    const hexAddress = nativeToHexString(
+    const hexAddress = tryNativeToHexString(
       supportedToken.address,
       supportedToken.chainId
     );
@@ -472,6 +470,7 @@ async function pullAllEVMTokens(
           isNative: false,
           walletAddress: publicAddress,
         }));
+        logger.debug(`Ethereum wallet balances: ${JSON.stringify(balances)}`)
         metrics.handleWalletBalances(balances);
       } catch (e) {
         logger.error(
@@ -557,20 +556,20 @@ async function pullAllAlephiumBalances(
 
     for (const token of supportedTokens) {
       if (token.chainId === CHAIN_ID_ALEPHIUM) {
-        const tokenBalance = balances.tokenBalances?.find(t => t.id === token.address)
+        const tokenId = binToHex(tokenIdFromAddress(token.address))
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
         const amount = tokenBalance?.amount ?? '0'
         walletBalances.push({
           chainId: chainConfig.chainId,
           balanceAbs: amount,
           balanceFormatted: amount,
           currencyName: '', // TODO: get token name from config
-          currencyAddressNative: addressFromContractId(token.address),
+          currencyAddressNative: token.address,
           isNative: false,
           walletAddress: account.address
         })
       } else {
-        const hasPrefix = token.address.startsWith('0x') || token.address.startsWith('0X')
-        const originTokenId = hasPrefix ? token.address.slice(2) : token.address
+        const originTokenId = tryNativeToHexString(token.address, token.chainId)
         const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
         const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
         const amount = tokenBalance?.amount ?? '0'
@@ -591,5 +590,6 @@ async function pullAllAlephiumBalances(
       }
     }
   }
+  logger.debug(`Alephium wallet balances: ${JSON.stringify(walletBalances)}`)
   metrics.handleWalletBalances(walletBalances)
 }
