@@ -121,6 +121,7 @@ export async function relay(
     if (targetChainId === CHAIN_ID_ALEPHIUM) {
       const alphConfigInfo = chainConfigInfo as AlephiumChainConfigInfo
       const redeemResult = await relayAlph(
+        parsedVAA.body.emitterChainId,
         alphConfigInfo,
         signedVAA,
         checkOnly,

@@ -1,5 +1,7 @@
 import {
+  ChainId,
   getIsTransferCompletedAlph,
+  getTokenBridgeForChainId,
   hexToUint8Array,
   redeemOnAlph
 } from "alephium-wormhole-sdk";
@@ -9,6 +11,7 @@ import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 
 export async function relayAlph(
+  emitterChainId: ChainId,
   chainConfigInfo: AlephiumChainConfigInfo,
   signedVAA: string,
   checkOnly: boolean,
@@ -27,9 +30,10 @@ export async function relayAlph(
   const signedVaaArray = hexToUint8Array(signedVAA)
 
   logger.debug('Checking to see if vaa has already been redeemed.')
+  const tokenBridgeForChainId = getTokenBridgeForChainId(chainConfigInfo.tokenBridgeAddress, emitterChainId)
   const alreadyRedeemed = await getIsTransferCompletedAlph(
     signer.nodeProvider,
-    chainConfigInfo.tokenBridgeAddress,
+    tokenBridgeForChainId,
     groupIndex,
     signedVaaArray
   )
@@ -45,7 +49,7 @@ export async function relayAlph(
   logger.info(`Will redeem using pubkey: ${(await signer.getSelectedAccount()).address}`)
 
   logger.debug('Redeeming...')
-  const result = await redeemOnAlph(signer, chainConfigInfo.tokenBridgeAddress, signedVaaArray)
+  const result = await redeemOnAlph(signer, tokenBridgeForChainId, signedVaaArray)
   logger.info(`Redeem transaction tx id: ${result.txId}`)
 
   metrics.incSuccesses(chainConfigInfo.chainId)
