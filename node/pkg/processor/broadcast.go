@@ -2,9 +2,10 @@ package processor
 
 import (
 	"encoding/hex"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -26,7 +27,7 @@ func (p *Processor) broadcastSignature(v *vaa.VAA, signature []byte, txhash []by
 	digest := v.SigningMsg()
 
 	obsv := gossipv1.SignedObservation{
-		Addr:      crypto.PubkeyToAddress((*p.guardianSigner).PublicKey()).Bytes(),
+		Addr:      crypto.PubkeyToAddress(p.guardianSigner.PublicKey()).Bytes(),
 		Hash:      digest.Bytes(),
 		Signature: signature,
 		TxHash:    txhash,

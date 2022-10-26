@@ -45,7 +45,7 @@ func NewKMSClient(ctx context.Context, keyId string, opts ...option.ClientOption
 }
 
 // ECDSASigner methods
-func (c KMSClient) Sign(digest []byte) ([]byte, error) {
+func (c *KMSClient) Sign(digest []byte) ([]byte, error) {
 	req := &kmspb.AsymmetricSignRequest{
 		Name: c.keyId,
 		Digest: &kmspb.Digest{
@@ -70,7 +70,7 @@ func (c KMSClient) Sign(digest []byte) ([]byte, error) {
 	return sig, nil
 }
 
-func (c KMSClient) PublicKey() ecdsa.PublicKey {
+func (c *KMSClient) PublicKey() ecdsa.PublicKey {
 	return *c.publicKey
 }
 

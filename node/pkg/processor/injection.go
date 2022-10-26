@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"encoding/hex"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -30,7 +31,7 @@ func (p *Processor) handleInjection(ctx context.Context, v *vaa.VAA) {
 		zap.String("digest", hex.EncodeToString(digest.Bytes())))
 
 	// Sign the digest using our node's guardian key.
-	s, err := (*p.guardianSigner).Sign(digest.Bytes())
+	s, err := p.guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		panic(err)
 	}
