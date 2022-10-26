@@ -4,8 +4,7 @@ import {
   hexToNativeString,
   parseTransferPayload,
   parseVAA,
-  uint8ArrayToHex,
-  VAA,
+  uint8ArrayToHex
 } from "alephium-wormhole-sdk";
 import { getListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";

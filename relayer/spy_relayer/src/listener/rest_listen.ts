@@ -1,16 +1,8 @@
 import { uint8ArrayToHex } from "alephium-wormhole-sdk";
-import { importCoreWasm } from "alephium-wormhole-sdk/lib/cjs/solana/wasm";
 import { Request, Response } from "express";
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
-import {
-  initPayloadWithVAA,
-  pushVaaToRedis,
-  storeInRedis,
-  storeKeyFromParsedVAA,
-  storeKeyToJson,
-  storePayloadToJson,
-} from "../helpers/redisHelper";
+import { pushVaaToRedis } from "../helpers/redisHelper";
 import {
   parseAndValidateVaa,
   ParsedTransferPayload,

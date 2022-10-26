@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, hexToUint8Array, parseVAA } from "alephium-wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 import { getRelayerEnvironment, RelayerEnvironment, validateRelayerConfig } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -25,6 +25,10 @@ const AUDITOR_THREAD_RESTART_MS = 10 * 1000;
 const AUDIT_INTERVAL_MS = 30 * 1000;
 const WORKER_INTERVAL_MS = 5 * 1000;
 const REDIS_RETRY_MS = 10 * 1000;
+
+const BACKOFF_TIME = 1000; // 1 second in milliseconds
+const MAX_BACKOFF_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+const MAX_RETRIES = 10;
 
 let metrics: PromHelper;
 
@@ -120,26 +124,20 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
         }
       }
       await redisClient.select(RedisTables.WORKING);
-      for await (const si_key of redisClient.scanIterator()) {
-        const si_value = await redisClient.get(si_key);
-        if (!si_value) {
-          continue;
+      for await (const siKey of redisClient.scanIterator()) {
+        const storeKey = storeKeyFromJson(siKey)
+        if (storeKey.targetChainId !== workerInfo.targetChainId) {
+          continue
         }
 
-        const storePayload: StorePayload = storePayloadFromJson(si_value);
-        try {
-          const parsedVAA = parseVAA(hexToUint8Array(storePayload.vaa_bytes));
-          if (parsedVAA.body.targetChainId !== workerInfo.targetChainId) {
-            continue;
-          }
-        } catch (e) {
-          auditLogger.error("Failed to parse a stored VAA: " + e);
-          auditLogger.error("si_value of failure: " + si_value);
+        const siValue = await redisClient.get(siKey);
+        if (!siValue) {
           continue;
         }
+        const storePayload: StorePayload = storePayloadFromJson(siValue);
         auditLogger.debug(
           "key %s => status: %s, timestamp: %s, retries: %d",
-          si_key,
+          siKey,
           Status[storePayload.status],
           storePayload.timestamp,
           storePayload.retries
@@ -167,7 +165,7 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
           if (storePayload.status === Status.FatalError) {
             // Done with this failed transaction
             auditLogger.debug("Discarding FatalError.");
-            await redisClient.del(si_key);
+            await redisClient.del(siKey);
             continue;
           } else if (storePayload.status === Status.Completed) {
             // Check for rollback
@@ -175,24 +173,24 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
 
             //TODO actually do an isTransferCompleted
             const rr = await relay(
-              storePayload.vaa_bytes,
+              storePayload.vaaBytes,
               true,
               workerInfo.walletPrivateKey,
               auditLogger,
               metrics
             );
 
-            await redisClient.del(si_key);
+            await redisClient.del(siKey);
             if (rr.status === Status.Completed) {
               metrics.incConfirmed(workerInfo.targetChainId);
             } else {
-              auditLogger.info("Detected a rollback on " + si_key);
+              auditLogger.info("Detected a rollback on " + siKey);
               metrics.incRollback(workerInfo.targetChainId);
               // Remove this item from the WORKING table and move it to INCOMING
               await redisClient.select(RedisTables.INCOMING);
               await redisClient.set(
-                si_key,
-                storePayloadToJson(resetPayload(storePayloadFromJson(si_value)))
+                siKey,
+                storePayloadToJson(resetPayload(storePayloadFromJson(siValue)))
               );
               await redisClient.select(RedisTables.WORKING);
             }
@@ -242,44 +240,28 @@ export async function run(ph: PromHelper) {
 }
 
 async function processRequest(
-  key: string,
+  item: WorkableItem,
   myPrivateKey: any,
   relayLogger: ScopedLogger
 ) {
   const logger = getScopedLogger(["processRequest"], relayLogger);
   try {
-    logger.debug("Processing request %s...", key);
-    // Get the entry from the working store
-    const rClient = await connectToRedis();
-    if (!rClient) {
-      logger.error("Failed to connect to Redis in processRequest");
-      return;
-    }
-    await rClient.select(RedisTables.WORKING);
-    let value: string | null = await rClient.get(key);
-    if (!value) {
-      logger.error("Could not find key %s", key);
-      return;
-    }
-    let payload: StorePayload = storePayloadFromJson(value);
-    if (payload.status !== Status.Pending) {
-      logger.info("This key %s has already been processed.", key);
-      return;
-    }
+    logger.debug("Processing request %s...", item.key);
+    let payload: StorePayload = storePayloadFromJson(item.value);
     // Actually do the processing here and update status and time field
     let relayResult: RelayResult;
     try {
       if (payload.retries > 0) {
         logger.info(
           "Calling with vaa_bytes %s, retry %d",
-          payload.vaa_bytes,
+          payload.vaaBytes,
           payload.retries
         );
       } else {
-        logger.info("Calling with vaa_bytes %s", payload.vaa_bytes);
+        logger.info("Calling with vaa_bytes %s", payload.vaaBytes);
       }
       relayResult = await relay(
-        payload.vaa_bytes,
+        payload.vaaBytes,
         false,
         myPrivateKey,
         logger,
@@ -302,12 +284,8 @@ async function processRequest(
       }
     }
 
-    const MAX_RETRIES = 10;
-    let targetChain: any = 0; // 0 is unspecified, but not covered by the SDK
-    try {
-      const parsedVAA = parseVAA(hexToUint8Array(payload.vaa_bytes));
-      targetChain = parsedVAA.body.targetChainId;
-    } catch (e) {}
+    const storeKey = storeKeyFromJson(item.key)
+    const targetChain = storeKey.targetChainId as ChainId
     let retry: boolean = false;
     if (relayResult.status !== Status.Completed) {
       metrics.incFailures(targetChain);
@@ -327,22 +305,28 @@ async function processRequest(
     payload.status = relayResult.status;
     payload.timestamp = new Date().toISOString();
     payload.retries++;
-    value = storePayloadToJson(payload);
+    const newValue = storePayloadToJson(payload);
+
+    const rClient = await connectToRedis();
+    if (!rClient) {
+      logger.error("Failed to connect to Redis in processRequest");
+      return;
+    }
+    await rClient.select(RedisTables.WORKING);
     if (!retry || payload.retries > MAX_RETRIES) {
-      await rClient.set(key, value);
+      await rClient.set(item.key, newValue);
     } else {
       // Remove from the working table
-      await rClient.del(key);
+      await rClient.del(item.key);
       // Put this back into the incoming table
       await rClient.select(RedisTables.INCOMING);
-      await rClient.set(key, value);
+      await rClient.set(item.key, newValue);
     }
     await rClient.quit();
   } catch (e: any) {
     logger.error("Unexpected error in processRequest: " + e.message);
-    logger.error("request key: " + key);
+    logger.error("request key: " + item.key);
     logger.error(e);
-    return [];
   }
 }
 
@@ -368,17 +352,15 @@ async function findWorkableItems(
         // Check to see if this worker should handle this VAA
         if (workerInfo.targetChainId !== 0) {
           const storeKey = storeKeyFromJson(si_key)
-          if (storeKey.target_chain_id !== workerInfo.targetChainId) {
+          if (storeKey.targetChainId !== workerInfo.targetChainId) {
             // Skipping mismatched chainId
             continue;
           }
         }
 
         // Check to see if this is a retry and if it is time to retry
-        let storePayload: StorePayload = storePayloadFromJson(si_value);
+        const storePayload: StorePayload = storePayloadFromJson(si_value);
         if (storePayload.retries > 0) {
-          const BACKOFF_TIME = 1000; // 1 second in milliseconds
-          const MAX_BACKOFF_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
           // calculate retry time
           const now: Date = new Date();
           const old: Date = new Date(storePayload.timestamp);
@@ -440,8 +422,7 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
       relayLogger
     );
     relayLogger.debug("Found items: %o", workableItems);
-    let i: number = 0;
-    for (i = 0; i < workableItems.length; i++) {
+    for (let i = 0; i < workableItems.length; i++) {
       const workItem: WorkableItem = workableItems[i];
       if (workItem) {
         //This will attempt to move the workable item to the WORKING table
@@ -449,7 +430,7 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
         if (await moveToWorking(workItem, relayLogger)) {
           relayLogger.info("Moved key to WORKING table: %s", workItem.key);
           await processRequest(
-            workItem.key,
+            workItem,
             workerInfo.walletPrivateKey,
             relayLogger
           );

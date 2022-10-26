@@ -173,19 +173,19 @@ export type RelayResult = {
 
 export type WorkerInfo = {
   index: number;
-  targetChainId: number;
+  targetChainId: ChainId;
   walletPrivateKey: string | Uint8Array;
 };
 
 export type StoreKey = {
-  emitter_chain_id: number;
-  target_chain_id: number;
-  emitter_address: string;
+  emitterChainId: ChainId;
+  targetChainId: ChainId;
+  emitterAddress: string;
   sequence: number;
 };
 
 export type StorePayload = {
-  vaa_bytes: string;
+  vaaBytes: string;
   status: Status;
   timestamp: string;
   retries: number;
@@ -193,15 +193,15 @@ export type StorePayload = {
 
 export function initPayload(): StorePayload {
   return {
-    vaa_bytes: "",
+    vaaBytes: "",
     status: Status.Pending,
     timestamp: new Date().toISOString(),
     retries: 0,
   };
 }
-export function initPayloadWithVAA(vaa_bytes: string): StorePayload {
+export function initPayloadWithVAA(vaaBytes: string): StorePayload {
   const sp: StorePayload = initPayload();
-  sp.vaa_bytes = vaa_bytes;
+  sp.vaaBytes = vaaBytes;
   return sp;
 }
 
@@ -209,9 +209,9 @@ export function storeKeyFromParsedVAA(
   parsedVAA: ParsedVaa<ParsedTransferPayload>
 ): StoreKey {
   return {
-    emitter_chain_id: parsedVAA.emitterChain as number,
-    emitter_address: uint8ArrayToHex(parsedVAA.emitterAddress),
-    target_chain_id: parsedVAA.targetChain as number,
+    emitterChainId: parsedVAA.emitterChain,
+    emitterAddress: uint8ArrayToHex(parsedVAA.emitterAddress),
+    targetChainId: parsedVAA.targetChain,
     sequence: parsedVAA.sequence,
   };
 }
@@ -233,7 +233,7 @@ export function storePayloadFromJson(json: string): StorePayload {
 }
 
 export function resetPayload(storePayload: StorePayload): StorePayload {
-  return initPayloadWithVAA(storePayload.vaa_bytes);
+  return initPayloadWithVAA(storePayload.vaaBytes);
 }
 
 export async function pushVaaToRedis(
@@ -268,11 +268,11 @@ export async function pushVaaToRedis(
 
   logger.debug(
     "storing: key: [" +
-      storeKey.emitter_chain_id +
+      storeKey.emitterChainId +
       "/" +
-      storeKey.emitter_address +
+      storeKey.emitterAddress +
       "/" +
-      storeKey.target_chain_id +
+      storeKey.targetChainId +
       "/" +
       storeKey.sequence +
       "], payload: [" +
@@ -349,14 +349,14 @@ export async function incrementSourceToTargetMap(
   if (!si_value) {
     return;
   }
-  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(si_value).vaa_bytes))
+  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(si_value).vaaBytes))
   
   if (
-    sourceToTargetMap[parsedKey.emitter_chain_id as ChainId]?.[
+    sourceToTargetMap[parsedKey.emitterChainId as ChainId]?.[
       vaa.body.targetChainId
     ] !== undefined
   ) {
-    sourceToTargetMap[parsedKey.emitter_chain_id as ChainId][
+    sourceToTargetMap[parsedKey.emitterChainId as ChainId][
       vaa.body.targetChainId
     ]++;
   }
