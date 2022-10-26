@@ -5,7 +5,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
-import { VAA } from "../utils";
+import { extractSequenceFromVAA } from "../utils";
 import { NodeProvider, node, addressFromContractId, subContractId } from "@alephium/web3";
 import {
   BITS_PER_KEY,
@@ -56,7 +56,7 @@ export async function getIsTransferCompletedAlph(
   const start = BigInt((fields[5] as node.ValU256).value)
   const firstNext256 = BigInt((fields[6] as node.ValU256).value)
   const secondNext256 = BigInt((fields[7] as node.ValU256).value)
-  const sequence = BigInt(VAA.from(signedVAA).body.sequence)
+  const sequence = extractSequenceFromVAA(signedVAA)
 
   if (sequence < start) {
     return isSequenceExecuted(provider, tokenBridgeForChainId, sequence, groupIndex)
