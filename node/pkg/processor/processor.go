@@ -68,7 +68,7 @@ type Processor struct {
 	injectC chan *vaa.VAA
 
 	// Node's guardian signer
-	guardianSigner *ecdsasigner.ECDSASigner
+	guardianSigner ecdsasigner.ECDSASigner
 
 	// devnetMode specified whether to submit transactions to the hardcoded Ethereum devnet
 	devnetMode         bool
@@ -108,7 +108,7 @@ func NewProcessor(
 	obsvC chan *gossipv1.SignedObservation,
 	injectC chan *vaa.VAA,
 	signedInC chan *gossipv1.SignedVAAWithQuorum,
-	guardianSigner *ecdsasigner.ECDSASigner,
+	guardianSigner ecdsasigner.ECDSASigner,
 	gst *common.GuardianSetState,
 	devnetMode bool,
 	devnetNumGuardians uint,
@@ -137,7 +137,7 @@ func NewProcessor(
 
 		logger:  supervisor.Logger(ctx),
 		state:   &aggregationState{vaaMap{}},
-		ourAddr: crypto.PubkeyToAddress((*guardianSigner).PublicKey()),
+		ourAddr: crypto.PubkeyToAddress(guardianSigner.PublicKey()),
 	}
 }
 

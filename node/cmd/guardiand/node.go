@@ -672,7 +672,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		if err != nil {
 			logger.Fatal("Failed to load guardian key from file", zap.Error(err))
 		}
-		guardianSigner = ecdsasigner.ECDSAPrivateKey{Value: gk}
+		guardianSigner = &ecdsasigner.ECDSAPrivateKey{Value: gk}
 	}
 
 	guardianPubkey := guardianSigner.PublicKey()
@@ -845,7 +845,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// Run supervisor.
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx, "p2p", p2p.Run(
-			obsvC, obsvReqC, obsvReqSendC, sendC, signedInC, priv, &guardianSigner, gst, *p2pPort, *p2pNetworkID, *p2pBootstrap, *nodeName, *disableHeartbeatVerify, rootCtxCancel)); err != nil {
+			obsvC, obsvReqC, obsvReqSendC, sendC, signedInC, priv, guardianSigner, gst, *p2pPort, *p2pNetworkID, *p2pBootstrap, *nodeName, *disableHeartbeatVerify, rootCtxCancel)); err != nil {
 			return err
 		}
 
@@ -965,7 +965,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			obsvC,
 			injectC,
 			signedInC,
-			&guardianSigner,
+			guardianSigner,
 			gst,
 			*unsafeDevMode,
 			*devNumGuardians,

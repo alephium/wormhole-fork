@@ -45,7 +45,7 @@ func NewKMSClient(ctx context.Context, keyId string, opts ...option.ClientOption
 }
 
 // ECDSASigner methods
-func (c KMSClient) Sign(digest []byte) ([]byte, error) {
+func (c *KMSClient) Sign(digest []byte) ([]byte, error) {
 	req := &kmspb.AsymmetricSignRequest{
 		Name: c.keyId,
 		Digest: &kmspb.Digest{
@@ -70,7 +70,7 @@ func (c KMSClient) Sign(digest []byte) ([]byte, error) {
 	return sig, nil
 }
 
-func (c KMSClient) PublicKey() ecdsa.PublicKey {
+func (c *KMSClient) PublicKey() ecdsa.PublicKey {
 	return *c.publicKey
 }
 
@@ -147,15 +147,13 @@ func parseSignature(kmsSignature []byte, digest []byte, pubKey ethcommon.Address
 }
 
 func appendV(sig []byte, digest []byte, pubKey ethcommon.Address) ([]byte, error) {
-	sigWithV := append(sig, 0)
-
 	for i := 0; i < 4; i++ {
+		sigWithV := append(sig, byte(i))
 		pk, err := ethcrypto.Ecrecover(digest, sigWithV)
 		signer_pk := ethcommon.BytesToAddress(ethcrypto.Keccak256(pk[1:])[12:])
 		if err == nil && signer_pk == pubKey {
 			return sigWithV, nil
 		}
-		sigWithV = append(sig, byte(i))
 	}
 
 	return nil, fmt.Errorf("Can not append V for KMS signature")

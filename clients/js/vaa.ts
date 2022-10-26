@@ -232,8 +232,8 @@ export async function signWithKMS(signers: string[], vaa: VAA<Payload>): Promise
         })
 
         const pubKey = await kmsClient.getPublicKey({ name: keyName })
-        const p2 = createPublicKey(pubKey[0].pem)
-        let pubKeyBuf = p2.export({ format: "der", type: "spki" });
+        const pubKeyObj = createPublicKey(pubKey[0].pem)
+        let pubKeyBuf = pubKeyObj.export({ format: "der", type: "spki" });
         pubKeyBuf = pubKeyBuf.slice(pubKeyBuf.length - 65)
 
         let _64 = signatureImport(signResponse.signature as Uint8Array);

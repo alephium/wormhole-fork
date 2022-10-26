@@ -16,7 +16,7 @@ func TestKMS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to setup KMS client: %v", err)
 	}
-	defer kmsClient.client.Close()
+	defer kmsClient.Client.Close()
 	verifySigner(t, kmsClient)
 }
 
@@ -26,7 +26,7 @@ func TestPrivateKey(t *testing.T) {
 		t.Fatal("Failed to generate key", err)
 	}
 
-	verifySigner(t, ECDSAPrivateKey{value: gk})
+	verifySigner(t, &ECDSAPrivateKey{Value: gk})
 }
 
 func verifySigner(t *testing.T, guardianSigner ECDSASigner) {
