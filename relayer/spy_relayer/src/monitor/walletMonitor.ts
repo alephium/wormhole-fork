@@ -540,56 +540,60 @@ async function pullAllAlephiumBalances(
   const nodeProvider = new NodeProvider(chainConfig.nodeUrl)
   web3.setCurrentNodeProvider(nodeProvider)
   const walletBalances: WalletBalance[] = []
-  for (const mnemonic of chainConfig.walletPrivateKeys as string[]) {
-    const wallet = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
-    const account = await wallet.getSelectedAccount()
-    const balances = await nodeProvider.addresses.getAddressesAddressBalance(account.address)
-    walletBalances.push({
-      chainId: chainConfig.chainId,
-      balanceAbs: balances.balance,
-      balanceFormatted: balances.balanceHint.slice(0, -5),
-      currencyName: 'ALPH',
-      currencyAddressNative: '',
-      isNative: true,
-      walletAddress: account.address
-    })
+  try {
+    for (const mnemonic of chainConfig.walletPrivateKeys as string[]) {
+      const wallet = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
+      const account = await wallet.getSelectedAccount()
+      const balances = await nodeProvider.addresses.getAddressesAddressBalance(account.address)
+      walletBalances.push({
+        chainId: chainConfig.chainId,
+        balanceAbs: balances.balance,
+        balanceFormatted: balances.balanceHint.slice(0, -5),
+        currencyName: 'ALPH',
+        currencyAddressNative: '',
+        isNative: true,
+        walletAddress: account.address
+      })
 
-    for (const token of supportedTokens) {
-      if (token.chainId === CHAIN_ID_ALEPHIUM) {
-        const tokenId = binToHex(tokenIdFromAddress(token.address))
-        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
-        const amount = tokenBalance?.amount ?? '0'
-        walletBalances.push({
-          chainId: chainConfig.chainId,
-          balanceAbs: amount,
-          balanceFormatted: amount,
-          currencyName: '', // TODO: get token name from config
-          currencyAddressNative: token.address,
-          isNative: false,
-          walletAddress: account.address
-        })
-      } else {
-        const originTokenId = tryNativeToHexString(token.address, token.chainId)
-        const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
-        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
-        const amount = tokenBalance?.amount ?? '0'
-        const contractAddress = addressFromContractId(tokenId)
-        // TODO: move this to SDK
-        const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
-        const name = (contractState.fields[5] as ValByteVec).value
-        const decimals = parseInt((contractState.fields[6] as ValU256).value)
-        walletBalances.push({
-          chainId: chainConfig.chainId,
-          balanceAbs: amount,
-          balanceFormatted: formatUnits(amount, decimals),
-          currencyName: name,
-          currencyAddressNative: contractAddress,
-          isNative: false,
-          walletAddress: account.address
-        })
+      for (const token of supportedTokens) {
+        if (token.chainId === CHAIN_ID_ALEPHIUM) {
+          const tokenId = binToHex(tokenIdFromAddress(token.address))
+          const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+          const amount = tokenBalance?.amount ?? '0'
+          walletBalances.push({
+            chainId: chainConfig.chainId,
+            balanceAbs: amount,
+            balanceFormatted: amount,
+            currencyName: '', // TODO: get token name from config
+            currencyAddressNative: token.address,
+            isNative: false,
+            walletAddress: account.address
+          })
+        } else {
+          const originTokenId = tryNativeToHexString(token.address, token.chainId)
+          const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
+          const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+          const amount = tokenBalance?.amount ?? '0'
+          const contractAddress = addressFromContractId(tokenId)
+          // TODO: move this to SDK
+          const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
+          const name = (contractState.fields[5] as ValByteVec).value
+          const decimals = parseInt((contractState.fields[6] as ValU256).value)
+          walletBalances.push({
+            chainId: chainConfig.chainId,
+            balanceAbs: amount,
+            balanceFormatted: formatUnits(amount, decimals),
+            currencyName: name,
+            currencyAddressNative: contractAddress,
+            isNative: false,
+            walletAddress: account.address
+          })
+        }
       }
     }
+    logger.debug(`Alephium wallet balances: ${JSON.stringify(walletBalances)}`)
+    metrics.handleWalletBalances(walletBalances)
+  } catch (error) {
+    logger.error(`Failed to pull Alephium wallet balances, error: ${error}`)
   }
-  logger.debug(`Alephium wallet balances: ${JSON.stringify(walletBalances)}`)
-  metrics.handleWalletBalances(walletBalances)
 }
