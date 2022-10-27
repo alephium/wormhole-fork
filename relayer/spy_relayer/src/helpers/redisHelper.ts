@@ -345,11 +345,11 @@ export async function incrementSourceToTargetMap(
   sourceToTargetMap: SourceToTargetMap
 ): Promise<void> {
   const parsedKey = storeKeyFromJson(key);
-  const si_value = await redisClient.get(key);
-  if (!si_value) {
+  const siValue = await redisClient.get(key);
+  if (!siValue) {
     return;
   }
-  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(si_value).vaaBytes))
+  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(siValue).vaaBytes))
   
   if (
     sourceToTargetMap[parsedKey.emitterChainId as ChainId]?.[
