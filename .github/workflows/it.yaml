@@ -24,20 +24,26 @@ jobs:
         working-directory: ./alephium
         # TODO: improve this
         run: |
-          npm install && cp .env.test .env && npx @alephium/cli devnet start && npx @alephium/cli devnet stop
-          echo "alephium.consensus.block-target-time = 10 millis" >> ~/.alephium-dev/user.conf
-          cat ~/.alephium-dev/user.conf
-          ALEPHIUM_HOME=~/.alephium-dev nohup java -jar ~/.alephium-dev/*.jar &
-          sleep 10
+          npm install && cp .env.test .env && npx @alephium/cli devnet start
           npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
           nohup npm run auto-mine &
       - name: ethereum
         working-directory: ./ethereum
         run: |
+          npx ganache-cli -e 10000 --deterministic --time="1970-01-01T00:00:00+00:00" > ganache.log &
+          until curl -X POST http://localhost:8545 --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":0}'
+          do
+            if (( SECONDS > 60 ))
+            then
+               echo "ganache-cli not working after 1 min..."
+               exit 1
+            fi
+            echo "Waiting..."
+            sleep 5
+          done
+          echo "ganache-cli is up"
           git apply 1conf.patch
           npm install && npm run build && cp .env.test .env
-          npx ganache-cli -e 10000 --deterministic --time="1970-01-01T00:00:00+00:00" > ganache.log &
-          sleep 5
           npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_solana_chain.js && npx truffle exec scripts/register_terra_chain.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_algo_chain.js && npx truffle exec scripts/register_alph_chain.js
           npx truffle exec mine.js &
       - name: sdk
