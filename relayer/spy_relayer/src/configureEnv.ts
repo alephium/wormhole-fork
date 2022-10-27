@@ -104,6 +104,7 @@ export interface SolanaChainConfigInfo extends ChainConfigInfo {
 }
 
 export interface EthereumChainConfigInfo extends ChainConfigInfo {
+  coreBridgeAddress: string
   wrappedNativeAsset: string
 }
 
@@ -379,9 +380,11 @@ function createTerraChainConfig(config: any): TerraChainConfigInfo {
 
 function createEvmChainConfig(config: any): EthereumChainConfigInfo {
   const chainConfig = createChainConfig(config)
+  const coreBridgeAddress = (config.coreBridgeAddress ?? invalidConfigField('coreBridgeAddress')) as string
   const wrappedNativeAsset = (config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')) as string
   return {
     ...chainConfig,
+    coreBridgeAddress,
     wrappedNativeAsset
   }
 }

@@ -12,6 +12,7 @@
     "listen_only": "node lib/main.js --listen_only",
     "relay_only": "node lib/main.js --relay_only",
     "wallet_monitor_only": "node lib/main.js --wallet_monitor_only",
+    "spy_relay:it": "SPY_RELAY_CONFIG=.env.it node lib/main.js",
     "test": "jest --config jestconfig.json --verbose"
   },
   "author": "",
