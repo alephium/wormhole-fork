@@ -20,7 +20,7 @@ import {
   governanceEmitterAddress,
   governanceModule,
   initGuardianSet,
-  messageFee,
+  defaultMessageFee,
   SetMessageFee,
   SubmitTransferFee,
   GuardianSetUpgrade
@@ -167,7 +167,7 @@ describe('test governance', () => {
   })
 
   it('should set message fee', async () => {
-    const setMessageFee = new SetMessageFee(messageFee * 2n)
+    const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
     const vaaBody = new VAABody(
       setMessageFee.encode(),
       governanceChainId,
@@ -192,7 +192,7 @@ describe('test governance', () => {
       }
     }
     const recipient = randomBytes(32)
-    const amount = messageFee * 20n
+    const amount = defaultMessageFee * 20n
     const submitTransferFee = new SubmitTransferFee(binToHex(recipient), amount)
     const vaaBody = new VAABody(
       submitTransferFee.encode(),
