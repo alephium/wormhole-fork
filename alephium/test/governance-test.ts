@@ -102,7 +102,7 @@ describe('test governance', () => {
       // we have checked the results in previous tests
       await test(seq)
     }
-  })
+  }, 10000)
 
   it('should update guardian set failed if new guardian set is empty', async () => {
     const emptyGuardianSet = new GuardianSet([], 1, [])
