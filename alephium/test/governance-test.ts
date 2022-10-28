@@ -23,7 +23,7 @@ import {
   messageFee,
   SetMessageFee,
   SubmitTransferFee,
-  UpdateGuardianSet
+  GuardianSetUpgrade
 } from './fixtures/governance-fixture'
 import * as blake from 'blakejs'
 
@@ -52,29 +52,29 @@ describe('test governance', () => {
   }
 
   it('should update guardian set succeed if target chain id is valid', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const validChainIds = [CHAIN_ID_ALEPHIUM, 0]
     for (const chainId of validChainIds) {
-      const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
+      const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       const testResult = await testCase(vaa, 'submitNewGuardianSet')
       const governanceState = testResult.contracts[0]
       expect(governanceState.fields['guardianSets']).toEqual([
         initGuardianSet.encodeAddresses().toLowerCase(),
-        updateGuardianSet.newGuardianSet.encodeAddresses().toLowerCase()
+        guardianSetUpgrade.newGuardianSet.encodeAddresses().toLowerCase()
       ])
       expect(governanceState.fields['guardianSetIndexes']).toEqual([
         initGuardianSet.index,
-        updateGuardianSet.newGuardianSet.index
+        guardianSetUpgrade.newGuardianSet.index
       ])
     }
   })
 
   it('should update guardian set failed if target chain id is invalid', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const invalidChainIds = [CHAIN_ID_ALEPHIUM + 1, CHAIN_ID_ALEPHIUM - 1]
     for (const chainId of invalidChainIds) {
-      const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
+      const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       await expectAssertionFailed(async () => {
         return await testCase(vaa, 'submitNewGuardianSet')
@@ -83,10 +83,10 @@ describe('test governance', () => {
   })
 
   it('should update guardian set failed if sequence is invalid', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     async function test(sequence: number) {
       const body = new VAABody(
-        updateGuardianSet.encode(),
+        guardianSetUpgrade.encode(),
         governanceChainId,
         CHAIN_ID_ALEPHIUM,
         governanceEmitterAddress,
@@ -98,7 +98,7 @@ describe('test governance', () => {
     for (let seq = 0; seq < 3; seq += 1) {
       await expectAssertionFailed(async () => await test(seq))
     }
-    for (let seq = 3; seq < 5; seq += 1) {
+    for (let seq = 3; seq < 10; seq += 3) {
       // we have checked the results in previous tests
       await test(seq)
     }
@@ -106,8 +106,8 @@ describe('test governance', () => {
 
   it('should update guardian set failed if new guardian set is empty', async () => {
     const emptyGuardianSet = new GuardianSet([], 1, [])
-    const updateGuardianSet = new UpdateGuardianSet(emptyGuardianSet)
-    const vaaBody = new VAABody(updateGuardianSet.encode(), governanceChainId, 0, governanceEmitterAddress, 0)
+    const guardianSetUpgrade = new GuardianSetUpgrade(emptyGuardianSet)
+    const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, 0, governanceEmitterAddress, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     await expectAssertionFailed(async () => {
       await testCase(vaa, 'submitNewGuardianSet')
@@ -115,9 +115,9 @@ describe('test governance', () => {
   })
 
   it('should failed if signature is not enough', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
-      updateGuardianSet.encode(),
+      guardianSetUpgrade.encode(),
       governanceChainId,
       CHAIN_ID_ALEPHIUM,
       governanceEmitterAddress,
@@ -130,9 +130,9 @@ describe('test governance', () => {
   })
 
   it('should failed if signature is duplicated', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
-      updateGuardianSet.encode(),
+      guardianSetUpgrade.encode(),
       governanceChainId,
       CHAIN_ID_ALEPHIUM,
       governanceEmitterAddress,
@@ -147,9 +147,9 @@ describe('test governance', () => {
   })
 
   it('should failed if signature is invalid', async () => {
-    const updateGuardianSet = new UpdateGuardianSet(testGuardianSet)
+    const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
-      updateGuardianSet.encode(),
+      guardianSetUpgrade.encode(),
       governanceChainId,
       CHAIN_ID_ALEPHIUM,
       governanceEmitterAddress,

@@ -84,12 +84,12 @@ Abstract Contract TokenBridgeGovernance(
         } else {
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
-            let currentencodedFields =
+            let currentEncodedFields =
                 u256To32Byte!(receivedSequence) ++
                 u256To32Byte!(sendSequence) ++
                 u256To1Byte!(minimalConsistencyLevel) ++
                 toByteVec!(refundAddress)
-            assert!(prevStateHash == blake2b!(currentencodedFields), ErrorCodes.ContractStateMismatch)
+            assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
             let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
             let newContractFields = byteVecSlice!(payload, offset, offset + stateLength)

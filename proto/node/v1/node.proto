@@ -62,7 +62,7 @@ message GovernanceMessage {
 
     UpdateMessageFee update_message_fee = 8;
     TransferFee transfer_fee = 9;
-    GuardianSetUpdate guardian_set = 10;
+    GuardianSetUpgrade guardian_set = 10;
     ContractUpgrade contract_upgrade = 11;
 
     // Token bridge and NFT module
@@ -97,7 +97,7 @@ message TransferFee {
 // GuardianSet represents a new guardian set to be submitted to and signed by the node.
 // During the genesis procedure, this data structure will be assembled using off-chain collaborative tooling
 // like GitHub using a human-readable encoding, so readability is a concern.
-message GuardianSetUpdate {
+message GuardianSetUpgrade {
   // List of guardian set members.
   message Guardian {
     // Guardian key pubkey. Stored as hex string with 0x prefix for human readability -

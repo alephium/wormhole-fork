@@ -9,7 +9,7 @@ export const governanceEmitterAddress = '000000000000000000000000000000000000000
 export const messageFee = BigInt('100000000000000')
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0002_governance_messaging.md
-export class UpdateGuardianSet {
+export class GuardianSetUpgrade {
   newGuardianSet: GuardianSet
 
   constructor(guardianSet: GuardianSet) {
