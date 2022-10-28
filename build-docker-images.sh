@@ -6,7 +6,7 @@ NUM_GUARDIANS=1
 
 export DOCKER_BUILDKIT=1
 
-VERSION=0.2.43
+VERSION=0.2.46
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -24,6 +24,7 @@ popd
 
 ## Build eth-node image
 pushd ethereum
+cp .env.test .env
 git apply 1conf.patch
 git apply truffle-config.patch
 docker build . -t alephium/eth-node:$VERSION
