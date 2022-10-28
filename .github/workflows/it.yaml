@@ -21,13 +21,14 @@ jobs:
       - name: build docker images
         run: ./build-docker-images.sh
       - name: start docker images
-        working-directory: ./integration_test
+        working-directory: ./integration_test/docker
         run: docker-compose up -d && sleep 120 # FIXME: make more robust
-      - name: Create ALPH wallet
+      - name: create ALPH wallet
         run: npx --yes @h0ngcha0/alephium-cli wallets restore -w alephium-web3-test-only-wallet -c "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava" -p alph
-      - name: Deploy ALPH contracts
+      - name: deploy ALPH contracts
         working-directory: ./alephium
         run: npm install && npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
-      - name: it
+      - name: run integration test
         working-directory: ./integration_test
         run: npm install && npm run it
+      # Next publish docker images after integration tests pass
