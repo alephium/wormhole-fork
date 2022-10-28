@@ -44,9 +44,7 @@ export function init(): boolean {
   try {
     relayerEnv = getRelayerEnvironment();
   } catch (e) {
-    logger.error(
-      "Encountered error while initiating the relayer environment: " + e
-    );
+    logger.error(`Encountered error while initiating the relayer environment: ${e}`);
     return false;
   }
 
@@ -71,7 +69,7 @@ function createWorkerInfos(metrics: PromHelper) {
       index++;
     });
   });
-  logger.info("will use " + workerArray.length + " workers");
+  logger.info(`Will use ${workerArray.length} workers`);
   return workerArray;
 }
 
@@ -99,8 +97,8 @@ async function spawnAuditorThread(workerInfo: WorkerInfo) {
           " chainId " +
           workerInfo.targetChainId
       );
-      logger.error("error message: " + error.message);
-      logger.error("error trace: " + error.stack);
+      logger.error(`Error message: ${error.message}`);
+      logger.error(`Error trace: ${error.stack}`);
       await sleep(AUDITOR_THREAD_RESTART_MS);
       spawnAuditorThread(workerInfo);
     }
@@ -136,7 +134,7 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
         }
         const storePayload: StorePayload = storePayloadFromJson(siValue);
         auditLogger.debug(
-          "key %s => status: %s, timestamp: %s, retries: %d",
+          "Key %s => status: %s, timestamp: %s, retries: %d",
           siKey,
           Status[storePayload.status],
           storePayload.timestamp,
@@ -324,9 +322,7 @@ async function processRequest(
     }
     await rClient.quit();
   } catch (e: any) {
-    logger.error("Unexpected error in processRequest: " + e.message);
-    logger.error("request key: " + item.key);
-    logger.error(e);
+    logger.error(`Unexpected error in processRequest, key: ${item.key}, err: ${e}`);
   }
 }
 
@@ -380,10 +376,7 @@ async function findWorkableItems(
     redisClient.quit();
     return workableItems;
   } catch (e: any) {
-    logger.error(
-      "Recoverable exception scanning REDIS for workable items: " + e.message
-    );
-    logger.error(e);
+    logger.error(`Recoverable exception scanning REDIS for workable items, err: ${e}`);
     return [];
   }
 }
@@ -404,8 +397,8 @@ async function spawnWorkerThread(workerInfo: WorkerInfo) {
         " chainId " +
         workerInfo.targetChainId
     );
-    logger.error("error message: " + error.message);
-    logger.error("error trace: " + error.stack);
+    logger.error(`Error message: ${error.message}`);
+    logger.error(`Error trace: ${error.stack}`);
     await sleep(WORKER_THREAD_RESTART_MS);
     spawnWorkerThread(workerInfo);
   });
@@ -421,24 +414,21 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
       workerInfo,
       relayLogger
     );
-    relayLogger.debug("Found items: %o", workableItems);
+    relayLogger.debug(`Found items: ${workableItems}`);
     for (let i = 0; i < workableItems.length; i++) {
       const workItem: WorkableItem = workableItems[i];
       if (workItem) {
         //This will attempt to move the workable item to the WORKING table
-        relayLogger.debug("Moving item: %o", workItem);
+        relayLogger.debug(`Try moving item to WORKING table, key: ${workItem.key}`);
         if (await moveToWorking(workItem, relayLogger)) {
-          relayLogger.info("Moved key to WORKING table: %s", workItem.key);
+          relayLogger.info(`Moved item to WORKING table, key: ${workItem.key}`);
           await processRequest(
             workItem,
             workerInfo.walletPrivateKey,
             relayLogger
           );
         } else {
-          relayLogger.error(
-            "Cannot move work item from INCOMING to WORKING: %s",
-            workItem.key
-          );
+          relayLogger.error(`Cannot move work item from INCOMING to WORKING, key: ${workItem.key}`);
         }
       }
     }
@@ -464,7 +454,7 @@ async function moveToWorking(
     // Move this entry from incoming store to working store
     await redisClient.select(RedisTables.INCOMING);
     if ((await redisClient.del(workItem.key)) === 0) {
-      logger.info("The key %s no longer exists in INCOMING", workItem.key);
+      logger.info(`The key ${workItem.key} no longer exists in INCOMING`);
       await redisClient.quit();
       return false;
     }
@@ -480,14 +470,13 @@ async function moveToWorking(
       return true;
     } else {
       metrics.incAlreadyExec();
-      logger.debug("Dropping request %s as already processed", workItem.key);
+      logger.debug(`Dropping request ${workItem.key} as already processed`);
       await redisClient.quit();
       return false;
     }
   } catch (e: any) {
-    logger.error("Recoverable exception moving item to working: " + e.message);
-    logger.error("%s => %s", workItem.key, workItem.value);
-    logger.error(e);
+    logger.error(`Recoverable exception moving item to working, err: ${e}`);
+    logger.error(`${workItem.key} => ${workItem.value}`);
     return false;
   }
 }

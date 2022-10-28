@@ -16,9 +16,7 @@ export function init(): boolean {
   try {
     env = getListenerEnvironment();
   } catch (e) {
-    logger.error(
-      "Encountered and error while initializing the listener environment: " + e
-    );
+    logger.error(`Encountered and error while initializing the listener environment: ${e}`)
     return false;
   }
   if (!env.restPort) {
@@ -36,7 +34,7 @@ export async function run() {
   const app = express();
   app.use(cors());
   app.listen(env.restPort, () =>
-    logger.info("listening on REST port %d!", env.restPort)
+    logger.info(`Listening on REST port ${env.restPort}`)
   );
 
   (async () => {
@@ -56,11 +54,7 @@ export async function run() {
 
         res.status(200).json({ message: "Scheduled" });
       } catch (e) {
-        logger.error(
-          "failed to process rest relay of vaa request, error: %o",
-          e
-        );
-        logger.error("offending request: %o", req);
+        logger.error(`Failed to process rest relay of vaa request ${JSON.stringify(req)}, error: ${e}`)
         res.status(400).json({ message: "Request failed" });
       }
     });

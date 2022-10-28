@@ -63,12 +63,8 @@ function init() {
 
 async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
   //TODO loop through all the chain configs, calc the public keys, pull their balances, and push to a combo of the loggers and prmometheus
-  if (!env) {
-    logger.error("pullBalances() - no env");
-    return [];
-  }
   if (!env.supportedChains) {
-    logger.error("pullBalances() - no supportedChains");
+    logger.info(`Skip pull balances because there is no 'supportedChains' in configs`);
     return [];
   }
   const balancePromises: Promise<WalletBalance[]>[] = [];
@@ -86,10 +82,8 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
               pullSolanaTokenBalances(solanaChainConfig, solanaPrivateKey)
             );
           } catch (e: any) {
-            logger.error(
-              "pulling balances failed failed for chain: " + solanaChainConfig.chainName
-            );
-            if (e && e.stack) {
+            logger.error(`Pulling balances failed failed for solana, err: ${e}`);
+            if (e.stack) {
               logger.error(e.stack);
             }
           }
@@ -100,7 +94,7 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
           try {
             balancePromises.push(pullEVMNativeBalance(ethChainInfo, privateKey));
           } catch (e) {
-            logger.error("pullEVMNativeBalance() failed: " + e);
+            logger.error(`Pulling evm native balance failed, err: ${e}`);
           }
         }
         // TODO one day this will spin up independent watchers that time themselves
@@ -113,13 +107,11 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
       } else if (chainInfo.chainId === CHAIN_ID_ALEPHIUM) {
         pullAllAlephiumBalances(env.supportedTokens, chainInfo as AlephiumChainConfigInfo, metrics)
       } else {
-        logger.error("Invalid chain ID in wallet monitor " + chainInfo.chainId);
+        logger.error(`Invalid chain ID in wallet monitor: ${chainInfo.chainId}`);
       }
     } catch (e: any) {
-      logger.error(
-        "pulling balances failed failed for chain: " + chainInfo.chainName
-      );
-      if (e && e.stack) {
+      logger.error(`Pulling balances failed failed for chain: ${chainInfo.chainName}, err: ${e}`);
+      if (e.stack) {
         logger.error(e.stack);
       }
     }
@@ -166,7 +158,7 @@ export async function pullTerraBalance(
       walletAddress: walletAddress,
     };
   } catch (e) {
-    logger.error("Failed to fetch terra balance for %s", tokenAddress);
+    logger.error(`Failed to fetch terra balance for ${tokenAddress}, err: ${e}`);
   }
 }
 
@@ -213,7 +205,7 @@ async function pullSolanaTokenBalances(
       });
     }
   } catch (e) {
-    logger.error("pullSolanaTokenBalances() - ", e);
+    logger.error(`Failed to pull solana token balances, err: ${e}`);
   }
 
   return output;
@@ -274,10 +266,7 @@ async function pullTerraNativeBalance(
     });
     return output;
   } catch (e) {
-    logger.error(
-      "Failed to fetch terra native balances for wallet %s",
-      walletAddress
-    );
+    logger.error(`Failed to fetch terra native balances for wallet ${walletAddress}, err: ${e}`);
     return [];
   }
 }
@@ -337,7 +326,7 @@ export async function collectWallets(metrics: PromHelper) {
     try {
       wallets = await pullBalances(metrics);
     } catch (e) {
-      scopedLogger.error("Failed to pullBalances: " + e);
+      scopedLogger.error(`Failed to pullBalances, err: ${e}`);
     }
     scopedLogger.debug("Done pulling balances.");
     metrics.handleWalletBalances(wallets);
@@ -474,7 +463,7 @@ async function pullAllEVMTokens(
         metrics.handleWalletBalances(balances);
       } catch (e) {
         logger.error(
-          "pullAllEVMTokens failed: for tokens " +
+          "Failed to pull evm tokens: for tokens " +
             JSON.stringify(localAddresses) +
             " on chain " +
             chainConfig.chainId +
@@ -484,12 +473,7 @@ async function pullAllEVMTokens(
       }
     }
   } catch (e) {
-    logger.error(
-      "pullAllEVMTokens failed: for chain " +
-        chainConfig.chainId +
-        ", error: " +
-        e
-    );
+    logger.error(`Failed to pull evm tokens for chain: ${chainConfig.chainName}, err: ${e}`);
   }
 }
 

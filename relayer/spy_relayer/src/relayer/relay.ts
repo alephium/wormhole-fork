@@ -41,15 +41,15 @@ export async function relay(
     const targetChainId = parsedVAA.body.targetChainId
     const chainConfigInfo = getChainConfigInfo(targetChainId);
     if (!chainConfigInfo) {
-      logger.error("relay: improper chain ID: " + targetChainId);
+      const errorMessage = `Fatal Error: target chain ${targetChainId} not supported`
+      logger.error(errorMessage);
       return {
         status: Status.FatalError,
-        result:
-          "Fatal Error: target chain " +
-          targetChainId +
-          " not supported",
+        result: errorMessage,
       };
     }
+
+    logger.debug(`Relay transfer payload: ${JSON.stringify(transferPayload)}`)
 
     if (isEVMChain(targetChainId)) {
       const evmConfigInfo = chainConfigInfo as EthereumChainConfigInfo
@@ -59,14 +59,6 @@ export async function relay(
           transferPayload.originAddress,
           transferPayload.originChain
         )?.toLowerCase() === evmConfigInfo.wrappedNativeAsset.toLowerCase();
-      logger.debug(
-        "isEVMChain: originAddress: [" +
-          transferPayload.originAddress +
-          "], wrappedAsset: [" +
-          evmConfigInfo.wrappedNativeAsset +
-          "], unwrapNative: " +
-          unwrapNative
-      );
       let evmResult = await relayEVM(
         evmConfigInfo,
         signedVAA,
@@ -134,18 +126,12 @@ export async function relay(
         : { status: Status.Error, result: redeemResult.result }
     }
 
-    logger.error(
-      "relay: target chain ID: " +
-        targetChainId +
-        " is invalid, this is a program bug!"
-    );
+    const errorMessage = `Fatal Error: target chain ${targetChainId} is invalid, this is a program bug!`
+    logger.error(errorMessage)
 
     return {
       status: Status.FatalError,
-      result:
-        "Fatal Error: target chain " +
-        targetChainId +
-        " is invalid, this is a program bug!",
+      result: `Fatal Error: target chain ${targetChainId} is invalid, this is a program bug!`
     };
   }
   return { status: Status.FatalError, result: "ERROR: Invalid payload type" };

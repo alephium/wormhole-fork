@@ -32,7 +32,7 @@ export enum RedisTables {
 }
 
 export function init(ph: PromHelper): boolean {
-  logger.info("will connect to redis at [" + redisHost + ":" + redisPort + "]");
+  logger.info(`Will connect to redis at [${redisHost}:${redisPort}]`);
   promHelper = ph;
   return true;
 }
@@ -49,27 +49,13 @@ export async function connectToRedis() {
 
     rClient.on("connect", function (err) {
       if (err) {
-        logger.error(
-          "connectToRedis: failed to connect to host [" +
-            redisHost +
-            "], port [" +
-            redisPort +
-            "]: %o",
-          err
-        );
+        logger.error(`Failed to connect to host ${redisHost}:${redisPort}, error: ${err}`)
       }
     });
 
     await rClient.connect();
   } catch (e) {
-    logger.error(
-      "connectToRedis: failed to connect to host [" +
-        redisHost +
-        "], port [" +
-        redisPort +
-        "]: %o",
-      e
-    );
+    logger.error(`Failed to connect to host ${redisHost}:${redisPort}, error: ${e}`)
   }
 
   return rClient;
@@ -77,47 +63,31 @@ export async function connectToRedis() {
 
 export async function storeInRedis(name: string, value: string) {
   if (!name) {
-    logger.error("storeInRedis: missing name");
-    return;
+    logger.error('Failed to store to redis: missing name')
+    return
   }
   if (!value) {
-    logger.error("storeInRedis: missing value");
-    return;
+    logger.error('Failed to store to redis: missing value')
+    return
   }
 
   await redisMutex.runExclusive(async () => {
-    logger.debug("storeInRedis: connecting to redis.");
+    logger.debug('Connecting to redis (storeInRedis)')
     let redisClient;
     try {
       redisQueue.push([name, value]);
       redisClient = await connectToRedis();
       if (!redisClient) {
-        logger.error(
-          "Failed to connect to redis, enqueued vaa, there are now " +
-            redisQueue.length +
-            " enqueued events"
-        );
-        return;
+        logger.error(`Failed to connect to redis, enqueued vaa, there are now ${redisQueue.length} enqueued events`)
+        return
       }
 
-      logger.debug(
-        "now connected to redis, attempting to push " +
-          redisQueue.length +
-          " queued items"
-      );
+      logger.debug(`Connected to redis, attempting to push ${redisQueue.length} queued items`)
       for (let item = redisQueue.pop(); item; item = redisQueue.pop()) {
         await addToRedis(redisClient, item[0], item[1]);
       }
     } catch (e) {
-      logger.error(
-        "Failed during redis item push. Currently" +
-          redisQueue.length +
-          " enqueued items"
-      );
-      logger.error(
-        "encountered an exception while pushing items to redis %o",
-        e
-      );
+      logger.error(`Failed during redis item push. Currently ${redisQueue.length} enqueued items, error: ${e}`)
     }
 
     try {
@@ -138,20 +108,13 @@ export async function addToRedis(
   value: string
 ) {
   try {
-    logger.debug("storeInRedis: storing in redis. name: " + name);
+    logger.debug(`Storing in redis. name: ${name}`);
     await redisClient.select(RedisTables.INCOMING);
     await redisClient.set(name, value);
 
-    logger.debug("storeInRedis: finished storing in redis.");
+    logger.debug('Finished storing in redis');
   } catch (e) {
-    logger.error(
-      "storeInRedis: failed to store to host [" +
-        redisHost +
-        "], port [" +
-        redisPort +
-        "]: %o",
-      e
-    );
+    logger.error(`Failed to store to redis ${redisHost}:${redisPort}, error: ${e}`);
   }
 }
 
@@ -243,7 +206,7 @@ export async function pushVaaToRedis(
   const transferPayload = parsedVAA.payload;
 
   logger.info(
-    "forwarding vaa to relayer: emitter: [" +
+    "Forwarding vaa to relayer: emitter: [" +
       parsedVAA.emitterChain +
       ":" +
       uint8ArrayToHex(parsedVAA.emitterAddress) +
@@ -267,7 +230,7 @@ export async function pushVaaToRedis(
   const storePayload = initPayloadWithVAA(hexVaa);
 
   logger.debug(
-    "storing: key: [" +
+    "Storing: key: [" +
       storeKey.emitterChainId +
       "/" +
       storeKey.emitterAddress +

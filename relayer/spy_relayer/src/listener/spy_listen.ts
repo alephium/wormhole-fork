@@ -37,7 +37,7 @@ export function init(): boolean {
       (process.env.REST_PORT ? process.env.REST_PORT : "4200") +
       "/relayvaa/";
   } catch (e) {
-    logger.error("Error initializing listener environment: " + e);
+    logger.error(`Error initializing listener environment: ${e}`);
     return false;
   }
 
@@ -53,7 +53,6 @@ export async function run(ph: PromHelper) {
     emitterFilter: { chainId: ChainId; emitterAddress: string };
   }[] = [];
   for (let i = 0; i < env.spyServiceFilters.length; i++) {
-    logger.info("Getting spyServiceFiltera " + i);
     const filter = env.spyServiceFilters[i];
     logger.info(
       "Getting spyServiceFilter[" +
@@ -73,21 +72,10 @@ export async function run(ph: PromHelper) {
         ),
       },
     };
-    logger.info(
-      "adding filter: chainId: [" +
-        typedFilter.emitterFilter.chainId +
-        "], emitterAddress: [" +
-        typedFilter.emitterFilter.emitterAddress +
-        "]"
-    );
     typedFilters.push(typedFilter);
   }
 
-  logger.info(
-    "spy_relay starting up, will listen for signed VAAs from [" +
-      env.spyServiceHost +
-      "]"
-  );
+  logger.info(`Listener starting up, will listen for signed VAAs from [${env.spyServiceHost}]`);
 
   const wrappedFilters = { filters: typedFilters };
 
@@ -108,39 +96,33 @@ export async function run(ph: PromHelper) {
 
       let connected = true;
       stream.on("error", (err: any) => {
-        logger.error("spy service returned an error: %o", err);
+        logger.error(`Spy service returned an error: ${err}`);
         connected = false;
       });
 
       stream.on("close", () => {
-        logger.error("spy service closed the connection!");
+        logger.error("Spy service closed the connection!");
         connected = false;
       });
 
-      logger.info(
-        "connected to spy service, listening for transfer signed VAAs"
-      );
+      logger.info("Connected to spy service, listening for transfer signed VAAs")
 
       while (connected) {
         await sleep(1000);
       }
     } catch (e) {
-      logger.error("spy service threw an exception: %o", e);
+      logger.error(`Spy service threw an exception: ${e}`);
     }
 
     if (stream !== undefined) {
       stream.destroy()
     }
     await sleep(5 * 1000);
-    logger.info("attempting to reconnect to the spy service");
+    logger.info("Attempting to reconnect to the spy service");
   }
 }
 
 async function processVaa(rawVaa: Uint8Array) {
-  //TODO, verify this is correct & potentially swap to using hex encoding
-  const vaaUri =
-    vaaUriPrelude + encodeURIComponent(Buffer.from(rawVaa).toString("base64"));
-
   const validationResults: ParsedVaa<ParsedTransferPayload> | string =
     await parseAndValidateVaa(rawVaa);
 

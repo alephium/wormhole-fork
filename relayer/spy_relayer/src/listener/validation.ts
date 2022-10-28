@@ -20,13 +20,11 @@ const logger = getLogger();
 export function validateInit(): boolean {
   const env = getListenerEnvironment();
 
-  logger.info(
-    "supported target chains: [" + env.spyServiceFilters.toString() + "]"
-  );
+  logger.info(`Supported target chains: [${env.spyServiceFilters.toString()}]`)
   if (env.spyServiceFilters.length) {
     env.spyServiceFilters.forEach((allowedContract) => {
       logger.info(
-        "adding allowed contract: chainId: [" +
+        "Adding allowed contract: chainId: [" +
           allowedContract.chainId +
           "] => address: [" +
           allowedContract.emitterAddress +
@@ -37,11 +35,11 @@ export function validateInit(): boolean {
     logger.info("There are no white listed contracts provisioned.");
   }
 
-  logger.info("supported tokens : [" + env.supportedTokens.toString() + "]");
+  logger.info(`Supported tokens : [${env.supportedTokens.toString()}]`);
   if (env.supportedTokens.length) {
     env.supportedTokens.forEach((supportedToken) => {
       logger.info(
-        "adding allowed contract: chainId: [" +
+        "Adding allowed contract: chainId: [" +
           supportedToken.chainId +
           "] => address: [" +
           supportedToken.address +
@@ -60,12 +58,12 @@ export function validateInit(): boolean {
 export async function parseAndValidateVaa(
   rawVaa: Uint8Array
 ): Promise<string | ParsedVaa<ParsedTransferPayload>> {
-  logger.debug("About to validate: " + uint8ArrayToHex(rawVaa));
+  logger.debug(`Validating signed VAA ${uint8ArrayToHex(rawVaa)}`);
   let parsedVaa: ParsedVaa<Uint8Array> | null = null;
   try {
     parsedVaa = parseVaaTyped(rawVaa);
   } catch (e) {
-    logger.error("Encountered error while parsing raw VAA " + e);
+    logger.error(`Encountered error while parsing raw VAA: ${e}`);
   }
   if (!parsedVaa) {
     return "Unable to parse the specified VAA.";
@@ -96,7 +94,7 @@ export async function parseAndValidateVaa(
   try {
     parsedPayload = parseTransferPayload(Buffer.from(parsedVaa.payload));
   } catch (e) {
-    logger.error("Encountered error while parsing vaa payload" + e);
+    logger.error(`Encountered error while parsing vaa payload: ${e}`);
   }
 
   if (!parsedPayload) {

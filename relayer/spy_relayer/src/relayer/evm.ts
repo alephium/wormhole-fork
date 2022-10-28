@@ -68,13 +68,11 @@ export async function relayEVM(
     return { redeemed: false, result: "not redeemed" };
   }
 
+  const address = await signer.getAddress()
   if (unwrapNative) {
-    logger.info(
-      "Will redeem and unwrap using pubkey: %s",
-      await signer.getAddress()
-    );
+    logger.info(`Will redeem and unwrap using pubkey: ${address}`);
   } else {
-    logger.info("Will redeem using pubkey: %s", await signer.getAddress());
+    logger.info(`Will redeem using pubkey: ${address}`);
   }
 
   logger.debug("Redeeming.");
@@ -98,7 +96,7 @@ export async function relayEVM(
     ? bridge.completeTransferAndUnwrapETH
     : bridge.completeTransfer;
   const tx = await contractMethod(signedVaaArray, overrides);
-  logger.info("waiting for tx hash: %s", tx.hash);
+  logger.info(`Waiting for tx hash: ${tx.hash}`);
   const receipt = await tx.wait();
 
   // Checking getIsTransferCompletedEth can be problematic if we get
@@ -110,7 +108,7 @@ export async function relayEVM(
     await provider.destroy();
   }
 
-  logger.info("success: %s tx hash: %s", success, receipt.transactionHash);
+  logger.info(`Redeem on Ethereum, success: ${success}, tx hash: ${receipt.transactionHash}`)
   metrics.incSuccesses(chainConfigInfo.chainId);
   return { redeemed: success, result: receipt };
 }

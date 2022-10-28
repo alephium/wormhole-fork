@@ -124,7 +124,7 @@ if (readinessPort) {
   const Net = require("net");
   const readinessServer = new Net.Server();
   readinessServer.listen(readinessPort, function () {
-    logger.info("listening for readiness requests on port " + readinessPort);
+    logger.info("Listening for readiness requests on port " + readinessPort);
   });
 
   readinessServer.on("connection", function (socket: any) {
