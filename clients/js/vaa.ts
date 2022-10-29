@@ -262,7 +262,7 @@ function calculateV(signature: Uint8Array, hash: Buffer, uncompressPubKey: Buffe
     const { ecdsaRecover } = require("secp256k1");
     let recId = -1;
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
         const rec = ecdsaRecover(signature, i, hash, false);
         if (Buffer.compare(rec, uncompressPubKey) == 0) {
             recId = i;

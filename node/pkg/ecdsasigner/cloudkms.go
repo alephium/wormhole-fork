@@ -147,7 +147,7 @@ func parseSignature(kmsSignature []byte, digest []byte, pubKey ethcommon.Address
 }
 
 func appendV(sig []byte, digest []byte, pubKey ethcommon.Address) ([]byte, error) {
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 2; i++ {
 		sigWithV := append(sig, byte(i))
 		pk, err := ethcrypto.Ecrecover(digest, sigWithV)
 		signer_pk := ethcommon.BytesToAddress(ethcrypto.Keccak256(pk[1:])[12:])

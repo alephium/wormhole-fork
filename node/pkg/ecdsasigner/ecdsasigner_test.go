@@ -2,7 +2,10 @@ package ecdsasigner
 
 import (
 	"context"
+	"math/big"
 	"testing"
+
+	"crypto/rand"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -26,11 +29,18 @@ func TestPrivateKey(t *testing.T) {
 		t.Fatal("Failed to generate key", err)
 	}
 
-	verifySigner(t, &ECDSAPrivateKey{Value: gk})
+	for i := 0; i < 100; i++ {
+		verifySigner(t, &ECDSAPrivateKey{Value: gk})
+	}
 }
 
 func verifySigner(t *testing.T, guardianSigner ECDSASigner) {
-	digest := ethcrypto.Keccak256Hash([]byte("Hello"))
+	bytes, err := randomBytes(1000000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	digest := ethcrypto.Keccak256Hash(bytes)
 	sig, err := guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		t.Fatal(err)
@@ -44,4 +54,19 @@ func verifySigner(t *testing.T, guardianSigner ECDSASigner) {
 	signerAddr := ethcommon.BytesToAddress(ethcrypto.Keccak256(pk[1:])[12:])
 	guardianAddr := ethcrypto.PubkeyToAddress(guardianSigner.PublicKey())
 	assert.Equal(t, signerAddr, guardianAddr, "Signer address should match guardian address")
+}
+
+func randomBytes(maxLength int64) ([]byte, error) {
+	randomInt, err := rand.Int(rand.Reader, big.NewInt(maxLength))
+	if err != nil {
+		return nil, err
+	}
+
+	bytes := make([]byte, randomInt.Int64())
+	_, err = rand.Read(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
 }
