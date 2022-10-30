@@ -213,7 +213,7 @@ export function signWithKey(signers: string[], vaa: VAA<Payload>): Signature[] {
 }
 
 const kmsClient = new KeyManagementServiceClient({
-    keyFile: "/tmp/credentials-file.json"
+    keyFile: process.env.GUARDIAN_CREDENTIALS_FILE
 })
 
 export async function signWithKMS(signers: string[], vaa: VAA<Payload>): Promise<Signature[]> {

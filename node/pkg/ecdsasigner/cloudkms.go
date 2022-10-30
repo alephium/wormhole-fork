@@ -162,9 +162,8 @@ func parseSignature(kmsSignature []byte, digest []byte, pubKey ethcommon.Address
 	curveOrderLen := 32
 	signature := make([]byte, 2*curveOrderLen)
 
-	// left pad R and S with zeroes
-	rBytes := parsedSig.R.Bytes()
-	sBytes := parsedSig.S.Bytes()
+	rBytes := trimLeftByte(parsedSig.R.Bytes(), byte(0))
+	sBytes := trimLeftByte(parsedSig.S.Bytes(), byte(0))
 	copy(signature[curveOrderLen-len(rBytes):], rBytes)
 	copy(signature[len(signature)-len(sBytes):], sBytes)
 
@@ -186,4 +185,11 @@ func appendV(sig []byte, digest []byte, pubKey ethcommon.Address) ([]byte, error
 
 func bitsToBytes(bits int) int {
 	return (bits + 7) >> 3
+}
+
+func trimLeftByte(s []byte, c byte) []byte {
+	for len(s) > 0 && s[0] == c {
+		s = s[1:]
+	}
+	return s
 }

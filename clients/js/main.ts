@@ -77,6 +77,12 @@ yargs(hideBin(process.argv))
             describe: "VAA sequence",
             type: "string",
           })
+          .option("use-kms", {
+            alias: "k",
+            required: false,
+            describe: "If KMS should be used",
+            type: "boolean",
+          })
           // Registration
           .command(
             "registration",
@@ -130,7 +136,7 @@ yargs(hideBin(process.argv))
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
                 payload,
-                true
+                !!argv["use-kms"]
               ).then((v) =>
                 console.log(serialiseVAA(v))
               );
@@ -184,7 +190,7 @@ yargs(hideBin(process.argv))
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
                 payload,
-                true
+                !!argv["use-kms"]
               ).then((v) => {
                 console.log(serialiseVAA(v));
               });
