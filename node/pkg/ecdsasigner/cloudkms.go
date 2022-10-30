@@ -60,14 +60,14 @@ func (c *KMSClient) Sign(digest []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Failed to sign with KMS: %w", err)
 	}
 
-	pubKey := ethcrypto.PubkeyToAddress(*c.publicKey)
+	address := ethcrypto.PubkeyToAddress(*c.publicKey)
 
-	sig, err := parseSignature(signResult.Signature, digest, pubKey)
+	signature, err := parseSignature(signResult.Signature, digest, address)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse KMS signature: %w", err)
 	}
 
-	return sig, nil
+	return signature, nil
 }
 
 func (c *KMSClient) PublicKey() ecdsa.PublicKey {
@@ -87,7 +87,13 @@ func getKMSPublicKey(
 		return nil, fmt.Errorf("Failed to fetch public key from the KMS API: %v", err)
 	}
 
-	pemBlock, rest := pem.Decode([]byte(kmsPublicKey.Pem))
+	return convertToECDSAPublicKey(kmsPublicKey.Pem)
+}
+
+func convertToECDSAPublicKey(
+	kmsPublicKeyPem string,
+) (*ecdsa.PublicKey, error) {
+	pemBlock, rest := pem.Decode([]byte(kmsPublicKeyPem))
 	if len(rest) > 0 {
 		return nil, fmt.Errorf("PEM block contains more than just public key")
 	}
