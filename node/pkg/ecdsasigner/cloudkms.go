@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"hash/crc32"
 	"math/big"
 
 	"crypto/x509/pkix"
@@ -15,6 +16,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/api/option"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // Client is a client for interacting with the Google Cloud KMS API
@@ -53,11 +55,20 @@ func (c *KMSClient) Sign(digest []byte) ([]byte, error) {
 				Sha256: digest,
 			},
 		},
+		DigestCrc32C: crc32Checksum(digest),
 	}
 
 	signResult, err := c.Client.AsymmetricSign(c.ctx, req)
+
 	if err != nil {
 		return nil, fmt.Errorf("Failed to sign with KMS: %w", err)
+	}
+
+	if !signResult.VerifiedDigestCrc32C {
+		return nil, fmt.Errorf("KMS signing request corrupted in-transit")
+	}
+	if signResult.SignatureCrc32C.Value != crc32Checksum(signResult.Signature).Value {
+		return nil, fmt.Errorf("KMS singing response corrupted in-transit")
 	}
 
 	address := ethcrypto.PubkeyToAddress(*c.publicKey)
@@ -75,6 +86,14 @@ func (c *KMSClient) PublicKey() ecdsa.PublicKey {
 }
 
 // Private Functions
+func crc32Checksum(data []byte) *wrapperspb.Int64Value {
+	// compute CRC32
+	table := crc32.MakeTable(crc32.Castagnoli)
+	checksum := crc32.Checksum(data, table)
+	val := wrapperspb.Int64(int64(checksum))
+	return val
+}
+
 func getKMSPublicKey(
 	ctx context.Context,
 	keyId string,
