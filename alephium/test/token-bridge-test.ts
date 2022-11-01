@@ -232,7 +232,7 @@ describe('test token bridge', () => {
       existingContracts: tokenBridgeInfo.dependencies
     })
 
-    const tokenBridgeState = testResult.contracts.filter((c) => c.contractId === tokenBridgeInfo.contractId)[0]
+    const tokenBridgeState = testResult.contracts.find((c) => c.contractId === tokenBridgeInfo.contractId)!
     expect(tokenBridgeState.fields['minimalConsistencyLevel']).toEqual(BigInt(newMinimalConsistencyLevel))
   })
 
@@ -356,25 +356,21 @@ describe('test token bridge', () => {
         existingContracts: fixture.wrappedAlphPoolInfo.states()
       })
 
-      const tokenBridgeForChainState = testResult.contracts.filter(
+      const tokenBridgeForChainState = testResult.contracts.find(
         (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-      )[0]
+      )!
       expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
       // check `totalBridged`
-      const tokenPoolState = testResult.contracts.filter(
-        (c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId
-      )[0]
+      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId)!
       const realTransferAmount = transferAmount - messageFee
       expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + realTransferAmount)
 
       // check `totalWrapped`
-      const wrappedAlphState = testResult.contracts.filter((c) => c.contractId === wrappedAlphId)[0]
+      const wrappedAlphState = testResult.contracts.find((c) => c.contractId === wrappedAlphId)!
       expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalBridged + realTransferAmount)
 
-      const wrappedAlphOutput = testResult.txOutputs.filter(
-        (c) => c.address === addressFromContractId(wrappedAlphId)
-      )[0]
+      const wrappedAlphOutput = testResult.txOutputs.find((c) => c.address === addressFromContractId(wrappedAlphId))!
       expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph + realTransferAmount)
       expect(wrappedAlphOutput.tokens).toEqual([
         {
@@ -383,7 +379,7 @@ describe('test token bridge', () => {
         }
       ])
 
-      const tokenPoolOutput = testResult.txOutputs.filter((c) => c.address === fixture.wrappedAlphPoolInfo.address)[0]
+      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.wrappedAlphPoolInfo.address)!
       expect(tokenPoolOutput.tokens).toEqual([
         {
           id: wrappedAlphId,
@@ -392,9 +388,9 @@ describe('test token bridge', () => {
       ])
 
       if (messageFee !== 0n) {
-        const governanceOutput = testResult.txOutputs.filter(
+        const governanceOutput = testResult.txOutputs.find(
           (c) => c.address === fixture.tokenBridgeInfo.governance.address
-        )[0]
+        )!
         expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
       }
 
@@ -450,23 +446,19 @@ describe('test token bridge', () => {
       })
 
       // check `totalBridged`
-      const tokenPoolState = testResult.contracts.filter(
-        (c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId
-      )[0]
+      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId)!
       expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged - transferAmount)
 
       // check `totalWrapped`
-      const wrappedAlphState = testResult.contracts.filter((c) => c.contractId === wrappedAlphId)[0]
+      const wrappedAlphState = testResult.contracts.find((c) => c.contractId === wrappedAlphId)!
       expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalWrappedAlph - transferAmount)
 
-      const tokenBridgeForChainState = testResult.contracts.filter(
+      const tokenBridgeForChainState = testResult.contracts.find(
         (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-      )[0]
+      )!
       expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
-      const wrappedAlphOutput = testResult.txOutputs.filter(
-        (c) => c.address === addressFromContractId(wrappedAlphId)
-      )[0]
+      const wrappedAlphOutput = testResult.txOutputs.find((c) => c.address === addressFromContractId(wrappedAlphId))!
       expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph - transferAmount)
       expect(wrappedAlphOutput.tokens).toEqual([
         {
@@ -475,13 +467,13 @@ describe('test token bridge', () => {
         }
       ])
 
-      const recipientOutput = testResult.txOutputs.filter((c) => c.address === toAddress)[0]
+      const recipientOutput = testResult.txOutputs.find((c) => c.address === toAddress)!
       expect(BigInt(recipientOutput.alphAmount)).toEqual(transferAmount - arbiterFee + dustAmount)
 
-      const callerOutput = testResult.txOutputs.filter((c) => c.address === defaultInputAsset.address)[0]
+      const callerOutput = testResult.txOutputs.find((c) => c.address === defaultInputAsset.address)!
       checkTxCallerBalance(callerOutput, dustAmount - arbiterFee)
 
-      const tokenPoolOutput = testResult.txOutputs.filter((c) => c.address === fixture.wrappedAlphPoolInfo.address)[0]
+      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.wrappedAlphPoolInfo.address)!
       expect(tokenPoolOutput.tokens).toEqual([
         {
           id: wrappedAlphId,
@@ -552,15 +544,15 @@ describe('test token bridge', () => {
       existingContracts: fixture.localTokenPoolInfo.states().concat(testTokenInfo.states())
     })
 
-    const tokenBridgeForChainState = testResult.contracts.filter(
+    const tokenBridgeForChainState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
-    const localTokenPoolState = testResult.contracts.filter(
+    const localTokenPoolState = testResult.contracts.find(
       (c) => c.contractId === fixture.localTokenPoolInfo.contractId
-    )[0]
+    )!
     expect(localTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
 
     const localTokenPoolOutput = testResult.txOutputs[0]
@@ -627,18 +619,18 @@ describe('test token bridge', () => {
 
     const checkResult = (testResult: TestContractResult) => {
       // check `totalBridged`
-      const localTokenPoolState = testResult.contracts.filter(
+      const localTokenPoolState = testResult.contracts.find(
         (c) => c.contractId === fixture.localTokenPoolInfo.contractId
-      )[0]
+      )!
       expect(localTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged - transferAmount)
 
-      const tokenBridgeForChainState = testResult.contracts.filter(
+      const tokenBridgeForChainState = testResult.contracts.find(
         (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-      )[0]
+      )!
       expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
       const initAsset = fixture.localTokenPoolInfo.selfState.asset
-      const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.localTokenPoolInfo.address)[0]
+      const contractOutput = testResult.txOutputs.find((c) => c.address === fixture.localTokenPoolInfo.address)!
       expect(contractOutput.alphAmount).toEqual(initAsset.alphAmount)
       expect(contractOutput.tokens).toEqual([
         {
@@ -651,7 +643,7 @@ describe('test token bridge', () => {
     const testResult0 = await testWithCaller(defaultInputAsset)
     checkResult(testResult0)
 
-    const recipientOutput0 = testResult0.txOutputs.filter((c) => c.address === toAddress)[0]
+    const recipientOutput0 = testResult0.txOutputs.find((c) => c.address === toAddress)!
     expect(BigInt(recipientOutput0.alphAmount)).toEqual(dustAmount)
     expect(recipientOutput0.tokens).toEqual([
       {
@@ -673,7 +665,7 @@ describe('test token bridge', () => {
     })
     checkResult(testResult1)
 
-    const recipientOutput1 = testResult1.txOutputs.filter((c) => c.address === toAddress)[0]
+    const recipientOutput1 = testResult1.txOutputs.find((c) => c.address === toAddress)!
     expect(BigInt(recipientOutput1.alphAmount)).toEqual(oneAlph - defaultGasFee)
     expect(recipientOutput1.tokens).toEqual([
       {
@@ -836,15 +828,15 @@ describe('test token bridge', () => {
 
     const testResult = await transferToken(minimalConsistencyLevel)
 
-    const tokenBridgeForChainState = testResult.contracts.filter(
+    const tokenBridgeForChainState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
-    const remoteTokenPoolState = testResult.contracts.filter(
+    const remoteTokenPoolState = testResult.contracts.find(
       (c) => c.contractId === fixture.remoteTokenPoolInfo.contractId
-    )[0]
+    )!
     expect(remoteTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged - transferAmount)
 
     const remoteTokenPoolOutput = testResult.txOutputs[0]
@@ -949,7 +941,7 @@ describe('test token bridge', () => {
       existingContracts: fixture.remoteTokenPoolInfo.states()
     })
 
-    const recipientOutput = testResult.txOutputs.filter((c) => c.address === toAddress)[0]
+    const recipientOutput = testResult.txOutputs.find((c) => c.address === toAddress)!
     expect(BigInt(recipientOutput.alphAmount)).toEqual(dustAmount)
     expect(recipientOutput.tokens).toEqual([
       {
@@ -966,17 +958,17 @@ describe('test token bridge', () => {
     ])
 
     // check `totalBridged`
-    const remoteTokenPoolState = testResult.contracts.filter(
+    const remoteTokenPoolState = testResult.contracts.find(
       (c) => c.contractId === fixture.remoteTokenPoolInfo.contractId
-    )[0]
+    )!
     expect(remoteTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
 
-    const tokenBridgeForChainState = testResult.contracts.filter(
+    const tokenBridgeForChainState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
 
-    const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.remoteTokenPoolInfo.address)[0]
+    const contractOutput = testResult.txOutputs.find((c) => c.address === fixture.remoteTokenPoolInfo.address)!
     expect(contractOutput.alphAmount).toEqual(fixture.remoteTokenPoolInfo.selfState.asset.alphAmount)
     expect(contractOutput.tokens).toEqual([
       {
@@ -1015,25 +1007,25 @@ describe('test token bridge', () => {
       existingContracts: fixture.localTokenPoolInfo.states().concat(testTokenInfo.states())
     })
 
-    const tokenBridgeForChainState = testResult.contracts.filter(
+    const tokenBridgeForChainState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainState.fields['start']).toEqual(256n)
     expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(0n)
     expect(tokenBridgeForChainState.fields['secondNext256']).toEqual(0n)
 
     // the locked assets have not changed
-    const tokenPoolState = testResult.contracts.filter((c) => c.address === fixture.localTokenPoolInfo.address)[0]
+    const tokenPoolState = testResult.contracts.find((c) => c.address === fixture.localTokenPoolInfo.address)!
     const tokenPoolInitAsset = fixture.localTokenPoolInfo.selfState.asset
     expect(tokenPoolState.asset.alphAmount).toEqual(tokenPoolInitAsset.alphAmount)
     expect(tokenPoolState.asset.tokens).toEqual(tokenPoolInitAsset.tokens)
 
     const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
-    const unexecutedSequenceState = testResult.contracts.filter((c) => c.contractId === unexecutedSequenceContractId)[0]
+    const unexecutedSequenceState = testResult.contracts.find((c) => c.contractId === unexecutedSequenceContractId)!
     expect(unexecutedSequenceState.fields['begin']).toEqual(0n)
     expect(unexecutedSequenceState.fields['sequences']).toEqual(0n)
 
-    checkTxCallerBalance(testResult.txOutputs.filter((c) => c.address === payer)[0], 0n)
+    checkTxCallerBalance(testResult.txOutputs.find((c) => c.address === payer)!, 0n)
   })
 
   it('should allow transfer wrapped token to non-original chain', async () => {
@@ -1079,20 +1071,20 @@ describe('test token bridge', () => {
 
     const testResult = await transferToken(minimalConsistencyLevel)
 
-    const tokenBridgeForChainBState = testResult.contracts.filter(
+    const tokenBridgeForChainBState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainBState.fields['sendSequence']).toEqual(0n)
 
-    const tokenBridgeForChainCState = testResult.contracts.filter(
+    const tokenBridgeForChainCState = testResult.contracts.find(
       (c) => c.contractId === tokenBridgeForChainCInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainCState.fields['sendSequence']).toEqual(1n)
 
     // check `totalBridged`
-    const remoteTokenPoolState = testResult.contracts.filter(
+    const remoteTokenPoolState = testResult.contracts.find(
       (c) => c.contractId === fixture.remoteTokenPoolInfo.contractId
-    )[0]
+    )!
     expect(remoteTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged - transferAmount)
 
     const remoteTokenPoolOutput = testResult.txOutputs[0]
@@ -1147,7 +1139,7 @@ describe('test token bridge', () => {
       existingContracts: [...fixture.remoteTokenPoolInfo.states(), ...tokenBridgeForChainCInfo.states()]
     })
 
-    const recipientOutput = testResult.txOutputs.filter((c) => c.address === toAddress)[0]
+    const recipientOutput = testResult.txOutputs.find((c) => c.address === toAddress)!
     expect(BigInt(recipientOutput.alphAmount)).toEqual(dustAmount)
     expect(recipientOutput.tokens).toEqual([
       {
@@ -1164,23 +1156,23 @@ describe('test token bridge', () => {
     ])
 
     // check `totalBridged`
-    const remoteTokenPoolState = testResult.contracts.filter(
+    const remoteTokenPoolState = testResult.contracts.find(
       (c) => c.contractId === fixture.remoteTokenPoolInfo.contractId
-    )[0]
+    )!
     expect(remoteTokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
 
     // check `TokenBridgeForChain` sequences
-    const tokenBridgeForChainBState = testResult.contracts.filter(
+    const tokenBridgeForChainBState = testResult.contracts.find(
       (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainBState.fields['firstNext256']).toEqual(0n)
 
-    const tokenBridgeForChainCState = testResult.contracts.filter(
+    const tokenBridgeForChainCState = testResult.contracts.find(
       (c) => c.contractId === tokenBridgeForChainCInfo.contractId
-    )[0]
+    )!
     expect(tokenBridgeForChainCState.fields['firstNext256']).toEqual(1n)
 
-    const contractOutput = testResult.txOutputs.filter((c) => c.address === fixture.remoteTokenPoolInfo.address)[0]
+    const contractOutput = testResult.txOutputs.find((c) => c.address === fixture.remoteTokenPoolInfo.address)!
     expect(contractOutput.alphAmount).toEqual(oneAlph)
     expect(contractOutput.tokens).toEqual([
       {
