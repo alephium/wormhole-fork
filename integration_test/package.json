@@ -31,7 +31,7 @@
     "@alephium/web3-wallet": "^0.2.0-rc.36",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
-    "alephium-wormhole-sdk": "^0.0.1-rc5",
+    "alephium-wormhole-sdk": "^0.1.0-rc0",
     "bs58": "^5.0.0",
     "eslint": "^7.32.0",
     "ethers": "^5.6.8",
