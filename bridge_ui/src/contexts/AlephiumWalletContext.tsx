@@ -2,7 +2,7 @@ import QRCodeModal from '@walletconnect/qrcode-modal'
 import { WalletConnectProvider } from '@alephium/walletconnect-provider'
 import { NodeProvider, Account, SignerProvider } from '@alephium/web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'
-import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID, WALLET_CONNECT_ALPH_PROJECT_ID } from '../utils/consts'
+import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID, CLUSTER, WALLET_CONNECT_ALPH_PROJECT_ID } from '../utils/consts'
 import { connect as connectToExtension, AlephiumWindowObject } from '@alephium/get-extension-wallet'
 
 export enum ConnectType {
@@ -29,6 +29,7 @@ export interface AlephiumWallet {
   connect(connectType: ConnectType): void
   disconnect(): void
   signer: AlephiumWalletSigner | undefined
+  error: string | undefined
   uri?: string
 }
 
@@ -48,6 +49,7 @@ export const AlephiumWalletProvider = ({
   const [walletConnectProvider, setWalletConnectProvider] = useState<WalletConnectProvider | undefined>(undefined)
   const [alephiumWindowObject, setAlephiumWindowObject] = useState<AlephiumWindowObject | undefined>(undefined)
   const [account, setAccount] = useState<Account | undefined>(undefined)
+  const [error, setError] = useState<string | undefined>(undefined)
   const connect = useCallback(async (connectType: ConnectType) => {
     if (connectType === ConnectType.WALLETCONNECT) {
       const provider = await WalletConnectProvider.init({
@@ -86,7 +88,16 @@ export const AlephiumWalletProvider = ({
         setAccount(account)
         setAlephiumWindowObject(windowAlephium)
 
-        windowAlephium.on("addressesChanged", async (addresses: string[]) => {
+        windowAlephium.on('networkChanged', (network) => {
+          console.log(`Network changed to ${network.id}`)
+          if (CLUSTER !== 'devnet' && CLUSTER !== network.id) {
+            setError(`Invalid network ${network.id}, please connect to ${CLUSTER}`)
+          } else {
+            setError(undefined)
+          }
+        })
+
+        windowAlephium.on('addressesChanged', async (addresses: string[]) => {
           if (addresses.length === 0) {
             setAccount(undefined)
           } else {
@@ -114,6 +125,7 @@ export const AlephiumWalletProvider = ({
         : alephiumWindowObject
           ? new AlephiumWalletSigner(alephiumWindowObject, account)
           : undefined,
+    error: error,
     uri: uri
   }), [
     connect,
@@ -121,6 +133,7 @@ export const AlephiumWalletProvider = ({
     walletConnectProvider,
     alephiumWindowObject,
     account,
+    error,
     uri
   ])
 
