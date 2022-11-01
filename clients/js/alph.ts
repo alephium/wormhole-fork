@@ -75,19 +75,19 @@ export async function execute_governance_alph(
       switch (payload.type) {
         case 'GuardianSetUpgrade':
           console.log('Submitting new guardian set')
-          console.log(`Hash: ${(await executeGovernanceScript(updateGuardianSetScript())).txId}`) 
+          console.log(`TxId: ${(await executeGovernanceScript(updateGuardianSetScript())).txId}`)
           break
         case 'UpdateMessageFee':
           console.log('Submitting update message fee')
-          console.log(`Hash: ${(await executeGovernanceScript(setMessageFeeScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(setMessageFeeScript())).txId}`)
           break
         case 'TransferFee':
           console.log('Submitting transfer fee')
-          console.log(`Hash: ${(await executeGovernanceScript(transferFeeScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(transferFeeScript())).txId}`)
           break
         case 'ContractUpgrade':
           console.log(`Upgrading core contract`)
-          console.log(`Hash: ${(await executeGovernanceScript(upgradeGovernanceContractScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(upgradeGovernanceContractScript())).txId}`)
           break
         default:
           impossible(payload)
@@ -100,7 +100,7 @@ export async function execute_governance_alph(
       switch (payload.type) {
         case 'ContractUpgrade':
           console.log('Upgrading contract')
-          console.log(`Hash: ${(await executeTokenBridgeScript(upgradeTokenBridgeContractScript())).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(upgradeTokenBridgeContractScript())).txId}`)
           break
         case 'RegisterChain':
           console.log('Registering chain')
@@ -112,11 +112,11 @@ export async function execute_governance_alph(
             wallet.account.address,
             BigInt(1e18)
           )
-          console.log(`Hash: ${result.txId}`)
+          console.log(`TxId: ${result.txId}`)
           break
         case 'Extension':
           console.log(`Action: ${payload.action}`)
-          console.log(`Hash: ${(await executeTokenBridgeExtensions(payload.action.payloadId)).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeExtensions(payload.action.payloadId)).txId}`)
           break
         default:
           impossible(payload)
