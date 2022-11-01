@@ -10,7 +10,7 @@ import {
   contractIdFromAddress,
   binToHex
 } from '@alephium/web3'
-import { createGovernance } from './governance-fixture'
+import { createGovernance, defaultMessageFee } from './governance-fixture'
 import {
   CHAIN_ID_ALEPHIUM,
   ContractInfo,
@@ -346,9 +346,14 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
   return new ContractInfo(tokenBridgeFactory, state, templateContracts.states(), address)
 }
 
-export function createTokenBridge(totalWrappedAlph = 0n, address?: string, receivedSequence?: bigint): TokenBridgeInfo {
+export function createTokenBridge(
+  totalWrappedAlph = 0n,
+  address?: string,
+  receivedSequence?: bigint,
+  messageFee?: bigint
+): TokenBridgeInfo {
   const tokenBridge = Project.contract('TokenBridge')
-  const governance = createGovernance()
+  const governance = createGovernance(undefined, messageFee)
   const wrappedAlphPoolCodeHash = Project.contract('WrappedAlphPool').codeHash
   const wrappedAlph = createWrappedAlph(totalWrappedAlph, wrappedAlphPoolCodeHash)
   const templateContracts = createTemplateContracts()
@@ -494,10 +499,11 @@ export function newTokenBridgeForChainFixture(
 export function newWrappedAlphPoolFixture(
   remoteChainId: number,
   remoteTokenBridgeId: string,
-  totalWrappedAlph: bigint = alph(10),
-  totalBridged: bigint = alph(10)
+  messageFee?: bigint
 ): WrappedAlphPoolTestFixture {
-  const tokenBridgeInfo = createTokenBridge(totalWrappedAlph)
+  const totalWrappedAlph = alph(10)
+  const totalBridged = alph(10)
+  const tokenBridgeInfo = createTokenBridge(totalWrappedAlph, undefined, undefined, messageFee)
   const tokenBridgeForChainInfo = createTokenBridgeForChain(tokenBridgeInfo, remoteChainId, remoteTokenBridgeId)
   const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, tokenBridgeInfo.wrappedAlphId)
   const asset: Asset = {

@@ -27,7 +27,7 @@ import (
 var messageFee *string
 var transferFeeAmount *string
 var transferFeeRecipient *string
-var subContractSize *int
+var destroyedUnexecutedSequenceContractSize *int
 var consistencyLevel *int
 var refundAddress *string
 var setUpdateNumGuardians *int
@@ -64,7 +64,7 @@ func init() {
 	transferFeeRecipient = transferFeeFlagSet.String("recipient", "", "Transfer fee recipient")
 	AdminClientTransferFeeTemplateCmd.Flags().AddFlagSet(transferFeeFlagSet)
 
-	subContractSize = AdminClientTokenBridgeDestroyContractsCmd.Flags().Int("num", 2, "Number of sub contracts in example file")
+	destroyedUnexecutedSequenceContractSize = AdminClientTokenBridgeDestroyContractsCmd.Flags().Int("num", 2, "Number of unexecuted sequence contracts that need to be removed in example file")
 	TemplateCmd.AddCommand(AdminClientTokenBridgeDestroyContractsCmd)
 
 	consistencyLevel = AdminClientTokenBridgeUpdateConsistencyLevelCmd.Flags().Int("consistency-level", 10, "New consistency level")
@@ -219,10 +219,10 @@ func runTransferFeeTemplate(cmd *cobra.Command, args []string) {
 
 func runGuardianSetTemplate(cmd *cobra.Command, args []string) {
 	// Use deterministic devnet addresses as examples in the template, such that this doubles as a test fixture.
-	guardians := make([]*nodev1.GuardianSetUpdate_Guardian, *setUpdateNumGuardians)
+	guardians := make([]*nodev1.GuardianSetUpgrade_Guardian, *setUpdateNumGuardians)
 	for i := 0; i < *setUpdateNumGuardians; i++ {
 		k := devnet.InsecureDeterministicEcdsaKeyByIndex(crypto.S256(), uint64(i))
-		guardians[i] = &nodev1.GuardianSetUpdate_Guardian{
+		guardians[i] = &nodev1.GuardianSetUpgrade_Guardian{
 			Pubkey: crypto.PubkeyToAddress(k.PublicKey).Hex(),
 			Name:   fmt.Sprintf("Example validator %d", i),
 		}
@@ -236,7 +236,7 @@ func runGuardianSetTemplate(cmd *cobra.Command, args []string) {
 				Nonce:         rand.Uint32(),
 				TargetChainId: uint32(vaa.ChainIDUnset),
 				Payload: &nodev1.GovernanceMessage_GuardianSet{
-					GuardianSet: &nodev1.GuardianSetUpdate{Guardians: guardians},
+					GuardianSet: &nodev1.GuardianSetUpgrade{Guardians: guardians},
 				},
 			},
 		},
@@ -353,7 +353,7 @@ func runTokenBridgeUpgradeContractTemplate(cmd *cobra.Command, args []string) {
 
 func runDestroyUnexecutedSequenceContractsTemplate(cmd *cobra.Command, args []string) {
 	sequences := make([]uint64, 0)
-	for i := 0; i < *subContractSize; i++ {
+	for i := 0; i < *destroyedUnexecutedSequenceContractSize; i++ {
 		sequences = append(sequences, uint64(i))
 	}
 	m := &nodev1.InjectGovernanceVAARequest{

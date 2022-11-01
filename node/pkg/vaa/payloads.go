@@ -29,8 +29,8 @@ type (
 		Payload []byte
 	}
 
-	// BodyGuardianSetUpdate is a governance message to set a new guardian set
-	BodyGuardianSetUpdate struct {
+	// BodyGuardianSetUpgrade is a governance message to set a new guardian set
+	BodyGuardianSetUpgrade struct {
 		Keys     []common.Address
 		NewIndex uint32
 	}
@@ -98,7 +98,7 @@ func (b BodyContractUpgrade) Serialize() []byte {
 	return buf.Bytes()
 }
 
-func (b BodyGuardianSetUpdate) Serialize() []byte {
+func (b BodyGuardianSetUpgrade) Serialize() []byte {
 	buf := new(bytes.Buffer)
 
 	// Module

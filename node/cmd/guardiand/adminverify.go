@@ -50,7 +50,7 @@ func runGovernanceVAAVerify(cmd *cobra.Command, args []string) {
 		targetChainId := vaa.ChainID(message.TargetChainId)
 		switch payload := message.Payload.(type) {
 		case *nodev1.GovernanceMessage_GuardianSet:
-			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = adminGuardianSetUpgradeToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_ContractUpgrade:
 			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeRegisterChain:
