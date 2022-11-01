@@ -390,10 +390,13 @@ describe('test token bridge', () => {
           amount: fixture.totalBridged + realTransferAmount
         }
       ])
-      const governanceOutput = testResult.txOutputs.filter(
-        (c) => c.address === fixture.tokenBridgeInfo.governance.address
-      )[0]
-      expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
+
+      if (messageFee !== 0n) {
+        const governanceOutput = testResult.txOutputs.filter(
+          (c) => c.address === fixture.tokenBridgeInfo.governance.address
+        )[0]
+        expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
+      }
 
       const transferMessage = new Transfer(realTransferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
       expect(testResult.events.length).toEqual(1)
