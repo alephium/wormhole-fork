@@ -116,11 +116,9 @@ upsert_env_file $ethFile $bscTokenBridge $bscTokenBridgeVAA
 
 # ethereum token bridge
 upsert_env_file $ethFile $ethTokenBridge $ethTokenBridgeVAA
-upsert_env_file $envFile $ethTokenBridge $ethTokenBridgeVAA
 
 # ethereum nft bridge
 upsert_env_file $ethFile $ethNFTBridge $ethNFTBridgeVAA
-upsert_env_file $envFile $ethNFTBridge $ethNFTBridgeVAA
 
 # alph token bridge
 upsert_env_file $ethFile $alphTokenBridge $alphTokenBridgeVAA

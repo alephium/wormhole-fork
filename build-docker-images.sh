@@ -6,7 +6,7 @@ NUM_GUARDIANS=1
 
 export DOCKER_BUILDKIT=1
 
-VERSION=0.2.46
+VERSION=0.2.47
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
