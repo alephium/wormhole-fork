@@ -62,7 +62,7 @@ services:
       - -c
       - "npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_alph_chain.js"
 
-  guardian:
+  guardian-0:
     image: alephium/guardiand:0.2.47
     hostname: guardian-0
     restart: unless-stopped
@@ -92,14 +92,50 @@ services:
       - "0"
       - --integrationTest
       - --unsafeDevMode
-      - --guardianKey
-      - /run/node/bridge.key
       - --publicRPC
       - "[::]:7070"
       - --publicWeb
       - "[::]:7071"
       - --adminSocket
       - /tmp/admin.sock
-      - --dataDir
-      - /run/node/data
+      - --logLevel=debug
+
+  guardian-1:
+    image: alephium/guardiand:0.2.47
+    hostname: guardian-1
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:9999:8999
+      - 127.0.0.1:8070:7070
+      - 127.0.0.1:8071:7071
+      - 127.0.0.1:7060:6060
+    volumes:
+      - guardian-node:/run/node/data
+    entrypoint:
+      - /guardiand
+      - node
+      - --ethRPC
+      - ws://eth-devnet:8545
+      - --alphRPC
+      - http://alephium:22973
+      - --alphContractIds
+      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,ytUzrdkkLG7VjbCT7H1xNxP8jqYUCw8RtXmRmeeitpYa"
+      - --alphGroupIndex
+      - "0"
+      - --alphMinConfirmations
+      - "1"
+      - --alphFetchPeriod
+      - "1"
+      - --devnetGuardianIndex
+      - "1"
+      - --integrationTest
+      - --unsafeDevMode
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --publicRPC
+      - "[::]:7070"
+      - --publicWeb
+      - "[::]:7071"
+      - --adminSocket
+      - /tmp/admin.sock
       - --logLevel=debug
