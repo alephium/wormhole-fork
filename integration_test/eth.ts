@@ -7,6 +7,7 @@ import {
   coalesceChainName,
   createWrappedOnEth,
   ERC20__factory,
+  Governance__factory,
   hexToUint8Array,
   MockWETH9__factory,
   redeemOnEth,
@@ -21,6 +22,7 @@ import { Wallet as ETHWallet, providers } from 'ethers'
 
 export function createEth(): BridgeChain {
   // Eth contract addresses are deterministic on devnet
+  const governanceAddress = '0xC89Ce4735882C9F0f0FE26686c53074E09B0D550'
   const tokenBridgeAddress = '0x0290FB167208Af455bB137780163b7B7a9a10C16'
   const tokenBridgeEmitterAddress = zeroPad(tokenBridgeAddress.slice(2), 32)
   const wethAddress = '0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E'
@@ -222,6 +224,19 @@ export function createEth(): BridgeChain {
     return await getTransactionFee(receipt.transactionHash)
   }
 
+  const getCurrentGuardianSet = async (): Promise<string[]> => {
+    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const guardianSetIndex = await governance.getCurrentGuardianSetIndex()
+    const result = await governance.getGuardianSet(guardianSetIndex)
+    return result[0]
+  }
+
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const messageFee = await governance.messageFee()
+    return messageFee.toBigInt()
+  }
+
   return {
     chainId: CHAIN_ID_ETH,
     testTokenId: testTokenAddress,
@@ -247,6 +262,9 @@ export function createEth(): BridgeChain {
     transferWrapped: transferWrapped,
 
     redeemToken: redeemToken,
-    redeemNative: redeemNative
+    redeemNative: redeemNative,
+
+    getCurrentGuardianSet: getCurrentGuardianSet,
+    getCurrentMessageFee: getCurrentMessageFee
   }
 }

@@ -43,13 +43,16 @@ export interface BridgeChain {
 
   redeemToken(signedVaa: Uint8Array): Promise<bigint>
   redeemNative(signedVaa: Uint8Array): Promise<bigint>
+
+  getCurrentGuardianSet(): Promise<string[]>
+  getCurrentMessageFee(): Promise<bigint>
 }
 
 export class Sequence {
   private seq: number
 
-  constructor() {
-    this.seq = 0
+  constructor(from?: number) {
+    this.seq = from ?? 0
   }
 
   next(): number {
@@ -59,9 +62,9 @@ export class Sequence {
   }
 }
 
-function assert(condition: boolean) {
+export function assert(condition: boolean) {
   if (!condition) {
-    console.trace('transfer error')
+    console.trace('error')
     process.exit(-1)
   }
 }

@@ -3,7 +3,17 @@ import base58 from 'bs58'
 import { BridgeChain, TransferResult, getSignedVAA, normalizeTokenId, Sequence, waitAlphTxConfirmed } from './utils'
 import path from 'path'
 import fs from 'fs'
-import { addressFromContractId, binToHex, groupOfAddress, node, web3 } from '@alephium/web3'
+import {
+  addressFromContractId,
+  binToHex,
+  Contract,
+  groupOfAddress,
+  node,
+  NodeProvider,
+  Project,
+  Val,
+  web3
+} from '@alephium/web3'
 import {
   attestFromAlph,
   attestWrappedAlph,
@@ -22,7 +32,14 @@ import {
 } from 'alephium-wormhole-sdk'
 
 export async function createAlephium(): Promise<BridgeChain> {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+  const nodeProvider = new NodeProvider('http://127.0.0.1:22973')
+  web3.setCurrentNodeProvider(nodeProvider)
+  const bridgeRootPath = path.join(process.cwd(), '..')
+  await Project.build(
+    { ignoreUnusedConstantsWarnings: true },
+    path.join(bridgeRootPath, 'alephium', 'contracts'),
+    path.join(bridgeRootPath, 'alephium', 'artifacts')
+  )
   const nodeWallet = await testNodeWallet()
   const accounts = await nodeWallet.getAccounts()
   const accountAddress = accounts[0].address
@@ -34,6 +51,7 @@ export async function createAlephium(): Promise<BridgeChain> {
   const tokenBridgeContractId = contracts.TokenBridge.contractId
   const wrappedAlphContractId = contracts.WrappedAlph.contractId
   const testTokenContractId = contracts.TestToken.contractId
+  const governanceAddress = contracts.Governance.contractAddress
   const sequence = new Sequence()
   const defaultMessageFee = 10n ** 14n
   const defaultArbiterFee = 0n
@@ -213,6 +231,31 @@ export async function createAlephium(): Promise<BridgeChain> {
     return await getTransactionFee(result.txId)
   }
 
+  const getCurrentGuardianSet = async (): Promise<string[]> => {
+    const governance = Project.contract('Governance')
+    const contractState = await governance.fetchState(governanceAddress, groupIndex)
+    const encoded = (contractState.fields['guardianSets'] as Val[])[1] as string
+    const guardianSet = encoded.slice(2) // remove the first byte
+    if (guardianSet.length === 0) {
+      return []
+    }
+    if (guardianSet.length % 40 !== 0) {
+      throw new Error(`Invalid guardian set: ${guardianSet}`)
+    }
+    const keySize = guardianSet.length / 40
+    const keys: string[] = new Array<string>(keySize)
+    for (let i = 0; i < keySize; i++) {
+      keys[i] = guardianSet.slice(i * 40, (i + 1) * 40)
+    }
+    return keys
+  }
+
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = Project.contract('Governance')
+    const contractState = await governance.fetchState(governanceAddress, groupIndex)
+    return contractState.fields['messageFee'] as bigint
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -238,6 +281,9 @@ export async function createAlephium(): Promise<BridgeChain> {
     transferWrapped: transferWrapped,
 
     redeemToken: redeemToken,
-    redeemNative: redeemToken
+    redeemNative: redeemToken,
+
+    getCurrentGuardianSet: getCurrentGuardianSet,
+    getCurrentMessageFee: getCurrentMessageFee
   }
 }
