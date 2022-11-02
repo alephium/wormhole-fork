@@ -2,7 +2,7 @@ import { NodeProvider, node } from '@alephium/web3'
 import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { BridgeChain } from './bridge_chain'
-import { createAlephium } from './alph'
+import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'
 
 export function assert(condition: boolean) {
@@ -70,7 +70,7 @@ export async function waitAlphTxConfirmed(
 
 type BridgeChains = {
   eth: BridgeChain
-  alph: BridgeChain
+  alph: AlephiumBridgeChain
 }
 
 let bridgeChains: BridgeChains | undefined = undefined

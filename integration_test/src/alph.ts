@@ -5,7 +5,17 @@ import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import path from 'path'
 import fs from 'fs'
-import { addressFromContractId, binToHex, groupOfAddress, node, NodeProvider, Project, Val, web3 } from '@alephium/web3'
+import {
+  addressFromContractId,
+  binToHex,
+  ContractState,
+  groupOfAddress,
+  node,
+  NodeProvider,
+  Project,
+  Val,
+  web3
+} from '@alephium/web3'
 import {
   attestFromAlph,
   attestWrappedAlph,
@@ -23,7 +33,12 @@ import {
   transferRemoteTokenFromAlph
 } from 'alephium-wormhole-sdk'
 
-export async function createAlephium(): Promise<BridgeChain> {
+export type AlephiumBridgeChain = BridgeChain & {
+  getContractState(address: string, contractName: string): Promise<ContractState>
+  getTokenBridgeContractState(): Promise<ContractState>
+}
+
+export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const nodeProvider = new NodeProvider('http://127.0.0.1:22973')
   web3.setCurrentNodeProvider(nodeProvider)
   const bridgeRootPath = path.join(process.cwd(), '..')
@@ -40,6 +55,7 @@ export async function createAlephium(): Promise<BridgeChain> {
   const deploymentsFile = path.join(process.cwd(), '..', 'alephium', '.deployments.devnet.json')
   const content = fs.readFileSync(deploymentsFile).toString()
   const contracts = JSON.parse(content)['0'].deployContractResults
+  const tokenBridgeAddress = contracts.TokenBridge.contractAddress
   const tokenBridgeContractId = contracts.TokenBridge.contractId
   const wrappedAlphContractId = contracts.WrappedAlph.contractId
   const testTokenContractId = contracts.TestToken.contractId
@@ -266,6 +282,15 @@ export async function createAlephium(): Promise<BridgeChain> {
     return keys
   }
 
+  const getContractState = async (address: string, name: string): Promise<ContractState> => {
+    const contract = Project.contract(name)
+    return await contract.fetchState(address, groupIndex)
+  }
+
+  const getTokenBridgeContractState = async (): Promise<ContractState> => {
+    return getContractState(tokenBridgeAddress, 'TokenBridge')
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -297,6 +322,9 @@ export async function createAlephium(): Promise<BridgeChain> {
     redeemNative: redeemToken,
 
     getCurrentGuardianSet: getCurrentGuardianSet,
-    getCurrentMessageFee: getCurrentMessageFee
+    getCurrentMessageFee: getCurrentMessageFee,
+
+    getContractState: getContractState,
+    getTokenBridgeContractState: getTokenBridgeContractState
   }
 }

@@ -14,7 +14,8 @@
     "update_message_fee": "npx ts-node src/governance/update_message_fee.ts",
     "transfer_token": "npx ts-node src/token_bridge/transfer_token_test.ts",
     "transfer_fee": "npx ts-node src/governance/transfer_fee.ts",
-    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee"
+    "update_refund_address": "npx ts-node src/governance/update_refund_address.ts",
+    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee && npm run update_refund_address"
   },
   "prettier": {
     "printWidth": 120,
