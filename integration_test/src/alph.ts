@@ -1,19 +1,11 @@
 import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
-import { BridgeChain, TransferResult, getSignedVAA, normalizeTokenId, Sequence, waitAlphTxConfirmed } from './utils'
+import { getSignedVAA, normalizeTokenId, waitAlphTxConfirmed } from './utils'
+import { BridgeChain, TransferResult } from './bridge_chain'
+import { Sequence } from './sequence'
 import path from 'path'
 import fs from 'fs'
-import {
-  addressFromContractId,
-  binToHex,
-  Contract,
-  groupOfAddress,
-  node,
-  NodeProvider,
-  Project,
-  Val,
-  web3
-} from '@alephium/web3'
+import { addressFromContractId, binToHex, groupOfAddress, node, NodeProvider, Project, Val, web3 } from '@alephium/web3'
 import {
   attestFromAlph,
   attestWrappedAlph,

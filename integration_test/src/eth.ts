@@ -17,8 +17,10 @@ import {
   transferFromEthNative,
   zeroPad
 } from 'alephium-wormhole-sdk'
-import { BridgeChain, getSignedVAA, normalizeTokenId, Sequence, TransferResult } from './utils'
 import { Wallet as ETHWallet, providers } from 'ethers'
+import { Sequence } from './sequence'
+import { BridgeChain, TransferResult } from './bridge_chain'
+import { getSignedVAA, normalizeTokenId } from './utils'
 
 export function createEth(): BridgeChain {
   // Eth contract addresses are deterministic on devnet

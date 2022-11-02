@@ -10,9 +10,10 @@
     "build": "rm -rf dist && npx tsc --build .",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
-    "governance": "npx ts-node governance.ts",
-    "transfer_token": "npx ts-node transfer_token.ts",
-    "it": "npm run governance && npm run transfer_token"
+    "guardian_set_upgrade": "npx ts-node src/governance/guardian_set_upgrade.ts",
+    "update_message_fee": "npx ts-node src/governance/update_message_fee.ts",
+    "transfer_token": "npx ts-node src/token_bridge/transfer_token_test.ts",
+    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token"
   },
   "prettier": {
     "printWidth": 120,

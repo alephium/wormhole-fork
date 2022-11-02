@@ -1,5 +1,5 @@
 {
-  "include": ["alph.ts", "eth.ts", "utils.ts", "transfer_token.ts", "governance.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "target": "es2020",

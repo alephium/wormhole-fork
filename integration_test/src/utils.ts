@@ -1,0 +1,86 @@
+import { NodeProvider, node } from '@alephium/web3'
+import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
+import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
+import { BridgeChain } from './bridge_chain'
+import { createAlephium } from './alph'
+import { createEth } from './eth'
+
+export function assert(condition: boolean) {
+  if (!condition) {
+    console.trace('error')
+    process.exit(-1)
+  }
+}
+
+export async function sleep(seconds: number) {
+  await new Promise((r) => setTimeout(r, seconds * 1000))
+}
+
+const GuardianHosts: string[] = ['http://127.0.0.1:7071']
+export async function getSignedVAA(
+  emitterChainId: ChainId,
+  emitterAddress: string,
+  targetChainId: ChainId,
+  sequence: number
+): Promise<Uint8Array> {
+  const response = await getSignedVAAWithRetry(
+    GuardianHosts,
+    emitterChainId,
+    emitterAddress,
+    targetChainId,
+    sequence.toString(),
+    { transport: NodeHttpTransport() },
+    1000,
+    30
+  )
+  return response.vaaBytes
+}
+
+export function normalizeTokenId(tokenId: string): string {
+  if (tokenId.length === 64) {
+    return tokenId
+  }
+  if (tokenId.startsWith('0x') || tokenId.startsWith('0X')) {
+    // ETH token address
+    return zeroPad(tokenId.slice(2), 32)
+  }
+  if (tokenId.length === 40) {
+    return zeroPad(tokenId, 32)
+  }
+  throw new Error(`invalid token id: ${tokenId}`)
+}
+
+function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+  return txStatus.type === 'Confirmed'
+}
+
+// TODO: add this to SDK
+export async function waitAlphTxConfirmed(
+  provider: NodeProvider,
+  txId: string,
+  confirmations: number
+): Promise<node.Confirmed> {
+  const status = await provider.transactions.getTransactionsStatus({ txId: txId })
+  if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
+    return status
+  }
+  await new Promise((r) => setTimeout(r, 1000))
+  return waitAlphTxConfirmed(provider, txId, confirmations)
+}
+
+type BridgeChains = {
+  eth: BridgeChain
+  alph: BridgeChain
+}
+
+let bridgeChains: BridgeChains | undefined = undefined
+
+export async function getBridgeChains(): Promise<BridgeChains> {
+  if (bridgeChains !== undefined) {
+    return bridgeChains
+  }
+  const alph = await createAlephium()
+  const eth = await createEth()
+  bridgeChains = { eth, alph }
+  return bridgeChains
+}
