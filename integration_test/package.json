@@ -15,7 +15,8 @@
     "transfer_token": "npx ts-node src/token_bridge/transfer_token_test.ts",
     "transfer_fee": "npx ts-node src/governance/transfer_fee.ts",
     "update_refund_address": "npx ts-node src/governance/update_refund_address.ts",
-    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee && npm run update_refund_address"
+    "update_consistency_level": "npx ts-node src/governance/update_consistency_level.ts",
+    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee && npm run update_refund_address && npm run update_consistency_level"
   },
   "prettier": {
     "printWidth": 120,
