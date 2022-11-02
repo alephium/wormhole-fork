@@ -30,12 +30,15 @@ import {
   redeemOnAlph,
   transferAlph,
   transferLocalTokenFromAlph,
-  transferRemoteTokenFromAlph
+  transferRemoteTokenFromAlph,
+  deposit as tokenBridgeForChainDeposit
 } from 'alephium-wormhole-sdk'
 
 export type AlephiumBridgeChain = BridgeChain & {
+  tokenBridgeContractId: string
   getContractState(address: string, contractName: string): Promise<ContractState>
   getTokenBridgeContractState(): Promise<ContractState>
+  deposit(remoteChainId: ChainId, amount: bigint): Promise<void>
 }
 
 export async function createAlephium(): Promise<AlephiumBridgeChain> {
@@ -291,6 +294,13 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getContractState(tokenBridgeAddress, 'TokenBridge')
   }
 
+  const deposit = async (remoteChainId: ChainId, amount: bigint): Promise<void> => {
+    const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, remoteChainId)
+    const result = await tokenBridgeForChainDeposit(nodeWallet, tokenBridgeForChainId, amount)
+    await waitAlphTxConfirmed(nodeProvider, result.txId, 1)
+    console.log(`Deposit completed, tx id: ${result.txId}`)
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -324,7 +334,9 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     getCurrentGuardianSet: getCurrentGuardianSet,
     getCurrentMessageFee: getCurrentMessageFee,
 
+    tokenBridgeContractId: tokenBridgeContractId,
     getContractState: getContractState,
-    getTokenBridgeContractState: getTokenBridgeContractState
+    getTokenBridgeContractState: getTokenBridgeContractState,
+    deposit: deposit
   }
 }

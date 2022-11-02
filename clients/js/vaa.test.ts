@@ -136,6 +136,7 @@ describe('vaa serde tests', () => {
   it('serde Alephium DestroyUnexecutedSequences', () => {
     const action: DestroyUnexecutedSequences = {
       payloadId: AlphPayloadIds.DestroyUnexecutedSequencesId,
+      emitterChain: 2,
       sequences: [0, 1, 5, 8, 9]
     }
     const payload: GovernanceExtension<typeof CHAIN_ID_ALEPHIUM, 'TokenBridge', DestroyUnexecutedSequences> = {
