@@ -66,6 +66,14 @@ export async function createAlephium(): Promise<BridgeChain> {
 
   const normalizeTransferAmount = (amount: bigint): bigint => amount
 
+  const normalizeAddress = (address: string): Uint8Array => {
+    const decoded = base58.decode(address)
+    if (decoded.length !== 33) {
+      throw new Error(`Invalid address ${address}`)
+    }
+    return decoded.slice(1)
+  }
+
   const getTransactionFee = async (txId: string): Promise<bigint> => {
     const status = await nodeWallet.nodeProvider.transactions.getTransactionsStatus({ txId: txId })
     // the transaction has been confirmed
@@ -75,9 +83,18 @@ export async function createAlephium(): Promise<BridgeChain> {
     return BigInt(tx.unsigned.gasPrice) * BigInt(tx.unsigned.gasAmount)
   }
 
-  const getNativeTokenBalance = async (): Promise<bigint> => {
-    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(accountAddress)
+  const getNativeTokenBalanceByAddress = async (address: string): Promise<bigint> => {
+    const decoded = base58.decode(address)
+    if (decoded[0] === 3) {
+      const contractState = await nodeProvider.contracts.getContractsAddressState(address, { group: groupIndex })
+      return BigInt(contractState.asset.attoAlphAmount)
+    }
+    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(address)
     return BigInt(balance.balance)
+  }
+
+  const getNativeTokenBalance = async (): Promise<bigint> => {
+    return getNativeTokenBalanceByAddress(accountAddress)
   }
 
   const getTokenBalance = async (tokenId: string): Promise<bigint> => {
@@ -256,10 +273,13 @@ export async function createAlephium(): Promise<BridgeChain> {
     recipientAddress: recipientAddress,
     messageFee: currentMessageFee,
     oneCoin: oneAlph,
+    governanceContractAddress: governanceAddress,
 
     normalizeTransferAmount: normalizeTransferAmount,
     getTransactionFee: getTransactionFee,
+    normalizeAddress: normalizeAddress,
 
+    getNativeTokenBalanceByAddress: getNativeTokenBalanceByAddress,
     getNativeTokenBalance: getNativeTokenBalance,
     getTokenBalance: getTokenBalance,
     getWrappedTokenBalance: getWrappedTokenBalance,

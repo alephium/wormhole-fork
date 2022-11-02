@@ -13,7 +13,8 @@
     "guardian_set_upgrade": "npx ts-node src/governance/guardian_set_upgrade.ts",
     "update_message_fee": "npx ts-node src/governance/update_message_fee.ts",
     "transfer_token": "npx ts-node src/token_bridge/transfer_token_test.ts",
-    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token"
+    "transfer_fee": "npx ts-node src/governance/transfer_fee.ts",
+    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee"
   },
   "prettier": {
     "printWidth": 120,

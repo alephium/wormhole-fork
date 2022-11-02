@@ -69,15 +69,26 @@ export async function createEth(): Promise<BridgeChain> {
     return (amount / unit) * unit
   }
 
+  const normalizeAddress = (address: string): Uint8Array => {
+    if (address.startsWith('0x') || address.startsWith('0X')) {
+      return Buffer.from(address.slice(2).padStart(64, '0'), 'hex')
+    }
+    return Buffer.from(address.padStart(64, '0'), 'hex')
+  }
+
   const getTransactionFee = async (txId: string): Promise<bigint> => {
     const receipt = await wallet.provider.getTransactionReceipt(txId)
     const tx = await wallet.provider.getTransaction(txId)
     return tx.gasPrice!.mul(receipt.gasUsed).toBigInt()
   }
 
+  const getNativeTokenBalanceByAddress = async (address: string): Promise<bigint> => {
+    const balance = await wallet.provider.getBalance(address)
+    return balance.toBigInt()
+  }
+
   const getNativeTokenBalance = async (): Promise<bigint> => {
-    const balanace = await wallet.getBalance()
-    return balanace.toBigInt()
+    return getNativeTokenBalanceByAddress(wallet.address)
   }
 
   const getWrappedToken = async (originTokenId: string, tokenChainId: ChainId): Promise<string> => {
@@ -250,10 +261,13 @@ export async function createEth(): Promise<BridgeChain> {
     recipientAddress: recipientAddress,
     messageFee: currentMessageFee,
     oneCoin: 10n ** 18n,
+    governanceContractAddress: governanceAddress,
 
     normalizeTransferAmount: normalizeTransferAmount,
     getTransactionFee: getTransactionFee,
+    normalizeAddress: normalizeAddress,
 
+    getNativeTokenBalanceByAddress: getNativeTokenBalanceByAddress,
     getNativeTokenBalance: getNativeTokenBalance,
     getTokenBalance: getTokenBalance,
     getWrappedTokenBalance: getWrappedTokenBalance,
