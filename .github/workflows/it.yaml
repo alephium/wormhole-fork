@@ -32,6 +32,9 @@ jobs:
           npx --yes @h0ngcha0/alephium-cli wallets restore -w alephium-web3-test-only-wallet \
             -c "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava" -p alph
           npm install && npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
+      - name: build clients
+        working-directory: ./clients/js
+        run: npm install && npm run build
       - name: run integration test
         working-directory: ./integration_test
         run: npm install && npm run it
