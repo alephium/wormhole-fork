@@ -74,6 +74,9 @@ func transformHexAddressToNative(chain vaa.ChainID, address string) string {
 	case vaa.ChainIDAlgorand:
 		// TODO
 		return ""
+	case vaa.ChainIDAlephium:
+		addr := fmt.Sprintf("0x%v", address[(len(address)-40):])
+		return addr
 	default:
 		log.Println("cannot process address for unknown chain: ", chain)
 		return ""

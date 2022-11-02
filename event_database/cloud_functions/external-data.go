@@ -105,6 +105,8 @@ func chainIdToCoinGeckoPlatform(chain vaa.ChainID) string {
 		return "polkadot"
 	case vaa.ChainIDEthereumRopsten:
 		return "ethereum"
+	case vaa.ChainIDAlephium:
+		return "alephium"
 	}
 	return ""
 }
