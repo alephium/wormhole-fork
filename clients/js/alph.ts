@@ -21,7 +21,8 @@ import { Parser } from 'binary-parser'
 export async function execute_governance_alph(
   payload: Payload,
   vaa: Buffer,
-  network: 'MAINNET' | 'TESTNET' | 'DEVNET'
+  network: 'MAINNET' | 'TESTNET' | 'DEVNET',
+  contractId?: string
 ) {
   const n = NETWORKS[network]['alephium']
   if (!n.rpc) {
@@ -38,7 +39,7 @@ export async function execute_governance_alph(
   const executeGovernanceScript = async (script: Script): Promise<SubmissionResult> => {
     return script.execute(wallet, {
       initialFields: {
-        'governance': contracts.core,
+        'governance': contractId ?? contracts.core,
         'vaa': vaa.toString('hex')
       }
     })
@@ -47,7 +48,7 @@ export async function execute_governance_alph(
   const executeTokenBridgeScript = async (script: Script): Promise<SubmissionResult> => {
     return script.execute(wallet, {
       initialFields: {
-        'tokenBridge': contracts.token_bridge,
+        'tokenBridge': contractId ?? contracts.token_bridge,
         'vaa': vaa.toString('hex')
       }
     })
@@ -69,7 +70,7 @@ export async function execute_governance_alph(
 
   switch (payload.module) {
     case 'Core':
-      if (contracts.core === undefined) {
+      if (contracts.core === undefined && contractId === undefined) {
         throw Error(`Unknown core contract on ${network} for alephium`)
       }
       switch (payload.type) {
@@ -94,7 +95,7 @@ export async function execute_governance_alph(
       }
       break
     case 'TokenBridge':
-      if (contracts.token_bridge === undefined) {
+      if (contracts.token_bridge === undefined && contractId === undefined) {
         throw Error(`Unknown token bridge contract on ${network} for alephium`)
       }
       switch (payload.type) {
@@ -104,7 +105,7 @@ export async function execute_governance_alph(
           break
         case 'RegisterChain':
           console.log('Registering chain')
-          const attestTokenHandlerId = subContractId(contracts.token_bridge, '00')
+          const attestTokenHandlerId = subContractId(contractId ?? contracts.token_bridge, '00')
           const result = await createRemoteTokenPoolOnAlph(
             wallet,
             attestTokenHandlerId,
