@@ -45,10 +45,17 @@ export async function createAlephium(): Promise<BridgeChain> {
   const testTokenContractId = contracts.TestToken.contractId
   const governanceAddress = contracts.Governance.contractAddress
   const sequence = new Sequence()
-  const defaultMessageFee = 10n ** 14n
   const defaultArbiterFee = 0n
   const defaultConfirmations = 1
   const oneAlph = 10n ** 18n
+
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = Project.contract('Governance')
+    const contractState = await governance.fetchState(governanceAddress, groupIndex)
+    return contractState.fields['messageFee'] as bigint
+  }
+
+  const currentMessageFee = await getCurrentMessageFee()
 
   const validateToAddress = (toAddress: Uint8Array): string => {
     if (toAddress.length !== 32) {
@@ -106,8 +113,8 @@ export async function createAlephium(): Promise<BridgeChain> {
   const attestToken = async (tokenId: string): Promise<Uint8Array> => {
     const result =
       tokenId === wrappedAlphContractId
-        ? await attestWrappedAlph(nodeWallet, tokenBridgeContractId, tokenId, accountAddress, defaultMessageFee, 1)
-        : await attestFromAlph(nodeWallet, tokenBridgeContractId, tokenId, accountAddress, defaultMessageFee, 1)
+        ? await attestWrappedAlph(nodeWallet, tokenBridgeContractId, tokenId, accountAddress, currentMessageFee, 1)
+        : await attestFromAlph(nodeWallet, tokenBridgeContractId, tokenId, accountAddress, currentMessageFee, 1)
     console.log(`attest alph token, token id: ${tokenId}, tx id: ${result.txId}`)
     return await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
   }
@@ -141,7 +148,7 @@ export async function createAlephium(): Promise<BridgeChain> {
       toChainId,
       validateToAddress(toAddress),
       amount,
-      defaultMessageFee,
+      currentMessageFee,
       defaultArbiterFee,
       defaultConfirmations
     )
@@ -199,7 +206,7 @@ export async function createAlephium(): Promise<BridgeChain> {
       toChainId,
       validateToAddress(toAddress),
       amount,
-      defaultMessageFee,
+      currentMessageFee,
       defaultArbiterFee,
       defaultConfirmations
     )
@@ -242,18 +249,12 @@ export async function createAlephium(): Promise<BridgeChain> {
     return keys
   }
 
-  const getCurrentMessageFee = async (): Promise<bigint> => {
-    const governance = Project.contract('Governance')
-    const contractState = await governance.fetchState(governanceAddress, groupIndex)
-    return contractState.fields['messageFee'] as bigint
-  }
-
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
     wrappedNativeTokenId: wrappedAlphContractId,
     recipientAddress: recipientAddress,
-    messageFee: defaultMessageFee,
+    messageFee: currentMessageFee,
     oneCoin: oneAlph,
 
     normalizeTransferAmount: normalizeTransferAmount,

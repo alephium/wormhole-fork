@@ -22,7 +22,7 @@ import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
 
-export function createEth(): BridgeChain {
+export async function createEth(): Promise<BridgeChain> {
   // Eth contract addresses are deterministic on devnet
   const governanceAddress = '0xC89Ce4735882C9F0f0FE26686c53074E09B0D550'
   const tokenBridgeAddress = '0x0290FB167208Af455bB137780163b7B7a9a10C16'
@@ -35,9 +35,19 @@ export function createEth(): BridgeChain {
   )
   const recipientAddress = hexToUint8Array(zeroPad(wallet.address.slice(2), 32))
   const sequence = new Sequence()
+
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const messageFee = await governance.messageFee()
+    return messageFee.toBigInt()
+  }
+
+  const currentMessageFee = await getCurrentMessageFee()
+
   const ethTxOptions = {
     gasLimit: 5000000,
-    gasPrice: 1000000
+    gasPrice: 1000000,
+    value: currentMessageFee
   }
 
   const validateEthTokenAddress = (tokenId: string) => {
@@ -113,7 +123,7 @@ export function createEth(): BridgeChain {
 
   const attestToken = async (tokenId: string): Promise<Uint8Array> => {
     validateEthTokenAddress(tokenId)
-    const ethReceipt = await attestFromEth(tokenBridgeAddress, wallet, tokenId)
+    const ethReceipt = await attestFromEth(tokenBridgeAddress, wallet, tokenId, ethTxOptions)
     console.log(`attest token, token address: ${tokenId}, tx id: ${ethReceipt.transactionHash}`)
     return await getSignedVAA(CHAIN_ID_ETH, tokenBridgeEmitterAddress, 0, sequence.next())
   }
@@ -131,7 +141,7 @@ export function createEth(): BridgeChain {
     sequence: number
   ): Promise<TransferResult> => {
     validateEthTokenAddress(tokenId)
-    const approveReceipt = await approveEth(tokenBridgeAddress, tokenId, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, tokenId, wallet, amount)
     const transferReceipt = await transferFromEth(
       tokenBridgeAddress,
       wallet,
@@ -160,7 +170,7 @@ export function createEth(): BridgeChain {
     toAddress: Uint8Array,
     sequence: number
   ): Promise<TransferResult> => {
-    const approveReceipt = await approveEth(tokenBridgeAddress, wethAddress, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, wethAddress, wallet, amount)
     const transferReceipt = await transferFromEthNative(
       tokenBridgeAddress,
       wallet,
@@ -191,7 +201,7 @@ export function createEth(): BridgeChain {
     sequence: number
   ): Promise<TransferResult> => {
     const wrappedToken = await getWrappedToken(originTokenId, tokenChainId)
-    const approveReceipt = await approveEth(tokenBridgeAddress, wrappedToken, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, wrappedToken, wallet, amount)
     const transferReceipt = await transferFromEth(
       tokenBridgeAddress,
       wallet,
@@ -221,7 +231,7 @@ export function createEth(): BridgeChain {
   }
 
   const redeemNative = async (signedVaa: Uint8Array): Promise<bigint> => {
-    const receipt = await redeemOnEthNative(tokenBridgeAddress, wallet, signedVaa, ethTxOptions)
+    const receipt = await redeemOnEthNative(tokenBridgeAddress, wallet, signedVaa)
     console.log(`redeem on eth succeed, tx id: ${receipt.transactionHash}`)
     return await getTransactionFee(receipt.transactionHash)
   }
@@ -233,18 +243,12 @@ export function createEth(): BridgeChain {
     return result[0]
   }
 
-  const getCurrentMessageFee = async (): Promise<bigint> => {
-    const governance = Governance__factory.connect(governanceAddress, wallet)
-    const messageFee = await governance.messageFee()
-    return messageFee.toBigInt()
-  }
-
   return {
     chainId: CHAIN_ID_ETH,
     testTokenId: testTokenAddress,
     wrappedNativeTokenId: wethAddress,
     recipientAddress: recipientAddress,
-    messageFee: 0n,
+    messageFee: currentMessageFee,
     oneCoin: 10n ** 18n,
 
     normalizeTransferAmount: normalizeTransferAmount,
