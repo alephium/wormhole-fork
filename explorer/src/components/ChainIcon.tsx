@@ -21,7 +21,7 @@ import {
   CHAIN_ID_FANTOM,
   CHAIN_ID_AURORA,
   CHAIN_ID_KARURA,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { chainEnums } from "../utils/consts";
 import { Box } from "@mui/material";
 

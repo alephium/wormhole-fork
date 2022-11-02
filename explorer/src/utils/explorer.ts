@@ -3,7 +3,7 @@ import {
   CHAIN_ID_TERRA,
   hexToNativeString,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { fromHex } from "@cosmjs/encoding";
 import { PublicKey } from "@solana/web3.js";
 import { ActiveNetwork, useNetworkContext } from "../contexts/NetworkContext";
@@ -182,6 +182,7 @@ const chainColors: { [chain: string]: string } = {
   "6": "hsl(360, 100%, 61%)",
   "7": "hsl(204, 100%, 48%)",
   "10": "hsl(220, 78%, 92%)",
+  "255": "hsl(54, 100%, 61%)",
 };
 const chainIdColors = Object.entries(chainColors).reduce<Array<string>>(
   // returns an array of hsl colors, indexed by chainId

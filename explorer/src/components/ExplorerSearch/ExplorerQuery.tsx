@@ -6,7 +6,7 @@ import { Bech32, toHex, fromHex } from "@cosmjs/encoding"
 import ExplorerSummary from './ExplorerSummary';
 
 import { useNetworkContext } from '../../contexts/NetworkContext';
-import { ChainId, getEmitterAddressSolana, isEVMChain } from "@certusone/wormhole-sdk";
+import { ChainId, getEmitterAddressSolana, isEVMChain } from "alephium-wormhole-sdk";
 import { ChainIDs, chainIDs } from '../../utils/consts';
 import { PublicKey } from '@solana/web3.js';
 

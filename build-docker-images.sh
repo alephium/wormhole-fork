@@ -37,9 +37,9 @@ docker build -f Dockerfile.automine . -t alephium/automine:$VERSION
 popd
 
 ## Build Bridge UI
-# pushd bridge_ui
-# docker build . -t alephium/bridge-ui:$VERSION
-# popd
+pushd bridge_ui
+docker build . -t alephium/bridge-ui:$VERSION
+popd
 
 ## Build Wormhole Explorer
 pushd explorer

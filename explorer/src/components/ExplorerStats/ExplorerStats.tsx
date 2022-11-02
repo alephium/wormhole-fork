@@ -16,6 +16,7 @@ import polygonIcon from "../../images/polygon.svg";
 import avalancheIcon from "../../images/avalanche.svg";
 import oasisIcon from "../../images/oasis.svg";
 import fantomIcon from "../../images/fantom.svg"
+import alephiumIcon from "../../images/alephium.svg"
 import GridWithCards from "../GridWithCards";
 import { explorer } from "../../utils/urls";
 
@@ -504,22 +505,6 @@ const ExplorerStats: React.FC<StatsProps> = ({
                 headerTextAlign="center"
                 data={[
                   {
-                    header: ChainID[1],
-                    src: solanaIcon,
-                    to: `${explorer}?emitterChain=1`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="1"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
                     header: ChainID[2],
                     src: ethereumIcon,
                     to: `${explorer}?emitterChain=2`,
@@ -536,9 +521,9 @@ const ExplorerStats: React.FC<StatsProps> = ({
                     imgStyle: { height: 110 },
                   },
                   {
-                    header: ChainID[3],
-                    src: terraIcon,
-                    to: `${explorer}?emitterChain=3`,
+                    header: ChainID[13],
+                    src: alephiumIcon,
+                    to: `${explorer}?emitterChain=255`,
                     description: (
                       <ChainOverviewCard
                         totals={totals}
@@ -546,71 +531,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
                           notionalTransferredToCumulative
                         }
                         notionalTransferred={notionalTransferred}
-                        dataKey="3"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[4],
-                    src: binanceChainIcon,
-                    to: `${explorer}?emitterChain=4`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="4"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[5],
-                    src: polygonIcon,
-                    to: `${explorer}?emitterChain=5`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="5"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[6],
-                    src: avalancheIcon,
-                    to: `${explorer}?emitterChain=6`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="6"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[7],
-                    src: oasisIcon,
-                    to: `${explorer}?emitterChain=7`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="7"
+                        dataKey="13"
                       />
                     ),
                     imgStyle: { height: 110 },

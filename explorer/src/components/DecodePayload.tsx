@@ -2,7 +2,7 @@
 import { BigNumber } from "ethers";
 import React, { useEffect, useState } from "react";
 import { Typography } from '@mui/material'
-import { importCoreWasm } from '@certusone/wormhole-sdk'
+import { importCoreWasm } from 'alephium-wormhole-sdk'
 
 import { chainEnums, ChainIDs, chainIDs, METADATA_REPLACE } from "../utils/consts";
 import { usdFormatter } from "../utils/explorer";
