@@ -26,7 +26,7 @@ func (p *Processor) broadcastSignature(v *vaa.VAA, signature []byte, txhash []by
 	digest := v.SigningMsg()
 
 	obsv := gossipv1.SignedObservation{
-		Addr:      crypto.PubkeyToAddress(p.gk.PublicKey).Bytes(),
+		Addr:      crypto.PubkeyToAddress(p.guardianSigner.PublicKey()).Bytes(),
 		Hash:      digest.Bytes(),
 		Signature: signature,
 		TxHash:    txhash,

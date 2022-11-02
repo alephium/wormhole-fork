@@ -15,6 +15,7 @@ import (
 
 	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/db"
+	"github.com/certusone/wormhole/node/pkg/ecdsasigner"
 	"github.com/certusone/wormhole/node/pkg/ethereum"
 	"github.com/certusone/wormhole/node/pkg/notify/discord"
 	"github.com/certusone/wormhole/node/pkg/telemetry"
@@ -151,6 +152,11 @@ var (
 	bigTableTableName          *string
 	bigTableTopicName          *string
 	bigTableKeyPath            *string
+
+	cloudKMSEnabled *bool
+	cloudKMSKeyName *string
+
+	guardianCredentialsFile *string
 )
 
 func init() {
@@ -263,7 +269,11 @@ func init() {
 	bigTableInstanceName = NodeCmd.Flags().String("bigTableInstanceName", "", "BigTable instance name for storing events")
 	bigTableTableName = NodeCmd.Flags().String("bigTableTableName", "", "BigTable table name to store events in")
 	bigTableTopicName = NodeCmd.Flags().String("bigTableTopicName", "", "GCP topic name to publish to")
-	bigTableKeyPath = NodeCmd.Flags().String("bigTableKeyPath", "", "Path to json Service Account key")
+
+	cloudKMSEnabled = NodeCmd.Flags().Bool("cloudKMSEnabled", false, "Turn on Cloud KMS support for Guardian Key")
+	cloudKMSKeyName = NodeCmd.Flags().String("cloudKMSKeyName", "", "Cloud KMS key name for Guardian Key")
+
+	guardianCredentialsFile = NodeCmd.Flags().String("guardianCredentialsFile", "", "Path to json Service Account key")
 }
 
 var (
@@ -588,8 +598,13 @@ func runNode(cmd *cobra.Command, args []string) {
 		if *bigTableTopicName == "" {
 			logger.Fatal("Please specify --bigTableTopicName")
 		}
-		if *bigTableKeyPath == "" {
-			logger.Fatal("Please specify --bigTableKeyPath")
+		if *guardianCredentialsFile == "" {
+			logger.Fatal("Please specify --guardianCredentialsFile")
+		}
+	}
+	if *cloudKMSEnabled {
+		if *cloudKMSKeyName == "" {
+			logger.Fatal("Please specify --cloudKMSKeyName")
 		}
 	}
 
@@ -689,12 +704,25 @@ func runNode(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// Guardian key
-	gk, err := loadGuardianKey(*guardianKeyPath)
-	if err != nil {
-		logger.Fatal("failed to load guardian key", zap.Error(err))
+	var guardianSigner ecdsasigner.ECDSASigner
+	if *cloudKMSEnabled {
+		bCtx := context.Background()
+		kmsClient, err := ecdsasigner.NewKMSClient(bCtx, *cloudKMSKeyName)
+		if err != nil {
+			log.Fatalf("Failed to setup KMS client: %v", err)
+		}
+		defer kmsClient.Client.Close()
+		guardianSigner = kmsClient
+	} else {
+		gk, err := loadGuardianKey(*guardianKeyPath)
+		if err != nil {
+			logger.Fatal("Failed to load guardian key from file", zap.Error(err))
+		}
+		guardianSigner = &ecdsasigner.ECDSAPrivateKey{Value: gk}
 	}
 
-	guardianAddr := ethcrypto.PubkeyToAddress(gk.PublicKey).String()
+	guardianPubkey := guardianSigner.PublicKey()
+	guardianAddr := ethcrypto.PubkeyToAddress(guardianPubkey).String()
 	logger.Info("Loaded guardian key", zap.String(
 		"address", guardianAddr))
 
@@ -859,7 +887,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// Run supervisor.
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx, "p2p", p2p.Run(
-			obsvC, obsvReqC, obsvReqSendC, sendC, signedInC, priv, gk, gst, *p2pPort, *p2pNetworkID, *p2pBootstrap, *nodeName, *disableHeartbeatVerify, rootCtxCancel)); err != nil {
+			obsvC, obsvReqC, obsvReqSendC, sendC, signedInC, priv, guardianSigner, gst, *p2pPort, *p2pNetworkID, *p2pBootstrap, *nodeName, *disableHeartbeatVerify, rootCtxCancel)); err != nil {
 			return err
 		}
 
@@ -979,7 +1007,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			obsvC,
 			injectC,
 			signedInC,
-			gk,
+			guardianSigner,
 			gst,
 			attestationEvents,
 			notifier,
@@ -1008,7 +1036,7 @@ func runNode(cmd *cobra.Command, args []string) {
 				GcpInstanceName: *bigTableInstanceName,
 				TableName:       *bigTableTableName,
 				TopicName:       *bigTableTopicName,
-				GcpKeyFilePath:  *bigTableKeyPath,
+				GcpKeyFilePath:  *guardianCredentialsFile,
 			}
 			if err := supervisor.Run(ctx, "bigtable", reporter.BigTableWriter(attestationEvents, bigTableConnection)); err != nil {
 				return err
