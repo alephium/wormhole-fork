@@ -81,7 +81,7 @@ services:
       - --alphRPC
       - http://alephium:22973
       - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,ytUzrdkkLG7VjbCT7H1xNxP8jqYUCw8RtXmRmeeitpYa"
+      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg"
       - --alphGroupIndex
       - "0"
       - --alphMinConfirmations
@@ -119,7 +119,7 @@ services:
       - --alphRPC
       - http://alephium:22973
       - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,ytUzrdkkLG7VjbCT7H1xNxP8jqYUCw8RtXmRmeeitpYa"
+      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg"
       - --alphGroupIndex
       - "0"
       - --alphMinConfirmations

@@ -17,7 +17,7 @@
     "update_refund_address": "npx ts-node src/governance/update_refund_address.ts",
     "update_consistency_level": "npx ts-node src/governance/update_consistency_level.ts",
     "destroy_unexecuted_sequences": "npx ts-node src/governance/destroy_unexecuted_sequences.ts",
-    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run transfer_token && npm run transfer_fee && npm run update_refund_address && npm run update_consistency_level && npm run destroy_unexecuted_sequences"
+    "it": "npm run guardian_set_upgrade && npm run update_message_fee && npm run update_consistency_level && npm run transfer_token && npm run transfer_fee && npm run update_refund_address && npm run destroy_unexecuted_sequences"
   },
   "prettier": {
     "printWidth": 120,

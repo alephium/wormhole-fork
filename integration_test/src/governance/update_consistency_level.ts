@@ -10,7 +10,7 @@ import {
   runCmdInContainer
 } from './governance_utils'
 
-const newConsistencyLevel = 33
+const newConsistencyLevel = 1
 
 function createUpdateConsistencyLevelVaa(sequence: number): string {
   return `
