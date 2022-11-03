@@ -305,11 +305,6 @@ yargs(hideBin(process.argv))
           choices: Object.keys(CHAINS),
           required: false,
         })
-        .option('contractId', {
-          describe: 'contract id',
-          type: 'string',
-          required: false
-        })
         .option("network", {
           alias: "n",
           describe: "network",
@@ -387,7 +382,7 @@ yargs(hideBin(process.argv))
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        await execute_governance_alph(parsed_vaa.payload, buf, network, argv.contractId)
+        await execute_governance_alph(parsed_vaa.payload, buf, network)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled
