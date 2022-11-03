@@ -47,7 +47,7 @@ async function updateConsistencyLevel() {
   const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_ALEPHIUM, seq)
   const signedVaaHex = binToHex(signedVaa)
   console.log(`Update consistency level vaa for Alephium: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet --contractId ${alph.tokenBridgeContractId}`
+  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
   console.log(`Submitting update consistency level vaa to Alephium`)
   execSync(submitCommand)
 

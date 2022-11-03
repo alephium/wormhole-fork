@@ -48,7 +48,7 @@ async function updateRefundAddress() {
   const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_ALEPHIUM, seq)
   const signedVaaHex = binToHex(signedVaa)
   console.log(`Update refund address vaa for Alephium: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet --contractId ${alph.tokenBridgeContractId}`
+  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
   console.log(`Submitting update refund address vaa to Alephium`)
   execSync(submitCommand)
 
