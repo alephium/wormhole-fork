@@ -198,7 +198,7 @@ export const WORMHOLE_RPC_HOSTS =
       ]
     : CLUSTER === "testnet"
     ? ["https://wormhole-v2-testnet-api.certus.one"]
-    : ["http://alephium-wormhole.softfork.se"]; // TODO: Able to override this in yaml file
+    : ["https://alephium-wormhole.softfork.se"]; // TODO: Able to override this in yaml file
     //: ["http://localhost:7071"];
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;

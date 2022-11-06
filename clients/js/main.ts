@@ -31,6 +31,7 @@ async function makeVAA(
   targetChain: number,
   emitterAddress: string,
   signers: string[],
+  keyNames: string[],
   sequence: string | undefined,
   p: Payload,
   useKMS: boolean
@@ -50,7 +51,7 @@ async function makeVAA(
   };
 
   if (useKMS) {
-    v.signatures = await vaa.signWithKMS(signers, v);
+    v.signatures = await vaa.signWithKMS(keyNames, v);
   } else {
     v.signatures = vaa.signWithKey(signers, v);
   }
@@ -69,8 +70,16 @@ yargs(hideBin(process.argv))
         yargs
           .option("guardian-secret", {
             alias: "g",
-            required: true,
+            required: false,
             describe: "Guardians' secret keys",
+            default: "",
+            type: "string",
+          })
+          .option("guardian-key-name", {
+            alias: "j",
+            required: false,
+            describe: "Guardians' KMS key names",
+            default: "",
             type: "string",
           })
           .option("sequence", {
@@ -130,6 +139,7 @@ yargs(hideBin(process.argv))
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
+                argv["guardian-key-name"].split(","),
                 argv["sequence"],
                 payload,
                 !!argv["use-kms"]
@@ -178,6 +188,7 @@ yargs(hideBin(process.argv))
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
+                argv["guardian-key-name"].split(","),
                 argv["sequence"],
                 payload,
                 !!argv["use-kms"]
@@ -232,6 +243,7 @@ yargs(hideBin(process.argv))
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
+                argv["guardian-key-name"].split(","),
                 sequence,
                 payload,
                 !!argv["use-kms"]
