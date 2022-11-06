@@ -24,12 +24,12 @@ popd
 
 ## Build eth-node image
 pushd ethereum
-cp .env.test .env
+# cp .env.test .env
 git apply 1conf.patch
-git apply truffle-config.patch
+# git apply truffle-config.patch
 docker build . -t liuhongchao/eth-node:$VERSION
 git apply -R 1conf.patch
-git apply -R truffle-config.patch
+# git apply -R truffle-config.patch
 popd
 
 pushd alephium
@@ -45,3 +45,9 @@ popd
 pushd explorer
 docker build . -t liuhongchao/wormhole-explorer:$VERSION
 popd
+
+#docker push liuhongchao/guardiand:$VERSION
+#docker push liuhongchao/eth-node:$VERSION
+#docker push liuhongchao/automine:$VERSION
+#docker push liuhongchao/bridge-ui:$VERSION
+#docker push liuhongchao/wormhole-explorer:$VERSION

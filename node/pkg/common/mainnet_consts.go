@@ -6,7 +6,6 @@ import "github.com/certusone/wormhole/node/pkg/vaa"
 // Wormhole guardian nodes.
 //
 // This list is duplicated a couple times across the codebase - make to to update all copies!
-//
 var PublicRPCEndpoints = []string{
 	"https://wormhole-v2-mainnet-api.certus.one",
 	"https://wormhole.inotel.ro",
@@ -52,5 +51,5 @@ var KnownEmitters = []struct {
 	{vaa.ChainIDKlaytn, "0000000000000000000000003c3c561757BAa0b78c5C025CdEAa4ee24C1dFfEf"},    // 13 Klaytn NFT Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000796Dff6D74F3E27060B71255Fe517BFb23C93eed"},      // 14 Celo Token Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000A6A377d75ca5c9052c9a77ED1e865Cc25Bd97bf3"},      // 14 Celo NFT Bridge
-	{vaa.ChainIDAlephium, "d921c79d323ec44763f76aeb793183005aa67612e74948b00ca2214b308c4f43"},  // 255 Alephium Token Bridge
+	{vaa.ChainIDAlephium, "3b170d6d5db622a22c8b953dd8b3250bfde84217745616eb74879db4006ce103"},  // 255 Alephium Token Bridge
 }

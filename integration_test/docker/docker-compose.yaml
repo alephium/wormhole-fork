@@ -81,7 +81,7 @@ services:
       - --alphRPC
       - http://alephium:22973
       - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,ytUzrdkkLG7VjbCT7H1xNxP8jqYUCw8RtXmRmeeitpYa"
+      - "weNFDTYyakR9c1GiK1Lt8wRw4f3VhK4ggBcZ9XHo2mw3,ytUzrdkkLG7VjbCT7H1xNxP8jqYUCw8RtXmRmeeitpYa"
       - --alphGroupIndex
       - "0"
       - --alphMinConfirmations

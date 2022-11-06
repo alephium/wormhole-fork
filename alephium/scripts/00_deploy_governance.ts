@@ -23,6 +23,9 @@ const deployGovernance: DeployFunction<Settings> = async (
     previousGuardianSetExpirationTimeMS: 0n
   }
 
+  console.log('governance initialFields', initialFields)
+  console.log('goverance code hash', governance.codeHash)
+
   const result = await deployer.deployContract(governance, {
     initialFields: initialFields
   })

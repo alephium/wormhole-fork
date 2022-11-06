@@ -26,3 +26,4 @@ bigtable-writer.json
 /solana/artifacts-mainnet/
 go.work
 go.work.sum
+sensitive/credentials-file.json

@@ -345,10 +345,10 @@ const DEVNET = {
     core: undefined,
     token_bridge: undefined,
     nft_bridge: undefined,
-  },  
+  },
   alephium: {
-    core: 'ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c',
-    token_bridge: 'd921c79d323ec44763f76aeb793183005aa67612e74948b00ca2214b308c4f43',
+    core: '2be99b190097814d425f659d78bd4f97a3041c41c38f626eecdab6d1357ea8f6',
+    token_bridge: '3b170d6d5db622a22c8b953dd8b3250bfde84217745616eb74879db4006ce103',
     nft_bridge: undefined,
   },
   neon: {

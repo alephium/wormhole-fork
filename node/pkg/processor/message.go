@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"encoding/hex"
+	"log"
 
 	"github.com/certusone/wormhole/node/pkg/db"
 	"github.com/mr-tron/base58"
@@ -138,6 +139,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	digest := v.SigningMsg()
 
 	// Sign the digest using our node's guardian key.
+	log.Println("signing digest", digest)
 	s, err := p.guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		panic(err)
