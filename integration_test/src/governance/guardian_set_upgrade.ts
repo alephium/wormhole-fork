@@ -78,8 +78,16 @@ async function checkGuardianSet(expected: string[]) {
   }
 }
 
-async function waitGuardianSetSynced(expectedGuardianSet: string[], expectedGuardianSetIndex: number, port: number) {
+async function waitGuardianSetSynced(
+  expectedGuardianSet: string[],
+  expectedGuardianSetIndex: number,
+  port: number,
+  timeout: number
+) {
   const url = `http://127.0.0.1:${port}/v1/guardianset/current`
+  if (timeout <= 0) {
+    throw new Error(`Fetch current gurdian set from ${url} timeout`)
+  }
   const result = await axios.get(url, { responseType: 'json' })
   if (result.data.message) {
     throw new Error(`Failed to fetch current guardian set from ${url}`)
@@ -90,7 +98,7 @@ async function waitGuardianSetSynced(expectedGuardianSet: string[], expectedGuar
   const index = result.data.guardianSet.index as number
   if (index !== expectedGuardianSetIndex) {
     await sleep(3)
-    await waitGuardianSetSynced(expectedGuardianSet, expectedGuardianSetIndex, port)
+    await waitGuardianSetSynced(expectedGuardianSet, expectedGuardianSetIndex, port, timeout - 3)
     return
   }
 
@@ -110,7 +118,7 @@ async function guardianSetUpgrade() {
   await checkGuardianSet(newGuardianSet)
 
   for (const port of guardianRpcPorts) {
-    await waitGuardianSetSynced(newGuardianSet, newGuardianSetIndex, port)
+    await waitGuardianSetSynced(newGuardianSet, newGuardianSetIndex, port, 45)
   }
 }
 
