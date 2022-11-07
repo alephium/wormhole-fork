@@ -94,11 +94,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const getTransactionFee = async (txId: string): Promise<bigint> => {
-    const status = await nodeWallet.nodeProvider.transactions.getTransactionsStatus({ txId: txId })
-    // the transaction has been confirmed
-    const blockHash = (status as node.Confirmed).blockHash
-    const block = await nodeWallet.nodeProvider.blockflow.getBlockflowBlocksBlockHash(blockHash)
-    const tx = block.transactions.find((t) => t.unsigned.txId === txId)!
+    const tx = await nodeWallet.nodeProvider.transactions.getTransactionsDetailsTxid(txId)
     return BigInt(tx.unsigned.gasPrice) * BigInt(tx.unsigned.gasAmount)
   }
 
