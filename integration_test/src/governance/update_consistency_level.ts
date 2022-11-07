@@ -7,7 +7,9 @@ import {
   getNextGovernanceSequence,
   governanceChainId,
   governanceEmitterId,
-  runCmdInContainer
+  injectVAA,
+  runCmdInContainer,
+  submitGovernanceVAA
 } from './governance_utils'
 
 const newConsistencyLevel = 1
@@ -34,22 +36,10 @@ async function updateConsistencyLevel() {
   assert(Number(currentConsistencyLevel) !== newConsistencyLevel)
 
   for (const guardianIndex of [0, 1]) {
-    const container = await getGuardianByIndex(guardianIndex)
-    const fileName = `update-consistency-level.proto`
-    await runCmdInContainer(container, ['bash', '-c', `echo '${updateConsistencyLevelVaa}' > ${fileName}`], '/')
-    await runCmdInContainer(
-      container,
-      ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-      '/'
-    )
+    await injectVAA(updateConsistencyLevelVaa, guardianIndex, 'update-consistency-level.proto')
   }
 
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_ALEPHIUM, seq)
-  const signedVaaHex = binToHex(signedVaa)
-  console.log(`Update consistency level vaa for Alephium: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
-  console.log(`Submitting update consistency level vaa to Alephium`)
-  execSync(submitCommand)
+  await submitGovernanceVAA('UpdateConsistencyLevel', seq, CHAIN_ID_ALEPHIUM)
 
   const expectedConsistencyLevel = (await alph.getTokenBridgeContractState()).fields[
     'minimalConsistencyLevel'

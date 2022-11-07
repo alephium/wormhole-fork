@@ -1,4 +1,4 @@
-import { addressFromContractId, binToHex, web3 } from '@alephium/web3'
+import { addressFromContractId, web3 } from '@alephium/web3'
 import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ETH,
@@ -6,15 +6,8 @@ import {
   getTokenBridgeForChainId,
   getUnexecutedSequenceId
 } from 'alephium-wormhole-sdk'
-import { execSync } from 'child_process'
-import { assert, getBridgeChains, getSignedVAA } from '../utils'
-import {
-  getGuardianByIndex,
-  getNextGovernanceSequence,
-  governanceChainId,
-  governanceEmitterId,
-  runCmdInContainer
-} from './governance_utils'
+import { assert, getBridgeChains } from '../utils'
+import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const unexecutedSequenceIndex = 0
 
@@ -67,25 +60,11 @@ async function destroyUnexecutedSequences() {
   const destroyUnexecutedSequencesVaa = createDestroyUnexecutedSequencesVaa(seq)
 
   for (const guardianIndex of [0, 1]) {
-    const container = await getGuardianByIndex(guardianIndex)
-    const fileName = `destroy-unexecuted-sequences.proto`
-    await runCmdInContainer(container, ['bash', '-c', `echo '${destroyUnexecutedSequencesVaa}' > ${fileName}`], '/')
-    await runCmdInContainer(
-      container,
-      ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-      '/'
-    )
+    await injectVAA(destroyUnexecutedSequencesVaa, guardianIndex, 'destroy-unexecuted-sequences.proto')
   }
 
   const balanceBeforeDestroy = await alph.getNativeTokenBalanceByAddress(tokenBridgeForChainAddress)
-
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_ALEPHIUM, seq)
-  const signedVaaHex = binToHex(signedVaa)
-  console.log(`Destroy unexecuted sequences vaa for Alephium: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
-  console.log(`Submitting destroy unexecuted sequences vaa to Alephium`)
-  execSync(submitCommand)
-
+  await submitGovernanceVAA('DestroyUnexecutedSequences', seq, CHAIN_ID_ALEPHIUM)
   const balanceAfterDestroy = await alph.getNativeTokenBalanceByAddress(tokenBridgeForChainAddress)
   assert(balanceBeforeDestroy + alph.oneCoin === balanceAfterDestroy)
 }

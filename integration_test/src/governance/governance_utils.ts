@@ -1,4 +1,8 @@
+import { binToHex } from '@alephium/web3'
+import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
 import Dockerode, { Container } from 'dockerode'
+import { getSignedVAA } from '../utils'
+import { execSync } from 'child_process'
 
 export const docker = new Dockerode()
 export const governanceChainId = 1
@@ -42,4 +46,33 @@ export async function getNextGovernanceSequence() {
   )
   const strs = output.toString('utf8').split(' ')
   return parseInt(strs[strs.length - 1])
+}
+
+export async function injectVAA(vaa: string, guardianIndex: number, fileName: string) {
+  const container = await getGuardianByIndex(guardianIndex)
+  await runCmdInContainer(container, ['bash', '-c', `echo '${vaa}' > ${fileName}`], '/')
+  await runCmdInContainer(
+    container,
+    ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
+    '/'
+  )
+}
+
+export async function submitGovernanceVAA(
+  action: string,
+  sequence: number,
+  toChainId: ChainId,
+  targetChainIds?: ChainId[]
+) {
+  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, toChainId, sequence)
+  const signedVaaHex = binToHex(signedVaa)
+  console.log(`${action} signed vaa: ${signedVaaHex}`)
+
+  const chainIds = targetChainIds ?? [toChainId]
+  for (const chainId of chainIds) {
+    const chain = coalesceChainName(chainId)
+    const command = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -c ${chain} -n devnet`
+    console.log(`Submitting ${action} signed vaa to ${chain}`)
+    execSync(command)
+  }
 }

@@ -1,16 +1,7 @@
-import { binToHex } from '@alephium/web3'
-import { CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
-import { execSync } from 'child_process'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
 import axios from 'axios'
-import { assert, getBridgeChains, getSignedVAA, sleep } from '../utils'
-import {
-  getGuardianByIndex,
-  getNextGovernanceSequence,
-  governanceChainId,
-  governanceEmitterId,
-  guardianRpcPorts,
-  runCmdInContainer
-} from './governance_utils'
+import { assert, getBridgeChains, sleep } from '../utils'
+import { getNextGovernanceSequence, guardianRpcPorts, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const newGuardianSet = ['0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe', '0x88D7D8B32a9105d228100E72dFFe2Fae0705D31c']
 const newGuardianSetIndex = 1
@@ -35,30 +26,12 @@ function createGuardianSetUpgradeVaa(sequence: number): string {
   `
 }
 
-async function injectGuardianSetUpgrade(): Promise<Uint8Array> {
+async function runGuardianSetUpgrade(): Promise<void> {
   // we only need to inject the vaa on guardian-0
-  const container = await getGuardianByIndex(0)
-  const fileName = 'guardian-set-upgrade.proto'
   const seq = await getNextGovernanceSequence()
   const guardianSetUpgradeVaa = createGuardianSetUpgradeVaa(seq)
-  await runCmdInContainer(container, ['bash', '-c', `echo '${guardianSetUpgradeVaa}' > ${fileName}`], '/')
-  await runCmdInContainer(
-    container,
-    ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-    '/'
-  )
-  return await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_UNSET, seq)
-}
-
-async function submitGuardianSetUpgrade(signedVaa: Uint8Array) {
-  const signedVaaHex = binToHex(signedVaa)
-  console.log(`Guardian set upgrade signed vaa: ${signedVaaHex}`)
-
-  for (const chain of ['alephium', 'ethereum']) {
-    const command = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -c ${chain} -n devnet`
-    console.log(`Submitting guardian set upgrade vaa to ${chain}`)
-    execSync(command)
-  }
+  await injectVAA(guardianSetUpgradeVaa, 0, 'guardian-set-upgrade.proto')
+  await submitGovernanceVAA('GuardianSetUpgrade', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH])
 }
 
 async function checkGuardianSet(expected: string[]) {
@@ -113,8 +86,7 @@ async function waitGuardianSetSynced(
 
 async function guardianSetUpgrade() {
   await checkGuardianSet(newGuardianSet.slice(0, 1))
-  const signedVaa = await injectGuardianSetUpgrade()
-  await submitGuardianSetUpgrade(signedVaa)
+  await runGuardianSetUpgrade()
   await checkGuardianSet(newGuardianSet)
 
   for (const port of guardianRpcPorts) {

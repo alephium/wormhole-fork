@@ -1,15 +1,8 @@
 import { binToHex } from '@alephium/web3'
 import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
-import { execSync } from 'child_process'
 import { BridgeChain } from '../bridge_chain'
-import { assert, getBridgeChains, getSignedVAA } from '../utils'
-import {
-  getGuardianByIndex,
-  getNextGovernanceSequence,
-  governanceChainId,
-  governanceEmitterId,
-  runCmdInContainer
-} from './governance_utils'
+import { assert, getBridgeChains } from '../utils'
+import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const alphRecipientAddress = '1HfMbRS8JxUohvWw4bwUTWNQaqeG7ni96JwYt79sNHNtg'
 const ethRecipientAddress = '0x46B591A30cEfa31E8bf8281C924766e6E424D26B'
@@ -45,21 +38,9 @@ async function transferFeeOnChain(chain: BridgeChain, recipient: string) {
   console.log(`Transfer amount for ${chainName}: ${transferAmount}`)
   const transferFeeVaa = createTransferFeeVaa(chain.chainId, seq, chain.normalizeAddress(recipient), transferAmount)
   for (const guardianIndex of [0, 1]) {
-    const container = await getGuardianByIndex(guardianIndex)
-    const fileName = `transfer-fee-${chain.chainId}.proto`
-    await runCmdInContainer(container, ['bash', '-c', `echo '${transferFeeVaa}' > ${fileName}`], '/')
-    await runCmdInContainer(
-      container,
-      ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-      '/'
-    )
+    await injectVAA(transferFeeVaa, guardianIndex, `transfer-fee-${chain.chainId}.proto`)
   }
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, chain.chainId, seq)
-  const signedVaaHex = binToHex(signedVaa)
-  console.log(`Transfer fee signed vaa for ${chainName}: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
-  console.log(`Submitting transfer fee vaa to ${chainName}`)
-  execSync(submitCommand)
+  await submitGovernanceVAA('TransferFee', seq, chain.chainId)
 
   const recipientBalanceAfterTransfer = await chain.getNativeTokenBalanceByAddress(recipient)
   const governanceBalanceAfterTransfer = await chain.getNativeTokenBalanceByAddress(chain.governanceContractAddress)

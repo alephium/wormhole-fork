@@ -1,15 +1,7 @@
-import { binToHex } from '@alephium/web3'
-import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
-import { execSync } from 'child_process'
+import { ChainId } from 'alephium-wormhole-sdk'
 import { BridgeChain } from '../bridge_chain'
-import { assert, getBridgeChains, getSignedVAA } from '../utils'
-import {
-  getGuardianByIndex,
-  getNextGovernanceSequence,
-  governanceChainId,
-  governanceEmitterId,
-  runCmdInContainer
-} from './governance_utils'
+import { assert, getBridgeChains } from '../utils'
+import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const dustAmount = 10n ** 15n
 
@@ -35,22 +27,10 @@ async function updateMessageFeeOnChain(chain: BridgeChain) {
   const seq = await getNextGovernanceSequence()
   const updateMessageFeeVaa = createUpdateMessageFeeVaa(seq, newMessageFee, chain.chainId)
   for (const guardianIndex of [0, 1]) {
-    const container = await getGuardianByIndex(guardianIndex)
-    const fileName = `update-message-fee-${chain.chainId}.proto`
-    await runCmdInContainer(container, ['bash', '-c', `echo '${updateMessageFeeVaa}' > ${fileName}`], '/')
-    await runCmdInContainer(
-      container,
-      ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-      '/'
-    )
+    await injectVAA(updateMessageFeeVaa, guardianIndex, `update-message-fee-${chain.chainId}.proto`)
   }
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, chain.chainId, seq)
-  const signedVaaHex = binToHex(signedVaa)
-  const chainName = coalesceChainName(chain.chainId)
-  console.log(`Update message fee signed vaa for ${chainName}: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
-  console.log(`Submitting update message fee vaa to ${chainName}`)
-  execSync(submitCommand)
+
+  await submitGovernanceVAA('UpdateMessageFee', seq, chain.chainId)
 
   const expectedMessageFee = await chain.getCurrentMessageFee()
   assert(expectedMessageFee === newMessageFee)

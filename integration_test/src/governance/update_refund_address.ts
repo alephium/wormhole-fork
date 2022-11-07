@@ -8,7 +8,9 @@ import {
   getNextGovernanceSequence,
   governanceChainId,
   governanceEmitterId,
-  runCmdInContainer
+  injectVAA,
+  runCmdInContainer,
+  submitGovernanceVAA
 } from './governance_utils'
 
 const newRefundAddress = '1HfMbRS8JxUohvWw4bwUTWNQaqeG7ni96JwYt79sNHNtg'
@@ -35,22 +37,10 @@ async function updateRefundAddress() {
   assert(currentRefundAddress.toLowerCase() !== newRefundAddress.toLowerCase())
 
   for (const guardianIndex of [0, 1]) {
-    const container = await getGuardianByIndex(guardianIndex)
-    const fileName = `update-refund-address.proto`
-    await runCmdInContainer(container, ['bash', '-c', `echo '${updateRefundAddressVaa}' > ${fileName}`], '/')
-    await runCmdInContainer(
-      container,
-      ['bash', '-c', `./guardiand admin governance-vaa-inject ${fileName} --socket /tmp/admin.sock`],
-      '/'
-    )
+    await injectVAA(updateRefundAddressVaa, guardianIndex, 'update-refund-address.proto')
   }
 
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, CHAIN_ID_ALEPHIUM, seq)
-  const signedVaaHex = binToHex(signedVaa)
-  console.log(`Update refund address vaa for Alephium: ${signedVaaHex}`)
-  const submitCommand = `npm --prefix ../clients/js start -- submit ${signedVaaHex} -n devnet`
-  console.log(`Submitting update refund address vaa to Alephium`)
-  execSync(submitCommand)
+  await submitGovernanceVAA('UpdateRefundAddress', seq, CHAIN_ID_ALEPHIUM)
 
   const expectedRefundAddress = (await alph.getTokenBridgeContractState()).fields['refundAddress'] as string
   assert(expectedRefundAddress.toLowerCase() === newRefundAddress.toLowerCase())
