@@ -19,10 +19,7 @@ export async function relayAlph(
   relayLogger: ScopedLogger,
   metrics: PromHelper
 ) {
-  const logger = getScopedLogger(
-    ["alph", chainConfigInfo.chainName],
-    relayLogger
-  )
+  const logger = getScopedLogger(["alph"], relayLogger)
 
   // we have validated the `groupIndex` at initialization
   const groupIndex = chainConfigInfo.groupIndex!

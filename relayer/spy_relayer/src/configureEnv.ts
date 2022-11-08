@@ -91,7 +91,6 @@ export type RelayerEnvironment = {
 
 export interface ChainConfigInfo {
   chainId: ChainId
-  chainName: string
   nativeCurrencySymbol: string
   nodeUrl: string
   tokenBridgeAddress: string
@@ -104,6 +103,7 @@ export interface SolanaChainConfigInfo extends ChainConfigInfo {
 }
 
 export interface EthereumChainConfigInfo extends ChainConfigInfo {
+  chainName: string
   coreBridgeAddress: string
   wrappedNativeAsset: string
 }
@@ -380,10 +380,12 @@ function createTerraChainConfig(config: any): TerraChainConfigInfo {
 
 function createEvmChainConfig(config: any): EthereumChainConfigInfo {
   const chainConfig = createChainConfig(config)
+  const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
   const coreBridgeAddress = (config.coreBridgeAddress ?? invalidConfigField('coreBridgeAddress')) as string
   const wrappedNativeAsset = (config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')) as string
   return {
     ...chainConfig,
+    chainName,
     coreBridgeAddress,
     wrappedNativeAsset
   }
@@ -400,7 +402,6 @@ function createAlephiumChainConfig(config: any): AlephiumChainConfigInfo {
 
 function createChainConfig(config: any): ChainConfigInfo {
   const chainId = (config.chainId ?? invalidConfigField('chainId')) as ChainId
-  const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
   const nativeCurrencySymbol = (config.nativeCurrencySymbol ?? invalidConfigField('nativeCurrencySymbol')) as string
   const nodeUrl = (config.nodeUrl ?? invalidConfigField('nodeUrl')) as string
   const tokenBridgeAddress = (config.tokenBridgeAddress ?? invalidConfigField('tokenBridgeAddress')) as string
@@ -418,7 +419,6 @@ function createChainConfig(config: any): ChainConfigInfo {
     : privateKeys as string[]
   return {
     chainId,
-    chainName,
     nativeCurrencySymbol,
     nodeUrl,
     tokenBridgeAddress,

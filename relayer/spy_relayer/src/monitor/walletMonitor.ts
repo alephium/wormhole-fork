@@ -9,7 +9,8 @@ import {
   isEVMChain,
   WSOL_DECIMALS,
   getTokenPoolId,
-  tryNativeToHexString
+  tryNativeToHexString,
+  coalesceChainName
 } from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair } from "@solana/web3.js";
@@ -110,7 +111,7 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
         logger.error(`Invalid chain ID in wallet monitor: ${chainInfo.chainId}`);
       }
     } catch (e: any) {
-      logger.error(`Pulling balances failed failed for chain: ${chainInfo.chainName}, err: ${e}`);
+      logger.error(`Pulling balances failed failed for chain: ${coalesceChainName(chainInfo.chainId)}, err: ${e}`);
       if (e.stack) {
         logger.error(e.stack);
       }
@@ -289,7 +290,7 @@ async function pullSolanaNativeBalance(
         balanceAbs: "0",
         balanceFormatted: "0",
         currencyName: chainInfo.nativeCurrencySymbol,
-        currencyAddressNative: chainInfo.chainName,
+        currencyAddressNative: coalesceChainName(chainInfo.chainId),
         isNative: true,
         walletAddress: keyPair.publicKey.toString(),
       },

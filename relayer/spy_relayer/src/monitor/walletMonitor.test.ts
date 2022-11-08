@@ -43,7 +43,6 @@ jest.setTimeout(300000);
 
 const terraChainConfig: TerraChainConfigInfo = {
   chainId: CHAIN_ID_TERRA,
-  chainName: "Terra",
   nativeCurrencySymbol: "UST",
   nodeUrl: "https://fcd.terra.dev",
   walletPrivateKeys: [],
