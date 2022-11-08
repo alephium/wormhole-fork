@@ -76,18 +76,22 @@ if (!foundOne) {
 }
 
 if (runListen && !spyListener.init()) {
+  logger.error(`Failed to init spy listener`)
   process.exit(1);
 }
 
 if (runRelayer && !relayWorker.init()) {
+  logger.error(`Failed to init relay worker`)
   process.exit(1);
 }
 
 if (runRest && !restListener.init()) {
+  logger.error(`Failed to init REST listener`)
   process.exit(1);
 }
 
 if (runWalletMonitor && !walletMonitor.init()) {
+  logger.error(`Failed to init wallet monitor`)
   process.exit(1);
 }
 
