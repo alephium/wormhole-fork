@@ -57,75 +57,78 @@ var (
 	statusAddr *string
 
 	guardianKeyPath *string
-	solanaContract  *string
+	// solanaContract  *string
 
 	ethRPC      *string
 	ethContract *string
 
-	bscRPC      *string
-	bscContract *string
+	// bscRPC      *string
+	// bscContract *string
 
-	polygonRPC      *string
-	polygonContract *string
+	// polygonRPC      *string
+	// polygonContract *string
 
 	ethRopstenRPC      *string
 	ethRopstenContract *string
 
-	auroraRPC      *string
-	auroraContract *string
+	// auroraRPC      *string
+	// auroraContract *string
 
-	fantomRPC      *string
-	fantomContract *string
+	// fantomRPC      *string
+	// fantomContract *string
 
-	avalancheRPC      *string
-	avalancheContract *string
+	// avalancheRPC      *string
+	// avalancheContract *string
 
-	oasisRPC      *string
-	oasisContract *string
+	// oasisRPC      *string
+	// oasisContract *string
 
-	karuraRPC      *string
-	karuraContract *string
+	// karuraRPC      *string
+	// karuraContract *string
 
-	acalaRPC      *string
-	acalaContract *string
+	// acalaRPC      *string
+	// acalaContract *string
 
-	klaytnRPC      *string
-	klaytnContract *string
+	// klaytnRPC      *string
+	// klaytnContract *string
 
-	celoRPC      *string
-	celoContract *string
+	// celoRPC      *string
+	// celoContract *string
 
-	moonbeamRPC      *string
-	moonbeamContract *string
+	// moonbeamRPC      *string
+	// moonbeamContract *string
 
-	neonRPC      *string
-	neonContract *string
+	// neonRPC      *string
+	// neonContract *string
 
-	terraWS       *string
-	terraLCD      *string
-	terraContract *string
+	// terraWS       *string
+	// terraLCD      *string
+	// terraContract *string
 
-	algorandIndexerRPC   *string
-	algorandIndexerToken *string
-	algorandAlgodRPC     *string
-	algorandAlgodToken   *string
-	algorandAppID        *uint64
+	// algorandIndexerRPC   *string
+	// algorandIndexerToken *string
+	// algorandAlgodRPC     *string
+	// algorandAlgodToken   *string
+	// algorandAppID        *uint64
 
-	solanaWsRPC *string
-	solanaRPC   *string
+	// solanaWsRPC *string
+	// solanaRPC   *string
 
 	alphRPC              *string
 	alphApiKey           *string
 	alphContractIds      *[]string
 	alphGroupIndex       *uint8
 	alphMinConfirmations *uint8
+	alphFetchPeriod      *uint8
 
 	logLevel *string
 
-	unsafeDevMode   *bool
-	testnetMode     *bool
-	devNumGuardians *uint
-	nodeName        *string
+	devnetGuardianIndex *int
+	integrationTest     *bool
+
+	unsafeDevMode *bool
+	testnetMode   *bool
+	nodeName      *string
 
 	publicRPC *string
 	publicWeb *string
@@ -163,74 +166,77 @@ func init() {
 	dataDir = NodeCmd.Flags().String("dataDir", "", "Data directory")
 
 	guardianKeyPath = NodeCmd.Flags().String("guardianKey", "", "Path to guardian key (required)")
-	solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
+	// solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
 	ethContract = NodeCmd.Flags().String("ethContract", "", "Ethereum contract address")
 
-	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
-	bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
+	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
+	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
 
-	polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
-	polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
+	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
+	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
 
 	ethRopstenRPC = NodeCmd.Flags().String("ethRopstenRPC", "", "Ethereum Ropsten RPC URL")
 	ethRopstenContract = NodeCmd.Flags().String("ethRopstenContract", "", "Ethereum Ropsten contract address")
 
-	avalancheRPC = NodeCmd.Flags().String("avalancheRPC", "", "Avalanche RPC URL")
-	avalancheContract = NodeCmd.Flags().String("avalancheContract", "", "Avalanche contract address")
+	// avalancheRPC = NodeCmd.Flags().String("avalancheRPC", "", "Avalanche RPC URL")
+	// avalancheContract = NodeCmd.Flags().String("avalancheContract", "", "Avalanche contract address")
 
-	oasisRPC = NodeCmd.Flags().String("oasisRPC", "", "Oasis RPC URL")
-	oasisContract = NodeCmd.Flags().String("oasisContract", "", "Oasis contract address")
+	// oasisRPC = NodeCmd.Flags().String("oasisRPC", "", "Oasis RPC URL")
+	// oasisContract = NodeCmd.Flags().String("oasisContract", "", "Oasis contract address")
 
-	auroraRPC = NodeCmd.Flags().String("auroraRPC", "", "Aurora Websocket RPC URL")
-	auroraContract = NodeCmd.Flags().String("auroraContract", "", "Aurora contract address")
+	// auroraRPC = NodeCmd.Flags().String("auroraRPC", "", "Aurora Websocket RPC URL")
+	// auroraContract = NodeCmd.Flags().String("auroraContract", "", "Aurora contract address")
 
-	fantomRPC = NodeCmd.Flags().String("fantomRPC", "", "Fantom Websocket RPC URL")
-	fantomContract = NodeCmd.Flags().String("fantomContract", "", "Fantom contract address")
+	// fantomRPC = NodeCmd.Flags().String("fantomRPC", "", "Fantom Websocket RPC URL")
+	// fantomContract = NodeCmd.Flags().String("fantomContract", "", "Fantom contract address")
 
-	karuraRPC = NodeCmd.Flags().String("karuraRPC", "", "Karura RPC URL")
-	karuraContract = NodeCmd.Flags().String("karuraContract", "", "Karura contract address")
+	// karuraRPC = NodeCmd.Flags().String("karuraRPC", "", "Karura RPC URL")
+	// karuraContract = NodeCmd.Flags().String("karuraContract", "", "Karura contract address")
 
-	acalaRPC = NodeCmd.Flags().String("acalaRPC", "", "Acala RPC URL")
-	acalaContract = NodeCmd.Flags().String("acalaContract", "", "Acala contract address")
+	// acalaRPC = NodeCmd.Flags().String("acalaRPC", "", "Acala RPC URL")
+	// acalaContract = NodeCmd.Flags().String("acalaContract", "", "Acala contract address")
 
-	klaytnRPC = NodeCmd.Flags().String("klaytnRPC", "", "Klaytn RPC URL")
-	klaytnContract = NodeCmd.Flags().String("klaytnContract", "", "Klaytn contract address")
+	// klaytnRPC = NodeCmd.Flags().String("klaytnRPC", "", "Klaytn RPC URL")
+	// klaytnContract = NodeCmd.Flags().String("klaytnContract", "", "Klaytn contract address")
 
-	celoRPC = NodeCmd.Flags().String("celoRPC", "", "Celo RPC URL")
-	celoContract = NodeCmd.Flags().String("celoContract", "", "Celo contract address")
+	// celoRPC = NodeCmd.Flags().String("celoRPC", "", "Celo RPC URL")
+	// celoContract = NodeCmd.Flags().String("celoContract", "", "Celo contract address")
 
-	moonbeamRPC = NodeCmd.Flags().String("moonbeamRPC", "", "Moonbeam RPC URL")
-	moonbeamContract = NodeCmd.Flags().String("moonbeamContract", "", "Moonbeam contract address")
+	// moonbeamRPC = NodeCmd.Flags().String("moonbeamRPC", "", "Moonbeam RPC URL")
+	// moonbeamContract = NodeCmd.Flags().String("moonbeamContract", "", "Moonbeam contract address")
 
-	neonRPC = NodeCmd.Flags().String("neonRPC", "", "Neon RPC URL")
-	neonContract = NodeCmd.Flags().String("neonContract", "", "Neon contract address")
+	// neonRPC = NodeCmd.Flags().String("neonRPC", "", "Neon RPC URL")
+	// neonContract = NodeCmd.Flags().String("neonContract", "", "Neon contract address")
 
-	terraWS = NodeCmd.Flags().String("terraWS", "", "Path to terrad root for websocket connection")
-	terraLCD = NodeCmd.Flags().String("terraLCD", "", "Path to LCD service root for http calls")
-	terraContract = NodeCmd.Flags().String("terraContract", "", "Wormhole contract address on Terra blockchain")
+	// terraWS = NodeCmd.Flags().String("terraWS", "", "Path to terrad root for websocket connection")
+	// terraLCD = NodeCmd.Flags().String("terraLCD", "", "Path to LCD service root for http calls")
+	// terraContract = NodeCmd.Flags().String("terraContract", "", "Wormhole contract address on Terra blockchain")
 
-	algorandIndexerRPC = NodeCmd.Flags().String("algorandIndexerRPC", "", "Algorand Indexer RPC URL")
-	algorandIndexerToken = NodeCmd.Flags().String("algorandIndexerToken", "", "Algorand Indexer access token")
-	algorandAlgodRPC = NodeCmd.Flags().String("algorandAlgodRPC", "", "Algorand Algod RPC URL")
-	algorandAlgodToken = NodeCmd.Flags().String("algorandAlgodToken", "", "Algorand Algod access token")
-	algorandAppID = NodeCmd.Flags().Uint64("algorandAppID", 0, "Algorand app id")
+	// algorandIndexerRPC = NodeCmd.Flags().String("algorandIndexerRPC", "", "Algorand Indexer RPC URL")
+	// algorandIndexerToken = NodeCmd.Flags().String("algorandIndexerToken", "", "Algorand Indexer access token")
+	// algorandAlgodRPC = NodeCmd.Flags().String("algorandAlgodRPC", "", "Algorand Algod RPC URL")
+	// algorandAlgodToken = NodeCmd.Flags().String("algorandAlgodToken", "", "Algorand Algod access token")
+	// algorandAppID = NodeCmd.Flags().Uint64("algorandAppID", 0, "Algorand app id")
 
-	solanaWsRPC = NodeCmd.Flags().String("solanaWS", "", "Solana Websocket URL (required")
-	solanaRPC = NodeCmd.Flags().String("solanaRPC", "", "Solana RPC URL (required")
+	// solanaWsRPC = NodeCmd.Flags().String("solanaWS", "", "Solana Websocket URL (required")
+	// solanaRPC = NodeCmd.Flags().String("solanaRPC", "", "Solana RPC URL (required")
 
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
 	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 10, "The min confirmations for alephium tx")
+	alphFetchPeriod = NodeCmd.Flags().Uint8("alphFetchPeriod", 10, "The fetch events period for alwphium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
+	devnetGuardianIndex = NodeCmd.Flags().Int("devnetGuardianIndex", 0, "Specify devnet guardian index")
+	integrationTest = NodeCmd.Flags().Bool("integrationTest", false, "Launch node for integration testing")
+
 	unsafeDevMode = NodeCmd.Flags().Bool("unsafeDevMode", false, "Launch node in unsafe, deterministic devnet mode")
 	testnetMode = NodeCmd.Flags().Bool("testnetMode", false, "Launch node in testnet mode (enables testnet-only features like Ropsten)")
-	devNumGuardians = NodeCmd.Flags().Uint("devNumGuardians", 5, "Number of devnet guardians to include in guardian set")
 	nodeName = NodeCmd.Flags().String("nodeName", "", "Node name to announce in gossip heartbeats")
 
 	publicRPC = NodeCmd.Flags().String("publicRPC", "", "Listen address for public gRPC interface")
@@ -289,7 +295,14 @@ func runNode(cmd *cobra.Command, args []string) {
 		fmt.Print(devwarning)
 	}
 
-	common.LockMemory()
+	if *integrationTest && !*unsafeDevMode {
+		fmt.Println("Integration tests can only be run in devnet mode")
+		os.Exit(1)
+	}
+
+	if !*integrationTest {
+		common.LockMemory()
+	}
 	common.SetRestrictiveUmask()
 
 	// Refuse to run as root in production mode.
@@ -391,18 +404,18 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		// Deterministic ganache ETH devnet address.
 		*ethContract = devnet.GanacheWormholeContractAddress.Hex()
-		*bscContract = devnet.GanacheWormholeContractAddress.Hex()
-		*polygonContract = devnet.GanacheWormholeContractAddress.Hex()
-		*avalancheContract = devnet.GanacheWormholeContractAddress.Hex()
-		*oasisContract = devnet.GanacheWormholeContractAddress.Hex()
-		*auroraContract = devnet.GanacheWormholeContractAddress.Hex()
-		*fantomContract = devnet.GanacheWormholeContractAddress.Hex()
-		*karuraContract = devnet.GanacheWormholeContractAddress.Hex()
-		*acalaContract = devnet.GanacheWormholeContractAddress.Hex()
-		*klaytnContract = devnet.GanacheWormholeContractAddress.Hex()
-		*celoContract = devnet.GanacheWormholeContractAddress.Hex()
-		*moonbeamContract = devnet.GanacheWormholeContractAddress.Hex()
-		*neonContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *bscContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *polygonContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *avalancheContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *oasisContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *auroraContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *fantomContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *karuraContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *acalaContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *klaytnContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *celoContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *moonbeamContract = devnet.GanacheWormholeContractAddress.Hex()
+		// *neonContract = devnet.GanacheWormholeContractAddress.Hex()
 	}
 
 	// Verify flags
@@ -425,60 +438,60 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *ethContract == "" {
 		logger.Fatal("Please specify --ethContract")
 	}
-	if *bscRPC == "" {
-		logger.Fatal("Please specify --bscRPC")
-	}
-	if *bscContract == "" {
-		logger.Fatal("Please specify --bscContract")
-	}
-	if *polygonRPC == "" {
-		logger.Fatal("Please specify --polygonRPC")
-	}
-	if *polygonContract == "" {
-		logger.Fatal("Please specify --polygonContract")
-	}
-	if *avalancheRPC == "" {
-		logger.Fatal("Please specify --avalancheRPC")
-	}
-	if *oasisRPC == "" {
-		logger.Fatal("Please specify --oasisRPC")
-	}
-	if *fantomRPC == "" {
-		logger.Fatal("Please specify --fantomRPC")
-	}
-	if *fantomContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --fantomContract")
-	}
-	if *auroraRPC == "" {
-		logger.Fatal("Please specify --auroraRPC")
-	}
-	if *auroraContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --auroraContract")
-	}
-	if *karuraRPC == "" {
-		logger.Fatal("Please specify --karuraRPC")
-	}
-	if *karuraContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --karuraContract")
-	}
-	if *acalaRPC == "" {
-		logger.Fatal("Please specify --acalaRPC")
-	}
-	if *acalaContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --acalaContract")
-	}
-	if *klaytnRPC == "" {
-		logger.Fatal("Please specify --klaytnRPC")
-	}
-	if *klaytnContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --klaytnContract")
-	}
-	if *celoRPC == "" {
-		logger.Fatal("Please specify --celoRPC")
-	}
-	if *celoContract == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --celoContract")
-	}
+	// if *bscRPC == "" {
+	// 	logger.Fatal("Please specify --bscRPC")
+	// }
+	// if *bscContract == "" {
+	// 	logger.Fatal("Please specify --bscContract")
+	// }
+	// if *polygonRPC == "" {
+	// 	logger.Fatal("Please specify --polygonRPC")
+	// }
+	// if *polygonContract == "" {
+	// 	logger.Fatal("Please specify --polygonContract")
+	// }
+	// if *avalancheRPC == "" {
+	// 	logger.Fatal("Please specify --avalancheRPC")
+	// }
+	// if *oasisRPC == "" {
+	// 	logger.Fatal("Please specify --oasisRPC")
+	// }
+	// if *fantomRPC == "" {
+	// 	logger.Fatal("Please specify --fantomRPC")
+	// }
+	// if *fantomContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --fantomContract")
+	// }
+	// if *auroraRPC == "" {
+	// 	logger.Fatal("Please specify --auroraRPC")
+	// }
+	// if *auroraContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --auroraContract")
+	// }
+	// if *karuraRPC == "" {
+	// 	logger.Fatal("Please specify --karuraRPC")
+	// }
+	// if *karuraContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --karuraContract")
+	// }
+	// if *acalaRPC == "" {
+	// 	logger.Fatal("Please specify --acalaRPC")
+	// }
+	// if *acalaContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --acalaContract")
+	// }
+	// if *klaytnRPC == "" {
+	// 	logger.Fatal("Please specify --klaytnRPC")
+	// }
+	// if *klaytnContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --klaytnContract")
+	// }
+	// if *celoRPC == "" {
+	// 	logger.Fatal("Please specify --celoRPC")
+	// }
+	// if *celoContract == "" && !*unsafeDevMode {
+	// 	logger.Fatal("Please specify --celoContract")
+	// }
 	if *testnetMode {
 		if *ethRopstenRPC == "" {
 			logger.Fatal("Please specify --ethRopstenRPC")
@@ -486,18 +499,18 @@ func runNode(cmd *cobra.Command, args []string) {
 		if *ethRopstenContract == "" {
 			logger.Fatal("Please specify --ethRopstenContract")
 		}
-		if *moonbeamRPC == "" {
-			logger.Fatal("Please specify --moonbeamRPC")
-		}
-		if *moonbeamContract == "" {
-			logger.Fatal("Please specify --moonbeamContract")
-		}
-		if *neonRPC == "" {
-			logger.Fatal("Please specify --neonRPC")
-		}
-		if *neonContract == "" {
-			logger.Fatal("Please specify --neonContract")
-		}
+		// if *moonbeamRPC == "" {
+		// 	logger.Fatal("Please specify --moonbeamRPC")
+		// }
+		// if *moonbeamContract == "" {
+		// 	logger.Fatal("Please specify --moonbeamContract")
+		// }
+		// if *neonRPC == "" {
+		// 	logger.Fatal("Please specify --neonRPC")
+		// }
+		// if *neonContract == "" {
+		// 	logger.Fatal("Please specify --neonContract")
+		// }
 	} else {
 		if *ethRopstenRPC != "" {
 			logger.Fatal("Please do not specify --ethRopstenRPC in non-testnet mode")
@@ -505,59 +518,59 @@ func runNode(cmd *cobra.Command, args []string) {
 		if *ethRopstenContract != "" {
 			logger.Fatal("Please do not specify --ethRopstenContract in non-testnet mode")
 		}
-		if *moonbeamRPC != "" && !*unsafeDevMode {
-			logger.Fatal("Please do not specify --moonbeamRPC")
-		}
-		if *moonbeamContract != "" && !*unsafeDevMode {
-			logger.Fatal("Please do not specify --moonbeamContract")
-		}
-		if *neonRPC != "" && !*unsafeDevMode {
-			logger.Fatal("Please do not specify --neonRPC")
-		}
-		if *neonContract != "" && !*unsafeDevMode {
-			logger.Fatal("Please do not specify --neonContract")
-		}
+		//if *moonbeamRPC != "" && !*unsafeDevMode {
+		//	logger.Fatal("Please do not specify --moonbeamRPC")
+		//}
+		//if *moonbeamContract != "" && !*unsafeDevMode {
+		//	logger.Fatal("Please do not specify --moonbeamContract")
+		//}
+		//if *neonRPC != "" && !*unsafeDevMode {
+		//	logger.Fatal("Please do not specify --neonRPC")
+		//}
+		//if *neonContract != "" && !*unsafeDevMode {
+		//	logger.Fatal("Please do not specify --neonContract")
+		//}
 	}
 	if *nodeName == "" {
 		logger.Fatal("Please specify --nodeName")
 	}
 
-	if *solanaContract == "" {
-		logger.Fatal("Please specify --solanaContract")
-	}
-	if *solanaWsRPC == "" {
-		logger.Fatal("Please specify --solanaWsUrl")
-	}
-	if *solanaRPC == "" {
-		logger.Fatal("Please specify --solanaUrl")
-	}
+	// if *solanaContract == "" {
+	// 	logger.Fatal("Please specify --solanaContract")
+	// }
+	// if *solanaWsRPC == "" {
+	// 	logger.Fatal("Please specify --solanaWsUrl")
+	// }
+	// if *solanaRPC == "" {
+	// 	logger.Fatal("Please specify --solanaUrl")
+	// }
 
-	if *terraWS == "" {
-		logger.Fatal("Please specify --terraWS")
-	}
-	if *terraLCD == "" {
-		logger.Fatal("Please specify --terraLCD")
-	}
-	if *terraContract == "" {
-		logger.Fatal("Please specify --terraContract")
-	}
-	if *testnetMode || *unsafeDevMode {
-		if *algorandIndexerRPC == "" {
-			logger.Fatal("Please specify --algorandIndexerRPC")
-		}
-		if *algorandIndexerToken == "" {
-			logger.Fatal("Please specify --algorandIndexerToken")
-		}
-		if *algorandAlgodRPC == "" {
-			logger.Fatal("Please specify --algorandAlgodRPC")
-		}
-		if *algorandAlgodToken == "" {
-			logger.Fatal("Please specify --algorandAlgodToken")
-		}
-		if *algorandAppID == 0 {
-			logger.Fatal("Please specify --algorandAppID")
-		}
-	}
+	// if *terraWS == "" {
+	// 	logger.Fatal("Please specify --terraWS")
+	// }
+	// if *terraLCD == "" {
+	// 	logger.Fatal("Please specify --terraLCD")
+	// }
+	// if *terraContract == "" {
+	// 	logger.Fatal("Please specify --terraContract")
+	// }
+	// if *testnetMode || *unsafeDevMode {
+	// 	if *algorandIndexerRPC == "" {
+	// 		logger.Fatal("Please specify --algorandIndexerRPC")
+	// 	}
+	// 	if *algorandIndexerToken == "" {
+	// 		logger.Fatal("Please specify --algorandIndexerToken")
+	// 	}
+	// 	if *algorandAlgodRPC == "" {
+	// 		logger.Fatal("Please specify --algorandAlgodRPC")
+	// 	}
+	// 	if *algorandAlgodToken == "" {
+	// 		logger.Fatal("Please specify --algorandAlgodToken")
+	// 	}
+	// 	if *algorandAppID == 0 {
+	// 		logger.Fatal("Please specify --algorandAppID")
+	// 	}
+	// }
 	if *bigTablePersistenceEnabled {
 		if *bigTableGCPProject == "" {
 			logger.Fatal("Please specify --bigTableGCPProject")
@@ -594,8 +607,8 @@ func runNode(cmd *cobra.Command, args []string) {
 	//
 	// Insert "I'm a sign, not a cop" meme.
 	//
-	if strings.Contains(*ethRPC, "mainnet.infura.io") ||
-		strings.Contains(*polygonRPC, "polygon-mainnet.infura.io") {
+	if strings.Contains(*ethRPC, "mainnet.infura.io") {
+		// strings.Contains(*polygonRPC, "polygon-mainnet.infura.io") {
 		logger.Fatal("Infura is known to send incorrect blocks - please use your own nodes")
 	}
 
@@ -618,14 +631,19 @@ func runNode(cmd *cobra.Command, args []string) {
 	// 	logger.Fatal("invalid Solana contract address", zap.Error(err))
 	// }
 
+	if *unsafeDevMode {
+		idx, err := devnet.GetDevnetIndex()
+		if err == nil {
+			*devnetGuardianIndex = idx
+		} else if err != nil && cmd.Flags().Lookup("devnetGuardianIndex") == nil {
+			logger.Fatal("Failed to parse hostname - are we running in devnet?", zap.Error(err))
+		}
+	}
+
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
-		gk, err := generateDevnetGuardianKey()
-		if err != nil {
-			logger.Fatal("failed to generate devnet guardian key", zap.Error(err))
-		}
-
-		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		gk := devnet.InsecureDeterministicEcdsaKeyByIndex(ethcrypto.S256(), uint64(*devnetGuardianIndex))
+		err := writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
 		if err != nil {
 			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
 		}
@@ -689,26 +707,26 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
 
 	// Observation request channel for each chain supporting observation requests.
-	chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDPolygon] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDAvalanche] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDOasis] = make(chan *gossipv1.ObservationRequest)
-	if *testnetMode || *unsafeDevMode {
-		chainObsvReqC[vaa.ChainIDAlgorand] = make(chan *gossipv1.ObservationRequest)
-	}
-	chainObsvReqC[vaa.ChainIDAurora] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDFantom] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDKarura] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDAcala] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDKlaytn] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDCelo] = make(chan *gossipv1.ObservationRequest)
-	if *testnetMode {
-		chainObsvReqC[vaa.ChainIDMoonbeam] = make(chan *gossipv1.ObservationRequest)
-		chainObsvReqC[vaa.ChainIDNeon] = make(chan *gossipv1.ObservationRequest)
-		chainObsvReqC[vaa.ChainIDEthereumRopsten] = make(chan *gossipv1.ObservationRequest)
-	}
+	// chainObsvReqC[vaa.ChainIDPolygon] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDAvalanche] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDOasis] = make(chan *gossipv1.ObservationRequest)
+	// if *testnetMode || *unsafeDevMode {
+	// 	chainObsvReqC[vaa.ChainIDAlgorand] = make(chan *gossipv1.ObservationRequest)
+	// }
+	// chainObsvReqC[vaa.ChainIDAurora] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDFantom] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDKarura] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDAcala] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDKlaytn] = make(chan *gossipv1.ObservationRequest)
+	// chainObsvReqC[vaa.ChainIDCelo] = make(chan *gossipv1.ObservationRequest)
+	// if *testnetMode {
+	// 	chainObsvReqC[vaa.ChainIDMoonbeam] = make(chan *gossipv1.ObservationRequest)
+	// 	chainObsvReqC[vaa.ChainIDNeon] = make(chan *gossipv1.ObservationRequest)
+	// 	chainObsvReqC[vaa.ChainIDEthereumRopsten] = make(chan *gossipv1.ObservationRequest)
+	// }
 	if *unsafeDevMode {
 		chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
 	}
@@ -742,11 +760,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// Load p2p private key
 	var priv crypto.PrivKey
 	if *unsafeDevMode {
-		idx, err := devnet.GetDevnetIndex()
-		if err != nil {
-			logger.Fatal("Failed to parse hostname - are we running in devnet?")
-		}
-		priv = devnet.DeterministicP2PPrivKeyByIndex(int64(idx))
+		priv = devnet.DeterministicP2PPrivKeyByIndex(int64(*devnetGuardianIndex))
 	} else {
 		priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
 		if err != nil {
@@ -918,7 +932,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 			alphWatcher, err := alephium.NewAlephiumWatcher(
 				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds, common.ReadinessAlephiumSyncing,
-				lockC, *alphMinConfirmations, chainObsvReqC[vaa.ChainIDAlephium],
+				lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
 			)
 			if err != nil {
 				logger.Error("failed to create alephium watcher", zap.Error(err))
@@ -939,9 +953,6 @@ func runNode(cmd *cobra.Command, args []string) {
 			signedInC,
 			gk,
 			gst,
-			*unsafeDevMode,
-			*devNumGuardians,
-			*ethRPC,
 			attestationEvents,
 			notifier,
 		)

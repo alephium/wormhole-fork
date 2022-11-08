@@ -65,6 +65,7 @@ type Watcher struct {
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	minConfirmations uint8
+	fetchPeriod      uint8
 	currentHeight    int32
 
 	client *Client
@@ -94,17 +95,22 @@ func NewAlephiumWatcher(
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
 	minConfirmations uint8,
+	fetchPeriod uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
 	if len(contracts) != 2 {
 		return nil, fmt.Errorf("invalid contract ids")
+	}
+	tokenBridgeContractId, err := ToContractId(contracts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid token bridge contract address")
 	}
 
 	watcher := &Watcher{
 		url:                       url,
 		apiKey:                    apiKey,
 		governanceContractAddress: contracts[0],
-		tokenBridgeContractId:     toContractId(contracts[1]),
+		tokenBridgeContractId:     tokenBridgeContractId,
 
 		chainIndex: &ChainIndex{
 			FromGroup: int32(fromGroup),
@@ -116,6 +122,7 @@ func NewAlephiumWatcher(
 		obsvReqC:  obsvReqC,
 
 		minConfirmations: minConfirmations,
+		fetchPeriod:      fetchPeriod,
 
 		client: NewClient(url, apiKey, 10),
 	}
@@ -163,7 +170,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 	}
 
 	fromIndex := *currentEventCount
-	eventTick := time.NewTicker(10 * time.Second)
+	eventTick := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
 	defer eventTick.Stop()
 
 	for {
@@ -216,7 +223,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 }
 
 func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
-	t := time.NewTicker(10 * time.Second)
+	t := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
 	defer t.Stop()
 
 	for {

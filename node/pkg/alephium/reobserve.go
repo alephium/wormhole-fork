@@ -16,8 +16,14 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 		case <-ctx.Done():
 			return
 		case req := <-w.obsvReqC:
-			assume(req.ChainId == uint32(vaa.ChainIDAlephium))
-			assume(len(req.TxHash) == 32)
+			if req.ChainId != uint32(vaa.ChainIDAlephium) {
+				logger.Error("invalid chain id, expect alephium", zap.Uint32("chainId", req.ChainId))
+				continue
+			}
+			if len(req.TxHash) != 32 {
+				logger.Error("invalid tx id, expect 32 bytes", zap.Int("haveSize", len(req.TxHash)))
+				continue
+			}
 			txId := hex.EncodeToString(req.TxHash[0:32])
 			txStatus, err := client.GetTransactionStatus(ctx, txId)
 			if err != nil {

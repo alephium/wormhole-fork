@@ -33,7 +33,12 @@ const configuration: Configuration<Settings> = {
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 1,
-      settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
+      settings: {
+        ...settingsTemplate,
+        minimalConsistencyLevel: process.env.MINIMAL_CONSISTENCY_LEVEL
+          ? parseInt(process.env.MINIMAL_CONSISTENCY_LEVEL)
+          : 10
+      }
     },
 
     testnet: {
