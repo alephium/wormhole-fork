@@ -3,7 +3,7 @@ import {
   NFTImplementation__factory,
   TokenImplementation,
   TokenImplementation__factory,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {

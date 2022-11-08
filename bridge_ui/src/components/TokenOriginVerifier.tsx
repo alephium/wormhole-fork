@@ -4,7 +4,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
   nativeToHexString,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   Card,
   CircularProgress,

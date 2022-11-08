@@ -20,44 +20,57 @@ import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
 import { attestTokenScript, attestWrappedAlphScript } from '../alephium/token_bridge';
+import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 
-export function attestFromAlph(
+export async function attestFromAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   tokenId: string,
   payer: string,
   messageFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): string {
+): Promise<BuildScriptTxResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = attestTokenScript()
-  return script.buildByteCodeToDeploy({
-    payer: payer,
-    tokenBridge: tokenBridgeId,
-    localTokenId: tokenId,
-    messageFee: messageFee,
-    nonce: nonceHex,
-    consistencyLevel: consistencyLevel
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: payer,
+      tokenBridge: tokenBridgeId,
+      localTokenId: tokenId,
+      messageFee: messageFee,
+      nonce: nonceHex,
+      consistencyLevel: BigInt(consistencyLevel)
+    },
+    attoAlphAmount: messageFee,
+    tokens: [{
+      id: tokenId,
+      amount: BigInt(1)
+    }]
   })
 }
 
-export function attestWrappedAlph(
+export async function attestWrappedAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   wrappedAlphId: string,
   payer: string,
   messageFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): string {
+): Promise<BuildScriptTxResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = attestWrappedAlphScript()
-  return script.buildByteCodeToDeploy({
-    payer: payer,
-    tokenBridge: tokenBridgeId,
-    wrappedAlphId: wrappedAlphId,
-    messageFee: messageFee,
-    nonce: nonceHex,
-    consistencyLevel: consistencyLevel
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: payer,
+      tokenBridge: tokenBridgeId,
+      wrappedAlphId: wrappedAlphId,
+      messageFee: messageFee,
+      nonce: nonceHex,
+      consistencyLevel: BigInt(consistencyLevel)
+    },
+    attoAlphAmount: messageFee
   })
 }
 

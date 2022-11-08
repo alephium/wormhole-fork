@@ -1,12 +1,38 @@
-# syntax=docker.io/docker/dockerfile:1.3@sha256:42399d4635eddd7a9b8a24be879d2f9a930d0ed040a61324cfdf59ef1357b3b2
+# Install dependencies only when needed
+FROM node:alpine AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+RUN apk add g++ make py3-pip
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Derivative of ethereum/Dockerfile, look there for an explanation on how it works.
-FROM node:16-alpine@sha256:f21f35732964a96306a84a8c4b5a829f6d3a0c5163237ff4b6b8b34f8d70064b
+# Rebuild the source code only when needed
+FROM node:alpine AS builder
+WORKDIR /app
+COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+ENV NODE_OPTIONS=--openssl-legacy-provider
+RUN npm run build
 
-RUN mkdir -p /app
+# Production image, copy all the files and run next
+FROM node:alpine AS runner
 WORKDIR /app
 
-COPY bridge_ui/package.json bridge_ui/package-lock.json ./
-RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
-    npm ci
-COPY bridge_ui .
+# You only need to copy next.config.js if you are NOT using the default configuration
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/config-overrides.js ./config-overrides.js
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+
+RUN npm install -g serve
+
+USER node
+
+# Expose
+EXPOSE 3000
+
+CMD ["serve", "-s", "build"]

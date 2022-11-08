@@ -14,13 +14,23 @@ var CoreModule = []byte{00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 
 var TokenBridgeModule = []byte{00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65}
 
 type (
-	// BodyContractUpgrade is a governance message to perform a contract upgrade of the core module
-	BodyContractUpgrade struct {
-		NewContract Address
+	// BodyUpdateMessageFee is a governance message to perform update message fee of the core module
+	BodyUpdateMessageFee struct {
+		NewMessageFee []byte
 	}
 
-	// BodyGuardianSetUpdate is a governance message to set a new guardian set
-	BodyGuardianSetUpdate struct {
+	BodyTransferFee struct {
+		Amount    []byte
+		Recipient []byte
+	}
+
+	// BodyContractUpgrade is a governance message to perform a contract upgrade of the core module
+	BodyContractUpgrade struct {
+		Payload []byte
+	}
+
+	// BodyGuardianSetUpgrade is a governance message to set a new guardian set
+	BodyGuardianSetUpgrade struct {
 		Keys     []common.Address
 		NewIndex uint32
 	}
@@ -34,10 +44,46 @@ type (
 
 	// BodyTokenBridgeUpgradeContract is a governance message to upgrade the token bridge.
 	BodyTokenBridgeUpgradeContract struct {
-		Module      string
-		NewContract Address
+		Module  string
+		Payload []byte
+	}
+
+	BodyTokenBridgeDestroyContracts struct {
+		EmitterChain ChainID
+		Sequences    []uint64
+	}
+
+	BodyTokenBridgeUpdateMinimalConsistencyLevel struct {
+		NewConsistencyLevel uint8
+	}
+
+	BodyTokenBridgeUpdateRefundAddress struct {
+		NewRefundAddress []byte
 	}
 )
+
+func (b BodyUpdateMessageFee) Serialize() []byte {
+	buf := new(bytes.Buffer)
+
+	// Module
+	buf.Write(CoreModule)
+	// Action
+	MustWrite(buf, binary.BigEndian, uint8(3))
+	buf.Write(b.NewMessageFee)
+	return buf.Bytes()
+}
+
+func (b BodyTransferFee) Serialize() []byte {
+	buf := new(bytes.Buffer)
+
+	// Module
+	buf.Write(CoreModule)
+	// Action
+	MustWrite(buf, binary.BigEndian, uint8(4))
+	buf.Write(b.Amount)
+	buf.Write(b.Recipient)
+	return buf.Bytes()
+}
 
 func (b BodyContractUpgrade) Serialize() []byte {
 	buf := new(bytes.Buffer)
@@ -47,12 +93,12 @@ func (b BodyContractUpgrade) Serialize() []byte {
 	// Action
 	MustWrite(buf, binary.BigEndian, uint8(1))
 
-	buf.Write(b.NewContract[:])
+	buf.Write(b.Payload[:])
 
 	return buf.Bytes()
 }
 
-func (b BodyGuardianSetUpdate) Serialize() []byte {
+func (b BodyGuardianSetUpgrade) Serialize() []byte {
 	buf := new(bytes.Buffer)
 
 	// Module
@@ -109,8 +155,46 @@ func (r BodyTokenBridgeUpgradeContract) Serialize() []byte {
 	buf.Write([]byte(r.Module))
 	// Write action ID
 	MustWrite(buf, binary.BigEndian, uint8(2))
-	// Write emitter address of chain to be registered
-	buf.Write(r.NewContract[:])
+	// Write contract upgrade payload
+	buf.Write(r.Payload[:])
 
+	return buf.Bytes()
+}
+
+func (b BodyTokenBridgeDestroyContracts) Serialize() []byte {
+	buf := new(bytes.Buffer)
+
+	// Module
+	buf.Write(TokenBridgeModule)
+	// Action ID
+	MustWrite(buf, binary.BigEndian, uint8(0xf0))
+	MustWrite(buf, binary.BigEndian, uint16(b.EmitterChain))
+	MustWrite(buf, binary.BigEndian, uint16(len(b.Sequences)))
+	for _, seq := range b.Sequences {
+		MustWrite(buf, binary.BigEndian, seq)
+	}
+	return buf.Bytes()
+}
+
+func (b BodyTokenBridgeUpdateMinimalConsistencyLevel) Serialize() []byte {
+	buf := new(bytes.Buffer)
+
+	// Module
+	buf.Write(TokenBridgeModule)
+	// Action ID
+	MustWrite(buf, binary.BigEndian, uint8(0xf1))
+	MustWrite(buf, binary.BigEndian, b.NewConsistencyLevel)
+	return buf.Bytes()
+}
+
+func (b BodyTokenBridgeUpdateRefundAddress) Serialize() []byte {
+	buf := new(bytes.Buffer)
+
+	// Module
+	buf.Write(TokenBridgeModule)
+	// Action ID
+	MustWrite(buf, binary.BigEndian, uint8(0xf2))
+	MustWrite(buf, binary.BigEndian, uint16(len(b.NewRefundAddress)))
+	buf.Write(b.NewRefundAddress)
 	return buf.Bytes()
 }

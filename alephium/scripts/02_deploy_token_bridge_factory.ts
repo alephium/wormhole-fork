@@ -12,50 +12,50 @@ async function deployTemplateContract(deployer: Deployer, name: string, initialF
 const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const wrappedAlphPoolId = await deployTemplateContract(deployer, 'WrappedAlphPool', {
     tokenBridgeId: '',
-    tokenChainId: 0,
+    tokenChainId: 0n,
     bridgeTokenId: '',
-    totalBridged: 0,
-    decimals_: 0
+    totalBridged: 0n,
+    decimals_: 0n
   })
   const localTokenPoolId = await deployTemplateContract(deployer, 'LocalTokenPool', {
     tokenBridgeId: '',
-    tokenChainId: 0,
+    tokenChainId: 0n,
     bridgeTokenId: '',
-    totalBridged: 0,
-    decimals_: 0
+    totalBridged: 0n,
+    decimals_: 0n
   })
   const remoteTokenPoolId = await deployTemplateContract(deployer, 'RemoteTokenPool', {
     tokenBridgeId: '',
-    tokenChainId: 0,
+    tokenChainId: 0n,
     bridgeTokenId: '',
-    totalBridged: 0,
+    totalBridged: 0n,
     symbol_: '',
     name_: '',
-    decimals_: 0,
-    sequence_: 0
+    decimals_: 0n,
+    sequence_: 0n
   })
   const tokenBridgeForChainId = await deployTemplateContract(deployer, 'TokenBridgeForChain', {
     governance: '',
-    localChainId: 0,
+    localChainId: 0n,
     localTokenBridgeId: '',
-    remoteChainId: 0,
+    remoteChainId: 0n,
     remoteTokenBridgeId: '',
-    start: 0,
-    firstNext256: 0,
-    secondNext256: 0,
+    start: 0n,
+    firstNext256: 0n,
+    secondNext256: 0n,
     unexecutedSequenceTemplateId: '',
-    sendSequence: 0
+    sendSequence: 0n
   })
   const attestTokenHandlerId = await deployTemplateContract(deployer, 'AttestTokenHandler', {
     governance: '',
     localTokenBridge: '',
-    remoteChainId: 0,
+    remoteChainId: 0n,
     remoteTokenBridgeId: '',
-    receivedSequence: 0
+    receivedSequence: 0n
   })
   const unexecutedSequenceId = await deployTemplateContract(deployer, 'UnexecutedSequence', {
     parentId: '',
-    begin: 0,
+    begin: 0n,
     sequences: 0n
   })
   const tokenBridgeFactory = Project.contract('TokenBridgeFactory')

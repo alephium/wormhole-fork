@@ -15,7 +15,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   CHAIN_ID_ACALA,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Button, makeStyles, Typography } from "@material-ui/core";
 import { Transaction } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";

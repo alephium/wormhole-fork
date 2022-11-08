@@ -1,5 +1,6 @@
 import {
   ALEPHIUM_BRIDGE_ADDRESS,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID
@@ -12,13 +13,14 @@ import {
   parseTargetChainFromLogAlph,
   getTokenPoolId,
   contractExists
-} from '@certusone/wormhole-sdk';
+} from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
   node,
-  SignerProvider,
-  addressFromContractId
+  addressFromContractId,
+  groupOfAddress
 } from '@alephium/web3';
+import * as base58 from 'bs58'
 
 const WormholeMessageEventIndex = 0
 
@@ -143,22 +145,6 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
   }
 }
 
-export async function submitAlphScriptTx(
-  provider: SignerProvider,
-  fromAddress: string,
-  bytecode: string,
-  tokens?: node.Token[],
-  attoAlphAmount?: string
-) {
-  return provider.signExecuteScriptTx({
-    signerAddress: fromAddress,
-    bytecode: bytecode,
-    submitTx: true,
-    tokens: tokens,
-    attoAlphAmount: attoAlphAmount
-  })
-}
-
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
   const tokenAddress = addressFromContractId(tokenId)
   const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
@@ -181,4 +167,12 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
         }
       }
     })
+}
+
+export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
+  if (recipient.length !== 32) {
+    return false
+  }
+  const address = base58.encode(Buffer.concat([Buffer.from([0x00]), recipient]))
+  return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
 }

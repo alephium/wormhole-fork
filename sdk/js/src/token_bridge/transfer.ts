@@ -1,3 +1,4 @@
+import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -51,33 +52,36 @@ import {
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 
-export function transferAlph(
+export async function transferAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   fromAddress: string,
   toChainId: ChainId,
   toAddress: string,
   alphAmount: bigint,
-  messageFee: bigint,
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): string {
+): Promise<BuildScriptTxResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferAlphScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridge: tokenBridgeId,
-    fromAddress: fromAddress,
-    toChainId: toChainId,
-    toAddress: toAddress,
-    alphAmount: alphAmount,
-    messageFee: messageFee,
-    arbiterFee: arbiterFee,
-    nonce: nonceHex,
-    consistencyLevel: consistencyLevel,
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridge: tokenBridgeId,
+      fromAddress: fromAddress,
+      toChainId: BigInt(toChainId),
+      toAddress: toAddress,
+      alphAmount: alphAmount,
+      arbiterFee: arbiterFee,
+      nonce: nonceHex,
+      consistencyLevel: BigInt(consistencyLevel),
+    },
+    attoAlphAmount: alphAmount
   })
 }
 
-export function transferLocalTokenFromAlph(
+export async function transferLocalTokenFromAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   fromAddress: string,
   localTokenId: string,
@@ -88,25 +92,33 @@ export function transferLocalTokenFromAlph(
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): string {
+): Promise<BuildScriptTxResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferLocalTokenScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridge: tokenBridgeId,
-    fromAddress: fromAddress,
-    localTokenId: localTokenId,
-    alphChainId: CHAIN_ID_ALEPHIUM,
-    toChainId: Number(toChainId),
-    toAddress: toAddress,
-    tokenAmount: tokenAmount,
-    messageFee: messageFee,
-    arbiterFee: arbiterFee,
-    nonce: nonceHex,
-    consistencyLevel: consistencyLevel
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridge: tokenBridgeId,
+      fromAddress: fromAddress,
+      localTokenId: localTokenId,
+      alphChainId: BigInt(CHAIN_ID_ALEPHIUM),
+      toChainId: BigInt(toChainId),
+      toAddress: toAddress,
+      tokenAmount: tokenAmount,
+      messageFee: messageFee,
+      arbiterFee: arbiterFee,
+      nonce: nonceHex,
+      consistencyLevel: BigInt(consistencyLevel)
+    },
+    attoAlphAmount: messageFee,
+    tokens: [{
+      id: localTokenId,
+      amount: tokenAmount
+    }]
   })
 }
 
-export function transferRemoteTokenFromAlph(
+export async function transferRemoteTokenFromAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   fromAddress: string,
   tokenPoolId: string,
@@ -119,22 +131,29 @@ export function transferRemoteTokenFromAlph(
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): string {
+): Promise<BuildScriptTxResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
   const script = transferRemoteTokenScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridge: tokenBridgeId,
-    fromAddress: fromAddress,
-    tokenPoolId: tokenPoolId,
-    remoteTokenId: remoteTokenId,
-    tokenChainId: Number(tokenChainId),
-    toChainId: Number(toChainId),
-    toAddress: toAddress,
-    tokenAmount: tokenAmount,
-    messageFee: messageFee,
-    arbiterFee: arbiterFee,
-    nonce: nonceHex,
-    consistencyLevel: consistencyLevel
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridge: tokenBridgeId,
+      fromAddress: fromAddress,
+      tokenPoolId: tokenPoolId,
+      remoteTokenId: remoteTokenId,
+      tokenChainId: BigInt(tokenChainId),
+      toChainId: BigInt(toChainId),
+      toAddress: toAddress,
+      tokenAmount: tokenAmount,
+      messageFee: messageFee,
+      arbiterFee: arbiterFee,
+      nonce: nonceHex,
+      consistencyLevel: BigInt(consistencyLevel)
+    },
+    attoAlphAmount: messageFee,
+    tokens: [{
+      id: tokenPoolId,
+      amount: tokenAmount
+    }]
   })
 }
 

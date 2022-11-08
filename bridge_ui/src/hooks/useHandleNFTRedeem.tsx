@@ -9,14 +9,14 @@ import {
   isEVMChain,
   parseNFTPayload,
   parseVAA
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   createMetaOnSolana,
   getForeignAssetSol,
   isNFTVAASolanaNative,
   redeemOnEth,
   redeemOnSolana,
-} from "@certusone/wormhole-sdk/lib/esm/nft_bridge";
+} from "alephium-wormhole-sdk/lib/esm/nft_bridge";
 import { arrayify } from "@ethersproject/bytes";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";

@@ -34,7 +34,7 @@ func DevnetGuardianSetVSS(n uint) *vaa.VAA {
 		EmitterAddress: vaa.Address{
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
 		},
-		Payload: vaa.BodyGuardianSetUpdate{
+		Payload: vaa.BodyGuardianSetUpgrade{
 			Keys:     pubkeys,
 			NewIndex: 1,
 		}.Serialize(),

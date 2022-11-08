@@ -1,5 +1,5 @@
 import { NodeProvider, node } from '@alephium/web3'
-import { ChainId, getSignedVAAWithRetry, zeroPad } from '@certusone/wormhole-sdk'
+import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 
 export type TransferResult = { signedVaa: Uint8Array; txFee: bigint }
@@ -124,10 +124,10 @@ export class TransferTokenTest {
       this.fromChain.chainId
     )
 
-    const extraFee = transferResult.txFee + this.fromChain.messageFee
-    assert(amount + extraFee + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
-    assert(amount + lockedBalanceBeforeTransfer === lockedBalanceAfterTransfer)
-    assert(amount + balanceBeforeTransferOnTargetChain === balanceAfterTransferOnTargetChain)
+    const realTransferAmount = amount - this.fromChain.messageFee
+    assert(amount + transferResult.txFee + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
+    assert(realTransferAmount + lockedBalanceBeforeTransfer === lockedBalanceAfterTransfer)
+    assert(realTransferAmount + balanceBeforeTransferOnTargetChain === balanceAfterTransferOnTargetChain)
   }
 
   async transferWrappedTestToken(amount: bigint): Promise<void> {

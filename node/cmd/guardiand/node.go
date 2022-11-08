@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/certusone/wormhole/node/pkg/alephium"
 	"github.com/certusone/wormhole/node/pkg/db"
@@ -394,13 +395,16 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// In devnet mode, we automatically set a number of flags that rely on deterministic keys.
 	if *unsafeDevMode {
-		g0key, err := peer.IDFromPrivateKey(devnet.DeterministicP2PPrivKeyByIndex(0))
-		if err != nil {
-			panic(err)
-		}
 
-		// Use the first guardian node as bootstrap
-		*p2pBootstrap = fmt.Sprintf("/dns4/guardian-0.guardian/udp/%d/quic/p2p/%s", *p2pPort, g0key.String())
+		// Use the first guardian node as bootstrap if it is not specified
+		if *p2pBootstrap == "" {
+			g0key, err := peer.IDFromPrivateKey(devnet.DeterministicP2PPrivKeyByIndex(0))
+			if err != nil {
+				panic(err)
+			}
+
+			*p2pBootstrap = fmt.Sprintf("/dns4/guardian-0.guardian/udp/%d/quic/p2p/%s", *p2pPort, g0key.String())
+		}
 
 		// Deterministic ganache ETH devnet address.
 		*ethContract = devnet.GanacheWormholeContractAddress.Hex()
@@ -423,13 +427,13 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *nodeKeyPath == "" && !*unsafeDevMode { // In devnet mode, keys are deterministically generated.
 		logger.Fatal("Please specify --nodeKey")
 	}
-	if *guardianKeyPath == "" {
+	if *guardianKeyPath == "" && !*unsafeDevMode {
 		logger.Fatal("Please specify --guardianKey")
 	}
 	if *adminSocketPath == "" {
 		logger.Fatal("Please specify --adminSocket")
 	}
-	if *dataDir == "" {
+	if *dataDir == "" && !*unsafeDevMode {
 		logger.Fatal("Please specify --dataDir")
 	}
 	if *ethRPC == "" {
@@ -640,10 +644,34 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// the first guardian node is the bootstrap node on the devnet
+	if *unsafeDevMode && *devnetGuardianIndex != 0 {
+		logger.Info("wait for the bootstrap node to establish networking", zap.Int("index", *devnetGuardianIndex))
+		time.Sleep(15 * time.Second)
+	}
+
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
 	if *unsafeDevMode {
+
+		// Set the guardian key path if it is not specified
+		if *guardianKeyPath == "" {
+			keyPath := fmt.Sprintf("/run/node/bridge.key-%d", *devnetGuardianIndex)
+			guardianKeyPath = &keyPath
+		}
+
 		gk := devnet.InsecureDeterministicEcdsaKeyByIndex(ethcrypto.S256(), uint64(*devnetGuardianIndex))
-		err := writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		err = writeGuardianKey(gk, "auto-generated deterministic devnet key", *guardianKeyPath, true)
+		if err != nil {
+			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
+		}
+
+		// Set the data path if it is not specified
+		if *dataDir == "" {
+			dbPath := fmt.Sprintf("/run/node/data-%d", *devnetGuardianIndex)
+			dataDir = &dbPath
+		}
+
+		logger.Info("devnet guardian", zap.Int("index", *devnetGuardianIndex), zap.String("keyPath", *guardianKeyPath), zap.String("dbPath", *dataDir))
 		if err != nil {
 			logger.Fatal("failed to write devnet guardian key", zap.Error(err))
 		}

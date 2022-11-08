@@ -6,10 +6,10 @@ export const governanceModule = zeroPad(stringToHex('Core'), 32)
 export const initGuardianSet = GuardianSet.random(12, 0)
 export const governanceChainId = 0
 export const governanceEmitterAddress = '0000000000000000000000000000000000000000000000000000000000000004'
-export const messageFee = BigInt('100000000000000')
+export const defaultMessageFee = 10n ** 14n
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0002_governance_messaging.md
-export class UpdateGuardianSet {
+export class GuardianSetUpgrade {
   newGuardianSet: GuardianSet
 
   constructor(guardianSet: GuardianSet) {
@@ -67,18 +67,18 @@ export class SubmitTransferFee {
   }
 }
 
-export function createGovernance(): ContractInfo {
+export function createGovernance(receivedSequence?: bigint, messageFee?: bigint): ContractInfo {
   const address = randomContractAddress()
   const governanceContract = Project.contract('Governance')
   const initFields = {
-    chainId: CHAIN_ID_ALEPHIUM,
-    governanceChainId: governanceChainId,
+    chainId: BigInt(CHAIN_ID_ALEPHIUM),
+    governanceChainId: BigInt(governanceChainId),
     governanceEmitterAddress: governanceEmitterAddress,
-    receivedSequence: 0,
-    messageFee: messageFee,
+    receivedSequence: receivedSequence ?? 0n,
+    messageFee: messageFee ?? defaultMessageFee,
     guardianSets: ['', initGuardianSet.encodeAddresses()],
-    guardianSetIndexes: [0, initGuardianSet.index],
-    previousGuardianSetExpirationTimeMS: 0
+    guardianSetIndexes: [0n, BigInt(initGuardianSet.index)],
+    previousGuardianSetExpirationTimeMS: 0n
   }
   const contractState = governanceContract.toState(initFields, initAsset, address)
   return new ContractInfo(governanceContract, contractState, [], address)

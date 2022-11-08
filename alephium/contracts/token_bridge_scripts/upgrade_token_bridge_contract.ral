@@ -1,0 +1,3 @@
+TxScript UpgradeTokenBridgeContract(tokenBridge: TokenBridge, vaa: ByteVec) {
+  tokenBridge.upgradeContract(vaa)
+}

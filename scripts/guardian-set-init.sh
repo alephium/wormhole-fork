@@ -9,7 +9,6 @@ echo "number of guardians to initialize: ${numGuardians}"
 addressesJson="./scripts/devnet-consts.json"
 
 # working files for accumulating state
-envFile="./scripts/.env.hex" # for generic hex data, for solana, terra, etc
 ethFile="./scripts/.env.0x" # for "0x" prefixed data, for ethereum scripts
 alphFile="./scripts/.env.alph"
 
@@ -45,46 +44,47 @@ fi
 echo "generating guardian set addresses"
 # create an array of strings containing the ECDSA public keys of the devnet guardians in the guardianset:
 # guardiansPublicEth has the leading "0x" that Eth scripts expect.
-guardiansPublicEth=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public]' $addressesJson)
+guardiansPublicEth=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].public]' $addressesJson)
 # guardiansPublicHex does not have a leading "0x", just hex strings.
-guardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
+guardiansPublicHex=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
 # also make a CSV string of the hex addresses, so the client scripts that need that format don't have to.
 guardiansPublicHexCSV=$(echo ${guardiansPublicHex} | jq --raw-output -c  '. | join(",")')
 
 # write the lists of addresses to the env files
 initSigners="INIT_SIGNERS"
 upsert_env_file $ethFile $initSigners $guardiansPublicEth
-upsert_env_file $envFile $initSigners $guardiansPublicHex
 upsert_env_file $alphFile $initSigners $guardiansPublicHex
-upsert_env_file $envFile "INIT_SIGNERS_CSV" $guardiansPublicHexCSV
 
 
 # 2) guardian private keys - used for generating the initial governance VAAs (register token bridge & nft bridge contracts on each chain).
 echo "generating guardian set keys"
 # create an array of strings containing the private keys of the devnet guardians in the guardianset
-guardiansPrivate=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].private]' $addressesJson)
+guardiansPrivate=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].private]' $addressesJson)
 # create a CSV string with the private keys of the guardians in the guardianset, that will be used to create registration VAAs
 guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(",")')
 
 # write the lists of keys to the env files
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate
-upsert_env_file $envFile "INIT_SIGNERS_KEYS_CSV"  $guardiansPrivateCSV
 
+# create update guardian set vaa if the numGuardians > 1
+if [[ "${numGuardians}" -gt "1" ]]; then
+    echo "creating update guardian set vaa"
+    newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
+    newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
+    updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
+    updateGuardianSet="UPDATE_GUARDIAN_SET_VAA"
+    upsert_env_file $ethFile $updateGuardianSet $updateGuardianSetVAA
+    upsert_env_file $alphFile $updateGuardianSet $updateGuardianSetVAA
+fi
 
 # 3) fetch and store the contract addresses that we need to make contract registration governance VAAs for:
 echo "getting contract addresses for chain registrations from $addressesJson"
 # get addresses from the constants file
-solTokenBridge=$(jq --raw-output '.chains."1".contracts.tokenBridgeEmitterAddress' $addressesJson)
 ethTokenBridge=$(jq --raw-output '.chains."2".contracts.tokenBridgeEmitterAddress' $addressesJson)
-terraTokenBridge=$(jq --raw-output '.chains."3".contracts.tokenBridgeEmitterAddress' $addressesJson)
 bscTokenBridge=$(jq --raw-output '.chains."4".contracts.tokenBridgeEmitterAddress' $addressesJson)
-algoTokenBridge=$(jq --raw-output '.chains."8".contracts.tokenBridgeEmitterAddress' $addressesJson)
 alphTokenBridge=$(jq --raw-output '.chains."255".contracts.tokenBridgeEmitterAddress' $addressesJson)
 
-solNFTBridge=$(jq --raw-output '.chains."1".contracts.nftBridgeEmitterAddress' $addressesJson)
 ethNFTBridge=$(jq --raw-output '.chains."2".contracts.nftBridgeEmitterAddress' $addressesJson)
-terraNFTBridge=$(jq --raw-output '.chains."3".contracts.nftBridgeEmitterAddress' $addressesJson)
-
 
 # 4) create token bridge registration VAAs
 echo "generating contract registration VAAs for token bridges"
@@ -94,78 +94,37 @@ if [[ ! -d ./clients/js/node_modules ]]; then
     npm ci --prefix clients/js
 fi
 # invoke clients/token_bridge commands to create registration VAAs
-solTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c solana -a ${solTokenBridge} -g ${guardiansPrivateCSV})
-ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV})
-terraTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c terra -a ${terraTokenBridge} -g ${guardiansPrivateCSV})
-bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV})
-algoTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c algorand -a ${algoTokenBridge} -g ${guardiansPrivateCSV})
-alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV})
-
-ethTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
-bscTokenBridgeVAAForAlph=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
-
+ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
+bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
+alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV} -s 2)
 
 # 5) create nft bridge registration VAAs
 echo "generating contract registration VAAs for nft bridges"
-solNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c solana -a ${solNFTBridge} -g ${guardiansPrivateCSV})
 ethNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c ethereum -a ${ethNFTBridge} -g ${guardiansPrivateCSV})
-terraNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c terra -a ${terraNFTBridge} -g ${guardiansPrivateCSV})
-
-
 
 # 6) write the registration VAAs to env files
 echo "writing VAAs to .env files"
 # define the keys that will hold the chain registration governance VAAs
-solTokenBridge="REGISTER_SOL_TOKEN_BRIDGE_VAA"
 ethTokenBridge="REGISTER_ETH_TOKEN_BRIDGE_VAA"
-terraTokenBridge="REGISTER_TERRA_TOKEN_BRIDGE_VAA"
 bscTokenBridge="REGISTER_BSC_TOKEN_BRIDGE_VAA"
-algoTokenBridge="REGISTER_ALGO_TOKEN_BRIDGE_VAA"
 alphTokenBridge="REGISTER_ALPH_TOKEN_BRIDGE_VAA"
 
-solNFTBridge="REGISTER_SOL_NFT_BRIDGE_VAA"
 ethNFTBridge="REGISTER_ETH_NFT_BRIDGE_VAA"
-terraNFTBridge="REGISTER_TERRA_NFT_BRIDGE_VAA"
-
-
-# solana token bridge
-upsert_env_file $ethFile $solTokenBridge $solTokenBridgeVAA
-upsert_env_file $envFile $solTokenBridge $solTokenBridgeVAA
-# solana nft bridge
-upsert_env_file $ethFile $solNFTBridge $solNFTBridgeVAA
-upsert_env_file $envFile $solNFTBridge $solNFTBridgeVAA
-
-
-# ethereum token bridge
-upsert_env_file $ethFile $ethTokenBridge $ethTokenBridgeVAA
-upsert_env_file $envFile $ethTokenBridge $ethTokenBridgeVAA
-# ethereum nft bridge
-upsert_env_file $ethFile $ethNFTBridge $ethNFTBridgeVAA
-upsert_env_file $envFile $ethNFTBridge $ethNFTBridgeVAA
-
-
-# terra token bridge
-upsert_env_file $ethFile $terraTokenBridge $terraTokenBridgeVAA
-upsert_env_file $envFile $terraTokenBridge $terraTokenBridgeVAA
-# terra nft bridge
-upsert_env_file $ethFile $terraNFTBridge $terraNFTBridgeVAA
-upsert_env_file $envFile $terraNFTBridge $terraNFTBridgeVAA
-
 
 # bsc token bridge
 upsert_env_file $ethFile $bscTokenBridge $bscTokenBridgeVAA
-upsert_env_file $envFile $bscTokenBridge $bscTokenBridgeVAA
 
-# algo token bridge
-upsert_env_file $ethFile $algoTokenBridge $algoTokenBridgeVAA
-upsert_env_file $envFile $algoTokenBridge $algoTokenBridgeVAA
+# ethereum token bridge
+upsert_env_file $ethFile $ethTokenBridge $ethTokenBridgeVAA
+
+# ethereum nft bridge
+upsert_env_file $ethFile $ethNFTBridge $ethNFTBridgeVAA
 
 # alph token bridge
 upsert_env_file $ethFile $alphTokenBridge $alphTokenBridgeVAA
-upsert_env_file $envFile $alphTokenBridge $alphTokenBridgeVAA
 
-upsert_env_file $alphFile $ethTokenBridge $ethTokenBridgeVAAForAlph
-upsert_env_file $alphFile $bscTokenBridge $bscTokenBridgeVAAForAlph
+upsert_env_file $alphFile $ethTokenBridge $ethTokenBridgeVAA
+upsert_env_file $alphFile $bscTokenBridge $bscTokenBridgeVAA
 
 # 7) copy the local .env file to the solana & terra dirs, if the script is running on the host machine
 # chain dirs will not exist if running in docker for Tilt, only if running locally. check before copying.
@@ -180,14 +139,5 @@ if [[ -d ./alephium ]]; then
     echo "copying $alphFile to /alephium/.env"
     cp $alphFile ./alephium/.env
 fi
-
-# copy the hex envFile to each of the non-EVM chains
-for envDest in ./solana/.env ./terra/tools/.env ./algorand/.env; do
-    dirname=$(dirname $envDest)
-    if [[ -d "$dirname" ]]; then
-        echo "copying $envFile to $envDest"
-        cp $envFile $envDest
-    fi
-done
 
 echo "guardian set init complete!"

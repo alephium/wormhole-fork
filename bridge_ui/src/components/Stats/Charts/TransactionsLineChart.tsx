@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 import { useTheme, useMediaQuery } from "@material-ui/core";
 import { useCallback } from "react";
 import {

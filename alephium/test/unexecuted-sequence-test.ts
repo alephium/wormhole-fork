@@ -22,10 +22,10 @@ describe('test unexecuted sequence', () => {
   it('should check sequence passed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const startSequence = 256
+    const startSequence = 256n
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
     let sequences = 0n
-    for (let seq = 0; seq < 255; seq++) {
+    for (let seq = 0n; seq < 255n; seq++) {
       const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences)
       const testResult = await unexecutedSequenceTest.testPublicMethod('checkSequence', {
         initialFields: { unexecutedSequenceId: unexecutedSequenceInfo.contractId },
@@ -43,9 +43,9 @@ describe('test unexecuted sequence', () => {
   it('should check sequence failed if sequence executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const startSequence = 256
+    const startSequence = 256n
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
-    for (let seq = 0; seq < 256; seq++) {
+    for (let seq = 0n; seq < 256n; seq++) {
       const sequences = 1n << BigInt(seq)
       const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences)
       await expectAssertionFailed(
@@ -64,8 +64,8 @@ describe('test unexecuted sequence', () => {
   it('should check sequence failed if sequence is out of range', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const startSequence = 256
-    const sequences = [0, startSequence - 1, startSequence * 2, startSequence * 10]
+    const startSequence = 256n
+    const sequences = [0n, startSequence - 1n, startSequence * 2n, startSequence * 10n]
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, 0n)
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
     for (const seq of sequences) {
@@ -85,9 +85,9 @@ describe('test unexecuted sequence', () => {
   it('should destroy contract if all sequences executed', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const startSequence = 0
-    const unexecutedSequenceOffset = 1
-    const sequences = allExecuted - (1n << BigInt(unexecutedSequenceOffset))
+    const startSequence = 0n
+    const unexecutedSequenceOffset = 1n
+    const sequences = allExecuted - (1n << unexecutedSequenceOffset)
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, startSequence, sequences)
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
     const testResult = await unexecutedSequenceTest.testPublicMethod('checkSequence', {
@@ -109,7 +109,7 @@ describe('test unexecuted sequence', () => {
   it('should destroy contract manually', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 0, 0n)
+    const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 0n, 0n)
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
     const testResult = await unexecutedSequenceTest.testPublicMethod('destroy', {
       initialFields: { unexecutedSequenceId: unexecutedSequenceInfo.contractId },
@@ -129,7 +129,7 @@ describe('test unexecuted sequence', () => {
   it('should only parent contract can call these methods', async () => {
     await buildProject()
     const parentId = randomContractId()
-    const unexecutedSequenceInfo = createUnexecutedSequence(randomContractId(), 0, 0n)
+    const unexecutedSequenceInfo = createUnexecutedSequence(randomContractId(), 0n, 0n)
     const unexecutedSequenceTest = Project.contract('UnexecutedSequenceTest')
     expectAssertionFailed(async () => {
       await unexecutedSequenceTest.testPublicMethod('checkSequence', {

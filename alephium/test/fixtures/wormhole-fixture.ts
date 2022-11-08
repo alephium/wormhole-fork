@@ -241,6 +241,10 @@ export function encodeU256(value: bigint): Uint8Array {
   return Buffer.from(zeroPad(value.toString(16), 32), 'hex')
 }
 
+export function encodeUint8(value: number): Uint8Array {
+  return Buffer.from([value & 0xff])
+}
+
 async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
   try {
     await func()

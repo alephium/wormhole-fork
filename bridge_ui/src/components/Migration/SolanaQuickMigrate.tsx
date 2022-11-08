@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_SOLANA } from "alephium-wormhole-sdk";
 import {
   CircularProgress,
   Container,

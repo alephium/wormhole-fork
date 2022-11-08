@@ -32,5 +32,6 @@ Abstract Contract Constants() {
     ExpectRemoteToken                       = 27
     InvalidConsistencyLevel                 = 28
     InvalidUpdateRefundAddressMessage       = 29
+    TransferAmountLessThanMessageFee        = 30
   }
 }

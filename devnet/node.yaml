@@ -73,22 +73,18 @@ spec:
             - --alphRPC
             - http://alph-full-node:22973
             - --alphContractIds
-            - "26v7DJHTsgtGar18M47KnY7f47WzKCm2oNmLsC3CgpGUb,yZzMeJJ32RVMawpDoBbRqRCRmiCvoLQyw5ho2JmyhMXU"
+            - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg"
             - --alphGroupIndex
             - "0"
             - --alphMinConfirmations
             - "10"
             - --unsafeDevMode
-            - --guardianKey
-            - /run/node/bridge.key
             - --publicRPC
             - "[::]:7070"
             - --publicWeb
             - "[::]:7071"
             - --adminSocket
             - /tmp/admin.sock
-            - --dataDir
-            - /run/node/data
             - --logLevel=debug
           securityContext:
             capabilities:

@@ -1,0 +1,3 @@
+TxScript UpdateMinimalConsistencyLevel(tokenBridge: TokenBridge, vaa: ByteVec) {
+  tokenBridge.updateMinimalConsistencyLevel(vaa)
+}

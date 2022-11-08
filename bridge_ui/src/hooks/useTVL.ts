@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {

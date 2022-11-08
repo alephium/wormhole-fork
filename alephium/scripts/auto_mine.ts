@@ -6,8 +6,10 @@ const chain00 = {
   toGroup: devnetGroupIndex
 }
 
+const nodeUrl = process.argv[2] ? process.argv[2] : 'http://127.0.0.1:22973'
+const nodeProvider = new NodeProvider(nodeUrl)
+
 async function mine(num: number): Promise<void> {
-  const nodeProvider = new NodeProvider('http://127.0.0.1:22973')
   await nodeProvider.miners.postMinersCpuMiningMineOneBlock(chain00)
   // mine other chains every 16 seconds
   if (num % 16 !== 0) {

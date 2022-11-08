@@ -22,7 +22,7 @@ import {
   MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { clusterApiUrl } from "@solana/web3.js";
 import { getAddress } from "ethers/lib/utils";
 import { CHAIN_CONFIG_MAP } from "../config";
@@ -200,7 +200,7 @@ export const WORMHOLE_RPC_HOSTS =
     ? ["https://wormhole-v2-testnet-api.certus.one"]
     : ["http://localhost:7071"];
 export const ETH_NETWORK_CHAIN_ID =
-  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1337;
+  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 3 : 1337;
 export const BSC_NETWORK_CHAIN_ID =
@@ -649,26 +649,27 @@ export const ALGORAND_TOKEN_BRIDGE_ID = BigInt(
 export const ALGORAND_WAIT_FOR_CONFIRMATIONS =
   CLUSTER === "mainnet" ? 4 : CLUSTER === "testnet" ? 4 : 1;
 
+export const WALLET_CONNECT_ALPH_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
 // the wormhole governance address
 export const ALEPHIUM_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "000000000000000000000000000000000000000000000"
-    : "26v7DJHTsgtGar18M47KnY7f47WzKCm2oNmLsC3CgpGUb";
+    : "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM";
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
-    : "4881e803abc33e91139d0e247b978ae31224f5da674f65f20943bb93455b09b7";
+    : "d921c79d323ec44763f76aeb793183005aa67612e74948b00ca2214b308c4f43";
 export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = "b6bc0625f2f11afca9b1e7e7c092ed59aa6b8b53f668e167e1f7bcdca0cfcc44";
 export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
-    : "19b256e115e6b78cdf25078f7d5bb52fac76bf9e97669e77274e8acb8931bf67";
+    : "7eba0bd8a081d080d708fd226f6da27d59574e465b3703b563ed990260e56803";
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
@@ -681,6 +682,13 @@ export const ALEPHIUM_NETWORK_ID =
     : CLUSTER === "testnet"
     ? 1
     : 4;
+// TODO: update this after contract deployed to mainnet and testnet
+export const ALEPHIUM_BRIDGE_GROUP_INDEX =
+  CLUSTER === 'mainnet'
+    ? 1
+    : CLUSTER === 'testnet'
+    ? 1
+    : 0
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

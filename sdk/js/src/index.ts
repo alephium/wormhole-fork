@@ -5,6 +5,7 @@ export * from "./rpc";
 export * from "./utils";
 export * from "./bridge";
 export * from "./token_bridge";
+export * from "./alephium"
 
 export * as ethers_contracts from "./ethers-contracts";
 export * as solana from "./solana";
@@ -15,3 +16,4 @@ export * as bridge from "./bridge";
 export * as token_bridge from "./token_bridge";
 export * as nft_bridge from "./nft_bridge";
 export * as algorand from "./algorand";
+export * as alephium from "./alephium"

@@ -2,7 +2,7 @@ import {
   ChainId,
   CHAIN_ID_ETH,
   hexToNativeAssetString,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";

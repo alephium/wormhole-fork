@@ -1,0 +1,3 @@
+TxScript SetMessageFee(governance: Governance, vaa: ByteVec) {
+  governance.submitSetMessageFee(vaa)
+}
