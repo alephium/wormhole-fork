@@ -139,3 +139,19 @@ services:
       - --adminSocket
       - /tmp/admin.sock
       - --logLevel=debug
+
+  spy:
+    image: alephium/guardiand:0.2.47
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:7072:7072
+    entrypoint:
+      - /guardiand
+      - spy
+      - --nodeKey
+      - /tmp/node.key
+      - --spyRPC
+      - "[::]:7072"
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --logLevel=debug
