@@ -176,6 +176,12 @@
       "codeHashDebug": "",
       "warnings": []
     },
+    "contracts/token_bridge_scripts/deposit.ral": {
+      "sourceCodeHash": "ba365fd4a095d169fa8791d3c9c1b3ac8546e6e10258c747ba09824b607b7441",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
     "contracts/token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral": {
       "sourceCodeHash": "dbf50c01bdd07bb247a858e2e7488ccb6ec8f323cdcef891db29d2b2875fbd3e",
       "bytecodeDebugPatch": "",

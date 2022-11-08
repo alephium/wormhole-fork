@@ -7,6 +7,7 @@ import {
   coalesceChainName,
   createWrappedOnEth,
   ERC20__factory,
+  Governance__factory,
   hexToUint8Array,
   MockWETH9__factory,
   redeemOnEth,
@@ -16,11 +17,14 @@ import {
   transferFromEthNative,
   zeroPad
 } from 'alephium-wormhole-sdk'
-import { BridgeChain, getSignedVAA, normalizeTokenId, Sequence, TransferResult } from './utils'
 import { Wallet as ETHWallet, providers } from 'ethers'
+import { Sequence } from './sequence'
+import { BridgeChain, TransferResult } from './bridge_chain'
+import { getSignedVAA, normalizeTokenId } from './utils'
 
-export function createEth(): BridgeChain {
+export async function createEth(): Promise<BridgeChain> {
   // Eth contract addresses are deterministic on devnet
+  const governanceAddress = '0xC89Ce4735882C9F0f0FE26686c53074E09B0D550'
   const tokenBridgeAddress = '0x0290FB167208Af455bB137780163b7B7a9a10C16'
   const tokenBridgeEmitterAddress = zeroPad(tokenBridgeAddress.slice(2), 32)
   const wethAddress = '0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E'
@@ -31,9 +35,19 @@ export function createEth(): BridgeChain {
   )
   const recipientAddress = hexToUint8Array(zeroPad(wallet.address.slice(2), 32))
   const sequence = new Sequence()
+
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const messageFee = await governance.messageFee()
+    return messageFee.toBigInt()
+  }
+
+  const currentMessageFee = await getCurrentMessageFee()
+
   const ethTxOptions = {
     gasLimit: 5000000,
-    gasPrice: 1000000
+    gasPrice: 1000000,
+    value: currentMessageFee
   }
 
   const validateEthTokenAddress = (tokenId: string) => {
@@ -55,15 +69,26 @@ export function createEth(): BridgeChain {
     return (amount / unit) * unit
   }
 
+  const normalizeAddress = (address: string): Uint8Array => {
+    if (address.startsWith('0x') || address.startsWith('0X')) {
+      return Buffer.from(address.slice(2).padStart(64, '0'), 'hex')
+    }
+    return Buffer.from(address.padStart(64, '0'), 'hex')
+  }
+
   const getTransactionFee = async (txId: string): Promise<bigint> => {
     const receipt = await wallet.provider.getTransactionReceipt(txId)
     const tx = await wallet.provider.getTransaction(txId)
     return tx.gasPrice!.mul(receipt.gasUsed).toBigInt()
   }
 
+  const getNativeTokenBalanceByAddress = async (address: string): Promise<bigint> => {
+    const balance = await wallet.provider.getBalance(address)
+    return balance.toBigInt()
+  }
+
   const getNativeTokenBalance = async (): Promise<bigint> => {
-    const balanace = await wallet.getBalance()
-    return balanace.toBigInt()
+    return getNativeTokenBalanceByAddress(wallet.address)
   }
 
   const getWrappedToken = async (originTokenId: string, tokenChainId: ChainId): Promise<string> => {
@@ -109,7 +134,7 @@ export function createEth(): BridgeChain {
 
   const attestToken = async (tokenId: string): Promise<Uint8Array> => {
     validateEthTokenAddress(tokenId)
-    const ethReceipt = await attestFromEth(tokenBridgeAddress, wallet, tokenId)
+    const ethReceipt = await attestFromEth(tokenBridgeAddress, wallet, tokenId, ethTxOptions)
     console.log(`attest token, token address: ${tokenId}, tx id: ${ethReceipt.transactionHash}`)
     return await getSignedVAA(CHAIN_ID_ETH, tokenBridgeEmitterAddress, 0, sequence.next())
   }
@@ -127,7 +152,7 @@ export function createEth(): BridgeChain {
     sequence: number
   ): Promise<TransferResult> => {
     validateEthTokenAddress(tokenId)
-    const approveReceipt = await approveEth(tokenBridgeAddress, tokenId, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, tokenId, wallet, amount)
     const transferReceipt = await transferFromEth(
       tokenBridgeAddress,
       wallet,
@@ -156,7 +181,7 @@ export function createEth(): BridgeChain {
     toAddress: Uint8Array,
     sequence: number
   ): Promise<TransferResult> => {
-    const approveReceipt = await approveEth(tokenBridgeAddress, wethAddress, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, wethAddress, wallet, amount)
     const transferReceipt = await transferFromEthNative(
       tokenBridgeAddress,
       wallet,
@@ -187,7 +212,7 @@ export function createEth(): BridgeChain {
     sequence: number
   ): Promise<TransferResult> => {
     const wrappedToken = await getWrappedToken(originTokenId, tokenChainId)
-    const approveReceipt = await approveEth(tokenBridgeAddress, wrappedToken, wallet, amount, ethTxOptions)
+    const approveReceipt = await approveEth(tokenBridgeAddress, wrappedToken, wallet, amount)
     const transferReceipt = await transferFromEth(
       tokenBridgeAddress,
       wallet,
@@ -217,9 +242,16 @@ export function createEth(): BridgeChain {
   }
 
   const redeemNative = async (signedVaa: Uint8Array): Promise<bigint> => {
-    const receipt = await redeemOnEthNative(tokenBridgeAddress, wallet, signedVaa, ethTxOptions)
+    const receipt = await redeemOnEthNative(tokenBridgeAddress, wallet, signedVaa)
     console.log(`redeem on eth succeed, tx id: ${receipt.transactionHash}`)
     return await getTransactionFee(receipt.transactionHash)
+  }
+
+  const getCurrentGuardianSet = async (): Promise<string[]> => {
+    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const guardianSetIndex = await governance.getCurrentGuardianSetIndex()
+    const result = await governance.getGuardianSet(guardianSetIndex)
+    return result[0]
   }
 
   return {
@@ -227,12 +259,15 @@ export function createEth(): BridgeChain {
     testTokenId: testTokenAddress,
     wrappedNativeTokenId: wethAddress,
     recipientAddress: recipientAddress,
-    messageFee: 0n,
+    messageFee: currentMessageFee,
     oneCoin: 10n ** 18n,
+    governanceContractAddress: governanceAddress,
 
     normalizeTransferAmount: normalizeTransferAmount,
     getTransactionFee: getTransactionFee,
+    normalizeAddress: normalizeAddress,
 
+    getNativeTokenBalanceByAddress: getNativeTokenBalanceByAddress,
     getNativeTokenBalance: getNativeTokenBalance,
     getTokenBalance: getTokenBalance,
     getWrappedTokenBalance: getWrappedTokenBalance,
@@ -247,6 +282,9 @@ export function createEth(): BridgeChain {
     transferWrapped: transferWrapped,
 
     redeemToken: redeemToken,
-    redeemNative: redeemNative
+    redeemNative: redeemNative,
+
+    getCurrentGuardianSet: getCurrentGuardianSet,
+    getCurrentMessageFee: getCurrentMessageFee
   }
 }

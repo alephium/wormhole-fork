@@ -1,5 +1,22 @@
 import { addressFromContractId, BuildScriptTxResult, NodeProvider, SignerProvider, subContractId } from "@alephium/web3"
-import { destroyUnexecutedSequencesScript, updateRefundAddressScript } from "../alephium/token_bridge"
+import { depositScript, destroyUnexecutedSequencesScript, updateRefundAddressScript } from "../alephium/token_bridge"
+
+export async function deposit(
+  signerProvider: SignerProvider,
+  tokenBridgeForChainId: string,
+  amount: bigint
+): Promise<BuildScriptTxResult> {
+  const script = depositScript()
+  const account = await signerProvider.getSelectedAccount()
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridgeForChain: tokenBridgeForChainId,
+      payer: account.address,
+      amount: amount
+    },
+    attoAlphAmount: amount
+  })
+}
 
 export async function destroyUnexecutedSequenceContracts(
   signerProvider: SignerProvider,
@@ -66,6 +83,14 @@ export function getTokenPoolId(
   }
   const pathHex = '02' + zeroPad(tokenChainId.toString(16), 2) + tokenId
   return subContractId(tokenBridgeId, pathHex)
+}
+
+export function getUnexecutedSequenceId(
+  tokenBridgeForChainId: string,
+  index: number
+): string {
+  const pathHex = zeroPad(index.toString(16), 8)
+  return subContractId(tokenBridgeForChainId, pathHex)
 }
 
 export async function contractExists(contractId: string, provider: NodeProvider): Promise<boolean> {
