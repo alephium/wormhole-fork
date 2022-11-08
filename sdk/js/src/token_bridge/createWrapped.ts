@@ -1,57 +1,74 @@
+import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import { createLocalTokenPoolScript, createRemoteTokenPoolScript, createWrappedAlphPoolScript } from "../alephium/token_bridge";
+import {
+  createLocalTokenPoolScript,
+  createRemoteTokenPoolScript,
+  createWrappedAlphPoolScript
+} from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
 
-export function createRemoteTokenPoolOnAlph(
+export async function createRemoteTokenPoolOnAlph(
+  signerProvider: SignerProvider,
   attestTokenHandlerId: string,
   signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint
-): string {
+): Promise<BuildScriptTxResult> {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = createRemoteTokenPoolScript()
-  return script.buildByteCodeToDeploy({
-    payer: payer,
-    attestTokenHandler: attestTokenHandlerId,
-    vaa: vaaHex,
-    alphAmount: alphAmount
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: payer,
+      attestTokenHandler: attestTokenHandlerId,
+      vaa: vaaHex,
+      alphAmount: alphAmount
+    },
+    attoAlphAmount: alphAmount
   })
 }
 
-export function createLocalTokenPoolOnAlph(
+export async function createLocalTokenPoolOnAlph(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   localTokenId: string,
   payer: string,
   alphAmount: bigint
-): string {
+): Promise<BuildScriptTxResult> {
   const script = createLocalTokenPoolScript()
-  return script.buildByteCodeToDeploy({
-    payer: payer,
-    tokenBridge: tokenBridgeId,
-    tokenId: localTokenId,
-    alphAmount: alphAmount
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: payer,
+      tokenBridge: tokenBridgeId,
+      tokenId: localTokenId,
+      alphAmount: alphAmount
+    },
+    attoAlphAmount: alphAmount
   })
 }
 
-export function createWrappedAlphPool(
+export async function createWrappedAlphPool(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   wrappedAlphId: string,
   payer: string,
   alphAmount: bigint
-): string {
+): Promise<BuildScriptTxResult> {
   const script = createWrappedAlphPoolScript()
-  return script.buildByteCodeToDeploy({
-    payer: payer,
-    wrappedAlphId: wrappedAlphId,
-    tokenBridge: tokenBridgeId,
-    alphAmount: alphAmount
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: payer,
+      wrappedAlphId: wrappedAlphId,
+      tokenBridge: tokenBridgeId,
+      alphAmount: alphAmount
+    },
+    attoAlphAmount: alphAmount
   })
 }
 

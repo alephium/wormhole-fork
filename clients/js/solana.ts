@@ -2,9 +2,9 @@ import * as web3s from '@solana/web3.js'
 import { NETWORKS } from "./networks";
 import { impossible, Payload, VAA } from "./vaa";
 import base58 from "bs58";
-import { importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "@certusone/wormhole-sdk";
-import { CONTRACTS } from "@certusone/wormhole-sdk"
-import { postVaaSolanaWithRetry } from "@certusone/wormhole-sdk"
+import { importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "alephium-wormhole-sdk";
+import { CONTRACTS } from "alephium-wormhole-sdk"
+import { postVaaSolanaWithRetry } from "alephium-wormhole-sdk"
 
 export async function execute_governance_solana(
   v: VAA<Payload>,
@@ -31,6 +31,9 @@ export async function execute_governance_solana(
           console.log("Upgrading core contract")
           ix = bridge.upgrade_contract_ix(bridge_id.toString(), from.publicKey.toString(), from.publicKey.toString(), vaa);
           break
+        case 'UpdateMessageFee':
+        case 'TransferFee':
+          throw new Error('Not supported')
         default:
           ix = impossible(v.payload)
       }
@@ -62,6 +65,8 @@ export async function execute_governance_solana(
           console.log("Registering chain")
           ix = token_bridge.register_chain_ix(token_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), vaa)
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           ix = impossible(v.payload)
 

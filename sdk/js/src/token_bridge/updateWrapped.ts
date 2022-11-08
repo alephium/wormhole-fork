@@ -1,3 +1,4 @@
+import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { ethers, Overrides } from "ethers";
 import {
   createWrappedOnAlgorand,
@@ -7,15 +8,18 @@ import {
 import { updateRemoteTokenPoolScript } from "../alephium/token_bridge";
 import { Bridge__factory } from "../ethers-contracts";
 
-export function updateRemoteTokenPoolOnAlph(
+export async function updateRemoteTokenPoolOnAlph(
+  signerProvider: SignerProvider,
   attestTokenHandlerId: string,
   signedVAA: Uint8Array
-): string {
+): Promise<BuildScriptTxResult> {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = updateRemoteTokenPoolScript()
-  return script.buildByteCodeToDeploy({
-    attestTokenHandler: attestTokenHandlerId,
-    vaa: vaaHex
+  return script.execute(signerProvider, {
+    initialFields: {
+      attestTokenHandler: attestTokenHandlerId,
+      vaa: vaaHex
+    }
   })
 }
 

@@ -62,7 +62,7 @@ export function updateRefundAddressScript(): Script {
     return Script.fromJson(updateRefundAddress)
 }
 
-export function upgraeTokenBridgeContractScript(): Script {
+export function upgradeTokenBridgeContractScript(): Script {
     return Script.fromJson(upgradeContract)
 }
 

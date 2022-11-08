@@ -22,7 +22,7 @@ import {
   MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { clusterApiUrl } from "@solana/web3.js";
 import { getAddress } from "ethers/lib/utils";
 import { CHAIN_CONFIG_MAP } from "../config";
@@ -649,6 +649,7 @@ export const ALGORAND_TOKEN_BRIDGE_ID = BigInt(
 export const ALGORAND_WAIT_FOR_CONFIRMATIONS =
   CLUSTER === "mainnet" ? 4 : CLUSTER === "testnet" ? 4 : 1;
 
+export const WALLET_CONNECT_ALPH_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
 // the wormhole governance address
 export const ALEPHIUM_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
@@ -681,6 +682,13 @@ export const ALEPHIUM_NETWORK_ID =
     : CLUSTER === "testnet"
     ? 1
     : 4;
+// TODO: update this after contract deployed to mainnet and testnet
+export const ALEPHIUM_BRIDGE_GROUP_INDEX =
+  CLUSTER === 'mainnet'
+    ? 1
+    : CLUSTER === 'testnet'
+    ? 1
+    : 0
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

@@ -6,7 +6,7 @@ const deployWrappedAlph: DeployFunction = async (deployer: Deployer): Promise<vo
   const wrappedAlphPoolCodeHash = Project.contract('WrappedAlphPool').codeHash
   const initialFields = {
     wrappedAlphPoolCodeHash: wrappedAlphPoolCodeHash,
-    totalWrapped: 0
+    totalWrapped: 0n
   }
 
   const MaxALPHAmount = BigInt('1000000000') * BigInt('1000000000000000000')

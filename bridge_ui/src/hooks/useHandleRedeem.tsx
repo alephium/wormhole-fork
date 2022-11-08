@@ -16,7 +16,7 @@ import {
   uint8ArrayToHex,
   getTokenBridgeForChainId,
   getIsTransferCompletedAlph
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
@@ -59,11 +59,7 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
-import {
-  getEmitterChainId,
-  waitTxConfirmed,
-  submitAlphScriptTx
-} from "../utils/alephium";
+import { getEmitterChainId, waitTxConfirmed } from "../utils/alephium";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { TransactionDB } from "../utils/db";
@@ -250,8 +246,7 @@ async function alephium(
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
-    const bytecode = redeemOnAlph(tokenBridgeForChainId, signedVAA)
-    const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode)
+    const result = await redeemOnAlph(signer.signerProvider, tokenBridgeForChainId, signedVAA)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(

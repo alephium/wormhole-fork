@@ -2,7 +2,7 @@ import { LCDClient, MnemonicKey, MsgExecuteContract } from "@terra-money/terra.j
 import { fromUint8Array } from "js-base64";
 import { impossible, Payload } from "./vaa";
 import { NETWORKS } from "./networks"
-import { CONTRACTS } from "@certusone/wormhole-sdk"
+import { CONTRACTS } from "alephium-wormhole-sdk"
 
 export async function execute_governance_terra(
   payload: Payload,
@@ -41,6 +41,9 @@ export async function execute_governance_terra(
         case "ContractUpgrade":
           console.log("Upgrading core contract")
           break
+        case 'UpdateMessageFee':
+        case 'TransferFee':
+          throw new Error('Not supported')
         default:
           impossible(payload)
       }
@@ -84,6 +87,8 @@ export async function execute_governance_terra(
         case "RegisterChain":
           console.log("Registering chain")
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           impossible(payload)
           execute_msg = impossible(payload)

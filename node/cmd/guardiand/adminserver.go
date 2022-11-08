@@ -77,7 +77,7 @@ func adminGuardianSetUpgradeToVAA(req *nodev1.GuardianSetUpgrade, timestamp time
 // adminUpdateMessageFeeToVAA converts a nodev1.UpdateMessageFee message to its canonical VAA representation.
 // Returns an error if the data is invalid.
 func adminUpdateMessageFeeToVAA(req *nodev1.UpdateMessageFee, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
-	if len(req.NewMessageFee) != 32 {
+	if len(req.NewMessageFee) != 64 {
 		return nil, errors.New("invalid new message fee")
 	}
 
@@ -94,10 +94,10 @@ func adminUpdateMessageFeeToVAA(req *nodev1.UpdateMessageFee, timestamp time.Tim
 }
 
 func adminTransferFeeToVAA(req *nodev1.TransferFee, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
-	if len(req.Amount) != 32 {
+	if len(req.Amount) != 64 {
 		return nil, errors.New("invalid transfer amount")
 	}
-	if len(req.Recipient) != 32 {
+	if len(req.Recipient) != 64 {
 		return nil, errors.New("invalid recipient address")
 	}
 	amount, err := hex.DecodeString(req.Amount)

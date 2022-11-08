@@ -22,7 +22,6 @@ jobs:
         run: cd tools && npm install && cd .. && make generate-proto-sdk
       - name: alephium
         working-directory: ./alephium
-        # TODO: improve this
         run: |
           npm install && cp .env.test .env && npx @alephium/cli devnet start
           npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
@@ -46,9 +45,6 @@ jobs:
           npm install && npm run build && cp .env.test .env
           npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_alph_chain.js
           npx truffle exec mine.js &
-      - name: sdk
-        working-directory: ./sdk/js
-        run: npm install && npm run build
       - name: guardian
         run: |
           git tag v0.0.0-integration-test

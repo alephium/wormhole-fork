@@ -1,8 +1,8 @@
-import { BridgeImplementation__factory, Implementation__factory, NFTBridgeImplementation__factory } from "@certusone/wormhole-sdk"
+import { BridgeImplementation__factory, Implementation__factory, NFTBridgeImplementation__factory } from "alephium-wormhole-sdk"
 import { ethers } from "ethers"
 import { NETWORKS } from "./networks"
 import { impossible, Payload } from "./vaa"
-import { Contracts, CONTRACTS, EVMChainName } from "@certusone/wormhole-sdk"
+import { Contracts, CONTRACTS, EVMChainName } from "alephium-wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 
@@ -63,6 +63,14 @@ export async function execute_governance_evm(
           console.log("Submitting new guardian set")
           console.log("Hash: " + (await cb.submitNewGuardianSet(vaa, overrides)).hash)
           break
+        case 'UpdateMessageFee':
+          console.log('Submitting update message fee')
+          console.log(`Hash: ${(await cb.submitSetMessageFee(vaa, overrides)).hash}`)
+          break
+        case 'TransferFee':
+          console.log('Submitting transfer fee')
+          console.log(`Hash: ${(await cb.submitTransferFees(vaa, overrides)).hash}`)
+          break
         case "ContractUpgrade":
           console.log("Upgrading core contract")
           console.log("Hash: " + (await cb.submitContractUpgrade(vaa, overrides)).hash)
@@ -108,6 +116,8 @@ export async function execute_governance_evm(
           console.log("Registering chain")
           console.log("Hash: " + (await tb.registerChain(vaa, overrides)).hash)
           break
+        case 'Extension':
+          throw new Error('Not supported')
         default:
           impossible(payload)
 

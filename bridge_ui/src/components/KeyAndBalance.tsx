@@ -5,7 +5,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import AlephiumWalletKey from "./AlephiumWalletKey";
 import AlgorandWalletKey from "./AlgorandWalletKey";
 import EthereumSignerKey from "./EthereumSignerKey";

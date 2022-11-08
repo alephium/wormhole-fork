@@ -67,18 +67,18 @@ export class SubmitTransferFee {
   }
 }
 
-export function createGovernance(receivedSequence?: number, messageFee?: bigint): ContractInfo {
+export function createGovernance(receivedSequence?: bigint, messageFee?: bigint): ContractInfo {
   const address = randomContractAddress()
   const governanceContract = Project.contract('Governance')
   const initFields = {
-    chainId: CHAIN_ID_ALEPHIUM,
-    governanceChainId: governanceChainId,
+    chainId: BigInt(CHAIN_ID_ALEPHIUM),
+    governanceChainId: BigInt(governanceChainId),
     governanceEmitterAddress: governanceEmitterAddress,
-    receivedSequence: receivedSequence ?? 0,
+    receivedSequence: receivedSequence ?? 0n,
     messageFee: messageFee ?? defaultMessageFee,
     guardianSets: ['', initGuardianSet.encodeAddresses()],
-    guardianSetIndexes: [0, initGuardianSet.index],
-    previousGuardianSetExpirationTimeMS: 0
+    guardianSetIndexes: [0n, BigInt(initGuardianSet.index)],
+    previousGuardianSetExpirationTimeMS: 0n
   }
   const contractState = governanceContract.toState(initFields, initAsset, address)
   return new ContractInfo(governanceContract, contractState, [], address)

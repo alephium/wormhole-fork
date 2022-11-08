@@ -165,6 +165,10 @@ func marshalTemplate(template *nodev1.InjectGovernanceVAARequest) {
 }
 
 func runUpdateMessageFeeTemplate(cmd *cobra.Command, args []string) {
+	chainID, err := parseChainID(*chainID)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fee, _ := new(big.Int).SetString(*messageFee, 10)
 	if fee == nil {
 		log.Fatal("invalid message fee")
@@ -175,7 +179,7 @@ func runUpdateMessageFeeTemplate(cmd *cobra.Command, args []string) {
 			{
 				Sequence:      rand.Uint64(),
 				Nonce:         rand.Uint32(),
-				TargetChainId: uint32(vaa.ChainIDUnset),
+				TargetChainId: uint32(chainID),
 				Payload: &nodev1.GovernanceMessage_UpdateMessageFee{
 					UpdateMessageFee: &nodev1.UpdateMessageFee{NewMessageFee: hex.EncodeToString(common.LeftPadBytes(fee.Bytes(), 32))},
 				},

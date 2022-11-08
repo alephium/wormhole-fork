@@ -81,7 +81,7 @@ var AdminClientFindMissingMessagesCmd = &cobra.Command{
 
 var DumpVAAByMessageID = &cobra.Command{
 	Use:   "dump-vaa-by-message-id [MESSAGE_ID]",
-	Short: "Retrieve a VAA by message ID (chain/emitter/seq) and decode and dump the VAA",
+	Short: "Retrieve a VAA by message ID (emitterChainId/emitterAddress/targetChainId/sequence) and decode and dump the VAA",
 	Run:   runDumpVAAByMessageID,
 	Args:  cobra.ExactArgs(1),
 }
