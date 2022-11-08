@@ -10,7 +10,8 @@ import {
   WSOL_DECIMALS,
   getTokenPoolId,
   tryNativeToHexString,
-  coalesceChainName
+  coalesceChainName,
+  contractExists
 } from "alephium-wormhole-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair } from "@solana/web3.js";
@@ -33,7 +34,13 @@ import { getEthereumToken } from "../utils/ethereum";
 import { getMultipleAccountsRPC } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
-import { addressFromContractId, binToHex, NodeProvider, tokenIdFromAddress, web3 } from "@alephium/web3"
+import {
+  addressFromContractId,
+  binToHex,
+  NodeProvider,
+  tokenIdFromAddress,
+  web3
+} from "@alephium/web3"
 import { PrivateKeyWallet } from "@alephium/web3-wallet";
 import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
 
@@ -554,26 +561,31 @@ async function pullAllAlephiumBalances(
             isNative: false,
             walletAddress: account.address
           })
-        } else {
-          const originTokenId = tryNativeToHexString(token.address, token.chainId)
-          const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
-          const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
-          const amount = tokenBalance?.amount ?? '0'
-          const contractAddress = addressFromContractId(tokenId)
-          // TODO: move this to SDK
-          const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
-          const name = (contractState.fields[5] as ValByteVec).value
-          const decimals = parseInt((contractState.fields[6] as ValU256).value)
-          walletBalances.push({
-            chainId: chainConfig.chainId,
-            balanceAbs: amount,
-            balanceFormatted: formatUnits(amount, decimals),
-            currencyName: name,
-            currencyAddressNative: contractAddress,
-            isNative: false,
-            walletAddress: account.address
-          })
+          continue
         }
+
+        const originTokenId = tryNativeToHexString(token.address, token.chainId)
+        const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
+        const tokenExists = await contractExists(tokenId, nodeProvider)
+        if (!tokenExists) {
+          continue
+        }
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+        const amount = tokenBalance?.amount ?? '0'
+        const contractAddress = addressFromContractId(tokenId)
+        // TODO: move this to SDK
+        const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
+        const name = (contractState.fields[5] as ValByteVec).value
+        const decimals = parseInt((contractState.fields[6] as ValU256).value)
+        walletBalances.push({
+          chainId: chainConfig.chainId,
+          balanceAbs: amount,
+          balanceFormatted: formatUnits(amount, decimals),
+          currencyName: name,
+          currencyAddressNative: contractAddress,
+          isNative: false,
+          walletAddress: account.address
+        })
       }
     }
     logger.debug(`Alephium wallet balances: ${JSON.stringify(walletBalances)}`)
