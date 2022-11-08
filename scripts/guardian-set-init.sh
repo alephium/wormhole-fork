@@ -80,17 +80,11 @@ fi
 # 3) fetch and store the contract addresses that we need to make contract registration governance VAAs for:
 echo "getting contract addresses for chain registrations from $addressesJson"
 # get addresses from the constants file
-solTokenBridge=$(jq --raw-output '.chains."1".contracts.tokenBridgeEmitterAddress' $addressesJson)
 ethTokenBridge=$(jq --raw-output '.chains."2".contracts.tokenBridgeEmitterAddress' $addressesJson)
-terraTokenBridge=$(jq --raw-output '.chains."3".contracts.tokenBridgeEmitterAddress' $addressesJson)
 bscTokenBridge=$(jq --raw-output '.chains."4".contracts.tokenBridgeEmitterAddress' $addressesJson)
-algoTokenBridge=$(jq --raw-output '.chains."8".contracts.tokenBridgeEmitterAddress' $addressesJson)
 alphTokenBridge=$(jq --raw-output '.chains."255".contracts.tokenBridgeEmitterAddress' $addressesJson)
 
-solNFTBridge=$(jq --raw-output '.chains."1".contracts.nftBridgeEmitterAddress' $addressesJson)
 ethNFTBridge=$(jq --raw-output '.chains."2".contracts.nftBridgeEmitterAddress' $addressesJson)
-terraNFTBridge=$(jq --raw-output '.chains."3".contracts.nftBridgeEmitterAddress' $addressesJson)
-
 
 # 4) create token bridge registration VAAs
 echo "generating contract registration VAAs for token bridges"
@@ -104,32 +98,27 @@ ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registrat
 bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
 alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV} -s 2)
 
-
 # 5) create nft bridge registration VAAs
 echo "generating contract registration VAAs for nft bridges"
-solNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c solana -a ${solNFTBridge} -g ${guardiansPrivateCSV})
 ethNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c ethereum -a ${ethNFTBridge} -g ${guardiansPrivateCSV})
-terraNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c terra -a ${terraNFTBridge} -g ${guardiansPrivateCSV})
-
-
 
 # 6) write the registration VAAs to env files
 echo "writing VAAs to .env files"
 # define the keys that will hold the chain registration governance VAAs
-solTokenBridge="REGISTER_SOL_TOKEN_BRIDGE_VAA"
 ethTokenBridge="REGISTER_ETH_TOKEN_BRIDGE_VAA"
-terraTokenBridge="REGISTER_TERRA_TOKEN_BRIDGE_VAA"
 bscTokenBridge="REGISTER_BSC_TOKEN_BRIDGE_VAA"
-algoTokenBridge="REGISTER_ALGO_TOKEN_BRIDGE_VAA"
 alphTokenBridge="REGISTER_ALPH_TOKEN_BRIDGE_VAA"
 
-solNFTBridge="REGISTER_SOL_NFT_BRIDGE_VAA"
 ethNFTBridge="REGISTER_ETH_NFT_BRIDGE_VAA"
-terraNFTBridge="REGISTER_TERRA_NFT_BRIDGE_VAA"
-
 
 # bsc token bridge
 upsert_env_file $ethFile $bscTokenBridge $bscTokenBridgeVAA
+
+# ethereum token bridge
+upsert_env_file $ethFile $ethTokenBridge $ethTokenBridgeVAA
+
+# ethereum nft bridge
+upsert_env_file $ethFile $ethNFTBridge $ethNFTBridgeVAA
 
 # alph token bridge
 upsert_env_file $ethFile $alphTokenBridge $alphTokenBridgeVAA
