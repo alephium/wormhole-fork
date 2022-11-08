@@ -79,16 +79,12 @@ spec:
             - --alphMinConfirmations
             - "10"
             - --unsafeDevMode
-            - --guardianKey
-            - /run/node/bridge.key
             - --publicRPC
             - "[::]:7070"
             - --publicWeb
             - "[::]:7071"
             - --adminSocket
             - /tmp/admin.sock
-            - --dataDir
-            - /run/node/data
             - --logLevel=debug
           securityContext:
             capabilities:

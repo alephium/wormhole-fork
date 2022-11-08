@@ -1,10 +1,11 @@
+import { Typography } from "@material-ui/core";
 import { useCallback, useState } from "react";
 import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import AlephiumConnectWalletDialog from "./AlephiumConnectWalletDialog";
 import ToggleConnectedButton from "./ToggleConnectedButton";
 
 const AlephiumWalletKey = () => {
-  const { disconnect, signer } =
+  const { disconnect, signer, error } =
     useAlephiumWallet();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -29,6 +30,11 @@ const AlephiumWalletKey = () => {
         isOpen={isDialogOpen}
         onClose={closeDialog}
       />
+      {error ? (
+        <Typography variant="body2" color="error">
+          {error}
+        </Typography>
+      ) : null}
     </>
   );
 };

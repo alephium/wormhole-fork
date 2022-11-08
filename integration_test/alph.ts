@@ -35,7 +35,7 @@ export async function createAlephium(): Promise<BridgeChain> {
   const wrappedAlphContractId = contracts.WrappedAlph.contractId
   const testTokenContractId = contracts.TestToken.contractId
   const sequence = new Sequence()
-  const defaultMessageFee = BigInt('100000000000000')
+  const defaultMessageFee = 10n ** 14n
   const defaultArbiterFee = 0n
   const defaultConfirmations = 1
   const oneAlph = 10n ** 18n

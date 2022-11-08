@@ -38,9 +38,9 @@ type nodePrivilegedService struct {
 	signedInC    chan *gossipv1.SignedVAAWithQuorum
 }
 
-// adminGuardianSetUpdateToVAA converts a nodev1.GuardianSetUpdate message to its canonical VAA representation.
+// adminGuardianSetUpgradeToVAA converts a nodev1.GuardianSetUpgrade message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
+func adminGuardianSetUpgradeToVAA(req *nodev1.GuardianSetUpgrade, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	if len(req.Guardians) == 0 {
 		return nil, errors.New("empty guardian set specified")
 	}
@@ -66,7 +66,7 @@ func adminGuardianSetUpdateToVAA(req *nodev1.GuardianSetUpdate, timestamp time.T
 	}
 
 	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
-		vaa.BodyGuardianSetUpdate{
+		vaa.BodyGuardianSetUpgrade{
 			Keys:     addrs,
 			NewIndex: guardianSetIndex + 1,
 		}.Serialize())
@@ -176,7 +176,7 @@ func tokenBridgeUpgradeContract(req *nodev1.BridgeUpgradeContract, timestamp tim
 	return v, nil
 }
 
-func tokenBridgeDestroyContracts(req *nodev1.TokenBridgeDestroyUnexecutedSequenceContracts, timestamp time.Time, guardianSetIndex, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
+func tokenBridgeDestroyUnexecutedSequenceContracts(req *nodev1.TokenBridgeDestroyUnexecutedSequenceContracts, timestamp time.Time, guardianSetIndex, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex,
 		vaa.BodyTokenBridgeDestroyContracts{
 			EmitterChain: vaa.ChainID(req.EmitterChain),
@@ -194,7 +194,7 @@ func tokenBridgeUpdateMinimalConsistencyLevel(req *nodev1.TokenBridgeUpdateMinim
 	return v, nil
 }
 
-func TokenBridgeUpdateRefundAddress(req *nodev1.TokenBridgeUpdateRefundAddress, timestamp time.Time, guardianSetIndex, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
+func tokenBridgeUpdateRefundAddress(req *nodev1.TokenBridgeUpdateRefundAddress, timestamp time.Time, guardianSetIndex, nonce uint32, sequence uint64, targetChainId vaa.ChainID) (*vaa.VAA, error) {
 	address, err := hex.DecodeString(req.NewRefundAddress)
 	if err != nil {
 		return nil, errors.New("invalid refund address encoding (expected hex)")
@@ -229,7 +229,7 @@ func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *no
 		case *nodev1.GovernanceMessage_TransferFee:
 			v, err = adminTransferFeeToVAA(payload.TransferFee, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_GuardianSet:
-			v, err = adminGuardianSetUpdateToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = adminGuardianSetUpgradeToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_ContractUpgrade:
 			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeRegisterChain:
@@ -237,11 +237,11 @@ func (s *nodePrivilegedService) InjectGovernanceVAA(ctx context.Context, req *no
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
 			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_DestroyUnexecutedSequenceContracts:
-			v, err = tokenBridgeDestroyContracts(payload.DestroyUnexecutedSequenceContracts, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = tokenBridgeDestroyUnexecutedSequenceContracts(payload.DestroyUnexecutedSequenceContracts, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_UpdateMinimalConsistencyLevel:
 			v, err = tokenBridgeUpdateMinimalConsistencyLevel(payload.UpdateMinimalConsistencyLevel, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_UpdateRefundAddress:
-			v, err = TokenBridgeUpdateRefundAddress(payload.UpdateRefundAddress, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = tokenBridgeUpdateRefundAddress(payload.UpdateRefundAddress, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}

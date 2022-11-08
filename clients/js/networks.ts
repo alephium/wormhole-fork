@@ -96,7 +96,7 @@ const MAINNET = {
   },
   alephium: {
     rpc: undefined,
-    key: undefined
+    key: get_env_var('ALPH_KEY')
   }
 };
 
@@ -180,7 +180,7 @@ const TESTNET = {
   },
   alephium: {
     rpc: undefined,
-    key: undefined
+    key: get_env_var('ALPH_KEY')
   }
 };
 
