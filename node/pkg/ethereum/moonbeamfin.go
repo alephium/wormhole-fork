@@ -8,7 +8,7 @@ package ethereum
 
 import (
 	"context"
-	common "github.com/certusone/wormhole/node/pkg/common"
+	common "github.com/alephium/wormhole-fork/node/pkg/common"
 	ethRpc "github.com/ethereum/go-ethereum/rpc"
 	"go.uber.org/zap"
 	"time"

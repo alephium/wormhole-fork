@@ -8,13 +8,13 @@ import (
 	"math"
 	"time"
 
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
+	nodev1 "github.com/alephium/wormhole-fork/node/pkg/proto/node/v1"
 )
 
 var AdminClientGovernanceVAAVerifyCmd = &cobra.Command{

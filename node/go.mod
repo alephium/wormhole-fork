@@ -1,4 +1,4 @@
-module github.com/certusone/wormhole/node
+module github.com/alephium/wormhole-fork/node
 
 go 1.18
 
