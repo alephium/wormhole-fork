@@ -1,10 +1,11 @@
 import {
-  ChainId,
   CHAIN_ID_ALEPHIUM,
   hexToNativeString,
-  parseTransferPayload,
-  parseVAA,
-  uint8ArrayToHex
+  deserializeVAA,
+  uint8ArrayToHex,
+  VAA,
+  TransferToken,
+  VAAPayload
 } from "alephium-wormhole-sdk";
 import { getListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
@@ -57,26 +58,28 @@ export function validateInit(): boolean {
 
 export async function parseAndValidateVaa(
   rawVaa: Uint8Array
-): Promise<string | ParsedVaa<ParsedTransferPayload>> {
+): Promise<string | VAA<TransferToken>> {
   logger.debug(`Validating signed VAA ${uint8ArrayToHex(rawVaa)}`);
-  let parsedVaa: ParsedVaa<Uint8Array> | null = null;
+  let vaa: VAA<VAAPayload> | null = null;
   try {
-    parsedVaa = parseVaaTyped(rawVaa);
+    vaa = deserializeVAA(rawVaa)
   } catch (e) {
-    logger.error(`Encountered error while parsing raw VAA: ${e}`);
+    logger.error(`Encountered error while parsing raw VAA: ${e}`)
   }
-  if (!parsedVaa) {
+  if (!vaa) {
     return "Unable to parse the specified VAA.";
   }
   const env = getListenerEnvironment();
 
-  const nativeAddress = parsedVaa.emitterChain === CHAIN_ID_ALEPHIUM
-    ? uint8ArrayToHex(parsedVaa.emitterAddress)
-    : hexToNativeString(uint8ArrayToHex(parsedVaa.emitterAddress), parsedVaa.emitterChain)
+  const emitterChainId = vaa.body.emitterChainId
+  const emitterAddressHex = uint8ArrayToHex(vaa.body.emitterAddress)
+  const nativeAddress = emitterChainId === CHAIN_ID_ALEPHIUM
+    ? emitterAddressHex
+    : hexToNativeString(emitterAddressHex, vaa.body.emitterChainId)
   const isApprovedAddress = env.spyServiceFilters.some((allowedContract) =>
-    parsedVaa &&
+    vaa &&
     nativeAddress &&
-    allowedContract.chainId === parsedVaa.emitterChain &&
+    allowedContract.chainId === emitterChainId &&
     allowedContract.emitterAddress.toLowerCase() === nativeAddress.toLowerCase()
   )
   if (!isApprovedAddress) {
@@ -84,34 +87,23 @@ export async function parseAndValidateVaa(
     return "VAA is not from a monitored contract.";
   }
 
-  const isCorrectPayloadType = parsedVaa.payload[0] === 1;
-  if (!isCorrectPayloadType) {
-    logger.debug("Specified vaa is not payload type 1.");
-    return "Specified vaa is not payload type 1..";
+  if (vaa.body.payload.type !== 'TransferToken') {
+    logger.debug("Specified vaa is not transfer token type");
+    return "Specified vaa is not transfer token type";
   }
 
-  let parsedPayload: any = null;
-  try {
-    parsedPayload = parseTransferPayload(Buffer.from(parsedVaa.payload));
-  } catch (e) {
-    logger.error(`Encountered error while parsing vaa payload: ${e}`);
-  }
-
-  if (!parsedPayload) {
-    logger.debug("Failed to parse the transfer payload.");
-    return "Could not parse the transfer payload.";
-  }
+  const transferTokenPayload = vaa.body.payload
 
   const originAddressNative = hexToNativeString(
-    parsedPayload.originAddress,
-    parsedPayload.originChain
+    uint8ArrayToHex(transferTokenPayload.originAddress),
+    transferTokenPayload.originChain
   );
 
   const approvedToken = env.supportedTokens.find((token) => {
     return (
       originAddressNative &&
       token.address.toLowerCase() === originAddressNative.toLowerCase() &&
-      token.chainId === parsedPayload.originChain
+      token.chainId === transferTokenPayload.originChain
     );
   });
 
@@ -120,13 +112,13 @@ export async function parseAndValidateVaa(
     return "Token transfer is not for an approved token.";
   }
 
-  if (parsedPayload.fee < approvedToken.minimalFee) {
-    const errorMessage = `Token transfer does not have a sufficient fee, tranfer fee: ${parsedPayload.fee}, minimal fee: ${approvedToken.minimalFee}`
+  if (transferTokenPayload.fee < approvedToken.minimalFee) {
+    const errorMessage = `Token transfer does not have a sufficient fee, tranfer fee: ${transferTokenPayload.fee}, minimal fee: ${approvedToken.minimalFee}`
     logger.debug(errorMessage)
     return errorMessage
   }
 
-  const key = getKey(parsedPayload.originChain, originAddressNative as string); //was null checked above
+  const key = getKey(transferTokenPayload.originChain, originAddressNative as string); //was null checked above
 
   const isQueued = await checkQueue(key);
   if (isQueued) {
@@ -134,8 +126,7 @@ export async function parseAndValidateVaa(
   }
   //TODO maybe an is redeemed check?
 
-  const fullyTyped = { ...parsedVaa, payload: parsedPayload };
-  return fullyTyped;
+  return vaa as VAA<TransferToken>
 }
 
 async function checkQueue(key: string): Promise<string | null> {
@@ -175,38 +166,4 @@ async function checkQueue(key: string): Promise<string | null> {
   }
 
   return null;
-}
-
-//TODO move these to the official SDK
-export function parseVaaTyped(signedVAA: Uint8Array) {
-  const parsedVAA = parseVAA(signedVAA);
-  return {
-    timestamp: parsedVAA.body.timestamp,
-    nonce: parsedVAA.body.nonce,
-    emitterChain: parsedVAA.body.emitterChainId,
-    emitterAddress: parsedVAA.body.emitterAddress,
-    targetChain: parsedVAA.body.targetChainId,
-    sequence: parsedVAA.body.sequence,
-    consistencyLevel: parsedVAA.body.consistencyLevel,
-    payload: parsedVAA.body.payload,
-  }
-}
-
-export type ParsedVaa<T> = {
-  timestamp: number;
-  nonce: number;
-  emitterChain: ChainId;
-  emitterAddress: Uint8Array;
-  targetChain: ChainId,
-  sequence: number;
-  consistencyLevel: number;
-  payload: T;
-};
-
-export type ParsedTransferPayload = {
-  amount: BigInt
-  originAddress: string
-  originChain: ChainId
-  targetAddress: string
-  fee: BigInt
 }

@@ -8,6 +8,8 @@ import {
   getEmitterAddressSolana,
   getEmitterAddressTerra,
   uint8ArrayToHex,
+  VAA,
+  TransferToken
 } from "alephium-wormhole-sdk";
 import {
   createSpyRPCServiceClient,
@@ -18,11 +20,7 @@ import { getLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { pushVaaToRedis } from "../helpers/redisHelper";
 import { sleep } from "../helpers/utils";
-import {
-  parseAndValidateVaa,
-  ParsedTransferPayload,
-  ParsedVaa,
-} from "./validation";
+import { parseAndValidateVaa } from "./validation";
 
 let metrics: PromHelper;
 let env: ListenerEnvironment;
@@ -123,7 +121,7 @@ export async function run(ph: PromHelper) {
 }
 
 async function processVaa(rawVaa: Uint8Array) {
-  const validationResults: ParsedVaa<ParsedTransferPayload> | string =
+  const validationResults: VAA<TransferToken> | string =
     await parseAndValidateVaa(rawVaa);
 
   metrics.incIncoming();
@@ -133,7 +131,7 @@ async function processVaa(rawVaa: Uint8Array) {
     return;
   }
 
-  const parsedVAA: ParsedVaa<ParsedTransferPayload> = validationResults;
+  const parsedVAA: VAA<TransferToken> = validationResults;
 
   await pushVaaToRedis(parsedVAA, uint8ArrayToHex(rawVaa));
 }

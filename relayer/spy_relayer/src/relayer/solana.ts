@@ -1,13 +1,13 @@
 import {
   CHAIN_ID_SOLANA,
+  deserializeTransferTokenVAA,
   getForeignAssetSolana,
   getIsTransferCompletedSolana,
   hexToNativeString,
   hexToUint8Array,
-  parseTransferPayload,
-  parseVAA,
   postVaaSolanaWithRetry,
   redeemOnSolana,
+  uint8ArrayToHex,
 } from "alephium-wormhole-sdk";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -32,8 +32,8 @@ export async function relaySolana(
   const logger = getScopedLogger(["solana"], relayLogger);
   //TODO native transfer & create associated token account
   //TODO close connection
-  const signedVaaArray = hexToUint8Array(signedVAAString);
-  const signedVaaBuffer = Buffer.from(signedVaaArray);
+  const signedVAA = hexToUint8Array(signedVAAString);
+  const signedVaaBuffer = Buffer.from(signedVAA);
   const connection = new Connection(chainConfigInfo.nodeUrl, "confirmed");
 
   if (!chainConfigInfo.bridgeAddress) {
@@ -54,7 +54,7 @@ export async function relaySolana(
 
   const alreadyRedeemed = await getIsTransferCompletedSolana(
     chainConfigInfo.tokenBridgeAddress,
-    signedVaaArray,
+    signedVAA,
     connection
   );
 
@@ -67,25 +67,24 @@ export async function relaySolana(
   }
 
   // determine fee destination address - an associated token account
-  const parsedVAA = parseVAA(signedVaaArray);
-  const payloadBuffer = Buffer.from(parsedVAA.body.payload);
-  const transferPayload = parseTransferPayload(payloadBuffer);
+  const transferPayload = deserializeTransferTokenVAA(signedVAA).body.payload
   logger.debug("Calculating the fee destination address");
+  const originAddressHex = uint8ArrayToHex(transferPayload.originAddress)
   const solanaMintAddress =
     transferPayload.originChain === CHAIN_ID_SOLANA
-      ? hexToNativeString(transferPayload.originAddress, CHAIN_ID_SOLANA)
+      ? hexToNativeString(originAddressHex, CHAIN_ID_SOLANA)
       : await getForeignAssetSolana(
           connection,
           chainConfigInfo.tokenBridgeAddress,
           transferPayload.originChain,
-          hexToUint8Array(transferPayload.originAddress)
+          transferPayload.originAddress
         );
   if (!solanaMintAddress) {
     throw new Error(
       `Unable to determine mint for origin chain: ${
         transferPayload.originChain
       }, address: ${transferPayload.originAddress} (${hexToNativeString(
-        transferPayload.originAddress,
+        originAddressHex,
         transferPayload.originChain
       )})`
     );
@@ -146,7 +145,7 @@ export async function relaySolana(
     chainConfigInfo.bridgeAddress,
     chainConfigInfo.tokenBridgeAddress,
     payerAddress,
-    signedVaaArray,
+    signedVAA,
     feeRecipientAddress.toString()
   );
 
@@ -160,7 +159,7 @@ export async function relaySolana(
   logger.debug("Checking to see if the transaction is complete.");
   const success = await getIsTransferCompletedSolana(
     chainConfigInfo.tokenBridgeAddress,
-    signedVaaArray,
+    signedVAA,
     connection
   );
 

@@ -1,13 +1,9 @@
-import { uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { uint8ArrayToHex, VAA, TransferToken } from "alephium-wormhole-sdk";
 import { Request, Response } from "express";
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import { pushVaaToRedis } from "../helpers/redisHelper";
-import {
-  parseAndValidateVaa,
-  ParsedTransferPayload,
-  ParsedVaa,
-} from "./validation";
+import { parseAndValidateVaa } from "./validation";
 
 let logger = getLogger();
 let env: ListenerEnvironment;
@@ -42,7 +38,7 @@ export async function run() {
       try {
         const vaaBuf = Uint8Array.from(Buffer.from(req.params.vaa, "base64"));
         const hexVaa = uint8ArrayToHex(vaaBuf);
-        const validationResults: ParsedVaa<ParsedTransferPayload> | string =
+        const validationResults: VAA<TransferToken> | string =
           await parseAndValidateVaa(vaaBuf);
 
         if (typeof validationResults === "string") {

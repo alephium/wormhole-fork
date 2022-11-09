@@ -1,13 +1,14 @@
 import {
   ChainId,
   hexToUint8Array,
-  parseVAA,
-  uint8ArrayToHex
+  VAA,
+  TransferToken,
+  uint8ArrayToHex,
+  deserializeVAA
 } from "alephium-wormhole-sdk";
 import { Mutex } from "async-mutex";
 import { createClient, RedisClientType } from "redis";
 import { getCommonEnvironment } from "../configureEnv";
-import { ParsedTransferPayload, ParsedVaa } from "../listener/validation";
 import { chainIDStrings } from "../utils/wormhole";
 import { getScopedLogger } from "./logHelper";
 import { PromHelper } from "./promHelpers";
@@ -169,13 +170,13 @@ export function initPayloadWithVAA(vaaBytes: string): StorePayload {
 }
 
 export function storeKeyFromParsedVAA(
-  parsedVAA: ParsedVaa<ParsedTransferPayload>
+  parsedVAA: VAA<TransferToken>
 ): StoreKey {
   return {
-    emitterChainId: parsedVAA.emitterChain,
-    emitterAddress: uint8ArrayToHex(parsedVAA.emitterAddress),
-    targetChainId: parsedVAA.targetChain,
-    sequence: parsedVAA.sequence,
+    emitterChainId: parsedVAA.body.emitterChainId,
+    emitterAddress: uint8ArrayToHex(parsedVAA.body.emitterAddress),
+    targetChainId: parsedVAA.body.targetChainId,
+    sequence: Number(parsedVAA.body.sequence),
   };
 }
 
@@ -200,26 +201,26 @@ export function resetPayload(storePayload: StorePayload): StorePayload {
 }
 
 export async function pushVaaToRedis(
-  parsedVAA: ParsedVaa<ParsedTransferPayload>,
+  parsedVAA: VAA<TransferToken>,
   hexVaa: string
 ) {
-  const transferPayload = parsedVAA.payload;
+  const transferPayload = parsedVAA.body.payload;
 
   logger.info(
     "Forwarding vaa to relayer: emitter: [" +
-      parsedVAA.emitterChain +
+      parsedVAA.body.emitterChainId +
       ":" +
-      uint8ArrayToHex(parsedVAA.emitterAddress) +
+      uint8ArrayToHex(parsedVAA.body.emitterAddress) +
       "], seqNum: " +
-      parsedVAA.sequence +
+      parsedVAA.body.sequence +
       ", payload: origin: [" +
-      transferPayload.originAddress +
+      transferPayload.originChain +
       ":" +
-      transferPayload.originAddress +
+      uint8ArrayToHex(transferPayload.originAddress) +
       "], target: [" +
-      parsedVAA.targetChain +
+      parsedVAA.body.targetChainId +
       ":" +
-      transferPayload.targetAddress +
+      uint8ArrayToHex(transferPayload.targetAddress) +
       "],  amount: " +
       transferPayload.amount +
       "],  fee: " +
@@ -312,7 +313,8 @@ export async function incrementSourceToTargetMap(
   if (!siValue) {
     return;
   }
-  const vaa = parseVAA(hexToUint8Array(storePayloadFromJson(siValue).vaaBytes))
+  const signedVAA = hexToUint8Array(storePayloadFromJson(siValue).vaaBytes)
+  const vaa = deserializeVAA(signedVAA)
   
   if (
     sourceToTargetMap[parsedKey.emitterChainId as ChainId]?.[
