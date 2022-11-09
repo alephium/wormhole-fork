@@ -10,7 +10,7 @@ This directory holds GCP Cloud Functions, one per file, along with shared utilit
 
 ### prereqs
 
-- Golang >= 1.16 installed and available on your path.
+- Golang >= 1.18 installed and available on your path.
 - The Go VSCode extension, and gopls installed.
 
 ### IDE setup

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"cloud.google.com/go/bigtable"
@@ -97,7 +97,7 @@ func ProcessTransfer(ctx context.Context, m PubSubMessage) error {
 	}
 
 	// create the bigtable identifier from the VAA data
-	rowKey := makeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.Sequence)
+	rowKey := MakeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.TargetChain, signedVaa.Sequence)
 	row, err := tbl.ReadRow(ctx, rowKey)
 	if err != nil {
 		log.Fatalf("Could not read row with key %s: %v", rowKey, err)
