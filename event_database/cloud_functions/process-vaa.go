@@ -89,7 +89,6 @@ type (
 		OriginAddress [32]byte
 		OriginChain   uint16
 		TargetAddress [32]byte
-		TargetChain   uint16
 	}
 	NFTTransfer struct {
 		PayloadId     uint8
@@ -100,7 +99,6 @@ type (
 		TokenId       uint256.Int
 		URI           []byte
 		TargetAddress [32]byte
-		TargetChain   uint16
 	}
 	AssetMeta struct {
 		PayloadId    uint8
@@ -132,10 +130,6 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 
 	if err := binary.Read(reader, binary.BigEndian, &tt.TargetAddress); err != nil {
 		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
-	}
-
-	if err := binary.Read(reader, binary.BigEndian, &tt.TargetChain); err != nil {
-		return nil, fmt.Errorf("failed to read TargetChain: %w", err)
 	}
 
 	return tt, nil
@@ -181,10 +175,6 @@ func DecodeNFTTransfer(data []byte) (*NFTTransfer, error) {
 	nt.URI = uri[:n]
 
 	if err := binary.Read(reader, binary.BigEndian, &nt.TargetAddress); err != nil {
-		return nil, fmt.Errorf("failed to read : %w", err)
-	}
-
-	if err := binary.Read(reader, binary.BigEndian, &nt.TargetChain); err != nil {
 		return nil, fmt.Errorf("failed to read : %w", err)
 	}
 
@@ -329,7 +319,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "OriginChain", ts, []byte(fmt.Sprint(payload.OriginChain)))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			if writeErr != nil {
@@ -412,7 +402,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "URI", ts, TrimUnicodeFromByteArray(payload.URI))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			return writeErr

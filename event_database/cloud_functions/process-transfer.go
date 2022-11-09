@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"cloud.google.com/go/bigtable"
@@ -75,8 +76,12 @@ func transformHexAddressToNative(chain vaa.ChainID, address string) string {
 		// TODO
 		return ""
 	case vaa.ChainIDAlephium:
-		addr := fmt.Sprintf("0x%v", address[(len(address)-40):])
-		return addr
+		data, err := hex.DecodeString(address)
+		if err != nil {
+			log.Printf("failed to decode hex address: %v\n", err)
+			return ""
+		}
+		return base58.Encode(append([]byte{0x00}, data[:]...))
 	default:
 		log.Println("cannot process address for unknown chain: ", chain)
 		return ""
