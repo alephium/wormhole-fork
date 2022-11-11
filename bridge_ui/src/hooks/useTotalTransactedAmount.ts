@@ -1,6 +1,7 @@
 import {
   hexToNativeString,
-  parseTransferPayload,
+  deserializeTransferTokenPayload,
+  uint8ArrayToHex
 } from "alephium-wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import axios from "axios";
@@ -72,7 +73,7 @@ const useTotalTransactedAmount = (): DataWrapper<number> => {
       console.log("about to parse", result.Payload);
       let payload;
       try {
-        payload = parseTransferPayload(
+        payload = deserializeTransferTokenPayload(
           Buffer.from(convertbase64ToBinary(result.Payload))
         );
       } catch (e) {
@@ -85,7 +86,7 @@ const useTotalTransactedAmount = (): DataWrapper<number> => {
       }
 
       const assetAddress =
-        hexToNativeString(payload.originAddress, payload.originChain) || "";
+        hexToNativeString(uint8ArrayToHex(payload.originAddress), payload.originChain) || "";
 
       const tvlItem = tvlArray.find((item) => {
         return (
