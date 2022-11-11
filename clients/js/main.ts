@@ -33,7 +33,7 @@ function makeVAA(
   signers: string[],
   sequence: string | undefined,
   p: Payload
-): Promise<VAA<Payload>> {
+): VAA<Payload> {
   let v: VAA<Payload> = {
     version: 1,
     guardianSetIndex: 0,
@@ -120,7 +120,7 @@ yargs(hideBin(process.argv))
                 argv["sequence"],
                 payload
               );
-              console.log(serialiseVAA(v))
+              console.log(serialiseVAA(v));
             }
           )
           // Upgrade
