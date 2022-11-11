@@ -1,0 +1,38 @@
+name: Integration Test
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - build-docker-images
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18.6'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: build docker images
+        run: ./build-docker-images.sh
+      - name: start docker images
+        working-directory: ./integration_test/docker
+        run: docker-compose up -d
+      - name: wait until ETH contracts are deployed
+        working-directory: ./integration_test/docker
+        run: ./wait-until-services-up.sh
+      - name: deploy ALPH contracts
+        working-directory: ./alephium
+        run: |
+          npx --yes @h0ngcha0/alephium-cli wallets restore -w alephium-web3-test-only-wallet \
+            -c "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava" -p alph
+          npm install && npm run compile-contracts && MINIMAL_CONSISTENCY_LEVEL=1 npm run deploy:devnet
+      - name: run integration test
+        working-directory: ./integration_test
+        run: npm install && npm run it
+      # Next publish docker images after integration tests pass

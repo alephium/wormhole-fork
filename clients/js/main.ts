@@ -3,7 +3,8 @@ import yargs from "yargs";
 
 import { hideBin } from "yargs/helpers";
 
-import { setDefaultWasm } from "@certusone/wormhole-sdk";
+import { setDefaultWasm, getSignedVAAWithRetry, ChainId } from "alephium-wormhole-sdk";
+import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { execute_governance_solana } from "./solana";
 import { execute_governance_evm } from "./evm";
 import { execute_governance_terra } from "./terra";
@@ -16,7 +17,8 @@ import {
   toChainName,
   isEVMChain,
   toChainId,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
+import { execute_governance_alph } from "./alph";
 
 setDefaultWasm("node");
 
@@ -24,14 +26,13 @@ const GOVERNANCE_CHAIN = 1;
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
 
-async function makeVAA(
+function makeVAA(
   emitterChain: number,
   targetChain: number,
   emitterAddress: string,
   signers: string[],
   sequence: string | undefined,
-  p: Payload,
-  useKMS: boolean
+  p: Payload
 ): Promise<VAA<Payload>> {
   let v: VAA<Payload> = {
     version: 1,
@@ -46,13 +47,7 @@ async function makeVAA(
     consistencyLevel: 0,
     payload: p,
   };
-
-  if (useKMS) {
-    v.signatures = await vaa.signWithKMS(signers, v);
-  } else {
-    v.signatures = vaa.signWithKey(signers, v);
-  }
-
+  v.signatures = vaa.sign(signers, v);
   return v;
 }
 
@@ -76,12 +71,6 @@ yargs(hideBin(process.argv))
             required: false,
             describe: "VAA sequence",
             type: "string",
-          })
-          .option("use-kms", {
-            alias: "k",
-            required: false,
-            describe: "If KMS should be used",
-            type: "boolean",
           })
           // Registration
           .command(
@@ -111,16 +100,10 @@ yargs(hideBin(process.argv))
                 })
             },
             (argv) => {
-              let module = argv["module"] as "NFTBridge" | "TokenBridge";
-              // TODO: remove this once we release our sdk
-              let emitterChainId = 0
-              if (argv["chain"] === "alephium") {
-                emitterChainId = 255
-              } else {
-                assertChain(argv["chain"])
-                emitterChainId = toChainId(argv["chain"])
-              }
-              let payload: vaa.PortalRegisterChain<typeof module> = {
+              const module = argv["module"] as "NFTBridge" | "TokenBridge";
+              assertChain(argv["chain"])
+              const emitterChainId = toChainId(argv["chain"])
+              const payload: vaa.PortalRegisterChain<typeof module> = {
                 module,
                 type: "RegisterChain",
                 emitterChain: emitterChainId,
@@ -129,17 +112,15 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
-                payload,
-                !!argv["use-kms"]
-              ).then((v) =>
-                console.log(serialiseVAA(v))
+                payload
               );
+              console.log(serialiseVAA(v))
             }
           )
           // Upgrade
@@ -171,35 +152,121 @@ yargs(hideBin(process.argv))
             },
             (argv) => {
               assertChain(argv["chain"]);
-              let module = argv["module"] as
+              const module = argv["module"] as
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              let payload: Payload = {
-                module,
-                type: "ContractUpgrade",
-                address: Buffer.from(
-                  argv["contract-address"].padStart(64, "0"),
-                  "hex"
-                ),
-              };
-              makeVAA(
+              const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
+              const payload = vaa.contractUpgradeVAA(module, address)
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["sequence"],
-                payload,
-                !!argv["use-kms"]
-              ).then((v) => {
-                console.log(serialiseVAA(v));
-              });
+                payload
+              );
+              console.log(serialiseVAA(v));
+            }
+          )
+          // Update guardian set
+          .command(
+            'update-guardian-set',
+            'Generate update guardian set vaa',
+            (yargs) => {
+              return yargs
+                .option('index', {
+                  alias: 'i',
+                  describe: 'New guardian set index',
+                  type: 'number',
+                  required: true,
+                })
+                .option('keys', {
+                  alias: 'k',
+                  describe: 'New guardian set keys',
+                  type: 'string',
+                  required: true
+                })
+            },
+            (argv) => {
+              const sequence = argv['sequence']
+              if (sequence === undefined) {
+                exitOnError('sequence is required for this command')
+              }
+              const index = argv['index']
+              const keys = argv['keys'].split(',').map(key => {
+                if (key.startsWith('0x') || key.startsWith('0X')) {
+                  return key.slice(2)
+                }
+                return key
+              })
+              if (keys.length === 0) {
+                throw new Error('new guardian set cannot be empty')
+              }
+              const payload: vaa.GuardianSetUpgrade = {
+                module: 'Core',
+                type: 'GuardianSetUpgrade',
+                newGuardianSetIndex: index,
+                newGuardianSetLength: keys.length,
+                newGuardianSet: keys
+              }
+              const vaa = makeVAA(
+                GOVERNANCE_CHAIN,
+                0,
+                GOVERNANCE_EMITTER,
+                argv["guardian-secret"].split(","),
+                sequence,
+                payload
+              )
+              console.log(serialiseVAA(vaa))
             }
           )
       );
     },
     (_) => {
       yargs.showHelp();
+    }
+  )
+  .command(
+    'fetch',
+    'Fetch a signed VAA from given VAA ID',
+    (yargs) => {
+      return yargs
+        .option('id', {
+          describe: 'VAA ID (emitterChainId/emitterAddress/targetChainId/sequence)',
+          type: 'string',
+          required: true
+        })
+        .option('url', {
+          describe: 'url, e.g. http://localhost:7071',
+          type: 'string',
+          required: true
+        })
+        .option('timeout', {
+          describe: 'timeout in seconds',
+          type: 'number'
+        })
+        .option('times', {
+          describe: 'retry times',
+          type: 'number'
+        })
+    },
+    async (argv) => {
+      const parts = argv.id.split('/')
+      if (parts.length !== 4) {
+        throw Error('Invalid VAA ID')
+      }
+      const response = await getSignedVAAWithRetry(
+        [argv.url],
+        parseInt(parts[0]) as ChainId,
+        parts[1],
+        parseInt(parts[2]) as ChainId,
+        parts[3],
+        { transport: NodeHttpTransport() },
+        (argv.timeout ?? 5) * 1000,
+        argv.times ?? 3
+      )
+      console.log(`Signed VAA: ${Buffer.from(response.vaaBytes).toString('hex')}`)
     }
   )
   ////////////////////////////////////////////////////////////////////////////////
@@ -315,11 +382,16 @@ yargs(hideBin(process.argv))
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        throw Error("Alephium is not supported yet")
+        await execute_governance_alph(parsed_vaa.payload, buf, network)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled
         impossible(chain);
       }
     }
-  ).argv;
+  ).argv
+
+function exitOnError(msg: string) {
+  console.log(msg)
+  process.exit(1)
+}

@@ -120,14 +120,15 @@ Contract TokenBridge(
         assert!(toChainId != localChainId, ErrorCodes.InvalidTransferTargetChain)
         let isLocalToken = tokenChainId == localChainId
         let tokenPoolId = subContractId!(Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId)
+        let messageFee = governance.getMessageFee()
         let payload =
-            if (bridgeTokenId == wrappedAlphId) WrappedAlphPool(tokenPoolId).transfer{fromAddress -> tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
+            if (bridgeTokenId == wrappedAlphId) WrappedAlphPool(tokenPoolId).transfer{fromAddress -> tokenAmount}(fromAddress, toAddress, tokenAmount, messageFee, arbiterFee, nonce)
             else if (isLocalToken) LocalTokenPool(tokenPoolId).transfer{fromAddress -> bridgeTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
             else RemoteTokenPool(tokenPoolId).transfer{fromAddress -> tokenPoolId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
 
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)
-        governance.publishWormholeMessage{fromAddress -> governance.getMessageFee()}(
+        governance.publishWormholeMessage{fromAddress -> messageFee}(
             fromAddress, toChainId, tokenBridgeForChain.nextSendSequence(), nonce, payload, consistencyLevel
         )
     }
@@ -142,6 +143,6 @@ Contract TokenBridge(
         nonce: ByteVec,
         consistencyLevel: U256
     ) -> () {
-        transferToken{fromAddress -> alphRemaining!(fromAddress)}(fromAddress, wrappedAlphId, localChainId, toChainId, toAddress, alphAmount, arbiterFee, nonce, consistencyLevel)
+        transferToken{fromAddress -> alphAmount}(fromAddress, wrappedAlphId, localChainId, toChainId, toAddress, alphAmount, arbiterFee, nonce, consistencyLevel)
     }
 }

@@ -21,7 +21,7 @@ import {
   TokenImplementation__factory,
   WSOL_ADDRESS,
   WSOL_DECIMALS,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {

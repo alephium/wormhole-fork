@@ -31,6 +31,12 @@ generate: dirs
 	tools/bin/buf lint
 	tools/bin/buf generate
 
+.PHONY: generate-proto-sdk
+generate-proto-sdk:
+	cd tools && ./build.sh
+	rm -rf sdk/js/src/proto
+	tools/bin/buf generate --template buf.gen.web.yaml
+
 .PHONY: node
 ## Build guardiand binary
 node: $(BIN)/guardiand

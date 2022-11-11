@@ -18,7 +18,7 @@ const createTestTokenPool: DeployFunction = async (deployer: Deployer): Promise<
     tokens: [
       {
         id: testToken.contractId,
-        amount: 1
+        amount: 1n
       }
     ]
   })

@@ -13,11 +13,11 @@ const deployTokenBridge: DeployFunction<Settings> = async (
   const initialFields = {
     governance: governanceId,
     wrappedAlphId: wrappedAlphId,
-    localChainId: network.settings.initChainId,
-    receivedSequence: 0,
-    sendSequence: 0,
+    localChainId: BigInt(network.settings.initChainId),
+    receivedSequence: 0n,
+    sendSequence: 0n,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
-    minimalConsistencyLevel: network.settings.minimalConsistencyLevel,
+    minimalConsistencyLevel: BigInt(network.settings.minimalConsistencyLevel),
     refundAddress: deployer.account.address
   }
 

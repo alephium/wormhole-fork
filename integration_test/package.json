@@ -1,0 +1,47 @@
+{
+  "name": "bridge-integration-test",
+  "version": "0.0.0",
+  "license": "GPL",
+  "type": "commonjs",
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && npx tsc --build .",
+    "lint": "eslint . --ext ts",
+    "lint:fix": "eslint . --fix --ext ts",
+    "it": "npx ts-node it.ts"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  },
+  "dependencies": {
+    "@alephium/web3": "^0.2.0-rc.36",
+    "@alephium/web3-test": "^0.2.0-rc.36",
+    "@alephium/web3-wallet": "^0.2.0-rc.36",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
+    "@types/elliptic": "^6.4.14",
+    "alephium-wormhole-sdk": "^0.1.0-rc0",
+    "bs58": "^5.0.0",
+    "eslint": "^7.32.0",
+    "ethers": "^5.6.8",
+    "web3": "^1.7.1"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.2",
+    "@typescript-eslint/eslint-plugin": "^5.37.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-security": "^1.5.0"
+  }
+}

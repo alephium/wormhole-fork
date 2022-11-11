@@ -1,3 +1,4 @@
+import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -24,15 +25,18 @@ import {
 import { hexToNativeString } from "../utils/array";
 import { parseTransferPayload } from "../utils/parseVaa";
 
-export function redeemOnAlph(
+export async function redeemOnAlph(
+  signerProvider: SignerProvider,
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
-): string {
+): Promise<BuildScriptTxResult> {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = completeTransferScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridgeForChain: tokenBridgeForChainId,
-    vaa: vaaHex
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridgeForChain: tokenBridgeForChainId,
+      vaa: vaaHex
+    }
   })
 }
 

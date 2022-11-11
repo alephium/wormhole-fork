@@ -63,6 +63,7 @@ spec:
             - --deterministic
             - --time="1970-01-01T00:00:00+00:00"
             - --host=0.0.0.0
+            - --chainId=1338
             - --db=/eth-full-node/
           ports:
             - containerPort: 8545
@@ -77,7 +78,7 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_solana_chain.js && npx truffle exec scripts/register_terra_chain.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_algo_chain.js && npx truffle exec scripts/register_alph_chain.js && nc -lkp 2000 0.0.0.0"
+            - "npm run migrate && npx truffle exec scripts/deploy_test_token.js && npx truffle exec scripts/register_bsc_chain.js && npx truffle exec scripts/register_alph_chain.js && npx truffle exec scripts/update_guardian_set.js && nc -lkp 2000 0.0.0.0"
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300

@@ -5,7 +5,7 @@ describe('test math', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
   interface TestCase {
-    decimals: number
+    decimals: bigint
     amount: bigint
     normalizedAmount: bigint
     deNormalizedAmount: bigint
@@ -18,22 +18,22 @@ describe('test math', () => {
 
     const cases: TestCase[] = [
       {
-        decimals: 6,
-        amount: BigInt('100000'),
-        normalizedAmount: BigInt('100000'),
-        deNormalizedAmount: BigInt('100000')
+        decimals: 6n,
+        amount: 100000n,
+        normalizedAmount: 100000n,
+        deNormalizedAmount: 100000n
       },
       {
-        decimals: 8,
-        amount: BigInt('10000000'),
-        normalizedAmount: BigInt('10000000'),
-        deNormalizedAmount: BigInt('10000000')
+        decimals: 8n,
+        amount: 10000000n,
+        normalizedAmount: 10000000n,
+        deNormalizedAmount: 10000000n
       },
       {
-        decimals: 10,
-        amount: BigInt('10000000011'),
-        normalizedAmount: BigInt('100000000'),
-        deNormalizedAmount: BigInt('10000000000')
+        decimals: 10n,
+        amount: 10000000011n,
+        normalizedAmount: 100000000n,
+        deNormalizedAmount: 10000000000n
       }
     ]
     for (const tc of cases) {
@@ -45,7 +45,7 @@ describe('test math', () => {
       })
       expect(testResult.returns.length).toEqual(1)
       const normalizedAmount = testResult.returns[0] as Number256
-      expect(normalizedAmount).toEqual(Number(tc.normalizedAmount))
+      expect(normalizedAmount).toEqual(tc.normalizedAmount)
 
       testResult = await contract.testPublicMethod('deNormalizeAmount', {
         testArgs: {
@@ -55,7 +55,7 @@ describe('test math', () => {
       })
       expect(testResult.returns.length).toEqual(1)
       const deNormalizedAmount = testResult.returns[0] as Number256
-      expect(deNormalizedAmount).toEqual(Number(tc.deNormalizedAmount))
+      expect(deNormalizedAmount).toEqual(tc.deNormalizedAmount)
     }
   })
 })

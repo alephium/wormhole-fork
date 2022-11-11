@@ -2,9 +2,15 @@ import { Parser } from "binary-parser"
 import { ethers } from "ethers"
 import { solidityKeccak256 } from "ethers/lib/utils"
 import * as elliptic from "elliptic"
-import { KeyManagementServiceClient } from "@google-cloud/kms"
-import { signatureImport, signatureNormalize } from 'secp256k1'
-import { createPublicKey } from 'crypto'
+import { ChainId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk"
+import {
+    AlphTokenBridgeExtensions,
+    alphTokenBridgeExtensionsParser,
+    serialiseAlphTokenBridgeExtensions
+} from './alph'
+import { P } from './parser'
+
+type Modules = 'Core' | 'TokenBridge' | 'NFTBridge'
 
 export interface Signature {
     guardianSetIndex: number
@@ -25,55 +31,45 @@ export interface VAA<T> {
     payload: T
 }
 
-class P<T> {
-    private parser: Parser
-    constructor(parser: Parser) {
-        this.parser = parser
-    }
-
-    // Try to parse a buffer with a parser, and return null if it failed due to an
-    // assertion error.
-    parse(buffer: Buffer): T | null {
-        try {
-            let result = this.parser.parse(buffer)
-            delete result['end']
-            return result
-        } catch (e: any) {
-            if (e.message?.includes("Assertion error")) {
-                return null
-            } else {
-                throw e
-            }
-        }
-    }
-
-    or<U>(other: P<U>): P<T | U> {
-        let p = new P<T | U>(other.parser);
-        p.parse = (buffer: Buffer): T | U | null => {
-            return this.parse(buffer) ?? other.parse(buffer)
-        }
-        return p
-    }
-}
-
 // All the different types of payloads
 export type Payload =
     GuardianSetUpgrade
+    | UpdateMessageFee
+    | TransferFee
     | CoreContractUpgrade
+    | AlphContractUpgrade<'Core'>
+    | AlphContractUpgrade<'TokenBridge'>
     | PortalContractUpgrade<"TokenBridge">
     | PortalContractUpgrade<"NFTBridge">
     | PortalRegisterChain<"TokenBridge">
     | PortalRegisterChain<"NFTBridge">
+    | GovernanceExtension<typeof CHAIN_ID_ALEPHIUM, 'TokenBridge', AlphTokenBridgeExtensions>
 // TODO: add other types of payloads
+
+export function contractUpgradeVAA(
+    module: 'Core' | 'TokenBridge' | 'NFTBridge',
+    address: Uint8Array
+): CoreContractUpgrade | PortalContractUpgrade<'TokenBridge'> | PortalContractUpgrade<'NFTBridge'> {
+    return {
+        module: module,
+        type: 'ContractUpgrade',
+        address: address
+    }
+}
 
 export function parse(buffer: Buffer): VAA<Payload | null> {
     const vaa = parseEnvelope(buffer)
     const parser = guardianSetUpgradeParser
+        .or(updateMessageFeeParser)
+        .or(transferFeeParser)
         .or(coreContractUpgradeParser)
+        .or(alphContractUpgradeParser('Core'))
+        .or(alphContractUpgradeParser('TokenBridge'))
         .or(portalContractUpgradeParser("TokenBridge"))
         .or(portalContractUpgradeParser("NFTBridge"))
         .or(portalRegisterChainParser("TokenBridge"))
         .or(portalRegisterChainParser("NFTBridge"))
+        .or(governanceExtensionParser(CHAIN_ID_ALEPHIUM, 'TokenBridge', alphTokenBridgeExtensionsParser))
     const payload = parser.parse(vaa.payload)
     var myVAA = { ...vaa, payload }
 
@@ -162,8 +158,18 @@ function vaaBody(vaa: VAA<Payload>) {
                 case "GuardianSetUpgrade":
                     payload_str = serialiseGuardianSetUpgrade(payload)
                     break
+                case 'UpdateMessageFee':
+                    payload_str = serialiseUpdateMessageFee(payload)
+                    break
+                case 'TransferFee':
+                    payload_str = serialiseTransferFee(payload)
+                    break
                 case "ContractUpgrade":
-                    payload_str = serialiseCoreContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialiseCoreContractUpgrade(payload)
+                    }
                     break
             }
             break
@@ -171,10 +177,19 @@ function vaaBody(vaa: VAA<Payload>) {
         case "TokenBridge":
             switch (payload.type) {
                 case "ContractUpgrade":
-                    payload_str = serialisePortalContractUpgrade(payload)
+                    if ('code' in payload) {
+                        payload_str = serialiseAlphContractUpgrade(payload)
+                    } else {
+                        payload_str = serialisePortalContractUpgrade(payload)
+                    }
                     break
                 case "RegisterChain":
                     payload_str = serialisePortalRegisterChain(payload)
+                    break
+                case 'Extension':
+                    if (payload.chainId === CHAIN_ID_ALEPHIUM && payload.module === 'TokenBridge') {
+                        payload_str = serialiseGovernanceExtension(payload, serialiseAlphTokenBridgeExtensions)
+                    }
                     break
             }
             break
@@ -192,7 +207,7 @@ function vaaBody(vaa: VAA<Payload>) {
     return body.join("")
 }
 
-export function signWithKey(signers: string[], vaa: VAA<Payload>): Signature[] {
+export function sign(signers: string[], vaa: VAA<Payload>): Signature[] {
     const body = vaaBody(vaa)
     const hash = solidityKeccak256(["bytes"], [solidityKeccak256(["bytes"], ["0x" + body])])
     const ec = new elliptic.ec("secp256k1")
@@ -212,68 +227,6 @@ export function signWithKey(signers: string[], vaa: VAA<Payload>): Signature[] {
     })
 }
 
-const kmsClient = new KeyManagementServiceClient({
-    keyFile: process.env.GUARDIAN_CREDENTIALS_FILE
-})
-
-export async function signWithKMS(signers: string[], vaa: VAA<Payload>): Promise<Signature[]> {
-    const body = vaaBody(vaa)
-    const hash = solidityKeccak256(["bytes"], [solidityKeccak256(["bytes"], ["0x" + body])])
-    const digest = Buffer.from(hash.substr(2), "hex")
-
-    var signatures: Signature[] = []
-    for (let i = 0; i < signers.length; i++) {
-        const keyName = signers[i]
-        const [signResponse] = await kmsClient.asymmetricSign({
-            name: keyName,
-            digest: {
-                sha256: digest
-            }
-        })
-
-        const pubKey = await kmsClient.getPublicKey({ name: keyName })
-        const pubKeyObj = createPublicKey(pubKey[0].pem)
-        let pubKeyBuf = pubKeyObj.export({ format: "der", type: "spki" });
-        pubKeyBuf = pubKeyBuf.slice(pubKeyBuf.length - 65)
-
-        let _64 = signatureImport(signResponse.signature as Uint8Array);
-        const normalized = signatureNormalize(_64);
-
-        const r = normalized.slice(0, 32)
-        const s = normalized.slice(32, 64)
-        const v = calculateV(normalized, digest, pubKeyBuf);
-
-        const packed = [
-            Buffer.from(r).toString("hex").padStart(64, "0"),
-            Buffer.from(s).toString("hex").padStart(64, "0"),
-            encode("uint8", v)
-        ].join("")
-
-        signatures.push({
-            guardianSetIndex: i,
-            signature: packed
-        })
-    }
-
-    return signatures
-}
-
-function calculateV(signature: Uint8Array, hash: Buffer, uncompressPubKey: Buffer): number {
-    const { ecdsaRecover } = require("secp256k1");
-    let recId = -1;
-
-    for (let i = 0; i < 2; i++) {
-        const rec = ecdsaRecover(signature, i, hash, false);
-        if (Buffer.compare(rec, uncompressPubKey) == 0) {
-            recId = i;
-            break;
-        }
-    }
-    if (recId == -1)
-        throw new Error("Impossible to calculare the recovery id. should not happen");
-    return recId;
-}
-
 // Parse an address of given length, and render it as hex
 const addressParser = (length: number) => new Parser()
     .endianess("big")
@@ -282,6 +235,79 @@ const addressParser = (length: number) => new Parser()
         lengthInBytes: length,
         formatter: (arr) => Buffer.from(arr).toString("hex")
     })
+
+export interface TransferFee {
+    module: 'Core'
+    type: 'TransferFee'
+    amount: bigint
+    recipient: Uint8Array
+}
+
+const transferFeeParser: P<TransferFee> = new P(new Parser()
+    .endianess('big')
+    .string('module', {
+        length: 32,
+        encoding: 'hex',
+        assert: Buffer.from('Core').toString('hex').padStart(64, '0'),
+        formatter: (_str) => 'Core'
+    })
+    .uint8('type', {
+        assert: 4,
+        formatter: (_action) => 'TransferFee'
+    })
+    .array('amount', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => BigInt(`0x${Buffer.from(bytes).toString('hex')}`)
+    })
+    .array('recipient', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => Uint8Array.from(bytes)
+    }))
+
+function serialiseTransferFee(payload: TransferFee): string {
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', 4),
+        payload.amount.toString(16).padStart(64, '0'),
+        Buffer.from(payload.recipient).toString('hex').padStart(64, '0')
+    ]
+    return body.join('')
+}
+
+export interface UpdateMessageFee {
+    module: 'Core'
+    type: 'UpdateMessageFee'
+    newMessageFee: bigint
+}
+
+const updateMessageFeeParser: P<UpdateMessageFee> = new P(new Parser()
+    .endianess('big')
+    .string('module', {
+        length: 32,
+        encoding: 'hex',
+        assert: Buffer.from('Core').toString('hex').padStart(64, '0'),
+        formatter: (_str) => 'Core'
+    })
+    .uint8('type', {
+        assert: 3,
+        formatter: (_action) => 'UpdateMessageFee'
+    })
+    .array('newMessageFee', {
+        type: 'uint8',
+        lengthInBytes: 32,
+        formatter: (bytes) => BigInt(`0x${Buffer.from(bytes).toString('hex')}`)
+    }))
+
+function serialiseUpdateMessageFee(payload: UpdateMessageFee): string {
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', 3),
+        payload.newMessageFee.toString(16).padStart(64, '0')
+    ]
+    return body.join('')
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Guardian set upgrade
@@ -294,7 +320,6 @@ export interface GuardianSetUpgrade {
     newGuardianSet: string[]
 }
 
-// Parse a guardian set upgrade payload
 const guardianSetUpgradeParser: P<GuardianSetUpgrade> = new P(new Parser()
     .endianess("big")
     .string("module", {
@@ -321,7 +346,7 @@ const guardianSetUpgradeParser: P<GuardianSetUpgrade> = new P(new Parser()
 
 function serialiseGuardianSetUpgrade(payload: GuardianSetUpgrade): string {
     const body = [
-        encode("bytes32", Buffer.from(Buffer.from(payload.module).toString("hex").padStart(64, "0"), "hex")),
+        encode("bytes32", encodeString(payload.module)),
         encode("uint8", 2),
         encode("uint32", payload.newGuardianSetIndex),
         encode("uint8", payload.newGuardianSet.length),
@@ -347,7 +372,7 @@ const coreContractUpgradeParser: P<CoreContractUpgrade> =
             length: 32,
             encoding: "hex",
             assert: Buffer.from("Core").toString("hex").padStart(64, "0"),
-            formatter: (_str) => module
+            formatter: (_str) => 'Core'
         })
         .uint8("type", {
             assert: 1,
@@ -356,7 +381,7 @@ const coreContractUpgradeParser: P<CoreContractUpgrade> =
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
-            // formatter: (arr) => Buffer.from(arr).toString("hex")
+            formatter: (arr) => Uint8Array.from(arr)
         })
         .string("end", {
             greedy: true,
@@ -370,6 +395,97 @@ function serialiseCoreContractUpgrade(payload: CoreContractUpgrade): string {
         encode("bytes32", payload.address)
     ]
     return body.join("")
+}
+
+export interface AlphContractUpgrade<Module extends 'Core' | 'TokenBridge'> {
+    module: Module
+    type: 'ContractUpgrade'
+    code: Uint8Array
+    state: Uint8Array
+}
+
+function alphContractUpgradeParser<Module extends 'Core' | 'TokenBridge'>(module: Module): P<AlphContractUpgrade<Module>> {
+    return new P(new Parser()
+        .endianess('big')
+        .string('module', {
+            length: 32,
+            encoding: 'hex',
+            assert: Buffer.from(module).toString('hex').padStart(64, '0'),
+            formatter: (_str) => module
+        })
+        .uint8('type', {
+            assert: module === 'Core' ? 1 : 2,
+            formatter: (_action) => 'ContractUpgrade'
+        })
+        .uint16('codeLength')
+        .array('code', {
+            type: 'uint8',
+            lengthInBytes: 'codeLength',
+            formatter: (arr) => Uint8Array.from(arr)
+        })
+        .array('state', {
+            type: 'uint8',
+            readUntil: 'eof',
+            formatter: (arr) => Uint8Array.from(arr)
+        })
+        .string("end", {
+            greedy: true,
+            assert: str => str === ""
+        })
+    )
+}
+
+function serialiseAlphContractUpgrade<Module extends 'Core' | 'TokenBridge'>(payload: AlphContractUpgrade<Module>): string {
+    const payloadId = payload.module === 'Core' ? 1 : 2
+    const body = [
+        encode('bytes32', encodeString(payload.module)),
+        encode('uint8', payloadId),
+        encode('uint16', payload.code.length),
+        Buffer.from(payload.code).toString('hex'),
+        Buffer.from(payload.state).toString('hex')
+    ]
+    return body.join('')
+}
+
+export interface GovernanceExtension<Chain extends ChainId, Module extends Modules, T> {
+    chainId: Chain
+    module: Module
+    type: 'Extension'
+    action: T
+}
+
+export function governanceExtensionParser<Chain extends ChainId, Module extends Modules, Action>(
+    chain: Chain,
+    module: Module,
+    actionParser: P<Action>
+): P<GovernanceExtension<Chain, Module, Action>> {
+    return new P(new Parser()
+        .endianess('big')
+        .buffer('chainId', {
+            length: () => 0,
+            formatter: (_) => chain
+        })
+        .string('module', {
+            length: 32,
+            encoding: 'hex',
+            assert: Buffer.from(module).toString('hex').padStart(64, '0'),
+            formatter: (_str) => module
+        })
+        .string('type', {
+            length: () => 0,
+            formatter: (_) => 'Extension'
+        })
+        .buffer('action', {
+            readUntil: 'eof',
+            formatter: (bytes) => actionParser.parse(bytes)
+        }))
+}
+
+function serialiseGovernanceExtension<Chain extends ChainId, Module extends Modules, Action>(
+    payload: GovernanceExtension<Chain, Module, Action>,
+    actionSerializer: (a: Action) => string
+): string {
+    return encode('bytes32', encodeString(payload.module)) + actionSerializer(payload.action)
 }
 
 export interface PortalContractUpgrade<Module extends "NFTBridge" | "TokenBridge"> {
@@ -386,16 +502,16 @@ function portalContractUpgradeParser<Module extends "NFTBridge" | "TokenBridge">
             length: 32,
             encoding: "hex",
             assert: Buffer.from(module).toString("hex").padStart(64, "0"),
-            formatter: (_str: string) => module
+            formatter: (_str) => module
         })
         .uint8("type", {
             assert: 2,
-            formatter: (_action: number) => "ContractUpgrade"
+            formatter: (_action) => "ContractUpgrade"
         })
         .array("address", {
             type: "uint8",
             lengthInBytes: 32,
-            // formatter: (arr) => Buffer.from(arr).toString("hex")
+            formatter: (arr) => Uint8Array.from(arr)
         })
         .string("end", {
             greedy: true,

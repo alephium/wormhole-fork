@@ -1,0 +1,16 @@
+diff --git a/ethereum/truffle-config.js b/ethereum/truffle-config.js
+index 0f67e6e0..97e5d0e3 100644
+--- a/ethereum/truffle-config.js
++++ b/ethereum/truffle-config.js
+@@ -6,9 +6,9 @@ const Caver = require("caver-js");
+ module.exports = {
+   networks: {
+     development: {
+-      host: "127.0.0.1",
++      host: "eth-devnet",
+       port: 8545,
+-      network_id: "*",
++      network_id: "123456",
+     },
+     // test network is the same as development but allows us to omit certain migrations
+     test: {

@@ -22,8 +22,8 @@ import {
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
   attestWrappedAlph
-} from "@certusone/wormhole-sdk";
-import { CHAIN_ID_UNSET } from "@certusone/wormhole-sdk/lib/esm";
+} from "alephium-wormhole-sdk";
+import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -53,7 +53,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { submitAlphScriptTx, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -74,7 +74,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { node as alphApi } from "@alephium/web3"
+import { BuildScriptTxResult } from "@alephium/web3"
 
 async function algo(
   dispatch: any,
@@ -305,10 +305,10 @@ async function alephium(
   try {
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
-        let bytecode: string
-        let tokens: alphApi.Token[] = []
+        let result: BuildScriptTxResult
         if (localTokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
-          bytecode = attestWrappedAlph(
+          result = await attestWrappedAlph(
+            signer.signerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
             signer.account.address,
@@ -316,16 +316,15 @@ async function alephium(
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         } else {
-          bytecode = attestFromAlph(
+          result = await attestFromAlph(
+            signer.signerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             localTokenId,
             signer.account.address,
             alphMessageFee,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
-          tokens = [{id: localTokenId, amount: '1'}];
         }
-        const result = await submitAlphScriptTx(signer.signerProvider, signer.account.address, bytecode, tokens)
         return result.txId;
       }
     );

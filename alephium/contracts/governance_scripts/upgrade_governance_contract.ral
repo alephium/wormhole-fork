@@ -1,0 +1,3 @@
+TxScript UpdateGovernanceContract(governance: Governance, vaa: ByteVec) {
+  governance.submitContractUpgrade(vaa)
+}

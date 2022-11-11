@@ -1,27 +1,33 @@
-import { addressFromContractId, NodeProvider, subContractId } from "@alephium/web3"
+import { addressFromContractId, BuildScriptTxResult, NodeProvider, SignerProvider, subContractId } from "@alephium/web3"
 import { destroyUnexecutedSequencesScript, updateRefundAddressScript } from "../alephium/token_bridge"
 
-export function destroyUnexecutedSequenceContracts(
+export async function destroyUnexecutedSequenceContracts(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): string {
+): Promise<BuildScriptTxResult> {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = destroyUnexecutedSequencesScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridge: tokenBridgeId,
-    vaa: vaaHex
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridge: tokenBridgeId,
+      vaa: vaaHex
+    }
   })
 }
 
-export function updateRefundAddress(
+export async function updateRefundAddress(
+  signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): string {
+): Promise<BuildScriptTxResult> {
   const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = updateRefundAddressScript()
-  return script.buildByteCodeToDeploy({
-    tokenBridge: tokenBridgeId,
-    vaa: vaaHex
+  return script.execute(signerProvider, {
+    initialFields: {
+      tokenBridge: tokenBridgeId,
+      vaa: vaaHex
+    }
   })
 }
 

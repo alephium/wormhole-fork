@@ -18,8 +18,8 @@ Abstract Contract TokenBridgeGovernance(
     }
 
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
-        let (targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
-        receivedSequence = receivedSequence + 1
+        let (msgSequence, targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
+        receivedSequence = msgSequence + 1
         return targetChainId, payload
     }
 
@@ -84,8 +84,12 @@ Abstract Contract TokenBridgeGovernance(
         } else {
             let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
             offset = offset + 32
-            let currentencodedFields = u256To32Byte!(receivedSequence) ++ u256To32Byte!(sendSequence)
-            assert!(prevStateHash == blake2b!(currentencodedFields), ErrorCodes.ContractStateMismatch)
+            let currentEncodedFields =
+                u256To32Byte!(receivedSequence) ++
+                u256To32Byte!(sendSequence) ++
+                u256To1Byte!(minimalConsistencyLevel) ++
+                toByteVec!(refundAddress)
+            assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
             let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
             offset = offset + 2
             let newContractFields = byteVecSlice!(payload, offset, offset + stateLength)

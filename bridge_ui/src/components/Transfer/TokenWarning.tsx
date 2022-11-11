@@ -4,7 +4,7 @@ import {
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { Box, Link, makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import {

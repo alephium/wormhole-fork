@@ -6,7 +6,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { arrayify, zeroPad } from "@ethersproject/bytes";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,

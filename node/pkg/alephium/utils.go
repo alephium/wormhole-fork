@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"runtime/debug"
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
@@ -17,18 +16,11 @@ import (
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"golang.org/x/crypto/blake2b"
 )
 
 const HashLength = 32
 const WormholeMessageEventIndex = 0
-
-func assume(cond bool) {
-	if !cond {
-		debug.PrintStack()
-		panic(cond)
-	}
-}
+const WormholeMessageFieldSize = 6
 
 func ToContractId(address string) (Byte32, error) {
 	var byte32 Byte32
@@ -36,59 +28,30 @@ func ToContractId(address string) (Byte32, error) {
 	if len(contractId) != 33 {
 		return byte32, fmt.Errorf("invalid contract address %s", address)
 	}
-	assume(len(contractId) == 33)
 	copy(byte32[:], contractId[1:])
 	return byte32, nil
 }
 
-func ToContractAddress(id Byte32) string {
+func ToContractAddress(contractId string) (*string, error) {
+	b, err := HexToFixedSizeBytes(contractId, 32)
+	if err != nil {
+		return nil, err
+	}
 	bytes := []byte{0x03}
-	bytes = append(bytes, id[:]...)
-	return base58.Encode(bytes)
+	bytes = append(bytes, b[:]...)
+	address := base58.Encode(bytes)
+	return &address, nil
 }
 
-func toContractId(address string) Byte32 {
-	contractId, err := ToContractId(address)
-	assume(err == nil)
-	return contractId
-}
-
-type Hash [HashLength]byte
-
-func (h Hash) ToHex() string {
-	dst := make([]byte, HashLength*2)
-	hex.Encode(dst, h[:])
-	return string(dst)
-}
-
-func (h Hash) Bytes() []byte {
-	return h[:]
-}
-
-func HexToFixedSizeBytes(str string, length int) []byte {
-	assume(len(str) == length*2)
+func HexToFixedSizeBytes(str string, length int) ([]byte, error) {
+	if len(str) != length*2 {
+		return nil, fmt.Errorf("invalid hex string %s, expect %d bytes", str, length)
+	}
 	bytes, err := hex.DecodeString(str)
-	assume(err == nil)
-	return bytes
-}
-
-func hexToBytes(str string) []byte {
-	assume(len(str)&1 == 0)
-	bytes, err := hex.DecodeString(str)
-	assume(err == nil)
-	return bytes
-}
-
-func HexToHash(str string) Hash {
-	var hash Hash
-	copy(hash[:], HexToFixedSizeBytes(str, 32))
-	return hash
-}
-
-func blake2bDoubleHash(data []byte) Hash {
-	hash0 := blake2b.Sum256(data)
-	hash := blake2b.Sum256(hash0[:])
-	return Hash(hash)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
 
 type Byte32 [32]byte
@@ -101,12 +64,6 @@ func (b Byte32) ToHex() string {
 	dst := make([]byte, HashLength*2)
 	hex.Encode(dst, b[:])
 	return string(dst)
-}
-
-func HexToByte32(str string) Byte32 {
-	var result Byte32
-	copy(result[:], HexToFixedSizeBytes(str, 32))
-	return result
 }
 
 type ChainIndex struct {
@@ -268,7 +225,9 @@ func maxUint8(a, b uint8) uint8 {
 }
 
 func ToWormholeMessage(fields []sdk.Val, txId string) (*WormholeMessage, error) {
-	assume(len(fields) == 6)
+	if len(fields) != WormholeMessageFieldSize {
+		return nil, fmt.Errorf("invalid wormhole message field size, expect %d, have %d", WormholeMessageFieldSize, len(fields))
+	}
 	emitter, err := toByte32(fields[0])
 	if err != nil {
 		return nil, err

@@ -2,7 +2,7 @@ import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import {
   AppBar,
   Container,

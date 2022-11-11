@@ -52,5 +52,5 @@ var KnownEmitters = []struct {
 	{vaa.ChainIDKlaytn, "0000000000000000000000003c3c561757BAa0b78c5C025CdEAa4ee24C1dFfEf"},    // 13 Klaytn NFT Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000796Dff6D74F3E27060B71255Fe517BFb23C93eed"},      // 14 Celo Token Bridge
 	{vaa.ChainIDCelo, "000000000000000000000000A6A377d75ca5c9052c9a77ED1e865Cc25Bd97bf3"},      // 14 Celo NFT Bridge
-	{vaa.ChainIDAlephium, "81ffa9b4c1dff36a9294d8501b6e79bc5eb103ff1a379a85b6fe6ac6f1ef2d01"},  // 255 Alephium Token Bridge
+	{vaa.ChainIDAlephium, "d921c79d323ec44763f76aeb793183005aa67612e74948b00ca2214b308c4f43"},  // 255 Alephium Token Bridge
 }

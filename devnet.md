@@ -21,35 +21,16 @@ minikube start --driver=docker --cpus=8 --memory=8G --disk-size=50g --namespace=
 Launch the devnet while specifying the number of guardians nodes to run:
 
 ```sh
-tilt up -- --num=1 --webHost=0.0.0.0
+tilt up -- --num=1 --webHost=0.0.0.0 --bridge_ui
 ```
 
 And wait for all pods to start.
 
-# Bridge ui
-
-Because we haven't released the sdk yet, we need to start bridge ui outside k8s cluster, build sdk first:
-
-```sh
-cd ethereum
-npm install && npm run build
-
-cd sdk/js
-npm install && npm run build
-```
-
-build and run bridge ui:
-
-```sh
-cd bridge_ui
-npm install && npm run start
-```
-
 # Devnet accounts and contracts
 
 Alephium account address: 1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH
-Alephium test token contract id: 4ff5a488a4fe1e52f82bcf14c05817a50187bc9ddfd0544b250540de3e728142, address: z55ZvcdJerhKWmv5oY1rZf6ZKP4hVynwUTksYqzHHL9f
-Alephium wrapped alph contract id: 2ee74846e95d07c41ea5b09677012986232521dec45fb6a6d1f6f7f0f20d56c5, address: wr3Qy9yNgL4WcebNWSEovreSGfpsXhQaLRcKbpgFRGgL
+Alephium test token contract id: 6c9e363a430b14f135428ea6d7a5b1cf893485ab9495e325258e7b16925d62ab, address: 21zx4ryc9Qwe6CKoAahKKDfSLQtxGdVQJNCxTswmmVTbp
+Alephium wrapped alph contract id: 7eba0bd8a081d080d708fd226f6da27d59574e465b3703b563ed990260e56803, address: 23De2HETiehDAm4jGyzFoRCdVa4UxMP9a4F5DqnL5hW2N
 
 Ethereum account private-key: 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
 Ethereum test token address: 0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A

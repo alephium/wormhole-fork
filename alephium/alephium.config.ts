@@ -11,7 +11,8 @@ const settingsTemplate = {
   initGovContract: process.env.INIT_GOV_CONTRACT!,
   minimalConsistencyLevel: -1, // to be overwritten
   registerETHVAA: process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!,
-  registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!
+  registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!,
+  updateGuardianSetVAA: process.env.UPDATE_GUARDIAN_SET_VAA
 }
 
 export type Settings = typeof settingsTemplate
@@ -33,7 +34,12 @@ const configuration: Configuration<Settings> = {
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 1,
-      settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
+      settings: {
+        ...settingsTemplate,
+        minimalConsistencyLevel: process.env.MINIMAL_CONSISTENCY_LEVEL
+          ? parseInt(process.env.MINIMAL_CONSISTENCY_LEVEL)
+          : 10
+      }
     },
 
     testnet: {

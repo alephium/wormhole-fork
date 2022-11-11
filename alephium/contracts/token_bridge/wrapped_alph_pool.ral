@@ -10,10 +10,12 @@ Contract WrappedAlphPool(
         fromAddress: Address,
         toAddress: ByteVec,
         amount: U256,
+        messageFee: U256,
         arbiterFee: U256,
         nonce: ByteVec
     ) -> ByteVec {
-        let (payload, totalAmount) = prepareTransfer(callerContractId!(), toAddress, amount, arbiterFee, nonce)
+        assert!(amount > messageFee, ErrorCodes.TransferAmountLessThanMessageFee)
+        let (payload, totalAmount) = prepareTransfer(callerContractId!(), toAddress, amount - messageFee, arbiterFee, nonce)
 
         WrappedAlph(bridgeTokenId).wrapAndTransfer{
             fromAddress -> totalAmount

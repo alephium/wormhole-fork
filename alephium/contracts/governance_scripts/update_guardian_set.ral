@@ -1,0 +1,3 @@
+TxScript UpdateGuardianSet(governance: Governance, vaa: ByteVec) {
+  governance.submitNewGuardianSet(vaa)
+}

@@ -70,11 +70,6 @@ type Processor struct {
 	// Node's guardian signer
 	guardianSigner ecdsasigner.ECDSASigner
 
-	// devnetMode specified whether to submit transactions to the hardcoded Ethereum devnet
-	devnetMode         bool
-	devnetNumGuardians uint
-	devnetEthRPC       string
-
 	attestationEvents *reporter.AttestationEventReporter
 
 	logger *zap.Logger
@@ -110,26 +105,20 @@ func NewProcessor(
 	signedInC chan *gossipv1.SignedVAAWithQuorum,
 	guardianSigner ecdsasigner.ECDSASigner,
 	gst *common.GuardianSetState,
-	devnetMode bool,
-	devnetNumGuardians uint,
-	devnetEthRPC string,
 	attestationEvents *reporter.AttestationEventReporter,
 	notifier *discord.DiscordNotifier,
 ) *Processor {
 
 	return &Processor{
-		lockC:              lockC,
-		setC:               setC,
-		sendC:              sendC,
-		obsvC:              obsvC,
-		signedInC:          signedInC,
-		injectC:            injectC,
-		guardianSigner:     guardianSigner,
-		gst:                gst,
-		devnetMode:         devnetMode,
-		devnetNumGuardians: devnetNumGuardians,
-		devnetEthRPC:       devnetEthRPC,
-		db:                 db,
+		lockC:          lockC,
+		setC:           setC,
+		sendC:          sendC,
+		obsvC:          obsvC,
+		signedInC:      signedInC,
+		injectC:        injectC,
+		guardianSigner: guardianSigner,
+		gst:            gst,
+		db:             db,
 
 		attestationEvents: attestationEvents,
 
