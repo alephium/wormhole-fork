@@ -17,7 +17,12 @@ RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
 
 ADD . .
 
+RUN apt-get update
+RUN apt-get install libcap2-bin -y
+
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
   go build -race -gcflags="all=-N -l" --ldflags '-extldflags "-Wl,--allow-multiple-definition"' -mod=readonly -o /guardiand github.com/certusone/wormhole/node
+
+RUN setcap cap_ipc_lock=+ep /guardiand
 
 ENTRYPOINT /guardiand

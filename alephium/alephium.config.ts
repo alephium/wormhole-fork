@@ -44,9 +44,9 @@ const configuration: Configuration<Settings> = {
 
     testnet: {
       networkId: 1,
-      // TODO: update config
-      nodeUrl: 'http://localhost:22973',
-      mnemonic: process.env.MNEMONIC as string,
+      nodeUrl: 'https://wallet-v15.testnet.alephium.org',
+      mnemonic:
+        'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 2,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
     },

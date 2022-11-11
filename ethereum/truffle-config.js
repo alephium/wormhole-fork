@@ -51,6 +51,8 @@ module.exports = {
       network_id: "5",
       gas: 4465030,
       gasPrice: 10000000000,
+      networkCheckTimeout: 50000000,
+      timeoutBlocks: 1500
     },
     binance: {
       provider: () => {
