@@ -7,6 +7,20 @@ export const CoreModule = '00000000000000000000000000000000000000000000000000000
 export const TokenBridgeModule = '000000000000000000000000000000000000000000546f6b656e427269646765'
 export const NFTBridgeModule = '00000000000000000000000000000000000000000000004e4654427269646765'
 
+export const TransferTokenPayloadId = 1
+export const AttestTokenPayloadId = 2
+export const TransferNFTPayloadId = 1
+
+export const CoreContractUpgradeActionId = 1
+export const GuardianSetUpgradeActionId = 2
+export const UpdateMessageFeeActionId = 3
+export const TransferFeeActionId = 4
+export const RegisterChainActionId = 1
+export const AppContractUpgradeActionId = 2
+export const DestroyUnexecutedSequencesActionId = 240
+export const UpdateMinimalConsistencyLevelActionId = 241
+export const UpdateRefundAddressActionId = 242
+
 export interface TransferNFT {
   type: 'TransferNFT'
   originAddress: Uint8Array // 32 bytes
@@ -403,7 +417,7 @@ function validateModule(module: Module, expected: Module, type: PayloadName) {
 export function deserializeTransferTokenPayload(payload: Uint8Array): TransferToken {
   validatePayloadSize(payload, 131, 'TransferToken')
   const reader = new Reader(payload)
-  validatePayloadId(reader.readUInt8(), 1, 'TransferToken')
+  validatePayloadId(reader.readUInt8(), TransferTokenPayloadId, 'TransferToken')
   return {
     type: 'TransferToken',
     amount: reader.readUInt256BE(),
@@ -416,7 +430,7 @@ export function deserializeTransferTokenPayload(payload: Uint8Array): TransferTo
 
 export function serializeTransferTokenPayload(payload: TransferToken): Uint8Array {
   const writer = new Writer(131)
-  writer.writeUInt8(1) // payloadId
+  writer.writeUInt8(TransferTokenPayloadId) // payloadId
   writer.writeUInt256BE(payload.amount)
   writer.writeBytes(payload.originAddress)
   writer.writeUInt16BE(payload.originChain)
@@ -435,7 +449,7 @@ export function serializeTransferTokenVAA(vaa: VAA<TransferToken>): Uint8Array {
 
 export function deserializeTransferNFTPayload(payload: Uint8Array): TransferNFT {
   const reader = new Reader(payload)
-  validatePayloadId(reader.readUInt8(), 1, 'TransferNFT')
+  validatePayloadId(reader.readUInt8(), TransferNFTPayloadId, 'TransferNFT')
   const transferNFT = {
     type: 'TransferNFT' as const,
     originAddress: reader.readBytes(32),
@@ -458,7 +472,7 @@ export function deserializeTransferNFTVAA(data: Uint8Array): VAA<TransferNFT> {
 
 export function serializeTransferNFTPayload(payload: TransferNFT): Uint8Array {
   const writer = new Writer(164 + payload.uri.length)
-  writer.writeUInt8(1) // payload id
+  writer.writeUInt8(TransferNFTPayloadId) // payload id
   writer.writeBytes(payload.originAddress)
   writer.writeUInt16BE(payload.originChain)
   writer.writeBytes(payload.symbol)
@@ -477,7 +491,7 @@ export function serializeTransferNFTVAA(vaa: VAA<TransferNFT>): Uint8Array {
 export function deserializeAttestTokenPayload(payload: Uint8Array): AttestToken {
   validatePayloadSize(payload, 100, 'AttestToken')
   const reader = new Reader(payload)
-  validatePayloadId(reader.readUInt8(), 2, 'AttestToken')
+  validatePayloadId(reader.readUInt8(), AttestTokenPayloadId, 'AttestToken')
   return {
     type: 'AttestToken',
     tokenId: reader.readBytes(32),
@@ -494,7 +508,7 @@ export function deserializeAttestTokenVAA(data: Uint8Array): VAA<AttestToken> {
 
 export function serializeAttestTokenPayload(payload: AttestToken): Uint8Array {
   const writer = new Writer(100)
-  writer.writeUInt8(2) // payload id
+  writer.writeUInt8(AttestTokenPayloadId) // payload id
   writer.writeBytes(payload.tokenId)
   writer.writeUInt16BE(payload.tokenChainId)
   writer.writeUInt8(payload.decimals)
@@ -508,7 +522,7 @@ export function serializeAttestTokenVAA(vaa: VAA<AttestToken>): Uint8Array {
 }
 
 function getContractUpgradeActionIdByModule(module: Module): number {
-  return module === 'Core' ? 1 : 2
+  return module === 'Core' ? CoreContractUpgradeActionId : AppContractUpgradeActionId
 }
 
 export function deserializeContractUpgradePayload(data: Uint8Array): ContractUpgrade<Module> {
@@ -565,7 +579,7 @@ export function serializeContractUpgradeVAA(vaa: VAA<ContractUpgrade<Module>>): 
 export function deserializeGuardianSetUpgradePayload(data: Uint8Array): GuardianSetUpgrade {
   const reader = new Reader(data)
   validateModule(reader.readModule(), 'Core', 'GuardianSetUpgrade')
-  validatePayloadId(reader.readUInt8(), 2, 'GuardianSetUpgrade')
+  validatePayloadId(reader.readUInt8(), GuardianSetUpgradeActionId, 'GuardianSetUpgrade')
   const newGuardianSetIndex = reader.readUInt32BE()
   const newGuardianSetSize = reader.readUInt8()
   const newGuardianSet = Array.from(Array(newGuardianSetSize).keys()).map(() => {
@@ -587,7 +601,7 @@ export function deserializeGuardianSetUpgradeVAA(data: Uint8Array): VAA<Guardian
 export function serializeGuardianSetUpgradePayload(payload: GuardianSetUpgrade): Uint8Array {
   const writer = new Writer(38 + payload.newGuardianSet.length * 20)
   writer.writeModule('Core')
-  writer.writeUInt8(2) // action id
+  writer.writeUInt8(GuardianSetUpgradeActionId) // action id
   writer.writeUInt32BE(payload.newGuardianSetIndex)
   writer.writeUInt8(payload.newGuardianSet.length)
   payload.newGuardianSet.forEach(guardian => {
@@ -604,7 +618,7 @@ export function deserializeUpdateMessageFeePayload(data: Uint8Array): UpdateMess
   validatePayloadSize(data, 65, 'UpdateMessageFee')
   const reader = new Reader(data)
   validateModule(reader.readModule(), 'Core', 'UpdateMessageFee')
-  validatePayloadId(reader.readUInt8(), 3, 'UpdateMessageFee')
+  validatePayloadId(reader.readUInt8(), UpdateMessageFeeActionId, 'UpdateMessageFee')
   const newMessageFee = reader.readUInt256BE()
   return {
     type: 'UpdateMessageFee',
@@ -620,7 +634,7 @@ export function deserializeUpdateMessageFeeVAA(data: Uint8Array): VAA<UpdateMess
 export function serializeUpdateMessageFeePayload(payload: UpdateMessageFee): Uint8Array {
   const writer = new Writer(65)
   writer.writeModule('Core')
-  writer.writeUInt8(3) // action id
+  writer.writeUInt8(UpdateMessageFeeActionId) // action id
   writer.writeUInt256BE(payload.newMessageFee)
   return writer.result()
 }
@@ -633,7 +647,7 @@ export function deserializeTransferFeePayload(data: Uint8Array): TransferFee {
   validatePayloadSize(data, 97, 'TransferFee')
   const reader = new Reader(data)
   validateModule(reader.readModule(), 'Core', 'TransferFee')
-  validatePayloadId(reader.readUInt8(), 4, 'TransferFee')
+  validatePayloadId(reader.readUInt8(), TransferFeeActionId, 'TransferFee')
   return {
     type: 'TransferFee',
     module: 'Core',
@@ -649,7 +663,7 @@ export function deserializeTransferFeeVAA(data: Uint8Array): VAA<TransferFee> {
 export function serializeTransferFeePayload(payload: TransferFee): Uint8Array {
   const writer = new Writer(97)
   writer.writeModule('Core')
-  writer.writeUInt8(4) // action id
+  writer.writeUInt8(TransferFeeActionId) // action id
   writer.writeUInt256BE(payload.amount)
   writer.writeBytes(payload.recipient)
   return writer.result()
@@ -738,7 +752,7 @@ export function deserializeRegisterChainPayload(payload: Uint8Array): RegisterCh
   if (module === 'Core') {
     throw new Error('Invalid RegisterChain module: Core')
   }
-  validatePayloadId(reader.readUInt8(), 1, 'RegisterChain')
+  validatePayloadId(reader.readUInt8(), RegisterChainActionId, 'RegisterChain')
   const emitterChainId = reader.readUInt16BE() as ChainId
   const emitterAddress = reader.readBytes(32)
   return {
@@ -768,7 +782,7 @@ export function deserializeNFTBridgeRegisterChainVAA(data: Uint8Array): VAA<Regi
 export function serializeRegisterChainPayload(payload: RegisterChain<'NFTBridge' | 'TokenBridge'>) {
   const writer = new Writer(67)
   writer.writeModule(payload.module)
-  writer.writeUInt8(1) // action id
+  writer.writeUInt8(RegisterChainActionId) // action id
   writer.writeUInt16BE(payload.emitterChainId)
   writer.writeBytes(payload.emitterAddress)
   return writer.result()
@@ -781,7 +795,7 @@ export function serializeRegisterChainVAA(vaa: VAA<RegisterChain<'NFTBridge' | '
 export function deserializeDestroyUnexecutedSequencesPayload(payload: Uint8Array): DestroyUnexecutedSequences {
   const reader = new Reader(payload)
   validateModule(reader.readModule(), 'TokenBridge', 'DestroyUnexecutedSequences')
-  validatePayloadId(reader.readUInt8(), 240, 'DestroyUnexecutedSequences')
+  validatePayloadId(reader.readUInt8(), DestroyUnexecutedSequencesActionId, 'DestroyUnexecutedSequences')
   const emitterChainId = reader.readUInt16BE() as ChainId
   const size = reader.readUInt16BE()
   validatePayloadSize(payload, 37 + size * 8, 'DestroyUnexecutedSequences')
@@ -803,7 +817,7 @@ export function deserializeDestroyUnexecutedSequencesVAA(data: Uint8Array): VAA<
 export function serializeDestroyUnexecutedSequencesPayload(payload: DestroyUnexecutedSequences): Uint8Array {
   const writer = new Writer(37 + payload.indexes.length * 8)
   writer.writeModule('TokenBridge')
-  writer.writeUInt8(240) // action id
+  writer.writeUInt8(DestroyUnexecutedSequencesActionId) // action id
   writer.writeUInt16BE(payload.emitterChainId)
   writer.writeUInt16BE(payload.indexes.length)
   payload.indexes.forEach(index => {
@@ -820,7 +834,7 @@ export function deserializeUpdateMinimalConsistencyLevelPayload(payload: Uint8Ar
   validatePayloadSize(payload, 34, 'UpdateMinimalConsistencyLevel')
   const reader = new Reader(payload)
   validateModule(reader.readModule(), 'TokenBridge', 'UpdateMinimalConsistencyLevel')
-  validatePayloadId(reader.readUInt8(), 241, 'UpdateMinimalConsistencyLevel')
+  validatePayloadId(reader.readUInt8(), UpdateMinimalConsistencyLevelActionId, 'UpdateMinimalConsistencyLevel')
   const newConsistencyLevel = reader.readUInt8()
   return {
     type: 'UpdateMinimalConsistencyLevel',
@@ -836,7 +850,7 @@ export function deserializeUpdateMinimalConsistencyLevelVAA(data: Uint8Array): V
 export function serializeUpdateMinimalConsistencyLevelPayload(payload: UpdateMinimalConsistencyLevel): Uint8Array {
   const writer = new Writer(34)
   writer.writeModule('TokenBridge')
-  writer.writeUInt8(241)
+  writer.writeUInt8(UpdateMinimalConsistencyLevelActionId)
   writer.writeUInt8(payload.newConsistencyLevel)
   return writer.result()
 }
@@ -848,7 +862,7 @@ export function serializeUpdateMinimalConsistencyLevelVAA(vaa: VAA<UpdateMinimal
 export function deserializeUpdateRefundAddressPayload(payload: Uint8Array): UpdateRefundAddress {
   const reader = new Reader(payload)
   validateModule(reader.readModule(), 'TokenBridge', 'UpdateRefundAddress')
-  validatePayloadId(reader.readUInt8(), 242, 'UpdateRefundAddress')
+  validatePayloadId(reader.readUInt8(), UpdateRefundAddressActionId, 'UpdateRefundAddress')
   const size = reader.readUInt16BE()
   validatePayloadSize(payload, 35 + size, 'UpdateRefundAddress')
   const newRefundAddress = reader.readBytes(size)
@@ -866,7 +880,7 @@ export function deserializeUpdateRefundAddressVAA(data: Uint8Array): VAA<UpdateR
 export function serializeUpdateRefundAddressPayload(payload: UpdateRefundAddress): Uint8Array {
   const writer = new Writer(35)
   writer.writeModule('TokenBridge')
-  writer.writeUInt8(242)
+  writer.writeUInt8(UpdateRefundAddressActionId)
   writer.writeUInt16BE(payload.newRefundAddress.length)
   return Buffer.concat([writer.result(), payload.newRefundAddress])
 }
@@ -876,7 +890,7 @@ export function serializeUpdateRefundAddressVAA(vaa: VAA<UpdateRefundAddress>): 
 }
 
 function deserializeApplicationVAA(signedVAA: Uint8Array, payloadId: number, payloadSize: number) {
-  if (payloadId === 2) {
+  if (payloadId === AttestTokenPayloadId) {
     return deserializeAttestTokenVAA(signedVAA)
   }
   if (payloadSize === 131) {
@@ -887,16 +901,16 @@ function deserializeApplicationVAA(signedVAA: Uint8Array, payloadId: number, pay
 
 function deserializeCoreGovernanceVAA(signedVAA: Uint8Array, actionId: number, targetChainId: ChainId) {
   switch (actionId) {
-    case 1:
+    case CoreContractUpgradeActionId:
       if (targetChainId === CHAIN_ID_ALEPHIUM) {
         return deserializeAlphCoreContractUpgradeVAA(signedVAA)
       }
       return deserializeCoreContractUpgradeVAA(signedVAA)
-    case 2:
+    case GuardianSetUpgradeActionId:
       return deserializeGuardianSetUpgradeVAA(signedVAA)
-    case 3:
+    case UpdateMessageFeeActionId:
       return deserializeUpdateMessageFeeVAA(signedVAA)
-    case 4:
+    case TransferFeeActionId:
       return deserializeTransferFeeVAA(signedVAA)
     default:
       throw new Error(`Invalid CoreGovernancePayload action id ${actionId}`)
@@ -905,18 +919,18 @@ function deserializeCoreGovernanceVAA(signedVAA: Uint8Array, actionId: number, t
 
 function deserializeTokenBridgeGovernanceVAA(signedVAA: Uint8Array, actionId: number, targetChainId: ChainId) {
   switch (actionId) {
-    case 1:
+    case RegisterChainActionId:
       return deserializeTokenBridgeRegisterChainVAA(signedVAA)
-    case 2:
+    case AppContractUpgradeActionId:
       if (targetChainId === CHAIN_ID_ALEPHIUM) {
         return deserializeAlphTokenBridgeContractUpgradeVAA(signedVAA)
       }
       return deserializeTokenBridgeContractUpgradeVAA(signedVAA)
-    case 240:
+    case DestroyUnexecutedSequencesActionId:
       return deserializeDestroyUnexecutedSequencesVAA(signedVAA)
-    case 241:
+    case UpdateMinimalConsistencyLevelActionId:
       return deserializeUpdateMinimalConsistencyLevelVAA(signedVAA)
-    case 242:
+    case UpdateRefundAddressActionId:
       return deserializeUpdateRefundAddressVAA(signedVAA)
     default:
       throw new Error(`Invalid TokenBridgeGovernancePayload action id ${actionId}`)
@@ -925,9 +939,9 @@ function deserializeTokenBridgeGovernanceVAA(signedVAA: Uint8Array, actionId: nu
 
 function deserializeNFTBridgeGovernanceVAA(signedVAA: Uint8Array, actionId: number) {
   switch (actionId) {
-    case 1:
+    case RegisterChainActionId:
       return deserializeNFTBridgeRegisterChainVAA(signedVAA)
-    case 2:
+    case AppContractUpgradeActionId:
       return deserializeNFTBridgeContractUpgradeVAA(signedVAA)
     default:
       throw new Error(`Invalid NFTBridgeGovernancePayload action id ${actionId}`)
