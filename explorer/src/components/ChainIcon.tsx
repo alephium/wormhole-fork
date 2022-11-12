@@ -9,6 +9,7 @@ import oasisIcon from "../images/oasis.svg";
 import fantomIcon from "../images/fantom.svg";
 import auroraIcon from "../images/aurora.svg";
 import karuraIcon from "../images/karura.svg"
+import alephiumIcon from "../images/alephium.svg"
 import {
   ChainId,
   CHAIN_ID_AVAX,
@@ -21,8 +22,9 @@ import {
   CHAIN_ID_FANTOM,
   CHAIN_ID_AURORA,
   CHAIN_ID_KARURA,
+  CHAIN_ID_ALEPHIUM,
 } from "alephium-wormhole-sdk";
-import { chainEnums } from "../utils/consts";
+import { ChainID } from "../utils/consts";
 import { Box } from "@mui/material";
 
 const chainIdToSrc = {
@@ -36,6 +38,7 @@ const chainIdToSrc = {
   [CHAIN_ID_FANTOM]: fantomIcon,
   [CHAIN_ID_AURORA]: auroraIcon,
   [CHAIN_ID_KARURA]: karuraIcon,
+  [CHAIN_ID_ALEPHIUM]: alephiumIcon
 };
 
 const ChainIcon = ({ chainId }: { chainId: ChainId }) =>
@@ -51,7 +54,7 @@ const ChainIcon = ({ chainId }: { chainId: ChainId }) =>
     >
       <img
         src={chainIdToSrc[chainId]}
-        alt={chainEnums[chainId] || ""}
+        alt={ChainID[chainId] || ""}
         style={{ width: 16 }}
       />
     </Box>

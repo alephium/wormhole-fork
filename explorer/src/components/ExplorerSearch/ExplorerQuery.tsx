@@ -20,6 +20,7 @@ export interface VAA {
     ConsistencyLevel: number,
     EmitterChain: number,
     EmitterAddress: string,
+    TargetChain: number,
     Payload: string // base64 encoded byte array
 }
 export interface TokenTransferPayload {
@@ -27,7 +28,6 @@ export interface TokenTransferPayload {
     OriginAddress: string
     OriginChain: string,
     TargetAddress: string,
-    TargetChain: string,
 }
 export interface TransferDetails {
     Amount: string,             // "1530.000000",
@@ -46,6 +46,7 @@ export interface BigTableMessage {
     QuorumTime?: string  // "2021-08-11 00:16:11.757 +0000 UTC"
     EmitterChain: keyof ChainIDs
     EmitterAddress: string
+    TargetChain: keyof ChainIDs
     Sequence: string
     TokenTransferPayload?: TokenTransferPayload
     TransferDetails?: TransferDetails
@@ -54,6 +55,7 @@ export interface BigTableMessage {
 interface ExplorerQuery {
     emitterChain?: number,
     emitterAddress?: string,
+    targetChain?: number,
     sequence?: string,
     txId?: string,
 }
@@ -69,6 +71,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
     const fetchMessage = async (
         emitterChain: ExplorerQuery["emitterChain"],
         emitterAddress: ExplorerQuery["emitterAddress"],
+        targetChain: ExplorerQuery["targetChain"],
         sequence: ExplorerQuery["sequence"],
         txId: ExplorerQuery["txId"]) => {
         let paddedAddress: string = ""
@@ -77,7 +80,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         let base = `${activeNetwork.endpoints.bigtableFunctionsBase}`
         let url = ""
 
-        if (emitterChain && emitterAddress && sequence) {
+        if (emitterChain && emitterAddress && targetChain && sequence) {
             if (emitterChain === chainIDs["solana"]) {
                 if (emitterAddress.length < 64) {
                     try {
@@ -119,7 +122,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
             } else {
                 paddedSequence = sequence
             }
-            url = `${base}readrow?emitterChain=${emitterChain}&emitterAddress=${paddedAddress}&sequence=${paddedSequence}`
+            url = `${base}readrow?emitterChain=${emitterChain}&emitterAddress=${paddedAddress}&targetChain=${targetChain}&sequence=${paddedSequence}`
         } else if (txId) {
             let transformedTxId = txId
             if (isHexString(txId)) {
@@ -180,12 +183,12 @@ const ExplorerQuery = (props: ExplorerQuery) => {
     }
 
     const refreshCallback = () => {
-        fetchMessage(props.emitterChain, props.emitterAddress, props.sequence, props.txId)
+        fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
     }
 
     if (polling && !pollInterval) {
         let interval = setInterval(() => {
-            fetchMessage(props.emitterChain, props.emitterAddress, props.sequence, props.txId)
+            fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
         }, 3000)
         setPollInterval(interval)
     } else if (!polling && pollInterval) {
@@ -200,7 +203,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         setLastFetched(undefined)
         if ((props.emitterChain && props.emitterAddress && props.sequence) || props.txId) {
             setLoading(true)
-            fetchMessage(props.emitterChain, props.emitterAddress, props.sequence, props.txId)
+            fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
         }
 
     }, [props.emitterChain, props.emitterAddress, props.sequence, props.txId, activeNetwork.endpoints.bigtableFunctionsBase])

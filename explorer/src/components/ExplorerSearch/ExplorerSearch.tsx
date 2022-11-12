@@ -14,11 +14,12 @@ const ExplorerSearch = ({ location }: ExplorerSearchProps) => {
         if (location.search) {
             const searchParams = new URLSearchParams(location.search);
 
-            const chain = searchParams.get("emitterChain");
+            const emitterChain = searchParams.get("emitterChain");
             const address = searchParams.get("emitterAddress");
+            const targetChain = searchParams.get("targetChain")
             const seq = searchParams.get("sequence");
             const tx = searchParams.get("txId");
-            if (!tx && chain && address && seq) {
+            if (!tx && emitterChain && address && targetChain && seq) {
                 setShowMessageIdForm(true);
             }
         } else {
