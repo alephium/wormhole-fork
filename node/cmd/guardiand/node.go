@@ -155,8 +155,6 @@ var (
 
 	cloudKMSEnabled *bool
 	cloudKMSKeyName *string
-
-	guardianCredentialsFile *string
 )
 
 func init() {
@@ -272,8 +270,6 @@ func init() {
 
 	cloudKMSEnabled = NodeCmd.Flags().Bool("cloudKMSEnabled", false, "Turn on Cloud KMS support for Guardian Key")
 	cloudKMSKeyName = NodeCmd.Flags().String("cloudKMSKeyName", "", "Cloud KMS key name for Guardian Key")
-
-	guardianCredentialsFile = NodeCmd.Flags().String("guardianCredentialsFile", "", "Path to json Service Account key")
 }
 
 var (
@@ -597,9 +593,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 		if *bigTableTopicName == "" {
 			logger.Fatal("Please specify --bigTableTopicName")
-		}
-		if *guardianCredentialsFile == "" {
-			logger.Fatal("Please specify --guardianCredentialsFile")
 		}
 	}
 	if *cloudKMSEnabled {
@@ -1036,7 +1029,6 @@ func runNode(cmd *cobra.Command, args []string) {
 				GcpInstanceName: *bigTableInstanceName,
 				TableName:       *bigTableTableName,
 				TopicName:       *bigTableTopicName,
-				GcpKeyFilePath:  *guardianCredentialsFile,
 			}
 			if err := supervisor.Run(ctx, "bigtable", reporter.BigTableWriter(attestationEvents, bigTableConnection)); err != nil {
 				return err

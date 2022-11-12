@@ -2,7 +2,6 @@ import { Parser } from "binary-parser"
 import { ethers } from "ethers"
 import { solidityKeccak256 } from "ethers/lib/utils"
 import * as elliptic from "elliptic"
-
 import { ChainId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk"
 import {
     AlphTokenBridgeExtensions,
@@ -10,9 +9,6 @@ import {
     serialiseAlphTokenBridgeExtensions
 } from './alph'
 import { P } from './parser'
-import { KeyManagementServiceClient } from "@google-cloud/kms"
-import { signatureImport, signatureNormalize } from 'secp256k1'
-import { createPublicKey } from 'crypto'
 
 type Modules = 'Core' | 'TokenBridge' | 'NFTBridge'
 
@@ -211,7 +207,7 @@ function vaaBody(vaa: VAA<Payload>) {
     return body.join("")
 }
 
-export function signWithKey(signers: string[], vaa: VAA<Payload>): Signature[] {
+export function sign(signers: string[], vaa: VAA<Payload>): Signature[] {
     const body = vaaBody(vaa)
     const hash = solidityKeccak256(["bytes"], [solidityKeccak256(["bytes"], ["0x" + body])])
     const ec = new elliptic.ec("secp256k1")
@@ -229,68 +225,6 @@ export function signWithKey(signers: string[], vaa: VAA<Payload>): Signature[] {
             signature: packed
         }
     })
-}
-
-const kmsClient = new KeyManagementServiceClient({
-    keyFile: process.env.GUARDIAN_CREDENTIALS_FILE
-})
-
-export async function signWithKMS(signers: string[], vaa: VAA<Payload>): Promise<Signature[]> {
-    const body = vaaBody(vaa)
-    const hash = solidityKeccak256(["bytes"], [solidityKeccak256(["bytes"], ["0x" + body])])
-    const digest = Buffer.from(hash.substr(2), "hex")
-
-    var signatures: Signature[] = []
-    for (let i = 0; i < signers.length; i++) {
-        const keyName = signers[i]
-        const [signResponse] = await kmsClient.asymmetricSign({
-            name: keyName,
-            digest: {
-                sha256: digest
-            }
-        })
-
-        const pubKey = await kmsClient.getPublicKey({ name: keyName })
-        const pubKeyObj = createPublicKey(pubKey[0].pem)
-        let pubKeyBuf = pubKeyObj.export({ format: "der", type: "spki" });
-        pubKeyBuf = pubKeyBuf.slice(pubKeyBuf.length - 65)
-
-        let _64 = signatureImport(signResponse.signature as Uint8Array);
-        const normalized = signatureNormalize(_64);
-
-        const r = normalized.slice(0, 32)
-        const s = normalized.slice(32, 64)
-        const v = calculateV(normalized, digest, pubKeyBuf);
-
-        const packed = [
-            Buffer.from(r).toString("hex").padStart(64, "0"),
-            Buffer.from(s).toString("hex").padStart(64, "0"),
-            encode("uint8", v)
-        ].join("")
-
-        signatures.push({
-            guardianSetIndex: i,
-            signature: packed
-        })
-    }
-
-    return signatures
-}
-
-function calculateV(signature: Uint8Array, hash: Buffer, uncompressPubKey: Buffer): number {
-    const { ecdsaRecover } = require("secp256k1");
-    let recId = -1;
-
-    for (let i = 0; i < 2; i++) {
-        const rec = ecdsaRecover(signature, i, hash, false);
-        if (Buffer.compare(rec, uncompressPubKey) == 0) {
-            recId = i;
-            break;
-        }
-    }
-    if (recId == -1)
-        throw new Error("Impossible to calculare the recovery id. should not happen");
-    return recId;
 }
 
 // Parse an address of given length, and render it as hex
