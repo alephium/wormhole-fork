@@ -31,7 +31,6 @@ function makeVAA(
   targetChain: number,
   emitterAddress: string,
   signers: string[],
-  keyNames: string[],
   sequence: string | undefined,
   p: Payload
 ): VAA<Payload> {
@@ -65,13 +64,6 @@ yargs(hideBin(process.argv))
             alias: "g",
             required: false,
             describe: "Guardians' secret keys",
-            default: "",
-            type: "string",
-          })
-          .option("guardian-key-name", {
-            alias: "j",
-            required: false,
-            describe: "Guardians' KMS key names",
             default: "",
             type: "string",
           })
@@ -126,7 +118,6 @@ yargs(hideBin(process.argv))
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
-                argv["guardian-key-name"].split(","),
                 argv["sequence"],
                 payload
               );
@@ -173,7 +164,6 @@ yargs(hideBin(process.argv))
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
-                argv["guardian-key-name"].split(","),
                 argv["sequence"],
                 payload
               );
@@ -226,7 +216,6 @@ yargs(hideBin(process.argv))
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
-                argv["guardian-key-name"].split(","),
                 sequence,
                 payload
               )

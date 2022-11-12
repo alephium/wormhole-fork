@@ -214,7 +214,7 @@ export function sign(signers: string[], vaa: VAA<Payload>): Signature[] {
 
     return signers.map((signer, i) => {
         const key = ec.keyFromPrivate(signer)
-        const signature = key.sign(Buffer.from(hash.substr(2), "hex"), { canonical: true })
+        const signature = key.sign(Buffer.from(hash.slice(2), "hex"), { canonical: true })
         const packed = [
             signature.r.toString("hex").padStart(64, "0"),
             signature.s.toString("hex").padStart(64, "0"),

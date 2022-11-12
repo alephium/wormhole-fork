@@ -34,12 +34,6 @@ COPY ethereum/.env.test ./ethereum/.env.test
 COPY alephium/.env.test ./alephium/.env.test
 
 ENV NUM_GUARDIANS=$num_guardians
-# WARNING:
-# Credentials file should only be used when generating VAAs for testnet and mainnet, it
-# should never be checked in!
-COPY README.md sensitive/credentials-file.json* .
-
-ENV GUARDIAN_CREDENTIALS_FILE="/credentials-file.json"
 
 # run guardian-set-init.sh to create env files with the init state for NUM_GUARDIANS
 RUN ./scripts/guardian-set-init.sh $NUM_GUARDIANS
