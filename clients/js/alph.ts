@@ -141,6 +141,7 @@ type PayloadId<Name extends PayloadIdName> = typeof PayloadIds[Name]
 
 export interface DestroyUnexecutedSequences {
   payloadId: PayloadId<'DestroyUnexecutedSequencesId'>
+  emitterChain: number
   sequences: number[]
 }
 
@@ -150,6 +151,7 @@ const destroyUnexecutedSequencesParser: P<DestroyUnexecutedSequences> = new P(
     .uint8('payloadId', {
       assert: PayloadIds.DestroyUnexecutedSequencesId
     })
+    .uint16('emitterChain')
     .uint16('length')
     .array('sequences', {
       length: 'length',
@@ -165,6 +167,7 @@ const destroyUnexecutedSequencesParser: P<DestroyUnexecutedSequences> = new P(
 function serialiseDestroyUnexecutedSequences(action: DestroyUnexecutedSequences): string {
   const body = [
     encodeNumber(action.payloadId, 1),
+    encodeNumber(action.emitterChain, 2),
     encodeNumber(action.sequences.length, 2),
     action.sequences.map(s => encodeNumber(s, 8)).join('')
   ]

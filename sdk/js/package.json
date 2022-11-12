@@ -1,6 +1,6 @@
 {
   "name": "alephium-wormhole-sdk",
-  "version": "0.1.0-rc0",
+  "version": "0.1.0-rc1",
   "description": "SDK for interacting with Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",
