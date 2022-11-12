@@ -10,7 +10,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
-	p "github.com/certusone/wormhole/event_database/cloud_functions"
+	p "github.com/alephium/wormhole-fork/event_database/cloud_functions"
 )
 
 func createAndSubscribe(client *pubsub.Client, topicName, subscriptionName string, handler func(ctx context.Context, m p.PubSubMessage) error) {
