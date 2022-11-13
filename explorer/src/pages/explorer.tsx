@@ -17,6 +17,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 interface ExplorerQueryValues {
   emitterChain: number;
   emitterAddress: string;
+  targetChain: number;
   sequence: string;
   txId: string;
 }
@@ -26,6 +27,8 @@ const ExplorerPage = ({ location }: PageProps) => {
     React.useState<ExplorerQueryValues["emitterChain"]>();
   const [emitterAddress, setEmitterAddress] =
     React.useState<ExplorerQueryValues["emitterAddress"]>();
+  const [targetChain, setTargetChain] =
+    React.useState<ExplorerQueryValues["targetChain"]>();
   const [sequence, setSequence] =
     React.useState<ExplorerQueryValues["sequence"]>();
   const [txId, setTxId] = React.useState<ExplorerQueryValues["txId"]>();
@@ -37,17 +40,21 @@ const ExplorerPage = ({ location }: PageProps) => {
       // take searchparams from the URL and set the values in the form
       const searchParams = new URLSearchParams(location.search);
 
-      const chain = searchParams.get("emitterChain");
+      const emitterChainParam = searchParams.get("emitterChain");
       const address = searchParams.get("emitterAddress");
+      const targetChainParam = searchParams.get("targetChain")
       const seq = searchParams.get("sequence");
       const tx = searchParams.get("txId");
 
       // if the search params are different form values, update state
-      if (Number(chain) !== emitterChain) {
-        setEmitterChain(Number(chain) || undefined);
+      if (Number(emitterChainParam) !== emitterChain) {
+        setEmitterChain(Number(emitterChainParam) || undefined);
       }
       if (address !== emitterAddress) {
         setEmitterAddress(address || undefined);
+      }
+      if (Number(targetChainParam) !== targetChain) {
+        setTargetChain(Number(targetChainParam) || undefined);
       }
       if (seq !== sequence) {
         setSequence(seq || undefined);
@@ -59,6 +66,7 @@ const ExplorerPage = ({ location }: PageProps) => {
       // clear state
       setEmitterChain(undefined);
       setEmitterAddress(undefined);
+      setTargetChain(undefined)
       setSequence(undefined);
       setTxId(undefined);
     }
@@ -180,7 +188,7 @@ const ExplorerPage = ({ location }: PageProps) => {
 
             <ExplorerSearch location={location} />
 
-            {!(emitterChain && emitterAddress && sequence) && // if there is no messageId query &&
+            {!(emitterChain && emitterAddress && targetChain && sequence) && // if there is no messageId query &&
               !txId && (                                      // if there is no transactionId query
                 <ExplorerStats
                   emitterChain={emitterChain}

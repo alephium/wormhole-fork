@@ -19,6 +19,7 @@ export const chainEnums = [
   "Fantom",
   "Karura",
   "Acala",
+  "Alephium"
 ];
 
 export interface ChainIDs {
@@ -72,7 +73,7 @@ export enum ChainID {
   Fantom,
   Karura,
   Acala,
-  Alephium,
+  Alephium = 255,
 }
 export type ChainName = keyof ChainIDs;
 export type ChainIDNumber = ChainIDs[ChainName];

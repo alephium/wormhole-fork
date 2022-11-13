@@ -12,7 +12,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/holiman/uint256"
 )
 
@@ -93,7 +93,6 @@ type (
 		OriginAddress [32]byte
 		OriginChain   uint16
 		TargetAddress [32]byte
-		TargetChain   uint16
 	}
 	NFTTransfer struct {
 		PayloadId     uint8
@@ -104,7 +103,6 @@ type (
 		TokenId       uint256.Int
 		URI           []byte
 		TargetAddress [32]byte
-		TargetChain   uint16
 	}
 	AssetMeta struct {
 		PayloadId    uint8
@@ -136,10 +134,6 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 
 	if err := binary.Read(reader, binary.BigEndian, &tt.TargetAddress); err != nil {
 		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
-	}
-
-	if err := binary.Read(reader, binary.BigEndian, &tt.TargetChain); err != nil {
-		return nil, fmt.Errorf("failed to read TargetChain: %w", err)
 	}
 
 	return tt, nil
@@ -188,10 +182,6 @@ func DecodeNFTTransfer(data []byte) (*NFTTransfer, error) {
 		return nil, fmt.Errorf("failed to read : %w", err)
 	}
 
-	if err := binary.Read(reader, binary.BigEndian, &nt.TargetChain); err != nil {
-		return nil, fmt.Errorf("failed to read : %w", err)
-	}
-
 	return nt, nil
 }
 
@@ -227,9 +217,9 @@ func DecodeAssetMeta(data []byte) (*AssetMeta, error) {
 }
 
 // TEMP: until this https://forge.certus.one/c/wormhole/+/1850 lands
-func makeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, sequence uint64) string {
+func MakeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, targetChain vaa.ChainID, sequence uint64) string {
 	// left-pad the sequence with zeros to 16 characters, because bigtable keys are stored lexicographically
-	return fmt.Sprintf("%d:%s:%016d", emitterChain, emitterAddress, sequence)
+	return fmt.Sprintf("%d:%s:%d:%016d", emitterChain, emitterAddress, targetChain, sequence)
 }
 func writePayloadToBigTable(ctx context.Context, rowKey string, colFam string, mutation *bigtable.Mutation, forceWrite bool) error {
 	mut := mutation
@@ -296,7 +286,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 	}
 
 	// create the bigtable identifier from the VAA data
-	rowKey := makeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.Sequence)
+	rowKey := MakeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.TargetChain, signedVaa.Sequence)
 	emitterHex := strings.ToLower(signedVaa.EmitterAddress.String())
 	payloadId := int(signedVaa.Payload[0])
 
@@ -332,9 +322,8 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "OriginAddress", ts, []byte(hex.EncodeToString(payload.OriginAddress[:])))
 			mutation.Set(colFam, "OriginChain", ts, []byte(fmt.Sprint(payload.OriginChain)))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
-			mutation.Set(colFam, "TargetChain", ts, []byte(fmt.Sprint(payload.TargetChain)))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			if writeErr != nil {
@@ -416,9 +405,8 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "TokenId", ts, payload.TokenId.Bytes())
 			mutation.Set(colFam, "URI", ts, TrimUnicodeFromByteArray(payload.URI))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
-			mutation.Set(colFam, "TargetChain", ts, []byte(fmt.Sprint(payload.TargetChain)))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			return writeErr

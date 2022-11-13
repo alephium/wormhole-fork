@@ -63,7 +63,8 @@ guardiansPrivate=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | 
 # create a CSV string with the private keys of the guardians in the guardianset, that will be used to create registration VAAs
 guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(",")')
 
-guardianSignerFlag="-g ${guardiansPrivateCSV}"
+guardiansKeyName=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].keyName]' $addressesJson)
+guardiansKeyNameCSV=$( echo ${guardiansKeyName} | jq --raw-output -c  '. | join(",")')
 
 # write the lists of keys to the env files
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate
@@ -73,7 +74,7 @@ if [[ "${numGuardians}" -gt "1" ]]; then
     echo "creating update guardian set vaa"
     newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
     newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
-    updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -s 0 ${guardianSignerFlag})
+    updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
     updateGuardianSet="UPDATE_GUARDIAN_SET_VAA"
     upsert_env_file $ethFile $updateGuardianSet $updateGuardianSetVAA
     upsert_env_file $alphFile $updateGuardianSet $updateGuardianSetVAA
@@ -96,13 +97,13 @@ if [[ ! -d ./clients/js/node_modules ]]; then
     npm ci --prefix clients/js
 fi
 # invoke clients/token_bridge commands to create registration VAAs
-ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -s 0 ${guardianSignerFlag})
-bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -s 1 ${guardianSignerFlag})
-alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -s 2 ${guardianSignerFlag})
+ethTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
+bscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 1)
+alphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV} -s 2)
 
 # 5) create nft bridge registration VAAs
 echo "generating contract registration VAAs for nft bridges"
-ethNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c ethereum -a ${ethNFTBridge} ${guardianSignerFlag})
+ethNFTBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m NFTBridge -c ethereum -a ${ethNFTBridge} -g ${guardiansPrivateCSV})
 
 # 6) write the registration VAAs to env files
 echo "writing VAAs to .env files"

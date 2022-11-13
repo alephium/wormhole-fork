@@ -8,10 +8,21 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
+
+func toChainID(str string) (vaa.ChainID, error) {
+	lowercaseStr := strings.ToLower((str))
+	chainId, err := strconv.Atoi(lowercaseStr)
+	if err == nil {
+		return vaa.ChainID(chainId), nil
+	}
+	return vaa.ChainIDFromString(lowercaseStr)
+}
 
 // fetch a single row by the row key
 func ReadRow(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +38,7 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 	// Set CORS headers for the main request.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var emitterChain, emitterAddress, sequence, rowKey string
+	var emitterChain, emitterAddress, targetChain, sequence, rowKey string
 
 	// allow GET requests with querystring params, or POST requests with json body.
 	switch r.Method {
@@ -35,6 +46,7 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 		queryParams := r.URL.Query()
 		emitterChain = queryParams.Get("emitterChain")
 		emitterAddress = queryParams.Get("emitterAddress")
+		targetChain = queryParams.Get("targetChain")
 		sequence = queryParams.Get("sequence")
 
 		readyCheck := queryParams.Get("readyCheck")
@@ -46,8 +58,8 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// check for empty values
-		if emitterChain == "" || emitterAddress == "" || sequence == "" {
-			fmt.Fprint(w, "query params ['emitterChain', 'emitterAddress', 'sequence'] cannot be empty")
+		if emitterChain == "" || emitterAddress == "" || targetChain == "" || sequence == "" {
+			fmt.Fprint(w, "query params ['emitterChain', 'emitterAddress', 'targetChain', 'sequence'] cannot be empty")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -55,6 +67,7 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 		// declare request body properties
 		var d struct {
 			EmitterChain   string `json:"emitterChain"`
+			TargetChain    string `json:"targetChain"`
 			EmitterAddress string `json:"emitterAddress"`
 			Sequence       string `json:"sequence"`
 		}
@@ -73,13 +86,14 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// check for empty values
-		if d.EmitterChain == "" || d.EmitterAddress == "" || d.Sequence == "" {
-			fmt.Fprint(w, "body values ['emitterChain', 'emitterAddress', 'sequence'] cannot be empty")
+		if d.EmitterChain == "" || d.EmitterAddress == "" || d.TargetChain == "" || d.Sequence == "" {
+			fmt.Fprint(w, "body values ['emitterChain', 'emitterAddress', 'targetChain', 'sequence'] cannot be empty")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		emitterChain = d.EmitterChain
 		emitterAddress = d.EmitterAddress
+		targetChain = d.TargetChain
 		sequence = d.Sequence
 	default:
 		http.Error(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
@@ -87,25 +101,28 @@ func ReadRow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// pad sequence to 16 characters
-	if len(sequence) <= 15 {
-		sequence = fmt.Sprintf("%016s", sequence)
-	}
 	// convert chain name to chainID
-	if len(emitterChain) > 1 {
-		chainNameMap := map[string]string{
-			"solana":   "1",
-			"ethereum": "2",
-			"terra":    "3",
-			"bsc":      "4",
-			"polygon":  "5",
-		}
-		lowercaseChain := strings.ToLower(emitterChain)
-		if _, ok := chainNameMap[lowercaseChain]; ok {
-			emitterChain = chainNameMap[lowercaseChain]
-		}
+	emitterChainId, err := toChainID(emitterChain)
+	if err != nil {
+		http.Error(w, "Invalid emitter chain", http.StatusBadRequest)
+		return
 	}
-	rowKey = emitterChain + ":" + emitterAddress + ":" + sequence
+	targetChainId, err := toChainID(targetChain)
+	if err != nil {
+		http.Error(w, "Invalid target chain", http.StatusBadRequest)
+		return
+	}
+	seq, err := strconv.ParseUint(sequence, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid sequence", http.StatusBadRequest)
+		return
+	}
+	emitterAddr, err := vaa.StringToAddress(emitterAddress)
+	if err != nil {
+		http.Error(w, "Invalid emitter address", http.StatusBadRequest)
+		return
+	}
+	rowKey = MakeRowKey(emitterChainId, emitterAddr, targetChainId, seq)
 
 	row, err := tbl.ReadRow(r.Context(), rowKey, bigtable.RowFilter(bigtable.LatestNFilter(1)))
 	if err != nil {

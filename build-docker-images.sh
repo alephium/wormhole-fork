@@ -19,7 +19,7 @@ docker build --target const-export -f Dockerfile.const -o type=local,dest=. --bu
 
 # Build guardian image (used for both guardian & spy)
 pushd node
-docker build . -t liuhongchao/guardiand:$VERSION
+docker build . -t wormhole/guardiand:$VERSION
 popd
 
 ## Build eth-node image
@@ -27,27 +27,21 @@ pushd ethereum
 # cp .env.test .env
 git apply 1conf.patch
 # git apply truffle-config.patch
-docker build . -t liuhongchao/eth-node:$VERSION
+docker build . -t wormhole/eth-node:$VERSION
 git apply -R 1conf.patch
 # git apply -R truffle-config.patch
 popd
 
 pushd alephium
-docker build -f Dockerfile.automine . -t liuhongchao/automine:$VERSION
+docker build -f Dockerfile.automine . -t wormhole/automine:$VERSION
 popd
 
 ## Build Bridge UI
 pushd bridge_ui
-docker build . -t liuhongchao/bridge-ui:$VERSION
+docker build . -t wormhole/bridge-ui:$VERSION
 popd
 
 ## Build Wormhole Explorer
 pushd explorer
-docker build . -t liuhongchao/wormhole-explorer:$VERSION
+docker build . -t wormhole/wormhole-explorer:$VERSION
 popd
-
-#docker push liuhongchao/guardiand:$VERSION
-#docker push liuhongchao/eth-node:$VERSION
-#docker push liuhongchao/automine:$VERSION
-#docker push liuhongchao/bridge-ui:$VERSION
-#docker push liuhongchao/wormhole-explorer:$VERSION

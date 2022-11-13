@@ -1,6 +1,6 @@
 import { Box, Card, Typography } from "@mui/material";
 import React from "react";
-import { chainEnums, chainIDs } from "../../utils/consts";
+import { ChainID, chainIDs } from "../../utils/consts";
 import { chainColors } from "../../utils/explorer";
 import DailyCountBarChart from "./DailyCountBarChart";
 import DailyNotionalBarChart from "./DailyNotionalBarChart";
@@ -98,7 +98,7 @@ const PastWeekCard: React.FC<PastWeekCardProps> = ({
                 display: "inline-block",
               }}
             />
-            <div>&nbsp;{chainEnums[chainId]}</div>
+            <div>&nbsp;{ChainID[chainId]}</div>
           </Box>
         ))}
       </div>

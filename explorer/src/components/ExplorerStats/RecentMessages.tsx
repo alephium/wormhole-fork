@@ -169,6 +169,7 @@ const RecentMessages = (props: RecentMessagesProps) => {
                         base64VAA={item.SignedVAABytes}
                         emitterChainName={item.EmitterChain}
                         emitterAddress={item.EmitterAddress}
+                        targetChainName={item.TargetChain}
                         showType={true}
                         showSummary={true}
                         transferDetails={item.TransferDetails}

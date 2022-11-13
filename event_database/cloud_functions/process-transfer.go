@@ -10,7 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"cloud.google.com/go/bigtable"
@@ -75,8 +76,12 @@ func transformHexAddressToNative(chain vaa.ChainID, address string) string {
 		// TODO
 		return ""
 	case vaa.ChainIDAlephium:
-		addr := fmt.Sprintf("0x%v", address[(len(address)-40):])
-		return addr
+		data, err := hex.DecodeString(address)
+		if err != nil {
+			log.Printf("failed to decode hex address: %v\n", err)
+			return ""
+		}
+		return base58.Encode(append([]byte{0x00}, data[:]...))
 	default:
 		log.Println("cannot process address for unknown chain: ", chain)
 		return ""
@@ -97,7 +102,7 @@ func ProcessTransfer(ctx context.Context, m PubSubMessage) error {
 	}
 
 	// create the bigtable identifier from the VAA data
-	rowKey := makeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.Sequence)
+	rowKey := MakeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.TargetChain, signedVaa.Sequence)
 	row, err := tbl.ReadRow(ctx, rowKey)
 	if err != nil {
 		log.Fatalf("Could not read row with key %s: %v", rowKey, err)
