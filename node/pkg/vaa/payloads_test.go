@@ -81,7 +81,7 @@ func TestBodyGuardianSetUpdateSerialize(t *testing.T) {
 		common.HexToAddress("0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaee"),
 	}
 	bodyGuardianSetUpdate := BodyGuardianSetUpgrade{Keys: keys, NewIndex: uint32(1)}
-	expected := "00000000000000000000000000000000000000000000000000000000436f726502000000000001025aaeb6053f3e94c9b9a09f33669435e7ef1beaed5aaeb6053f3e94c9b9a09f33669435e7ef1beaee"
+	expected := "00000000000000000000000000000000000000000000000000000000436f72650200000001025aaeb6053f3e94c9b9a09f33669435e7ef1beaed5aaeb6053f3e94c9b9a09f33669435e7ef1beaee"
 	serializedBodyGuardianSetUpdate := bodyGuardianSetUpdate.Serialize()
 	assert.Equal(t, hex.EncodeToString(serializedBodyGuardianSetUpdate), expected)
 }

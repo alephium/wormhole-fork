@@ -1,0 +1,3 @@
+TxScript Deposit(tokenBridgeForChain: TokenBridgeForChain, payer: Address, amount: U256) {
+  tokenBridgeForChain.deposit{payer -> amount}(payer, amount)
+}
