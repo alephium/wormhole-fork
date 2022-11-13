@@ -18,7 +18,7 @@ func TestPrivateKey(t *testing.T) {
 	address := ethcrypto.PubkeyToAddress(signer.PublicKey())
 
 	for i := 0; i < 100; i++ {
-		random, err := randomBytes(1000000)
+		random, err := randomBytes(1000)
 		if err != nil {
 			t.Fatal(err)
 		}

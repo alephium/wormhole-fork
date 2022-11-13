@@ -26,16 +26,15 @@ const GOVERNANCE_CHAIN = 1;
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
 
-async function makeVAA(
+function makeVAA(
   emitterChain: number,
   targetChain: number,
   emitterAddress: string,
   signers: string[],
   keyNames: string[],
   sequence: string | undefined,
-  p: Payload,
-  useKMS: boolean
-): Promise<VAA<Payload>> {
+  p: Payload
+): VAA<Payload> {
   let v: VAA<Payload> = {
     version: 1,
     guardianSetIndex: 0,
@@ -49,13 +48,7 @@ async function makeVAA(
     consistencyLevel: 0,
     payload: p,
   };
-
-  if (useKMS) {
-    v.signatures = await vaa.signWithKMS(keyNames, v);
-  } else {
-    v.signatures = vaa.signWithKey(signers, v);
-  }
-
+  v.signatures = vaa.sign(signers, v);
   return v;
 }
 
@@ -87,12 +80,6 @@ yargs(hideBin(process.argv))
             required: false,
             describe: "VAA sequence",
             type: "string",
-          })
-          .option("use-kms", {
-            alias: "k",
-            required: false,
-            describe: "If KMS should be used",
-            type: "boolean",
           })
           // Registration
           .command(
@@ -134,18 +121,16 @@ yargs(hideBin(process.argv))
                   "hex"
                 ),
               };
-              makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["guardian-key-name"].split(","),
                 argv["sequence"],
-                payload,
-                !!argv["use-kms"]
-              ).then((v) =>
-                console.log(serialiseVAA(v))
+                payload
               );
+              console.log(serialiseVAA(v));
             }
           )
           // Upgrade
@@ -183,18 +168,16 @@ yargs(hideBin(process.argv))
                 | "TokenBridge";
               const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
               const payload = vaa.contractUpgradeVAA(module, address)
-              makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 argv["guardian-key-name"].split(","),
                 argv["sequence"],
-                payload,
-                !!argv["use-kms"]
-              ).then((v) => {
-                console.log(serialiseVAA(v));
-              });
+                payload
+              );
+              console.log(serialiseVAA(v));
             }
           )
           // Update guardian set
