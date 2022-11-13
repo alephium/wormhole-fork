@@ -2,13 +2,13 @@ package p2p
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	node_common "github.com/certusone/wormhole/node/pkg/common"
+	"github.com/certusone/wormhole/node/pkg/ecdsasigner"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"github.com/certusone/wormhole/node/pkg/version"
 	"github.com/ethereum/go-ethereum/common"
@@ -66,7 +66,7 @@ func signedObservationRequestDigest(b []byte) common.Hash {
 	return ethcrypto.Keccak256Hash(append(signedObservationRequestPrefix, b...))
 }
 
-func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.ObservationRequest, obsvReqSendC chan *gossipv1.ObservationRequest, sendC chan []byte, signedInC chan *gossipv1.SignedVAAWithQuorum, priv crypto.PrivKey, gk *ecdsa.PrivateKey, gst *node_common.GuardianSetState, port uint, networkID string, bootstrapPeers string, nodeName string, disableHeartbeatVerify bool, rootCtxCancel context.CancelFunc) func(ctx context.Context) error {
+func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.ObservationRequest, obsvReqSendC chan *gossipv1.ObservationRequest, sendC chan []byte, signedInC chan *gossipv1.SignedVAAWithQuorum, priv crypto.PrivKey, guardianSigner ecdsasigner.ECDSASigner, gst *node_common.GuardianSetState, port uint, networkID string, bootstrapPeers string, nodeName string, disableHeartbeatVerify bool, rootCtxCancel context.CancelFunc) func(ctx context.Context) error {
 	return func(ctx context.Context) (re error) {
 		logger := supervisor.Logger(ctx)
 
@@ -237,7 +237,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 						BootTimestamp: bootTime.UnixNano(),
 					}
 
-					ourAddr := ethcrypto.PubkeyToAddress(gk.PublicKey)
+					ourAddr := ethcrypto.PubkeyToAddress(guardianSigner.PublicKey())
 					if err := gst.SetHeartbeat(ourAddr, h.ID(), heartbeat); err != nil {
 						panic(err)
 					}
@@ -252,7 +252,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 
 					// Sign the heartbeat using our node's guardian key.
 					digest := heartbeatDigest(b)
-					sig, err := ethcrypto.Sign(digest.Bytes(), gk)
+					sig, err := guardianSigner.Sign(digest.Bytes())
 					if err != nil {
 						panic(err)
 					}
@@ -299,7 +299,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 
 					// Sign the observation request using our node's guardian key.
 					digest := signedObservationRequestDigest(b)
-					sig, err := ethcrypto.Sign(digest.Bytes(), gk)
+					sig, err := guardianSigner.Sign(digest.Bytes())
 					if err != nil {
 						panic(err)
 					}
@@ -307,7 +307,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 					sReq := &gossipv1.SignedObservationRequest{
 						ObservationRequest: b,
 						Signature:          sig,
-						GuardianAddr:       ethcrypto.PubkeyToAddress(gk.PublicKey).Bytes(),
+						GuardianAddr:       ethcrypto.PubkeyToAddress(guardianSigner.PublicKey()).Bytes(),
 					}
 
 					envelope := &gossipv1.GossipMessage{

@@ -562,7 +562,7 @@ function portalRegisterChainParser<Module extends "NFTBridge" | "TokenBridge">(m
             greedy: true,
             assert: str => str === ""
         })
-)
+    )
 }
 
 function serialisePortalRegisterChain<Module extends "NFTBridge" | "TokenBridge">(payload: PortalRegisterChain<Module>): string {

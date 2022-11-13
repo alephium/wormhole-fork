@@ -8,7 +8,6 @@ import (
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	"github.com/certusone/wormhole/node/pkg/vaa"
 	"go.uber.org/zap"
-	"google.golang.org/api/option"
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
@@ -17,7 +16,6 @@ import (
 type BigTableConnectionConfig struct {
 	GcpProjectID    string
 	GcpInstanceName string
-	GcpKeyFilePath  string
 	TableName       string
 	TopicName       string
 }
@@ -49,7 +47,7 @@ func BigTableWriter(events *AttestationEventReporter, connectionConfig *BigTable
 		client, err := bigtable.NewClient(ctx,
 			e.connectionConfig.GcpProjectID,
 			e.connectionConfig.GcpInstanceName,
-			option.WithCredentialsFile(e.connectionConfig.GcpKeyFilePath))
+		)
 		if err != nil {
 			return fmt.Errorf("failed to create BigTable client: %w", err)
 		}
@@ -57,7 +55,7 @@ func BigTableWriter(events *AttestationEventReporter, connectionConfig *BigTable
 
 		pubsubClient, err := pubsub.NewClient(ctx,
 			e.connectionConfig.GcpProjectID,
-			option.WithCredentialsFile(e.connectionConfig.GcpKeyFilePath))
+		)
 		if err != nil {
 			logger.Error("failed to create GCP PubSub client", zap.Error(err))
 			return fmt.Errorf("failed to create GCP PubSub client: %w", err)

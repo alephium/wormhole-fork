@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"go.uber.org/zap"
 
 	"github.com/certusone/wormhole/node/pkg/common"
@@ -139,7 +138,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	digest := v.SigningMsg()
 
 	// Sign the digest using our node's guardian key.
-	s, err := crypto.Sign(digest.Bytes(), p.gk)
+	s, err := p.guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		panic(err)
 	}
