@@ -63,6 +63,7 @@ func init() {
 	transferFeeAmount = transferFeeFlagSet.String("amount", "", "Transfer fee amount")
 	transferFeeRecipient = transferFeeFlagSet.String("recipient", "", "Transfer fee recipient")
 	AdminClientTransferFeeTemplateCmd.Flags().AddFlagSet(transferFeeFlagSet)
+	TemplateCmd.AddCommand(AdminClientTransferFeeTemplateCmd)
 
 	destroyedUnexecutedSequenceContractSize = AdminClientTokenBridgeDestroyContractsCmd.Flags().Int("num", 2, "Number of unexecuted sequence contracts that need to be removed in example file")
 	TemplateCmd.AddCommand(AdminClientTokenBridgeDestroyContractsCmd)

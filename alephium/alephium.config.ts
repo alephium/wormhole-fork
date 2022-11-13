@@ -36,9 +36,7 @@ const configuration: Configuration<Settings> = {
       confirmations: 1,
       settings: {
         ...settingsTemplate,
-        minimalConsistencyLevel: process.env.MINIMAL_CONSISTENCY_LEVEL
-          ? parseInt(process.env.MINIMAL_CONSISTENCY_LEVEL)
-          : 10
+        minimalConsistencyLevel: 10
       }
     },
 
