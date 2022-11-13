@@ -70,8 +70,8 @@ var (
 	// polygonRPC      *string
 	// polygonContract *string
 
-	ethRopstenRPC      *string
-	ethRopstenContract *string
+	// ethRopstenRPC      *string
+	// ethRopstenContract *string
 
 	// auroraRPC      *string
 	// auroraContract *string
@@ -184,8 +184,8 @@ func init() {
 	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
 	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
 
-	ethRopstenRPC = NodeCmd.Flags().String("ethRopstenRPC", "", "Ethereum Ropsten RPC URL")
-	ethRopstenContract = NodeCmd.Flags().String("ethRopstenContract", "", "Ethereum Ropsten contract address")
+	// ethRopstenRPC = NodeCmd.Flags().String("ethRopstenRPC", "", "Ethereum Ropsten RPC URL")
+	// ethRopstenContract = NodeCmd.Flags().String("ethRopstenContract", "", "Ethereum Ropsten contract address")
 
 	// avalancheRPC = NodeCmd.Flags().String("avalancheRPC", "", "Avalanche RPC URL")
 	// avalancheContract = NodeCmd.Flags().String("avalancheContract", "", "Avalanche contract address")
@@ -437,8 +437,11 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *nodeKeyPath == "" && !*unsafeDevMode { // In devnet mode, keys are deterministically generated.
 		logger.Fatal("Please specify --nodeKey")
 	}
-	if *guardianKeyPath == "" && !*unsafeDevMode {
-		logger.Fatal("Please specify --guardianKey")
+	if *guardianKeyPath == "" && !*cloudKMSEnabled && !*unsafeDevMode {
+		logger.Fatal("Please either specify --guardianKey or --cloudKMSEnabled")
+	}
+	if *cloudKMSEnabled && *unsafeDevMode {
+		logger.Fatal("Please do not specify --cloudKMSEnabled in devnet")
 	}
 	if *adminSocketPath == "" {
 		logger.Fatal("Please specify --adminSocket")
@@ -507,12 +510,12 @@ func runNode(cmd *cobra.Command, args []string) {
 	// 	logger.Fatal("Please specify --celoContract")
 	// }
 	if *testnetMode {
-		if *ethRopstenRPC == "" {
-			logger.Fatal("Please specify --ethRopstenRPC")
-		}
-		if *ethRopstenContract == "" {
-			logger.Fatal("Please specify --ethRopstenContract")
-		}
+		// if *ethRopstenRPC == "" {
+		// 	logger.Fatal("Please specify --ethRopstenRPC")
+		// }
+		// if *ethRopstenContract == "" {
+		// 	logger.Fatal("Please specify --ethRopstenContract")
+		// }
 		// if *moonbeamRPC == "" {
 		// 	logger.Fatal("Please specify --moonbeamRPC")
 		// }
@@ -526,12 +529,12 @@ func runNode(cmd *cobra.Command, args []string) {
 		// 	logger.Fatal("Please specify --neonContract")
 		// }
 	} else {
-		if *ethRopstenRPC != "" {
-			logger.Fatal("Please do not specify --ethRopstenRPC in non-testnet mode")
-		}
-		if *ethRopstenContract != "" {
-			logger.Fatal("Please do not specify --ethRopstenContract in non-testnet mode")
-		}
+		// if *ethRopstenRPC != "" {
+		// 	logger.Fatal("Please do not specify --ethRopstenRPC in non-testnet mode")
+		// }
+		// if *ethRopstenContract != "" {
+		// 	logger.Fatal("Please do not specify --ethRopstenContract in non-testnet mode")
+		// }
 		//if *moonbeamRPC != "" && !*unsafeDevMode {
 		//	logger.Fatal("Please do not specify --moonbeamRPC")
 		//}

@@ -44,7 +44,7 @@ const configuration: Configuration<Settings> = {
 
     testnet: {
       networkId: 1,
-      nodeUrl: 'https://wallet-v15.testnet.alephium.org',
+      nodeUrl: 'https://alephium-testnet.softfork.se',
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 2,

@@ -244,8 +244,8 @@ const TESTNET = {
     nft_bridge: "0x98A0F4B96972b32Fcb3BD03cAeB66A44a6aB9Edb",
   },
   alephium: {
-    core: undefined,
-    token_bridge: undefined,
+    core: '25ffa69066b0ec1e9a9f969c40a9181e3d93482563fc118018582fa76a54475b',
+    token_bridge: 'cd93469f5a60b465178f2a7ab4c2a72271947e8309080c93f516a3d189ad348d',
     nft_bridge: undefined,
   },
   neon: {

@@ -44,6 +44,10 @@ var nftEmitters = map[string]string{
 	"0000000000000000000000002b048Da40f69c8dc386a56705915f8E966fe1eba": "0x2b048Da40f69c8dc386a56705915f8E966fe1eba",   // ethereum ropesten
 	"3b170d6d5db622a22c8b953dd8b3250bfde84217745616eb74879db4006ce103": "xfcZ7phvcDs9hwYbXNsTzdiWePWkYGrp44a2a9xYK2Yz", // alephium
 	// TODO "": "",  // fantom
+
+	// testnet
+	"cd93469f5a60b465178f2a7ab4c2a72271947e8309080c93f516a3d189ad348d": "28XRwc2ah8aDdi9EdP17G5Hakz5sitgFjPooxWi4U1xLt", // alephium
+
 }
 var muNFTEmitters sync.RWMutex
 
