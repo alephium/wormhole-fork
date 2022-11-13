@@ -45,14 +45,12 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://goerli.infura.io/v3/" + process.env.INFURA_KEY
+          "wss://goerli.infura.io/ws/v3/" + process.env.INFURA_KEY
         );
       },
       network_id: "5",
       gas: 4465030,
       gasPrice: 10000000000,
-      networkCheckTimeout: 50000000,
-      timeoutBlocks: 1500
     },
     binance: {
       provider: () => {

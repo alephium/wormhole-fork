@@ -175,7 +175,7 @@ const TESTNET = {
   },
   ethereum: {
     core: "0x4b293B6c42EF1496ff656f8B16865dF9D19851B4",
-    token_bridge: "0x10983Ef336152188BEeB72D305e73b0B57d29f11",
+    token_bridge: "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4",
     nft_bridge: "0xD8E4C2DbDd2e2bd8F1336EA691dBFF6952B1a6eB",
   },
   bsc: {

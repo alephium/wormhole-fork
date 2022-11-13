@@ -33,7 +33,7 @@ exports.TERRA_HOST = exports.CLUSTER === "mainnet"
 exports.ETH_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
     : exports.CLUSTER === "testnet"
-        ? "0x44F3e7c20850B3B5f3031114726A9240911D912a"
+        ? "0x4370eE0D87282A329595D98c285Ac4A3725490fb"
         : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550");
 exports.ETH_NFT_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x6FFd7EdE62328b3Af38FCD61461Bbfc52F5651fE"
@@ -43,7 +43,7 @@ exports.ETH_NFT_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet
 exports.ETH_TOKEN_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x3ee18B2214AFF97000D974cf647E7C347E8fa585"
     : exports.CLUSTER === "testnet"
-        ? "0x10983Ef336152188BEeB72D305e73b0B57d29f11"
+        ? "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4"
         : "0x0290FB167208Af455bB137780163b7B7a9a10C16");
 exports.BSC_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
