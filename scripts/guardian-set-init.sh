@@ -63,14 +63,7 @@ guardiansPrivate=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | 
 # create a CSV string with the private keys of the guardians in the guardianset, that will be used to create registration VAAs
 guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(",")')
 
-guardiansKeyName=$(jq -c --argjson lastIndex 1 '.devnetGuardians[:$lastIndex] | [.[].keyName]' $addressesJson)
-guardiansKeyNameCSV=$( echo ${guardiansKeyName} | jq --raw-output -c  '. | join(",")')
-
 guardianSignerFlag="-g ${guardiansPrivateCSV}"
-if [ -f ${GUARDIAN_CREDENTIALS_FILE} ]; then
-    echo "Use KMS with credential file: ${GUARDIAN_CREDENTIALS_FILE}"
-    guardianSignerFlag="-j ${guardiansKeyNameCSV} -k"
-fi
 
 # write the lists of keys to the env files
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate

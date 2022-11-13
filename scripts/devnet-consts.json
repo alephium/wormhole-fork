@@ -271,8 +271,7 @@
         {
             "name": "guardian-0",
             "public": "0xAC6769233A8ADB8c90280C9B4485Cb36e2761bD4",
-            "private": "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0",
-            "keyName": "projects/alephium-wormhole/locations/global/keyRings/alephium-wormhole-guardian-0-keyring/cryptoKeys/alephium-wormhole-guardian-0-signing-key/cryptoKeyVersions/1"
+            "private": "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0"
         },
         {
             "name": "guardian-1",
