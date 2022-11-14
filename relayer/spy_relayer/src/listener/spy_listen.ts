@@ -1,13 +1,16 @@
 import {
   ChainId,
+  CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getEmitterAddressEth,
   getEmitterAddressSolana,
   getEmitterAddressTerra,
-  hexToUint8Array,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+  VAA,
+  TransferToken
+} from "alephium-wormhole-sdk";
 import {
   createSpyRPCServiceClient,
   subscribeSignedVAA,
@@ -15,28 +18,16 @@ import {
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
-import {
-  initPayloadWithVAA,
-  pushVaaToRedis,
-  storeInRedis,
-  storeKeyFromParsedVAA,
-  storeKeyToJson,
-  storePayloadToJson,
-} from "../helpers/redisHelper";
+import { pushVaaToRedis } from "../helpers/redisHelper";
 import { sleep } from "../helpers/utils";
-import {
-  parseAndValidateVaa,
-  ParsedTransferPayload,
-  ParsedVaa,
-} from "./validation";
+import { parseAndValidateVaa } from "./validation";
 
 let metrics: PromHelper;
 let env: ListenerEnvironment;
 let logger = getLogger();
 let vaaUriPrelude: string;
 
-export function init(runListen: boolean): boolean {
-  if (!runListen) return true;
+export function init(): boolean {
   try {
     env = getListenerEnvironment();
     vaaUriPrelude =
@@ -44,7 +35,7 @@ export function init(runListen: boolean): boolean {
       (process.env.REST_PORT ? process.env.REST_PORT : "4200") +
       "/relayvaa/";
   } catch (e) {
-    logger.error("Error initializing listener environment: " + e);
+    logger.error(`Error initializing listener environment: ${e}`);
     return false;
   }
 
@@ -60,7 +51,6 @@ export async function run(ph: PromHelper) {
     emitterFilter: { chainId: ChainId; emitterAddress: string };
   }[] = [];
   for (let i = 0; i < env.spyServiceFilters.length; i++) {
-    logger.info("Getting spyServiceFiltera " + i);
     const filter = env.spyServiceFilters[i];
     logger.info(
       "Getting spyServiceFilter[" +
@@ -80,24 +70,10 @@ export async function run(ph: PromHelper) {
         ),
       },
     };
-    logger.info("Getting spyServiceFilterc " + i);
-    logger.info(
-      "adding filter: chainId: [" +
-        typedFilter.emitterFilter.chainId +
-        "], emitterAddress: [" +
-        typedFilter.emitterFilter.emitterAddress +
-        "]"
-    );
-    logger.info("Getting spyServiceFilterd " + i);
     typedFilters.push(typedFilter);
-    logger.info("Getting spyServiceFiltere " + i);
   }
 
-  logger.info(
-    "spy_relay starting up, will listen for signed VAAs from [" +
-      env.spyServiceHost +
-      "]"
-  );
+  logger.info(`Listener starting up, will listen for signed VAAs from [${env.spyServiceHost}]`);
 
   const wrappedFilters = { filters: typedFilters };
 
@@ -118,38 +94,34 @@ export async function run(ph: PromHelper) {
 
       let connected = true;
       stream.on("error", (err: any) => {
-        logger.error("spy service returned an error: %o", err);
+        logger.error(`Spy service returned an error: ${err}`);
         connected = false;
       });
 
       stream.on("close", () => {
-        logger.error("spy service closed the connection!");
+        logger.error("Spy service closed the connection!");
         connected = false;
       });
 
-      logger.info(
-        "connected to spy service, listening for transfer signed VAAs"
-      );
+      logger.info("Connected to spy service, listening for transfer signed VAAs")
 
       while (connected) {
         await sleep(1000);
       }
     } catch (e) {
-      logger.error("spy service threw an exception: %o", e);
+      logger.error(`Spy service threw an exception: ${e}`);
     }
 
-    stream.end;
+    if (stream !== undefined) {
+      stream.destroy()
+    }
     await sleep(5 * 1000);
-    logger.info("attempting to reconnect to the spy service");
+    logger.info("Attempting to reconnect to the spy service");
   }
 }
 
 async function processVaa(rawVaa: Uint8Array) {
-  //TODO, verify this is correct & potentially swap to using hex encoding
-  const vaaUri =
-    vaaUriPrelude + encodeURIComponent(Buffer.from(rawVaa).toString("base64"));
-
-  const validationResults: ParsedVaa<ParsedTransferPayload> | string =
+  const validationResults: VAA<TransferToken> | string =
     await parseAndValidateVaa(rawVaa);
 
   metrics.incIncoming();
@@ -159,22 +131,30 @@ async function processVaa(rawVaa: Uint8Array) {
     return;
   }
 
-  const parsedVAA: ParsedVaa<ParsedTransferPayload> = validationResults;
+  const parsedVAA: VAA<TransferToken> = validationResults;
 
   await pushVaaToRedis(parsedVAA, uint8ArrayToHex(rawVaa));
 }
 
 async function encodeEmitterAddress(
-  myChainId: ChainId,
-  emitterAddressStr: string
+  emitterChainId: ChainId,
+  emitterAddress: string
 ): Promise<string> {
-  if (myChainId === CHAIN_ID_SOLANA) {
-    return await getEmitterAddressSolana(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_ALEPHIUM) {
+    return emitterAddress
   }
 
-  if (myChainId === CHAIN_ID_TERRA) {
-    return await getEmitterAddressTerra(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_ETH) {
+    return getEmitterAddressEth(emitterAddress)
   }
 
-  return getEmitterAddressEth(emitterAddressStr);
+  if (emitterChainId === CHAIN_ID_SOLANA) {
+    return await getEmitterAddressSolana(emitterAddress);
+  }
+
+  if (emitterChainId === CHAIN_ID_TERRA) {
+    return await getEmitterAddressTerra(emitterAddress);
+  }
+
+  throw new Error(`Unsupported chain: ${emitterChainId}`)
 }

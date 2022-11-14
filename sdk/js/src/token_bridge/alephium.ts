@@ -78,6 +78,9 @@ export function getTokenPoolId(
   tokenChainId: number,
   tokenId: string
 ): string {
+  if (tokenId.length !== 64) {
+    throw new Error(`Invalid token id ${tokenId}, expect 32 bytes hex string`)
+  }
   const pathHex = '02' + zeroPad(tokenChainId.toString(16), 2) + tokenId
   return subContractId(tokenBridgeId, pathHex)
 }

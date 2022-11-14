@@ -1,14 +1,14 @@
 import {
   ChainId,
   hexToUint8Array,
-  importCoreWasm,
-  parseTransferPayload,
+  VAA,
+  TransferToken,
   uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+  deserializeVAA
+} from "alephium-wormhole-sdk";
 import { Mutex } from "async-mutex";
 import { createClient, RedisClientType } from "redis";
 import { getCommonEnvironment } from "../configureEnv";
-import { ParsedTransferPayload, ParsedVaa } from "../listener/validation";
 import { chainIDStrings } from "../utils/wormhole";
 import { getScopedLogger } from "./logHelper";
 import { PromHelper } from "./promHelpers";
@@ -33,7 +33,7 @@ export enum RedisTables {
 }
 
 export function init(ph: PromHelper): boolean {
-  logger.info("will connect to redis at [" + redisHost + ":" + redisPort + "]");
+  logger.info(`Will connect to redis at [${redisHost}:${redisPort}]`);
   promHelper = ph;
   return true;
 }
@@ -50,27 +50,13 @@ export async function connectToRedis() {
 
     rClient.on("connect", function (err) {
       if (err) {
-        logger.error(
-          "connectToRedis: failed to connect to host [" +
-            redisHost +
-            "], port [" +
-            redisPort +
-            "]: %o",
-          err
-        );
+        logger.error(`Failed to connect to host ${redisHost}:${redisPort}, error: ${err}`)
       }
     });
 
     await rClient.connect();
   } catch (e) {
-    logger.error(
-      "connectToRedis: failed to connect to host [" +
-        redisHost +
-        "], port [" +
-        redisPort +
-        "]: %o",
-      e
-    );
+    logger.error(`Failed to connect to host ${redisHost}:${redisPort}, error: ${e}`)
   }
 
   return rClient;
@@ -78,47 +64,31 @@ export async function connectToRedis() {
 
 export async function storeInRedis(name: string, value: string) {
   if (!name) {
-    logger.error("storeInRedis: missing name");
-    return;
+    logger.error('Failed to store to redis: missing name')
+    return
   }
   if (!value) {
-    logger.error("storeInRedis: missing value");
-    return;
+    logger.error('Failed to store to redis: missing value')
+    return
   }
 
   await redisMutex.runExclusive(async () => {
-    logger.debug("storeInRedis: connecting to redis.");
+    logger.debug('Connecting to redis (storeInRedis)')
     let redisClient;
     try {
       redisQueue.push([name, value]);
       redisClient = await connectToRedis();
       if (!redisClient) {
-        logger.error(
-          "Failed to connect to redis, enqueued vaa, there are now " +
-            redisQueue.length +
-            " enqueued events"
-        );
-        return;
+        logger.error(`Failed to connect to redis, enqueued vaa, there are now ${redisQueue.length} enqueued events`)
+        return
       }
 
-      logger.debug(
-        "now connected to redis, attempting to push " +
-          redisQueue.length +
-          " queued items"
-      );
+      logger.debug(`Connected to redis, attempting to push ${redisQueue.length} queued items`)
       for (let item = redisQueue.pop(); item; item = redisQueue.pop()) {
         await addToRedis(redisClient, item[0], item[1]);
       }
     } catch (e) {
-      logger.error(
-        "Failed during redis item push. Currently" +
-          redisQueue.length +
-          " enqueued items"
-      );
-      logger.error(
-        "encountered an exception while pushing items to redis %o",
-        e
-      );
+      logger.error(`Failed during redis item push. Currently ${redisQueue.length} enqueued items, error: ${e}`)
     }
 
     try {
@@ -139,20 +109,13 @@ export async function addToRedis(
   value: string
 ) {
   try {
-    logger.debug("storeInRedis: storing in redis. name: " + name);
+    logger.debug(`Storing in redis. name: ${name}`);
     await redisClient.select(RedisTables.INCOMING);
     await redisClient.set(name, value);
 
-    logger.debug("storeInRedis: finished storing in redis.");
+    logger.debug('Finished storing in redis');
   } catch (e) {
-    logger.error(
-      "storeInRedis: failed to store to host [" +
-        redisHost +
-        "], port [" +
-        redisPort +
-        "]: %o",
-      e
-    );
+    logger.error(`Failed to store to redis ${redisHost}:${redisPort}, error: ${e}`);
   }
 }
 
@@ -174,18 +137,19 @@ export type RelayResult = {
 
 export type WorkerInfo = {
   index: number;
-  targetChainId: number;
-  walletPrivateKey: any;
+  targetChainId: ChainId;
+  walletPrivateKey: string;
 };
 
 export type StoreKey = {
-  chain_id: number;
-  emitter_address: string;
+  emitterChainId: ChainId;
+  targetChainId: ChainId;
+  emitterAddress: string;
   sequence: number;
 };
 
 export type StorePayload = {
-  vaa_bytes: string;
+  vaaBytes: string;
   status: Status;
   timestamp: string;
   retries: number;
@@ -193,25 +157,26 @@ export type StorePayload = {
 
 export function initPayload(): StorePayload {
   return {
-    vaa_bytes: "",
+    vaaBytes: "",
     status: Status.Pending,
     timestamp: new Date().toISOString(),
     retries: 0,
   };
 }
-export function initPayloadWithVAA(vaa_bytes: string): StorePayload {
+export function initPayloadWithVAA(vaaBytes: string): StorePayload {
   const sp: StorePayload = initPayload();
-  sp.vaa_bytes = vaa_bytes;
+  sp.vaaBytes = vaaBytes;
   return sp;
 }
 
 export function storeKeyFromParsedVAA(
-  parsedVAA: ParsedVaa<ParsedTransferPayload>
+  parsedVAA: VAA<TransferToken>
 ): StoreKey {
   return {
-    chain_id: parsedVAA.emitterChain as number,
-    emitter_address: uint8ArrayToHex(parsedVAA.emitterAddress),
-    sequence: parsedVAA.sequence,
+    emitterChainId: parsedVAA.body.emitterChainId,
+    emitterAddress: uint8ArrayToHex(parsedVAA.body.emitterAddress),
+    targetChainId: parsedVAA.body.targetChainId,
+    sequence: Number(parsedVAA.body.sequence),
   };
 }
 
@@ -232,30 +197,30 @@ export function storePayloadFromJson(json: string): StorePayload {
 }
 
 export function resetPayload(storePayload: StorePayload): StorePayload {
-  return initPayloadWithVAA(storePayload.vaa_bytes);
+  return initPayloadWithVAA(storePayload.vaaBytes);
 }
 
 export async function pushVaaToRedis(
-  parsedVAA: ParsedVaa<ParsedTransferPayload>,
+  parsedVAA: VAA<TransferToken>,
   hexVaa: string
 ) {
-  const transferPayload = parsedVAA.payload;
+  const transferPayload = parsedVAA.body.payload;
 
   logger.info(
-    "forwarding vaa to relayer: emitter: [" +
-      parsedVAA.emitterChain +
+    "Forwarding vaa to relayer: emitter: [" +
+      parsedVAA.body.emitterChainId +
       ":" +
-      uint8ArrayToHex(parsedVAA.emitterAddress) +
+      uint8ArrayToHex(parsedVAA.body.emitterAddress) +
       "], seqNum: " +
-      parsedVAA.sequence +
+      parsedVAA.body.sequence +
       ", payload: origin: [" +
-      transferPayload.originAddress +
+      transferPayload.originChain +
       ":" +
-      transferPayload.originAddress +
+      uint8ArrayToHex(transferPayload.originAddress) +
       "], target: [" +
-      transferPayload.targetChain +
+      parsedVAA.body.targetChainId +
       ":" +
-      transferPayload.targetAddress +
+      uint8ArrayToHex(transferPayload.targetAddress) +
       "],  amount: " +
       transferPayload.amount +
       "],  fee: " +
@@ -266,10 +231,12 @@ export async function pushVaaToRedis(
   const storePayload = initPayloadWithVAA(hexVaa);
 
   logger.debug(
-    "storing: key: [" +
-      storeKey.chain_id +
+    "Storing: key: [" +
+      storeKey.emitterChainId +
       "/" +
-      storeKey.emitter_address +
+      storeKey.emitterAddress +
+      "/" +
+      storeKey.targetChainId +
       "/" +
       storeKey.sequence +
       "], payload: [" +
@@ -339,27 +306,23 @@ export function createSourceToTargetMap(
 export async function incrementSourceToTargetMap(
   key: string,
   redisClient: RedisClientType<any>,
-  parse_vaa: Function,
   sourceToTargetMap: SourceToTargetMap
 ): Promise<void> {
   const parsedKey = storeKeyFromJson(key);
-  const si_value = await redisClient.get(key);
-  if (!si_value) {
+  const siValue = await redisClient.get(key);
+  if (!siValue) {
     return;
   }
-  const parsedPayload = parseTransferPayload(
-    Buffer.from(
-      parse_vaa(hexToUint8Array(storePayloadFromJson(si_value).vaa_bytes))
-        .payload
-    )
-  );
+  const signedVAA = hexToUint8Array(storePayloadFromJson(siValue).vaaBytes)
+  const vaa = deserializeVAA(signedVAA)
+  
   if (
-    sourceToTargetMap[parsedKey.chain_id as ChainId]?.[
-      parsedPayload.targetChain
+    sourceToTargetMap[parsedKey.emitterChainId as ChainId]?.[
+      vaa.body.targetChainId
     ] !== undefined
   ) {
-    sourceToTargetMap[parsedKey.chain_id as ChainId][
-      parsedPayload.targetChain
+    sourceToTargetMap[parsedKey.emitterChainId as ChainId][
+      vaa.body.targetChainId
     ]++;
   }
 }
@@ -367,7 +330,6 @@ export async function incrementSourceToTargetMap(
 export async function monitorRedis(metrics: PromHelper) {
   const scopedLogger = getScopedLogger(["monitorRedis"], logger);
   const TEN_SECONDS: number = 10000;
-  const { parse_vaa } = await importCoreWasm();
   const knownChainIds = Object.keys(chainIDStrings).map(
     (c) => Number(c) as ChainId
   );
@@ -384,7 +346,6 @@ export async function monitorRedis(metrics: PromHelper) {
           incrementSourceToTargetMap(
             si_key,
             redisClient,
-            parse_vaa,
             incomingSourceToTargetMap
           );
         }
@@ -404,7 +365,6 @@ export async function monitorRedis(metrics: PromHelper) {
           incrementSourceToTargetMap(
             si_key,
             redisClient,
-            parse_vaa,
             workingSourceToTargetMap
           );
         }

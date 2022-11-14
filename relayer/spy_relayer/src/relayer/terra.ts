@@ -2,15 +2,15 @@ import {
   getIsTransferCompletedTerra,
   hexToUint8Array,
   redeemOnTerra,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import axios from "axios";
-import { ChainConfigInfo } from "../configureEnv";
+import { TerraChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 
 export async function relayTerra(
-  chainConfigInfo: ChainConfigInfo,
+  chainConfigInfo: TerraChainConfigInfo,
   signedVAA: string,
   checkOnly: boolean,
   walletPrivateKey: any,

@@ -1,10 +1,10 @@
 require("../helpers/loadConfig");
 process.env.LOG_DIR = ".";
 
-import { CHAIN_ID_TERRA } from "@certusone/wormhole-sdk";
+import { CHAIN_ID_TERRA } from "alephium-wormhole-sdk";
 import { jest, test } from "@jest/globals";
 import { LCDClient } from "@terra-money/terra.js";
-import { ChainConfigInfo } from "../configureEnv";
+import { TerraChainConfigInfo } from "../configureEnv";
 import { calcLocalAddressesTerra, pullTerraBalance } from "./walletMonitor";
 // import { pullEVMBalance } from "./walletMonitor";
 
@@ -41,11 +41,11 @@ jest.setTimeout(300000);
 //   }
 // });
 
-const terraChainConfig: ChainConfigInfo = {
+const terraChainConfig: TerraChainConfigInfo = {
   chainId: CHAIN_ID_TERRA,
-  chainName: "Terra",
   nativeCurrencySymbol: "UST",
   nodeUrl: "https://fcd.terra.dev",
+  walletPrivateKeys: [],
   tokenBridgeAddress: "terra10nmmwe8r3g99a9newtqa7a75xfgs2e8z87r2sf",
   terraName: "mainnet",
   terraChainId: "columbus-5",
