@@ -38,7 +38,7 @@ exports.ETH_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
 exports.ETH_NFT_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x6FFd7EdE62328b3Af38FCD61461Bbfc52F5651fE"
     : exports.CLUSTER === "testnet"
-        ? "0x26b4afb60d6c903165150c6f0aa14f8016be4aec" // TODO: test address
+        ? "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F"
         : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec");
 exports.ETH_TOKEN_BRIDGE_ADDRESS = utils_1.getAddress(exports.CLUSTER === "mainnet"
     ? "0x3ee18B2214AFF97000D974cf647E7C347E8fa585"
