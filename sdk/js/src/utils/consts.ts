@@ -174,7 +174,7 @@ const TESTNET = {
     nft_bridge: undefined,
   },
   ethereum: {
-    core: "0x4b293B6c42EF1496ff656f8B16865dF9D19851B4",
+    core: "0x4370eE0D87282A329595D98c285Ac4A3725490fb",
     token_bridge: "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4",
     nft_bridge: "0xD8E4C2DbDd2e2bd8F1336EA691dBFF6952B1a6eB",
   },
@@ -244,8 +244,8 @@ const TESTNET = {
     nft_bridge: "0x98A0F4B96972b32Fcb3BD03cAeB66A44a6aB9Edb",
   },
   alephium: {
-    core: '25ffa69066b0ec1e9a9f969c40a9181e3d93482563fc118018582fa76a54475b',
-    token_bridge: 'cd93469f5a60b465178f2a7ab4c2a72271947e8309080c93f516a3d189ad348d',
+    core: '125d54dc1751a3e6236553a6cd1dcfe72aeb7fc42adf27c776924a7beea78270',
+    token_bridge: '0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f',
     nft_bridge: undefined,
   },
   neon: {

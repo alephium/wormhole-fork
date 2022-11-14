@@ -46,7 +46,7 @@ var nftEmitters = map[string]string{
 	// TODO "": "",  // fantom
 
 	// testnet
-	"cd93469f5a60b465178f2a7ab4c2a72271947e8309080c93f516a3d189ad348d": "28XRwc2ah8aDdi9EdP17G5Hakz5sitgFjPooxWi4U1xLt", // alephium
+	"0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz", // alephium
 
 }
 var muNFTEmitters sync.RWMutex
