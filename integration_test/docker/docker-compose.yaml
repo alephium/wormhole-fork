@@ -101,7 +101,7 @@ services:
       - --logLevel=debug
 
   guardian-1:
-    image: alephium/guardiand:0.2.47
+    image: alephium/guardiand:0.2.56
     hostname: guardian-1
     restart: unless-stopped
     ports:
