@@ -9,6 +9,7 @@ import { getLogger } from "./helpers/logHelper";
 export type SupportedToken = {
   chainId: ChainId;
   address: string;
+  minimalFee: bigint;
 };
 
 export type CommonEnvironment = {
@@ -85,15 +86,21 @@ export type RelayerEnvironment = {
   redisPort: number;
   clearRedisOnInit: boolean;
   demoteWorkingOnInit: boolean;
-  supportedTokens: { chainId: ChainId; address: string }[];
+  supportedTokens: SupportedToken[];
 };
+
+export type WalletMonitorEnvironment = {
+  supportedChains: ChainConfigInfo[]
+  supportedTokens: SupportedToken[]
+}
 
 export interface ChainConfigInfo {
   chainId: ChainId
   nativeCurrencySymbol: string
   nodeUrl: string
   tokenBridgeAddress: string
-  walletPrivateKeys: string[]
+  walletPrivateKeys?: string[]
+  walletAddresses?: string[]
 }
 
 export interface EthereumChainConfigInfo extends ChainConfigInfo {
@@ -113,11 +120,31 @@ export interface AlephiumChainConfigInfo extends ChainConfigInfo {
   groupIndex: number
 }
 
+let walletMonitorEnv: WalletMonitorEnvironment | undefined = undefined
+
+export const getWalletMonitorEnvironment: () => WalletMonitorEnvironment = () => {
+  if (walletMonitorEnv) {
+    return walletMonitorEnv
+  }
+  const env = createWalletMonitorEnv()
+  walletMonitorEnv = env
+  return walletMonitorEnv
+}
+
+const createWalletMonitorEnv: () => WalletMonitorEnvironment = () => {
+  const supportedChains = loadChainConfig('WALLET_MONITOR_CHAINS', false)
+  const supportedTokens = loadSupportedTokens()
+  return {
+    supportedChains,
+    supportedTokens
+  }
+}
+
 export type ListenerEnvironment = {
   spyServiceHost: string;
   spyServiceFilters: { chainId: ChainId; emitterAddress: string }[];
   restPort: number;
-  supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[];
+  supportedTokens: SupportedToken[];
 };
 
 let listenerEnv: ListenerEnvironment | undefined = undefined;
@@ -136,7 +163,6 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   let spyServiceHost: string;
   let spyServiceFilters: { chainId: ChainId; emitterAddress: string }[] = [];
   let restPort: number;
-  let supportedTokens: { chainId: ChainId; address: string; minimalFee: bigint }[] = [];
   const logger = getLogger();
 
   if (!process.env.SPY_SERVICE_HOST) {
@@ -173,25 +199,7 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   }
 
   logger.info("Getting SUPPORTED_TOKENS...");
-  if (!process.env.SUPPORTED_TOKENS) {
-    throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
-  }
-  // const array = JSON.parse(process.env.SUPPORTED_TOKENS);
-  const tokens = eval(process.env.SUPPORTED_TOKENS);
-  if (!tokens || !Array.isArray(tokens)) {
-    throw new Error("SUPPORTED_TOKENS is not an array.");
-  }
-  tokens.forEach((token: any) => {
-    if (token.chainId && token.address && token.minimalFee) {
-      supportedTokens.push({
-        chainId: token.chainId,
-        address: token.address,
-        minimalFee: BigInt(token.minimalFee)
-      });
-    } else {
-      throw new Error("Invalid token record: " + JSON.stringify(token));
-    }
-  })
+  const supportedTokens = loadSupportedTokens() 
 
   return {
     spyServiceHost,
@@ -218,8 +226,8 @@ export function getChainConfigInfo(chainId: ChainId) {
   return env.supportedChains.find((x) => x.chainId === chainId) 
 }
 
-export async function validateRelayerConfig() {
-  const chainConfigInfo = getChainConfigInfo(CHAIN_ID_ALEPHIUM)
+export async function validateChainConfig(env: { supportedChains: ChainConfigInfo[] }) {
+  const chainConfigInfo = env.supportedChains.find((x) => x.chainId === CHAIN_ID_ALEPHIUM) 
   if (chainConfigInfo === undefined) {
     return
   }
@@ -237,12 +245,10 @@ export async function validateRelayerConfig() {
 }
 
 const createRelayerEnvironment: () => RelayerEnvironment = () => {
-  let supportedChains: ChainConfigInfo[] = [];
   let redisHost: string;
   let redisPort: number;
   let clearRedisOnInit: boolean;
   let demoteWorkingOnInit: boolean;
-  let supportedTokens: { chainId: ChainId; address: string }[] = [];
 
   if (!process.env.REDIS_HOST) {
     throw new Error("Missing required environment variable: REDIS_HOST");
@@ -280,28 +286,8 @@ const createRelayerEnvironment: () => RelayerEnvironment = () => {
     }
   }
 
-  supportedChains = loadChainConfig();
-
-  if (!process.env.SUPPORTED_TOKENS) {
-    throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
-  } else {
-    // const array = JSON.parse(process.env.SUPPORTED_TOKENS);
-    const array = eval(process.env.SUPPORTED_TOKENS);
-    if (!array || !Array.isArray(array)) {
-      throw new Error("SUPPORTED_TOKENS is not an array.");
-    } else {
-      array.forEach((token: any) => {
-        if (token.chainId && token.address) {
-          supportedTokens.push({
-            chainId: token.chainId,
-            address: token.address,
-          });
-        } else {
-          throw new Error("Invalid token record. " + token.toString());
-        }
-      });
-    }
-  }
+  const supportedChains = loadChainConfig('RELAYER_CHAINS', true)
+  const supportedTokens = loadSupportedTokens()
 
   return {
     supportedChains,
@@ -313,13 +299,35 @@ const createRelayerEnvironment: () => RelayerEnvironment = () => {
   };
 };
 
+export function loadSupportedTokens(): SupportedToken[] {
+  if (!process.env.SUPPORTED_TOKENS) {
+    throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
+  }
+  const tokens = eval(process.env.SUPPORTED_TOKENS);
+  if (!tokens || !Array.isArray(tokens)) {
+    throw new Error("SUPPORTED_TOKENS is not an array.");
+  }
+  return tokens.map((token: any) => {
+    if (token.chainId && token.address && token.minimalFee) {
+      return {
+        chainId: token.chainId,
+        address: token.address,
+        minimalFee: BigInt(token.minimalFee)
+      }
+    } else {
+      throw new Error("Invalid token record: " + JSON.stringify(token));
+    }
+  })
+}
+
 //Polygon is not supported on local Tilt network atm.
-export function loadChainConfig(): ChainConfigInfo[] {
-  if (!process.env.SUPPORTED_CHAINS) {
-    throw new Error("Missing required environment variable: SUPPORTED_CHAINS");
+export function loadChainConfig(field: string, isRelayer: boolean): ChainConfigInfo[] {
+  const chains = process.env[`${field}`]
+  if (chains === undefined) {
+    throw new Error(`Missing required environment variable: ${field}`);
   }
 
-  const unformattedChains = JSON.parse(process.env.SUPPORTED_CHAINS);
+  const unformattedChains = JSON.parse(chains);
   const supportedChains: ChainConfigInfo[] = [];
 
   if (!unformattedChains.forEach) {
@@ -332,19 +340,19 @@ export function loadChainConfig(): ChainConfigInfo[] {
     }
 
     if (element.chainId === CHAIN_ID_TERRA) {
-      supportedChains.push(createTerraChainConfig(element))
+      supportedChains.push(createTerraChainConfig(element, isRelayer))
     } else if (element.chainId === CHAIN_ID_ALEPHIUM) {
-      supportedChains.push(createAlephiumChainConfig(element))
+      supportedChains.push(createAlephiumChainConfig(element, isRelayer))
     } else {
-      supportedChains.push(createEvmChainConfig(element))
+      supportedChains.push(createEvmChainConfig(element, isRelayer))
     }
   });
 
   return supportedChains;
 }
 
-function createTerraChainConfig(config: any): TerraChainConfigInfo {
-  const chainConfig = createChainConfig(config)
+function createTerraChainConfig(config: any, isRelayer: boolean): TerraChainConfigInfo {
+  const chainConfig = createChainConfig(config, isRelayer)
   const terraName = (config.terraName ?? invalidConfigField('terraName')) as string
   const terraChainId = (config.terraChainId ?? invalidConfigField('terraChainId')) as string
   const terraCoin = (config.terraCoin ?? invalidConfigField('terraCoin')) as string
@@ -358,8 +366,8 @@ function createTerraChainConfig(config: any): TerraChainConfigInfo {
   }
 }
 
-function createEvmChainConfig(config: any): EthereumChainConfigInfo {
-  const chainConfig = createChainConfig(config)
+function createEvmChainConfig(config: any, isRelayer: boolean): EthereumChainConfigInfo {
+  const chainConfig = createChainConfig(config, isRelayer)
   const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
   const coreBridgeAddress = (config.coreBridgeAddress ?? invalidConfigField('coreBridgeAddress')) as string
   const wrappedNativeAsset = (config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')) as string
@@ -371,8 +379,8 @@ function createEvmChainConfig(config: any): EthereumChainConfigInfo {
   }
 }
 
-function createAlephiumChainConfig(config: any): AlephiumChainConfigInfo {
-  const chainConfig = createChainConfig(config)
+function createAlephiumChainConfig(config: any, isRelayer: boolean): AlephiumChainConfigInfo {
+  const chainConfig = createChainConfig(config, isRelayer)
   const groupIndex = (config.groupIndex ?? invalidConfigField('groupIndex')) as number
   return {
     ...chainConfig,
@@ -380,18 +388,32 @@ function createAlephiumChainConfig(config: any): AlephiumChainConfigInfo {
   }
 }
 
-function createChainConfig(config: any): ChainConfigInfo {
+function createChainConfig(config: any, isRelayer: boolean): ChainConfigInfo {
   const chainId = (config.chainId ?? invalidConfigField('chainId')) as ChainId
   const nativeCurrencySymbol = (config.nativeCurrencySymbol ?? invalidConfigField('nativeCurrencySymbol')) as string
   const nodeUrl = (config.nodeUrl ?? invalidConfigField('nodeUrl')) as string
   const tokenBridgeAddress = (config.tokenBridgeAddress ?? invalidConfigField('tokenBridgeAddress')) as string
-  const walletPrivateKeys = config.walletPrivateKeys ?? invalidConfigField('walletPrivateKeys')
+  let walletPrivateKeys: any = config.walletPrivateKeys
+  let walletAddresses: any = config.walletAddresses
+  if (isRelayer) {
+    if (!(walletPrivateKeys && Array.isArray(walletPrivateKeys))) {
+      invalidConfigField('walletPrivateKeys')
+    }
+  } else {
+    if (walletPrivateKeys !== undefined) {
+      throw new Error(`Invalid config, only relayer needs private keys`)
+    }
+    if (!(walletAddresses && Array.isArray(walletAddresses))) {
+      throw invalidConfigField('walletAddresses')
+    }
+  }
   return {
     chainId,
     nativeCurrencySymbol,
     nodeUrl,
     tokenBridgeAddress,
-    walletPrivateKeys
+    walletPrivateKeys,
+    walletAddresses,
   }
 }
 

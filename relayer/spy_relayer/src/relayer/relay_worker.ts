@@ -1,5 +1,5 @@
 import { ChainId } from "alephium-wormhole-sdk";
-import { getRelayerEnvironment, RelayerEnvironment, validateRelayerConfig } from "../configureEnv";
+import { getRelayerEnvironment, RelayerEnvironment, validateChainConfig } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import {
@@ -60,7 +60,7 @@ function createWorkerInfos(metrics: PromHelper) {
     metrics.incConfirmed(chain.chainId, 0);
     metrics.incFailures(chain.chainId, 0);
     metrics.incRollback(chain.chainId, 0);
-    chain.walletPrivateKeys.forEach((key) => {
+    chain.walletPrivateKeys!.forEach((key) => {
       workerArray.push({
         walletPrivateKey: key,
         index: index,
@@ -215,7 +215,7 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
 
 export async function run(ph: PromHelper) {
   metrics = ph;
-  await validateRelayerConfig()
+  await validateChainConfig(relayerEnv)
 
   if (relayerEnv.clearRedisOnInit) {
     logger.info("Clearing REDIS as per tunable...");

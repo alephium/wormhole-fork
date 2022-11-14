@@ -11,16 +11,16 @@ import {
   coalesceChainName,
   contractExists
 } from "alephium-wormhole-sdk";
-import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
-import { ethers, Signer } from "ethers";
+import { LCDClient } from "@terra-money/terra.js";
+import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import {
   AlephiumChainConfigInfo,
   EthereumChainConfigInfo,
-  getRelayerEnvironment,
-  RelayerEnvironment,
+  getWalletMonitorEnvironment,
   SupportedToken,
-  TerraChainConfigInfo
+  TerraChainConfigInfo,
+  WalletMonitorEnvironment
 } from "../configureEnv";
 import { getScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
@@ -34,11 +34,10 @@ import {
   tokenIdFromAddress,
   web3
 } from "@alephium/web3"
-import { PrivateKeyWallet } from "@alephium/web3-wallet";
 import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
 import { sleep } from "../helpers/utils";
 
-let env: RelayerEnvironment;
+let env: WalletMonitorEnvironment;
 const logger = getScopedLogger(["walletMonitor"]);
 
 export type WalletBalance = {
@@ -57,7 +56,7 @@ export interface TerraNativeBalances {
 
 function init() {
   try {
-    env = getRelayerEnvironment();
+    env = getWalletMonitorEnvironment();
   } catch (e) {
     logger.error("Unable to instantiate the relayerEnv in wallet monitor");
   }
@@ -75,9 +74,9 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
     try {
       if (isEVMChain(chainInfo.chainId)) {
         const ethChainInfo = chainInfo as EthereumChainConfigInfo
-        for (const privateKey of ethChainInfo.walletPrivateKeys as string[] || []) {
+        for (const walletAddress of ethChainInfo.walletAddresses as string[] || []) {
           try {
-            balancePromises.push(pullEVMNativeBalance(ethChainInfo, privateKey));
+            balancePromises.push(pullEVMNativeBalance(ethChainInfo, walletAddress));
           } catch (e) {
             logger.error(`Pulling evm native balance failed, err: ${e}`);
           }
@@ -149,17 +148,15 @@ export async function pullTerraBalance(
 
 async function pullEVMNativeBalance(
   chainInfo: EthereumChainConfigInfo,
-  privateKey: string
+  address: string
 ): Promise<WalletBalance[]> {
-  if (!privateKey || !chainInfo.nodeUrl) {
+  if (!address || !chainInfo.nodeUrl) {
     throw new Error("Bad chainInfo config for EVM chain: " + chainInfo.chainId);
   }
 
   let provider = newProvider(chainInfo.nodeUrl);
   if (!provider) throw new Error("bad provider");
-  const signer: Signer = new ethers.Wallet(privateKey, provider);
-  const addr: string = await signer.getAddress();
-  const weiAmount = await provider.getBalance(addr);
+  const weiAmount = await provider.getBalance(address);
   const balanceInEth = ethers.utils.formatEther(weiAmount);
 
   return [
@@ -170,7 +167,7 @@ async function pullEVMNativeBalance(
       currencyName: chainInfo.nativeCurrencySymbol,
       currencyAddressNative: "",
       isNative: true,
-      walletAddress: addr,
+      walletAddress: address,
     },
   ];
 }
@@ -322,12 +319,8 @@ async function pullAllEVMTokens(
       supportedTokens,
       chainConfig
     );
-    if (!chainConfig.walletPrivateKeys) {
-      return;
-    }
-    for (const privateKey of chainConfig.walletPrivateKeys) {
+    for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
       try {
-        const publicAddress = await new ethers.Wallet(privateKey).getAddress();
         const tokens = await Promise.all(
           localAddresses.map((tokenAddress) =>
             getEthereumToken(tokenAddress, provider)
@@ -337,7 +330,7 @@ async function pullAllEVMTokens(
           tokens.map((token) =>
             Promise.all([
               token.decimals(),
-              token.balanceOf(publicAddress),
+              token.balanceOf(walletAddress),
               token.symbol(),
             ])
           )
@@ -349,7 +342,7 @@ async function pullAllEVMTokens(
           currencyName: symbol,
           currencyAddressNative: localAddresses[idx],
           isNative: false,
-          walletAddress: publicAddress,
+          walletAddress: walletAddress,
         }));
         logger.debug(`Ethereum wallet balances: ${JSON.stringify(balances)}`)
         metrics.handleWalletBalances(balances);
@@ -386,12 +379,7 @@ async function pullAllTerraBalances(
     supportedTokens,
     chainConfig
   );
-  for (const privateKey of chainConfig.walletPrivateKeys as string[]) {
-    const mk = new MnemonicKey({
-      mnemonic: privateKey,
-    });
-    const wallet = lcd.wallet(mk);
-    const walletAddress = wallet.key.accAddress;
+  for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
     balances = [
       ...balances,
       ...(await pullTerraNativeBalance(lcd, chainConfig, walletAddress)),
@@ -417,10 +405,8 @@ async function pullAllAlephiumBalances(
   web3.setCurrentNodeProvider(nodeProvider)
   const walletBalances: WalletBalance[] = []
   try {
-    for (const mnemonic of chainConfig.walletPrivateKeys as string[]) {
-      const wallet = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
-      const account = await wallet.getSelectedAccount()
-      const balances = await nodeProvider.addresses.getAddressesAddressBalance(account.address)
+    for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
+      const balances = await nodeProvider.addresses.getAddressesAddressBalance(walletAddress)
       walletBalances.push({
         chainId: chainConfig.chainId,
         balanceAbs: balances.balance,
@@ -428,7 +414,7 @@ async function pullAllAlephiumBalances(
         currencyName: 'ALPH',
         currencyAddressNative: '',
         isNative: true,
-        walletAddress: account.address
+        walletAddress: walletAddress
       })
 
       for (const token of supportedTokens) {
@@ -443,7 +429,7 @@ async function pullAllAlephiumBalances(
             currencyName: '', // TODO: get token name from config
             currencyAddressNative: token.address,
             isNative: false,
-            walletAddress: account.address
+            walletAddress: walletAddress
           })
           continue
         }
@@ -468,7 +454,7 @@ async function pullAllAlephiumBalances(
           currencyName: name,
           currencyAddressNative: contractAddress,
           isNative: false,
-          walletAddress: account.address
+          walletAddress: walletAddress
         })
       }
     }
