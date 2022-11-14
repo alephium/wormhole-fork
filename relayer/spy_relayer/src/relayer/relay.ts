@@ -1,6 +1,5 @@
 import {
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   deserializeTransferTokenVAA,
   hexToNativeString,
@@ -12,13 +11,11 @@ import {
 } from "alephium-wormhole-sdk";
 
 import { relayEVM } from "./evm";
-import { relaySolana } from "./solana";
 import { relayTerra } from "./terra";
 import {
   getChainConfigInfo,
   AlephiumChainConfigInfo,
   EthereumChainConfigInfo,
-  SolanaChainConfigInfo,
   TerraChainConfigInfo
 } from "../configureEnv";
 import { RelayResult, Status } from "../helpers/redisHelper";
@@ -77,24 +74,6 @@ export async function relay(
       status: evmResult.redeemed ? Status.Completed : Status.Error,
       result: evmResult.result.toString(),
     };
-  }
-
-  if (targetChainId === CHAIN_ID_SOLANA) {
-    const solanaConfigInfo = chainConfigInfo as SolanaChainConfigInfo
-    let rResult: RelayResult = { status: Status.Error, result: "" };
-    const retVal = await relaySolana(
-      solanaConfigInfo,
-      signedVAA,
-      checkOnly,
-      walletPrivateKey,
-      logger,
-      metrics
-    );
-    if (retVal.redeemed) {
-      rResult.status = Status.Completed;
-    }
-    rResult.result = retVal.result;
-    return rResult;
   }
 
   if (targetChainId === CHAIN_ID_TERRA) {

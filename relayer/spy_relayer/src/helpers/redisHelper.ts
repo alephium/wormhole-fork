@@ -138,7 +138,7 @@ export type RelayResult = {
 export type WorkerInfo = {
   index: number;
   targetChainId: ChainId;
-  walletPrivateKey: string | Uint8Array;
+  walletPrivateKey: string;
 };
 
 export type StoreKey = {

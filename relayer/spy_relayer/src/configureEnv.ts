@@ -2,7 +2,6 @@ import { NodeProvider, web3 } from "@alephium/web3";
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA
 } from "alephium-wormhole-sdk";
 import { getLogger } from "./helpers/logHelper";
@@ -94,12 +93,7 @@ export interface ChainConfigInfo {
   nativeCurrencySymbol: string
   nodeUrl: string
   tokenBridgeAddress: string
-  walletPrivateKeys: Uint8Array[] | string[]
-}
-
-export interface SolanaChainConfigInfo extends ChainConfigInfo {
-  bridgeAddress: string
-  wrappedNativeAsset: string
+  walletPrivateKeys: string[]
 }
 
 export interface EthereumChainConfigInfo extends ChainConfigInfo {
@@ -337,9 +331,7 @@ export function loadChainConfig(): ChainConfigInfo[] {
       throw new Error("Invalid chain config: " + element);
     }
 
-    if (element.chainId === CHAIN_ID_SOLANA) {
-      supportedChains.push(createSolanaChainConfig(element))
-    } else if (element.chainId === CHAIN_ID_TERRA) {
+    if (element.chainId === CHAIN_ID_TERRA) {
       supportedChains.push(createTerraChainConfig(element))
     } else if (element.chainId === CHAIN_ID_ALEPHIUM) {
       supportedChains.push(createAlephiumChainConfig(element))
@@ -349,18 +341,6 @@ export function loadChainConfig(): ChainConfigInfo[] {
   });
 
   return supportedChains;
-}
-
-function createSolanaChainConfig(config: any): SolanaChainConfigInfo {
-  const chainConfig = createChainConfig(config)
-  const bridgeAddress = config.bridgeAddress ?? invalidConfigField('bridgeAddress')
-  const wrappedNativeAsset = config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')
-
-  return {
-    ...chainConfig,
-    bridgeAddress,
-    wrappedNativeAsset
-  }
 }
 
 function createTerraChainConfig(config: any): TerraChainConfigInfo {
@@ -405,18 +385,7 @@ function createChainConfig(config: any): ChainConfigInfo {
   const nativeCurrencySymbol = (config.nativeCurrencySymbol ?? invalidConfigField('nativeCurrencySymbol')) as string
   const nodeUrl = (config.nodeUrl ?? invalidConfigField('nodeUrl')) as string
   const tokenBridgeAddress = (config.tokenBridgeAddress ?? invalidConfigField('tokenBridgeAddress')) as string
-  const privateKeys = config.walletPrivateKeys ?? invalidConfigField('walletPrivateKeys')
-  const walletPrivateKeys = chainId === CHAIN_ID_SOLANA
-    ? (privateKeys as any[]).map((item: any) => {
-      try {
-        return Uint8Array.from(item)
-      } catch (e) {
-        throw new Error(
-          'Failed to coerce Solana private keys into a uint array. ENV JSON is possibly incorrect.'
-        )
-      }
-    })
-    : privateKeys as string[]
+  const walletPrivateKeys = config.walletPrivateKeys ?? invalidConfigField('walletPrivateKeys')
   return {
     chainId,
     nativeCurrencySymbol,

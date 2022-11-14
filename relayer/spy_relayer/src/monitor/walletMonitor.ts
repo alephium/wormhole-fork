@@ -2,19 +2,15 @@ import {
   Bridge__factory,
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   getForeignAssetTerra,
   hexToUint8Array,
   isEVMChain,
-  WSOL_DECIMALS,
   getTokenPoolId,
   tryNativeToHexString,
   coalesceChainName,
   contractExists
 } from "alephium-wormhole-sdk";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, Keypair } from "@solana/web3.js";
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import { ethers, Signer } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
@@ -23,15 +19,12 @@ import {
   EthereumChainConfigInfo,
   getRelayerEnvironment,
   RelayerEnvironment,
-  SolanaChainConfigInfo,
   SupportedToken,
   TerraChainConfigInfo
 } from "../configureEnv";
 import { getScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
-import { getMetaplexData, sleep } from "../helpers/utils";
 import { getEthereumToken } from "../utils/ethereum";
-import { getMultipleAccountsRPC } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
 import {
@@ -43,6 +36,7 @@ import {
 } from "@alephium/web3"
 import { PrivateKeyWallet } from "@alephium/web3-wallet";
 import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
+import { sleep } from "../helpers/utils";
 
 let env: RelayerEnvironment;
 const logger = getScopedLogger(["walletMonitor"]);
@@ -79,24 +73,7 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
   for (const chainInfo of env.supportedChains) {
     if (!chainInfo) continue;
     try {
-      if (chainInfo.chainId === CHAIN_ID_SOLANA) {
-        const solanaChainConfig = chainInfo as SolanaChainConfigInfo
-        for (const solanaPrivateKey of solanaChainConfig.walletPrivateKeys as Uint8Array[] || []) {
-          try {
-            balancePromises.push(
-              pullSolanaNativeBalance(solanaChainConfig, solanaPrivateKey)
-            );
-            balancePromises.push(
-              pullSolanaTokenBalances(solanaChainConfig, solanaPrivateKey)
-            );
-          } catch (e: any) {
-            logger.error(`Pulling balances failed failed for solana, err: ${e}`);
-            if (e.stack) {
-              logger.error(e.stack);
-            }
-          }
-        }
-      } else if (isEVMChain(chainInfo.chainId)) {
+      if (isEVMChain(chainInfo.chainId)) {
         const ethChainInfo = chainInfo as EthereumChainConfigInfo
         for (const privateKey of ethChainInfo.walletPrivateKeys as string[] || []) {
           try {
@@ -170,55 +147,6 @@ export async function pullTerraBalance(
   }
 }
 
-async function pullSolanaTokenBalances(
-  chainInfo: SolanaChainConfigInfo,
-  privateKey: Uint8Array
-): Promise<WalletBalance[]> {
-  const keyPair = Keypair.fromSecretKey(privateKey);
-  const connection = new Connection(chainInfo.nodeUrl);
-  const output: WalletBalance[] = [];
-
-  try {
-    const allAccounts = await connection.getParsedTokenAccountsByOwner(
-      keyPair.publicKey,
-      { programId: TOKEN_PROGRAM_ID },
-      "confirmed"
-    );
-    let mintAddresses: string[] = [];
-    allAccounts.value.forEach((account) => {
-      mintAddresses.push(account.account.data.parsed?.info?.mint);
-    });
-    const mdArray = await getMetaplexData(mintAddresses, chainInfo);
-
-    for (const account of allAccounts.value) {
-      let mintAddress: string[] = [];
-      mintAddress.push(account.account.data.parsed?.info?.mint);
-      const mdArray = await getMetaplexData(mintAddress, chainInfo);
-      let cName: string = "";
-      if (mdArray && mdArray[0] && mdArray[0].data && mdArray[0].data.symbol) {
-        const encoded = mdArray[0].data.symbol;
-        cName = encodeURIComponent(encoded);
-        cName = cName.replace(/%/g, "_");
-      }
-
-      output.push({
-        chainId: CHAIN_ID_SOLANA,
-        balanceAbs: account.account.data.parsed?.info?.tokenAmount?.amount,
-        balanceFormatted:
-          account.account.data.parsed?.info?.tokenAmount?.uiAmount,
-        currencyName: cName,
-        currencyAddressNative: account.account.data.parsed?.info?.mint,
-        isNative: false,
-        walletAddress: account.pubkey.toString(),
-      });
-    }
-  } catch (e) {
-    logger.error(`Failed to pull solana token balances, err: ${e}`);
-  }
-
-  return output;
-}
-
 async function pullEVMNativeBalance(
   chainInfo: EthereumChainConfigInfo,
   privateKey: string
@@ -277,50 +205,6 @@ async function pullTerraNativeBalance(
     logger.error(`Failed to fetch terra native balances for wallet ${walletAddress}, err: ${e}`);
     return [];
   }
-}
-
-async function pullSolanaNativeBalance(
-  chainInfo: SolanaChainConfigInfo,
-  privateKey: Uint8Array
-): Promise<WalletBalance[]> {
-  const keyPair = Keypair.fromSecretKey(privateKey);
-  const connection = new Connection(chainInfo.nodeUrl);
-  const fetchAccounts = await getMultipleAccountsRPC(connection, [
-    keyPair.publicKey,
-  ]);
-
-  if (!fetchAccounts[0]) {
-    //Accounts with zero balance report as not existing.
-    return [
-      {
-        chainId: chainInfo.chainId,
-        balanceAbs: "0",
-        balanceFormatted: "0",
-        currencyName: chainInfo.nativeCurrencySymbol,
-        currencyAddressNative: coalesceChainName(chainInfo.chainId),
-        isNative: true,
-        walletAddress: keyPair.publicKey.toString(),
-      },
-    ];
-  }
-
-  const amountLamports = fetchAccounts[0].lamports.toString();
-  const amountSol = formatUnits(
-    fetchAccounts[0].lamports,
-    WSOL_DECIMALS
-  ).toString();
-
-  return [
-    {
-      chainId: chainInfo.chainId,
-      balanceAbs: amountLamports,
-      balanceFormatted: amountSol,
-      currencyName: chainInfo.nativeCurrencySymbol,
-      currencyAddressNative: "",
-      isNative: true,
-      walletAddress: keyPair.publicKey.toString(),
-    },
-  ];
 }
 
 export async function collectWallets(metrics: PromHelper) {
