@@ -32,7 +32,9 @@ import {
   deserializeUpdateRefundAddressPayload,
   serializeAttestTokenPayload,
   deserializeAttestTokenPayload,
-  extractPayloadFromVAA
+  extractPayloadFromVAA,
+  RegisterChain,
+  signVAABody
 } from "./vaa"
 
 describe('serialize/deserialize vaa', () => {
@@ -341,5 +343,32 @@ describe('serialize/deserialize vaa', () => {
 
     const sequence = extractSequenceFromVAA(vaa)
     expect(sequence).toEqual(BigInt(513))
+  })
+
+  it('should sign vaa body', () => {
+    const body: VAABody<RegisterChain<'TokenBridge'>> = {
+      timestamp: 1,
+      nonce: 1,
+      emitterChainId: 1,
+      targetChainId: 0,
+      emitterAddress: Buffer.from('0000000000000000000000000000000000000000000000000000000000000004', 'hex'),
+      sequence: BigInt(0),
+      consistencyLevel: 0,
+      payload: {
+        type: 'RegisterChain',
+        module: 'TokenBridge',
+        emitterChainId: 2,
+        emitterAddress: Buffer.from('0000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16', 'hex')
+      }
+    }
+    const signatures = signVAABody(
+      ['cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0', 'c3b2e45c422a1602333a64078aeb42637370b0f48fe385f9cfa6ad54a8e0c47e'],
+      body
+    )
+    expect(signatures.length).toEqual(2)
+    expect(signatures[0].index).toEqual(0)
+    expect(signatures[0].sig).toEqual(Buffer.from('667549ac50a1f11588f7cd432bb591b515852b641474ee043e0b05015b14598d29add6805312e0d2235f45790b0efdb401dd38bbea098478c90fc512584de3b101', 'hex'))
+    expect(signatures[1].index).toEqual(1)
+    expect(signatures[1].sig).toEqual(Buffer.from('db49c715ce76d6905a701fa99fbdd2f67aad473176f4e98dffff7e6a855a7b534da26e226e54ccf6b91993a09d2854d11033bc3299d8f3321688492c6da09d3300', 'hex'))
   })
 })

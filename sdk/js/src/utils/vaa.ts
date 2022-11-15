@@ -1,5 +1,7 @@
 import { uint8ArrayToHex } from "./array";
 import { ChainId, CHAIN_ID_ALEPHIUM } from "./consts";
+import { keccak256 } from 'ethers/lib/utils'
+import * as elliptic from "elliptic"
 
 export const METADATA_REPLACE = new RegExp("\u0000", "g");
 
@@ -1020,4 +1022,20 @@ export function serializeVAABody<T extends VAAPayload>(body: VAABody<T>): Uint8A
 export function serializeVAA<T extends VAAPayload>(vaa: VAA<T>): Uint8Array {
   const serializer = VAAPayloadSerializers[vaa.body.payload.type] as (payload: T) => Uint8Array
   return _serializeVAA(vaa, serializer)
+}
+
+export function signVAABody<T extends VAAPayload>(keys: string[], body: VAABody<T>): Signature[] {
+  const hash = keccak256(keccak256(serializeVAABody(body))).slice(2)
+  const ec = new elliptic.ec("secp256k1")
+
+  return keys.map((k, index) => {
+    const key = ec.keyFromPrivate(k)
+    const sig = key.sign(hash, { canonical: true })
+    const signature = [
+      sig.r.toString(16).padStart(64, '0'),
+      sig.s.toString(16).padStart(64, '0'),
+      (sig.recoveryParam as number).toString(16).padStart(2, '0')
+    ].join('')
+    return new Signature(index, Buffer.from(signature, 'hex'))
+  })
 }
