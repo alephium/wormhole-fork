@@ -14,6 +14,7 @@ import { default as updateRefundAddress } from './artifacts/token_bridge_scripts
 import { default as upgradeContract } from './artifacts/token_bridge_scripts/upgrade_token_bridge_contract.ral.json'
 import { default as updateMinimalConsistencyLevel } from './artifacts/token_bridge_scripts/update_minimal_consistency_level.ral.json'
 import { default as deposit } from './artifacts/token_bridge_scripts/deposit.ral.json'
+import { default as registerChain } from './artifacts/token_bridge_scripts/register_chain.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -73,4 +74,8 @@ export function updateMinimalConsistencyLevelScript(): Script {
 
 export function depositScript(): Script {
     return Script.fromJson(deposit)
+}
+
+export function registerChainScript(): Script {
+    return Script.fromJson(registerChain)
 }
