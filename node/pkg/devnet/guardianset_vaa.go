@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"go.uber.org/zap"
 
-	"github.com/certusone/wormhole/node/pkg/ethereum/abi"
-	"github.com/certusone/wormhole/node/pkg/supervisor"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/ethereum/abi"
+	"github.com/alephium/wormhole-fork/node/pkg/supervisor"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 // DevnetGuardianSetVSS returns a VAA signed by guardian-0 that adds all n validators.

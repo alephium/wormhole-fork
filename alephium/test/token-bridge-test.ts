@@ -302,7 +302,7 @@ describe('test token bridge', () => {
       // we have checked the results in previous tests
       await test(seq)
     }
-  })
+  }, 10000)
 
   it('should create wrapped alph pool', async () => {
     await buildProject()

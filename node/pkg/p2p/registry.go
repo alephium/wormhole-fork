@@ -1,8 +1,8 @@
 package p2p
 
 import (
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"sync"
 )
 

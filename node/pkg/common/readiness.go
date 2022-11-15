@@ -1,6 +1,6 @@
 package common
 
-import "github.com/certusone/wormhole/node/pkg/readiness"
+import "github.com/alephium/wormhole-fork/node/pkg/readiness"
 
 const (
 	ReadinessEthSyncing        readiness.Component = "ethSyncing"

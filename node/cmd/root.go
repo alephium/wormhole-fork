@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/certusone/wormhole/node/cmd/debug"
-	"github.com/certusone/wormhole/node/cmd/spy"
-	"github.com/certusone/wormhole/node/pkg/version"
+	"github.com/alephium/wormhole-fork/node/cmd/debug"
+	"github.com/alephium/wormhole-fork/node/cmd/spy"
+	"github.com/alephium/wormhole-fork/node/pkg/version"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -12,7 +12,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
-	"github.com/certusone/wormhole/node/cmd/guardiand"
+	"github.com/alephium/wormhole-fork/node/cmd/guardiand"
 )
 
 var cfgFile string

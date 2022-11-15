@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/certusone/wormhole/node/pkg/supervisor"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/supervisor"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 var (
