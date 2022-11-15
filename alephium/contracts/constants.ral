@@ -24,7 +24,6 @@ Abstract Contract Constants() {
     InvalidTransferTargetChain              = 19
     InvalidDestroyUnexecutedSequenceMessage = 20
     InvalidCaller                           = 21
-    InvalidTransferToAddress                = 22
     ArbiterFeeLessThanAmount                = 23
     InvalidAttestTokenMessage               = 24
     InvalidPayloadId                        = 25
