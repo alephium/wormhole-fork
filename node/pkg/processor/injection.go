@@ -6,7 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"go.uber.org/zap"
 
 	"github.com/alephium/wormhole-fork/node/pkg/supervisor"
@@ -31,7 +30,7 @@ func (p *Processor) handleInjection(ctx context.Context, v *vaa.VAA) {
 		zap.String("digest", hex.EncodeToString(digest.Bytes())))
 
 	// Sign the digest using our node's guardian key.
-	s, err := crypto.Sign(digest.Bytes(), p.gk)
+	s, err := p.guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		panic(err)
 	}

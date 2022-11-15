@@ -1,34 +1,43 @@
 import {
   Bridge__factory,
   ChainId,
-  CHAIN_ID_SOLANA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
   getForeignAssetTerra,
   hexToUint8Array,
   isEVMChain,
-  nativeToHexString,
-  WSOL_DECIMALS,
-} from "@certusone/wormhole-sdk";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, Keypair } from "@solana/web3.js";
-import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
-import { ethers, Signer } from "ethers";
+  getTokenPoolId,
+  tryNativeToHexString,
+  coalesceChainName,
+  contractExists
+} from "alephium-wormhole-sdk";
+import { LCDClient } from "@terra-money/terra.js";
+import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import {
-  ChainConfigInfo,
-  getRelayerEnvironment,
-  RelayerEnvironment,
+  AlephiumChainConfigInfo,
+  EthereumChainConfigInfo,
+  getWalletMonitorEnvironment,
   SupportedToken,
+  TerraChainConfigInfo,
+  WalletMonitorEnvironment
 } from "../configureEnv";
 import { getScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
-import { getMetaplexData, sleep } from "../helpers/utils";
 import { getEthereumToken } from "../utils/ethereum";
-import { getMultipleAccountsRPC } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
+import {
+  addressFromContractId,
+  binToHex,
+  NodeProvider,
+  tokenIdFromAddress,
+  web3
+} from "@alephium/web3"
+import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
+import { sleep } from "../helpers/utils";
 
-let env: RelayerEnvironment;
+let env: WalletMonitorEnvironment;
 const logger = getScopedLogger(["walletMonitor"]);
 
 export type WalletBalance = {
@@ -47,7 +56,7 @@ export interface TerraNativeBalances {
 
 function init() {
   try {
-    env = getRelayerEnvironment();
+    env = getWalletMonitorEnvironment();
   } catch (e) {
     logger.error("Unable to instantiate the relayerEnv in wallet monitor");
   }
@@ -55,59 +64,38 @@ function init() {
 
 async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
   //TODO loop through all the chain configs, calc the public keys, pull their balances, and push to a combo of the loggers and prmometheus
-  if (!env) {
-    logger.error("pullBalances() - no env");
-    return [];
-  }
   if (!env.supportedChains) {
-    logger.error("pullBalances() - no supportedChains");
+    logger.info(`Skip pull balances because there is no 'supportedChains' in configs`);
     return [];
   }
   const balancePromises: Promise<WalletBalance[]>[] = [];
   for (const chainInfo of env.supportedChains) {
     if (!chainInfo) continue;
     try {
-      if (chainInfo.chainId === CHAIN_ID_SOLANA) {
-        for (const solanaPrivateKey of chainInfo.solanaPrivateKey || []) {
+      if (isEVMChain(chainInfo.chainId)) {
+        const ethChainInfo = chainInfo as EthereumChainConfigInfo
+        for (const walletAddress of ethChainInfo.walletAddresses as string[] || []) {
           try {
-            balancePromises.push(
-              pullSolanaNativeBalance(chainInfo, solanaPrivateKey)
-            );
-            balancePromises.push(
-              pullSolanaTokenBalances(chainInfo, solanaPrivateKey)
-            );
-          } catch (e: any) {
-            logger.error(
-              "pulling balances failed failed for chain: " + chainInfo.chainName
-            );
-            if (e && e.stack) {
-              logger.error(e.stack);
-            }
-          }
-        }
-      } else if (isEVMChain(chainInfo.chainId)) {
-        for (const privateKey of chainInfo.walletPrivateKey || []) {
-          try {
-            balancePromises.push(pullEVMNativeBalance(chainInfo, privateKey));
+            balancePromises.push(pullEVMNativeBalance(ethChainInfo, walletAddress));
           } catch (e) {
-            logger.error("pullEVMNativeBalance() failed: " + e);
+            logger.error(`Pulling evm native balance failed, err: ${e}`);
           }
         }
         // TODO one day this will spin up independent watchers that time themselves
         // purposefully not awaited
-        pullAllEVMTokens(env.supportedTokens, chainInfo, metrics);
+        pullAllEVMTokens(env.supportedTokens, ethChainInfo, metrics);
       } else if (chainInfo.chainId === CHAIN_ID_TERRA) {
         // TODO one day this will spin up independent watchers that time themselves
         // purposefully not awaited
-        pullAllTerraBalances(env.supportedTokens, chainInfo, metrics);
+        pullAllTerraBalances(env.supportedTokens, chainInfo as TerraChainConfigInfo, metrics);
+      } else if (chainInfo.chainId === CHAIN_ID_ALEPHIUM) {
+        pullAllAlephiumBalances(env.supportedTokens, chainInfo as AlephiumChainConfigInfo, metrics)
       } else {
-        logger.error("Invalid chain ID in wallet monitor " + chainInfo.chainId);
+        logger.error(`Invalid chain ID in wallet monitor: ${chainInfo.chainId}`);
       }
     } catch (e: any) {
-      logger.error(
-        "pulling balances failed failed for chain: " + chainInfo.chainName
-      );
-      if (e && e.stack) {
+      logger.error(`Pulling balances failed failed for chain: ${coalesceChainName(chainInfo.chainId)}, err: ${e}`);
+      if (e.stack) {
         logger.error(e.stack);
       }
     }
@@ -154,72 +142,21 @@ export async function pullTerraBalance(
       walletAddress: walletAddress,
     };
   } catch (e) {
-    logger.error("Failed to fetch terra balance for %s", tokenAddress);
+    logger.error(`Failed to fetch terra balance for ${tokenAddress}, err: ${e}`);
   }
-}
-
-async function pullSolanaTokenBalances(
-  chainInfo: ChainConfigInfo,
-  privateKey: Uint8Array
-): Promise<WalletBalance[]> {
-  const keyPair = Keypair.fromSecretKey(privateKey);
-  const connection = new Connection(chainInfo.nodeUrl);
-  const output: WalletBalance[] = [];
-
-  try {
-    const allAccounts = await connection.getParsedTokenAccountsByOwner(
-      keyPair.publicKey,
-      { programId: TOKEN_PROGRAM_ID },
-      "confirmed"
-    );
-    let mintAddresses: string[] = [];
-    allAccounts.value.forEach((account) => {
-      mintAddresses.push(account.account.data.parsed?.info?.mint);
-    });
-    const mdArray = await getMetaplexData(mintAddresses, chainInfo);
-
-    for (const account of allAccounts.value) {
-      let mintAddress: string[] = [];
-      mintAddress.push(account.account.data.parsed?.info?.mint);
-      const mdArray = await getMetaplexData(mintAddress, chainInfo);
-      let cName: string = "";
-      if (mdArray && mdArray[0] && mdArray[0].data && mdArray[0].data.symbol) {
-        const encoded = mdArray[0].data.symbol;
-        cName = encodeURIComponent(encoded);
-        cName = cName.replace(/%/g, "_");
-      }
-
-      output.push({
-        chainId: CHAIN_ID_SOLANA,
-        balanceAbs: account.account.data.parsed?.info?.tokenAmount?.amount,
-        balanceFormatted:
-          account.account.data.parsed?.info?.tokenAmount?.uiAmount,
-        currencyName: cName,
-        currencyAddressNative: account.account.data.parsed?.info?.mint,
-        isNative: false,
-        walletAddress: account.pubkey.toString(),
-      });
-    }
-  } catch (e) {
-    logger.error("pullSolanaTokenBalances() - ", e);
-  }
-
-  return output;
 }
 
 async function pullEVMNativeBalance(
-  chainInfo: ChainConfigInfo,
-  privateKey: string
+  chainInfo: EthereumChainConfigInfo,
+  address: string
 ): Promise<WalletBalance[]> {
-  if (!privateKey || !chainInfo.nodeUrl) {
+  if (!address || !chainInfo.nodeUrl) {
     throw new Error("Bad chainInfo config for EVM chain: " + chainInfo.chainId);
   }
 
   let provider = newProvider(chainInfo.nodeUrl);
   if (!provider) throw new Error("bad provider");
-  const signer: Signer = new ethers.Wallet(privateKey, provider);
-  const addr: string = await signer.getAddress();
-  const weiAmount = await provider.getBalance(addr);
+  const weiAmount = await provider.getBalance(address);
   const balanceInEth = ethers.utils.formatEther(weiAmount);
 
   return [
@@ -230,14 +167,14 @@ async function pullEVMNativeBalance(
       currencyName: chainInfo.nativeCurrencySymbol,
       currencyAddressNative: "",
       isNative: true,
-      walletAddress: addr,
+      walletAddress: address,
     },
   ];
 }
 
 async function pullTerraNativeBalance(
   lcd: LCDClient,
-  chainInfo: ChainConfigInfo,
+  chainInfo: TerraChainConfigInfo,
   walletAddress: string
 ): Promise<WalletBalance[]> {
   try {
@@ -262,56 +199,9 @@ async function pullTerraNativeBalance(
     });
     return output;
   } catch (e) {
-    logger.error(
-      "Failed to fetch terra native balances for wallet %s",
-      walletAddress
-    );
+    logger.error(`Failed to fetch terra native balances for wallet ${walletAddress}, err: ${e}`);
     return [];
   }
-}
-
-async function pullSolanaNativeBalance(
-  chainInfo: ChainConfigInfo,
-  privateKey: Uint8Array
-): Promise<WalletBalance[]> {
-  const keyPair = Keypair.fromSecretKey(privateKey);
-  const connection = new Connection(chainInfo.nodeUrl);
-  const fetchAccounts = await getMultipleAccountsRPC(connection, [
-    keyPair.publicKey,
-  ]);
-
-  if (!fetchAccounts[0]) {
-    //Accounts with zero balance report as not existing.
-    return [
-      {
-        chainId: chainInfo.chainId,
-        balanceAbs: "0",
-        balanceFormatted: "0",
-        currencyName: chainInfo.nativeCurrencySymbol,
-        currencyAddressNative: chainInfo.chainName,
-        isNative: true,
-        walletAddress: keyPair.publicKey.toString(),
-      },
-    ];
-  }
-
-  const amountLamports = fetchAccounts[0].lamports.toString();
-  const amountSol = formatUnits(
-    fetchAccounts[0].lamports,
-    WSOL_DECIMALS
-  ).toString();
-
-  return [
-    {
-      chainId: chainInfo.chainId,
-      balanceAbs: amountLamports,
-      balanceFormatted: amountSol,
-      currencyName: chainInfo.nativeCurrencySymbol,
-      currencyAddressNative: "",
-      isNative: true,
-      walletAddress: keyPair.publicKey.toString(),
-    },
-  ];
 }
 
 export async function collectWallets(metrics: PromHelper) {
@@ -325,7 +215,7 @@ export async function collectWallets(metrics: PromHelper) {
     try {
       wallets = await pullBalances(metrics);
     } catch (e) {
-      scopedLogger.error("Failed to pullBalances: " + e);
+      scopedLogger.error(`Failed to pullBalances, err: ${e}`);
     }
     scopedLogger.debug("Done pulling balances.");
     metrics.handleWalletBalances(wallets);
@@ -336,7 +226,7 @@ export async function collectWallets(metrics: PromHelper) {
 async function calcLocalAddressesEVM(
   provider: ethers.providers.JsonRpcBatchProvider,
   supportedTokens: SupportedToken[],
-  chainConfigInfo: ChainConfigInfo
+  chainConfigInfo: EthereumChainConfigInfo
 ): Promise<string[]> {
   const tokenBridge = Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
@@ -348,10 +238,7 @@ async function calcLocalAddressesEVM(
       tokenAddressPromises.push(Promise.resolve(supportedToken.address));
       continue;
     }
-    const hexAddress = nativeToHexString(
-      supportedToken.address,
-      supportedToken.chainId
-    );
+    const hexAddress = tryNativeToHexString(supportedToken.address, supportedToken.chainId)
     if (!hexAddress) {
       logger.debug(
         "calcLocalAddressesEVM() - no hexAddress for chainId: " +
@@ -377,7 +264,7 @@ async function calcLocalAddressesEVM(
 export async function calcLocalAddressesTerra(
   lcd: LCDClient,
   supportedTokens: SupportedToken[],
-  chainConfigInfo: ChainConfigInfo
+  chainConfigInfo: TerraChainConfigInfo
 ) {
   const output: string[] = [];
   for (const supportedToken of supportedTokens) {
@@ -388,7 +275,7 @@ export async function calcLocalAddressesTerra(
       }
       continue;
     }
-    const hexAddress = nativeToHexString(
+    const hexAddress = tryNativeToHexString(
       supportedToken.address,
       supportedToken.chainId
     );
@@ -419,7 +306,7 @@ export async function calcLocalAddressesTerra(
 
 async function pullAllEVMTokens(
   supportedTokens: SupportedToken[],
-  chainConfig: ChainConfigInfo,
+  chainConfig: EthereumChainConfigInfo,
   metrics: PromHelper
 ) {
   try {
@@ -432,12 +319,8 @@ async function pullAllEVMTokens(
       supportedTokens,
       chainConfig
     );
-    if (!chainConfig.walletPrivateKey) {
-      return;
-    }
-    for (const privateKey of chainConfig.walletPrivateKey) {
+    for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
       try {
-        const publicAddress = await new ethers.Wallet(privateKey).getAddress();
         const tokens = await Promise.all(
           localAddresses.map((tokenAddress) =>
             getEthereumToken(tokenAddress, provider)
@@ -447,7 +330,7 @@ async function pullAllEVMTokens(
           tokens.map((token) =>
             Promise.all([
               token.decimals(),
-              token.balanceOf(publicAddress),
+              token.balanceOf(walletAddress),
               token.symbol(),
             ])
           )
@@ -459,12 +342,13 @@ async function pullAllEVMTokens(
           currencyName: symbol,
           currencyAddressNative: localAddresses[idx],
           isNative: false,
-          walletAddress: publicAddress,
+          walletAddress: walletAddress,
         }));
+        logger.debug(`Ethereum wallet balances: ${JSON.stringify(balances)}`)
         metrics.handleWalletBalances(balances);
       } catch (e) {
         logger.error(
-          "pullAllEVMTokens failed: for tokens " +
+          "Failed to pull evm tokens: for tokens " +
             JSON.stringify(localAddresses) +
             " on chain " +
             chainConfig.chainId +
@@ -474,35 +358,16 @@ async function pullAllEVMTokens(
       }
     }
   } catch (e) {
-    logger.error(
-      "pullAllEVMTokens failed: for chain " +
-        chainConfig.chainId +
-        ", error: " +
-        e
-    );
+    logger.error(`Failed to pull evm tokens for chain: ${chainConfig.chainName}, err: ${e}`);
   }
 }
 
 async function pullAllTerraBalances(
   supportedTokens: SupportedToken[],
-  chainConfig: ChainConfigInfo,
+  chainConfig: TerraChainConfigInfo,
   metrics: PromHelper
 ) {
   let balances: WalletBalance[] = [];
-  if (!chainConfig.walletPrivateKey) {
-    return balances;
-  }
-  if (
-    !(
-      chainConfig.terraChainId &&
-      chainConfig.terraCoin &&
-      chainConfig.terraGasPriceUrl &&
-      chainConfig.terraName
-    )
-  ) {
-    logger.error("Terra relay was called without proper instantiation.");
-    throw new Error("Terra relay was called without proper instantiation.");
-  }
   const lcdConfig = {
     URL: chainConfig.nodeUrl,
     chainID: chainConfig.terraChainId,
@@ -514,12 +379,7 @@ async function pullAllTerraBalances(
     supportedTokens,
     chainConfig
   );
-  for (const privateKey of chainConfig.walletPrivateKey) {
-    const mk = new MnemonicKey({
-      mnemonic: privateKey,
-    });
-    const wallet = lcd.wallet(mk);
-    const walletAddress = wallet.key.accAddress;
+  for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
     balances = [
       ...balances,
       ...(await pullTerraNativeBalance(lcd, chainConfig, walletAddress)),
@@ -533,4 +393,74 @@ async function pullAllTerraBalances(
   }
 
   metrics.handleWalletBalances(balances);
+}
+
+async function pullAllAlephiumBalances(
+  supportedTokens: SupportedToken[],
+  chainConfig: AlephiumChainConfigInfo,
+  metrics: PromHelper
+) {
+  const groupIndex = chainConfig.groupIndex!
+  const nodeProvider = new NodeProvider(chainConfig.nodeUrl)
+  web3.setCurrentNodeProvider(nodeProvider)
+  const walletBalances: WalletBalance[] = []
+  try {
+    for (const walletAddress of chainConfig.walletAddresses as string[] || []) {
+      const balances = await nodeProvider.addresses.getAddressesAddressBalance(walletAddress)
+      walletBalances.push({
+        chainId: chainConfig.chainId,
+        balanceAbs: balances.balance,
+        balanceFormatted: balances.balanceHint.slice(0, -5),
+        currencyName: 'ALPH',
+        currencyAddressNative: '',
+        isNative: true,
+        walletAddress: walletAddress
+      })
+
+      for (const token of supportedTokens) {
+        if (token.chainId === CHAIN_ID_ALEPHIUM) {
+          const tokenId = binToHex(tokenIdFromAddress(token.address))
+          const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+          const amount = tokenBalance?.amount ?? '0'
+          walletBalances.push({
+            chainId: chainConfig.chainId,
+            balanceAbs: amount,
+            balanceFormatted: amount,
+            currencyName: '', // TODO: get token name from config
+            currencyAddressNative: token.address,
+            isNative: false,
+            walletAddress: walletAddress
+          })
+          continue
+        }
+
+        const originTokenId = tryNativeToHexString(token.address, token.chainId)
+        const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
+        const tokenExists = await contractExists(tokenId, nodeProvider)
+        if (!tokenExists) {
+          continue
+        }
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+        const amount = tokenBalance?.amount ?? '0'
+        const contractAddress = addressFromContractId(tokenId)
+        // TODO: move this to SDK
+        const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
+        const name = (contractState.fields[5] as ValByteVec).value
+        const decimals = parseInt((contractState.fields[6] as ValU256).value)
+        walletBalances.push({
+          chainId: chainConfig.chainId,
+          balanceAbs: amount,
+          balanceFormatted: formatUnits(amount, decimals),
+          currencyName: name,
+          currencyAddressNative: contractAddress,
+          isNative: false,
+          walletAddress: walletAddress
+        })
+      }
+    }
+    logger.debug(`Alephium wallet balances: ${JSON.stringify(walletBalances)}`)
+    metrics.handleWalletBalances(walletBalances)
+  } catch (error) {
+    logger.error(`Failed to pull Alephium wallet balances, error: ${error}`)
+  }
 }

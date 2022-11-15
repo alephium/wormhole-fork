@@ -1,6 +1,5 @@
-import { hexToUint8Array, parseTransferPayload } from "@certusone/wormhole-sdk";
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
-import { getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
+import { ChainId } from "alephium-wormhole-sdk";
+import { getRelayerEnvironment, RelayerEnvironment, validateChainConfig } from "../configureEnv";
 import { getLogger, getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import {
@@ -12,6 +11,7 @@ import {
   RelayResult,
   resetPayload,
   Status,
+  storeKeyFromJson,
   StorePayload,
   storePayloadFromJson,
   storePayloadToJson,
@@ -26,6 +26,10 @@ const AUDIT_INTERVAL_MS = 30 * 1000;
 const WORKER_INTERVAL_MS = 5 * 1000;
 const REDIS_RETRY_MS = 10 * 1000;
 
+const BACKOFF_TIME = 1000; // 1 second in milliseconds
+const MAX_BACKOFF_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+const MAX_RETRIES = 10;
+
 let metrics: PromHelper;
 
 const logger = getLogger();
@@ -36,15 +40,11 @@ type WorkableItem = {
   value: string;
 };
 
-export function init(runWorker: boolean): boolean {
-  if (!runWorker) return true;
-
+export function init(): boolean {
   try {
     relayerEnv = getRelayerEnvironment();
   } catch (e) {
-    logger.error(
-      "Encountered error while initiating the relayer environment: " + e
-    );
+    logger.error(`Encountered error while initiating the relayer environment: ${e}`);
     return false;
   }
 
@@ -60,15 +60,7 @@ function createWorkerInfos(metrics: PromHelper) {
     metrics.incConfirmed(chain.chainId, 0);
     metrics.incFailures(chain.chainId, 0);
     metrics.incRollback(chain.chainId, 0);
-    chain.walletPrivateKey?.forEach((key) => {
-      workerArray.push({
-        walletPrivateKey: key,
-        index: index,
-        targetChainId: chain.chainId,
-      });
-      index++;
-    });
-    chain.solanaPrivateKey?.forEach((key) => {
+    chain.walletPrivateKeys!.forEach((key) => {
       workerArray.push({
         walletPrivateKey: key,
         index: index,
@@ -77,7 +69,7 @@ function createWorkerInfos(metrics: PromHelper) {
       index++;
     });
   });
-  logger.info("will use " + workerArray.length + " workers");
+  logger.info(`Will use ${workerArray.length} workers`);
   return workerArray;
 }
 
@@ -105,8 +97,8 @@ async function spawnAuditorThread(workerInfo: WorkerInfo) {
           " chainId " +
           workerInfo.targetChainId
       );
-      logger.error("error message: " + error.message);
-      logger.error("error trace: " + error.stack);
+      logger.error(`Error message: ${error.message}`);
+      logger.error(`Error trace: ${error.stack}`);
       await sleep(AUDITOR_THREAD_RESTART_MS);
       spawnAuditorThread(workerInfo);
     }
@@ -130,31 +122,20 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
         }
       }
       await redisClient.select(RedisTables.WORKING);
-      for await (const si_key of redisClient.scanIterator()) {
-        const si_value = await redisClient.get(si_key);
-        if (!si_value) {
-          continue;
+      for await (const siKey of redisClient.scanIterator()) {
+        const storeKey = storeKeyFromJson(siKey)
+        if (storeKey.targetChainId !== workerInfo.targetChainId) {
+          continue
         }
 
-        const storePayload: StorePayload = storePayloadFromJson(si_value);
-        try {
-          const { parse_vaa } = await importCoreWasm();
-          const parsedVAA = parse_vaa(hexToUint8Array(storePayload.vaa_bytes));
-          const payloadBuffer: Buffer = Buffer.from(parsedVAA.payload);
-          const transferPayload = parseTransferPayload(payloadBuffer);
-
-          const chain = transferPayload.targetChain;
-          if (chain !== workerInfo.targetChainId) {
-            continue;
-          }
-        } catch (e) {
-          auditLogger.error("Failed to parse a stored VAA: " + e);
-          auditLogger.error("si_value of failure: " + si_value);
+        const siValue = await redisClient.get(siKey);
+        if (!siValue) {
           continue;
         }
+        const storePayload: StorePayload = storePayloadFromJson(siValue);
         auditLogger.debug(
-          "key %s => status: %s, timestamp: %s, retries: %d",
-          si_key,
+          "Key %s => status: %s, timestamp: %s, retries: %d",
+          siKey,
           Status[storePayload.status],
           storePayload.timestamp,
           storePayload.retries
@@ -182,7 +163,7 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
           if (storePayload.status === Status.FatalError) {
             // Done with this failed transaction
             auditLogger.debug("Discarding FatalError.");
-            await redisClient.del(si_key);
+            await redisClient.del(siKey);
             continue;
           } else if (storePayload.status === Status.Completed) {
             // Check for rollback
@@ -190,24 +171,24 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
 
             //TODO actually do an isTransferCompleted
             const rr = await relay(
-              storePayload.vaa_bytes,
+              storePayload.vaaBytes,
               true,
               workerInfo.walletPrivateKey,
               auditLogger,
               metrics
             );
 
-            await redisClient.del(si_key);
+            await redisClient.del(siKey);
             if (rr.status === Status.Completed) {
               metrics.incConfirmed(workerInfo.targetChainId);
             } else {
-              auditLogger.info("Detected a rollback on " + si_key);
+              auditLogger.info("Detected a rollback on " + siKey);
               metrics.incRollback(workerInfo.targetChainId);
               // Remove this item from the WORKING table and move it to INCOMING
               await redisClient.select(RedisTables.INCOMING);
               await redisClient.set(
-                si_key,
-                storePayloadToJson(resetPayload(storePayloadFromJson(si_value)))
+                siKey,
+                storePayloadToJson(resetPayload(storePayloadFromJson(siValue)))
               );
               await redisClient.select(RedisTables.WORKING);
             }
@@ -225,15 +206,16 @@ async function doAuditorThread(workerInfo: WorkerInfo) {
       }
       redisClient.quit();
       // metrics.setDemoWalletBalance(now.getUTCSeconds());
-      await sleep(AUDIT_INTERVAL_MS);
     } catch (e) {
       auditLogger.error("spawnAuditorThread: caught exception: " + e);
     }
+    await sleep(AUDIT_INTERVAL_MS);
   }
 }
 
 export async function run(ph: PromHelper) {
   metrics = ph;
+  await validateChainConfig(relayerEnv)
 
   if (relayerEnv.clearRedisOnInit) {
     logger.info("Clearing REDIS as per tunable...");
@@ -256,44 +238,28 @@ export async function run(ph: PromHelper) {
 }
 
 async function processRequest(
-  key: string,
+  item: WorkableItem,
   myPrivateKey: any,
   relayLogger: ScopedLogger
 ) {
   const logger = getScopedLogger(["processRequest"], relayLogger);
   try {
-    logger.debug("Processing request %s...", key);
-    // Get the entry from the working store
-    const rClient = await connectToRedis();
-    if (!rClient) {
-      logger.error("Failed to connect to Redis in processRequest");
-      return;
-    }
-    await rClient.select(RedisTables.WORKING);
-    let value: string | null = await rClient.get(key);
-    if (!value) {
-      logger.error("Could not find key %s", key);
-      return;
-    }
-    let payload: StorePayload = storePayloadFromJson(value);
-    if (payload.status !== Status.Pending) {
-      logger.info("This key %s has already been processed.", key);
-      return;
-    }
+    logger.debug("Processing request %s...", item.key);
+    let payload: StorePayload = storePayloadFromJson(item.value);
     // Actually do the processing here and update status and time field
     let relayResult: RelayResult;
     try {
       if (payload.retries > 0) {
         logger.info(
           "Calling with vaa_bytes %s, retry %d",
-          payload.vaa_bytes,
+          payload.vaaBytes,
           payload.retries
         );
       } else {
-        logger.info("Calling with vaa_bytes %s", payload.vaa_bytes);
+        logger.info("Calling with vaa_bytes %s", payload.vaaBytes);
       }
       relayResult = await relay(
-        payload.vaa_bytes,
+        payload.vaaBytes,
         false,
         myPrivateKey,
         logger,
@@ -316,16 +282,8 @@ async function processRequest(
       }
     }
 
-    const MAX_RETRIES = 10;
-    let targetChain: any = 0; // 0 is unspecified, but not covered by the SDK
-    try {
-      const { parse_vaa } = await importCoreWasm();
-      const parsedVAA = parse_vaa(hexToUint8Array(payload.vaa_bytes));
-      const transferPayload = parseTransferPayload(
-        Buffer.from(parsedVAA.payload)
-      );
-      targetChain = transferPayload.targetChain;
-    } catch (e) {}
+    const storeKey = storeKeyFromJson(item.key)
+    const targetChain = storeKey.targetChainId as ChainId
     let retry: boolean = false;
     if (relayResult.status !== Status.Completed) {
       metrics.incFailures(targetChain);
@@ -345,22 +303,26 @@ async function processRequest(
     payload.status = relayResult.status;
     payload.timestamp = new Date().toISOString();
     payload.retries++;
-    value = storePayloadToJson(payload);
+    const newValue = storePayloadToJson(payload);
+
+    const rClient = await connectToRedis();
+    if (!rClient) {
+      logger.error("Failed to connect to Redis in processRequest");
+      return;
+    }
+    await rClient.select(RedisTables.WORKING);
     if (!retry || payload.retries > MAX_RETRIES) {
-      await rClient.set(key, value);
+      await rClient.set(item.key, newValue);
     } else {
       // Remove from the working table
-      await rClient.del(key);
+      await rClient.del(item.key);
       // Put this back into the incoming table
       await rClient.select(RedisTables.INCOMING);
-      await rClient.set(key, value);
+      await rClient.set(item.key, newValue);
     }
     await rClient.quit();
   } catch (e: any) {
-    logger.error("Unexpected error in processRequest: " + e.message);
-    logger.error("request key: " + key);
-    logger.error(e);
-    return [];
+    logger.error(`Unexpected error in processRequest, key: ${item.key}, err: ${e}`);
   }
 }
 
@@ -383,24 +345,18 @@ async function findWorkableItems(
     for await (const si_key of redisClient.scanIterator()) {
       const si_value = await redisClient.get(si_key);
       if (si_value) {
-        let storePayload: StorePayload = storePayloadFromJson(si_value);
         // Check to see if this worker should handle this VAA
         if (workerInfo.targetChainId !== 0) {
-          const { parse_vaa } = await importCoreWasm();
-          const parsedVAA = parse_vaa(hexToUint8Array(storePayload.vaa_bytes));
-          const payloadBuffer: Buffer = Buffer.from(parsedVAA.payload);
-          const transferPayload = parseTransferPayload(payloadBuffer);
-          const tgtChainId = transferPayload.targetChain;
-          if (tgtChainId !== workerInfo.targetChainId) {
+          const storeKey = storeKeyFromJson(si_key)
+          if (storeKey.targetChainId !== workerInfo.targetChainId) {
             // Skipping mismatched chainId
             continue;
           }
         }
 
         // Check to see if this is a retry and if it is time to retry
+        const storePayload: StorePayload = storePayloadFromJson(si_value);
         if (storePayload.retries > 0) {
-          const BACKOFF_TIME = 1000; // 1 second in milliseconds
-          const MAX_BACKOFF_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
           // calculate retry time
           const now: Date = new Date();
           const old: Date = new Date(storePayload.timestamp);
@@ -420,10 +376,7 @@ async function findWorkableItems(
     redisClient.quit();
     return workableItems;
   } catch (e: any) {
-    logger.error(
-      "Recoverable exception scanning REDIS for workable items: " + e.message
-    );
-    logger.error(e);
+    logger.error(`Recoverable exception scanning REDIS for workable items, err: ${e}`);
     return [];
   }
 }
@@ -444,8 +397,8 @@ async function spawnWorkerThread(workerInfo: WorkerInfo) {
         " chainId " +
         workerInfo.targetChainId
     );
-    logger.error("error message: " + error.message);
-    logger.error("error trace: " + error.stack);
+    logger.error(`Error message: ${error.message}`);
+    logger.error(`Error trace: ${error.stack}`);
     await sleep(WORKER_THREAD_RESTART_MS);
     spawnWorkerThread(workerInfo);
   });
@@ -461,25 +414,21 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
       workerInfo,
       relayLogger
     );
-    // relayLogger.debug("Found items: %o", workableItems);
-    let i: number = 0;
-    for (i = 0; i < workableItems.length; i++) {
+    relayLogger.debug(`Found items: ${workableItems}`);
+    for (let i = 0; i < workableItems.length; i++) {
       const workItem: WorkableItem = workableItems[i];
       if (workItem) {
         //This will attempt to move the workable item to the WORKING table
-        relayLogger.debug("Moving item: %o", workItem);
+        relayLogger.debug(`Try moving item to WORKING table, key: ${workItem.key}`);
         if (await moveToWorking(workItem, relayLogger)) {
-          relayLogger.info("Moved key to WORKING table: %s", workItem.key);
+          relayLogger.info(`Moved item to WORKING table, key: ${workItem.key}`);
           await processRequest(
-            workItem.key,
+            workItem,
             workerInfo.walletPrivateKey,
             relayLogger
           );
         } else {
-          relayLogger.error(
-            "Cannot move work item from INCOMING to WORKING: %s",
-            workItem.key
-          );
+          relayLogger.error(`Cannot move work item from INCOMING to WORKING, key: ${workItem.key}`);
         }
       }
     }
@@ -505,7 +454,7 @@ async function moveToWorking(
     // Move this entry from incoming store to working store
     await redisClient.select(RedisTables.INCOMING);
     if ((await redisClient.del(workItem.key)) === 0) {
-      logger.info("The key %s no longer exists in INCOMING", workItem.key);
+      logger.info(`The key ${workItem.key} no longer exists in INCOMING`);
       await redisClient.quit();
       return false;
     }
@@ -521,14 +470,13 @@ async function moveToWorking(
       return true;
     } else {
       metrics.incAlreadyExec();
-      logger.debug("Dropping request %s as already processed", workItem.key);
+      logger.debug(`Dropping request ${workItem.key} as already processed`);
       await redisClient.quit();
       return false;
     }
   } catch (e: any) {
-    logger.error("Recoverable exception moving item to working: " + e.message);
-    logger.error("%s => %s", workItem.key, workItem.value);
-    logger.error(e);
+    logger.error(`Recoverable exception moving item to working, err: ${e}`);
+    logger.error(`${workItem.key} => ${workItem.value}`);
     return false;
   }
 }

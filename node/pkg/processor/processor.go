@@ -2,12 +2,12 @@ package processor
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"time"
 
 	"github.com/alephium/wormhole-fork/node/pkg/notify/discord"
 
 	"github.com/alephium/wormhole-fork/node/pkg/db"
+	"github.com/alephium/wormhole-fork/node/pkg/ecdsasigner"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -68,8 +68,8 @@ type Processor struct {
 	// injectC is a channel of VAAs injected locally.
 	injectC chan *vaa.VAA
 
-	// gk is the node's guardian private key
-	gk *ecdsa.PrivateKey
+	// Node's guardian signer
+	guardianSigner ecdsasigner.ECDSASigner
 
 	attestationEvents *reporter.AttestationEventReporter
 
@@ -104,22 +104,22 @@ func NewProcessor(
 	obsvC chan *gossipv1.SignedObservation,
 	injectC chan *vaa.VAA,
 	signedInC chan *gossipv1.SignedVAAWithQuorum,
-	gk *ecdsa.PrivateKey,
+	guardianSigner ecdsasigner.ECDSASigner,
 	gst *common.GuardianSetState,
 	attestationEvents *reporter.AttestationEventReporter,
 	notifier *discord.DiscordNotifier,
 ) *Processor {
 
 	return &Processor{
-		lockC:     lockC,
-		setC:      setC,
-		sendC:     sendC,
-		obsvC:     obsvC,
-		signedInC: signedInC,
-		injectC:   injectC,
-		gk:        gk,
-		gst:       gst,
-		db:        db,
+		lockC:          lockC,
+		setC:           setC,
+		sendC:          sendC,
+		obsvC:          obsvC,
+		signedInC:      signedInC,
+		injectC:        injectC,
+		guardianSigner: guardianSigner,
+		gst:            gst,
+		db:             db,
 
 		attestationEvents: attestationEvents,
 
@@ -127,7 +127,7 @@ func NewProcessor(
 
 		logger:  supervisor.Logger(ctx),
 		state:   &aggregationState{vaaMap{}},
-		ourAddr: crypto.PubkeyToAddress(gk.PublicKey),
+		ourAddr: crypto.PubkeyToAddress(guardianSigner.PublicKey()),
 	}
 }
 

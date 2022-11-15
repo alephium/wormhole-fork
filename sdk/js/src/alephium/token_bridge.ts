@@ -13,6 +13,7 @@ import { default as destroyUnexecutedSequences } from './artifacts/token_bridge_
 import { default as updateRefundAddress } from './artifacts/token_bridge_scripts/update_refund_address.ral.json'
 import { default as upgradeContract } from './artifacts/token_bridge_scripts/upgrade_token_bridge_contract.ral.json'
 import { default as updateMinimalConsistencyLevel } from './artifacts/token_bridge_scripts/update_minimal_consistency_level.ral.json'
+import { default as deposit } from './artifacts/token_bridge_scripts/deposit.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -68,4 +69,8 @@ export function upgradeTokenBridgeContractScript(): Script {
 
 export function updateMinimalConsistencyLevelScript(): Script {
     return Script.fromJson(updateMinimalConsistencyLevel)
+}
+
+export function depositScript(): Script {
+    return Script.fromJson(deposit)
 }

@@ -1,4 +1,4 @@
-import { TokenImplementation__factory } from "@certusone/wormhole-sdk";
+import { TokenImplementation__factory } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 
 export async function getEthereumToken(

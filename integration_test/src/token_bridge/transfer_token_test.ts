@@ -1,7 +1,7 @@
-import { createAlephium } from './alph'
-import { createEth } from './eth'
-import { BridgeChain, TransferTokenTest } from './utils'
 import { execSync } from 'child_process'
+import { BridgeChain } from '../bridge_chain'
+import { getBridgeChains } from '../utils'
+import { TransferTokenTest } from './transfer_token'
 
 async function attestTokens(alph: BridgeChain, eth: BridgeChain) {
   const signedVaa0 = await alph.attestToken(alph.testTokenId)
@@ -28,8 +28,9 @@ function randomBigInt(max: bigint, normalizeFunc: (amount: bigint) => bigint): b
 }
 
 async function test() {
-  const alph = await createAlephium()
-  const eth = createEth()
+  const chains = await getBridgeChains()
+  const alph = chains.alph
+  const eth = chains.eth
 
   console.log('================== attest tokens ==================')
   await attestTokens(alph, eth)
