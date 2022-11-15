@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '16'
       - name: build docker images
-        run: ./build-docker-images.sh
+        run: ./build-docker-images.sh true
       - name: start docker images
         working-directory: ./integration_test/docker
         run: docker-compose up -d
