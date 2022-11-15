@@ -11,7 +11,7 @@ export const NFTBridgeModule = '00000000000000000000000000000000000000000000004e
 
 export const TransferTokenPayloadId = 1
 export const AttestTokenPayloadId = 2
-export const TransferNFTPayloadId = 1
+export const TransferNFTPayloadId = 3
 
 export const CoreContractUpgradeActionId = 1
 export const GuardianSetUpgradeActionId = 2
@@ -39,7 +39,7 @@ export interface TransferToken {
   amount: bigint
   originAddress: Uint8Array // 32 bytes
   originChain: ChainId
-  targetAddress: Uint8Array // 32 bytes
+  targetAddress: Uint8Array
   fee: bigint
 }
 
@@ -417,25 +417,32 @@ function validateModule(module: Module, expected: Module, type: PayloadName) {
 }
 
 export function deserializeTransferTokenPayload(payload: Uint8Array): TransferToken {
-  validatePayloadSize(payload, 131, 'TransferToken')
   const reader = new Reader(payload)
   validatePayloadId(reader.readUInt8(), TransferTokenPayloadId, 'TransferToken')
+  const amount = reader.readUInt256BE()
+  const originAddress = reader.readBytes(32)
+  const originChain = reader.readUInt16BE() as ChainId
+  const targetAddressSize = reader.readUInt16BE()
+  const targetAddress = reader.readBytes(targetAddressSize)
+  const fee = reader.readUInt256BE()
+  validatePayloadSize(payload, 101 + targetAddressSize, 'TransferToken')
   return {
     type: 'TransferToken',
-    amount: reader.readUInt256BE(),
-    originAddress: reader.readBytes(32),
-    originChain: reader.readUInt16BE() as ChainId,
-    targetAddress: reader.readBytes(32),
-    fee: reader.readUInt256BE()
+    amount,
+    originAddress,
+    originChain,
+    targetAddress,
+    fee
   }
 }
 
 export function serializeTransferTokenPayload(payload: TransferToken): Uint8Array {
-  const writer = new Writer(131)
+  const writer = new Writer(101 + payload.targetAddress.length)
   writer.writeUInt8(TransferTokenPayloadId) // payloadId
   writer.writeUInt256BE(payload.amount)
   writer.writeBytes(payload.originAddress)
   writer.writeUInt16BE(payload.originChain)
+  writer.writeUInt16BE(payload.targetAddress.length)
   writer.writeBytes(payload.targetAddress)
   writer.writeUInt256BE(payload.fee)
   return writer.result()
@@ -904,14 +911,17 @@ export function serializeUpdateRefundAddressVAA(vaa: VAA<UpdateRefundAddress>): 
   return _serializeVAA(vaa, serializeUpdateRefundAddressPayload)
 }
 
-function deserializeApplicationVAA(signedVAA: Uint8Array, payloadId: number, payloadSize: number) {
-  if (payloadId === AttestTokenPayloadId) {
-    return deserializeAttestTokenVAA(signedVAA)
+function deserializeApplicationVAA(signedVAA: Uint8Array, payloadId: number) {
+  switch (payloadId) {
+    case TransferTokenPayloadId:
+      return deserializeTransferTokenVAA(signedVAA)
+    case AttestTokenPayloadId:
+      return deserializeAttestTokenVAA(signedVAA)
+    case TransferNFTPayloadId:
+      return deserializeTransferNFTVAA(signedVAA)
+    default:
+      throw new Error(`Invalid application vaa payload id: ${payloadId}`)
   }
-  if (payloadSize === 131) {
-    return deserializeTransferTokenVAA(signedVAA)
-  }
-  return deserializeTransferNFTVAA(signedVAA)
 }
 
 function deserializeCoreGovernanceVAA(signedVAA: Uint8Array, actionId: number, targetChainId: ChainId) {
@@ -984,7 +994,7 @@ export function deserializeVAA(signedVAA: Uint8Array): VAA<VAAPayload> {
   const payload = body.slice(53)
   const payloadId = payload[0]
   if (payloadId !== 0) {
-    return deserializeApplicationVAA(signedVAA, payloadId, payload.length)
+    return deserializeApplicationVAA(signedVAA, payloadId)
   }
 
   const module = bytesToModule(payload.slice(0, 32))
