@@ -1,6 +1,6 @@
 import { execSync } from 'child_process'
 import { BridgeChain } from '../bridge_chain'
-import { getBridgeChains } from '../utils'
+import { getBridgeChains, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 
 async function attestTokens(alph: BridgeChain, eth: BridgeChain) {
@@ -13,18 +13,6 @@ async function attestTokens(alph: BridgeChain, eth: BridgeChain) {
   await alph.createWrapped(signedVaa2)
   const signedVaa3 = await eth.attestToken(eth.wrappedNativeTokenId)
   await alph.createWrapped(signedVaa3)
-}
-
-function randomBigInt(max: bigint, normalizeFunc: (amount: bigint) => bigint): bigint {
-  const length = max.toString().length
-  let multiplier = ''
-  while (multiplier.length < length) {
-    multiplier += Math.random().toString().split('.')[1]
-  }
-  multiplier = multiplier.slice(0, length)
-  const num = (max * BigInt(multiplier)) / 10n ** BigInt(length)
-  const normalized = normalizeFunc(num)
-  return normalized === 0n ? randomBigInt(max, normalizeFunc) : normalized
 }
 
 async function test() {
@@ -89,6 +77,9 @@ async function test() {
       process.exit(-1)
     }
   }
+
+  console.log('================= transfer tokens to multi-sig address =================')
+  await ethToAlph.transferToMultiSigAddress(10)
 }
 
 test()

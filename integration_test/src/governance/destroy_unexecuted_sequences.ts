@@ -6,17 +6,13 @@ import {
   getTokenBridgeForChainId,
   getUnexecutedSequenceId,
   serializeVAA,
-  serializeVAABody,
-  Signature,
   TransferToken,
   VAA,
   signVAABody,
   VAABody
 } from 'alephium-wormhole-sdk'
-import { keccak256 } from 'ethers/lib/utils'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
-import * as elliptic from 'elliptic'
 
 const unexecutedSequenceIndex = 0
 const guardianKeys = [
@@ -47,7 +43,7 @@ async function createUnexecutedSequence() {
     amount: 1000000000000000000n,
     originAddress: Buffer.from('000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e', 'hex'),
     originChain: CHAIN_ID_ETH,
-    targetAddress: Buffer.from('bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a', 'hex'),
+    targetAddress: Buffer.from('00bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a', 'hex'),
     fee: 0n
   }
   const vaaBody: VAABody<TransferToken> = {

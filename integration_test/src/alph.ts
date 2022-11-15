@@ -9,6 +9,7 @@ import {
   addressFromContractId,
   binToHex,
   ContractState,
+  encodeI256,
   groupOfAddress,
   node,
   NodeProvider,
@@ -34,6 +35,7 @@ import {
   deposit as tokenBridgeForChainDeposit,
   deserializeTransferTokenVAA
 } from 'alephium-wormhole-sdk'
+import { randomBytes } from 'ethers/lib/utils'
 
 export type AlephiumBridgeChain = BridgeChain & {
   tokenBridgeContractId: string
@@ -55,7 +57,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const accounts = await nodeWallet.getAccounts()
   const accountAddress = accounts[0].address
   const groupIndex = groupOfAddress(accountAddress)
-  const recipientAddress = base58.decode(accountAddress).slice(1)
+  const recipientAddress = base58.decode(accountAddress)
   const deploymentsFile = path.join(process.cwd(), '..', 'alephium', '.deployments.devnet.json')
   const content = fs.readFileSync(deploymentsFile).toString()
   const contracts = JSON.parse(content)['0'].deployContractResults
@@ -76,13 +78,6 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const currentMessageFee = await getCurrentMessageFee()
-
-  const validateToAddress = (toAddress: Uint8Array): string => {
-    if (toAddress.length !== 32) {
-      throw new Error('Alephium transfer: invalid to address, expect 32 bytes')
-    }
-    return binToHex(toAddress)
-  }
 
   const normalizeTransferAmount = (amount: bigint): bigint => amount
 
@@ -117,16 +112,24 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getNativeTokenBalanceByAddress(accountAddress)
   }
 
-  const getTokenBalance = async (tokenId: string): Promise<bigint> => {
-    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(accountAddress)
+  const getTokenBalanceByAddress = async (tokenId: string, address: string): Promise<bigint> => {
+    const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(address)
     const tokenBalance = balance.tokenBalances?.find((t) => t.id === tokenId)
     return tokenBalance === undefined ? 0n : BigInt(tokenBalance.amount)
   }
 
+  const getTokenBalance = async (tokenId: string): Promise<bigint> => {
+    return getTokenBalanceByAddress(tokenId, accountAddress)
+  }
+
   const getWrappedTokenBalance = async (originTokenId: string, tokenChainId: ChainId): Promise<bigint> => {
+    return getWrappedTokenBalanceByAddress(originTokenId, tokenChainId, accountAddress)
+  }
+
+  const getWrappedTokenBalanceByAddress = async (originTokenId: string, tokenChainId: ChainId, address: string): Promise<bigint> => {
     const remoteTokenId = normalizeTokenId(originTokenId)
     const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, remoteTokenId)
-    return getTokenBalance(tokenPoolId)
+    return getTokenBalanceByAddress(tokenPoolId, address)
   }
 
   const getLocalLockedTokenBalance = async (tokenId: string): Promise<bigint> => {
@@ -183,7 +186,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
       accountAddress,
       tokenId,
       toChainId,
-      validateToAddress(toAddress),
+      binToHex(toAddress),
       amount,
       currentMessageFee,
       defaultArbiterFee,
@@ -211,7 +214,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
       tokenBridgeContractId,
       accountAddress,
       toChainId,
-      validateToAddress(toAddress),
+      binToHex(toAddress),
       amount,
       defaultArbiterFee,
       defaultConfirmations
@@ -241,7 +244,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
       remoteTokenId,
       tokenChainId,
       toChainId,
-      validateToAddress(toAddress),
+      binToHex(toAddress),
       amount,
       currentMessageFee,
       defaultArbiterFee,
@@ -302,6 +305,22 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     console.log(`Deposit completed, tx id: ${result.txId}`)
   }
 
+  const genMultiSigAddress = (): Uint8Array => {
+    const n = Math.floor(Math.random() * 7) + 3
+    const m = Math.floor(Math.random() * n) + 1
+    let hex: string = '01' + binToHex(encodeI256(BigInt(n)))
+    for (let i = 0; i < n; i += 1) {
+      hex += Buffer.from(randomBytes(32)).toString('hex')
+    }
+    const address = Buffer.from(hex + binToHex(encodeI256(BigInt(m))), 'hex')
+    const addressBase58 = base58.encode(address)
+    const group = groupOfAddress(addressBase58)
+    if (group === groupIndex) {
+      return address
+    }
+    return genMultiSigAddress()
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -319,6 +338,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     getNativeTokenBalance: getNativeTokenBalance,
     getTokenBalance: getTokenBalance,
     getWrappedTokenBalance: getWrappedTokenBalance,
+    getWrappedTokenBalanceByAddress: getWrappedTokenBalanceByAddress,
     getLockedNativeBalance: getLockedNativeBalance,
     getLockedTokenBalance: getLockedTokenBalance,
 
@@ -334,6 +354,8 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     getCurrentGuardianSet: getCurrentGuardianSet,
     getCurrentMessageFee: getCurrentMessageFee,
+
+    genMultiSigAddress: genMultiSigAddress,
 
     tokenBridgeContractId: tokenBridgeContractId,
     getContractState: getContractState,
