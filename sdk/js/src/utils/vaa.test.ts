@@ -288,15 +288,15 @@ describe('serialize/deserialize vaa', () => {
   })
 
   it('should test serialize/deserialize AttestToken payload', () => {
-    const data = Buffer.from('02eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a00ff0a52d94d718dbcd32e93024a8dfc22b0aa61b1cda236e0a57511286d4c312bd4d9b0829a98beeb076cd26ac6d09cb430ed3d178a1ef79fd69248762d651b3d8000', 'hex')
+    const data = Buffer.from('02eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a00ff0a000000000000000000000000000000000000000000000054657374546f6b656e00000000000000000000000000000000000000000054657374546f6b656e2d30', 'hex')
     const payload = deserializeAttestTokenPayload(data)
     expect(payload).toEqual({
       type: 'AttestToken',
       tokenId: Buffer.from('eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a', 'hex'),
       tokenChainId: CHAIN_ID_ALEPHIUM,
       decimals: 10,
-      symbol: Buffer.from('52d94d718dbcd32e93024a8dfc22b0aa61b1cda236e0a57511286d4c312bd4d9', 'hex'),
-      name: Buffer.from('b0829a98beeb076cd26ac6d09cb430ed3d178a1ef79fd69248762d651b3d8000', 'hex')
+      symbol: 'TestToken',
+      name: 'TestToken-0'
     })
     expect(serializeAttestTokenPayload(payload)).toEqual(data)
 
@@ -305,8 +305,8 @@ describe('serialize/deserialize vaa', () => {
       tokenId: randomBytes(32),
       tokenChainId: randomInt(0, 10) as ChainId,
       decimals: randomNumber(1),
-      symbol: randomBytes(32),
-      name: randomBytes(32)
+      symbol: randomBytes(5).toString('hex'),
+      name: randomBytes(6).toString('hex')
     })
   })
 

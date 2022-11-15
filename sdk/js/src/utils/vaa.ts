@@ -27,8 +27,8 @@ export interface TransferNFT {
   type: 'TransferNFT'
   originAddress: Uint8Array // 32 bytes
   originChain: ChainId
-  symbol: Uint8Array // 32 bytes
-  name: Uint8Array // 32 bytes
+  symbol: string
+  name: string
   tokenId: bigint
   uri: Uint8Array
   targetAddress: Uint8Array // 32 bytes
@@ -48,8 +48,8 @@ export interface AttestToken {
   tokenId: Uint8Array // 32 bytes
   tokenChainId: ChainId
   decimals: number
-  symbol: Uint8Array // 32 bytes
-  name: Uint8Array   // 32 bytes
+  symbol: string
+  name: string
 }
 
 export type Module = 'Core' | 'TokenBridge' | 'NFTBridge'
@@ -449,6 +449,19 @@ export function serializeTransferTokenVAA(vaa: VAA<TransferToken>): Uint8Array {
   return _serializeVAA(vaa, serializeTransferTokenPayload)
 }
 
+function bytes32ToUtf8String(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString('utf8').replace(METADATA_REPLACE, '')
+}
+
+function utf8StringTo32Bytes(str: string): Uint8Array {
+  const buf = Buffer.from(str, 'utf8')
+  if (buf.length > 32) {
+    throw new Error(`String ${str} exceed 32 bytes`)
+  }
+  const prefix = Buffer.alloc(32 - buf.length)
+  return Buffer.concat([prefix, buf])
+}
+
 export function deserializeTransferNFTPayload(payload: Uint8Array): TransferNFT {
   const reader = new Reader(payload)
   validatePayloadId(reader.readUInt8(), TransferNFTPayloadId, 'TransferNFT')
@@ -456,8 +469,8 @@ export function deserializeTransferNFTPayload(payload: Uint8Array): TransferNFT 
     type: 'TransferNFT' as const,
     originAddress: reader.readBytes(32),
     originChain: reader.readUInt16BE() as ChainId,
-    symbol: reader.readBytes(32),
-    name: reader.readBytes(32),
+    symbol: bytes32ToUtf8String(reader.readBytes(32)),
+    name: bytes32ToUtf8String(reader.readBytes(32)),
     tokenId: reader.readUInt256BE(),
     uri: reader.readBytes(reader.readUInt8()),
     targetAddress: reader.readBytes(32)
@@ -477,8 +490,8 @@ export function serializeTransferNFTPayload(payload: TransferNFT): Uint8Array {
   writer.writeUInt8(TransferNFTPayloadId) // payload id
   writer.writeBytes(payload.originAddress)
   writer.writeUInt16BE(payload.originChain)
-  writer.writeBytes(payload.symbol)
-  writer.writeBytes(payload.name)
+  writer.writeBytes(utf8StringTo32Bytes(payload.symbol))
+  writer.writeBytes(utf8StringTo32Bytes(payload.name))
   writer.writeUInt256BE(payload.tokenId)
   writer.writeUInt8(payload.uri.length)
   writer.writeBytes(payload.uri)
@@ -499,8 +512,8 @@ export function deserializeAttestTokenPayload(payload: Uint8Array): AttestToken 
     tokenId: reader.readBytes(32),
     tokenChainId: reader.readUInt16BE() as ChainId,
     decimals: reader.readUInt8(),
-    symbol: reader.readBytes(32),
-    name: reader.readBytes(32)
+    symbol: bytes32ToUtf8String(reader.readBytes(32)),
+    name: bytes32ToUtf8String(reader.readBytes(32))
   }
 }
 
@@ -514,8 +527,8 @@ export function serializeAttestTokenPayload(payload: AttestToken): Uint8Array {
   writer.writeBytes(payload.tokenId)
   writer.writeUInt16BE(payload.tokenChainId)
   writer.writeUInt8(payload.decimals)
-  writer.writeBytes(payload.symbol)
-  writer.writeBytes(payload.name)
+  writer.writeBytes(utf8StringTo32Bytes(payload.symbol))
+  writer.writeBytes(utf8StringTo32Bytes(payload.name))
   return writer.result()
 }
 
