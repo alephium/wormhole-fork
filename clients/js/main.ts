@@ -3,13 +3,26 @@ import yargs from "yargs";
 
 import { hideBin } from "yargs/helpers";
 
-import { setDefaultWasm, getSignedVAAWithRetry, ChainId } from "alephium-wormhole-sdk";
+import {
+  setDefaultWasm,
+  getSignedVAAWithRetry,
+  ChainId,
+  VAA,
+  GovernancePayload,
+  RegisterChain,
+  serializeVAA,
+  ContractUpgrade,
+  GuardianSetUpgrade,
+  deserializeVAA,
+  isGovernanceVAA,
+  uint8ArrayToHex,
+  signVAABody
+} from "alephium-wormhole-sdk";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { execute_governance_solana } from "./solana";
-import { execute_governance_evm } from "./evm";
-import { execute_governance_terra } from "./terra";
-import * as vaa from "./vaa";
-import { impossible, Payload, serialiseVAA, VAA } from "./vaa";
+import { executeGovernanceSolana } from "./solana";
+import { executeGovernanceEvm } from "./evm";
+import { executeGovernanceTerra } from "./terra";
+import { impossible } from "./utils";
 import {
   assertChain,
   ChainName,
@@ -18,7 +31,7 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
-import { execute_governance_alph } from "./alph";
+import { executeGovernanceAlph } from "./alph";
 
 setDefaultWasm("node");
 
@@ -32,23 +45,28 @@ function makeVAA(
   emitterAddress: string,
   signers: string[],
   sequence: string | undefined,
-  p: Payload
-): VAA<Payload> {
-  let v: VAA<Payload> = {
+  p: GovernancePayload
+): VAA<GovernancePayload> {
+  const v: VAA<GovernancePayload> = {
     version: 1,
     guardianSetIndex: 0,
     signatures: [],
-    timestamp: 1,
-    nonce: 1,
-    emitterChain: emitterChain,
-    targetChain: targetChain,
-    emitterAddress: emitterAddress,
-    sequence: typeof sequence === 'undefined' ? BigInt(Math.floor(Math.random() * 100000000)) : BigInt(sequence),
-    consistencyLevel: 0,
-    payload: p,
-  };
-  v.signatures = vaa.sign(signers, v);
-  return v;
+    body: {
+      timestamp: 1,
+      nonce: 1,
+      emitterChainId: emitterChain as ChainId,
+      targetChainId: targetChain as ChainId,
+      emitterAddress: Buffer.from(emitterAddress, 'hex'),
+      sequence: sequence === undefined ? BigInt(Math.floor(Math.random() * 100000000)) : BigInt(sequence),
+      consistencyLevel: 0,
+      payload: p,
+    }
+  }
+  const signatures = signVAABody(signers, v.body)
+  return {
+    ...v,
+    signatures
+  }
 }
 
 yargs(hideBin(process.argv))
@@ -103,10 +121,10 @@ yargs(hideBin(process.argv))
               const module = argv["module"] as "NFTBridge" | "TokenBridge";
               assertChain(argv["chain"])
               const emitterChainId = toChainId(argv["chain"])
-              const payload: vaa.PortalRegisterChain<typeof module> = {
+              const payload: RegisterChain<typeof module> = {
+                type: 'RegisterChain',
                 module,
-                type: "RegisterChain",
-                emitterChain: emitterChainId,
+                emitterChainId,
                 emitterAddress: Buffer.from(
                   argv["contract-address"].padStart(64, "0"),
                   "hex"
@@ -120,7 +138,7 @@ yargs(hideBin(process.argv))
                 argv["sequence"],
                 payload
               );
-              console.log(serialiseVAA(v));
+              console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )
           // Upgrade
@@ -157,7 +175,11 @@ yargs(hideBin(process.argv))
                 | "NFTBridge"
                 | "TokenBridge";
               const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
-              const payload = vaa.contractUpgradeVAA(module, address)
+              const payload: ContractUpgrade<typeof module> = {
+                type: 'ContractUpgrade',
+                module,
+                newContractAddress: address
+              }
               const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 toChainId(argv["chain"]),
@@ -166,7 +188,7 @@ yargs(hideBin(process.argv))
                 argv["sequence"],
                 payload
               );
-              console.log(serialiseVAA(v));
+              console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )
           // Update guardian set
@@ -196,18 +218,17 @@ yargs(hideBin(process.argv))
               const index = argv['index']
               const keys = argv['keys'].split(',').map(key => {
                 if (key.startsWith('0x') || key.startsWith('0X')) {
-                  return key.slice(2)
+                  return Buffer.from(key.slice(2), 'hex')
                 }
-                return key
+                return Buffer.from(key)
               })
               if (keys.length === 0) {
                 throw new Error('new guardian set cannot be empty')
               }
-              const payload: vaa.GuardianSetUpgrade = {
-                module: 'Core',
+              const payload: GuardianSetUpgrade = {
                 type: 'GuardianSetUpgrade',
+                module: 'Core',
                 newGuardianSetIndex: index,
-                newGuardianSetLength: keys.length,
                 newGuardianSet: keys
               }
               const vaa = makeVAA(
@@ -218,7 +239,7 @@ yargs(hideBin(process.argv))
                 sequence,
                 payload
               )
-              console.log(serialiseVAA(vaa))
+              console.log(uint8ArrayToHex(serializeVAA(vaa)))
             }
           )
       );
@@ -282,8 +303,8 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const buf = Buffer.from(String(argv.vaa), "hex");
-      const parsed_vaa = vaa.parse(buf);
-      console.log(parsed_vaa);
+      const parsedVaa = deserializeVAA(buf);
+      console.log(parsedVaa);
     }
   )
   ////////////////////////////////////////////////////////////////////////////////
@@ -314,15 +335,14 @@ yargs(hideBin(process.argv))
         });
     },
     async (argv) => {
-      const vaa_hex = String(argv.vaa);
-      const buf = Buffer.from(vaa_hex, "hex");
-      const parsed_vaa = vaa.parse(buf);
-
-      if (!vaa.hasPayload(parsed_vaa)) {
-        throw Error("Couldn't parse VAA payload");
+      const vaaHex = String(argv.vaa);
+      const buf = Buffer.from(vaaHex, "hex");
+      const parsedVaa = deserializeVAA(buf);
+      if (!isGovernanceVAA(parsedVaa)) {
+        throw new Error(`Non governance vaa: ${parsedVaa}`)
       }
 
-      console.log(parsed_vaa.payload);
+      console.log(parsedVaa.body.payload);
 
       const network = argv.network.toUpperCase();
       if (
@@ -347,9 +367,9 @@ yargs(hideBin(process.argv))
       // two don't agree instead of silently taking the VAA's target chain.
 
       // get VAA chain
-      const vaa_chain_id = parsed_vaa.targetChain;
-      assertChain(vaa_chain_id);
-      const vaa_chain = toChainName(vaa_chain_id);
+      const targetChainId = parsedVaa.body.targetChainId
+      assertChain(targetChainId);
+      const targetChainName = toChainName(targetChainId);
 
       // get chain from command line arg
       const cli_chain = argv["chain"];
@@ -357,14 +377,14 @@ yargs(hideBin(process.argv))
       let chain: ChainName;
       if (cli_chain !== undefined) {
         assertChain(cli_chain);
-        if (vaa_chain !== "unset" && cli_chain !== vaa_chain) {
+        if (targetChainName !== "unset" && cli_chain !== targetChainName) {
           throw Error(
-            `Specified target chain (${cli_chain}) does not match VAA target chain (${vaa_chain})`
+            `Specified target chain (${cli_chain}) does not match VAA target chain (${targetChainName})`
           );
         }
         chain = cli_chain;
       } else {
-        chain = vaa_chain;
+        chain = targetChainName;
       }
 
       if (chain === "unset") {
@@ -372,17 +392,17 @@ yargs(hideBin(process.argv))
           "This VAA does not specify the target chain, please provide it by hand using the '--chain' flag."
         );
       } else if (isEVMChain(chain)) {
-        await execute_governance_evm(parsed_vaa.payload, buf, network, chain);
+        await executeGovernanceEvm(parsedVaa.body.payload, buf, network, chain);
       } else if (chain === "terra") {
-        await execute_governance_terra(parsed_vaa.payload, buf, network);
+        await executeGovernanceTerra(parsedVaa.body.payload, buf, network);
       } else if (chain === "solana") {
-        await execute_governance_solana(parsed_vaa, buf, network);
+        await executeGovernanceSolana(parsedVaa, buf, network);
       } else if (chain === "algorand") {
         throw Error("Algorand is not supported yet");
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        await execute_governance_alph(parsed_vaa.payload, buf, network)
+        await executeGovernanceAlph(parsedVaa.body.payload, buf, network)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled

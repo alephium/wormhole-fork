@@ -1,13 +1,13 @@
 import * as web3s from '@solana/web3.js'
 import { NETWORKS } from "./networks";
-import { impossible, Payload, VAA } from "./vaa";
+import { impossible } from "./utils";
 import base58 from "bs58";
-import { importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "alephium-wormhole-sdk";
-import { CONTRACTS } from "alephium-wormhole-sdk"
+import { GovernancePayload, importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "alephium-wormhole-sdk";
+import { CONTRACTS, VAA } from "alephium-wormhole-sdk"
 import { postVaaSolanaWithRetry } from "alephium-wormhole-sdk"
 
-export async function execute_governance_solana(
-  v: VAA<Payload>,
+export async function executeGovernanceSolana(
+  v: VAA<GovernancePayload>,
   vaa: Buffer,
   network: "MAINNET" | "TESTNET" | "DEVNET"
 ) {
@@ -19,10 +19,10 @@ export async function execute_governance_solana(
 
   let from = web3s.Keypair.fromSecretKey(base58.decode(NETWORKS[network].solana.key))
 
-  switch (v.payload.module) {
+  switch (v.body.payload.module) {
     case "Core":
       const bridge = await importCoreWasm()
-      switch (v.payload.type) {
+      switch (v.body.payload.type) {
         case "GuardianSetUpgrade":
           console.log("Submitting new guardian set")
           ix = bridge.update_guardian_set_ix(bridge_id.toString(), from.publicKey.toString(), vaa);
@@ -35,12 +35,12 @@ export async function execute_governance_solana(
         case 'TransferFee':
           throw new Error('Not supported')
         default:
-          ix = impossible(v.payload)
+          throw new Error(`Invalid governance payload type: ${v.body.payload.type}`)
       }
       break
     case "NFTBridge":
       const nft_bridge = await importNftWasm()
-      switch (v.payload.type) {
+      switch (v.body.payload.type) {
         case "ContractUpgrade":
           console.log("Upgrading contract")
           ix = nft_bridge.upgrade_contract_ix(nft_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), from.publicKey.toString(), vaa);
@@ -50,13 +50,13 @@ export async function execute_governance_solana(
           ix = nft_bridge.register_chain_ix(nft_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), vaa);
           break
         default:
-          ix = impossible(v.payload)
+          ix = impossible(v.body.payload)
 
       }
       break
     case "TokenBridge":
       const token_bridge = await importTokenWasm()
-      switch (v.payload.type) {
+      switch (v.body.payload.type) {
         case "ContractUpgrade":
           console.log("Upgrading contract")
           ix = token_bridge.upgrade_contract_ix(token_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), from.publicKey.toString(), vaa)
@@ -65,15 +65,13 @@ export async function execute_governance_solana(
           console.log("Registering chain")
           ix = token_bridge.register_chain_ix(token_bridge_id.toString(), bridge_id.toString(), from.publicKey.toString(), vaa)
           break
-        case 'Extension':
-          throw new Error('Not supported')
         default:
-          ix = impossible(v.payload)
+          throw new Error(`Invalid governance payload type: ${v.body.payload.type}`)
 
       }
       break
     default:
-      ix = impossible(v.payload)
+      ix = impossible(v.body.payload)
   }
 
   // First upload the VAA

@@ -1,11 +1,11 @@
 import { LCDClient, MnemonicKey, MsgExecuteContract } from "@terra-money/terra.js";
 import { fromUint8Array } from "js-base64";
-import { impossible, Payload } from "./vaa";
+import { impossible } from "./utils";
 import { NETWORKS } from "./networks"
-import { CONTRACTS } from "alephium-wormhole-sdk"
+import { CONTRACTS, GovernancePayload } from "alephium-wormhole-sdk"
 
-export async function execute_governance_terra(
-  payload: Payload,
+export async function executeGovernanceTerra(
+  payload: GovernancePayload,
   vaa: Buffer,
   network: "MAINNET" | "TESTNET" | "DEVNET"
 ) {
@@ -45,7 +45,7 @@ export async function execute_governance_terra(
         case 'TransferFee':
           throw new Error('Not supported')
         default:
-          impossible(payload)
+          throw new Error(`Invalid governance payload type: ${payload.type}`)
       }
       break
     case "NFTBridge":
@@ -87,11 +87,8 @@ export async function execute_governance_terra(
         case "RegisterChain":
           console.log("Registering chain")
           break
-        case 'Extension':
-          throw new Error('Not supported')
         default:
-          impossible(payload)
-          execute_msg = impossible(payload)
+          throw new Error(`Invalid governance payload type: ${payload.type}`)
 
       }
       break

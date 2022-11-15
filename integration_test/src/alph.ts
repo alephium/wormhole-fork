@@ -26,12 +26,13 @@ import {
   getAttestTokenHandlerId,
   getTokenBridgeForChainId,
   getTokenPoolId,
-  parseVAA,
+  deserializeAttestTokenVAA,
   redeemOnAlph,
   transferAlph,
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
-  deposit as tokenBridgeForChainDeposit
+  deposit as tokenBridgeForChainDeposit,
+  deserializeTransferTokenVAA
 } from 'alephium-wormhole-sdk'
 
 export type AlephiumBridgeChain = BridgeChain & {
@@ -156,7 +157,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const createWrapped = async (signedVaa: Uint8Array): Promise<void> => {
-    const vaa = parseVAA(signedVaa)
+    const vaa = deserializeAttestTokenVAA(signedVaa)
     const attestTokenHandlerId = getAttestTokenHandlerId(tokenBridgeContractId, vaa.body.emitterChainId)
     const result = await createRemoteTokenPoolOnAlph(
       nodeWallet,
@@ -258,7 +259,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const redeemToken = async (signedVaa: Uint8Array): Promise<bigint> => {
-    const vaa = parseVAA(signedVaa)
+    const vaa = deserializeTransferTokenVAA(signedVaa)
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId)
     const result = await redeemOnAlph(nodeWallet, tokenBridgeForChainId, signedVaa)
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)

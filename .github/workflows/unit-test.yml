@@ -47,20 +47,25 @@ jobs:
           npm test
           npx @alephium/cli devnet stop
 
-  clients:
+  sdk:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         node-version: [16, 18]
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.18.6'
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Run tests
-        working-directory: ./clients/js
+        working-directory: .
         run: |
-          npm ci
-          npm run build
-          npm run test
+          cd tools && npm ci && cd ..
+          make generate-proto-sdk
+          cd ethereum && npm ci && npm run build
+          cd ../sdk/js
+          npm ci && npm run build && npm run test

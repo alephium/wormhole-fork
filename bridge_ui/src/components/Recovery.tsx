@@ -14,16 +14,18 @@ import {
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
-  parseNFTPayload,
   parseSequenceFromLogAlgorand,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
-  parseTransferPayload,
   uint8ArrayToHex,
-  parseVAA,
   parseTargetChainFromLogEth,
   CHAIN_ID_ETH,
+  CHAIN_ID_UNSET,
+  TransferToken,
+  TransferNFT,
+  deserializeTransferTokenVAA,
+  deserializeTransferNFTVAA,
 } from "alephium-wormhole-sdk";
 import {
   Accordion,
@@ -75,7 +77,7 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
-  WORMHOLE_RPC_HOSTS,
+  WORMHOLE_RPC_HOSTS
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
@@ -84,7 +86,6 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
-import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -421,19 +422,13 @@ export default function Recovery() {
   const parsedPayload = useMemo(() => {
     try {
       return recoveryParsedVAA?.body.payload
-        ? isNFT
-          ? parseNFTPayload(
-              Buffer.from(recoveryParsedVAA.body.payload)
-            )
-          : parseTransferPayload(
-              Buffer.from(recoveryParsedVAA.body.payload)
-            )
+        ? recoveryParsedVAA.body.payload
         : null;
     } catch (e) {
       console.error(e);
       return null;
     }
-  }, [recoveryParsedVAA, isNFT]);
+  }, [recoveryParsedVAA]);
 
   const { search } = useLocation();
   const query = useMemo(() => new URLSearchParams(search), [search]);
@@ -586,7 +581,10 @@ export default function Recovery() {
     if (recoverySignedVAA) {
       (async () => {
         try {
-          const parsedVAA = parseVAA(hexToUint8Array(recoverySignedVAA));
+          const bytes = hexToUint8Array(recoverySignedVAA)
+          const parsedVAA = isNFT
+            ? deserializeTransferNFTVAA(bytes)
+            : deserializeTransferTokenVAA(bytes)
           if (!cancelled) {
             setRecoveryParsedVAA(parsedVAA);
           }
@@ -601,7 +599,7 @@ export default function Recovery() {
     return () => {
       cancelled = true;
     };
-  }, [recoverySignedVAA]);
+  }, [recoverySignedVAA, isNFT]);
   const parsedVAATargetChain = recoveryParsedVAA?.body.targetChainId;
   const parsedVAAEmitterChain = recoveryParsedVAA?.body.emitterChainId;
   const enableRecovery = recoverySignedVAA && parsedVAATargetChain;
@@ -611,19 +609,21 @@ export default function Recovery() {
       if (enableRecovery && recoverySignedVAA && parsedVAATargetChain && parsedPayload) {
         // TODO: make recovery reducer
         if (isNFT) {
+          const payload = parsedPayload as TransferNFT
           dispatch(
             setRecoveryNFTVaa({
               vaa: recoverySignedVAA,
               parsedPayload: {
                 targetChain: parsedVAATargetChain,
-                targetAddress: parsedPayload.targetAddress,
-                originChain: parsedPayload.originChain,
-                originAddress: parsedPayload.originAddress,
+                targetAddress: uint8ArrayToHex(payload.targetAddress),
+                originChain: payload.originChain,
+                originAddress: uint8ArrayToHex(payload.originAddress),
               },
             })
           );
           push("/nft");
         } else {
+          const payload = parsedPayload as TransferToken
           dispatch(
             setRecoveryVaa({
               vaa: recoverySignedVAA,
@@ -632,13 +632,10 @@ export default function Recovery() {
                 sourceTxId: recoverySourceTx,
                 sourceChain: parsedVAAEmitterChain,
                 targetChain: parsedVAATargetChain,
-                targetAddress: parsedPayload.targetAddress,
-                originChain: parsedPayload.originChain,
-                originAddress: parsedPayload.originAddress,
-                amount:
-                  "amount" in parsedPayload
-                    ? parsedPayload.amount.toString()
-                    : "",
+                targetAddress: uint8ArrayToHex(payload.targetAddress),
+                originChain: payload.originChain,
+                originAddress: uint8ArrayToHex(payload.originAddress),
+                amount: payload.amount.toString()
               },
             })
           );
@@ -843,7 +840,7 @@ export default function Recovery() {
                   value={
                     (parsedPayload &&
                       hexToNativeAssetString(
-                        parsedPayload.originAddress,
+                        uint8ArrayToHex(parsedPayload.originAddress),
                         parsedPayload.originChain
                       )) ||
                     ""
@@ -877,7 +874,7 @@ export default function Recovery() {
                   value={
                     (parsedPayload &&
                       hexToNativeString(
-                        parsedPayload.targetAddress,
+                        uint8ArrayToHex(parsedPayload.targetAddress),
                         parsedVAATargetChain
                       )) ||
                     ""
