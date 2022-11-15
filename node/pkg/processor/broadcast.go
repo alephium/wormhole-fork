@@ -10,8 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/protobuf/proto"
 
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 var (
@@ -26,7 +26,7 @@ func (p *Processor) broadcastSignature(v *vaa.VAA, signature []byte, txhash []by
 	digest := v.SigningMsg()
 
 	obsv := gossipv1.SignedObservation{
-		Addr:      crypto.PubkeyToAddress(p.gk.PublicKey).Bytes(),
+		Addr:      crypto.PubkeyToAddress(p.guardianSigner.PublicKey()).Bytes(),
 		Hash:      digest.Bytes(),
 		Signature: signature,
 		TxHash:    txhash,

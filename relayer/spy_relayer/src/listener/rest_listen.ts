@@ -1,33 +1,18 @@
-import { uint8ArrayToHex } from "@certusone/wormhole-sdk";
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import { uint8ArrayToHex, VAA, TransferToken } from "alephium-wormhole-sdk";
 import { Request, Response } from "express";
 import { getListenerEnvironment, ListenerEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
-import {
-  initPayloadWithVAA,
-  pushVaaToRedis,
-  storeInRedis,
-  storeKeyFromParsedVAA,
-  storeKeyToJson,
-  storePayloadToJson,
-} from "../helpers/redisHelper";
-import {
-  parseAndValidateVaa,
-  ParsedTransferPayload,
-  ParsedVaa,
-} from "./validation";
+import { pushVaaToRedis } from "../helpers/redisHelper";
+import { parseAndValidateVaa } from "./validation";
 
 let logger = getLogger();
 let env: ListenerEnvironment;
 
-export function init(runRest: boolean): boolean {
-  if (!runRest) return true;
+export function init(): boolean {
   try {
     env = getListenerEnvironment();
   } catch (e) {
-    logger.error(
-      "Encountered and error while initializing the listener environment: " + e
-    );
+    logger.error(`Encountered and error while initializing the listener environment: ${e}`)
     return false;
   }
   if (!env.restPort) {
@@ -45,7 +30,7 @@ export async function run() {
   const app = express();
   app.use(cors());
   app.listen(env.restPort, () =>
-    logger.info("listening on REST port %d!", env.restPort)
+    logger.info(`Listening on REST port ${env.restPort}`)
   );
 
   (async () => {
@@ -53,7 +38,7 @@ export async function run() {
       try {
         const vaaBuf = Uint8Array.from(Buffer.from(req.params.vaa, "base64"));
         const hexVaa = uint8ArrayToHex(vaaBuf);
-        const validationResults: ParsedVaa<ParsedTransferPayload> | string =
+        const validationResults: VAA<TransferToken> | string =
           await parseAndValidateVaa(vaaBuf);
 
         if (typeof validationResults === "string") {
@@ -65,11 +50,7 @@ export async function run() {
 
         res.status(200).json({ message: "Scheduled" });
       } catch (e) {
-        logger.error(
-          "failed to process rest relay of vaa request, error: %o",
-          e
-        );
-        logger.error("offending request: %o", req);
+        logger.error(`Failed to process rest relay of vaa request ${JSON.stringify(req)}, error: ${e}`)
         res.status(400).json({ message: "Request failed" });
       }
     });

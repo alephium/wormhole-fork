@@ -5,12 +5,10 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_POLYGON,
   getIsTransferCompletedEth,
-  hexToUint8Array,
-  redeemOnEth,
-  redeemOnEthNative,
-} from "@certusone/wormhole-sdk";
+  hexToUint8Array
+} from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
-import { ChainConfigInfo } from "../configureEnv";
+import { EthereumChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { CeloProvider, CeloWallet } from "@celo-tools/celo-ethers-wrapper";
@@ -31,7 +29,7 @@ export function newProvider(
 }
 
 export async function relayEVM(
-  chainConfigInfo: ChainConfigInfo,
+  chainConfigInfo: EthereumChainConfigInfo,
   signedVAA: string,
   unwrapNative: boolean,
   checkOnly: boolean,
@@ -70,13 +68,11 @@ export async function relayEVM(
     return { redeemed: false, result: "not redeemed" };
   }
 
+  const address = await signer.getAddress()
   if (unwrapNative) {
-    logger.info(
-      "Will redeem and unwrap using pubkey: %s",
-      await signer.getAddress()
-    );
+    logger.info(`Will redeem and unwrap using pubkey: ${address}`);
   } else {
-    logger.info("Will redeem using pubkey: %s", await signer.getAddress());
+    logger.info(`Will redeem using pubkey: ${address}`);
   }
 
   logger.debug("Redeeming.");
@@ -100,7 +96,7 @@ export async function relayEVM(
     ? bridge.completeTransferAndUnwrapETH
     : bridge.completeTransfer;
   const tx = await contractMethod(signedVaaArray, overrides);
-  logger.info("waiting for tx hash: %s", tx.hash);
+  logger.info(`Waiting for tx hash: ${tx.hash}`);
   const receipt = await tx.wait();
 
   // Checking getIsTransferCompletedEth can be problematic if we get
@@ -112,7 +108,7 @@ export async function relayEVM(
     await provider.destroy();
   }
 
-  logger.info("success: %s tx hash: %s", success, receipt.transactionHash);
+  logger.info(`Redeem on Ethereum, success: ${success}, tx hash: ${receipt.transactionHash}`)
   metrics.incSuccesses(chainConfigInfo.chainId);
   return { redeemed: success, result: receipt };
 }
