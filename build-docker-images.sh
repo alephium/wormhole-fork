@@ -2,6 +2,12 @@
 
 set -e
 
+DEVNET=$1
+
+if $DEVNET ; then
+  echo 'Build images on devnet'
+fi
+
 NUM_GUARDIANS=1
 
 export DOCKER_BUILDKIT=1
@@ -19,29 +25,33 @@ docker build --target const-export -f Dockerfile.const -o type=local,dest=. --bu
 
 # Build guardian image (used for both guardian & spy)
 pushd node
-docker build . -t wormhole/guardiand:$VERSION
+docker build . -t alephium/guardiand:$VERSION
 popd
 
 ## Build eth-node image
 pushd ethereum
-# cp .env.test .env
-git apply 1conf.patch
-# git apply truffle-config.patch
-docker build . -t wormhole/eth-node:$VERSION
-git apply -R 1conf.patch
-# git apply -R truffle-config.patch
+if $DEVNET ; then
+  cp .env.test .env
+  git apply 1conf.patch
+  git apply truffle-config.patch
+fi
+docker build . -t alephium/eth-node:$VERSION
+if $DEVNET ; then
+  git apply -R 1conf.patch
+  git apply -R truffle-config.patch
+fi
 popd
 
 pushd alephium
-docker build -f Dockerfile.automine . -t wormhole/automine:$VERSION
+docker build -f Dockerfile.automine . -t alephium/automine:$VERSION
 popd
 
 ## Build Bridge UI
 pushd bridge_ui
-docker build . -t wormhole/bridge-ui:$VERSION
+docker build . -t alephium/bridge-ui:$VERSION
 popd
 
 ## Build Wormhole Explorer
 pushd explorer
-docker build . -t wormhole/wormhole-explorer:$VERSION
+docker build . -t alephium/wormhole-explorer:$VERSION
 popd

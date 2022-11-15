@@ -180,8 +180,6 @@ def build_node_yaml():
                     "v2Events",
                     "--bigTableTopicName",
                     "new-vaa-devnet",
-                    "--bigTableKeyPath",
-                    "/tmp/mounted-keys/bigtable-key.json",
                     "--bigTableGCPProject",
                     gcpProject,
                 ]
