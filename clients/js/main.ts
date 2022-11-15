@@ -15,13 +15,14 @@ import {
   GuardianSetUpgrade,
   deserializeVAA,
   isGovernanceVAA,
-  uint8ArrayToHex
+  uint8ArrayToHex,
+  signVAABody
 } from "alephium-wormhole-sdk";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { executeGovernanceSolana } from "./solana";
 import { executeGovernanceEvm } from "./evm";
 import { executeGovernanceTerra } from "./terra";
-import { impossible, sign } from "./utils";
+import { impossible } from "./utils";
 import {
   assertChain,
   ChainName,
@@ -61,7 +62,7 @@ function makeVAA(
       payload: p,
     }
   }
-  const signatures = sign(signers, v)
+  const signatures = signVAABody(signers, v.body)
   return {
     ...v,
     signatures

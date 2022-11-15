@@ -2,10 +2,10 @@
   "name": "alephium-wormhole-client",
   "version": "1.0.0",
   "dependencies": {
-    "@alephium/web3": "^0.2.0-rc.36",
-    "@alephium/web3-wallet": "^0.2.0-rc.36",
+    "@alephium/web3": "0.2.0-rc.36",
+    "@alephium/web3-wallet": "0.2.0-rc.36",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
-    "alephium-wormhole-sdk": "^0.1.0-rc5",
+    "alephium-wormhole-sdk": "0.1.0-rc7",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@solana/web3.js": "^1.22.0",
     "@terra-money/terra.js": "^1.8.9",

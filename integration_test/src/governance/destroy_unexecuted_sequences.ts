@@ -10,6 +10,7 @@ import {
   Signature,
   TransferToken,
   VAA,
+  signVAABody,
   VAABody
 } from 'alephium-wormhole-sdk'
 import { keccak256 } from 'ethers/lib/utils'
@@ -38,21 +39,6 @@ function createDestroyUnexecutedSequencesVaa(sequence: number): string {
   `
 }
 
-function sign(keys: string[], bytes: Uint8Array): Signature[] {
-  const ec = new elliptic.ec('secp256k1')
-  const hash = keccak256(keccak256(bytes)).slice(2)
-  return keys.map((k, index) => {
-    const key = ec.keyFromPrivate(k)
-    const sig = key.sign(hash, { canonical: true })
-    const signature = [
-      sig.r.toString(16).padStart(64, '0'),
-      sig.s.toString(16).padStart(64, '0'),
-      (sig.recoveryParam as number).toString(16).padStart(2, '0')
-    ].join('')
-    return new Signature(index, Buffer.from(signature, 'hex'))
-  })
-}
-
 async function createUnexecutedSequence() {
   const chains = await getBridgeChains()
   await chains.alph.deposit(CHAIN_ID_ETH, 5n * chains.alph.oneCoin)
@@ -74,11 +60,10 @@ async function createUnexecutedSequence() {
     consistencyLevel: 15,
     payload: transferTokenPayload
   }
-  const vaaBodyBytes = serializeVAABody(vaaBody)
   const vaa: VAA<TransferToken> = {
     version: 1,
     guardianSetIndex: 1,
-    signatures: sign(guardianKeys, vaaBodyBytes),
+    signatures: signVAABody(guardianKeys, vaaBody),
     body: vaaBody
   }
   await chains.alph.redeemToken(serializeVAA(vaa))
