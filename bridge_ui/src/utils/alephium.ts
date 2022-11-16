@@ -12,7 +12,9 @@ import {
   WormholeWrappedInfo,
   parseTargetChainFromLogAlph,
   getTokenPoolId,
-  contractExists
+  contractExists,
+  extractPayloadFromVAA,
+  extractBodyFromVAA
 } from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
@@ -92,10 +94,8 @@ export function isAlphTxConfirmed(txStatus: node.TxStatus): txStatus is node.Con
 }
 
 export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
-  const length = signedVAA.length
-  const emitterChainIdOffset = length - 176
-  const emitterChainIdBytes = signedVAA.slice(emitterChainIdOffset, emitterChainIdOffset + 2)
-  const emitterChainId = Buffer.from(emitterChainIdBytes).readUInt16BE(0)
+  const payload = extractBodyFromVAA(signedVAA)
+  const emitterChainId = Buffer.from(payload).readUInt16BE(8)
   return emitterChainId as ChainId
 }
 
@@ -170,9 +170,6 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
 }
 
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
-  if (recipient.length !== 32) {
-    return false
-  }
-  const address = base58.encode(Buffer.concat([Buffer.from([0x00]), recipient]))
+  const address = base58.encode(recipient)
   return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
 }
