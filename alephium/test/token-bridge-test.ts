@@ -404,13 +404,7 @@ describe('test token bridge', () => {
     const tokenBridgeForChain = fixture.tokenBridgeForChainInfo.contract
 
     async function test(arbiterFee: bigint) {
-      const transfer = new Transfer(
-        transferAmount,
-        wrappedAlphId,
-        CHAIN_ID_ALEPHIUM,
-        toAddress,
-        arbiterFee
-      )
+      const transfer = new Transfer(transferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
       const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
@@ -574,13 +568,7 @@ describe('test token bridge', () => {
     const toAddress = hexToBase58(toAddressHex)
     const transferAmount = oneAlph
     const arbiterFee = defaultMessageFee
-    const transfer = new Transfer(
-      transferAmount,
-      testTokenInfo.contractId,
-      CHAIN_ID_ALEPHIUM,
-      toAddressHex,
-      arbiterFee
-    )
+    const transfer = new Transfer(transferAmount, testTokenInfo.contractId, CHAIN_ID_ALEPHIUM, toAddressHex, arbiterFee)
     const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     const tokenBridgeForChain = fixture.tokenBridgeForChainInfo.contract
@@ -967,13 +955,7 @@ describe('test token bridge', () => {
     const toAddress = randomAssetAddressHex()
     const transferAmount = oneAlph
     const arbiterFee = defaultMessageFee
-    const transfer = new Transfer(
-      transferAmount,
-      testTokenInfo.contractId,
-      CHAIN_ID_ALEPHIUM,
-      toAddress,
-      arbiterFee
-    )
+    const transfer = new Transfer(transferAmount, testTokenInfo.contractId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
     const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 768)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     const tokenBridgeForChain = fixture.tokenBridgeForChainInfo.contract
