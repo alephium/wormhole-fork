@@ -17,7 +17,8 @@ import {
   parseSequenceFromLogAlph,
   getIsTransferCompletedEth,
   transferLocalTokenFromAlph,
-  getSignedVAAWithRetry
+  getSignedVAAWithRetry,
+  uint8ArrayToHex
 } from 'alephium-wormhole-sdk'
 import { parseUnits } from '@ethersproject/units'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
@@ -42,6 +43,7 @@ import {
 import { sleep } from '../helpers/utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { web3, node, NodeProvider, binToHex, bs58 } from '@alephium/web3'
+import { arrayify } from 'ethers/lib/utils'
 
 jest.setTimeout(60000)
 
@@ -112,7 +114,7 @@ describe('Alephium to Ethereum', () => {
 
   test('Send Alephium test token to Ethereum', async () => {
     try {
-      const recipientAddress = tryNativeToHexString(await ethWallet.getAddress(), CHAIN_ID_ETH)
+      const recipientAddress = await ethWallet.getAddress()
       const amount = 1000n
       const transferResult = await transferLocalTokenFromAlph(
         alphWallet,
@@ -120,7 +122,7 @@ describe('Alephium to Ethereum', () => {
         alphWallet.account.address,
         ALPH_TEST_TOKEN_ID,
         CHAIN_ID_ETH,
-        recipientAddress,
+        uint8ArrayToHex(arrayify(recipientAddress)),
         amount,
         ONE_ALPH,
         0n,
@@ -229,7 +231,7 @@ describe('Ethereum to Alephium', () => {
       // approve the bridge to spend tokens
       await approveEth(ETH_TOKEN_BRIDGE_ADDRESS, TEST_ERC20, ethWallet, amount)
       // transfer tokens
-      const recipientAddress = bs58.decode(alphWallet.address).slice(1)
+      const recipientAddress = bs58.decode(alphWallet.address)
       const receipt = await transferFromEth(
         ETH_TOKEN_BRIDGE_ADDRESS,
         ethWallet,

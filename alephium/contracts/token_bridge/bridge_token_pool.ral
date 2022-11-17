@@ -14,7 +14,6 @@ Abstract Contract BridgeTokenPool(
         nonce: ByteVec
     ) -> (ByteVec, U256) {
         checkCaller!(callerContractId == tokenBridgeId, ErrorCodes.InvalidCaller)
-        assert!(size!(toAddress) == 32, ErrorCodes.InvalidTransferToAddress)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
 
         let normalizedAmount = normalizeAmount(amount, decimals_)
@@ -25,6 +24,7 @@ Abstract Contract BridgeTokenPool(
             u256To32Byte!(normalizedAmount) ++
             bridgeTokenId ++
             u256To2Byte!(tokenChainId) ++
+            u256To2Byte!(size!(toAddress)) ++
             toAddress ++
             u256To32Byte!(normalizedFee)
         let totalAmount = deNormalizeAmount(normalizedAmount, decimals_)
