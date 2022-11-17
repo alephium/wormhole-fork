@@ -73,7 +73,7 @@ spec:
             - --alphRPC
             - http://alph-full-node:22973
             - --alphContractIds
-            - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,zwNQiE92U7SnpBHWYahPTRdhahd9YZViGPjxzbeugqvB"
+            - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
             - --alphGroupIndex
             - "0"
             - --alphMinConfirmations

@@ -24,13 +24,13 @@ Abstract Contract Constants() {
     InvalidTransferTargetChain              = 19
     InvalidDestroyUnexecutedSequenceMessage = 20
     InvalidCaller                           = 21
-    ArbiterFeeLessThanAmount                = 23
-    InvalidAttestTokenMessage               = 24
-    InvalidPayloadId                        = 25
-    InvalidTransferMessage                  = 26
-    ExpectRemoteToken                       = 27
-    InvalidConsistencyLevel                 = 28
-    InvalidUpdateRefundAddressMessage       = 29
-    TransferAmountLessThanMessageFee        = 30
+    ArbiterFeeLessThanAmount                = 22
+    InvalidAttestTokenMessage               = 23
+    InvalidPayloadId                        = 24
+    InvalidTransferMessage                  = 25
+    ExpectRemoteToken                       = 26
+    InvalidConsistencyLevel                 = 27
+    InvalidUpdateRefundAddressMessage       = 28
+    TransferAmountLessThanMessageFee        = 29
   }
 }

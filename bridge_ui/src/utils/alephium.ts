@@ -13,7 +13,6 @@ import {
   parseTargetChainFromLogAlph,
   getTokenPoolId,
   contractExists,
-  extractPayloadFromVAA,
   extractBodyFromVAA
 } from 'alephium-wormhole-sdk';
 import {

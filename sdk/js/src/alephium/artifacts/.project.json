@@ -65,25 +65,25 @@
     "contracts/token_bridge/attest_token_handler.ral": {
       "sourceCodeHash": "dd3cafffb71df97133695ae689cb05249dcd3ed17d80b30f6e94359d19d466e5",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "113e26b76fc08189a93bed727f899d57172fcc66c3b39e729d59a0ff9b4a2d57",
+      "codeHashDebug": "3ca927f053a247cbcbde028b76cb5df13be57b43147637a32903de8bdb155419",
       "warnings": []
     },
     "contracts/token_bridge/local_token_pool.ral": {
       "sourceCodeHash": "a92a4b71bae391eefab5ff22eae7ea1f9d25cae7ff8a69c2ee5134795520e105",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "7c4fa95761683f3eb98684eac7c4d22d8a3f89edec611fa9d39d7c7bedbd130a",
+      "codeHashDebug": "0e323310a5634ff09837bc37391b49ad9eb88ad18d4585d7da43c73fbfdaba4c",
       "warnings": []
     },
     "contracts/token_bridge/remote_token_pool.ral": {
       "sourceCodeHash": "8e77992f4af4f831d1dfea7b2f0a505113f368aa4b8a0a8fb0e27fc08a249099",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "94af04cfe2f3348a70a89750e67230ae043d487dc62da12dfd2076afd0cbcca3",
+      "codeHashDebug": "73e6d82337c7126065e61d8cb84a62237675357f0879ce2495ff58dfba4898a0",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
       "sourceCodeHash": "a9042b242b83dc01bac0ca4f1b3d3180e42eb4deb1fa10bdfcc9ddc60b90de0f",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "2587b2ac1233f1bb1c08022fdfaf39e5d60a43f7b6f4070137b674d29e854fc3",
+      "codeHashDebug": "94d87a13d3733399880bc8f565f7d8e1c72a6e8a253c0b5d1c3d2b1be876eb55",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
@@ -95,7 +95,7 @@
     "contracts/token_bridge/token_bridge_for_chain.ral": {
       "sourceCodeHash": "ea4ec8ff35cf85a51828e4208d98b55162323ddf5731b0982239a5d715c66ec3",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "5feea342a96709fccfc3daa4f3d00d21cddbc855e97248b935191d2e793784ea",
+      "codeHashDebug": "8a3fb102179173e95c068b39159442d5737179ee8bb5570106fbd88a0807fe75",
       "warnings": []
     },
     "contracts/token_bridge/wrapped_alph.ral": {
@@ -107,7 +107,7 @@
     "contracts/token_bridge/wrapped_alph_pool.ral": {
       "sourceCodeHash": "7d92e4177e019c06a2ddec16b6430937e656a8800f0a88a067001c1e06e1b27c",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "f852df7c110f2497b8c636e8eca44859090f956dd506f0df055abe2e47c1d303",
+      "codeHashDebug": "3741c37ffc9cf1ece451b14a5bfe0e815388a8d1d8d58cd1757cb2722d632378",
       "warnings": []
     },
     "contracts/governance_scripts/set_message_fee.ral": {
@@ -237,7 +237,7 @@
       "warnings": []
     },
     "contracts/constants.ral": {
-      "sourceCodeHash": "268bf05ae1bf7d07b8e375455f162b3f597207d148a9f8dd18a9c4cb3627868c",
+      "sourceCodeHash": "6e9d195a93038710988f6f239e42d215f4eb4a60cd249c107527184efbde4aac",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []

@@ -348,7 +348,7 @@ const DEVNET = {
   },  
   alephium: {
     core: 'ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c',
-    token_bridge: '5cd7b9bad8dae4bcb407ce3544830b37314545ad1b226641fea33c87f7442c44',
+    token_bridge: '3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7',
     nft_bridge: undefined,
   },
   neon: {
