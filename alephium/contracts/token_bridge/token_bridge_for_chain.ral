@@ -41,7 +41,7 @@ Contract TokenBridgeForChain(
         return amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, readonly = false)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let (sequenceReady, payload) = checkCompleteTransfer(vaa)
         if (!sequenceReady) { // too many unexecuted sequences in between, compact those sequences first
@@ -67,12 +67,12 @@ Contract TokenBridgeForChain(
         }
     }
 
-    @using(assetsInContract = true, preapprovedAssets = true)
+    @using(assetsInContract = true, preapprovedAssets = true, readonly = false)
     pub fn deposit(from: Address, alphAmount: U256) -> () {
         transferAlphToSelf!(from, alphAmount)
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, readonly = false)
     pub fn withdraw(alphAmount: U256) -> () {
         let refundAddress = TokenBridge(localTokenBridgeId).getRefundAddress()
         assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)

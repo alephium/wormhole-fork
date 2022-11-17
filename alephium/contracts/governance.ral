@@ -26,7 +26,7 @@ Contract Governance(
         return messageFee
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true, externalCallCheck = false)
+    @using(preapprovedAssets = true, assetsInContract = true, externalCallCheck = false, readonly = false)
     pub fn publishWormholeMessage(
         payer: Address,
         targetChainId: U256,
@@ -123,6 +123,7 @@ Contract Governance(
         panic!(ErrorCodes.InvalidGuardianSetIndex)
     }
 
+    @using(readonly = false)
     pub fn submitContractUpgrade(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
@@ -155,6 +156,7 @@ Contract Governance(
         previousGuardianSetExpirationTimeMS = blockTimeStamp!() + GuardianSetExpireDuration
     }
 
+    @using(readonly = false)
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {
         updatePreviousGuardianSet()
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewGuardianSet)
@@ -169,6 +171,7 @@ Contract Governance(
         guardianSets[1] = byteVecSlice!(payload, 37, payloadSize)
     }
 
+    @using(readonly = false)
     pub fn submitSetMessageFee(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewMessageFee)
         assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
@@ -177,7 +180,7 @@ Contract Governance(
         messageFee = fee
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, readonly = false)
     pub fn submitTransferFees(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.TransferFee)
         assert!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)

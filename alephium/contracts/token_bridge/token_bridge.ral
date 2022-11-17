@@ -8,7 +8,7 @@ Contract TokenBridge(
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
 ) extends TokenBridgeGovernance(governance, localChainId, receivedSequence, sendSequence, tokenBridgeFactory, minimalConsistencyLevel, refundAddress) {
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, readonly = false)
     pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
@@ -33,7 +33,7 @@ Contract TokenBridge(
         return current
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, readonly = false)
     pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let isWrappedAlph = localTokenId == wrappedAlphId
         if (!isWrappedAlph) {
@@ -104,7 +104,7 @@ Contract TokenBridge(
         remoteTokenPool.updateDetails(symbol, name, msgSequence)
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, readonly = false)
     pub fn transferToken(
         fromAddress: Address,
         bridgeTokenId: ByteVec,
@@ -133,7 +133,7 @@ Contract TokenBridge(
         )
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, readonly = false)
     pub fn transferAlph(
         fromAddress: Address,
         toChainId: U256,
