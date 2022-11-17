@@ -88,7 +88,7 @@ type (
 		Amount        uint256.Int
 		OriginAddress [32]byte
 		OriginChain   uint16
-		TargetAddress [32]byte
+		TargetAddress []byte
 	}
 	NFTTransfer struct {
 		PayloadId     uint8
@@ -128,9 +128,16 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 		return nil, fmt.Errorf("failed to read OriginChain: %w", err)
 	}
 
-	if err := binary.Read(reader, binary.BigEndian, &tt.TargetAddress); err != nil {
+	var targetAddressSize uint16
+	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
+		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
+	}
+
+	targetAddress := make([]byte, targetAddressSize)
+	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
 		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
 	}
+	tt.TargetAddress = targetAddress
 
 	return tt, nil
 }
