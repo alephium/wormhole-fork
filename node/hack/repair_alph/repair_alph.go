@@ -7,12 +7,12 @@ import (
 	"log"
 	"math"
 
-	"github.com/certusone/wormhole/node/pkg/alephium"
-	"github.com/certusone/wormhole/node/pkg/common"
-	"github.com/certusone/wormhole/node/pkg/db"
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
-	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/alephium"
+	"github.com/alephium/wormhole-fork/node/pkg/common"
+	"github.com/alephium/wormhole-fork/node/pkg/db"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
+	nodev1 "github.com/alephium/wormhole-fork/node/pkg/proto/node/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"google.golang.org/grpc"
 )
 

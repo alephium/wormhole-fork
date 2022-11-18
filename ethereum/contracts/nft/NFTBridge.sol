@@ -204,7 +204,7 @@ contract NFTBridge is NFTBridgeGovernance {
         require(bytes(transfer.uri).length <= 200, "tokenURI must not exceed 200 bytes");
 
         encoded = abi.encodePacked(
-            uint8(1),
+            uint8(3),
             transfer.tokenAddress,
             transfer.tokenChain,
             transfer.symbol,
@@ -222,7 +222,7 @@ contract NFTBridge is NFTBridgeGovernance {
         uint8 payloadID = encoded.toUint8(index);
         index += 1;
 
-        require(payloadID == 1, "invalid Transfer");
+        require(payloadID == 3, "invalid Transfer");
 
         transfer.tokenAddress = encoded.toBytes32(index);
         index += 32;

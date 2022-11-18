@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 
 export const chainIDStrings: { [key in ChainId]: string } = {
   0: "Unset",
@@ -19,5 +19,6 @@ export const chainIDStrings: { [key in ChainId]: string } = {
   15: "NEAR",
   16: "Moonbeam",
   17: "Neon",
+  255: "Alephium",
   10001: "Ropsten",
 };

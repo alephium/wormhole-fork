@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"flag"
-	"github.com/certusone/wormhole/node/pkg/notify/discord"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/notify/discord"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"go.uber.org/zap"
 )
 

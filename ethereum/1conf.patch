@@ -10,7 +10,7 @@ index e4cd0df0..6ff3d1d7 100644
 +        }(0, nonce, encoded, 1);
      }
  
-     function wrapAndTransferETH(uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce) public payable returns (uint64 sequence) {
+     function wrapAndTransferETH(uint16 recipientChain, bytes calldata recipient, uint256 arbiterFee, uint32 nonce) public payable returns (uint64 sequence) {
 @@ -194,7 +194,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
  
          sequence = wormhole().publishMessage{

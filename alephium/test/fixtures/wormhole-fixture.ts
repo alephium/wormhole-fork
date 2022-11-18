@@ -3,7 +3,16 @@ import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { Contract, ContractState, Asset, contractIdFromAddress, binToHex, Project, NodeProvider } from '@alephium/web3'
+import {
+  Contract,
+  ContractState,
+  Asset,
+  contractIdFromAddress,
+  binToHex,
+  Project,
+  NodeProvider,
+  encodeI256
+} from '@alephium/web3'
 
 export const web3 = new Web3()
 export const ethAccounts = web3.eth.accounts
@@ -212,15 +221,42 @@ export class ContractUpgrade {
   }
 }
 
-export function randomAssetAddress(): string {
-  const prefix = Buffer.from([0x00])
-  const bytes = Buffer.concat([prefix, randomBytes(32)])
-  return base58.encode(bytes)
+export function randomByte32Hex(): string {
+  return binToHex(randomBytes(32))
 }
 
-export function toRecipientId(address: string): string {
-  const bytes = base58.decode(address)
-  return binToHex(bytes.slice(1))
+export function hexToBase58(hex: string): string {
+  return base58.encode(Buffer.from(hex, 'hex'))
+}
+
+export function randomAssetAddressHex(): string {
+  const generator = [randomP2PKHAddressHex, () => randomP2MPKHAddressHex(3, 5), randomP2SHAddressHex]
+  const index = Math.floor(Math.random() * 2)
+  return generator[index]()
+}
+
+export function randomAssetAddress(): string {
+  return base58.encode(Buffer.from(randomAssetAddressHex(), 'hex'))
+}
+
+export function randomP2PKHAddressHex(): string {
+  return '00' + randomByte32Hex()
+}
+
+export function randomP2MPKHAddressHex(m: number, n: number): string {
+  let hex: string = '01' + binToHex(encodeI256(BigInt(n)))
+  for (let i = 0; i < n; i += 1) {
+    hex += randomByte32Hex()
+  }
+  return hex + binToHex(encodeI256(BigInt(m)))
+}
+
+export function randomP2SHAddressHex(): string {
+  return '02' + randomByte32Hex()
+}
+
+export function randomP2CAddressHex(): string {
+  return '03' + randomByte32Hex()
 }
 
 export function randomContractId(): string {

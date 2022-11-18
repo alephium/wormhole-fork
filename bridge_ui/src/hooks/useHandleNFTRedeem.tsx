@@ -5,10 +5,7 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_SOLANA,
   getClaimAddressSolana,
-  hexToUint8Array,
-  isEVMChain,
-  parseNFTPayload,
-  parseVAA
+  isEVMChain
 } from "alephium-wormhole-sdk";
 import {
   createMetaOnSolana,
@@ -21,7 +18,7 @@ import { arrayify } from "@ethersproject/bytes";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
-import { Signer } from "ethers";
+import { BigNumber, Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -44,6 +41,7 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import useNFTSignedVAA from "./useNFTSignedVAA";
+import { deserializeTransferNFTVAA } from "alephium-wormhole-sdk/lib/esm";
 
 async function evm(
   dispatch: any,
@@ -125,15 +123,12 @@ async function solana(
     }
     const isNative = await isNFTVAASolanaNative(signedVAA);
     if (!isNative) {
-      const parsedVAA = parseVAA(signedVAA);
-      const { originChain, originAddress, tokenId } = parseNFTPayload(
-        Buffer.from(parsedVAA.body.payload)
-      );
+      const payload = deserializeTransferNFTVAA(signedVAA).body.payload
       const mintAddress = await getForeignAssetSol(
         SOL_NFT_BRIDGE_ADDRESS,
-        originChain,
-        hexToUint8Array(originAddress),
-        arrayify(tokenId)
+        payload.originChain,
+        payload.originAddress,
+        arrayify(BigNumber.from(payload.tokenId))
       );
       const [metadataAddress] = await getMetadataAddress(mintAddress);
       const metadata = await connection.getAccountInfo(metadataAddress);

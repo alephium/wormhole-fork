@@ -7,9 +7,9 @@ import (
 	"log"
 	"math"
 
-	"github.com/certusone/wormhole/node/pkg/common"
-	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/common"
+	nodev1 "github.com/alephium/wormhole-fork/node/pkg/proto/node/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"google.golang.org/grpc"
 )
 

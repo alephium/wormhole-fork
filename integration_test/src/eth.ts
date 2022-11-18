@@ -21,6 +21,7 @@ import { Wallet as ETHWallet, providers } from 'ethers'
 import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
+import { binToHex } from '@alephium/web3'
 
 export async function createEth(): Promise<BridgeChain> {
   // Eth contract addresses are deterministic on devnet
@@ -33,7 +34,7 @@ export async function createEth(): Promise<BridgeChain> {
     '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d',
     new providers.JsonRpcProvider('http://127.0.0.1:8545')
   )
-  const recipientAddress = hexToUint8Array(zeroPad(wallet.address.slice(2), 32))
+  const recipientAddress = hexToUint8Array(wallet.address.slice(2))
   const sequence = new Sequence()
 
   const getCurrentMessageFee = async (): Promise<bigint> => {
@@ -55,13 +56,6 @@ export async function createEth(): Promise<BridgeChain> {
     if (!hasPrefix || tokenId.length !== 42) {
       throw new Error(`Eth transfer: invalid eth token address: ${tokenId}`)
     }
-  }
-
-  const validateToAddress = (toAddress: Uint8Array): Uint8Array => {
-    if (toAddress.length !== 32) {
-      throw new Error('Eth transfer: invalid to address, expect 32 bytes')
-    }
-    return toAddress
   }
 
   const normalizeTransferAmount = (amount: bigint): bigint => {
@@ -103,7 +97,7 @@ export async function createEth(): Promise<BridgeChain> {
     return balance.toBigInt()
   }
 
-  const getWrappedTokenBalanceOf = async (
+  const getWrappedTokenBalanceByAddress = async (
     originTokenId: string,
     tokenChainId: ChainId,
     address: string
@@ -119,7 +113,7 @@ export async function createEth(): Promise<BridgeChain> {
   }
 
   const getWrappedTokenBalance = async (originTokenId: string, tokenChainId: ChainId): Promise<bigint> => {
-    return getWrappedTokenBalanceOf(originTokenId, tokenChainId, wallet.address)
+    return getWrappedTokenBalanceByAddress(originTokenId, tokenChainId, wallet.address)
   }
 
   const getLockedNativeBalance = async (): Promise<bigint> => {
@@ -159,7 +153,7 @@ export async function createEth(): Promise<BridgeChain> {
       tokenId,
       amount,
       toChainId,
-      validateToAddress(toAddress),
+      toAddress,
       undefined,
       ethTxOptions
     )
@@ -187,7 +181,7 @@ export async function createEth(): Promise<BridgeChain> {
       wallet,
       amount,
       toChainId,
-      validateToAddress(toAddress),
+      toAddress,
       undefined,
       ethTxOptions
     )
@@ -219,7 +213,7 @@ export async function createEth(): Promise<BridgeChain> {
       wrappedToken,
       amount,
       toChainId,
-      validateToAddress(toAddress),
+      toAddress,
       undefined,
       ethTxOptions
     )
@@ -254,6 +248,10 @@ export async function createEth(): Promise<BridgeChain> {
     return result[0]
   }
 
+  const genMultiSigAddress = (): Uint8Array => {
+    throw new Error('Not supported')
+  }
+
   return {
     chainId: CHAIN_ID_ETH,
     testTokenId: testTokenAddress,
@@ -271,6 +269,7 @@ export async function createEth(): Promise<BridgeChain> {
     getNativeTokenBalance: getNativeTokenBalance,
     getTokenBalance: getTokenBalance,
     getWrappedTokenBalance: getWrappedTokenBalance,
+    getWrappedTokenBalanceByAddress: getWrappedTokenBalanceByAddress,
     getLockedNativeBalance: getLockedNativeBalance,
     getLockedTokenBalance: getLockedTokenBalance,
 
@@ -285,6 +284,8 @@ export async function createEth(): Promise<BridgeChain> {
     redeemNative: redeemNative,
 
     getCurrentGuardianSet: getCurrentGuardianSet,
-    getCurrentMessageFee: getCurrentMessageFee
+    getCurrentMessageFee: getCurrentMessageFee,
+
+    genMultiSigAddress: genMultiSigAddress
   }
 }

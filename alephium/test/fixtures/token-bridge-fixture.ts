@@ -10,7 +10,7 @@ import {
   contractIdFromAddress,
   binToHex
 } from '@alephium/web3'
-import { createGovernance, defaultMessageFee } from './governance-fixture'
+import { createGovernance } from './governance-fixture'
 import {
   CHAIN_ID_ALEPHIUM,
   ContractInfo,
@@ -18,8 +18,8 @@ import {
   initAsset,
   randomContractAddress,
   randomContractId,
-  randomAssetAddress,
-  alph
+  alph,
+  randomAssetAddress
 } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUnexecutedSequence } from './sequence-fixture'
@@ -149,13 +149,15 @@ export class Transfer {
   }
 
   encode(): Uint8Array {
-    const buffer = Buffer.allocUnsafe(131)
+    const recipientSize = this.recipient.length / 2
+    const buffer = Buffer.allocUnsafe(101 + recipientSize)
     buffer.writeUint8(1, 0) // payloadId
     buffer.write(zeroPad(this.amount.toString(16), 32), 1, 'hex')
     buffer.write(this.tokenId, 33, 'hex')
     buffer.writeUint16BE(this.tokenChainId, 65)
-    buffer.write(this.recipient, 67, 'hex')
-    buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 99, 'hex')
+    buffer.writeUint16BE(recipientSize, 67)
+    buffer.write(this.recipient, 69, 'hex')
+    buffer.write(zeroPad(this.arbiterFee.toString(16), 32), 69 + recipientSize, 'hex')
     return buffer
   }
 }

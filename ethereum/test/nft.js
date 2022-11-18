@@ -243,7 +243,7 @@ contract("NFT", function () {
         assert.equal(log.payload.length - 2, 336);
 
         // payload id
-        assert.equal(log.payload.substr(2, 2), "01");
+        assert.equal(log.payload.substr(2, 2), "03");
 
         // token
         assert.equal(log.payload.substr(4, 64), web3.eth.abi.encodeParameter("address", NFTImplementation.address).substring(2));
@@ -280,7 +280,7 @@ contract("NFT", function () {
         const ownerBefore = await token.methods.ownerOf(tokenId).call();
         assert.equal(ownerBefore, NFTBridge.address);
 
-        // PayloadID uint8 = 1
+        // PayloadID uint8 = 3
         // // Address of the NFT. Left-zero-padded if shorter than 32 bytes
         // NFTAddress [32]uint8
         // // Chain ID of the NFT
@@ -299,7 +299,7 @@ contract("NFT", function () {
         // // Chain ID of the recipient
         // ToChain uint16
         const data = "0x" +
-            "01" +
+            "03" +
             // tokenaddress
             web3.eth.abi.encodeParameter("address", NFTImplementation.address).substr(2) +
             // tokenchain
@@ -350,7 +350,7 @@ contract("NFT", function () {
 
         // we are using the asset where we created a wrapper in the previous test
         let data = "0x" +
-            "01" +
+            "03" +
             // tokenaddress
             testBridgedAssetAddress +
             // tokenchain
@@ -411,7 +411,7 @@ contract("NFT", function () {
         // Transfer another tokenID of the same token address
         tokenId = "1000000000000000002"
         data = "0x" +
-            "01" +
+            "03" +
             // tokenaddress
             testBridgedAssetAddress +
             // tokenchain
@@ -462,7 +462,7 @@ contract("NFT", function () {
 
         // we are using the asset where we created a wrapper in the previous test
         let data = "0x" +
-            "01" +
+            "03" +
             // tokenaddress
             testBridgedAssetAddress +
             // tokenchain

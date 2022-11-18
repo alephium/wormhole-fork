@@ -1,4 +1,4 @@
-import { getRelayerEnvironment, RelayerEnvironment } from "../configureEnv";
+import { getRelayerEnvironment, validateChainConfig, WalletMonitorEnvironment } from "../configureEnv";
 import { getLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { collectWallets } from "./walletMonitor";
@@ -6,13 +6,11 @@ import { collectWallets } from "./walletMonitor";
 let metrics: PromHelper;
 
 const logger = getLogger();
-let relayerEnv: RelayerEnvironment;
+let walletMonitorEnv: WalletMonitorEnvironment;
 
-export function init(runWorker: boolean): boolean {
-  if (!runWorker) return true;
-
+export function init(): boolean {
   try {
-    relayerEnv = getRelayerEnvironment();
+    walletMonitorEnv = getRelayerEnvironment();
   } catch (e) {
     logger.error(
       "Encountered error while initiating the monitor environment: " + e
@@ -25,6 +23,7 @@ export function init(runWorker: boolean): boolean {
 
 export async function run(ph: PromHelper) {
   metrics = ph;
+  await validateChainConfig(walletMonitorEnv)
 
   try {
     collectWallets(metrics);

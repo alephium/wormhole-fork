@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package spy.v1;
 
-option go_package = "github.com/certusone/wormhole/node/pkg/proto/spy/v1;spyv1";
+option go_package = "github.com/alephium/wormhole-fork/node/pkg/proto/spy/v1;spyv1";
 
 import "google/api/annotations.proto";
 import "publicrpc/v1/publicrpc.proto";

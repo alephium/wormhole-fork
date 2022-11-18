@@ -13,8 +13,8 @@ contract BridgeStructs {
         bytes32 tokenAddress;
         // Chain ID of the token
         uint16 tokenChain;
-        // Address of the recipient. Left-zero-padded if shorter than 32 bytes
-        bytes32 to;
+        // Address of the recipient
+        bytes to;
         // Amount of tokens (big-endian uint256) that the user is willing to pay as relayer fee. Must be <= Amount.
         uint256 fee;
     }
