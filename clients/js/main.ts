@@ -240,7 +240,7 @@ yargs(hideBin(process.argv))
                 sequence,
                 payload
               )
-              console.log(uint8ArrayToHex(serializeVAA(vaa)))
+              console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )
       );
