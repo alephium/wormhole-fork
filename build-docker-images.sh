@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo xtrace
 
 NUM_GUARDIANS=1
 
