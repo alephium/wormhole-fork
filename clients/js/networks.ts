@@ -115,7 +115,7 @@ const TESTNET = {
     key: get_env_var("TERRA_MNEMONIC"),
   },
   ethereum: {
-    rpc: `https://goerli.infura.io/v3/${get_env_var("INFURA_KEY")}`,
+    rpc: `https://goerli.infura.io/v3/8853e0fb94aa4336be2175c73ef0acd4`,
     key: get_env_var("ETH_KEY"),
   },
   bsc: {
@@ -179,8 +179,8 @@ const TESTNET = {
     key: get_env_var("ETH_KEY"),
   },
   alephium: {
-    rpc: undefined,
-    key: get_env_var('ALPH_KEY')
+    rpc: 'https://alephium-testnet.softfork.se',
+    key: get_env_var("ALPH_KEY"),
   }
 };
 

@@ -197,7 +197,7 @@ export const WORMHOLE_RPC_HOSTS =
         "https://wormhole-v2-mainnet.01node.com",
       ]
     : CLUSTER === "testnet"
-    ? ["https://wormhole-v2-testnet-api.certus.one"]
+    ? ["https://guardian.wormhole-testnet.softfork.se"]
     : ["https://alephium-wormhole.softfork.se"]; // TODO: Able to override this in yaml file
     //: ["http://localhost:7071"];
 export const ETH_NETWORK_CHAIN_ID =
@@ -289,7 +289,7 @@ export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
     ? "http://localhost:12973"
     : CLUSTER === "testnet"
-    ? "http://localhost:12973"
+    ? "https://alephium-testnet.softfork.se"
     : "https://alephium-dev.softfork.se"
     //: "http://localhost:22973"
 
@@ -298,7 +298,7 @@ export const ALEPHIUM_EXPLORER_HOST =
   CLUSTER === "mainnet"
     ? "http://localhost:9090"
     : CLUSTER === "testnet"
-    ? "http://localhost:9090"
+    ? "https://backend-v19.testnet.alephium.org"
     : "http://localhost:9090"
 
 export const ALGORAND_HOST =

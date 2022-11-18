@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-DEVNET=$1
+VERSION=0.2.77
+export DOCKER_BUILDKIT=1
 
-if $DEVNET ; then
-  echo 'Build images on devnet'
+NETWORKS=('mainnet' 'testnet' 'devnet')
+
+network=${1:-devnet}
+
+if [[ ${NETWORKS[*]}] =~ $network ]]
+then
+    echo "Build images on $network"
+else
+    echo "Network has to be one of ${NETWORKS[*]}"
 fi
 
 NUM_GUARDIANS=1
-
-export DOCKER_BUILDKIT=1
-
-VERSION=0.2.71
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -30,25 +34,26 @@ popd
 
 ## Build eth-node image
 pushd ethereum
-if $DEVNET ; then
-  cp .env.test .env
+if [[ "$network" == 'devnet' ]] ; then
+  cp .env.testnet .env
   git apply 1conf.patch
   git apply truffle-config.patch
 fi
 docker build . -t alephium/eth-node:$VERSION
-if $DEVNET ; then
+if [[ "$network" == 'devnet' ]] ; then
   git apply -R 1conf.patch
   git apply -R truffle-config.patch
 fi
 popd
 
+## Build auto miner for alephium
 pushd alephium
 docker build -f Dockerfile.automine . -t alephium/automine:$VERSION
 popd
 
 ## Build Bridge UI
 pushd bridge_ui
-docker build . -t alephium/bridge-ui:$VERSION
+docker build . -t alephium/bridge-ui:$VERSION --build-arg network=$network
 popd
 
 ## Build Wormhole Explorer
