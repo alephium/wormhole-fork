@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo xtrace
 
 NUM_GUARDIANS=1
 
 export DOCKER_BUILDKIT=1
 
-VERSION=0.2.47
+VERSION=0.2.56
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -37,9 +37,9 @@ docker build -f Dockerfile.automine . -t alephium/automine:$VERSION
 popd
 
 ## Build Bridge UI
-# pushd bridge_ui
-# docker build . -t alephium/bridge-ui:$VERSION
-# popd
+pushd bridge_ui
+docker build . -t alephium/bridge-ui:$VERSION
+popd
 
 ## Build Wormhole Explorer
 pushd explorer

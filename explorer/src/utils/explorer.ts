@@ -3,11 +3,11 @@ import {
   CHAIN_ID_TERRA,
   hexToNativeString,
   isEVMChain,
-} from "@certusone/wormhole-sdk";
+} from "alephium-wormhole-sdk";
 import { fromHex } from "@cosmjs/encoding";
 import { PublicKey } from "@solana/web3.js";
 import { ActiveNetwork, useNetworkContext } from "../contexts/NetworkContext";
-import { chainEnums, ChainID, chainIDs } from "./consts";
+import { ChainID, chainIDs } from "./consts";
 
 const makeDate = (date: string): string => {
   const [_, month, day] = date.split("-");
@@ -23,7 +23,7 @@ const makeGroupName = (
 ): string => {
   let ALL = "All Wormhole messages";
   if (emitterChain) {
-    ALL = `All ${chainEnums[emitterChain]} messages`;
+    ALL = `All ${ChainID[emitterChain]} messages`;
   }
   let group = groupKey === "*" ? ALL : groupKey;
   if (group.includes(":")) {
@@ -60,7 +60,7 @@ const getNativeAddress = (
     if (!activeNetwork) {
       activeNetwork = useNetworkContext().activeNetwork;
     }
-    const chainName = chainEnums[chainId].toLowerCase();
+    const chainName = ChainID[chainId].toLowerCase();
 
     // use the "chains" map of hex: nativeAdress first
     if (emitterAddress in activeNetwork.chains[chainName]) {
@@ -91,7 +91,7 @@ const contractNameFormatter = (
     activeNetwork = useNetworkContext().activeNetwork;
   }
 
-  const chainName = chainEnums[chainId].toLowerCase();
+  const chainName = ChainID[chainId].toLowerCase();
   let nativeAddress = getNativeAddress(chainId, address, activeNetwork);
 
   let truncated = truncateAddress(nativeAddress || address);
@@ -182,6 +182,7 @@ const chainColors: { [chain: string]: string } = {
   "6": "hsl(360, 100%, 61%)",
   "7": "hsl(204, 100%, 48%)",
   "10": "hsl(220, 78%, 92%)",
+  "255": "hsl(54, 100%, 61%)",
 };
 const chainIdColors = Object.entries(chainColors).reduce<Array<string>>(
   // returns an array of hsl colors, indexed by chainId

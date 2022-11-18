@@ -15,12 +15,13 @@ import {
 } from "../../utils/explorer";
 import { OutboundLink } from "gatsby-plugin-google-gtag";
 import { ChainID, chainIDs } from "../../utils/consts";
-import { hexToNativeString } from "@certusone/wormhole-sdk";
+import { hexToNativeString } from "alephium-wormhole-sdk";
 import { explorer } from "../../utils/urls";
 
 interface SummaryProps {
   emitterChain?: number;
   emitterAddress?: string;
+  targetChain?: number;
   sequence?: string;
   txId?: string;
   message: BigTableMessage;
@@ -36,26 +37,28 @@ const ExplorerSummary = (props: SummaryProps) => {
   const {
     EmitterChain,
     EmitterAddress,
+    TargetChain,
     InitiatingTxID,
     TokenTransferPayload,
     TransferDetails,
   } = message;
   // get chainId from chain name
-  let chainId = chainIDs[EmitterChain];
+  const emitterChainId = chainIDs[EmitterChain];
+  const targetChainId = chainIDs[TargetChain]
 
   let transactionId: string | undefined;
   if (InitiatingTxID) {
     if (
-      chainId === chainIDs["ethereum"] ||
-      chainId === chainIDs["bsc"] ||
-      chainId === chainIDs["polygon"]
+      emitterChainId === chainIDs["ethereum"] ||
+      emitterChainId === chainIDs["bsc"] ||
+      emitterChainId === chainIDs["polygon"]
     ) {
       transactionId = InitiatingTxID;
     } else {
-      if (chainId === chainIDs["solana"]) {
+      if (emitterChainId === chainIDs["solana"]) {
         const txId = InitiatingTxID.slice(2); // remove the leading "0x"
-        transactionId = hexToNativeString(txId, chainId);
-      } else if (chainId === chainIDs["terra"]) {
+        transactionId = hexToNativeString(txId, emitterChainId);
+      } else if (emitterChainId === chainIDs["terra"]) {
         transactionId = InitiatingTxID.slice(2); // remove the leading "0x"
       }
     }
@@ -99,7 +102,7 @@ const ExplorerSummary = (props: SummaryProps) => {
           TokenTransferPayload.TargetAddress &&
           TransferDetails &&
           nativeExplorerContractUri(
-            Number(TokenTransferPayload.TargetChain),
+            targetChainId,
             TokenTransferPayload.TargetAddress
           ) ? (
             <>
@@ -124,14 +127,14 @@ const ExplorerSummary = (props: SummaryProps) => {
                   ) : (
                     TransferDetails.OriginSymbol
                   )}
-                  {` `}from {ChainID[chainId]}, to{" "}
-                  {ChainID[Number(TokenTransferPayload.TargetChain)]}, destined
+                  {` `}from {ChainID[emitterChainId]}, to{" "}
+                  {ChainID[targetChainId]}, destined
                   for address{" "}
                 </span>
                 <Link
                   component={OutboundLink}
                   href={nativeExplorerContractUri(
-                    Number(TokenTransferPayload.TargetChain),
+                    targetChainId,
                     TokenTransferPayload.TargetAddress
                   )}
                   target="_blank"
@@ -140,7 +143,7 @@ const ExplorerSummary = (props: SummaryProps) => {
                 >
                   {truncateAddress(
                     getNativeAddress(
-                      Number(TokenTransferPayload.TargetChain),
+                      targetChainId,
                       TokenTransferPayload.TargetAddress
                     )
                   )}
@@ -176,19 +179,19 @@ const ExplorerSummary = (props: SummaryProps) => {
           ) : null}
           {EmitterChain &&
           EmitterAddress &&
-          nativeExplorerContractUri(chainId, EmitterAddress) ? (
+          nativeExplorerContractUri(emitterChainId, EmitterAddress) ? (
             <li>
               <span style={textStyles}>
-                This message was emitted by the {ChainID[chainId]}{" "}
+                This message was emitted by the {ChainID[emitterChainId]}{" "}
               </span>
               <Link
                 component={OutboundLink}
-                href={nativeExplorerContractUri(chainId, EmitterAddress)}
+                href={nativeExplorerContractUri(emitterChainId, EmitterAddress)}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ ...textStyles, whiteSpace: "nowrap" }}
               >
-                {contractNameFormatter(EmitterAddress, chainId)}
+                {contractNameFormatter(EmitterAddress, emitterChainId)}
               </Link>
               <span style={textStyles}> contract</span>
               {transactionId && (
@@ -199,7 +202,7 @@ const ExplorerSummary = (props: SummaryProps) => {
                   </span>
                   <Link
                     component={OutboundLink}
-                    href={nativeExplorerTxUri(chainId, transactionId)}
+                    href={nativeExplorerTxUri(emitterChainId, transactionId)}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ ...textStyles, whiteSpace: "nowrap" }}
@@ -223,6 +226,7 @@ const ExplorerSummary = (props: SummaryProps) => {
         base64VAA={props.message.SignedVAABytes}
         emitterChainName={props.message.EmitterChain}
         emitterAddress={props.message.EmitterAddress}
+        targetChainName={props.message.TargetChain}
         showPayload={true}
         transferDetails={props.message.TransferDetails}
       />

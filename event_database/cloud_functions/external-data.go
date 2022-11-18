@@ -12,7 +12,7 @@ import (
 
 	"net/http"
 
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 const cgBaseUrl = "https://api.coingecko.com/api/v3/"
@@ -105,6 +105,8 @@ func chainIdToCoinGeckoPlatform(chain vaa.ChainID) string {
 		return "polkadot"
 	case vaa.ChainIDEthereumRopsten:
 		return "ethereum"
+	case vaa.ChainIDAlephium:
+		return "alephium"
 	}
 	return ""
 }

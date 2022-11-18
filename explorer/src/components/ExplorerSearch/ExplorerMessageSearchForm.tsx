@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PageProps, navigate } from "gatsby";
 
 import ExplorerQuery from "./ExplorerQuery";
-import { chainEnums, ChainID, chainIDs } from "../../utils/consts";
+import { ChainID, chainIDs } from "../../utils/consts";
 import { useNetworkContext } from "../../contexts/NetworkContext";
 import { truncateAddress } from "../../utils/explorer";
 
@@ -21,10 +21,11 @@ import ExplorerFormSelect, { explorerFormType } from "./ExplorerFormSelect";
 interface ExplorerMessageSearchValues {
   emitterChain: number;
   emitterAddress: string;
+  targetChain: number;
   sequence: string;
 }
 
-const emitterChains = [
+const chains = [
   { label: ChainID[1], value: chainIDs["solana"] },
   { label: ChainID[2], value: chainIDs["ethereum"] },
   { label: ChainID[3], value: chainIDs["terra"] },
@@ -34,6 +35,7 @@ const emitterChains = [
   { label: ChainID[7], value: chainIDs["oasis"] },
   { label: ChainID[9], value: chainIDs["aurora"] },
   { label: ChainID[10], value: chainIDs["fantom"] },
+  { label: ChainID[255], value: chainIDs["alephium"] },
 ];
 
 interface ExplorerMessageSearchProps {
@@ -51,6 +53,8 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
     useState<ExplorerMessageSearchValues["emitterChain"]>();
   const [emitterAddress, setEmitterAddress] =
     useState<ExplorerMessageSearchValues["emitterAddress"]>();
+  const [targetChain, setTargetChain] =
+    useState<ExplorerMessageSearchValues["targetChain"]>();
   const [sequence, setSequence] =
     useState<ExplorerMessageSearchValues["sequence"]>();
 
@@ -61,17 +65,20 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
       // take searchparams from the URL and set the values in the form
       const searchParams = new URLSearchParams(location.search);
 
-      const chain = searchParams.get("emitterChain");
+      const emitterChain = searchParams.get("emitterChain");
       const address = searchParams.get("emitterAddress");
+      const targetChain = searchParams.get("targetChain")
       const seqQuery = searchParams.get("sequence");
 
-      setEmitterChain(Number(chain));
+      setEmitterChain(Number(emitterChain));
       setEmitterAddress(address || undefined);
+      setTargetChain(Number(targetChain))
       setSequence(seqQuery || undefined);
     } else {
       // clear state
       setEmitterChain(undefined);
       setEmitterAddress(undefined);
+      setTargetChain(undefined)
       setSequence(undefined);
     }
   }, [location.search]);
@@ -79,14 +86,14 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
   const handleSubmit = (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     // pushing to the history stack will cause the component to get new props, and useEffect will run.
-    if (emitterChain && emitterAddress && sequence) {
+    if (emitterChain && emitterAddress && targetChain && sequence) {
       navigate(
-        `?emitterChain=${emitterChain}&emitterAddress=${emitterAddress}&sequence=${sequence}`
+        `?emitterChain=${emitterChain}&emitterAddress=${emitterAddress}&targetChain=${targetChain}&sequence=${sequence}`
       );
     }
   };
 
-  const onChain = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onEmitterChain = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setEmitterChain(Number(value));
   };
@@ -94,6 +101,11 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
   const onAddress = (value: string) => {
     // trim whitespace
     setEmitterAddress(value.replace(/\s/g, ""));
+  };
+
+  const onTargetChain = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    setTargetChain(Number(value));
   };
 
   const onSequence = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,14 +130,14 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
         <TextField
           select
           value={emitterChain || ""}
-          onChange={onChain}
-          placeholder="Chain"
-          label="Chain"
+          onChange={onEmitterChain}
+          placeholder="Emitter Chain"
+          label="Emitter Chain"
           fullWidth
           size="small"
           sx={{ my: 1 }}
         >
-          {emitterChains.map(({ label, value }) => (
+          {chains.map(({ label, value }) => (
             <MenuItem key={label} value={value}>
               {label}
             </MenuItem>
@@ -150,7 +162,7 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
           // Filter out keys that are not human readable names, by checking for a space in the key.
           options={Object.entries(
             activeNetwork.chains[
-              chainEnums[emitterChain || 1]?.toLowerCase()
+              ChainID[emitterChain || 1]?.toLowerCase()
             ] || {}
           )
             .filter(([key]) => key.includes(" "))
@@ -159,6 +171,23 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
               value: val,
             }))}
         />
+
+        <TextField
+          select
+          value={targetChain || ""}
+          onChange={onTargetChain}
+          placeholder="Target Chain"
+          label="Target Chain"
+          fullWidth
+          size="small"
+          sx={{ my: 1 }}
+        >
+          {chains.map(({ label, value }) => (
+            <MenuItem key={label} value={value}>
+              {label}
+            </MenuItem>
+          ))}
+        </TextField>
 
         <TextField
           type="number"
@@ -183,10 +212,11 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
         </Button>
       </Box>
 
-      {emitterChain && emitterAddress && sequence ? (
+      {emitterChain && emitterAddress && targetChain && sequence ? (
         <ExplorerQuery
           emitterChain={emitterChain}
           emitterAddress={emitterAddress}
+          targetChain={targetChain}
           sequence={sequence}
         />
       ) : null}

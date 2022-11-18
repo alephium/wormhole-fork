@@ -139,7 +139,7 @@ const MAINNET = {
     core: undefined,
     token_bridge: undefined,
     nft_bridge: undefined,
-  },  
+  },
   alephium: {
     core: undefined,
     token_bridge: undefined,
@@ -242,7 +242,7 @@ const TESTNET = {
     core: "0xa5B7D85a8f27dd7907dc8FdC21FA5657D5E2F901",
     token_bridge: "0xbc976D4b9D57E57c3cA52e1Fd136C45FF7955A96",
     nft_bridge: "0x98A0F4B96972b32Fcb3BD03cAeB66A44a6aB9Edb",
-  },    
+  },
   alephium: {
     core: undefined,
     token_bridge: undefined,
