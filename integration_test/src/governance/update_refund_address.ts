@@ -1,15 +1,10 @@
 import { binToHex } from '@alephium/web3'
 import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
 import base58 from 'bs58'
-import { execSync } from 'child_process'
-import { assert, getBridgeChains, getSignedVAA } from '../utils'
+import { assert, getBridgeChains } from '../utils'
 import {
-  getGuardianByIndex,
   getNextGovernanceSequence,
-  governanceChainId,
-  governanceEmitterId,
   injectVAA,
-  runCmdInContainer,
   submitGovernanceVAA
 } from './governance_utils'
 

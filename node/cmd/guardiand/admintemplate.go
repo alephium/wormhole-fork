@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcutil/bech32"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/mr-tron/base58"
 	"github.com/spf13/pflag"
@@ -20,8 +20,8 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	"github.com/certusone/wormhole/node/pkg/devnet"
-	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/devnet"
+	nodev1 "github.com/alephium/wormhole-fork/node/pkg/proto/node/v1"
 )
 
 var messageFee *string

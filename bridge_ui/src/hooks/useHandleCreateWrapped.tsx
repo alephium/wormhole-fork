@@ -65,6 +65,7 @@ import { postWithFees } from "../utils/terra";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { waitTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
+import { SignerProvider } from "alephium-wormhole-sdk/node_modules/@alephium/web3/dist/src/signer/signer"
 
 async function algo(
   dispatch: any,
@@ -255,8 +256,8 @@ async function alephium(
   try {
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
     const result = shouldUpdate
-      ? await updateRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA)
-      : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
+      ? await updateRemoteTokenPoolOnAlph(signer.signerProvider as SignerProvider, attestTokenHandlerId, signedVAA)
+      : await createRemoteTokenPoolOnAlph(signer.signerProvider as SignerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(

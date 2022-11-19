@@ -1,6 +1,7 @@
 import { Sequence } from '../sequence'
 import { BridgeChain } from '../bridge_chain'
-import { assert } from '../utils'
+import { assert, randomBigInt } from '../utils'
+import * as base58 from 'bs58'
 
 export class TransferTokenTest {
   fromChain: BridgeChain
@@ -113,5 +114,38 @@ export class TransferTokenTest {
 
     assert(amount + balanceBeforeTransferOnTargetChain - txFee === balanceAfterTransferOnTargetChain)
     assert(amount + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
+  }
+
+  async transferToMultiSigAddress(num: number): Promise<void> {
+    const tokenId = this.fromChain.testTokenId
+    const balance = await this.fromChain.getTokenBalance(tokenId)
+    const maxAmount = balance / BigInt(num)
+    for (let i = 0; i < num; i++) {
+      const multiSigAddressBytes = this.toChain.genMultiSigAddress()
+      const multiSigAddressBase58 = base58.encode(multiSigAddressBytes)
+      const balanceBeforeTransfer = await this.toChain.getWrappedTokenBalanceByAddress(
+        tokenId,
+        this.fromChain.chainId,
+        multiSigAddressBase58
+      )
+      assert(balanceBeforeTransfer === 0n)
+
+      const amount = randomBigInt(maxAmount, this.fromChain.normalizeTransferAmount)
+      const transferResult = await this.fromChain.transferToken(
+        tokenId,
+        amount,
+        this.toChain.chainId,
+        multiSigAddressBytes,
+        this.sequence.next()
+      )
+      await this.toChain.redeemToken(transferResult.signedVaa)
+
+      const balanceAfterTransfer = await this.toChain.getWrappedTokenBalanceByAddress(
+        tokenId,
+        this.fromChain.chainId,
+        multiSigAddressBase58
+      )
+      assert(balanceAfterTransfer === amount)
+    }
   }
 }

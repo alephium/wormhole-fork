@@ -1,6 +1,6 @@
 package common
 
-import "github.com/certusone/wormhole/node/pkg/vaa"
+import "github.com/alephium/wormhole-fork/node/pkg/vaa"
 
 // PublicRPCEndpoints is a list of known public RPC endpoints for mainnet, operated by
 // Wormhole guardian nodes.

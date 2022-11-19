@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -euo pipefail xtrace
+
+NUM_GUARDIANS=1
 
 VERSION=0.2.77
 export DOCKER_BUILDKIT=1

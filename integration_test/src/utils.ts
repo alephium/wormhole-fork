@@ -84,3 +84,15 @@ export async function getBridgeChains(): Promise<BridgeChains> {
   bridgeChains = { eth, alph }
   return bridgeChains
 }
+
+export function randomBigInt(max: bigint, normalizeFunc: (amount: bigint) => bigint): bigint {
+  const length = max.toString().length
+  let multiplier = ''
+  while (multiplier.length < length) {
+    multiplier += Math.random().toString().split('.')[1]
+  }
+  multiplier = multiplier.slice(0, length)
+  const num = (max * BigInt(multiplier)) / 10n ** BigInt(length)
+  const normalized = normalizeFunc(num)
+  return normalized === 0n ? randomBigInt(max, normalizeFunc) : normalized
+}

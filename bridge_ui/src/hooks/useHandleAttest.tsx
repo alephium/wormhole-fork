@@ -75,6 +75,7 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import { BuildScriptTxResult } from "@alephium/web3"
+import { SignerProvider } from "alephium-wormhole-sdk/node_modules/@alephium/web3/dist/src/signer/signer"
 
 async function algo(
   dispatch: any,
@@ -308,7 +309,7 @@ async function alephium(
         let result: BuildScriptTxResult
         if (localTokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
           result = await attestWrappedAlph(
-            signer.signerProvider,
+            signer.signerProvider as SignerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
             signer.account.address,
@@ -317,7 +318,7 @@ async function alephium(
           );
         } else {
           result = await attestFromAlph(
-            signer.signerProvider,
+            signer.signerProvider as SignerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             localTokenId,
             signer.account.address,

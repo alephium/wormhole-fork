@@ -32,8 +32,6 @@ import HeaderText from "./components/HeaderText";
 import Migration from "./components/Migration";
 import EvmQuickMigrate from "./components/Migration/EvmQuickMigrate";
 import SolanaQuickMigrate from "./components/Migration/SolanaQuickMigrate";
-import NFT from "./components/NFT";
-import NFTOriginVerifier from "./components/NFTOriginVerifier";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
 import CustodyAddresses from "./components/Stats/CustodyAddresses";
@@ -266,7 +264,7 @@ function App() {
           </Typography>
         </AppBar>
       ) : null}
-      {["/transfer", "/nft", "/redeem", "/transactions"].includes(pathname) ? (
+      {["/transfer", "/redeem", "/transactions"].includes(pathname) ? (
         <Container maxWidth="md" style={{ paddingBottom: 24 }}>
           <HeaderText
             white
@@ -274,7 +272,7 @@ function App() {
               <>
                 <Typography>
                   Portal is a bridge that offers unlimited transfers across
-                  chains for tokens and NFTs wrapped by Wormhole.
+                  chains for tokens wrapped by Wormhole.
                 </Typography>
                 <Typography>
                   Unlike many other bridges, you avoid double wrapping and never
@@ -292,7 +290,7 @@ function App() {
             indicatorColor="primary"
           >
             <Tab label="Tokens" value="/transfer" />
-            <Tab label="NFTs" value="/nft" />
+            { /* <Tab label="NFTs" value="/nft" /> */ }
             <Tab label="Redeem" value="/redeem" to="/redeem" />
             <Tab label="Transactions" value="/transactions" to="/transactions" />
           </Tabs>
@@ -302,18 +300,14 @@ function App() {
         <Route exact path="/transfer">
           <Transfer />
         </Route>
-        <Route exact path="/nft">
-          <NFT />
-        </Route>
+        { /* <Route exact path="/nft"> <NFT /> </Route> */ }
         <Route exact path="/redeem">
           <Recovery />
         </Route>
         <Route exact path="/transactions">
           <Transactions />
         </Route>
-        <Route exact path="/nft-origin-verifier">
-          <NFTOriginVerifier />
-        </Route>
+        { /* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */ }
         <Route exact path="/token-origin-verifier">
           <TokenOriginVerifier />
         </Route>

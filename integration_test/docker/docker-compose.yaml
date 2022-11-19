@@ -81,7 +81,7 @@ services:
       - --alphRPC
       - http://alephium:22973
       - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg"
+      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
       - --alphGroupIndex
       - "0"
       - --alphMinConfirmations
@@ -119,7 +119,7 @@ services:
       - --alphRPC
       - http://alephium:22973
       - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,29JYTXFuhzo6uqQhe242gAhBFSadtL6bYw9zvDTrgUpDg"
+      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
       - --alphGroupIndex
       - "0"
       - --alphMinConfirmations
@@ -138,4 +138,20 @@ services:
       - "[::]:7071"
       - --adminSocket
       - /tmp/admin.sock
+      - --logLevel=debug
+
+  spy:
+    image: alephium/guardiand:0.2.56
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:7072:7072
+    entrypoint:
+      - /guardiand
+      - spy
+      - --nodeKey
+      - /tmp/node.key
+      - --spyRPC
+      - "[::]:7072"
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
       - --logLevel=debug

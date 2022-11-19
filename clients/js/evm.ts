@@ -1,13 +1,18 @@
-import { BridgeImplementation__factory, Implementation__factory, NFTBridgeImplementation__factory } from "alephium-wormhole-sdk"
+import {
+  BridgeImplementation__factory,
+  GovernancePayload,
+  Implementation__factory,
+  NFTBridgeImplementation__factory
+} from "alephium-wormhole-sdk"
 import { ethers } from "ethers"
 import { NETWORKS } from "./networks"
-import { impossible, Payload } from "./vaa"
+import { impossible } from "./utils"
 import { Contracts, CONTRACTS, EVMChainName } from "alephium-wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 
-export async function execute_governance_evm(
-  payload: Payload,
+export async function executeGovernanceEvm(
+  payload: GovernancePayload,
   vaa: Buffer,
   network: "MAINNET" | "TESTNET" | "DEVNET",
   chain: EVMChainName
@@ -76,7 +81,7 @@ export async function execute_governance_evm(
           console.log("Hash: " + (await cb.submitContractUpgrade(vaa, overrides)).hash)
           break
         default:
-          impossible(payload)
+          throw new Error(`Invalid governance payload type: ${payload.type}`)
       }
       break
     case "NFTBridge":
@@ -116,11 +121,8 @@ export async function execute_governance_evm(
           console.log("Registering chain")
           console.log("Hash: " + (await tb.registerChain(vaa, overrides)).hash)
           break
-        case 'Extension':
-          throw new Error('Not supported')
         default:
-          impossible(payload)
-
+          throw new Error(`Invalid governance payload type: ${payload.type}`)
       }
       break
     default:

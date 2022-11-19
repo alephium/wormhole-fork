@@ -11,7 +11,7 @@ import (
 	"github.com/terra-money/terra.go/key"
 	"github.com/terra-money/terra.go/msg"
 
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 type submitVAAMsg struct {

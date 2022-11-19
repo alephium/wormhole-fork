@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 import http = require("http");
 import client = require("prom-client");
 import { WalletBalance } from "../monitor/walletMonitor";

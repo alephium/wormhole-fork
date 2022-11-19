@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	node_common "github.com/certusone/wormhole/node/pkg/common"
-	"github.com/certusone/wormhole/node/pkg/db"
+	node_common "github.com/alephium/wormhole-fork/node/pkg/common"
+	"github.com/alephium/wormhole-fork/node/pkg/db"
 	"github.com/mr-tron/base58"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.uber.org/zap"
 
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 var (

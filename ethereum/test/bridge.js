@@ -472,7 +472,7 @@ contract("Bridge", function () {
             TokenImplementation.address,
             amount,
             "10",
-            "0x000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e",
+            "0xb7a2211e8165943192ad04f5dd21bedc29ff003e",
             fee,
             "234"
         ).send({
@@ -497,8 +497,6 @@ contract("Bridge", function () {
 
         assert.equal(log.targetChainId, "10")
 
-        assert.equal(log.payload.length - 2, 262);
-
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
 
@@ -511,11 +509,16 @@ contract("Bridge", function () {
         // chain id
         assert.equal(log.payload.substr(132, 4), web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + 64 - 4))
 
-        // to
-        assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
+        // to address size
+        assert.equal(log.payload.substr(136, 4), web3.eth.abi.encodeParameter("uint16", 20).substring(62))
+
+        // to address
+        assert.equal(log.payload.substr(140, 40), "b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
         // fee
-        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(180, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+
+        assert.equal(log.payload.length - 2, 242);
     })
 
     it("should deposit and log fee token transfers correctly", async function () {
@@ -587,8 +590,6 @@ contract("Bridge", function () {
 
         assert.equal(log.targetChainId, "10")
 
-        assert.equal(log.payload.length - 2, 262);
-
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
 
@@ -601,11 +602,16 @@ contract("Bridge", function () {
         // chain id
         assert.equal(log.payload.substr(132, 4), web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + 64 - 4))
 
-        // to
-        assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
+        // to address size
+        assert.equal(log.payload.substr(136, 4), web3.eth.abi.encodeParameter("uint16", 32).substring(62))
+
+        // to address
+        assert.equal(log.payload.substr(140, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
         // fee
-        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+
+        assert.equal(log.payload.length - 2, 266);
     })
 
     it("should transfer out locked assets for a valid transfer vm", async function () {
@@ -630,8 +636,10 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("address", TokenImplementation.address).substr(2) +
             // tokenchain
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
-            // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
+            // to address size
+            web3.eth.abi.encodeParameter("uint16", 20).substring(62) +
+            // to address
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(26) +
             // fee
             "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -685,8 +693,10 @@ contract("Bridge", function () {
             testBridgedAssetAddress +
             // tokenchain
             testBridgedAssetChain +
-            // receiver
-            web3.eth.abi.encodeParameter("address", accounts[0]).substr(2) +
+            // to address size
+            web3.eth.abi.encodeParameter("uint16", 20).substring(62) +
+            // to address
+            web3.eth.abi.encodeParameter("address", accounts[0]).substr(26) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2);
 
@@ -821,8 +831,6 @@ contract("Bridge", function () {
 
         assert.equal(log.targetChainId, "10")
 
-        assert.equal(log.payload.length - 2, 262);
-
         // payload id
         assert.equal(log.payload.substr(2, 2), "01");
 
@@ -835,11 +843,16 @@ contract("Bridge", function () {
         // chain id
         assert.equal(log.payload.substr(132, 4), web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + 64 - 4))
 
-        // to
-        assert.equal(log.payload.substr(136, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
+        // to address size
+        assert.equal(log.payload.substr(136, 4), web3.eth.abi.encodeParameter("uint16", 32).substring(62))
+
+        // to address
+        assert.equal(log.payload.substr(140, 64), "000000000000000000000000b7a2211e8165943192ad04f5dd21bedc29ff003e");
 
         // fee
-        assert.equal(log.payload.substr(200, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+        assert.equal(log.payload.substr(204, 64), web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2))
+
+        assert.equal(log.payload.length - 2, 266);
     })
 
     it("should handle ETH withdrawals and fees correctly", async function () {
@@ -866,8 +879,10 @@ contract("Bridge", function () {
             web3.eth.abi.encodeParameter("address", WETH).substr(2) +
             // tokenchain
             web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)) +
-            // receiver
-            web3.eth.abi.encodeParameter("address", accounts[1]).substr(2) +
+            // to address size
+            web3.eth.abi.encodeParameter("uint16", 20).substring(62) +
+            // to address
+            web3.eth.abi.encodeParameter("address", accounts[1]).substr(26) +
             // fee
             web3.eth.abi.encodeParameter("uint256", new BigNumber(fee).div(1e10).toString()).substring(2);
 

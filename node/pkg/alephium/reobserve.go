@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	sdk "github.com/alephium/go-sdk"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"go.uber.org/zap"
 )
 

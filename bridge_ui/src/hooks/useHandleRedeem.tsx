@@ -63,6 +63,7 @@ import { getEmitterChainId, waitTxConfirmed } from "../utils/alephium";
 import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { TransactionDB } from "../utils/db";
+import { SignerProvider } from "alephium-wormhole-sdk/node_modules/@alephium/web3/dist/src/signer/signer"
 
 async function algo(
   dispatch: any,
@@ -246,7 +247,7 @@ async function alephium(
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
-    const result = await redeemOnAlph(signer.signerProvider, tokenBridgeForChainId, signedVAA)
+    const result = await redeemOnAlph(signer.signerProvider as SignerProvider, tokenBridgeForChainId, signedVAA)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(

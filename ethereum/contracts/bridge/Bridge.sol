@@ -61,7 +61,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         }(0, nonce, encoded, 15);
     }
 
-    function wrapAndTransferETH(uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce) public payable returns (uint64 sequence) {
+    function wrapAndTransferETH(uint16 recipientChain, bytes calldata recipient, uint256 arbiterFee, uint32 nonce) public payable returns (uint64 sequence) {
         BridgeStructs.TransferResult memory transferResult = _wrapAndTransferETH(arbiterFee);
         sequence = logTransfer(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce);
     }
@@ -101,7 +101,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         });
     }
 
-    function transferTokens(address token, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 arbiterFee, uint32 nonce) public payable nonReentrant returns (uint64 sequence) {
+    function transferTokens(address token, uint256 amount, uint16 recipientChain, bytes calldata recipient, uint256 arbiterFee, uint32 nonce) public payable nonReentrant returns (uint64 sequence) {
         BridgeStructs.TransferResult memory transferResult = _transferTokens(token, amount, arbiterFee);
         sequence = logTransfer(transferResult.tokenChain, transferResult.tokenAddress, transferResult.normalizedAmount, recipientChain, recipient, transferResult.normalizedArbiterFee, transferResult.wormholeFee, nonce);
     }
@@ -178,7 +178,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         return amount;
     }
 
-    function logTransfer(uint16 tokenChain, bytes32 tokenAddress, uint256 amount, uint16 recipientChain, bytes32 recipient, uint256 fee, uint256 callValue, uint32 nonce) internal returns (uint64 sequence) {
+    function logTransfer(uint16 tokenChain, bytes32 tokenAddress, uint256 amount, uint16 recipientChain, bytes calldata recipient, uint256 fee, uint256 callValue, uint32 nonce) internal returns (uint64 sequence) {
         require(fee <= amount, "fee exceeds amount");
 
         BridgeStructs.Transfer memory transfer = BridgeStructs.Transfer({
@@ -283,7 +283,8 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         require(verifyBridgeVM(vm), "invalid emitter");
 
         BridgeStructs.Transfer memory transfer = parseTransfer(vm.payload);
-        address transferRecipient = address(uint160(uint256(transfer.to)));
+        require(transfer.to.length == 20, "invalid to address");
+        address transferRecipient = transfer.to.toAddress(0);
 
         require(!isTransferCompleted(vm.hash), "transfer already completed");
         setTransferCompleted(vm.hash);
@@ -388,6 +389,7 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
             transfer.amount,
             transfer.tokenAddress,
             transfer.tokenChain,
+            uint16(transfer.to.length),
             transfer.to,
             transfer.fee
         );
@@ -436,8 +438,11 @@ contract Bridge is BridgeGovernance, ReentrancyGuard {
         transfer.tokenChain = encoded.toUint16(index);
         index += 2;
 
-        transfer.to = encoded.toBytes32(index);
-        index += 32;
+        uint16 toAddressSize = encoded.toUint16(index);
+        index += 2;
+
+        transfer.to = encoded.slice(index, toAddressSize);
+        index += toAddressSize;
 
         transfer.fee = encoded.toUint256(index);
         index += 32;

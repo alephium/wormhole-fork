@@ -1,4 +1,5 @@
 {
+  "testPathIgnorePatterns": ["/node_modules/", "/lib/"],
   "transform": {
     "^.+\\.(t|j)sx?$": "ts-jest"
   },

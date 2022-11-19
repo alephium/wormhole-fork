@@ -19,6 +19,7 @@ export interface BridgeChain {
   getNativeTokenBalance(): Promise<bigint>
   getTokenBalance(tokenId: string): Promise<bigint>
   getWrappedTokenBalance(originTokenId: string, tokenChainId: ChainId): Promise<bigint>
+  getWrappedTokenBalanceByAddress(originTokenId: string, tokenChainId: ChainId, address: string): Promise<bigint>
   getLockedNativeBalance(): Promise<bigint>
   getLockedTokenBalance(tokenId: string): Promise<bigint>
 
@@ -47,4 +48,6 @@ export interface BridgeChain {
 
   getCurrentGuardianSet(): Promise<string[]>
   getCurrentMessageFee(): Promise<bigint>
+
+  genMultiSigAddress(): Uint8Array
 }

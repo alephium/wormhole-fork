@@ -13,8 +13,8 @@ import (
 
 	sdk "github.com/alephium/go-sdk"
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/certusone/wormhole/node/pkg/common"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/common"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 

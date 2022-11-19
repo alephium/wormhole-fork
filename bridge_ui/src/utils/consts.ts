@@ -198,8 +198,7 @@ export const WORMHOLE_RPC_HOSTS =
       ]
     : CLUSTER === "testnet"
     ? ["https://guardian.wormhole-testnet.softfork.se"]
-    : ["https://alephium-wormhole.softfork.se"]; // TODO: Able to override this in yaml file
-    //: ["http://localhost:7071"];
+    : ["https://alephium-wormhole.softfork.se"];
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
@@ -291,8 +290,6 @@ export const ALEPHIUM_HOST =
     : CLUSTER === "testnet"
     ? "https://alephium-testnet.softfork.se"
     : "https://alephium-dev.softfork.se"
-    //: "http://localhost:22973"
-
 
 export const ALEPHIUM_EXPLORER_HOST =
   CLUSTER === "mainnet"
@@ -665,14 +662,14 @@ export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f"
-    : "d921c79d323ec44763f76aeb793183005aa67612e74948b00ca2214b308c4f43";
-export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = "b6bc0625f2f11afca9b1e7e7c092ed59aa6b8b53f668e167e1f7bcdca0cfcc44";
+    : "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7";
+export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = "73e6d82337c7126065e61d8cb84a62237675357f0879ce2495ff58dfba4898a0";
 export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
     ? "7d7b768ab9e22692fe76b605314da3769ce82740f43def8d7de2605ba07db81a"
-    : "7eba0bd8a081d080d708fd226f6da27d59574e465b3703b563ed990260e56803";
+    : "1697eb1aac440db3f1359701e301424ae974eae8e080238d212e79dfc7ab4cda";
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL

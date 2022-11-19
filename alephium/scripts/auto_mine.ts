@@ -21,7 +21,7 @@ async function mine(num: number): Promise<void> {
   }
   const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo(chain00)
   console.log(`chain index: ${chain00.fromGroup} -> ${chain00.toGroup}, height: ${chainInfo.currentHeight}`)
-  await new Promise((resolve) => setTimeout(resolve, 10000))
+  await new Promise((resolve) => setTimeout(resolve, 1000))
   await mine(num + 1)
 }
 

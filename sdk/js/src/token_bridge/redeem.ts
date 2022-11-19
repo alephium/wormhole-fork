@@ -22,8 +22,8 @@ import {
   WSOL_DECIMALS,
   MAX_VAA_DECIMALS,
 } from "../utils";
-import { hexToNativeString } from "../utils/array";
-import { parseTransferPayload } from "../utils/parseVaa";
+import { hexToNativeString, uint8ArrayToHex } from "../utils/array";
+import { deserializeTransferTokenVAA } from "../utils/vaa";
 
 export async function redeemOnAlph(
   signerProvider: SignerProvider,
@@ -83,14 +83,11 @@ export async function redeemAndUnwrapOnSolana(
   payerAddress: string,
   signedVAA: Uint8Array
 ) {
-  const { parse_vaa } = await importCoreWasm();
   const { complete_transfer_native_ix } = await importTokenWasm();
-  const parsedVAA = parse_vaa(signedVAA);
-  const parsedPayload = parseTransferPayload(
-    Buffer.from(new Uint8Array(parsedVAA.payload))
-  );
+  const parsedVAA = deserializeTransferTokenVAA(signedVAA)
+  const parsedPayload = parsedVAA.body.payload
   const targetAddress = hexToNativeString(
-    parsedPayload.targetAddress,
+    uint8ArrayToHex(parsedPayload.targetAddress),
     CHAIN_ID_SOLANA
   );
   if (!targetAddress) {

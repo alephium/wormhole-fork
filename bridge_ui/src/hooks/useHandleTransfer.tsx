@@ -89,6 +89,7 @@ import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWal
 import { validateAlephiumRecipientAddress, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { BuildScriptTxResult } from "@alephium/web3";
 import { Transaction, TransactionDB } from "../utils/db";
+import { SignerProvider } from "alephium-wormhole-sdk/node_modules/@alephium/web3/dist/src/signer/signer"
 
 async function algo(
   dispatch: any,
@@ -354,7 +355,7 @@ async function alephium(
         let result: BuildScriptTxResult
         if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
           result = await transferAlph(
-            signer.signerProvider,
+            signer.signerProvider as SignerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
             targetChain,
@@ -365,7 +366,7 @@ async function alephium(
           )
         } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
           result = await transferLocalTokenFromAlph(
-            signer.signerProvider,
+            signer.signerProvider as SignerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
             tokenId,
@@ -378,7 +379,7 @@ async function alephium(
           )
         } else {
           result = await transferRemoteTokenFromAlph(
-            signer.signerProvider,
+            signer.signerProvider as SignerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             signer.account.address,
             tokenId,

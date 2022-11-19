@@ -31,10 +31,13 @@ Contract TokenBridgeForChain(
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
         let vaaTokenId = byteVecSlice!(payload, 33, 65)
         let vaaTokenChainId = u256From2Byte!(byteVecSlice!(payload, 65, 67))
-        let toAddress = byteVecSlice!(payload, 67, 99)
-        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, 99, 131))
-        assert!(size!(payload) == 131, ErrorCodes.InvalidMessageSize)
-        let recipient = byteVecToAddress!(#00 ++ toAddress)
+        let toAddressSize = u256From2Byte!(byteVecSlice!(payload, 67, 69))
+        let toAddressEndOffset = 69 + toAddressSize
+        let toAddress = byteVecSlice!(payload, 69, toAddressEndOffset)
+        let payloadSize = toAddressEndOffset + 32
+        let normalizedArbiterFee = u256From32Byte!(byteVecSlice!(payload, toAddressEndOffset, payloadSize))
+        assert!(size!(payload) == payloadSize, ErrorCodes.InvalidMessageSize)
+        let recipient = byteVecToAddress!(toAddress)
         return amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee
     }
 
