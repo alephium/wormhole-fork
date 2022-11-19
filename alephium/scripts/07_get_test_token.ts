@@ -11,7 +11,6 @@ const getTestToken: DeployFunction = async (deployer: Deployer): Promise<void> =
     amount: oneAlph * 10n,
     token: token.contractId
   }
-  console.log("token.contractId", token.contractId)
   await deployer.runScript(script, {
     initialFields: initialFields
   })

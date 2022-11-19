@@ -704,7 +704,6 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *cloudKMSEnabled {
 		bCtx := context.Background()
 		kmsClient, err := ecdsasigner.NewKMSClient(bCtx, *cloudKMSKeyName)
-		log.Println("KMS client initiated")
 		if err != nil {
 			log.Fatalf("Failed to setup KMS client: %v", err)
 		}

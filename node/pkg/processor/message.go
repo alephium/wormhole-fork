@@ -139,7 +139,6 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	digest := v.SigningMsg()
 
 	// Sign the digest using our node's guardian key.
-	log.Println("signing digest", digest)
 	s, err := p.guardianSigner.Sign(digest.Bytes())
 	if err != nil {
 		panic(err)
