@@ -3,7 +3,6 @@ package processor
 import (
 	"context"
 	"encoding/hex"
-	"log"
 
 	"github.com/alephium/wormhole-fork/node/pkg/db"
 	"github.com/mr-tron/base58"
