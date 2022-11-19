@@ -350,28 +350,9 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
-	// readiness.RegisterComponent(common.ReadinessSolanaSyncing)
-	// readiness.RegisterComponent(common.ReadinessTerraSyncing)
 	if *testnetMode || *unsafeDevMode {
 		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
-		// readiness.RegisterComponent(common.ReadinessAlgorandSyncing)
 	}
-	// readiness.RegisterComponent(common.ReadinessBSCSyncing)
-	// readiness.RegisterComponent(common.ReadinessPolygonSyncing)
-	// readiness.RegisterComponent(common.ReadinessAvalancheSyncing)
-	// readiness.RegisterComponent(common.ReadinessOasisSyncing)
-	// readiness.RegisterComponent(common.ReadinessAuroraSyncing)
-	// readiness.RegisterComponent(common.ReadinessFantomSyncing)
-	// readiness.RegisterComponent(common.ReadinessKaruraSyncing)
-	// readiness.RegisterComponent(common.ReadinessAcalaSyncing)
-	// readiness.RegisterComponent(common.ReadinessKlaytnSyncing)
-	// readiness.RegisterComponent(common.ReadinessCeloSyncing)
-
-	// if *testnetMode {
-	// 	readiness.RegisterComponent(common.ReadinessEthRopstenSyncing)
-	// 	readiness.RegisterComponent(common.ReadinessMoonbeamSyncing)
-	// 	readiness.RegisterComponent(common.ReadinessNeonSyncing)
-	// }
 
 	if *statusAddr != "" {
 		// Use a custom routing instead of using http.DefaultServeMux directly to avoid accidentally exposing packages
@@ -414,18 +395,6 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		// Deterministic ganache ETH devnet address.
 		*ethContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *bscContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *polygonContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *avalancheContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *oasisContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *auroraContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *fantomContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *karuraContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *acalaContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *klaytnContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *celoContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *moonbeamContract = devnet.GanacheWormholeContractAddress.Hex()
-		// *neonContract = devnet.GanacheWormholeContractAddress.Hex()
 	}
 
 	// Verify flags
@@ -451,139 +420,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	if *ethContract == "" {
 		logger.Fatal("Please specify --ethContract")
 	}
-	// if *bscRPC == "" {
-	// 	logger.Fatal("Please specify --bscRPC")
-	// }
-	// if *bscContract == "" {
-	// 	logger.Fatal("Please specify --bscContract")
-	// }
-	// if *polygonRPC == "" {
-	// 	logger.Fatal("Please specify --polygonRPC")
-	// }
-	// if *polygonContract == "" {
-	// 	logger.Fatal("Please specify --polygonContract")
-	// }
-	// if *avalancheRPC == "" {
-	// 	logger.Fatal("Please specify --avalancheRPC")
-	// }
-	// if *oasisRPC == "" {
-	// 	logger.Fatal("Please specify --oasisRPC")
-	// }
-	// if *fantomRPC == "" {
-	// 	logger.Fatal("Please specify --fantomRPC")
-	// }
-	// if *fantomContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --fantomContract")
-	// }
-	// if *auroraRPC == "" {
-	// 	logger.Fatal("Please specify --auroraRPC")
-	// }
-	// if *auroraContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --auroraContract")
-	// }
-	// if *karuraRPC == "" {
-	// 	logger.Fatal("Please specify --karuraRPC")
-	// }
-	// if *karuraContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --karuraContract")
-	// }
-	// if *acalaRPC == "" {
-	// 	logger.Fatal("Please specify --acalaRPC")
-	// }
-	// if *acalaContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --acalaContract")
-	// }
-	// if *klaytnRPC == "" {
-	// 	logger.Fatal("Please specify --klaytnRPC")
-	// }
-	// if *klaytnContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --klaytnContract")
-	// }
-	// if *celoRPC == "" {
-	// 	logger.Fatal("Please specify --celoRPC")
-	// }
-	// if *celoContract == "" && !*unsafeDevMode {
-	// 	logger.Fatal("Please specify --celoContract")
-	// }
-	if *testnetMode {
-		// if *ethRopstenRPC == "" {
-		// 	logger.Fatal("Please specify --ethRopstenRPC")
-		// }
-		// if *ethRopstenContract == "" {
-		// 	logger.Fatal("Please specify --ethRopstenContract")
-		// }
-		// if *moonbeamRPC == "" {
-		// 	logger.Fatal("Please specify --moonbeamRPC")
-		// }
-		// if *moonbeamContract == "" {
-		// 	logger.Fatal("Please specify --moonbeamContract")
-		// }
-		// if *neonRPC == "" {
-		// 	logger.Fatal("Please specify --neonRPC")
-		// }
-		// if *neonContract == "" {
-		// 	logger.Fatal("Please specify --neonContract")
-		// }
-	} else {
-		// if *ethRopstenRPC != "" {
-		// 	logger.Fatal("Please do not specify --ethRopstenRPC in non-testnet mode")
-		// }
-		// if *ethRopstenContract != "" {
-		// 	logger.Fatal("Please do not specify --ethRopstenContract in non-testnet mode")
-		// }
-		//if *moonbeamRPC != "" && !*unsafeDevMode {
-		//	logger.Fatal("Please do not specify --moonbeamRPC")
-		//}
-		//if *moonbeamContract != "" && !*unsafeDevMode {
-		//	logger.Fatal("Please do not specify --moonbeamContract")
-		//}
-		//if *neonRPC != "" && !*unsafeDevMode {
-		//	logger.Fatal("Please do not specify --neonRPC")
-		//}
-		//if *neonContract != "" && !*unsafeDevMode {
-		//	logger.Fatal("Please do not specify --neonContract")
-		//}
-	}
 	if *nodeName == "" {
 		logger.Fatal("Please specify --nodeName")
 	}
 
-	// if *solanaContract == "" {
-	// 	logger.Fatal("Please specify --solanaContract")
-	// }
-	// if *solanaWsRPC == "" {
-	// 	logger.Fatal("Please specify --solanaWsUrl")
-	// }
-	// if *solanaRPC == "" {
-	// 	logger.Fatal("Please specify --solanaUrl")
-	// }
-
-	// if *terraWS == "" {
-	// 	logger.Fatal("Please specify --terraWS")
-	// }
-	// if *terraLCD == "" {
-	// 	logger.Fatal("Please specify --terraLCD")
-	// }
-	// if *terraContract == "" {
-	// 	logger.Fatal("Please specify --terraContract")
-	// }
-	// if *testnetMode || *unsafeDevMode {
-	// 	if *algorandIndexerRPC == "" {
-	// 		logger.Fatal("Please specify --algorandIndexerRPC")
-	// 	}
-	// 	if *algorandIndexerToken == "" {
-	// 		logger.Fatal("Please specify --algorandIndexerToken")
-	// 	}
-	// 	if *algorandAlgodRPC == "" {
-	// 		logger.Fatal("Please specify --algorandAlgodRPC")
-	// 	}
-	// 	if *algorandAlgodToken == "" {
-	// 		logger.Fatal("Please specify --algorandAlgodToken")
-	// 	}
-	// 	if *algorandAppID == 0 {
-	// 		logger.Fatal("Please specify --algorandAppID")
-	// 	}
-	// }
 	if *bigTablePersistenceEnabled {
 		if *bigTableGCPProject == "" {
 			logger.Fatal("Please specify --bigTableGCPProject")
@@ -762,23 +602,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDPolygon] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDAvalanche] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDOasis] = make(chan *gossipv1.ObservationRequest)
-	// if *testnetMode || *unsafeDevMode {
-	// 	chainObsvReqC[vaa.ChainIDAlgorand] = make(chan *gossipv1.ObservationRequest)
-	// }
-	// chainObsvReqC[vaa.ChainIDAurora] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDFantom] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDKarura] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDAcala] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDKlaytn] = make(chan *gossipv1.ObservationRequest)
-	// chainObsvReqC[vaa.ChainIDCelo] = make(chan *gossipv1.ObservationRequest)
-	// if *testnetMode {
-	// 	chainObsvReqC[vaa.ChainIDMoonbeam] = make(chan *gossipv1.ObservationRequest)
-	// 	chainObsvReqC[vaa.ChainIDNeon] = make(chan *gossipv1.ObservationRequest)
-	// 	chainObsvReqC[vaa.ChainIDEthereumRopsten] = make(chan *gossipv1.ObservationRequest)
-	// }
+
 	if *unsafeDevMode {
 		chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
 	}
@@ -891,90 +715,6 @@ func runNode(cmd *cobra.Command, args []string) {
 			ethereum.NewEthWatcher(*ethRPC, ethContractAddr, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], *unsafeDevMode).Run); err != nil {
 			return err
 		}
-
-		// if err := supervisor.Run(ctx, "bscwatch",
-		// 	ethereum.NewEthWatcher(*bscRPC, bscContractAddr, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, nil, 1, chainObsvReqC[vaa.ChainIDBSC], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-
-		// polygonMinConfirmations := uint64(512)
-		// if *testnetMode {
-		// 	polygonMinConfirmations = 64
-		// }
-
-		// if err := supervisor.Run(ctx, "polygonwatch",
-		// 	ethereum.NewEthWatcher(*polygonRPC, polygonContractAddr, "polygon", common.ReadinessPolygonSyncing, vaa.ChainIDPolygon, lockC, nil, polygonMinConfirmations, chainObsvReqC[vaa.ChainIDPolygon], *unsafeDevMode).Run); err != nil {
-		// 	// Special case: Polygon can fork like PoW Ethereum, and it's not clear what the safe number of blocks is
-		// 	//
-		// 	// Hardcode the minimum number of confirmations to 512 regardless of what the smart contract specifies to protect
-		// 	// developers from accidentally specifying an unsafe number of confirmations. We can remove this restriction as soon
-		// 	// as specific public guidance exists for Polygon developers.
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "avalanchewatch",
-		// 	ethereum.NewEthWatcher(*avalancheRPC, avalancheContractAddr, "avalanche", common.ReadinessAvalancheSyncing, vaa.ChainIDAvalanche, lockC, nil, 1, chainObsvReqC[vaa.ChainIDAvalanche], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "oasiswatch",
-		// 	ethereum.NewEthWatcher(*oasisRPC, oasisContractAddr, "oasis", common.ReadinessOasisSyncing, vaa.ChainIDOasis, lockC, nil, 1, chainObsvReqC[vaa.ChainIDOasis], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "aurorawatch",
-		// 	ethereum.NewEthWatcher(*auroraRPC, auroraContractAddr, "aurora", common.ReadinessAuroraSyncing, vaa.ChainIDAurora, lockC, nil, 1, chainObsvReqC[vaa.ChainIDAurora], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "fantomwatch",
-		// 	ethereum.NewEthWatcher(*fantomRPC, fantomContractAddr, "fantom", common.ReadinessFantomSyncing, vaa.ChainIDFantom, lockC, nil, 1, chainObsvReqC[vaa.ChainIDFantom], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "karurawatch",
-		// 	ethereum.NewEthWatcher(*karuraRPC, karuraContractAddr, "karura", common.ReadinessKaruraSyncing, vaa.ChainIDKarura, lockC, nil, 1, chainObsvReqC[vaa.ChainIDKarura], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "acalawatch",
-		// 	ethereum.NewEthWatcher(*acalaRPC, acalaContractAddr, "acala", common.ReadinessAcalaSyncing, vaa.ChainIDAcala, lockC, nil, 1, chainObsvReqC[vaa.ChainIDAcala], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "klaytnwatch",
-		// 	ethereum.NewEthWatcher(*klaytnRPC, klaytnContractAddr, "klaytn", common.ReadinessKlaytnSyncing, vaa.ChainIDKlaytn, lockC, nil, 1, chainObsvReqC[vaa.ChainIDKlaytn], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-		// if err := supervisor.Run(ctx, "celowatch",
-		// 	ethereum.NewEthWatcher(*celoRPC, celoContractAddr, "celo", common.ReadinessCeloSyncing, vaa.ChainIDCelo, lockC, nil, 1, chainObsvReqC[vaa.ChainIDCelo], *unsafeDevMode).Run); err != nil {
-		// 	return err
-		// }
-
-		// if *testnetMode {
-		// 	if err := supervisor.Run(ctx, "ethropstenwatch",
-		// 		ethereum.NewEthWatcher(*ethRopstenRPC, ethRopstenContractAddr, "ethropsten", common.ReadinessEthRopstenSyncing, vaa.ChainIDEthereumRopsten, lockC, nil, 1, chainObsvReqC[vaa.ChainIDEthereumRopsten], *unsafeDevMode).Run); err != nil {
-		// 		return err
-		// 	}
-		// 	if err := supervisor.Run(ctx, "moonbeamwatch",
-		// 		ethereum.NewEthWatcher(*moonbeamRPC, moonbeamContractAddr, "moonbeam", common.ReadinessMoonbeamSyncing, vaa.ChainIDMoonbeam, lockC, nil, 1, chainObsvReqC[vaa.ChainIDMoonbeam], *unsafeDevMode).Run); err != nil {
-		// 		return err
-		// 	}
-		// 	if err := supervisor.Run(ctx, "neonwatch",
-		// 		ethereum.NewEthWatcher(*neonRPC, neonContractAddr, "neon", common.ReadinessNeonSyncing, vaa.ChainIDNeon, lockC, nil, 32, chainObsvReqC[vaa.ChainIDNeon], *unsafeDevMode).Run); err != nil {
-		// 		return err
-		// 	}
-		// }
-
-		// // Start Terra watcher only if configured
-		// logger.Info("Starting Terra watcher")
-		// if err := supervisor.Run(ctx, "terrawatch",
-		// 	terra.NewWatcher(*terraWS, *terraLCD, *terraContract, lockC, setC, chainObsvReqC[vaa.ChainIDTerra]).Run); err != nil {
-		// 	return err
-		// }
-
-		// if err := supervisor.Run(ctx, "solwatch-confirmed",
-		// 	solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, nil, rpc.CommitmentConfirmed).Run); err != nil {
-		// 	return err
-		// }
-
-		// if err := supervisor.Run(ctx, "solwatch-finalized",
-		// 	solana.NewSolanaWatcher(*solanaWsRPC, *solanaRPC, solAddress, lockC, chainObsvReqC[vaa.ChainIDSolana], rpc.CommitmentFinalized).Run); err != nil {
-		// 	return err
-		// }
 
 		if *testnetMode || *unsafeDevMode {
 			// if err := supervisor.Run(ctx, "algorandwatch",
