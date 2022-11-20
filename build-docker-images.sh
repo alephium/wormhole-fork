@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-set -euo pipefail xtrace
+NETWORKS=('mainnet' 'testnet' 'devnet')
 
+network=$1
 NUM_GUARDIANS=1
+
+set -euo pipefail xtrace
 
 VERSION=0.2.77
 export DOCKER_BUILDKIT=1
-
-NETWORKS=('mainnet' 'testnet' 'devnet')
-
-network=${1:-devnet}
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
 then
@@ -17,8 +16,6 @@ then
 else
     echo "Network has to be one of ${NETWORKS[*]}"
 fi
-
-NUM_GUARDIANS=1
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -37,7 +34,7 @@ popd
 ## Build eth-node image
 pushd ethereum
 if [[ "$network" == 'devnet' ]] ; then
-  cp .env.testnet .env
+  cp .env.devnet .env
   git apply 1conf.patch
   git apply truffle-config.patch
 fi
