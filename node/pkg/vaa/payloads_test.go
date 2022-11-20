@@ -90,7 +90,7 @@ func TestBodyTokenBridgeRegisterChainSerialize(t *testing.T) {
 	module := "test"
 	addr := Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
 	bodyTokenBridgeRegisterChain := BodyTokenBridgeRegisterChain{Module: module, ChainID: 1, EmitterAddress: addr}
-	expected := "000000000000000000000000000000000000000000000000000000007465737401000000010000000000000000000000000000000000000000000000000000000000000004"
+	expected := "00000000000000000000000000000000000000000000000000000000746573740100010000000000000000000000000000000000000000000000000000000000000004"
 	serializedBodyTokenBridgeRegisterChain := bodyTokenBridgeRegisterChain.Serialize()
 	assert.Equal(t, hex.EncodeToString(serializedBodyTokenBridgeRegisterChain), expected)
 }
