@@ -28,7 +28,7 @@ docker build --target const-export -f Dockerfile.const -o type=local,dest=. --bu
 
 # Build guardian image (used for both guardian & spy)
 pushd node
-docker build . -t alephium/guardiand:$VERSION
+docker build . -t alephium/guardiand:$VERSION --build-arg network=$network
 popd
 
 ## Build eth-node image

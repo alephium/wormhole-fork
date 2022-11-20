@@ -1,7 +1,7 @@
 # syntax=docker.io/docker/dockerfile:1.3@sha256:42399d4635eddd7a9b8a24be879d2f9a930d0ed040a61324cfdf59ef1357b3b2
 FROM docker.io/golang:1.18.6@sha256:60dd47f8883de5cf2af2e2c5e00bdf4a304d39af63e617ac559671f9f87982f5
 
-ENV GOPROXY=https://goproxy.cn
+Arg network
 
 # Support additional root CAs
 COPY go.mod cert.pem* /certs/
@@ -19,12 +19,11 @@ RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
 
 ADD . .
 
-# RUN apt-get update
-# RUN apt-get install libcap2-bin -y
+RUN if [[ "$network" != "devnet" ]]; then apt-get update && apt-get install libcap2-bin -y; fi
 
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
   go build -race -gcflags="all=-N -l" --ldflags '-extldflags "-Wl,--allow-multiple-definition"' -mod=readonly -o /guardiand github.com/alephium/wormhole-fork/node
 
-# RUN setcap cap_ipc_lock=+ep /guardiand
+RUN if [[ "$network" != "devnet" ]]; then setcap cap_ipc_lock=+ep /guardiand; fi
 
 ENTRYPOINT /guardiand
