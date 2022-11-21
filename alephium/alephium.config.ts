@@ -42,7 +42,7 @@ const configuration: Configuration<Settings> = {
 
     testnet: {
       networkId: 1,
-      nodeUrl: 'https://alephium-testnet.softfork.se',
+      nodeUrl: process.env.ALPH_NODE_URL as string,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
@@ -50,8 +50,7 @@ const configuration: Configuration<Settings> = {
 
     mainnet: {
       networkId: 0,
-      // TODO: update config
-      nodeUrl: 'http://localhost:22973',
+      nodeUrl: process.env.ALPH_NODE_URL as string,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
       settings: { ...settingsTemplate, minimalConsistencyLevel: 105 }

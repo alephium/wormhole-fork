@@ -121,9 +121,9 @@ export const AlephiumWalletProvider = ({
     disconnect: disconnect,
     signer:
       walletConnectProvider
-        ? new AlephiumWalletSigner(walletConnectProvider as SignerProvider, account)
+        ? new AlephiumWalletSigner(walletConnectProvider, account)
         : alephiumWindowObject
-          ? new AlephiumWalletSigner(alephiumWindowObject as SignerProvider, account)
+          ? new AlephiumWalletSigner(alephiumWindowObject, account)
           : undefined,
     error: error,
     uri: uri

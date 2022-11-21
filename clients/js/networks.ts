@@ -115,7 +115,7 @@ const TESTNET = {
     key: get_env_var("TERRA_MNEMONIC"),
   },
   ethereum: {
-    rpc: `https://goerli.infura.io/v3/8853e0fb94aa4336be2175c73ef0acd4`,
+    rpc: `https://goerli.infura.io/v3/${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
   },
   bsc: {
