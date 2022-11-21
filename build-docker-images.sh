@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-set -euo pipefail xtrace
+NETWORKS=('mainnet' 'testnet' 'devnet')
 
+network=$1
 NUM_GUARDIANS=1
+
+set -euo pipefail xtrace
 
 VERSION=0.2.77
 export DOCKER_BUILDKIT=1
-
-NETWORKS=('mainnet' 'testnet' 'devnet')
-
-network=${1:-devnet}
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
 then
@@ -18,8 +17,6 @@ else
     echo "Network has to be one of ${NETWORKS[*]}"
     exit 1
 fi
-
-NUM_GUARDIANS=1
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
@@ -32,7 +29,7 @@ docker build --target const-export -f Dockerfile.const -o type=local,dest=. --bu
 
 # Build guardian image (used for both guardian & spy)
 pushd node
-docker build . -t alephium/guardiand:$VERSION
+docker build . -t alephium/guardiand:$VERSION --build-arg network=$network
 popd
 
 ## Build eth-node image

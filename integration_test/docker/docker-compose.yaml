@@ -141,7 +141,7 @@ services:
       - --logLevel=debug
 
   spy:
-    image: alephium/guardiand:0.2.56
+    image: alephium/guardiand:0.2.77
     restart: unless-stopped
     ports:
       - 127.0.0.1:7072:7072
