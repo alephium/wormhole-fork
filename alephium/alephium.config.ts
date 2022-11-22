@@ -12,7 +12,7 @@ const settingsTemplate = {
   minimalConsistencyLevel: -1, // to be overwritten
   registerETHVAA: process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!,
   registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!,
-  updateGuardianSetVAA: process.env.UPDATE_GUARDIAN_SET_VAA
+  guardianSetUpgradeVAA: process.env.GUARDIAN_SET_UPGRADE_VAA
 }
 
 export type Settings = typeof settingsTemplate

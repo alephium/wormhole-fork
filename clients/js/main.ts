@@ -16,7 +16,8 @@ import {
   deserializeVAA,
   isGovernanceVAA,
   uint8ArrayToHex,
-  signVAABody
+  signVAABody,
+  serializeGuardianSetUpgradePayload
 } from "alephium-wormhole-sdk";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { executeGovernanceSolana } from "./solana";
@@ -191,10 +192,10 @@ yargs(hideBin(process.argv))
               console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )
-          // Update guardian set
+          // Guardian set upgrade
           .command(
-            'update-guardian-set',
-            'Generate update guardian set vaa',
+            'guardian-set-upgrade',
+            'Generate guardian set upgrade vaa',
             (yargs) => {
               return yargs
                 .option('index', {
@@ -220,7 +221,7 @@ yargs(hideBin(process.argv))
                 if (key.startsWith('0x') || key.startsWith('0X')) {
                   return Buffer.from(key.slice(2), 'hex')
                 }
-                return Buffer.from(key)
+                return Buffer.from(key, 'hex')
               })
               if (keys.length === 0) {
                 throw new Error('new guardian set cannot be empty')
