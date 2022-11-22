@@ -2,8 +2,8 @@
   "name": "alephium-wormhole-client",
   "version": "1.0.0",
   "dependencies": {
-    "@alephium/web3": "0.2.0",
-    "@alephium/web3-wallet": "0.2.0",
+    "@alephium/web3": "0.2.2",
+    "@alephium/web3-wallet": "0.2.2",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
     "alephium-wormhole-sdk": "0.1.0-rc14",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
