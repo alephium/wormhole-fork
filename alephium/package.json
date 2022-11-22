@@ -10,9 +10,9 @@
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
     "build": "rm -rf dist && npx tsc --build .",
-    "compile-contracts": "npx @alephium/cli@latest compile",
-    "test": "npx @alephium/cli@latest test -i -v",
-    "deploy:devnet": "npx @alephium/cli@latest deploy -n devnet",
+    "compile-contracts": "npx @alephium/cli compile",
+    "test": "npx @alephium/cli test -i -v",
+    "deploy:devnet": "npx @alephium/cli deploy -n devnet",
     "auto-mine": "npx ts-node scripts/auto_mine.ts"
   },
   "prettier": {
