@@ -17,7 +17,7 @@ Contract UnexecutedSequence(
         }
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, updateFields = false)
     pub fn destroy(refundAddress: Address) -> () {
         checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         destroySelf!(refundAddress)

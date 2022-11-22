@@ -456,7 +456,7 @@ export function serializeTransferTokenVAA(vaa: VAA<TransferToken>): Uint8Array {
   return _serializeVAA(vaa, serializeTransferTokenPayload)
 }
 
-function bytes32ToUtf8String(bytes: Uint8Array): string {
+export function bytes32ToUtf8String(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('utf8').replace(METADATA_REPLACE, '')
 }
 

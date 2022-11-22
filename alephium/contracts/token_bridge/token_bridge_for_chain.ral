@@ -25,7 +25,7 @@ Contract TokenBridgeForChain(
         return checkSequence(msgSequence), payload
     }
 
-    @using(readonly = true)
+    @using(updateFields = false)
     fn parseCompleteTransfer(payload: ByteVec) -> (U256, ByteVec, U256, Address, U256) {
         assert!(byteVecSlice!(payload, 0, 1) == PayloadId.Transfer, ErrorCodes.InvalidPayloadId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 1, 33))
@@ -41,7 +41,7 @@ Contract TokenBridgeForChain(
         return amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee
     }
 
-    @using(preapprovedAssets = true, readonly = false)
+    @using(preapprovedAssets = true, updateFields = true)
     pub fn completeTransfer(vaa: ByteVec, caller: Address) -> () {
         let (sequenceReady, payload) = checkCompleteTransfer(vaa)
         if (!sequenceReady) { // too many unexecuted sequences in between, compact those sequences first
@@ -57,7 +57,7 @@ Contract TokenBridgeForChain(
         )
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, updateFields = false)
     pub fn destroyUnexecutedSequenceContracts(paths: ByteVec) -> () {
         checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
         let length = size!(paths)
@@ -67,12 +67,12 @@ Contract TokenBridgeForChain(
         }
     }
 
-    @using(assetsInContract = true, preapprovedAssets = true, readonly = false)
+    @using(assetsInContract = true, preapprovedAssets = true, updateFields = false)
     pub fn deposit(from: Address, alphAmount: U256) -> () {
         transferAlphToSelf!(from, alphAmount)
     }
 
-    @using(assetsInContract = true, readonly = false)
+    @using(assetsInContract = true, updateFields = false)
     pub fn withdraw(alphAmount: U256) -> () {
         let refundAddress = TokenBridge(localTokenBridgeId).getRefundAddress()
         assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)

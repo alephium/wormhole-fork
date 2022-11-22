@@ -10,7 +10,6 @@ import {
   CHAIN_ID_UNSET,
   createRemoteTokenPoolOnAlph,
   getAttestTokenHandlerId,
-  tryNativeToHexString,
   getIsTransferCompletedAlph,
   getTokenBridgeForChainId,
   attestFromAlph,
@@ -271,7 +270,6 @@ describe('Ethereum to Alephium', () => {
         console.log(`Sleeping before querying spy relay: timestamp: ${new Date().toLocaleString()}`)
         await sleep(5000)
         success = await getIsTransferCompletedAlph(
-          web3.getCurrentNodeProvider(),
           tokenBridgeForChainId,
           ALPH_GROUP_INDEX,
           transferSignedVAA

@@ -4,7 +4,7 @@ Contract SequenceTest(
   mut secondNext256: U256,
   unexecutedSequenceTemplateId: ByteVec
 ) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId) {
-  @using(readonly = false)
+  @using(updateFields = true)
   pub fn check(seq: U256) -> Bool {
     return checkSequence(seq)
   }

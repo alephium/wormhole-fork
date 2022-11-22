@@ -9,7 +9,8 @@ import {
   getTokenPoolId,
   tryNativeToHexString,
   coalesceChainName,
-  contractExists
+  contractExists,
+  getRemoteTokenInfo
 } from "alephium-wormhole-sdk";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
@@ -443,15 +444,12 @@ async function pullAllAlephiumBalances(
         const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
         const amount = tokenBalance?.amount ?? '0'
         const contractAddress = addressFromContractId(tokenId)
-        // TODO: move this to SDK
-        const contractState = await nodeProvider.contracts.getContractsAddressState(contractAddress, {group: groupIndex})
-        const name = (contractState.fields[5] as ValByteVec).value
-        const decimals = parseInt((contractState.fields[6] as ValU256).value)
+        const tokenInfo = await getRemoteTokenInfo(contractAddress, groupIndex)
         walletBalances.push({
           chainId: chainConfig.chainId,
           balanceAbs: amount,
-          balanceFormatted: formatUnits(amount, decimals),
-          currencyName: name,
+          balanceFormatted: formatUnits(amount, tokenInfo.decimals),
+          currencyName: tokenInfo.name,
           currencyAddressNative: contractAddress,
           isNative: false,
           walletAddress: walletAddress

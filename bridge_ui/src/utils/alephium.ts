@@ -13,7 +13,8 @@ import {
   parseTargetChainFromLogAlph,
   getTokenPoolId,
   contractExists,
-  extractBodyFromVAA
+  extractBodyFromVAA,
+  getRemoteTokenInfoFromContractState
 } from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
@@ -130,10 +131,8 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
     const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: group.group })
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-      const symbol = (state.fields[4] as node.ValByteVec).value
-      const name = (state.fields[5] as node.ValByteVec).value
-      const decimals = parseInt((state.fields[6] as node.ValU256).value)
-      return new TokenInfo(decimals, symbol, name)
+      const tokenInfo = getRemoteTokenInfoFromContractState(state)
+      return new TokenInfo(tokenInfo.decimals, tokenInfo.symbol, tokenInfo.name)
     }
 
     const localTokenPoolId = await getLocalTokenPoolId(provider, tokenId)
@@ -150,12 +149,13 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
   return provider
     .contracts
     .getContractsAddressState(tokenAddress, { group: group.group })
-    .then(response => {
-      if (response.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-        const originalAsset = Buffer.from((response.fields[2] as node.ValByteVec).value, 'hex')
+    .then(state => {
+      if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
+        const tokenInfo = getRemoteTokenInfoFromContractState(state)
+        const originalAsset = Buffer.from(tokenInfo.tokenId, 'hex')
         return {
           isWrapped: true,
-          chainId: parseInt((response.fields[1] as node.ValU256).value) as ChainId,
+          chainId: tokenInfo.tokenChainId,
           assetAddress: originalAsset,
         }
       } else {

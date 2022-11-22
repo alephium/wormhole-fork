@@ -1,4 +1,4 @@
-import { Script } from '@alephium/web3'
+import { Script, Contract } from '@alephium/web3'
 import { default as createLocalTokenPool } from './artifacts/token_bridge_scripts/create_local_token_pool.ral.json'
 import { default as createRemoteTokenPool } from './artifacts/token_bridge_scripts/create_remote_token_pool.ral.json'
 import { default as updateRemoteTokenPool } from './artifacts/token_bridge_scripts/update_remote_token_pool.ral.json'
@@ -14,6 +14,9 @@ import { default as updateRefundAddress } from './artifacts/token_bridge_scripts
 import { default as upgradeContract } from './artifacts/token_bridge_scripts/upgrade_token_bridge_contract.ral.json'
 import { default as updateMinimalConsistencyLevel } from './artifacts/token_bridge_scripts/update_minimal_consistency_level.ral.json'
 import { default as deposit } from './artifacts/token_bridge_scripts/deposit.ral.json'
+import { default as tokenBridgeForChain } from './artifacts/token_bridge/token_bridge_for_chain.ral.json'
+import { default as unexecutedSequence } from './artifacts/sequence/unexecuted_sequence.ral.json'
+import { default as remoteTokenPool } from './artifacts/token_bridge/remote_token_pool.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -73,4 +76,16 @@ export function updateMinimalConsistencyLevelScript(): Script {
 
 export function depositScript(): Script {
     return Script.fromJson(deposit)
+}
+
+export function tokenBridgeForChainContract(): Contract {
+    return Contract.fromJson(tokenBridgeForChain)
+}
+
+export function unexecutedSequenceContract(): Contract {
+    return Contract.fromJson(unexecutedSequence)
+}
+
+export function remoteTokenPoolContract(): Contract {
+    return Contract.fromJson(remoteTokenPool)
 }

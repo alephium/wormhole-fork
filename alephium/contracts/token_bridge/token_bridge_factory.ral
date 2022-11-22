@@ -6,32 +6,32 @@ Contract TokenBridgeFactory(
   attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
   unexecutedSequenceTemplateId: ByteVec    // used to create contract by copyCreateContract
 ) {
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getWrappedAlphPoolTemplateId() -> ByteVec {
     return wrappedAlphPoolTemplateId
   }
 
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getLocalTokenPoolTemplateId() -> ByteVec {
     return localTokenPoolTemplateId
   }
 
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getRemoteTokenPoolTemplateId() -> ByteVec {
     return remoteTokenPoolTemplateId
   }
 
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getTokenBridgeForChainTemplateId() -> ByteVec {
     return tokenBridgeForChainTemplateId
   }
 
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getAttestTokenHandlerTemplateId() -> ByteVec {
     return attestTokenHandlerTemplateId
   }
 
-  @using(readonly = true, externalCallCheck = false)
+  @using(updateFields = false)
   pub fn getUnexecutedSequenceTemplateId() -> ByteVec {
     return unexecutedSequenceTemplateId
   }

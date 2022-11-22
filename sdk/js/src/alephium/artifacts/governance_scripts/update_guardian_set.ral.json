@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.2",
+  "version": "v1.5.3",
   "name": "UpdateGuardianSet",
   "bytecodeTemplate": "01010300000005{1}0d0c{0}0108",
   "fieldsSig": {

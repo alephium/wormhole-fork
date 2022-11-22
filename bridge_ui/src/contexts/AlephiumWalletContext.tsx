@@ -1,6 +1,6 @@
 import QRCodeModal from '@walletconnect/qrcode-modal'
 import { WalletConnectProvider } from '@alephium/walletconnect-provider'
-import { NodeProvider, Account, SignerProvider } from '@alephium/web3'
+import { NodeProvider, Account, SignerProvider, web3 } from '@alephium/web3'
 import { Context, createContext, ReactChildren, useCallback, useContext, useMemo, useState } from 'react'
 import { ALEPHIUM_HOST, ALEPHIUM_NETWORK_ID, CLUSTER, WALLET_CONNECT_ALPH_PROJECT_ID } from '../utils/consts'
 import { connect as connectToExtension, AlephiumWindowObject } from '@alephium/get-extension-wallet'
@@ -45,6 +45,7 @@ export const AlephiumWalletProvider = ({
 }: {
   children: ReactChildren;
 }) => {
+  web3.setCurrentNodeProvider(ALEPHIUM_HOST)
   const [uri, setUri] = useState<string | undefined>(undefined)
   const [walletConnectProvider, setWalletConnectProvider] = useState<WalletConnectProvider | undefined>(undefined)
   const [alephiumWindowObject, setAlephiumWindowObject] = useState<AlephiumWindowObject | undefined>(undefined)
