@@ -129,8 +129,6 @@ func (r BodyTokenBridgeRegisterChain) Serialize() []byte {
 	buf.Write([]byte(r.Module))
 	// Write action ID
 	MustWrite(buf, binary.BigEndian, uint8(1))
-	// Write target chain (0 = universal)
-	MustWrite(buf, binary.BigEndian, uint16(0))
 	// Write chain to be registered
 	MustWrite(buf, binary.BigEndian, r.ChainID)
 	// Write emitter address of chain to be registered

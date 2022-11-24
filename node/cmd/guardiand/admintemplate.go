@@ -312,7 +312,7 @@ func runTokenBridgeRegisterChainTemplate(cmd *cobra.Command, args []string) {
 				TargetChainId: uint32(vaa.ChainIDUnset),
 				Payload: &nodev1.GovernanceMessage_BridgeRegisterChain{
 					BridgeRegisterChain: &nodev1.BridgeRegisterChain{
-						Module:         *module,
+						Module:         "TokenBridge",
 						ChainId:        uint32(chainID),
 						EmitterAddress: address,
 					},

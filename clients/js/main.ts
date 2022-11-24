@@ -239,7 +239,7 @@ yargs(hideBin(process.argv))
                 argv["guardian-secret"].split(","),
                 sequence,
                 payload
-              )
+              );
               console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )

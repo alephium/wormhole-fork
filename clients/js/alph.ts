@@ -14,6 +14,7 @@ import {
   destroyUnexecutedSequencesScript,
   updateMinimalConsistencyLevelScript,
   updateRefundAddressScript,
+  registerChain,
   GovernancePayload
 } from 'alephium-wormhole-sdk'
 
@@ -89,14 +90,7 @@ export async function executeGovernanceAlph(
           break
         case 'RegisterChain':
           console.log('Registering chain')
-          const attestTokenHandlerId = subContractId(contracts.token_bridge, '00')
-          const result = await createRemoteTokenPoolOnAlph(
-            wallet,
-            attestTokenHandlerId,
-            vaa,
-            wallet.account.address,
-            BigInt(1e18)
-          )
+          const result = await registerChain(wallet, contracts.token_bridge, vaa, BigInt(2e18))
           console.log(`TxId: ${result.txId}`)
           break
         case 'DestroyUnexecutedSequences':
