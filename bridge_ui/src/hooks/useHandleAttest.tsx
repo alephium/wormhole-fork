@@ -58,7 +58,7 @@ import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  alphMessageFee,
+  ALEPHIUM_MESSAGE_FEE,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -312,7 +312,7 @@ async function alephium(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
             signer.account.address,
-            alphMessageFee,
+            ALEPHIUM_MESSAGE_FEE,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         } else {
@@ -321,7 +321,7 @@ async function alephium(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             localTokenId,
             signer.account.address,
-            alphMessageFee,
+            ALEPHIUM_MESSAGE_FEE,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           );
         }

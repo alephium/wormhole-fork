@@ -1,4 +1,5 @@
 import {
+  remoteTokenPoolContract,
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
@@ -17,7 +18,6 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
-  CONTRACTS,
   isEVMChain,
   MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
@@ -29,8 +29,16 @@ import { CHAIN_CONFIG_MAP } from "../config";
 import bscIcon from "../icons/bsc.svg";
 import ethIcon from "../icons/eth.svg";
 import alephiumIcon from "../icons/alephium.svg";
+import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
+import { default as alephiumTestnetConfig } from '../../../configs/alephium/testnet.json'
+import { default as alephiumMainnetConfig } from '../../../configs/alephium/mainnet.json'
+import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
+import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
+import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
+import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
+import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
+import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
-export const alphMessageFee = BigInt("100000000000000")
 export const alphArbiterFee = BigInt("0")
 export const minimalAlphInContract = BigInt("1000000000000000000")
 
@@ -188,17 +196,10 @@ export const getExplorerName = (chainId: ChainId) =>
     : "Explorer";
 export const WORMHOLE_RPC_HOSTS =
   CLUSTER === "mainnet"
-    ? [
-        "https://wormhole-v2-mainnet-api.certus.one",
-        "https://wormhole.inotel.ro",
-        "https://wormhole-v2-mainnet-api.mcf.rocks",
-        "https://wormhole-v2-mainnet-api.chainlayer.network",
-        "https://wormhole-v2-mainnet-api.staking.fund",
-        "https://wormhole-v2-mainnet.01node.com",
-      ]
+    ? guardianMainnetConfig.guardianUrls
     : CLUSTER === "testnet"
-    ? ["https://guardian.wormhole-testnet.softfork.se"]
-    : ["https://alephium-wormhole.softfork.se"];
+    ? guardianTestnetConfig.guardianUrls
+    : guardianDevnetConfig.guardianUrls
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
@@ -286,17 +287,17 @@ export const TERRA_HOST =
 
 export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
-    ? "http://localhost:12973"
+    ? alephiumMainnetConfig.nodeUrl
     : CLUSTER === "testnet"
-    ? "https://alephium-testnet.softfork.se"
-    : "https://alephium-dev.softfork.se"
+    ? alephiumTestnetConfig.nodeUrl
+    : alephiumDevnetConfig.nodeUrl
 
 export const ALEPHIUM_EXPLORER_HOST =
   CLUSTER === "mainnet"
-    ? "http://localhost:9090"
+    ? alephiumMainnetConfig.explorerUrl
     : CLUSTER === "testnet"
-    ? "https://backend-v19.testnet.alephium.org"
-    : "http://localhost:9090"
+    ? alephiumTestnetConfig.explorerUrl
+    : alephiumDevnetConfig.explorerUrl
 
 export const ALGORAND_HOST =
   CLUSTER === "mainnet"
@@ -332,10 +333,10 @@ export const ACALA_HOST =
 
 export const ETH_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+    ? ethereumMainnetConfig.contracts.governance
     : CLUSTER === "testnet"
-    ? "0x4370eE0D87282A329595D98c285Ac4A3725490fb"
-    : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
+    ? ethereumTestnetConfig.contracts.governance
+    : ethereumDevnetConfig.contracts.governance
 );
 export const ETH_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
@@ -346,10 +347,10 @@ export const ETH_NFT_BRIDGE_ADDRESS = getAddress(
 );
 export const ETH_TOKEN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? "0x3ee18B2214AFF97000D974cf647E7C347E8fa585"
+    ? ethereumMainnetConfig.contracts.tokenBridge
     : CLUSTER === "testnet"
-    ? "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4"
-    : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
+    ? ethereumTestnetConfig.contracts.tokenBridge
+    : ethereumDevnetConfig.contracts.tokenBridge
 );
 export const BSC_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
@@ -500,21 +501,21 @@ export const KARURA_TOKEN_BRIDGE_ADDRESS = getAddress(
 );
 export const ACALA_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? CONTRACTS.MAINNET.acala.core
+    ? ""
     : CLUSTER === "testnet"
     ? "0x4377B49d559c0a9466477195C6AdC3D433e265c0"
     : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
 );
 export const ACALA_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? CONTRACTS.MAINNET.acala.nft_bridge
+    ? ""
     : CLUSTER === "testnet"
     ? "0x96f1335e0AcAB3cfd9899B30b2374e25a2148a6E"
     : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
 );
 export const ACALA_TOKEN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? CONTRACTS.MAINNET.acala.token_bridge
+    ? ""
     : CLUSTER === "testnet"
     ? "0xebA00cbe08992EdD08ed7793E07ad6063c807004"
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
@@ -565,21 +566,21 @@ export const NEON_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x0000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? CONTRACTS.TESTNET.neon.core
+    ? ""
     : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
 );
 export const NEON_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x0000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? CONTRACTS.TESTNET.neon.nft_bridge
+    ? ""
     : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
 );
 export const NEON_TOKEN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x0000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? CONTRACTS.TESTNET.neon.token_bridge
+    ? ""
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
 );
 export const SOL_BRIDGE_ADDRESS =
@@ -650,26 +651,33 @@ export const ALGORAND_WAIT_FOR_CONFIRMATIONS =
   CLUSTER === "mainnet" ? 4 : CLUSTER === "testnet" ? 4 : 1;
 
 export const WALLET_CONNECT_ALPH_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
+
+export const ALEPHIUM_MESSAGE_FEE =
+  CLUSTER === "mainnet"
+    ? BigInt(alephiumMainnetConfig.messageFee)
+    : CLUSTER === "testnet"
+    ? BigInt(alephiumTestnetConfig.messageFee)
+    : BigInt(alephiumDevnetConfig.messageFee)
 // the wormhole governance address
 export const ALEPHIUM_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
-    ? "000000000000000000000000000000000000000000000"
+    ? alephiumMainnetConfig.contracts.nativeGovernance
     : CLUSTER === "testnet"
-    ? "uvdzcPKssgTScZtMvC6NhR6vH7fPAE4wA9KTcQ2eigFq"
-    : "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM";
+    ? alephiumTestnetConfig.contracts.nativeGovernance
+    : alephiumDevnetConfig.contracts.nativeGovernance
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
   CLUSTER === "mainnet"
-    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    ? alephiumMainnetConfig.contracts.tokenBridge
     : CLUSTER === "testnet"
-    ? "0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f"
-    : "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7";
-export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = "73e6d82337c7126065e61d8cb84a62237675357f0879ce2495ff58dfba4898a0";
+    ? alephiumTestnetConfig.contracts.tokenBridge
+    : alephiumDevnetConfig.contracts.tokenBridge
+export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = remoteTokenPoolContract().codeHash
 export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
   CLUSTER === "mainnet"
-    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    ? alephiumMainnetConfig.contracts.walph
     : CLUSTER === "testnet"
-    ? "7d7b768ab9e22692fe76b605314da3769ce82740f43def8d7de2605ba07db81a"
-    : "1697eb1aac440db3f1359701e301424ae974eae8e080238d212e79dfc7ab4cda";
+    ? alephiumTestnetConfig.contracts.walph
+    : alephiumDevnetConfig.contracts.walph
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
@@ -678,17 +686,17 @@ export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
     : DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL;
 export const ALEPHIUM_NETWORK_ID =
   CLUSTER === "mainnet"
-    ? 0
+    ? alephiumMainnetConfig.networkId
     : CLUSTER === "testnet"
-    ? 1
-    : 4;
+    ? alephiumTestnetConfig.networkId
+    : alephiumDevnetConfig.networkId
 // TODO: update this after contract deployed to mainnet and testnet
 export const ALEPHIUM_BRIDGE_GROUP_INDEX =
   CLUSTER === 'mainnet'
-    ? 1
+    ? alephiumMainnetConfig.groupIndex
     : CLUSTER === 'testnet'
-    ? 1
-    : 0
+    ? alephiumTestnetConfig.groupIndex
+    : alephiumDevnetConfig.groupIndex
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
@@ -886,10 +894,10 @@ export const TERRA_SWAPRATE_URL =
 
 export const WETH_ADDRESS =
   CLUSTER === "mainnet"
-    ? "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ? ethereumMainnetConfig.contracts.weth
     : CLUSTER === "testnet"
-    ? "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
-    : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+    ? ethereumTestnetConfig.contracts.weth
+    : ethereumDevnetConfig.contracts.weth
 export const WETH_DECIMALS = 18;
 
 export const WBNB_ADDRESS =

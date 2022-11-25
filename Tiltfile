@@ -456,7 +456,7 @@ if bridge_ui:
     docker_build(
         ref = "bridge-ui",
         context = ".",
-        only = ["./bridge_ui"],
+        only = ["./bridge_ui", "./configs"],
         dockerfile = "bridge_ui/Dockerfile",
         entrypoint = entrypoint,
         live_update = live_update,
