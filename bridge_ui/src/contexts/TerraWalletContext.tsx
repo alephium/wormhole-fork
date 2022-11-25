@@ -5,13 +5,13 @@ import { CLUSTER } from "../utils/consts";
 const mainnet: NetworkInfo = {
   name: "mainnet",
   chainID: "columbus-5",
-  lcd: "https://lcd.terra.dev",
+  lcd: "https://lcd.terra.dev"
 };
 
 const testnet: NetworkInfo = {
   name: "testnet",
   chainID: "bombay-12",
-  lcd: "https://bombay-lcd.terra.dev",
+  lcd: "https://bombay-lcd.terra.dev"
 };
 
 const walletConnectChainIds: Record<number, NetworkInfo> = {

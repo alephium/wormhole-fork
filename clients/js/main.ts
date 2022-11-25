@@ -81,8 +81,9 @@ yargs(hideBin(process.argv))
         yargs
           .option("guardian-secret", {
             alias: "g",
-            required: true,
+            required: false,
             describe: "Guardians' secret keys",
+            default: "",
             type: "string",
           })
           .option("sequence", {
@@ -232,15 +233,15 @@ yargs(hideBin(process.argv))
                 newGuardianSetIndex: index,
                 newGuardianSet: keys
               }
-              const vaa = makeVAA(
+              const v = makeVAA(
                 GOVERNANCE_CHAIN,
                 0,
                 GOVERNANCE_EMITTER,
                 argv["guardian-secret"].split(","),
                 sequence,
                 payload
-              )
-              console.log(uint8ArrayToHex(serializeVAA(vaa)))
+              );
+              console.log(uint8ArrayToHex(serializeVAA(v)))
             }
           )
       );

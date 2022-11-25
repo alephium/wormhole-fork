@@ -193,6 +193,7 @@ func FindValues(w http.ResponseWriter, r *http.Request) {
 			Summary: Summary{
 				EmitterChain:    detail.EmitterChain,
 				EmitterAddress:  detail.EmitterAddress,
+				TargetChain:     detail.TargetChain,
 				Sequence:        detail.Sequence,
 				InitiatingTxID:  detail.InitiatingTxID,
 				Payload:         detail.Payload,

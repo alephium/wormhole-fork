@@ -16,16 +16,16 @@ import { PageProps } from 'gatsby'
 import HeroText from "../components/HeroText";
 import Layout from "../components/Layout";
 import shape1 from "../images/index/shape2.svg";
-import { Heartbeat } from "@certusone/wormhole-sdk/lib/esm/proto/gossip/v1/gossip";
+import { Heartbeat } from "alephium-wormhole-sdk/lib/esm/proto/gossip/v1/gossip";
 import {
   GrpcWebImpl,
   PublicRPCServiceClientImpl,
-} from "@certusone/wormhole-sdk/lib/esm/proto/publicrpc/v1/publicrpc";
+} from "alephium-wormhole-sdk/lib/esm/proto/publicrpc/v1/publicrpc";
 import ReactTimeAgo from "react-time-ago";
 import NetworkSelect from "../components/NetworkSelect";
 import { useNetworkContext } from "../contexts/NetworkContext";
 import ChainIcon from "../components/ChainIcon";
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId } from "alephium-wormhole-sdk";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import { ChainID } from "../utils/consts";
 import { SEO } from "../components/SEO";

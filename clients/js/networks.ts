@@ -179,8 +179,8 @@ const TESTNET = {
     key: get_env_var("ETH_KEY"),
   },
   alephium: {
-    rpc: undefined,
-    key: get_env_var('ALPH_KEY')
+    rpc: 'https://alephium-testnet.softfork.se',
+    key: get_env_var("ALPH_KEY"),
   }
 };
 

@@ -141,6 +141,7 @@ docker_build(
     ref = "guardiand-image",
     context = "node",
     dockerfile = "node/Dockerfile",
+    build_args = {"network": "devnet"}
 )
 
 def command_with_dlv(argv):
@@ -180,8 +181,6 @@ def build_node_yaml():
                     "v2Events",
                     "--bigTableTopicName",
                     "new-vaa-devnet",
-                    "--bigTableKeyPath",
-                    "/tmp/mounted-keys/bigtable-key.json",
                     "--bigTableGCPProject",
                     gcpProject,
                 ]

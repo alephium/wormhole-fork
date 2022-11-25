@@ -45,7 +45,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://goerli.infura.io/v3/" + process.env.INFURA_KEY
+          "wss://goerli.infura.io/ws/v3/" + process.env.INFURA_KEY
         );
       },
       network_id: "5",

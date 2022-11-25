@@ -139,7 +139,7 @@ const MAINNET = {
     core: undefined,
     token_bridge: undefined,
     nft_bridge: undefined,
-  },  
+  },
   alephium: {
     core: undefined,
     token_bridge: undefined,
@@ -174,9 +174,9 @@ const TESTNET = {
     nft_bridge: undefined,
   },
   ethereum: {
-    core: "0x706abc4E45D419950511e474C7B9Ed348A4a716c",
-    token_bridge: "0xF890982f9310df57d00f659cf4fd87e65adEd8d7",
-    nft_bridge: "0xD8E4C2DbDd2e2bd8F1336EA691dBFF6952B1a6eB",
+    core: "0x4370eE0D87282A329595D98c285Ac4A3725490fb",
+    token_bridge: "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4",
+    nft_bridge: "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F",
   },
   bsc: {
     core: "0x68605AD7b15c732a30b1BbC62BE8F2A509D74b4D",
@@ -242,10 +242,10 @@ const TESTNET = {
     core: "0xa5B7D85a8f27dd7907dc8FdC21FA5657D5E2F901",
     token_bridge: "0xbc976D4b9D57E57c3cA52e1Fd136C45FF7955A96",
     nft_bridge: "0x98A0F4B96972b32Fcb3BD03cAeB66A44a6aB9Edb",
-  },    
+  },
   alephium: {
-    core: undefined,
-    token_bridge: undefined,
+    core: '125d54dc1751a3e6236553a6cd1dcfe72aeb7fc42adf27c776924a7beea78270',
+    token_bridge: '0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f',
     nft_bridge: undefined,
   },
   neon: {
@@ -345,7 +345,7 @@ const DEVNET = {
     core: undefined,
     token_bridge: undefined,
     nft_bridge: undefined,
-  },  
+  },
   alephium: {
     core: 'ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c',
     token_bridge: '3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7',

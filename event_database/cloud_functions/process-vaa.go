@@ -12,7 +12,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/holiman/uint256"
 )
 
@@ -35,14 +35,19 @@ var nftEmitters = map[string]string{
 
 	// devnet
 	"96ee982293251b48729804c8e8b24b553eb6b887867024948d2236fd37a577ab": "NFTWqJR8YnRVqPDvTJrYuLrQDitTG5AScqbeghi4zSA",  // solana
-	"00000000000000000000000026b4afb60d6c903165150c6f0aa14f8016be4aec": "0x26b4afb60d6c903165150c6f0aa14f8016be4aec",   // ethereum goerli
 	"0000000000000000000000000fe5c51f539a651152ae461086d733777a54a134": "terra1plju286nnfj3z54wgcggd4enwaa9fgf5kgrgzl", // terra
 	"000000000000000000000000cD16E5613EF35599dc82B24Cb45B5A93D779f1EE": "0xcD16E5613EF35599dc82B24Cb45B5A93D779f1EE",   // bsc
 	"00000000000000000000000051a02d0dcb5e52F5b92bdAA38FA013C91c7309A9": "0x51a02d0dcb5e52F5b92bdAA38FA013C91c7309A9",   // polygon
 	"000000000000000000000000D601BAf2EEE3C028344471684F6b27E789D9075D": "0xD601BAf2EEE3C028344471684F6b27E789D9075D",   // avalance
 	"000000000000000000000000C5c25B41AB0b797571620F5204Afa116A44c0ebA": "0xC5c25B41AB0b797571620F5204Afa116A44c0ebA",   // oasis
 	"0000000000000000000000002b048Da40f69c8dc386a56705915f8E966fe1eba": "0x2b048Da40f69c8dc386a56705915f8E966fe1eba",   // ethereum ropesten
+	"3b170d6d5db622a22c8b953dd8b3250bfde84217745616eb74879db4006ce103": "xfcZ7phvcDs9hwYbXNsTzdiWePWkYGrp44a2a9xYK2Yz", // alephium
 	// TODO "": "",  // fantom
+
+	// testnet
+	"0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz", // alephium
+	"00000000000000000000000014cAD5A8A887020e1198B26fFA2814bC6415D18F": "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F",   // ethereum goerli
+
 }
 var muNFTEmitters sync.RWMutex
 
@@ -87,8 +92,7 @@ type (
 		Amount        uint256.Int
 		OriginAddress [32]byte
 		OriginChain   uint16
-		TargetAddress [32]byte
-		TargetChain   uint16
+		TargetAddress []byte
 	}
 	NFTTransfer struct {
 		PayloadId     uint8
@@ -99,7 +103,6 @@ type (
 		TokenId       uint256.Int
 		URI           []byte
 		TargetAddress [32]byte
-		TargetChain   uint16
 	}
 	AssetMeta struct {
 		PayloadId    uint8
@@ -129,13 +132,16 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 		return nil, fmt.Errorf("failed to read OriginChain: %w", err)
 	}
 
-	if err := binary.Read(reader, binary.BigEndian, &tt.TargetAddress); err != nil {
-		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
+	var targetAddressSize uint16
+	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
+		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
 	}
 
-	if err := binary.Read(reader, binary.BigEndian, &tt.TargetChain); err != nil {
-		return nil, fmt.Errorf("failed to read TargetChain: %w", err)
+	targetAddress := make([]byte, targetAddressSize)
+	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
+		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
 	}
+	tt.TargetAddress = targetAddress
 
 	return tt, nil
 }
@@ -183,10 +189,6 @@ func DecodeNFTTransfer(data []byte) (*NFTTransfer, error) {
 		return nil, fmt.Errorf("failed to read : %w", err)
 	}
 
-	if err := binary.Read(reader, binary.BigEndian, &nt.TargetChain); err != nil {
-		return nil, fmt.Errorf("failed to read : %w", err)
-	}
-
 	return nt, nil
 }
 
@@ -222,9 +224,9 @@ func DecodeAssetMeta(data []byte) (*AssetMeta, error) {
 }
 
 // TEMP: until this https://forge.certus.one/c/wormhole/+/1850 lands
-func makeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, sequence uint64) string {
+func MakeRowKey(emitterChain vaa.ChainID, emitterAddress vaa.Address, targetChain vaa.ChainID, sequence uint64) string {
 	// left-pad the sequence with zeros to 16 characters, because bigtable keys are stored lexicographically
-	return fmt.Sprintf("%d:%s:%016d", emitterChain, emitterAddress, sequence)
+	return fmt.Sprintf("%d:%s:%d:%016d", emitterChain, emitterAddress, targetChain, sequence)
 }
 func writePayloadToBigTable(ctx context.Context, rowKey string, colFam string, mutation *bigtable.Mutation, forceWrite bool) error {
 	mut := mutation
@@ -291,7 +293,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 	}
 
 	// create the bigtable identifier from the VAA data
-	rowKey := makeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.Sequence)
+	rowKey := MakeRowKey(signedVaa.EmitterChain, signedVaa.EmitterAddress, signedVaa.TargetChain, signedVaa.Sequence)
 	emitterHex := strings.ToLower(signedVaa.EmitterAddress.String())
 	payloadId := int(signedVaa.Payload[0])
 
@@ -327,9 +329,8 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "OriginAddress", ts, []byte(hex.EncodeToString(payload.OriginAddress[:])))
 			mutation.Set(colFam, "OriginChain", ts, []byte(fmt.Sprint(payload.OriginChain)))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
-			mutation.Set(colFam, "TargetChain", ts, []byte(fmt.Sprint(payload.TargetChain)))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			if writeErr != nil {
@@ -411,9 +412,8 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			mutation.Set(colFam, "TokenId", ts, payload.TokenId.Bytes())
 			mutation.Set(colFam, "URI", ts, TrimUnicodeFromByteArray(payload.URI))
 			mutation.Set(colFam, "TargetAddress", ts, []byte(targetAddressHex))
-			mutation.Set(colFam, "TargetChain", ts, []byte(fmt.Sprint(payload.TargetChain)))
 
-			addReceiverAddressToMutation(mutation, ts, payload.TargetChain, targetAddressHex)
+			addReceiverAddressToMutation(mutation, ts, uint16(signedVaa.TargetChain), targetAddressHex)
 
 			writeErr := writePayloadToBigTable(ctx, rowKey, colFam, mutation, false)
 			return writeErr

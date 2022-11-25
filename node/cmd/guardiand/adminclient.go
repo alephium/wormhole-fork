@@ -94,7 +94,7 @@ var SendObservationRequest = &cobra.Command{
 }
 
 var GetNextGovernanceVAASequenceCmd = &cobra.Command{
-	Use:   "get-next-governance-vaa-sequence [TARGET_CHAIN_ID]",
+	Use:   "get-next-governance-vaa-sequence",
 	Short: "Get the next governance vaa sequence",
 	Run:   runGetNextGovernanceVAASequence,
 	Args:  cobra.ExactArgs(0),

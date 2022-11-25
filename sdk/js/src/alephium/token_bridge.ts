@@ -17,6 +17,7 @@ import { default as deposit } from './artifacts/token_bridge_scripts/deposit.ral
 import { default as tokenBridgeForChain } from './artifacts/token_bridge/token_bridge_for_chain.ral.json'
 import { default as unexecutedSequence } from './artifacts/sequence/unexecuted_sequence.ral.json'
 import { default as remoteTokenPool } from './artifacts/token_bridge/remote_token_pool.ral.json'
+import { default as registerChain } from './artifacts/token_bridge_scripts/register_chain.ral.json'
 
 export function createLocalTokenPoolScript(): Script {
     return Script.fromJson(createLocalTokenPool)
@@ -88,4 +89,8 @@ export function unexecutedSequenceContract(): Contract {
 
 export function remoteTokenPoolContract(): Contract {
     return Contract.fromJson(remoteTokenPool)
+}
+
+export function registerChainScript(): Script {
+    return Script.fromJson(registerChain)
 }

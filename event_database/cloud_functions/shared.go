@@ -16,7 +16,7 @@ import (
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/storage"
-	"github.com/certusone/wormhole/node/pkg/vaa"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 // shared code for the various functions, primarily response formatting.
@@ -200,6 +200,7 @@ type (
 	Summary struct {
 		EmitterChain    string
 		EmitterAddress  string
+		TargetChain     string
 		Sequence        string
 		InitiatingTxID  string
 		Payload         []byte
@@ -222,7 +223,6 @@ type (
 		OriginAddress string
 		OriginChain   string
 		TargetAddress string
-		TargetChain   string
 	}
 	AssetMetaPayload struct {
 		TokenAddress    string
@@ -241,7 +241,6 @@ type (
 		TokenId       string
 		URI           string
 		TargetAddress string
-		TargetChain   string
 	}
 	TransferDetails struct {
 		Amount             string
@@ -285,6 +284,8 @@ func chainIdStringToType(chainId string) vaa.ChainID {
 		return vaa.ChainIDKarura
 	case "12":
 		return vaa.ChainIDAcala
+	case "255":
+		return vaa.ChainIDAlephium
 	case "10001":
 		return vaa.ChainIDEthereumRopsten
 	}
@@ -305,6 +306,8 @@ func makeSummary(row bigtable.Row) *Summary {
 				summary.EmitterChain = string(item.Value)
 			case "MessagePublication:EmitterAddress":
 				summary.EmitterAddress = string(item.Value)
+			case "MessagePublication:TargetChain":
+				summary.TargetChain = string(item.Value)
 			case "MessagePublication:Sequence":
 				summary.Sequence = string(item.Value)
 			}
@@ -313,10 +316,12 @@ func makeSummary(row bigtable.Row) *Summary {
 		// Some rows have a QuorumState, but no MessagePublication,
 		// so populate Summary values from the rowKey.
 		keyParts := strings.Split(row.Key(), ":")
-		chainId := chainIdStringToType(keyParts[0])
-		summary.EmitterChain = chainId.String()
+		emitterChainId := chainIdStringToType(keyParts[0])
+		summary.EmitterChain = emitterChainId.String()
 		summary.EmitterAddress = keyParts[1]
-		seq := strings.TrimLeft(keyParts[2], "0")
+		targetChainId := chainIdStringToType(keyParts[2])
+		summary.TargetChain = targetChainId.String()
+		seq := strings.TrimLeft(keyParts[3], "0")
 		if seq == "" {
 			seq = "0"
 		}
@@ -360,6 +365,7 @@ func makeDetails(row bigtable.Row) *Details {
 	deets.Summary = Summary{
 		EmitterChain:    sum.EmitterChain,
 		EmitterAddress:  sum.EmitterAddress,
+		TargetChain:     sum.TargetChain,
 		Sequence:        sum.Sequence,
 		InitiatingTxID:  sum.InitiatingTxID,
 		Payload:         sum.Payload,
@@ -384,8 +390,6 @@ func makeDetails(row bigtable.Row) *Details {
 				tokenTransferPayload.OriginChain = string(item.Value)
 			case "TokenTransferPayload:TargetAddress":
 				tokenTransferPayload.TargetAddress = string(item.Value)
-			case "TokenTransferPayload:TargetChain":
-				tokenTransferPayload.TargetChain = string(item.Value)
 			}
 		}
 		deets.TokenTransferPayload = tokenTransferPayload
@@ -430,8 +434,6 @@ func makeDetails(row bigtable.Row) *Details {
 				nftTransferPayload.URI = string(TrimUnicodeFromByteArray(item.Value))
 			case "NFTTransferPayload:TargetAddress":
 				nftTransferPayload.TargetAddress = string(item.Value)
-			case "NFTTransferPayload:TargetChain":
-				nftTransferPayload.TargetChain = string(item.Value)
 			}
 		}
 		deets.NFTTransferPayload = nftTransferPayload

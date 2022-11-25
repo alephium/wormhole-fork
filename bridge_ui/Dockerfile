@@ -13,6 +13,8 @@ WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 ENV NODE_OPTIONS=--openssl-legacy-provider
+ARG network="devnet"
+ENV REACT_APP_CLUSTER=$network
 RUN npm run build
 
 # Production image, copy all the files and run next

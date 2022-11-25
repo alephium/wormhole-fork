@@ -11,9 +11,29 @@ import {
   depositScript,
   destroyUnexecutedSequencesScript,
   remoteTokenPoolContract,
-  updateRefundAddressScript
+  updateRefundAddressScript,
+  registerChainScript
 } from "../alephium/token_bridge"
 import { bytes32ToUtf8String, ChainId } from "../utils"
+
+export async function registerChain(
+  signerProvider: SignerProvider,
+  tokenBridgeId: string,
+  signedVAA: Uint8Array,
+  alphAmount: bigint
+): Promise<BuildScriptTxResult> {
+  const script = registerChainScript()
+  const account = await signerProvider.getSelectedAccount()
+  return script.execute(signerProvider, {
+    initialFields: {
+      payer: account.address,
+      tokenBridge: tokenBridgeId,
+      vaa: Buffer.from(signedVAA).toString('hex'),
+      alphAmount: alphAmount
+    },
+    attoAlphAmount: alphAmount
+  })
+}
 
 export async function deposit(
   signerProvider: SignerProvider,

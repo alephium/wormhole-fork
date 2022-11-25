@@ -197,8 +197,8 @@ export const WORMHOLE_RPC_HOSTS =
         "https://wormhole-v2-mainnet.01node.com",
       ]
     : CLUSTER === "testnet"
-    ? ["https://wormhole-v2-testnet-api.certus.one"]
-    : ["http://localhost:7071"];
+    ? ["https://guardian.wormhole-testnet.softfork.se"]
+    : ["https://alephium-wormhole.softfork.se"];
 export const ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
@@ -288,14 +288,14 @@ export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
     ? "http://localhost:12973"
     : CLUSTER === "testnet"
-    ? "http://localhost:12973"
-    : "http://localhost:22973"
+    ? "https://alephium-testnet.softfork.se"
+    : "https://alephium-dev.softfork.se"
 
 export const ALEPHIUM_EXPLORER_HOST =
   CLUSTER === "mainnet"
     ? "http://localhost:9090"
     : CLUSTER === "testnet"
-    ? "http://localhost:9090"
+    ? "https://backend-v19.testnet.alephium.org"
     : "http://localhost:9090"
 
 export const ALGORAND_HOST =
@@ -334,21 +334,21 @@ export const ETH_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
     : CLUSTER === "testnet"
-    ? "0x706abc4E45D419950511e474C7B9Ed348A4a716c"
+    ? "0x4370eE0D87282A329595D98c285Ac4A3725490fb"
     : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
 );
 export const ETH_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x6FFd7EdE62328b3Af38FCD61461Bbfc52F5651fE"
     : CLUSTER === "testnet"
-    ? "0xD8E4C2DbDd2e2bd8F1336EA691dBFF6952B1a6eB"
+    ? "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F"
     : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
 );
 export const ETH_TOKEN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x3ee18B2214AFF97000D974cf647E7C347E8fa585"
     : CLUSTER === "testnet"
-    ? "0xF890982f9310df57d00f659cf4fd87e65adEd8d7"
+    ? "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4"
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
 );
 export const BSC_BRIDGE_ADDRESS = getAddress(
@@ -655,20 +655,20 @@ export const ALEPHIUM_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
     ? "000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? "000000000000000000000000000000000000000000000"
+    ? "uvdzcPKssgTScZtMvC6NhR6vH7fPAE4wA9KTcQ2eigFq"
     : "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM";
 export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    ? "0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f"
     : "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7";
 export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = "73e6d82337c7126065e61d8cb84a62237675357f0879ce2495ff58dfba4898a0";
 export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
   CLUSTER === "mainnet"
     ? "0000000000000000000000000000000000000000000000000000000000000000"
     : CLUSTER === "testnet"
-    ? "0000000000000000000000000000000000000000000000000000000000000000"
+    ? "7d7b768ab9e22692fe76b605314da3769ce82740f43def8d7de2605ba07db81a"
     : "1697eb1aac440db3f1359701e301424ae974eae8e080238d212e79dfc7ab4cda";
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
