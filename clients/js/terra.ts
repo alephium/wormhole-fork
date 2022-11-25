@@ -1,7 +1,7 @@
 import { LCDClient, MnemonicKey, MsgExecuteContract } from "@terra-money/terra.js";
 import { fromUint8Array } from "js-base64";
 import { impossible } from "./utils";
-import { NETWORKS } from "./networks"
+import { CONFIGS } from "./configs"
 import { CONTRACTS, GovernancePayload } from "alephium-wormhole-sdk"
 
 export async function executeGovernanceTerra(
@@ -10,7 +10,7 @@ export async function executeGovernanceTerra(
   network: "MAINNET" | "TESTNET" | "DEVNET"
 ) {
 
-  let n = NETWORKS[network]['terra']
+  let n = CONFIGS[network]['terra']
   let contracts = CONTRACTS[network]['terra']
 
   const terra = new LCDClient({

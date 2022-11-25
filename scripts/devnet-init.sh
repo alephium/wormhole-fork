@@ -49,7 +49,7 @@ ethContractExists() {
   fi
 }
 
-wait "curl --output /dev/null --silent --fail $alphNodeUrl/addresses/$alphNativeTokenBridge/group" 
+wait "curl --output /dev/null --silent --fail $alphNodeUrl/addresses/$alphNativeTokenBridge/group"
 wait "ethContractExists $ethNativeTokenBridge"
 
 echo "generating guardian set addresses"

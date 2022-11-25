@@ -1,10 +1,8 @@
-import { NETWORKS } from './networks'
+import { CONFIGS } from './configs'
 import { impossible } from './utils'
 import { web3, Script, SubmissionResult, subContractId } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import {
-  Contracts,
-  CONTRACTS,
   updateGuardianSetScript,
   upgradeGovernanceContractScript,
   createRemoteTokenPoolOnAlph,
@@ -21,24 +19,25 @@ import {
 export async function executeGovernanceAlph(
   payload: GovernancePayload,
   vaa: Buffer,
-  network: 'MAINNET' | 'TESTNET' | 'DEVNET'
+  network: 'MAINNET' | 'TESTNET' | 'DEVNET',
+  nodeUrl?: string
 ) {
-  const n = NETWORKS[network]['alephium']
-  if (!n.rpc) {
+  const n = CONFIGS[network]['alephium']
+  const rpc = nodeUrl ?? n.rpc
+  if (rpc === undefined) {
     throw Error(`No ${network} rpc defined for alephium (see networks.ts)`)
   }
   if (!n.key) {
     throw Error(`No ${network} key defined for alephium (see networks.ts)`)
   }
 
-  const contracts: Contracts = CONTRACTS[network]['alephium']
-  web3.setCurrentNodeProvider(n.rpc)
+  web3.setCurrentNodeProvider(rpc)
   const wallet = PrivateKeyWallet.FromMnemonicWithGroup(n.key, 0)
 
   const executeGovernanceScript = async (script: Script): Promise<SubmissionResult> => {
     return script.execute(wallet, {
       initialFields: {
-        'governance': contracts.core,
+        'governance': n.governanceAddress,
         'vaa': vaa.toString('hex')
       }
     })
@@ -47,7 +46,7 @@ export async function executeGovernanceAlph(
   const executeTokenBridgeScript = async (script: Script): Promise<SubmissionResult> => {
     return script.execute(wallet, {
       initialFields: {
-        'tokenBridge': contracts.token_bridge,
+        'tokenBridge': n.tokenBridgeAddress,
         'vaa': vaa.toString('hex')
       }
     })
@@ -55,7 +54,7 @@ export async function executeGovernanceAlph(
 
   switch (payload.module) {
     case 'Core':
-      if (contracts.core === undefined) {
+      if (n.governanceAddress === undefined) {
         throw Error(`Unknown core contract on ${network} for alephium`)
       }
       switch (payload.type) {
@@ -80,7 +79,7 @@ export async function executeGovernanceAlph(
       }
       break
     case 'TokenBridge':
-      if (contracts.token_bridge === undefined) {
+      if (n.tokenBridgeAddress === undefined) {
         throw Error(`Unknown token bridge contract on ${network} for alephium`)
       }
       switch (payload.type) {
@@ -90,7 +89,7 @@ export async function executeGovernanceAlph(
           break
         case 'RegisterChain':
           console.log('Registering chain')
-          const result = await registerChain(wallet, contracts.token_bridge, vaa, BigInt(2e18))
+          const result = await registerChain(wallet, n.tokenBridgeAddress, vaa, BigInt(2e18))
           console.log(`TxId: ${result.txId}`)
           break
         case 'DestroyUnexecutedSequences':

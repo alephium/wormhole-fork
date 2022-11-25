@@ -1,4 +1,10 @@
 import { ChainName } from "alephium-wormhole-sdk";
+import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
+import { default as alephiumTestnetConfig } from '../../configs/alephium/testnet.json'
+import { default as alephiumMainnetConfig } from '../../configs/alephium/mainnet.json'
+import { default as ethereumDevnetConfig } from '../../configs/ethereum/devnet.json'
+import { default as ethereumTestnetConfig } from '../../configs/ethereum/testnet.json'
+import { default as ethereumMainnetConfig } from '../../configs/ethereum/mainnet.json'
 
 require("dotenv").config({ path: `${process.env.HOME}/.wormhole/.env` });
 
@@ -31,8 +37,10 @@ const MAINNET = {
     key: get_env_var("TERRA_MNEMONIC"),
   },
   ethereum: {
-    rpc: `https://mainnet.infura.io/v3/${get_env_var("INFURA_KEY")}`,
+    rpc: `${ethereumMainnetConfig.nodeUrl}${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
+    tokenBridgeAddress: `${ethereumMainnetConfig.contracts.tokenBridge}`,
+    governanceAddress: `${ethereumMainnetConfig.contracts.governance}`
   },
   bsc: {
     rpc: "https://bsc-dataseed.binance.org/",
@@ -95,8 +103,10 @@ const MAINNET = {
     key: get_env_var("ETH_KEY"),
   },
   alephium: {
-    rpc: undefined,
-    key: get_env_var('ALPH_KEY')
+    rpc: alephiumMainnetConfig.nodeUrl,
+    key: get_env_var('ALPH_KEY'),
+    tokenBridgeAddress: alephiumMainnetConfig.contracts.tokenBridge,
+    governanceAddress: alephiumMainnetConfig.contracts.governance
   }
 };
 
@@ -115,8 +125,10 @@ const TESTNET = {
     key: get_env_var("TERRA_MNEMONIC"),
   },
   ethereum: {
-    rpc: `https://goerli.infura.io/v3/${get_env_var("INFURA_KEY")}`,
+    rpc: `${ethereumTestnetConfig.nodeUrl}${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
+    tokenBridgeAddress: `${ethereumTestnetConfig.contracts.tokenBridge}`,
+    governanceAddress: `${ethereumTestnetConfig.contracts.governance}`
   },
   bsc: {
     rpc: "https://data-seed-prebsc-1-s1.binance.org:8545",
@@ -179,8 +191,10 @@ const TESTNET = {
     key: get_env_var("ETH_KEY"),
   },
   alephium: {
-    rpc: 'https://alephium-testnet.softfork.se',
-    key: get_env_var("ALPH_KEY"),
+    rpc: alephiumTestnetConfig.nodeUrl,
+    key: get_env_var('ALPH_KEY'),
+    tokenBridgeAddress: alephiumTestnetConfig.contracts.tokenBridge,
+    governanceAddress: alephiumTestnetConfig.contracts.governance
   }
 };
 
@@ -201,6 +215,8 @@ const DEVNET = {
   ethereum: {
     rpc: "http://localhost:8545",
     key: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+    tokenBridgeAddress: `${ethereumDevnetConfig.contracts.tokenBridge}`,
+    governanceAddress: `${ethereumDevnetConfig.contracts.governance}`
   },
   bsc: {
     rpc: "http://localhost:8546",
@@ -263,8 +279,10 @@ const DEVNET = {
     key: undefined,
   },
   alephium: {
-    rpc: 'http://localhost:22973',
-    key: 'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava'
+    rpc: alephiumDevnetConfig.nodeUrl,
+    key: alephiumDevnetConfig.mnemonic,
+    tokenBridgeAddress: alephiumDevnetConfig.contracts.tokenBridge,
+    governanceAddress: alephiumDevnetConfig.contracts.governance
   }
 };
 
@@ -296,4 +314,4 @@ const isMainnetConnections: ChainConnections = MAINNET;
  */
 const isDevnetConnections: ChainConnections = DEVNET;
 
-export const NETWORKS = { MAINNET, TESTNET, DEVNET };
+export const CONFIGS = { MAINNET, TESTNET, DEVNET };

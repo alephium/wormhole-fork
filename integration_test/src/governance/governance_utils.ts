@@ -3,10 +3,11 @@ import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
 import Dockerode, { Container } from 'dockerode'
 import { getSignedVAA } from '../utils'
 import { execSync } from 'child_process'
+import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
 
 export const docker = new Dockerode()
-export const governanceChainId = 1
-export const governanceEmitterId = '0000000000000000000000000000000000000000000000000000000000000004'
+export const governanceChainId = guardianDevnetConfig.governanceChainId as ChainId
+export const governanceEmitterAddress = guardianDevnetConfig.governanceEmitterAddress
 export const guardianRpcPorts = [7071, 8071]
 
 export async function getGuardianByIndex(index: number) {
@@ -64,7 +65,7 @@ export async function submitGovernanceVAA(
   toChainId: ChainId,
   targetChainIds?: ChainId[]
 ) {
-  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterId, toChainId, sequence)
+  const signedVaa = await getSignedVAA(governanceChainId, governanceEmitterAddress, toChainId, sequence)
   const signedVaaHex = binToHex(signedVaa)
   console.log(`${action} signed vaa: ${signedVaaHex}`)
 
