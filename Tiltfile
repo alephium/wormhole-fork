@@ -104,15 +104,6 @@ local_resource(
     trigger_mode = trigger_mode,
 )
 
-local_resource(
-    name = "const-gen",
-    deps = ["scripts", "clients", "ethereum/.env.test"],
-    cmd = 'tilt docker build -- --target const-export -f Dockerfile.const -o type=local,dest=. --build-arg num_guardians=%s .' % (num_guardians),
-    env = {"DOCKER_BUILDKIT": "1"},
-    allow_parallel = True,
-    trigger_mode = trigger_mode,
-)
-
 # wasm
 
 if solana:
@@ -189,7 +180,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node", "devnet-init"]
 if solana:
     guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
 
@@ -205,17 +196,6 @@ k8s_resource(
     labels = ["guardian"],
     trigger_mode = trigger_mode,
 )
-
-# guardian set update - triggered by "tilt args" changes
-if num_guardians >= 2 and ci == False:
-    local_resource(
-        name = "guardian-set-update",
-        resource_deps = guardian_resource_deps + ["guardian"],
-        deps = ["scripts/send-vaa.sh", "clients/eth"],
-        cmd = './scripts/update-guardian-set.sh %s %s %s' % (num_guardians, webHost, namespace),
-        labels = ["guardian"],
-        trigger_mode = trigger_mode,
-    )
 
 # spy
 k8s_yaml_with_ns("devnet/spy.yaml")
@@ -264,7 +244,6 @@ if solana:
             port_forward(8900, name = "Solana WS [:8900]", host = webHost),
             port_forward(9000, name = "Solana PubSub [:9000]", host = webHost),
         ],
-        resource_deps = ["const-gen"],
         labels = ["solana"],
         trigger_mode = trigger_mode,
     )
@@ -273,15 +252,20 @@ if solana:
 
 docker_build(
   ref = "alephium",
-  context = "./alephium",
-  ignore = ["./artifacts", "./contracts", "./node_modules", "./dist", "./test"],
+  context = ".",
+  only = [
+    "./alephium/alephium-1.5.3.jar",
+    "./alephium/contracts",
+    "./alephium/lib",
+    "./alephium/scripts",
+    "./alephium/auto-mine.sh",
+    "./alephium/deploy.sh",
+    "./alephium/package-lock.json",
+    "./alephium/package.json",
+    "./alephium/alephium.config.ts",
+    "./configs",
+  ],
   dockerfile = "./alephium/Dockerfile"
-)
-
-docker_build(
-    ref = "alephium-contracts",
-    context = "./alephium",
-    dockerfile = "./alephium/Dockerfile.contracts"
 )
 
 k8s_yaml_with_ns("devnet/alph-full-node.yaml")
@@ -292,7 +276,6 @@ k8s_resource(
     port_forward(22973, name = "Alephium REST [:22973]", host = webHost),
     # port_forward(20973, name = "Alephium Mining [:20973]", host = webHost),
   ],
-  resource_deps = ["const-gen"],
   labels = ["alephium"],
   trigger_mode = trigger_mode,
 )
@@ -333,19 +316,17 @@ k8s_resource(
 
 docker_build(
     ref = "eth-node",
-    context = "./ethereum",
+    context = ".",
     dockerfile = "./ethereum/Dockerfile",
 
-    # ignore local node_modules (in case they're present)
-    ignore = ["./node_modules"],
-
-    # sync external scripts for incremental development
-    # (everything else needs to be restarted from scratch for determinism)
-    #
-    # This relies on --update-mode=exec to work properly with a non-root user.
-    # https://github.com/tilt-dev/tilt/issues/3708
-    live_update = [
-        sync("./ethereum/src", "/home/node/app/src"),
+    only = [
+        "./ethereum/contracts",
+        "./ethereum/migrations",
+        "./ethereum/package-lock.json",
+        "./ethereum/package.json",
+        "./ethereum/truffle-config.js",
+        "./ethereum/mine.js",
+        "./configs"
     ],
 )
 
@@ -421,8 +402,35 @@ k8s_resource(
     port_forwards = [
         port_forward(8545, name = "Ganache RPC [:8545]", host = webHost),
     ],
-    resource_deps = ["const-gen"],
     labels = ["evm"],
+    trigger_mode = trigger_mode,
+)
+
+# devnet init
+docker_build(
+    ref = "devnet-init-image",
+    context = ".",
+    only = ["configs", "scripts/devnet-init.sh", "clients/js"],
+    dockerfile = "Dockerfile.init"
+)
+
+def build_devnet_init_yaml():
+    init_yaml = read_yaml_stream("devnet/init.yaml")
+
+    for obj in init_yaml:
+        if obj["kind"] == "Pod" and obj["metadata"]["name"] == "devnet-init":
+            container = obj["spec"]["containers"][0]
+            container["command"] += ['/scripts/devnet-init.sh %s' % num_guardians]
+            print(container["command"])
+
+    return encode_yaml_stream(init_yaml)
+
+k8s_yaml_with_ns(build_devnet_init_yaml())
+
+k8s_resource(
+    "devnet-init",
+    resource_deps = ["eth-devnet", "alph-full-node"],
+    labels = ["devnet-init"],
     trigger_mode = trigger_mode,
 )
 
@@ -431,7 +439,6 @@ k8s_resource(
 #     port_forwards = [
 #         port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
 #     ],
-#     resource_deps = ["const-gen"],
 #     labels = ["evm"],
 #     trigger_mode = trigger_mode,
 # )
@@ -600,7 +607,6 @@ if explorer:
 #         port_forward(26657, name = "Terra RPC [:26657]", host = webHost),
 #         port_forward(1317, name = "Terra LCD [:1317]", host = webHost),
 #     ],
-#     resource_deps = ["const-gen"],
 #     labels = ["terra"],
 #     trigger_mode = trigger_mode,
 # )
@@ -648,7 +654,6 @@ if algorand:
             port_forward(4002, name = "KMD [:4002]", host = webHost),
             port_forward(8980, name = "Indexer [:8980]", host = webHost),
         ],
-        resource_deps = ["const-gen"],
         labels = ["algorand"],
         trigger_mode = trigger_mode,
     )

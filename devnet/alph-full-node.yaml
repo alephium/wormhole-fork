@@ -13,9 +13,6 @@ spec:
   - name: alph-rest
     port: 22973
     targetPort: alph-rest
-#  - name: alph-mining
-#    port: 20973
-#    targetPort: alph-mining
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -33,97 +30,21 @@ spec:
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 0
-      volumes:
-        - name: alph-full-node
-          persistentVolumeClaim:
-            claimName: alph-full-node-pvc
-        - name: alph-configs
-          configMap:
-            name: alph-configs
       containers:
         - name: alph-full-node
           image: alephium
-          env:
-            - name: ALEPHIUM_HOME
-              value: /alephium-home/.alephium
-          volumeMounts:
-            - mountPath: /alephium-home/.alephium
-              name: alph-full-node
-              subPath: .alephium
-            - mountPath: /alephium-home/.alephium/user.conf
-              name: alph-configs
-              subPath: user.conf
+          command: ["/bin/sh", "-c"]
+          # TODO: remove this once explorer-backend direct-access-mode works
+          args:
+            - npx @alephium/cli devnet start;
+              npx @alephium/cli devnet stop;
+              echo 'alephium.network.internal-address="alph-full-node:19973"\nalephium.network.coordinator-address="alph-full-node:19973"' >> ~/.alephium-dev/user.conf;
+              ALEPHIUM_HOME=~/.alephium-dev/ java -jar ~/.alephium-dev/alephium*.jar &
+              sh /alephium/deploy.sh;
           ports:
             - containerPort: 22973
               name: alph-rest
               protocol: TCP
-#            - containerPort: 20973
-#              name: alph-mining
-#              protocol: TCP
           readinessProbe:
             tcpSocket:
               port: 22973
-        - name: alph-contracts
-          image: alephium-contracts
-          command:
-            - /bin/sh
-            - -c
-            - "sh /alephium/deploy.sh"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: alph-full-node-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: alph-configs
-data:
-  user.conf: |
-    alephium.broker.broker-id = 0
-    alephium.broker.broker-num = 1
-    alephium.broker.groups = 4
-    alephium.genesis.allocations = [
-      {
-        address = "1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH",
-        amount = 1000000000000000000000000,
-        lock-duration = 0 seconds
-      }
-    ]
-    alephium.consensus.num-zeros-at-least-in-hash = 0
-    alephium.consensus.uncle-dependency-gap-time = 0 seconds
-
-    alephium.wallet.secret-dir = "/alephium-home/.alephium-wallet"
-    alephium.network.network-id = 4
-    alephium.discovery.bootstrap = []
-    alephium.wallet.locking-timeout = 99999 minutes
-    alephium.mempool.auto-mine-for-dev = true
-    alephium.node.event-log.enabled = true
-    alephium.node.event-log.index-by-tx-id = true
-
-    alephium.api.network-interface = "0.0.0.0"
-    alephium.api.api-key-enabled = false
-    // alephium.api.api-key = "0e9afae96a96ac75720addc97231b3a1cdd9c331b2e23cfcc1f781cdd068d8c3"
-
-    alephium.network.rest-port = 22973
-    alephium.network.ws-port = 21973
-    alephium.network.miner-api-port = 20973
-    alephium.network.bind-address  = "0.0.0.0:19973"
-    alephium.network.internal-address  = "alph-full-node:19973"
-    alephium.network.coordinator-address  = "alph-full-node:19973"
-
-    alephium.mining.api-interface = "0.0.0.0"
-    // arbitrary mining addresses
-    alephium.mining.miner-addresses = [
-      "1FsroWmeJPBhcPiUr37pWXdojRBe6jdey9uukEXk1TheA",
-      "1CQvSXsmM5BMFKguKDPpNUfw1idiut8UifLtT8748JdHc",
-      "193maApeJWrz9GFwWCfa982ccLARVE9Y1WgKSJaUs7UAx",
-      "16fZKYPCZJv2TP3FArA9FLUQceTS9U8xVnSjxFG9MBKyY"
-    ]
