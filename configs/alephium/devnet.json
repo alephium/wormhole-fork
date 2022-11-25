@@ -1,0 +1,24 @@
+{
+  "chainId": 255,
+  "groupIndex": 0,
+  "mnemonic": "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
+  "minimalConsistencyLevel": 10,
+  "messageFee": "100000000000000",
+  "contracts": {
+    "governance": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c",
+    "nativeGovernance": "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM",
+    "tokenBridge": "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7",
+    "nativeTokenBridge": "xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU",
+    "walph": "1697eb1aac440db3f1359701e301424ae974eae8e080238d212e79dfc7ab4cda",
+    "testToken": "9b1e7b838873c0196bd300e663966ff257375d640a3e068ddbc359c81c476c2f"
+  },
+  "nodeUrl": "http://localhost:22973",
+  "explorerUrl": "http://localhost:9090",
+  "networkId": 4,
+  "coreEmitterAddress": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c",
+  "tokenBridgeEmitterAddress": "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7",
+  "bridgeTokens": [
+    "vD9SSVfaZ7msnk37DKsom21c5G9V9MQZXeFhqwigCzob",
+    "258UGJj4DyKGaUKQ4qMApXNDAdpqmXLVN5v2ZUovxf8y4"
+  ]
+}
