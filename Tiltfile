@@ -565,9 +565,23 @@ if explorer:
     # explorer web app
     docker_build(
         ref = "explorer",
-        context = "./explorer",
+        context = ".",
         dockerfile = "./explorer/Dockerfile",
-        ignore = ["./node_modules"],
+        only = [
+            "./explorer/plugins",
+            "./explorer/src",
+            "./explorer/static",
+            "./explorer/wasm",
+            "./explorer/.env.development",
+            "./explorer/.env.production",
+            "./explorer/gatsby-browser.js",
+            "./explorer/gatsby-config.js",
+            "./explorer/gatsby-node.js",
+            "./explorer/package.json",
+            "./explorer/package-lock.json",
+            "./explorer/tsconfig.json",
+            "./configs"
+        ],
         live_update = [
             sync("./explorer/src", "/home/node/app/src"),
             sync("./explorer/public", "/home/node/app/public"),

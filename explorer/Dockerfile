@@ -3,16 +3,16 @@
 # Derivative of ethereum/Dockerfile, look there for an explanation on how it works.
 FROM node:16-alpine@sha256:004dbac84fed48e20f9888a23e32fa7cf83c2995e174a78d41d9a9dd1e051a20
 
-RUN mkdir -p /app
+RUN mkdir -p /app && mkdir /configs
 WORKDIR /app
+COPY ./configs /configs
 
-ADD package.json .
-ADD package-lock.json .
+ADD ./explorer/package.json .
+ADD ./explorer/package-lock.json .
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
   npm ci
 
-ADD . .
-
+ADD ./explorer .
 
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
   npm run build

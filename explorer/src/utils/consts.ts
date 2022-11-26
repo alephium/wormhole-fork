@@ -4,6 +4,15 @@ import {
   getEmitterAddressSolana,
   getEmitterAddressTerra,
 } from "alephium-wormhole-sdk";
+import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
+import { default as alephiumTestnetConfig } from '../../../configs/alephium/testnet.json'
+import { default as alephiumMainnetConfig } from '../../../configs/alephium/mainnet.json'
+import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
+import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
+import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
+import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
+import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
+import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
 export const chainEnums = [
   "",
@@ -27,52 +36,17 @@ export interface ChainIDs {
 }
 
 export const chainIDs: ChainIDs = {
-  solana: 1,
   ethereum: 2,
-  terra: 3,
-  bsc: 4,
-  polygon: 5,
-  avalanche: 6,
-  oasis: 7,
-  // chains without mainnet contract addresses commented out
-  // algorand: 8,
-  aurora: 9,
-  fantom: 10,
-  // kurura: 11,
-  // acala: 12,
   alephium: 255,
 };
 
 export const chainIDStrings: { [chainIDString: string]: string } = {
-  "1": "solana",
   "2": "ethereum",
-  "3": "terra",
-  "4": "bsc",
-  "5": "polygon",
-  "6": "avalanche",
-  "7": "oasis",
-  "8": "algorand",
-  "9": "aurora",
-  "10": "fantom",
-  "11": "karura",
-  "12": "acala",
   "255": "alephium",
 };
 
 export enum ChainID {
-  "unknown",
-  Solana,
-  Ethereum,
-  Terra,
-  BSC,
-  Polygon,
-  Avalanche,
-  Oasis,
-  Algorand,
-  Aurora,
-  Fantom,
-  Karura,
-  Acala,
+  Ethereum = 2,
   Alephium = 255,
 }
 export type ChainName = keyof ChainIDs;
@@ -84,167 +58,43 @@ export const METADATA_REPLACE = new RegExp("\u0000", "g");
 // Created this map as a work around to access them dynamically (ie. process.env[someKeyName]).
 const envVarMap: { [name: string]: string | undefined } = {
   // devnet
-  GATSBY_DEVNET_SOLANA_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_SOLANA_CORE_BRIDGE,
-  GATSBY_DEVNET_SOLANA_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_SOLANA_TOKEN_BRIDGE,
-  GATSBY_DEVNET_SOLANA_NFT_BRIDGE: process.env.GATSBY_DEVNET_SOLANA_NFT_BRIDGE,
   GATSBY_DEVNET_ETHEREUM_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_ETHEREUM_CORE_BRIDGE,
+    ethereumDevnetConfig.contracts.governance,
   GATSBY_DEVNET_ETHEREUM_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_ETHEREUM_TOKEN_BRIDGE,
-  GATSBY_DEVNET_ETHEREUM_NFT_BRIDGE:
-    process.env.GATSBY_DEVNET_ETHEREUM_NFT_BRIDGE,
-  GATSBY_DEVNET_TERRA_CORE_BRIDGE: process.env.GATSBY_DEVNET_TERRA_CORE_BRIDGE,
-  GATSBY_DEVNET_TERRA_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_TERRA_TOKEN_BRIDGE,
-  GATSBY_DEVNET_TERRA_NFT_BRIDGE: process.env.GATSBY_DEVNET_TERRA_NFT_BRIDGE,
-  GATSBY_DEVNET_BSC_CORE_BRIDGE: process.env.GATSBY_DEVNET_BSC_CORE_BRIDGE,
-  GATSBY_DEVNET_BSC_TOKEN_BRIDGE: process.env.GATSBY_DEVNET_BSC_TOKEN_BRIDGE,
-  GATSBY_DEVNET_BSC_NFT_BRIDGE: process.env.GATSBY_DEVNET_BSC_NFT_BRIDGE,
-  GATSBY_DEVNET_POLYGON_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_POLYGON_CORE_BRIDGE,
-  GATSBY_DEVNET_POLYGON_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_POLYGON_TOKEN_BRIDGE,
-  GATSBY_DEVNET_POLYGON_NFT_BRIDGE:
-    process.env.GATSBY_DEVNET_POLYGON_NFT_BRIDGE,
-  GATSBY_DEVNET_AVALANCHE_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_AVALANCHE_CORE_BRIDGE,
-  GATSBY_DEVNET_AVALANCHE_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_AVALANCHE_TOKEN_BRIDGE,
-  GATSBY_DEVNET_AVALANCHE_NFT_BRIDGE:
-    process.env.GATSBY_DEVNET_AVALANCHE_NFT_BRIDGE,
-  GATSBY_DEVNET_OASIS_CORE_BRIDGE: process.env.GATSBY_DEVNET_OASIS_CORE_BRIDGE,
-  GATSBY_DEVNET_OASIS_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_OASIS_TOKEN_BRIDGE,
-  GATSBY_DEVNET_OASIS_NFT_BRIDGE: process.env.GATSBY_DEVNET_OASIS_NFT_BRIDGE,
-  GATSBY_DEVNET_FANTOM_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_FANTOM_CORE_BRIDGE,
-  GATSBY_DEVNET_FANTOM_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_FANTOM_TOKEN_BRIDGE,
-  GATSBY_DEVNET_FANTOM_NFT_BRIDGE: process.env.GATSBY_DEVNET_FANTOM_NFT_BRIDGE,
-  GATSBY_DEVNET_AURORA_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_AURORA_CORE_BRIDGE,
-  GATSBY_DEVNET_AURORA_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_AURORA_TOKEN_BRIDGE,
-  GATSBY_DEVNET_AURORA_NFT_BRIDGE: process.env.GATSBY_DEVNET_AURORA_NFT_BRIDGE,
+    ethereumDevnetConfig.contracts.tokenBridge,
+  GATSBY_DEVNET_ETHEREUM_NFT_BRIDGE: undefined,
+
   GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE,
+    alephiumDevnetConfig.contracts.governance,
   GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
-  GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE,
+    alephiumDevnetConfig.contracts.tokenBridge,
+  GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE: undefined,
 
   // testnet
-  GATSBY_TESTNET_SOLANA_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_SOLANA_CORE_BRIDGE,
-  GATSBY_TESTNET_SOLANA_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_SOLANA_TOKEN_BRIDGE,
-  GATSBY_TESTNET_SOLANA_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_SOLANA_NFT_BRIDGE,
   GATSBY_TESTNET_ETHEREUM_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_ETHEREUM_CORE_BRIDGE,
+    ethereumTestnetConfig.contracts.governance,
   GATSBY_TESTNET_ETHEREUM_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_ETHEREUM_TOKEN_BRIDGE,
-  GATSBY_TESTNET_ETHEREUM_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_ETHEREUM_NFT_BRIDGE,
-  GATSBY_TESTNET_TERRA_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_TERRA_CORE_BRIDGE,
-  GATSBY_TESTNET_TERRA_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_TERRA_TOKEN_BRIDGE,
-  GATSBY_TESTNET_TERRA_NFT_BRIDGE: process.env.GATSBY_TESTNET_TERRA_NFT_BRIDGE,
-  GATSBY_TESTNET_BSC_CORE_BRIDGE: process.env.GATSBY_TESTNET_BSC_CORE_BRIDGE,
-  GATSBY_TESTNET_BSC_TOKEN_BRIDGE: process.env.GATSBY_TESTNET_BSC_TOKEN_BRIDGE,
-  GATSBY_TESTNET_BSC_NFT_BRIDGE: process.env.GATSBY_TESTNET_BSC_NFT_BRIDGE,
-  GATSBY_TESTNET_POLYGON_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_POLYGON_CORE_BRIDGE,
-  GATSBY_TESTNET_POLYGON_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_POLYGON_TOKEN_BRIDGE,
-  GATSBY_TESTNET_POLYGON_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_POLYGON_NFT_BRIDGE,
-  GATSBY_TESTNET_AVALANCHE_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_AVALANCHE_CORE_BRIDGE,
-  GATSBY_TESTNET_AVALANCHE_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_AVALANCHE_TOKEN_BRIDGE,
-  GATSBY_TESTNET_AVALANCHE_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_AVALANCHE_NFT_BRIDGE,
-  GATSBY_TESTNET_OASIS_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_OASIS_CORE_BRIDGE,
-  GATSBY_TESTNET_OASIS_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_OASIS_TOKEN_BRIDGE,
-  GATSBY_TESTNET_OASIS_NFT_BRIDGE: process.env.GATSBY_TESTNET_OASIS_NFT_BRIDGE,
-  GATSBY_TESTNET_FANTOM_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_FANTOM_CORE_BRIDGE,
-  GATSBY_TESTNET_FANTOM_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_FANTOM_TOKEN_BRIDGE,
-  GATSBY_TESTNET_FANTOM_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_FANTOM_NFT_BRIDGE,
-  GATSBY_TESTNET_AURORA_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_AURORA_CORE_BRIDGE,
-  GATSBY_TESTNET_AURORA_TOKEN_BRIDGE:
-    process.env.GATSBY_TESTNET_AURORA_TOKEN_BRIDGE,
-  GATSBY_TESTNET_AURORA_NFT_BRIDGE:
-    process.env.GATSBY_TESTNET_AURORA_NFT_BRIDGE,
+    ethereumTestnetConfig.contracts.tokenBridge,
+  GATSBY_TESTNET_ETHEREUM_NFT_BRIDGE: undefined,
+
   GATSBY_TESTNET_ALEPHIUM_CORE_BRIDGE:
-    process.env.GATSBY_TESTNET_ALEPHIUM_CORE_BRIDGE,
+    alephiumTestnetConfig.contracts.governance,
   GATSBY_TESTNET_ALEPHIUM_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
-  GATSBY_TESTNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE,
+    alephiumTestnetConfig.contracts.tokenBridge,
+  GATSBY_TESTNET_ALEPHIUM_NFT_BRIDGE: undefined,
 
   // mainnet
-  GATSBY_MAINNET_SOLANA_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_SOLANA_CORE_BRIDGE,
-  GATSBY_MAINNET_SOLANA_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_SOLANA_TOKEN_BRIDGE,
-  GATSBY_MAINNET_SOLANA_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_SOLANA_NFT_BRIDGE,
   GATSBY_MAINNET_ETHEREUM_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_ETHEREUM_CORE_BRIDGE,
+    ethereumMainnetConfig.contracts.governance,
   GATSBY_MAINNET_ETHEREUM_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_ETHEREUM_TOKEN_BRIDGE,
-  GATSBY_MAINNET_ETHEREUM_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_ETHEREUM_NFT_BRIDGE,
-  GATSBY_MAINNET_TERRA_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_TERRA_CORE_BRIDGE,
-  GATSBY_MAINNET_TERRA_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_TERRA_TOKEN_BRIDGE,
-  GATSBY_MAINNET_TERRA_NFT_BRIDGE: process.env.GATSBY_MAINNET_TERRA_NFT_BRIDGE,
-  GATSBY_MAINNET_BSC_CORE_BRIDGE: process.env.GATSBY_MAINNET_BSC_CORE_BRIDGE,
-  GATSBY_MAINNET_BSC_TOKEN_BRIDGE: process.env.GATSBY_MAINNET_BSC_TOKEN_BRIDGE,
-  GATSBY_MAINNET_BSC_NFT_BRIDGE: process.env.GATSBY_MAINNET_BSC_NFT_BRIDGE,
-  GATSBY_MAINNET_POLYGON_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_POLYGON_CORE_BRIDGE,
-  GATSBY_MAINNET_POLYGON_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_POLYGON_TOKEN_BRIDGE,
-  GATSBY_MAINNET_POLYGON_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_POLYGON_NFT_BRIDGE,
-  GATSBY_MAINNET_AVALANCHE_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_AVALANCHE_CORE_BRIDGE,
-  GATSBY_MAINNET_AVALANCHE_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_AVALANCHE_TOKEN_BRIDGE,
-  GATSBY_MAINNET_AVALANCHE_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_AVALANCHE_NFT_BRIDGE,
-  GATSBY_MAINNET_OASIS_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_OASIS_CORE_BRIDGE,
-  GATSBY_MAINNET_OASIS_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_OASIS_TOKEN_BRIDGE,
-  GATSBY_MAINNET_OASIS_NFT_BRIDGE: process.env.GATSBY_MAINNET_OASIS_NFT_BRIDGE,
-  GATSBY_MAINNET_FANTOM_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_FANTOM_CORE_BRIDGE,
-  GATSBY_MAINNET_FANTOM_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_FANTOM_TOKEN_BRIDGE,
-  GATSBY_MAINNET_FANTOM_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_FANTOM_NFT_BRIDGE,
-  GATSBY_MAINNET_AURORA_CORE_BRIDGE:
-    process.env.GATSBY_MAINNET_AURORA_CORE_BRIDGE,
-  GATSBY_MAINNET_AURORA_TOKEN_BRIDGE:
-    process.env.GATSBY_MAINNET_AURORA_TOKEN_BRIDGE,
-  GATSBY_MAINNET_AURORA_NFT_BRIDGE:
-    process.env.GATSBY_MAINNET_AURORA_NFT_BRIDGE,
+    ethereumMainnetConfig.contracts.tokenBridge,
+  GATSBY_MAINNET_ETHEREUM_NFT_BRIDGE: undefined,
+
   GATSBY_MAINNET_ALEPHIUM_CORE_BRIDGE:
-    process.env.GATSBY_DEVNET_ALEPHIUM_CORE_BRIDGE,
+    alephiumMainnetConfig.contracts.governance,
   GATSBY_MAINNET_ALEPHIUM_TOKEN_BRIDGE:
-    process.env.GATSBY_DEVNET_ALEPHIUM_TOKEN_BRIDGE,
-  GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE: process.env.GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE
+    alephiumMainnetConfig.contracts.tokenBridge,
+  GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE: undefined
 };
 
 export interface KnownContracts {
@@ -330,7 +180,7 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
             "BRIDGE",
           ].join("_");
           let address = envVarMap[envVarName];
-          if (!address) throw `missing environment variable: ${envVarName}`;
+          if (address === undefined) throw `missing environment variable: ${envVarName}`;
           const desc = `${contractType} Bridge`;
           // index by: description, contract address, and emitter address
           try {
@@ -364,18 +214,18 @@ export const endpoints: { [network: string]: NetworkConfig } = {
     bigtableFunctionsBase: String(
       process.env.GATSBY_BIGTABLE_FUNCTIONS_DEVNET_BASE_URL
     ),
-    guardianRpcBase: String(process.env.GATSBY_GUARDIAN_DEVNET_RPC_URL),
+    guardianRpcBase: (guardianDevnetConfig.guardianUrls as string[])[0],
   },
   testnet: {
     bigtableFunctionsBase: String(
       process.env.GATSBY_BIGTABLE_FUNCTIONS_TESTNET_BASE_URL
     ),
-    guardianRpcBase: String(process.env.GATSBY_GUARDIAN_TESTNET_RPC_URL),
+    guardianRpcBase: (guardianTestnetConfig.guardianUrls as string[])[0],
   },
   mainnet: {
     bigtableFunctionsBase: String(
       process.env.GATSBY_BIGTABLE_FUNCTIONS_MAINNET_BASE_URL
     ),
-    guardianRpcBase: String(process.env.GATSBY_GUARDIAN_MAINNET_RPC_URL),
+    guardianRpcBase: (guardianMainnetConfig.guardianUrls as string[])[0],
   },
 };
