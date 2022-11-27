@@ -130,7 +130,8 @@ if explorer:
 
 docker_build(
     ref = "guardiand-image",
-    context = "node",
+    context = ".",
+    only = ["./node", "./configs"],
     dockerfile = "node/Dockerfile",
     build_args = {"network": "devnet"}
 )

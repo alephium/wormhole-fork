@@ -4,20 +4,23 @@ FROM docker.io/golang:1.18.6@sha256:60dd47f8883de5cf2af2e2c5e00bdf4a304d39af63e6
 Arg network
 
 # Support additional root CAs
-COPY go.mod cert.pem* /certs/
+COPY ./node/go.mod ./node/cert.pem* /certs/
 # Debian
 RUN if [ -e /certs/cert.pem ]; then cp /certs/cert.pem /etc/ssl/certs/ca-certificates.crt; fi
 # git
 RUN if [ -e /certs/cert.pem ]; then git config --global http.sslCAInfo /certs/cert.pem; fi
 
+RUN mkdir /configs
+COPY ./configs /configs
+
 WORKDIR /app
 
-ADD tools tools
+ADD ./node/tools tools
 
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
   cd tools/ && go build -mod=readonly -o /dlv github.com/go-delve/delve/cmd/dlv
 
-ADD . .
+ADD ./node .
 
 RUN if [[ "$network" != "devnet" ]]; then apt-get update && apt-get install libcap2-bin -y; fi
 

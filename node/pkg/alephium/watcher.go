@@ -101,15 +101,19 @@ func NewAlephiumWatcher(
 	if len(contracts) != 2 {
 		return nil, fmt.Errorf("invalid contract ids")
 	}
-	tokenBridgeContractId, err := ToContractId(contracts[1])
+	governanceContractAddress, err := ToContractAddress(contracts[0])
 	if err != nil {
-		return nil, fmt.Errorf("invalid token bridge contract address")
+		return nil, fmt.Errorf("invalid governance contract id")
+	}
+	tokenBridgeContractId, err := HexToByte32(contracts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid token bridge contract id")
 	}
 
 	watcher := &Watcher{
 		url:                       url,
 		apiKey:                    apiKey,
-		governanceContractAddress: contracts[0],
+		governanceContractAddress: *governanceContractAddress,
 		tokenBridgeContractId:     tokenBridgeContractId,
 
 		chainIndex: &ChainIndex{

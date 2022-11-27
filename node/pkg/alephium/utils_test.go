@@ -171,3 +171,11 @@ func TestContractConversion(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, bytes, id)
 }
+
+func TestHexToByte32(t *testing.T) {
+	bytes := randomByte32()
+	hex := bytes.ToHex()
+	res, err := HexToByte32(hex)
+	assert.Nil(t, err)
+	assert.True(t, res.equalWith(bytes))
+}
