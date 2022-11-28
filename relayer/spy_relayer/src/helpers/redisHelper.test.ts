@@ -2,6 +2,7 @@ process.env.LOG_LEVEL = "debug";
 process.env.PROM_PORT = "0";
 process.env.REDIS_HOST = "localhost";
 process.env.REDIS_PORT = "0";
+process.env.NETWORK = "devnet"
 
 import { ChainId } from "alephium-wormhole-sdk";
 import { chainIDStrings } from "../utils/wormhole";

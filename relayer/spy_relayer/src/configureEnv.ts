@@ -2,9 +2,15 @@ import { NodeProvider, web3 } from "@alephium/web3";
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_TERRA
+  CHAIN_ID_ETH
 } from "alephium-wormhole-sdk";
 import { getLogger } from "./helpers/logHelper";
+import * as alephiumDevnetConfig from '../../../configs/alephium/devnet.json'
+import * as alephiumTestnetConfig from '../../../configs/alephium/testnet.json'
+import * as alephiumMainnetConfig from '../../../configs/alephium/mainnet.json'
+import * as ethereumDevnetConfig from '../../../configs/ethereum/devnet.json'
+import * as ethereumTestnetConfig from '../../../configs/ethereum/testnet.json'
+import * as ethereumMainnetConfig from '../../../configs/ethereum/mainnet.json'
 
 export type SupportedToken = {
   chainId: ChainId;
@@ -21,6 +27,16 @@ export type CommonEnvironment = {
   redisPort: number;
 };
 
+function validateNetwork() {
+  if (process.env.NETWORK === undefined) {
+    throw new Error(`Missing NETWORK in config`)
+  }
+  const networks = ['devnet', 'testnet', 'mainnet']
+  if (!networks.includes(process.env.NETWORK)) {
+    throw new Error(`Network has to be one of ${networks}`)
+  }
+}
+
 let loggingEnv: CommonEnvironment | undefined = undefined;
 
 export const getCommonEnvironment: () => CommonEnvironment = () => {
@@ -34,6 +50,8 @@ export const getCommonEnvironment: () => CommonEnvironment = () => {
 };
 
 function createCommonEnvironment(): CommonEnvironment {
+  validateNetwork()
+
   let logLevel;
   let promPort;
   let readinessPort;
@@ -171,23 +189,24 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
     spyServiceHost = process.env.SPY_SERVICE_HOST;
   }
 
-  logger.info("Getting SPY_SERVICE_FILTERS...");
-  if (!process.env.SPY_SERVICE_FILTERS) {
+  logger.info("Getting SPY_SERVICE_FILTER_CHAINS...");
+  if (!process.env.SPY_SERVICE_FILTER_CHAINS) {
     throw new Error(
-      "Missing required environment variable: SPY_SERVICE_FILTERS"
+      "Missing required environment variable: SPY_SERVICE_FILTER_CHAINS"
     );
   }
-  const filters = JSON.parse(process.env.SPY_SERVICE_FILTERS);
-  if (!filters || !Array.isArray(filters)) {
-    throw new Error('Spy service filters is not an array.');
+  const chains = JSON.parse(process.env.SPY_SERVICE_FILTER_CHAINS);
+  if (!chains || !Array.isArray(chains)) {
+    throw new Error('Spy service filter chains is not an array.');
   }
-  filters.forEach((filter: any) => {
-    if (filter.chainId === undefined || filter.emitterAddress === undefined) {
-      throw new Error(`Invalid filter record: ${filter}`);
+  chains.forEach((chain: any) => {
+    if (typeof chain !== 'number') {
+      throw new Error(`Invalid filter chain: ${chain}`);
     }
+    const chainId = chain as ChainId
     spyServiceFilters.push({
-      chainId: filter.chainId as ChainId,
-      emitterAddress: filter.emitterAddress as string,
+      chainId: chainId,
+      emitterAddress: getTokenBridgeAddress(chainId),
     })
   })
 
@@ -208,6 +227,25 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
     supportedTokens,
   };
 };
+
+function getTokenBridgeAddress(chainId: ChainId): string {
+  switch (chainId) {
+    case CHAIN_ID_ALEPHIUM:
+      return process.env.NETWORK === 'devnet'
+        ? alephiumDevnetConfig.contracts.tokenBridge
+        : process.env.NETWORK === 'testnet'
+        ? alephiumTestnetConfig.contracts.tokenBridge
+        : alephiumMainnetConfig.contracts.tokenBridge
+    case CHAIN_ID_ETH:
+      return process.env.NETWORK === 'devnet'
+        ? ethereumDevnetConfig.contracts.tokenBridge
+        : process.env.NETWORK === 'testnet'
+        ? ethereumTestnetConfig.contracts.tokenBridge
+        : ethereumMainnetConfig.contracts.tokenBridge
+    default:
+      throw new Error(`Invalid chain: ${chainId}`)
+  }
+}
 
 let relayerEnv: RelayerEnvironment | undefined = undefined;
 
@@ -300,24 +338,45 @@ const createRelayerEnvironment: () => RelayerEnvironment = () => {
 };
 
 export function loadSupportedTokens(): SupportedToken[] {
-  if (!process.env.SUPPORTED_TOKENS) {
-    throw new Error("Missing required environment variable: SUPPORTED_TOKENS");
-  }
-  const tokens = eval(process.env.SUPPORTED_TOKENS);
-  if (!tokens || !Array.isArray(tokens)) {
-    throw new Error("SUPPORTED_TOKENS is not an array.");
-  }
-  return tokens.map((token: any) => {
-    if (token.chainId && token.address && token.minimalFee) {
-      return {
-        chainId: token.chainId,
-        address: token.address,
-        minimalFee: BigInt(token.minimalFee)
+  if (process.env.SUPPORTED_TOKENS) {
+    const tokens = eval(process.env.SUPPORTED_TOKENS);
+    if (!tokens || !Array.isArray(tokens)) {
+      throw new Error("SUPPORTED_TOKENS is not an array.");
+    }
+    return tokens.map((token: any) => {
+      if (token.chainId && token.address && token.minimalFee) {
+        return {
+          chainId: token.chainId,
+          address: token.address,
+          minimalFee: BigInt(token.minimalFee)
+        }
+      } else {
+        throw new Error("Invalid token record: " + JSON.stringify(token));
       }
-    } else {
-      throw new Error("Invalid token record: " + JSON.stringify(token));
+    })
+  }
+
+  const [alphBridgeTokens, ethBridgeTokens]: [string[], string[]] = process.env.NETWORK === 'devnet'
+    ? [alephiumDevnetConfig.bridgeTokens, ethereumDevnetConfig.bridgeTokens]
+    : process.env.NETWORK === 'testnet'
+    ? [alephiumTestnetConfig.bridgeTokens, ethereumTestnetConfig.bridgeTokens]
+    : [alephiumMainnetConfig.bridgeTokens, ethereumMainnetConfig.bridgeTokens]
+  
+  const alphTokens = alphBridgeTokens.map(token => {
+    return {
+      chainId: CHAIN_ID_ALEPHIUM,
+      address: token,
+      minimalFee: 0n
     }
   })
+  const ethTokens = ethBridgeTokens.map(token => {
+    return {
+      chainId: CHAIN_ID_ETH,
+      address: token,
+      minimalFee: 0n
+    }
+  })
+  return Array.prototype.concat(alphTokens, ethTokens)
 }
 
 //Polygon is not supported on local Tilt network atm.
@@ -339,60 +398,58 @@ export function loadChainConfig(field: string, isRelayer: boolean): ChainConfigI
       throw new Error("Invalid chain config: " + element);
     }
 
-    if (element.chainId === CHAIN_ID_TERRA) {
-      supportedChains.push(createTerraChainConfig(element, isRelayer))
-    } else if (element.chainId === CHAIN_ID_ALEPHIUM) {
+    if (element.chainId === CHAIN_ID_ALEPHIUM) {
       supportedChains.push(createAlephiumChainConfig(element, isRelayer))
-    } else {
+    } else if (element.chainId === CHAIN_ID_ETH) {
       supportedChains.push(createEvmChainConfig(element, isRelayer))
+    } else {
+      throw new Error(`Invalid chain id: ${element.chainId}`)
     }
   });
 
   return supportedChains;
 }
 
-function createTerraChainConfig(config: any, isRelayer: boolean): TerraChainConfigInfo {
-  const chainConfig = createChainConfig(config, isRelayer)
-  const terraName = (config.terraName ?? invalidConfigField('terraName')) as string
-  const terraChainId = (config.terraChainId ?? invalidConfigField('terraChainId')) as string
-  const terraCoin = (config.terraCoin ?? invalidConfigField('terraCoin')) as string
-  const terraGasPriceUrl = (config.terraGasPriceUrl ?? invalidConfigField('terraGasPriceUrl')) as string
-  return {
-    ...chainConfig,
-    terraName,
-    terraChainId,
-    terraCoin,
-    terraGasPriceUrl
-  }
-}
-
 function createEvmChainConfig(config: any, isRelayer: boolean): EthereumChainConfigInfo {
   const chainConfig = createChainConfig(config, isRelayer)
   const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
-  const coreBridgeAddress = (config.coreBridgeAddress ?? invalidConfigField('coreBridgeAddress')) as string
-  const wrappedNativeAsset = (config.wrappedNativeAsset ?? invalidConfigField('wrappedNativeAsset')) as string
+  const ethereumConfig = process.env.NETWORK === 'devnet'
+    ? ethereumDevnetConfig
+    : process.env.NETWORK === 'testnet'
+    ? ethereumTestnetConfig
+    : ethereumMainnetConfig
+  const tokenBridgeAddress = ethereumConfig.contracts.tokenBridge
+  const wrappedNativeAsset = ethereumConfig.contracts.weth
+  const coreBridgeAddress = ethereumConfig.contracts.governance
   return {
     ...chainConfig,
-    chainName,
+    tokenBridgeAddress,
     coreBridgeAddress,
+    chainName,
     wrappedNativeAsset
   }
 }
 
 function createAlephiumChainConfig(config: any, isRelayer: boolean): AlephiumChainConfigInfo {
   const chainConfig = createChainConfig(config, isRelayer)
-  const groupIndex = (config.groupIndex ?? invalidConfigField('groupIndex')) as number
+  const alephiumConfig = process.env.NETWORK === 'devnet'
+    ? alephiumDevnetConfig
+    : process.env.NETWORK === 'testnet'
+    ? alephiumTestnetConfig
+    : alephiumMainnetConfig
+  const groupIndex = alephiumConfig.groupIndex
+  const tokenBridgeAddress = alephiumConfig.contracts.tokenBridge
   return {
     ...chainConfig,
+    tokenBridgeAddress,
     groupIndex
   }
 }
 
-function createChainConfig(config: any, isRelayer: boolean): ChainConfigInfo {
+function createChainConfig(config: any, isRelayer: boolean): Omit<ChainConfigInfo, 'tokenBridgeAddress'> {
   const chainId = (config.chainId ?? invalidConfigField('chainId')) as ChainId
   const nativeCurrencySymbol = (config.nativeCurrencySymbol ?? invalidConfigField('nativeCurrencySymbol')) as string
   const nodeUrl = (config.nodeUrl ?? invalidConfigField('nodeUrl')) as string
-  const tokenBridgeAddress = (config.tokenBridgeAddress ?? invalidConfigField('tokenBridgeAddress')) as string
   let walletPrivateKeys: any = config.walletPrivateKeys
   let walletAddresses: any = config.walletAddresses
   if (isRelayer) {
@@ -411,7 +468,6 @@ function createChainConfig(config: any, isRelayer: boolean): ChainConfigInfo {
     chainId,
     nativeCurrencySymbol,
     nodeUrl,
-    tokenBridgeAddress,
     walletPrivateKeys,
     walletAddresses,
   }
