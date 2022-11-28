@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	network        = flag.String("network", "", "Network type (devnet, testnet, mainnet)")
 	adminRPC       = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
 	shouldBackfill = flag.Bool("backfill", true, "Backfill missing sequences")
 	onlyChain      = flag.String("only", "", "Only check this chain")
@@ -33,6 +34,19 @@ func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, 
 
 func main() {
 	flag.Parse()
+
+	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
+	if err != nil {
+		log.Fatalf("failed to read configs, network: %s", *network)
+	}
+
+	emitterAddresses := []struct {
+		ChainID vaa.ChainID
+		Emitter string
+	}{
+		{vaa.ChainIDEthereum, bridgeConfig.Ethereum.TokenBridgeEmitterAddress},
+		{vaa.ChainIDAlephium, bridgeConfig.Alephium.TokenBridgeEmitterAddress},
+	}
 
 	if *targetChain > math.MaxUint16 {
 		log.Fatalf("invalid target chain id: %d", *targetChain)
@@ -54,7 +68,7 @@ func main() {
 		}
 	}
 
-	for _, emitter := range common.KnownEmitters {
+	for _, emitter := range emitterAddresses {
 		if only != vaa.ChainIDUnset {
 			if emitter.ChainID != only {
 				continue
@@ -68,7 +82,7 @@ func main() {
 			TargetChain:    uint32(*targetChain),
 			EmitterAddress: emitter.Emitter,
 			RpcBackfill:    *shouldBackfill,
-			BackfillNodes:  common.PublicRPCEndpoints,
+			BackfillNodes:  bridgeConfig.Guardian.GuardianUrls,
 		}
 		resp, err := admin.FindMissingMessages(ctx, &msg)
 		if err != nil {

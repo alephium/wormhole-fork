@@ -28,38 +28,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-var etherscanAPIMap = map[vaa.ChainID]string{
-	vaa.ChainIDEthereum:  "https://api.etherscan.io/api",
-	vaa.ChainIDBSC:       "https://api.bscscan.com/api",
-	vaa.ChainIDAvalanche: "https://api.snowtrace.io/api",
-	vaa.ChainIDPolygon:   "https://api.polygonscan.com/api",
-	vaa.ChainIDOasis:     "https://explorer.emerald.oasis.dev/api",
-	vaa.ChainIDAurora:    "https://explorer.mainnet.aurora.dev/api",
-	vaa.ChainIDFantom:    "https://api.ftmscan.com/api",
-	vaa.ChainIDKarura:    "https://blockscout.karura.network/api",
-	vaa.ChainIDAcala:     "https://blockscout.acala.network/api",
-	// NOTE: Not sure what should be here for Klaytn, since they use: https://scope.klaytn.com/
-	vaa.ChainIDCelo: "https://celoscan.xyz/api",
-}
-
-var coreContractMap = map[vaa.ChainID]string{
-	vaa.ChainIDEthereum:  "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B",
-	vaa.ChainIDBSC:       "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B",
-	vaa.ChainIDAvalanche: "0x54a8e5f9c4CbA08F9943965859F6c34eAF03E26c",
-	vaa.ChainIDPolygon:   "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7",
-	vaa.ChainIDOasis:     "0xfe8cd454b4a1ca468b57d79c0cc77ef5b6f64585", // <- converted to all lower case for easy compares
-	vaa.ChainIDAurora:    "0xa321448d90d4e5b0a732867c18ea198e75cac48e",
-	vaa.ChainIDFantom:    strings.ToLower("0x126783A6Cb203a3E35344528B26ca3a0489a1485"),
-	vaa.ChainIDKarura:    strings.ToLower("0xa321448d90d4e5b0A732867c18eA198e75CAC48E"),
-	vaa.ChainIDAcala:     strings.ToLower("0xa321448d90d4e5b0A732867c18eA198e75CAC48E"),
-	vaa.ChainIDKlaytn:    strings.ToLower("0x0C21603c4f3a6387e241c0091A7EA39E43E90bb7"),
-	vaa.ChainIDCelo:      strings.ToLower("0xa321448d90d4e5b0A732867c18eA198e75CAC48E"),
-}
+const EtherscanAPI = "https://api.etherscan.io/api"
 
 var (
+	network      = flag.String("network", "", "Network type (devnet, testnet, mainnet)")
 	adminRPC     = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
 	etherscanKey = flag.String("etherscanKey", "", "Etherscan API Key")
-	chain        = flag.String("chain", "ethereum", "Eth Chain name")
 	targetChain  = flag.Uint("targetChain", 0, "VAA target chain id")
 	dryRun       = flag.Bool("dryRun", true, "Dry run")
 	step         = flag.Uint64("step", 10000, "Step")
@@ -80,10 +54,6 @@ func addUserAgent(req *http.Request) *http.Request {
 		"User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
 	)
 	return req
-}
-
-func usesBlockscout(chainId vaa.ChainID) bool {
-	return chainId == vaa.ChainIDOasis || chainId == vaa.ChainIDAurora || chainId == vaa.ChainIDKarura || chainId == vaa.ChainIDAcala
 }
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, nodev1.NodePrivilegedServiceClient) {
@@ -132,15 +102,10 @@ type logResponse struct {
 	Result json.RawMessage `json:"result"`
 }
 
-func getCurrentHeight(chainId vaa.ChainID, ctx context.Context, c *http.Client, api, key string, showErr bool) (uint64, error) {
+func getCurrentHeight(ctx context.Context, c *http.Client, api, key string, showErr bool) (uint64, error) {
 	var req *http.Request
 	var err error
-	if usesBlockscout(chainId) {
-		// This is the BlockScout based explorer leg
-		req, err = http.NewRequest("GET", fmt.Sprintf("%s?module=block&action=eth_block_number", api), nil)
-	} else {
-		req, err = http.NewRequest("GET", fmt.Sprintf("%s?module=proxy&action=eth_blockNumber&apikey=%s", api, key), nil)
-	}
+	req, err = http.NewRequest("GET", fmt.Sprintf("%s?module=proxy&action=eth_blockNumber&apikey=%s", api, key), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -172,19 +137,12 @@ func getCurrentHeight(chainId vaa.ChainID, ctx context.Context, c *http.Client, 
 	return hexutil.DecodeUint64(r.Result)
 }
 
-func getLogs(chainId vaa.ChainID, ctx context.Context, c *http.Client, api, key, contract, topic0 string, from, to string, showErr bool) ([]*logEntry, error) {
+func getLogs(ctx context.Context, c *http.Client, api, key, contract, topic0 string, from, to string, showErr bool) ([]*logEntry, error) {
 	var req *http.Request
 	var err error
-	if usesBlockscout(chainId) {
-		// This is the BlockScout based explorer leg
-		req, err = http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(
-			"%s?module=logs&action=getLogs&fromBlock=%s&toBlock=%s&topic0=%s",
-			api, from, to, topic0), nil)
-	} else {
-		req, err = http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(
-			"%s?module=logs&action=getLogs&fromBlock=%s&toBlock=%s&address=%s&topic0=%s&apikey=%s",
-			api, from, to, contract, topic0, key), nil)
-	}
+	req, err = http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(
+		"%s?module=logs&action=getLogs&fromBlock=%s&toBlock=%s&address=%s&topic0=%s&apikey=%s",
+		api, from, to, contract, topic0, key), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -223,50 +181,27 @@ func getLogs(chainId vaa.ChainID, ctx context.Context, c *http.Client, api, key,
 		return nil, fmt.Errorf("failed to unmarshal log entry: %w", err)
 	}
 
-	if usesBlockscout(chainId) {
-		// Because of a bug in BlockScout based explorers we need to check the address
-		// in the log to see if it is the core bridge
-		var filtered []*logEntry
-		for _, logLine := range logs {
-			// Check value of address in log
-			if logLine.Address == contract {
-				filtered = append(filtered, logLine)
-			}
-		}
-		logs = filtered
-	}
-
 	return logs, nil
 }
 
 func main() {
 	flag.Parse()
 
+	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
+	if err != nil {
+		log.Fatalf("failed to read configs, network: %s", *network)
+	}
+
 	if *targetChain > math.MaxUint16 {
 		log.Fatalf("invalid target chain id: %d", *targetChain)
 	}
 
-	chainID, err := vaa.ChainIDFromString(*chain)
-	if err != nil {
-		log.Fatalf("Invalid chain: %v", err)
-	}
-
 	if *etherscanKey == "" {
 		// BlockScout based explorers don't require an ether scan key
-		if !usesBlockscout(chainID) {
-			log.Fatal("Etherscan API Key is required")
-		}
+		log.Fatal("Etherscan API Key is required")
 	}
 
-	etherscanAPI, ok := etherscanAPIMap[chainID]
-	if !ok {
-		log.Fatalf("Unsupported chain: %v", err)
-	}
-
-	coreContract, ok := coreContractMap[chainID]
-	if !ok {
-		panic("no core contract")
-	}
+	coreContract := bridgeConfig.Ethereum.Contracts.Governance
 	ctx := context.Background()
 
 	jar, err := cookiejar.New(nil)
@@ -276,7 +211,7 @@ func main() {
 	httpClient := &http.Client{
 		Jar: jar,
 	}
-	currentHeight, err := getCurrentHeight(chainID, ctx, httpClient, etherscanAPI, *etherscanKey, *showError)
+	currentHeight, err := getCurrentHeight(ctx, httpClient, EtherscanAPI, *etherscanKey, *showError)
 	if err != nil {
 		log.Fatalf("Failed to get current height: %v", err)
 	}
@@ -291,65 +226,49 @@ func main() {
 		log.Fatalf("failed to get admin client: %v", err)
 	}
 
-	// A polygon VAA that was not reobserved before the blocks aged out of guardian rpc nodes
-	ignoreAddress, _ := vaa.StringToAddress("0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde")
-	polygonIgnoredVaa := db.VAAID{
-		Sequence:       6840,
-		EmitterChain:   vaa.ChainIDPolygon,
-		EmitterAddress: ignoreAddress,
+	contract := eth_common.HexToAddress(bridgeConfig.Ethereum.Contracts.TokenBridge)
+	emitterAddress := bridgeConfig.Ethereum.TokenBridgeEmitterAddress
+
+	log.Printf("Requesting missing messages for %s (%v)", emitterAddress, contract)
+
+	guardianPublicEndpoints := bridgeConfig.Guardian.GuardianUrls
+	msg := nodev1.FindMissingMessagesRequest{
+		EmitterChain:   uint32(vaa.ChainIDEthereum),
+		TargetChain:    uint32(*targetChain),
+		EmitterAddress: emitterAddress,
+		RpcBackfill:    true,
+		BackfillNodes:  guardianPublicEndpoints,
+	}
+	resp, err := admin.FindMissingMessages(ctx, &msg)
+	if err != nil {
+		log.Fatalf("failed to run find FindMissingMessages RPC: %v", err)
 	}
 
-	for _, emitter := range common.KnownEmitters {
-		if emitter.ChainID != chainID {
-			continue
-		}
-
-		contract := eth_common.HexToAddress(emitter.Emitter)
-
-		log.Printf("Requesting missing messages for %s (%v)", emitter.Emitter, contract)
-
-		msg := nodev1.FindMissingMessagesRequest{
-			EmitterChain:   uint32(chainID),
-			TargetChain:    uint32(*targetChain),
-			EmitterAddress: emitter.Emitter,
-			RpcBackfill:    true,
-			BackfillNodes:  common.PublicRPCEndpoints,
-		}
-		resp, err := admin.FindMissingMessages(ctx, &msg)
+	msgs := []*db.VAAID{}
+	for _, id := range resp.MissingMessages {
+		fmt.Println(id)
+		vId, err := db.VaaIDFromString(id)
 		if err != nil {
-			log.Fatalf("failed to run find FindMissingMessages RPC: %v", err)
+			log.Fatalf("failed to parse VAAID: %v", err)
 		}
+		msgs = append(msgs, vId)
+	}
 
-		msgs := []*db.VAAID{}
-		for _, id := range resp.MissingMessages {
-			fmt.Println(id)
-			vId, err := db.VaaIDFromString(id)
-			if err != nil {
-				log.Fatalf("failed to parse VAAID: %v", err)
-			}
-			if *vId == polygonIgnoredVaa {
-				log.Printf("Ignored message: %+v", &polygonIgnoredVaa)
-				continue
-			}
-			msgs = append(msgs, vId)
-		}
+	if len(msgs) == 0 {
+		log.Printf("No missing messages found for %s", emitterAddress)
+		return
+	}
 
-		if len(msgs) == 0 {
-			log.Printf("No missing messages found for %s", emitter.Emitter)
-			continue
-		}
+	lowest := msgs[0].Sequence
+	highest := msgs[len(msgs)-1].Sequence
 
-		lowest := msgs[0].Sequence
-		highest := msgs[len(msgs)-1].Sequence
+	log.Printf("Found %d missing messages for %s: %d – %d", len(msgs), emitterAddress, lowest, highest)
 
-		log.Printf("Found %d missing messages for %s: %d – %d", len(msgs), emitter.Emitter, lowest, highest)
-
-		if _, ok := missingMessages[contract]; !ok {
-			missingMessages[contract] = make(map[uint64]bool)
-		}
-		for _, msg := range msgs {
-			missingMessages[contract][msg.Sequence] = true
-		}
+	if _, ok := missingMessages[contract]; !ok {
+		missingMessages[contract] = make(map[uint64]bool)
+	}
+	for _, msg := range msgs {
+		missingMessages[contract][msg.Sequence] = true
 	}
 
 	// Press enter to continue if not in dryRun mode
@@ -392,7 +311,7 @@ func main() {
 
 		log.Printf("Requesting logs from block %s to %s", from, to)
 
-		logs, err := getLogs(chainID, ctx, c, etherscanAPI, *etherscanKey, coreContract, tokenLockupTopic.Hex(), from, to, *showError)
+		logs, err := getLogs(ctx, c, EtherscanAPI, *etherscanKey, coreContract, tokenLockupTopic.Hex(), from, to, *showError)
 		if err != nil {
 			log.Fatalf("failed to get logs: %v", err)
 		}
@@ -469,21 +388,25 @@ func main() {
 
 			_, err = admin.SendObservationRequest(ctx, &nodev1.SendObservationRequestRequest{
 				ObservationRequest: &gossipv1.ObservationRequest{
-					ChainId: uint32(chainID),
+					ChainId: uint32(vaa.ChainIDEthereum),
 					TxHash:  tx.Bytes(),
 				}})
 			if err != nil {
 				log.Fatalf("SendObservationRequest: %v", err)
 			}
 
+			emitterAddressHex := hex.EncodeToString(eth_common.LeftPadBytes(emitter.Bytes(), 32))
 			for i := 0; i < 10; i++ {
 				log.Printf("verifying %d", seq)
-				req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(
-					"%s/v1/signed_vaa/%d/%s/%d",
-					common.PublicRPCEndpoints[0],
-					chainID,
-					hex.EncodeToString(eth_common.LeftPadBytes(emitter.Bytes(), 32)),
-					seq), nil)
+				reqUrl := fmt.Sprintf(
+					"%s/v1/signed_vaa/%d/%s/%d/%d",
+					guardianPublicEndpoints[0],
+					vaa.ChainIDEthereum,
+					emitterAddressHex,
+					targetChain,
+					seq,
+				)
+				req, err := http.NewRequestWithContext(ctx, "GET", reqUrl, nil)
 				if err != nil {
 					panic(err)
 				}
