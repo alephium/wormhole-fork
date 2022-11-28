@@ -15,7 +15,7 @@ RUN mkdir /configs
 COPY ./configs /configs
 
 WORKDIR /app
-COPY . .
+COPY ./bridge_ui .
 COPY --from=deps /app/node_modules ./node_modules
 ENV NODE_OPTIONS=--openssl-legacy-provider
 ARG network="devnet"
