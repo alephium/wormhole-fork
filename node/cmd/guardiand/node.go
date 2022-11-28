@@ -390,6 +390,12 @@ func runNode(cmd *cobra.Command, args []string) {
 	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
 	alphGroupIndex := alphConfig.GroupIndex
 
+	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
+	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
+	if err != nil {
+		logger.Fatal("invalid governance emitter address", zap.String("address", bridgeConfig.Guardian.GovernanceEmitterAddress), zap.Error(err))
+	}
+
 	// In devnet mode, we automatically set a number of flags that rely on deterministic keys.
 	if unsafeDevMode {
 
@@ -696,7 +702,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	// local admin service socket
-	adminService, err := adminServiceRunnable(logger, *adminSocketPath, injectC, signedInC, obsvReqSendC, db, gst)
+	adminService, err := adminServiceRunnable(logger, *adminSocketPath, injectC, signedInC, obsvReqSendC, db, gst, governanceChainId, governanceEmitterAddress)
 	if err != nil {
 		logger.Fatal("failed to create admin service socket", zap.Error(err))
 	}
@@ -750,6 +756,8 @@ func runNode(cmd *cobra.Command, args []string) {
 			gst,
 			attestationEvents,
 			notifier,
+			governanceChainId,
+			governanceEmitterAddress,
 		)
 		if err := supervisor.Run(ctx, "processor", p.Run); err != nil {
 			return err

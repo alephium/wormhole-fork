@@ -9,6 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var GovernanceEmitter = vaa.Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
+var GovernanceChain = vaa.ChainIDAlephium
+
 func randomAddress() vaa.Address {
 	var addr vaa.Address
 	rand.Read(addr[:])
@@ -80,8 +83,8 @@ func TestFindEmitterSequenceGap(t *testing.T) {
 func randomGovernanceVAA(targetChainId vaa.ChainID) *vaa.VAA {
 	return &vaa.VAA{
 		Version:        1,
-		EmitterChain:   vaa.GovernanceChain,
-		EmitterAddress: vaa.GovernanceEmitter,
+		EmitterChain:   GovernanceChain,
+		EmitterAddress: GovernanceEmitter,
 		TargetChain:    targetChainId,
 		Sequence:       rand.Uint64(),
 		Signatures:     []*vaa.Signature{randomSignature()},
@@ -100,7 +103,7 @@ func TestMaxGovernanceVAASequence(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 
-	maxSeq, err := db.MaxGovernanceVAASequence()
+	maxSeq, err := db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
 	assert.Nil(t, err)
 	assert.Equal(t, *maxSeq, uint64(0))
 
@@ -119,7 +122,7 @@ func TestMaxGovernanceVAASequence(t *testing.T) {
 	}
 	sortSequences(sequences0)
 	maxSequence0 := sequences0[len(sequences0)-1]
-	maxSeq, err = db.MaxGovernanceVAASequence()
+	maxSeq, err = db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
 	assert.Nil(t, err)
 	assert.Equal(t, *maxSeq, maxSequence0)
 
@@ -134,7 +137,7 @@ func TestMaxGovernanceVAASequence(t *testing.T) {
 	}
 	sortSequences(sequences1)
 	maxSequence1 := sequences1[len(sequences1)-1]
-	maxSeq, err = db.MaxGovernanceVAASequence()
+	maxSeq, err = db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
 	assert.Nil(t, err)
 	assert.Equal(t, *maxSeq, maxU64(maxSequence0, maxSequence1))
 }

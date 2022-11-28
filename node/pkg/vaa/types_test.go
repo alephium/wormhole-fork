@@ -96,10 +96,12 @@ func TestBodyRegisterChain_Serialize(t *testing.T) {
 }
 
 func TestBodyRegisterChain_Serializee(t *testing.T) {
+	var governanceEmitterAddress = Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
+	var governanceChainId = ChainIDSolana
 	payload, _ := hex.DecodeString("000000000000000000000000000000000000000000546f6b656e42726964676501000000080102030400000000000000000000000000000000000000000000000000000000")
 	key, _ := crypto.HexToECDSA("cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0")
 	timestamp := time.Unix(0, 0)
-	vaa := CreateGovernanceVAA(timestamp, 12, 38, ChainIDEthereum, 1, payload)
+	vaa := CreateGovernanceVAA(governanceChainId, governanceEmitterAddress, timestamp, 12, 38, ChainIDEthereum, 1, payload)
 	vaa.AddSignature(key, 0)
 	vaaData, _ := vaa.Marshal()
 	require.Equal(t, "0100000001010034871608908f592f41a50403cf4cc8d22cb03b32fa00279eaa5df5398fc0a87a6ec53189837ed9c44931528d26c8b44d7d9a3270a6f48ec9923ddf164601bdef00000000000000000c000100020000000000000000000000000000000000000000000000000000000000000004000000000000002620000000000000000000000000000000000000000000546f6b656e42726964676501000000080102030400000000000000000000000000000000000000000000000000000000", hex.EncodeToString(vaaData))
