@@ -32,9 +32,7 @@ docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
 docker build --target node-export -f Dockerfile.proto -o type=local,dest=. .
 
 # Build guardian image (used for both guardian & spy)
-pushd node
-docker build . -t alephium/guardiand:$VERSION --build-arg network=$network
-popd
+docker build -f ./node/Dockerfile . -t alephium/guardiand:$VERSION --build-arg network=$network
 
 ## Build eth-node image
 docker build -f ./ethereum/Dockerfile . -t alephium/eth-node:$VERSION
@@ -42,11 +40,7 @@ docker build -f ./ethereum/Dockerfile . -t alephium/eth-node:$VERSION
 docker build -f ./alephium/Dockerfile . -t alephium/alephium-contracts:$VERSION
 
 ## Build Bridge UI
-pushd bridge_ui
-docker build . -t alephium/bridge-ui:$VERSION --build-arg network=$network
-popd
+docker build -f ./bridge_ui/Dockerfile . -t alephium/bridge-ui:$VERSION --build-arg network=$network
 
 ## Build Wormhole Explorer
-pushd explorer
-docker build . -t alephium/wormhole-explorer:$VERSION
-popd
+docker build -f ./explorer/Dockerfile . -t alephium/wormhole-explorer:$VERSION
