@@ -25,7 +25,7 @@ Contract WrappedAlphPool(
         return payload
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = false)
     pub fn receiveWrappedAlph(fromAddress: Address, totalAmount: U256) -> () {
         checkCaller!(callerContractId!() == bridgeTokenId, ErrorCodes.InvalidCaller)
         transferTokenToSelf!(fromAddress, bridgeTokenId, totalAmount)

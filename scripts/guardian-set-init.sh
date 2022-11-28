@@ -69,15 +69,15 @@ guardiansKeyNameCSV=$( echo ${guardiansKeyName} | jq --raw-output -c  '. | join(
 # write the lists of keys to the env files
 upsert_env_file $ethFile "INIT_SIGNERS_KEYS_JSON" $guardiansPrivate
 
-# create update guardian set vaa if the numGuardians > 1
+# create guardian set upgrade vaa if the numGuardians > 1
 if [[ "${numGuardians}" -gt "1" ]]; then
-    echo "creating update guardian set vaa"
+    echo "creating guardian set upgrade vaa"
     newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.devnetGuardians[:$lastIndex] | [.[].public[2:]]' $addressesJson)
     newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
-    updateGuardianSetVAA=$(npm --prefix clients/js start --silent -- generate update-guardian-set -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
-    updateGuardianSet="UPDATE_GUARDIAN_SET_VAA"
-    upsert_env_file $ethFile $updateGuardianSet $updateGuardianSetVAA
-    upsert_env_file $alphFile $updateGuardianSet $updateGuardianSetVAA
+    guardianSetUpgradeVAA=$(npm --prefix clients/js start --silent -- generate guardian-set-upgrade -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
+    guardianSetUpgrade="GUARDIAN_SET_UPGRADE_VAA"
+    upsert_env_file $ethFile $guardianSetUpgrade $guardianSetUpgradeVAA
+    upsert_env_file $alphFile $guardianSetUpgrade $guardianSetUpgradeVAA
 fi
 
 # 3) fetch and store the contract addresses that we need to make contract registration governance VAAs for:

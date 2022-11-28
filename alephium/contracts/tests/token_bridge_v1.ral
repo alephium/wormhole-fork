@@ -9,6 +9,6 @@ Contract TokenBridgeV1(
     @unused mut minimalConsistencyLevel: U256,
     @unused mut refundAddress: Address
 ) {
-  @using(readonly = true)
+  @using(updateFields = false)
   pub fn foo() -> () {}
 }

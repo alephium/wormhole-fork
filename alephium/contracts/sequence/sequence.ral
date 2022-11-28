@@ -5,7 +5,7 @@ Abstract Contract Sequence(
     mut secondNext256: U256,
     unexecutedSequenceTemplateId: ByteVec
 ) extends Constants() {
-    @using(readonly = true)
+    @using(updateFields = false)
     fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
         assert!(current & flag == 0, ErrorCodes.InvalidSequence)

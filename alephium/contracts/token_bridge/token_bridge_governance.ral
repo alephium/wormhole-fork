@@ -33,7 +33,7 @@ Abstract Contract TokenBridgeGovernance(
         return remoteChainId, remoteTokenBridgeId
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, updateFields = true)
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
 
@@ -72,6 +72,7 @@ Abstract Contract TokenBridgeGovernance(
         )
     }
 
+    @using(updateFields = true)
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -99,6 +100,7 @@ Abstract Contract TokenBridgeGovernance(
         }
     }
 
+    @using(updateFields = true)
     pub fn destroyUnexecutedSequenceContracts(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnexecutedSequences)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -113,6 +115,7 @@ Abstract Contract TokenBridgeGovernance(
         TokenBridgeForChain(tokenBridgeForChainId).destroyUnexecutedSequenceContracts(paths)
     }
 
+    @using(updateFields = true)
     pub fn updateMinimalConsistencyLevel(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateMinimalConsistencyLevel)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -121,11 +124,12 @@ Abstract Contract TokenBridgeGovernance(
         minimalConsistencyLevel = consistencyLevel
     }
 
-    @using(readonly = true, externalCallCheck = false)
+    @using(updateFields = false)
     pub fn getRefundAddress() -> Address {
         return refundAddress
     }
 
+    @using(updateFields = true)
     pub fn updateRefundAddress(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)

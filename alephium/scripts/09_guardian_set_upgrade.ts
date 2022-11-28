@@ -2,16 +2,16 @@ import { Project } from '@alephium/web3'
 import { Configuration, Deployer, DeployFunction, Network } from '@alephium/cli'
 import { Settings } from '../alephium.config'
 
-const updateGuardianSet: DeployFunction<Settings> = async (
+const guardianSetUpgrade: DeployFunction<Settings> = async (
   deployer: Deployer,
   network: Network<Settings>
 ): Promise<void> => {
-  if (network.settings.updateGuardianSetVAA !== undefined) {
+  if (network.settings.guardianSetUpgradeVAA !== undefined) {
     const script = Project.script('UpdateGuardianSet')
     const governanceContractId = deployer.getDeployContractResult('Governance').contractId
     const initialFields = {
       governance: governanceContractId,
-      vaa: network.settings.updateGuardianSetVAA
+      vaa: network.settings.guardianSetUpgradeVAA
     }
     await deployer.runScript(script, {
       initialFields: initialFields
@@ -19,6 +19,6 @@ const updateGuardianSet: DeployFunction<Settings> = async (
   }
 }
 
-updateGuardianSet.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
+guardianSetUpgrade.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
 
-export default updateGuardianSet
+export default guardianSetUpgrade

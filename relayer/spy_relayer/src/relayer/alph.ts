@@ -30,7 +30,6 @@ export async function relayAlph(
   logger.debug('Checking to see if vaa has already been redeemed.')
   const tokenBridgeForChainId = getTokenBridgeForChainId(chainConfigInfo.tokenBridgeAddress, emitterChainId)
   const alreadyRedeemed = await getIsTransferCompletedAlph(
-    signer.nodeProvider,
     tokenBridgeForChainId,
     groupIndex,
     signedVaaArray

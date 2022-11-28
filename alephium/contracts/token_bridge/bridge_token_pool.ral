@@ -5,7 +5,7 @@ Abstract Contract BridgeTokenPool(
     mut totalBridged: U256,
     decimals_: U256
 ) extends Math(), Constants(), TokenBridgeConstants() implements TokenPool {
-    @using(readonly = true)
+    @using(updateFields = false)
     fn prepareTransfer(
         callerContractId: ByteVec,
         toAddress: ByteVec,
@@ -32,7 +32,7 @@ Abstract Contract BridgeTokenPool(
         return payload, totalAmount
     }
 
-    @using(readonly = true)
+    @using(updateFields = false)
     fn prepareCompleteTransfer(
         callerContractId: ByteVec,
         emitterChainId: U256,

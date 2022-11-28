@@ -24,7 +24,7 @@ Contract AttestTokenHandler(
     return tokenId, symbol, name, decimals, msgSequence
   }
 
-  @using(preapprovedAssets = true)
+  @using(preapprovedAssets = true, updateFields = true)
   pub fn createRemoteTokenPool(
     vaa: ByteVec,
     payer: Address,
@@ -36,6 +36,7 @@ Contract AttestTokenHandler(
     )
   }
 
+  @using(updateFields = true)
   pub fn updateRemoteTokenPool(vaa: ByteVec) -> () {
     let (tokenId, symbol, name, _, msgSequence) = parseAttestToken(vaa)
     localTokenBridge.updateRemoteTokenPool(tokenId, remoteChainId, symbol, name, msgSequence)

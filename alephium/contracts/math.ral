@@ -1,5 +1,5 @@
 Abstract Contract Math() {
-    @using(readonly = true)
+    @using(updateFields = false)
     pub fn pow(x: U256, y: U256) -> (U256) {
         let mut result = 1
         for (let mut i = 0; i < y; i = i + 1) {
@@ -8,7 +8,7 @@ Abstract Contract Math() {
         return result
     }
 
-    @using(readonly = true)
+    @using(updateFields = false)
     pub fn normalizeAmount(amount: U256, decimals: U256) -> (U256) {
         if (decimals > 8) {
             return amount / pow(10, decimals - 8)
@@ -16,7 +16,7 @@ Abstract Contract Math() {
         return amount
     }
 
-    @using(readonly = true)
+    @using(updateFields = false)
     pub fn deNormalizeAmount(amount: U256, decimals: U256) -> (U256) {
         if (decimals > 8) {
             return amount * pow(10, decimals - 8)

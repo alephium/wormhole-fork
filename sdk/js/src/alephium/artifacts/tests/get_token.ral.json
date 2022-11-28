@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.0",
+  "version": "v1.5.3",
   "name": "GetToken",
   "bytecodeTemplate": "01010300000009{0}{2}a2{0}{2}0e0c{1}0100",
   "fieldsSig": {

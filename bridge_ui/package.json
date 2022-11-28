@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@alephium/walletconnect-provider": "0.2.0",
-    "@alephium/web3": "0.2.0",
-    "alephium-wormhole-sdk": "0.1.1-rc4",
+    "@alephium/web3": "0.2.2",
+    "alephium-wormhole-sdk": "0.1.0-rc15",
     "@alephium/get-extension-wallet": "0.4.0-rc.1",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",

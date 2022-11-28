@@ -1,4 +1,4 @@
 Contract Empty() {
-  @using(readonly = true)
+  @using(updateFields = false)
   pub fn foo() -> () {}
 }
