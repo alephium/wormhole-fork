@@ -71,18 +71,13 @@ services:
       - ws://eth-devnet:8545
       - --alphRPC
       - http://alph-full-node:22973
-      - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
-      - --alphGroupIndex
-      - "0"
-      - --alphMinConfirmations
-      - "1"
+      - --network
+      - "devnet"
       - --alphFetchPeriod
       - "1"
       - --devnetGuardianIndex
       - "0"
       - --integrationTest
-      - --unsafeDevMode
       - --publicRPC
       - "[::]:7070"
       - --publicWeb
@@ -109,18 +104,13 @@ services:
       - ws://eth-devnet:8545
       - --alphRPC
       - http://alph-full-node:22973
-      - --alphContractIds
-      - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
-      - --alphGroupIndex
-      - "0"
-      - --alphMinConfirmations
-      - "1"
+      - --network
+      - "devnet"
       - --alphFetchPeriod
       - "1"
       - --devnetGuardianIndex
       - "1"
       - --integrationTest
-      - --unsafeDevMode
       - --bootstrap
       - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
       - --publicRPC
