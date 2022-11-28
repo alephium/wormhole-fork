@@ -16,11 +16,12 @@ export type Settings = {
 }
 
 function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
-  const [alephiumConfig, guardianConfig] = network === 'devnet'
-    ? [alephiumDevnetConfig, guardianDevnetConfig]
-    : network === 'testnet'
-    ? [alephiumTestnetConfig, guardianTestnetConfig]
-    : [alephiumMainnetConfig, guardianMainnetConfig]
+  const [alephiumConfig, guardianConfig] =
+    network === 'devnet'
+      ? [alephiumDevnetConfig, guardianDevnetConfig]
+      : network === 'testnet'
+      ? [alephiumTestnetConfig, guardianTestnetConfig]
+      : [alephiumMainnetConfig, guardianMainnetConfig]
   return {
     initSigners: guardianConfig.initSigners as string[],
     chainId: alephiumConfig.chainId as number,
