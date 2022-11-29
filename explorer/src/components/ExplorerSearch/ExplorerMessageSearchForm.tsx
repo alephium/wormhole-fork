@@ -26,15 +26,7 @@ interface ExplorerMessageSearchValues {
 }
 
 const chains = [
-  { label: ChainID[1], value: chainIDs["solana"] },
   { label: ChainID[2], value: chainIDs["ethereum"] },
-  { label: ChainID[3], value: chainIDs["terra"] },
-  { label: ChainID[4], value: chainIDs["bsc"] },
-  { label: ChainID[5], value: chainIDs["polygon"] },
-  { label: ChainID[6], value: chainIDs["avalanche"] },
-  { label: ChainID[7], value: chainIDs["oasis"] },
-  { label: ChainID[9], value: chainIDs["aurora"] },
-  { label: ChainID[10], value: chainIDs["fantom"] },
   { label: ChainID[255], value: chainIDs["alephium"] },
 ];
 

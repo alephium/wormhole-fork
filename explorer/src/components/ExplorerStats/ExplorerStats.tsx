@@ -521,7 +521,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
                     imgStyle: { height: 110 },
                   },
                   {
-                    header: ChainID[13],
+                    header: ChainID[255],
                     src: alephiumIcon,
                     to: `${explorer}?emitterChain=255`,
                     description: (
