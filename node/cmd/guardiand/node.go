@@ -296,7 +296,6 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	unsafeDevMode := *network == "devnet"
-	testnetMode := *network == "testnet"
 	if unsafeDevMode {
 		fmt.Print(devwarning)
 	}
@@ -349,9 +348,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
-	if testnetMode || unsafeDevMode {
-		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
-	}
+	readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 
 	if *statusAddr != "" {
 		// Use a custom routing instead of using http.DefaultServeMux directly to avoid accidentally exposing packages
@@ -611,10 +608,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-
-	if unsafeDevMode {
-		chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
-	}
+	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
 
 	// Multiplex observation requests to the appropriate chain
 	go func() {
@@ -725,23 +719,21 @@ func runNode(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if testnetMode || unsafeDevMode {
-			// if err := supervisor.Run(ctx, "algorandwatch",
-			// 	algorand.NewWatcher(*algorandIndexerRPC, *algorandIndexerToken, *algorandAlgodRPC, *algorandAlgodToken, *algorandAppID, lockC, setC, chainObsvReqC[vaa.ChainIDAlgorand]).Run); err != nil {
-			// 	return err
-			// }
+		// if err := supervisor.Run(ctx, "algorandwatch",
+		// 	algorand.NewWatcher(*algorandIndexerRPC, *algorandIndexerToken, *algorandAlgodRPC, *algorandAlgodToken, *algorandAppID, lockC, setC, chainObsvReqC[vaa.ChainIDAlgorand]).Run); err != nil {
+		// 	return err
+		// }
 
-			alphWatcher, err := alephium.NewAlephiumWatcher(
-				*alphRPC, *alphApiKey, alphGroupIndex, alphGroupIndex, alphContracts, common.ReadinessAlephiumSyncing,
-				lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
-			)
-			if err != nil {
-				logger.Error("failed to create alephium watcher", zap.Error(err))
-				return err
-			}
-			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
-				logger.Error("failed to run alephium watcher", zap.Error((err)))
-			}
+		alphWatcher, err := alephium.NewAlephiumWatcher(
+			*alphRPC, *alphApiKey, alphGroupIndex, alphGroupIndex, alphContracts, common.ReadinessAlephiumSyncing,
+			lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
+		)
+		if err != nil {
+			logger.Error("failed to create alephium watcher", zap.Error(err))
+			return err
+		}
+		if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
+			logger.Error("failed to run alephium watcher", zap.Error((err)))
 		}
 
 		p := processor.NewProcessor(ctx,
