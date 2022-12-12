@@ -22,7 +22,6 @@ import {
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import {
-  transferAlphScript,
   transferLocalTokenScript,
   transferRemoteTokenScript
 } from "../alephium/token_bridge";
@@ -51,34 +50,7 @@ import {
   WSOL_ADDRESS,
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
-
-export async function transferAlph(
-  signerProvider: SignerProvider,
-  tokenBridgeId: string,
-  fromAddress: string,
-  toChainId: ChainId,
-  toAddress: string,
-  alphAmount: bigint,
-  arbiterFee: bigint,
-  consistencyLevel: number,
-  nonce?: string
-): Promise<BuildScriptTxResult> {
-  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const script = transferAlphScript()
-  return script.execute(signerProvider, {
-    initialFields: {
-      tokenBridge: tokenBridgeId,
-      fromAddress: fromAddress,
-      toChainId: BigInt(toChainId),
-      toAddress: toAddress,
-      alphAmount: alphAmount,
-      arbiterFee: arbiterFee,
-      nonce: nonceHex,
-      consistencyLevel: BigInt(consistencyLevel),
-    },
-    attoAlphAmount: alphAmount
-  })
-}
+import { ALPHTokenId } from "./alephium";
 
 export async function transferLocalTokenFromAlph(
   signerProvider: SignerProvider,
@@ -109,11 +81,8 @@ export async function transferLocalTokenFromAlph(
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
-    attoAlphAmount: messageFee,
-    tokens: [{
-      id: localTokenId,
-      amount: tokenAmount
-    }]
+    attoAlphAmount: localTokenId === ALPHTokenId ? messageFee + tokenAmount : messageFee,
+    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: tokenAmount }]
   })
 }
 

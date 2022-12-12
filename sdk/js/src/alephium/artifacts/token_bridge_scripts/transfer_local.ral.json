@@ -1,5 +1,5 @@
 {
-  "version": "v1.5.3",
+  "version": "v1.5.5",
   "name": "TransferLocal",
   "bytecodeTemplate": "01010300000014{1}7a{7}a2{2}{6}a3{1}{2}{3}{4}{5}{6}{8}{9}{10}13090c{0}010d",
   "fieldsSig": {

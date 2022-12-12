@@ -6,13 +6,13 @@ import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import {
   createLocalTokenPoolScript,
-  createRemoteTokenPoolScript,
-  createWrappedAlphPoolScript
+  createRemoteTokenPoolScript
 } from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
+import { ALPHTokenId } from "./alephium";
 
 export async function createRemoteTokenPoolOnAlph(
   signerProvider: SignerProvider,
@@ -49,26 +49,8 @@ export async function createLocalTokenPoolOnAlph(
       tokenId: localTokenId,
       alphAmount: alphAmount
     },
-    attoAlphAmount: alphAmount
-  })
-}
-
-export async function createWrappedAlphPool(
-  signerProvider: SignerProvider,
-  tokenBridgeId: string,
-  wrappedAlphId: string,
-  payer: string,
-  alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = createWrappedAlphPoolScript()
-  return script.execute(signerProvider, {
-    initialFields: {
-      payer: payer,
-      wrappedAlphId: wrappedAlphId,
-      tokenBridge: tokenBridgeId,
-      alphAmount: alphAmount
-    },
-    attoAlphAmount: alphAmount
+    attoAlphAmount: alphAmount,
+    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 
