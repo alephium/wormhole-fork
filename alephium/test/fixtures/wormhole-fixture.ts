@@ -11,7 +11,8 @@ import {
   binToHex,
   Project,
   NodeProvider,
-  encodeI256
+  encodeI256,
+  subContractId
 } from '@alephium/web3'
 
 export const web3 = new Web3()
@@ -308,4 +309,9 @@ export async function expectError<T>(func: () => Promise<T>, error: string) {
 
 export function chainIdToBytes(chainId: number): Uint8Array {
   return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
+}
+
+export function subContractIdWithGroup(parentContractId: string, path: string, groupIndex = 0): string {
+  const contractId = subContractId(parentContractId, path)
+  return contractId.slice(0, -2) + groupIndex.toString(16).padStart(2, '0')
 }

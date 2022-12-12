@@ -4,7 +4,6 @@ import {
   Output,
   TestContractResult,
   Token,
-  subContractId,
   ContractState,
   contractIdFromAddress,
   binToHex,
@@ -66,7 +65,8 @@ import {
   randomP2PKHAddressHex,
   randomP2MPKHAddressHex,
   randomP2SHAddressHex,
-  randomP2CAddressHex
+  randomP2CAddressHex,
+  subContractIdWithGroup
 } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as blake from 'blakejs'
@@ -984,7 +984,10 @@ describe('test token bridge', () => {
     expect(tokenPoolState.asset.alphAmount).toEqual(tokenPoolInitAsset.alphAmount)
     expect(tokenPoolState.asset.tokens).toEqual(tokenPoolInitAsset.tokens)
 
-    const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
+    const unexecutedSequenceContractId = subContractIdWithGroup(
+      fixture.tokenBridgeForChainInfo.contractId,
+      '0000000000000000'
+    )
     const unexecutedSequenceState = testResult.contracts.find((c) => c.contractId === unexecutedSequenceContractId)!
     expect(unexecutedSequenceState.fields['begin']).toEqual(0n)
     expect(unexecutedSequenceState.fields['sequences']).toEqual(0n)
@@ -1152,7 +1155,7 @@ describe('test token bridge', () => {
     const paths = [0, 1, 2, 5, 8]
     const subContracts: ContractState[] = []
     for (const path of paths) {
-      const unexecutedSequenceContractId = subContractId(
+      const unexecutedSequenceContractId = subContractIdWithGroup(
         fixture.tokenBridgeForChainInfo.contractId,
         zeroPad(path.toString(16), 8)
       )

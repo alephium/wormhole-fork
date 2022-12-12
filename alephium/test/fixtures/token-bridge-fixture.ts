@@ -2,7 +2,6 @@ import {
   Project,
   Contract,
   ContractState,
-  subContractId,
   Asset,
   stringToHex,
   addressFromContractId,
@@ -19,7 +18,8 @@ import {
   randomContractAddress,
   randomContractId,
   alph,
-  randomAssetAddress
+  randomAssetAddress,
+  subContractIdWithGroup
 } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUnexecutedSequence } from './sequence-fixture'
@@ -385,7 +385,7 @@ export function createTokenBridge(
 }
 
 function subContractAddress(parentId: string, pathHex: string): string {
-  return addressFromContractId(subContractId(parentId, pathHex))
+  return addressFromContractId(subContractIdWithGroup(parentId, pathHex))
 }
 
 export function chainIdHex(chainId: number): string {
