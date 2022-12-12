@@ -26,6 +26,7 @@ import { createUnexecutedSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
 export const minimalConsistencyLevel = 105n
+export const ALPHTokenId = ''.padStart(64, '0')
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0003_token_bridge.md
 export class AttestToken {
@@ -170,7 +171,6 @@ export function createTestToken(): ContractInfo {
 }
 
 export interface TemplateContracts {
-  wrappedAlphPoolTemplate: ContractInfo
   localTokenPoolTemplate: ContractInfo
   remoteTokenPoolTemplate: ContractInfo
   unexecutedSequenceTemplate: ContractInfo
@@ -182,7 +182,6 @@ export interface TemplateContracts {
 
 export class TokenBridgeInfo extends ContractInfo {
   governance: ContractInfo
-  wrappedAlphId: string
   templateContracts: TemplateContracts
 
   constructor(
@@ -191,12 +190,10 @@ export class TokenBridgeInfo extends ContractInfo {
     deps: ContractState[],
     address: string,
     governance: ContractInfo,
-    wrappedAlphId: string,
     templateContracts: TemplateContracts
   ) {
     super(contract, selfState, deps, address)
     this.governance = governance
-    this.wrappedAlphId = wrappedAlphId
     this.templateContracts = templateContracts
   }
 }
@@ -217,14 +214,12 @@ export class TokenBridgeForChainInfo extends ContractInfo {
 }
 
 function createTemplateContracts(): TemplateContracts {
-  const wrappedAlphPool = createWrappedAlphPoolTemplate()
   const localTokenPool = createLocalTokenPoolTemplate()
   const remoteTokenPool = createRemoteTokenPoolTemplate()
   const attestTokenHandler = createAttestTokenHandlerTemplate()
   const tokenBridgeForChain = createTokenBridgeForChainTemplate()
   const unexecutedSequence = createUnexecutedSequence(randomContractId(), 0n, 0n)
   return {
-    wrappedAlphPoolTemplate: wrappedAlphPool,
     localTokenPoolTemplate: localTokenPool,
     remoteTokenPoolTemplate: remoteTokenPool,
     attestTokenHandlerTemplate: attestTokenHandler,
@@ -233,7 +228,6 @@ function createTemplateContracts(): TemplateContracts {
 
     states(): ContractState[] {
       return [
-        wrappedAlphPool.selfState,
         localTokenPool.selfState,
         remoteTokenPool.selfState,
         attestTokenHandler.selfState,
@@ -255,34 +249,6 @@ function createContract(
   const contractAddress = typeof address === 'undefined' ? randomContractAddress() : address
   const state = contract.toState(initFields, asset, address)
   return new ContractInfo(contract, state, deps, contractAddress)
-}
-
-function createWrappedAlph(totalWrapped: bigint, wrappedAlphPoolCodeHash: string): ContractInfo {
-  const contractId = randomContractId()
-  const initAsset: Asset = {
-    alphAmount: totalWrapped,
-    tokens: [
-      {
-        id: contractId,
-        amount: totalWrapped
-      }
-    ]
-  }
-  const initFields = {
-    wrappedAlphPoolCodeHash: wrappedAlphPoolCodeHash,
-    totalWrapped: totalWrapped
-  }
-  return createContract('WrappedAlph', initFields, [], initAsset, addressFromContractId(contractId))
-}
-
-function createWrappedAlphPoolTemplate(): ContractInfo {
-  return createContract('WrappedAlphPool', {
-    tokenBridgeId: '',
-    tokenChainId: 0n,
-    bridgeTokenId: '',
-    totalBridged: 0n,
-    decimals_: 0n
-  })
 }
 
 function createLocalTokenPoolTemplate(): ContractInfo {
@@ -336,7 +302,6 @@ function createTokenBridgeForChainTemplate(): ContractInfo {
 export function createTokenBridgeFactory(templateContracts: TemplateContracts): ContractInfo {
   const tokenBridgeFactory = Project.contract('TokenBridgeFactory')
   const initFields = {
-    wrappedAlphPoolTemplateId: templateContracts.wrappedAlphPoolTemplate.contractId,
     localTokenPoolTemplateId: templateContracts.localTokenPoolTemplate.contractId,
     remoteTokenPoolTemplateId: templateContracts.remoteTokenPoolTemplate.contractId,
     tokenBridgeForChainTemplateId: templateContracts.tokenBridgeForChainTemplate.contractId,
@@ -349,15 +314,12 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
 }
 
 export function createTokenBridge(
-  totalWrappedAlph = 0n,
   address?: string,
   receivedSequence?: bigint,
   messageFee?: bigint
 ): TokenBridgeInfo {
   const tokenBridge = Project.contract('TokenBridge')
   const governance = createGovernance(undefined, messageFee)
-  const wrappedAlphPoolCodeHash = Project.contract('WrappedAlphPool').codeHash
-  const wrappedAlph = createWrappedAlph(totalWrappedAlph, wrappedAlphPoolCodeHash)
   const templateContracts = createTemplateContracts()
   const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
   const tokenBridgeAddress = typeof address === 'undefined' ? randomContractAddress() : address
@@ -366,20 +328,18 @@ export function createTokenBridge(
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
     receivedSequence: receivedSequence ?? 0n,
     sendSequence: 0n,
-    wrappedAlphId: wrappedAlph.contractId,
     tokenBridgeFactory: tokenBridgeFactory.contractId,
     minimalConsistencyLevel: minimalConsistencyLevel,
     refundAddress: randomAssetAddress()
   }
   const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
-  const deps = Array.prototype.concat(governance.states(), wrappedAlph.states(), tokenBridgeFactory.states())
+  const deps = Array.prototype.concat(governance.states(), tokenBridgeFactory.states())
   return new TokenBridgeInfo(
     tokenBridge,
     state,
     deps,
     tokenBridgeAddress,
     governance,
-    wrappedAlph.contractId,
     templateContracts
   )
 }
@@ -465,12 +425,6 @@ export interface TokenBridgeForChainFixture extends TokenBridgeFixture {
   tokenBridgeForChainInfo: TokenBridgeForChainInfo
 }
 
-export interface WrappedAlphPoolTestFixture extends TokenBridgeForChainFixture {
-  wrappedAlphPoolInfo: ContractInfo
-  totalWrappedAlph: bigint
-  totalBridged: bigint
-}
-
 export interface LocalTokenPoolTestFixture extends TokenBridgeForChainFixture {
   localTokenPoolInfo: ContractInfo
   localTokenId: string
@@ -491,66 +445,28 @@ export function newTokenBridgeFixture(): TokenBridgeFixture {
 
 export function newTokenBridgeForChainFixture(
   remoteChainId: number,
-  remoteTokenBridgeId: string
-): TokenBridgeForChainFixture {
-  const tokenBridgeInfo = createTokenBridge()
-  const tokenBridgeForChainInfo = createTokenBridgeForChain(tokenBridgeInfo, remoteChainId, remoteTokenBridgeId)
-  return { tokenBridgeInfo, tokenBridgeForChainInfo }
-}
-
-export function newWrappedAlphPoolFixture(
-  remoteChainId: number,
   remoteTokenBridgeId: string,
   messageFee?: bigint
-): WrappedAlphPoolTestFixture {
-  const totalWrappedAlph = alph(10)
-  const totalBridged = alph(10)
-  const tokenBridgeInfo = createTokenBridge(totalWrappedAlph, undefined, undefined, messageFee)
+): TokenBridgeForChainFixture {
+  const tokenBridgeInfo = createTokenBridge(undefined, undefined, messageFee)
   const tokenBridgeForChainInfo = createTokenBridgeForChain(tokenBridgeInfo, remoteChainId, remoteTokenBridgeId)
-  const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, tokenBridgeInfo.wrappedAlphId)
-  const asset: Asset = {
-    alphAmount: minimalAlphInContract,
-    tokens: [
-      {
-        id: tokenBridgeInfo.wrappedAlphId,
-        amount: totalBridged
-      }
-    ]
-  }
-  const wrappedAlphPoolInfo = createContract(
-    'WrappedAlphPool',
-    {
-      tokenBridgeId: tokenBridgeInfo.contractId,
-      tokenChainId: BigInt(CHAIN_ID_ALEPHIUM),
-      bridgeTokenId: tokenBridgeInfo.wrappedAlphId,
-      totalBridged: totalBridged,
-      decimals_: 0n
-    },
-    tokenBridgeForChainInfo.states(),
-    asset,
-    address
-  )
-  return { tokenBridgeInfo, tokenBridgeForChainInfo, wrappedAlphPoolInfo, totalWrappedAlph, totalBridged }
+  return { tokenBridgeInfo, tokenBridgeForChainInfo }
 }
 
 export function newLocalTokenPoolFixture(
   remoteChainId: number,
   remoteTokenBridgeId: string,
   localTokenId: string,
-  totalBridged: bigint = alph(10)
+  messageFee?: bigint
 ): LocalTokenPoolTestFixture {
-  const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId)
+  const totalBridged = alph(10)
+  const fixture = newTokenBridgeForChainFixture(remoteChainId, remoteTokenBridgeId, messageFee)
   const tokenBridgeInfo = fixture.tokenBridgeInfo
   const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
   const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, localTokenId)
   const asset: Asset = {
-    alphAmount: minimalAlphInContract,
-    tokens: [
-      {
-        id: localTokenId,
-        amount: totalBridged
-      }
-    ]
+    alphAmount: localTokenId === ALPHTokenId ? minimalAlphInContract + totalBridged : minimalAlphInContract,
+    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: totalBridged }]
   }
   const localTokenPoolInfo = createContract(
     'LocalTokenPool',

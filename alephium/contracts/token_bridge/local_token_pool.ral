@@ -5,7 +5,7 @@ Contract LocalTokenPool(
     mut totalBridged: U256,
     decimals_: U256 // should be 0
 ) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn transfer(
         fromAddress: Address,
         toAddress: ByteVec,
@@ -21,7 +21,7 @@ Contract LocalTokenPool(
         return payload
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn completeTransfer(
         emitterChainId: U256,
         amount: U256,
@@ -36,7 +36,7 @@ Contract LocalTokenPool(
         )
 
         if (caller != recipient) {
-            transferAlph!(caller, recipient, dustAmount!())
+            transferToken!(caller, recipient, ALPH, dustAmount!())
         }
         transferTokenFromSelf!(recipient, bridgeTokenId, transferAmount)
         if (arbiterFee > 0) {

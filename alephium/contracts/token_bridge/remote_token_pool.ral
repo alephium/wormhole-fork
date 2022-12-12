@@ -8,21 +8,19 @@ Contract RemoteTokenPool(
     decimals_: U256,
     mut sequence_: U256
 ) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
-    @using(updateFields = false)
     pub fn name() -> ByteVec {
         return name_
     }
 
-    @using(updateFields = false)
     pub fn symbol() -> ByteVec {
         return symbol_
     }
 
-    @using(updateFields = false)
     pub fn decimals() -> U256 {
         return decimals_
     }
 
+    @using(updateFields = true)
     pub fn updateDetails(symbol: ByteVec, name: ByteVec, sequence: U256) -> () {
         checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
         assert!(sequence_ < sequence, ErrorCodes.InvalidSequence)
@@ -31,7 +29,7 @@ Contract RemoteTokenPool(
         sequence_ = sequence
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn transfer(
         fromAddress: Address,
         toAddress: ByteVec,
@@ -47,7 +45,7 @@ Contract RemoteTokenPool(
         return payload
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn completeTransfer(
         emitterChainId: U256,
         amount: U256,
@@ -62,7 +60,7 @@ Contract RemoteTokenPool(
         )
 
         if (caller != recipient) {
-            transferAlph!(caller, recipient, dustAmount!())
+            transferToken!(caller, recipient, ALPH, dustAmount!())
         }
         let tokenId = selfTokenId!()
         transferTokenFromSelf!(recipient, tokenId, transferAmount)

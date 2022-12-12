@@ -12,8 +12,7 @@ TxScript TransferLocal(
     consistencyLevel: U256
 ) {
     tokenBridge.transferToken{
-        fromAddress -> messageFee,
-            localTokenId: tokenAmount
+        fromAddress -> ALPH: messageFee, localTokenId: tokenAmount
     }(
         fromAddress,
         localTokenId,

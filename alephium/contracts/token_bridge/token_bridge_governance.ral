@@ -17,6 +17,7 @@ Abstract Contract TokenBridgeGovernance(
       UpdateRefundAddress           = #f2
     }
 
+    @using(updateFields = true)
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
         let (msgSequence, targetChainId, payload) = governance.parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, TokenBridgeModule, action)
         receivedSequence = msgSequence + 1
@@ -33,7 +34,7 @@ Abstract Contract TokenBridgeGovernance(
         return remoteChainId, remoteTokenBridgeId
     }
 
-    @using(preapprovedAssets = true, updateFields = true)
+    @using(preapprovedAssets = true)
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
 
@@ -46,7 +47,7 @@ Abstract Contract TokenBridgeGovernance(
             0
         )
         let attestTokenHandlerPath = Path.AttestTokenHandler ++ remoteChainIdBytes
-        copyCreateSubContract!{payer -> createContractAlphAmount}(
+        copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             attestTokenHandlerPath,
             tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
             attestTokenHandlerFields
@@ -65,7 +66,7 @@ Abstract Contract TokenBridgeGovernance(
             0
         )
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
-        copyCreateSubContract!{payer -> createContractAlphAmount}(
+        copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             tokenBridgeForChainPath,
             tokenBridgeFactory.getTokenBridgeForChainTemplateId(),
             tokenBridgeForChainFields
@@ -100,7 +101,6 @@ Abstract Contract TokenBridgeGovernance(
         }
     }
 
-    @using(updateFields = true)
     pub fn destroyUnexecutedSequenceContracts(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnexecutedSequences)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -124,7 +124,7 @@ Abstract Contract TokenBridgeGovernance(
         minimalConsistencyLevel = consistencyLevel
     }
 
-    @using(updateFields = false)
+    @using(externalCallCheck = false)
     pub fn getRefundAddress() -> Address {
         return refundAddress
     }

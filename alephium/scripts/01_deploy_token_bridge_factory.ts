@@ -10,13 +10,6 @@ async function deployTemplateContract(deployer: Deployer, name: string, initialF
 }
 
 const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
-  const wrappedAlphPoolId = await deployTemplateContract(deployer, 'WrappedAlphPool', {
-    tokenBridgeId: '',
-    tokenChainId: 0n,
-    bridgeTokenId: '',
-    totalBridged: 0n,
-    decimals_: 0n
-  })
   const localTokenPoolId = await deployTemplateContract(deployer, 'LocalTokenPool', {
     tokenBridgeId: '',
     tokenChainId: 0n,
@@ -60,7 +53,6 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
   })
   const tokenBridgeFactory = Project.contract('TokenBridgeFactory')
   const initialFields = {
-    wrappedAlphPoolTemplateId: wrappedAlphPoolId,
     localTokenPoolTemplateId: localTokenPoolId,
     remoteTokenPoolTemplateId: remoteTokenPoolId,
     tokenBridgeForChainTemplateId: tokenBridgeForChainId,

@@ -5,14 +5,13 @@ Abstract Contract Sequence(
     mut secondNext256: U256,
     unexecutedSequenceTemplateId: ByteVec
 ) extends Constants() {
-    @using(updateFields = false)
     fn setExecuted(offset: U256, current: U256) -> U256 {
         let flag = 1 << offset
         assert!(current & flag == 0, ErrorCodes.InvalidSequence)
         return current | flag
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, updateFields = true)
     fn compact() -> () {
         if (firstNext256 != SequenceExecutedFlag) {
             let encodedState = encodeToByteVec!(
@@ -20,7 +19,7 @@ Abstract Contract Sequence(
                 start,
                 firstNext256
             )
-            copyCreateSubContract!{selfAddress!() -> 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
+            copyCreateSubContract!{selfAddress!() -> ALPH: 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
         }
         start = start + 256
         firstNext256 = secondNext256
@@ -33,6 +32,7 @@ Abstract Contract Sequence(
         UnexecutedSequence(unexecutedSequenceId).checkSequence(seq, selfAddress!())
     }
 
+    @using(updateFields = true)
     fn checkSequence(seq: U256) -> Bool {
         if (seq < start) {
             checkSequenceInSubContract(seq)

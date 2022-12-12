@@ -1,5 +1,5 @@
 Interface TokenPool {
-    @using(preapprovedAssets = true, assetsInContract = true)
+    @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn completeTransfer(
         emitterChainId: U256,
         amount: U256,

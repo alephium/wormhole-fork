@@ -7,6 +7,6 @@ TxScript AttestToken(
     consistencyLevel: U256
 ) {
     tokenBridge.attestToken{
-        payer -> messageFee, localTokenId: 1
+        payer -> ALPH: messageFee, localTokenId: 1
     }(payer, localTokenId, nonce, consistencyLevel)
 }

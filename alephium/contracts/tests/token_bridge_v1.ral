@@ -4,11 +4,9 @@ Contract TokenBridgeV1(
     @unused localChainId: U256,
     @unused mut receivedSequence: U256,
     @unused mut sendSequence: U256,
-    @unused wrappedAlphId: ByteVec,
     @unused tokenBridgeFactory: ByteVec,
     @unused mut minimalConsistencyLevel: U256,
     @unused mut refundAddress: Address
 ) {
-  @using(updateFields = false)
   pub fn foo() -> () {}
 }

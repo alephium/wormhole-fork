@@ -1,8 +1,0 @@
-TxScript CreateWrappedAlphPool(
-    payer: Address,
-    tokenBridge: TokenBridge,
-    wrappedAlphId: ByteVec,
-    alphAmount: U256
-) {
-    tokenBridge.createLocalTokenPool{payer -> alphAmount}(wrappedAlphId, payer, alphAmount)
-}

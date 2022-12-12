@@ -9,6 +9,5 @@ Contract GovernanceV1(
     @unused mut guardianSetIndexes: [U256; 2],
     @unused mut previousGuardianSetExpirationTimeMS: U256
 ) {
-  @using(updateFields = false)
   pub fn foo() -> () {}
 }

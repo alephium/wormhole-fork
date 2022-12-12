@@ -13,8 +13,7 @@ TxScript TransferRemote(
     consistencyLevel: U256
 ) {
     tokenBridge.transferToken{
-        fromAddress -> messageFee,
-            tokenPoolId: tokenAmount
+        fromAddress -> ALPH: messageFee, tokenPoolId: tokenAmount
     }(
         fromAddress,
         remoteTokenId,
