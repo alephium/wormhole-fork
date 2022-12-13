@@ -19,9 +19,7 @@ import {
   signVAABody
 } from "alephium-wormhole-sdk";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { executeGovernanceSolana } from "./solana";
 import { executeGovernanceEvm } from "./evm";
-import { executeGovernanceTerra } from "./terra";
 import { impossible } from "./utils";
 import {
   assertChain,
@@ -401,9 +399,9 @@ yargs(hideBin(process.argv))
       } else if (isEVMChain(chain)) {
         await executeGovernanceEvm(parsedVaa.body.payload, buf, network, chain, nodeUrl);
       } else if (chain === "terra") {
-        await executeGovernanceTerra(parsedVaa.body.payload, buf, network);
+        throw Error("Terra is not supported yet");
       } else if (chain === "solana") {
-        await executeGovernanceSolana(parsedVaa, buf, network);
+        throw Error("Solana is not supported yet");
       } else if (chain === "algorand") {
         throw Error("Algorand is not supported yet");
       } else if (chain === "near") {
