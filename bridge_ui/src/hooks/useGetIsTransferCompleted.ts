@@ -24,6 +24,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -154,7 +155,7 @@ export default function useGetIsTransferCompleted(
               throw Error("transfer source chain is undefined")
             }
 
-            const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
+            const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
             transferCompleted = await getIsTransferCompletedAlph(
               tokenBridgeForChainId,
               alphSigner.account.group,

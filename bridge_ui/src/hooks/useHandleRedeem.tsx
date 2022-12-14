@@ -44,6 +44,7 @@ import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -245,7 +246,7 @@ async function alephium(
   dispatch(setIsRedeeming(true));
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
-    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = await redeemOnAlph(signer.signerProvider, tokenBridgeForChainId, signedVAA)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)

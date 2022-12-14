@@ -2,8 +2,7 @@ import {
   ALEPHIUM_BRIDGE_ADDRESS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
 } from "./consts";
 import {
   ChainId,
@@ -14,7 +13,8 @@ import {
   getTokenPoolId,
   contractExists,
   extractBodyFromVAA,
-  getRemoteTokenInfoFromContractState
+  getRemoteTokenInfoFromContractState,
+  ALPHTokenId
 } from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
@@ -103,7 +103,7 @@ async function getLocalTokenPoolId(nodeProvider: NodeProvider, tokenId: string):
   if (tokenId.length !== 64) {
     throw Error("invalid token id " + tokenId)
   }
-  const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId)
+  const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId, ALEPHIUM_BRIDGE_GROUP_INDEX)
   const tokenPoolCreated = await contractExists(localTokenPoolId, nodeProvider)
   return tokenPoolCreated ? localTokenPoolId : null
 }
@@ -122,8 +122,8 @@ export class TokenInfo {
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
   // TODO: get symbol and name from configs
-  if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
-    return new TokenInfo(0, 'wrapped-alph', 'wrapped-alph')
+  if (tokenId === ALPHTokenId) {
+    return new TokenInfo(0, 'ALPH', 'ALPH')
   }
 
   const tokenAddress = addressFromContractId(tokenId)
@@ -144,6 +144,13 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
+  if (tokenId === ALPHTokenId) {
+    return {
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: Buffer.from(tokenId, 'hex')
+    }
+  }
   const tokenAddress = addressFromContractId(tokenId)
   const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
   return provider

@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { ALPHTokenId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
 import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
@@ -8,7 +8,6 @@ import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
 import { getAlephiumTokenInfo } from "../../utils/alephium";
-import { ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID } from "../../utils/consts";
 import alephiumIcon from "../../icons/alephium.svg";
 
 type AlephiumTokenPickerProps = {
@@ -41,7 +40,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   const alphUIAmount = formatUnits(alphAmount, 18)
   const alph = createParsedTokenAccount(
     address,
-    ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
+    ALPHTokenId,
     alphAmount.toString(),
     18,
     parseFloat(alphUIAmount),

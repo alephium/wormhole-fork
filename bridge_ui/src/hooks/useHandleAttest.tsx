@@ -20,8 +20,7 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
-  parseTargetChainFromLogEth,
-  attestWrappedAlph
+  parseTargetChainFromLogEth
 } from "alephium-wormhole-sdk";
 import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
@@ -67,14 +66,12 @@ import {
   SOLANA_HOST,
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_TOKEN_BRIDGE_ADDRESS,
-  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
+  TERRA_TOKEN_BRIDGE_ADDRESS
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { BuildScriptTxResult } from "@alephium/web3"
 
 async function algo(
   dispatch: any,
@@ -305,26 +302,14 @@ async function alephium(
   try {
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
-        let result: BuildScriptTxResult
-        if (localTokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
-          result = await attestWrappedAlph(
-            signer.signerProvider,
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
-            signer.account.address,
-            ALEPHIUM_MESSAGE_FEE,
-            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-          );
-        } else {
-          result = await attestFromAlph(
-            signer.signerProvider,
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            localTokenId,
-            signer.account.address,
-            ALEPHIUM_MESSAGE_FEE,
-            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-          );
-        }
+        const result = await attestFromAlph(
+          signer.signerProvider,
+          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+          localTokenId,
+          signer.account.address,
+          ALEPHIUM_MESSAGE_FEE,
+          ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+        )
         return result.txId;
       }
     );
