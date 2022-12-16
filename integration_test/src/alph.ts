@@ -156,7 +156,14 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const attestToken = async (tokenId: string): Promise<Uint8Array> => {
-    const result = await attestFromAlph(nodeWallet, tokenBridgeContractId, tokenId, accountAddress, currentMessageFee, 1)
+    const result = await attestFromAlph(
+      nodeWallet,
+      tokenBridgeContractId,
+      tokenId,
+      accountAddress,
+      currentMessageFee,
+      1
+    )
     console.log(`attest alph token, token id: ${tokenId}, tx id: ${result.txId}`)
     return await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
   }

@@ -75,7 +75,11 @@ async function destroyUnexecutedSequences() {
   const state0 = await alph.getContractState(tokenBridgeForChainAddress, 'TokenBridgeForChain')
   assert(Number(state0.fields['start'] as bigint) === 0)
 
-  const unexecutedSequenceContractId = getUnexecutedSequenceId(tokenBridgeForChainId, unexecutedSequenceIndex, alph.groupIndex)
+  const unexecutedSequenceContractId = getUnexecutedSequenceId(
+    tokenBridgeForChainId,
+    unexecutedSequenceIndex,
+    alph.groupIndex
+  )
   const exists0 = await contractExists(unexecutedSequenceContractId, web3.getCurrentNodeProvider())
   assert(!exists0)
 

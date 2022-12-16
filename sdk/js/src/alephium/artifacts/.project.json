@@ -81,9 +81,9 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
-      "sourceCodeHash": "4074e21ba598656cfe3c2f9e96957e41a08fdb49de1af76de759a9886defde82",
+      "sourceCodeHash": "997308fc813e92f03ec58b1309e41e57d379bb71895c6610f81949a1321b7bdb",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "0f40f4beef292d147dcd47b5d42b65762ecab24a919f4fca3c0036ccb8053492",
+      "codeHashDebug": "8dc103ab87acb96784c6f40d211410919ce7cb197037f80f2eb1476797c042d9",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
@@ -171,13 +171,13 @@
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_local.ral": {
-      "sourceCodeHash": "a41e10c871bf34e01b4551c60d28308fe112ebd0d0334c09966ca020ace7bc36",
+      "sourceCodeHash": "f7c7fd0c2caf533bd5599f412bcee82a15fdc7cfa98821475c8b32bdac95a4a3",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_remote.ral": {
-      "sourceCodeHash": "04839a7335eca3bdba5f82f0284810a394646ac0946211e6e0dee39c3fc809a1",
+      "sourceCodeHash": "c98c599b02af9c5aa15fb69c55f4258b0be3cd41c82686b93a69e4141cbf9113",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
