@@ -7,17 +7,17 @@
   "contracts": {
     "governance": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea800",
     "nativeGovernance": "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPG3",
-    "tokenBridge": "e42186b3428813e408617c3992a12f739dec88c394c29c66d24a3701808bd300",
-    "nativeTokenBridge": "2A3UidJRJcwnq78fYBDGYyupprS3bN1A9jN671bQXEPKD",
-    "testToken": "87df750d0e8586cd6df81df9d2871c045c7d734fe678a490f56ba794979d1400"
+    "tokenBridge": "79f4b5130c7ff8f0b0886a58e42e7cbe65ffb00b0e1ca8226afaeb96f6ebe800",
+    "nativeTokenBridge": "22u1s6WMp9aczn9bYKh9oicpWsfLGSrSE7vyuZ7JTigV5",
+    "testToken": "f01256322ed2e2c66130bf5c9e4ca5984c065d3f6a0f21c954a2548eb3122100"
   },
   "nodeUrl": "http://localhost:22973",
   "explorerUrl": "http://localhost:9090",
   "networkId": 4,
   "coreEmitterAddress": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea800",
-  "tokenBridgeEmitterAddress": "e42186b3428813e408617c3992a12f739dec88c394c29c66d24a3701808bd300",
+  "tokenBridgeEmitterAddress": "79f4b5130c7ff8f0b0886a58e42e7cbe65ffb00b0e1ca8226afaeb96f6ebe800",
   "bridgeTokens": [
     "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
-    "23qLn7UMGbuLVDqfHJzw2MdAbpQzH9ALi7RJoZHkKayuq"
+    "2Ar6BEU16fGZgTFjMgjCC1uvyUfAPRCMFACUJaHu7isrP"
   ]
 }

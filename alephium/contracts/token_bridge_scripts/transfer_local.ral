@@ -20,6 +20,7 @@ TxScript TransferLocal(
         toChainId,
         toAddress,
         tokenAmount,
+        messageFee,
         arbiterFee,
         nonce,
         consistencyLevel

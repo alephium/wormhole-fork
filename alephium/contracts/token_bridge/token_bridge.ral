@@ -104,6 +104,7 @@ Contract TokenBridge(
         toChainId: U256,
         toAddress: ByteVec,
         tokenAmount: U256,
+        messageFee: U256,
         arbiterFee: U256,
         nonce: ByteVec,
         consistencyLevel: U256
@@ -113,12 +114,9 @@ Contract TokenBridge(
         let isLocalToken = tokenChainId == localChainId
         let tokenPoolId = subContractId!(Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId)
 
-        // Minus `messageFee` from transfer amount for consistent with ETH
-        let messageFee = governance.getMessageFee()
-        let amount = if (bridgeTokenId == ALPH) tokenAmount - messageFee else tokenAmount
         let payload =
-            if (isLocalToken) LocalTokenPool(tokenPoolId).transfer{fromAddress -> bridgeTokenId: amount}(fromAddress, toAddress, amount, arbiterFee, nonce)
-            else RemoteTokenPool(tokenPoolId).transfer{fromAddress -> tokenPoolId: amount}(fromAddress, toAddress, amount, arbiterFee, nonce)
+            if (isLocalToken) LocalTokenPool(tokenPoolId).transfer{fromAddress -> bridgeTokenId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
+            else RemoteTokenPool(tokenPoolId).transfer{fromAddress -> tokenPoolId: tokenAmount}(fromAddress, toAddress, tokenAmount, arbiterFee, nonce)
 
         let tokenBridgeForChainId = subContractId!(Path.TokenBridgeForChain ++ u256To2Byte!(toChainId))
         let tokenBridgeForChain = TokenBridgeForChain(tokenBridgeForChainId)

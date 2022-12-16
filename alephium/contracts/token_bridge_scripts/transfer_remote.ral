@@ -21,6 +21,7 @@ TxScript TransferRemote(
         toChainId,
         toAddress,
         tokenAmount,
+        messageFee,
         arbiterFee,
         nonce,
         consistencyLevel

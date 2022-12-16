@@ -328,6 +328,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: messageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: minimalConsistencyLevel
@@ -343,12 +344,11 @@ describe('test token bridge', () => {
 
       // check `totalBridged`
       const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.localTokenPoolInfo.contractId)!
-      const realTransferAmount = transferAmount - messageFee
-      expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + realTransferAmount)
-      expect(tokenPoolState.asset.alphAmount).toEqual(fixture.totalBridged + realTransferAmount + minimalAlphInContract)
+      expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
+      expect(tokenPoolState.asset.alphAmount).toEqual(fixture.totalBridged + transferAmount + minimalAlphInContract)
 
       const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.localTokenPoolInfo.address)!
-      expect(tokenPoolOutput.alphAmount).toEqual(fixture.totalBridged + realTransferAmount + minimalAlphInContract)
+      expect(tokenPoolOutput.alphAmount).toEqual(fixture.totalBridged + transferAmount + minimalAlphInContract)
       expect(tokenPoolOutput.tokens).toEqual([])
 
       if (messageFee !== 0n) {
@@ -358,7 +358,7 @@ describe('test token bridge', () => {
         expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
       }
 
-      const transferMessage = new Transfer(realTransferAmount, ALPHTokenId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
+      const transferMessage = new Transfer(transferAmount, ALPHTokenId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
       expect(testResult.events.length).toEqual(1)
       const event = testResult.events[0]
       expect(event.name).toEqual('WormholeMessage')
@@ -477,6 +477,7 @@ describe('test token bridge', () => {
         toChainId: BigInt(remoteChainId),
         toAddress: toAddress,
         tokenAmount: transferAmount,
+        messageFee: defaultMessageFee,
         arbiterFee: arbiterFee,
         nonce: nonceHex,
         consistencyLevel: minimalConsistencyLevel
@@ -751,6 +752,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: consistencyLevel
@@ -836,6 +838,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: minimalConsistencyLevel
@@ -993,6 +996,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(chainC),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: consistencyLevel
