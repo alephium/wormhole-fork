@@ -4,17 +4,20 @@
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
   "contracts": {
-    "governance": "",
-    "nativeGovernance": "",
-    "tokenBridge": "",
-    "nativeTokenBridge": "",
-    "walph": "",
-    "testToken": ""
+    "governance": "125d54dc1751a3e6236553a6cd1dcfe72aeb7fc42adf27c776924a7beea78270",
+    "nativeGovernance": "uvdzcPKssgTScZtMvC6NhR6vH7fPAE4wA9KTcQ2eigFq",
+    "tokenBridge": "0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f",
+    "nativeTokenBridge": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz",
+    "walph": "a7bb401cf6548c8fa0cafe07c0d3e7d08d5ac86f6a6542981bfea89b6805c07a",
+    "testToken": "66a5fbef6d372fffd2ca5a2d696b9ab2c0ab04112b99f2a0e6962607afe917db"
   },
-  "nodeUrl": "",
-  "explorerUrl": "",
+  "nodeUrl": "https://alephium-testnet.softfork.se",
+  "explorerUrl": "https://backend-v19.testnet.alephium.org",
   "networkId": 1,
-  "coreEmitterAddress": "",
-  "tokenBridgeEmitterAddress": "",
-  "bridgeTokens": []
+  "coreEmitterAddress": "125d54dc1751a3e6236553a6cd1dcfe72aeb7fc42adf27c776924a7beea78270",
+  "tokenBridgeEmitterAddress": "0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f",
+  "bridgeTokens": [
+    "25yhoZ72tppZUiBU6Qrcrqrou3cKHnd6w8JBD65gJduMK",
+    "21beVffN3xCsNuvdVzvKHLfj225Jd5p9s5axEwZt7aSz6"
+  ]
 }
