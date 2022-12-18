@@ -14,5 +14,7 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 
 ADD ./explorer .
 
+ARG network="devnet"
+ENV GATSBY_DEFAULT_NETWORK=$network
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
   npm run build

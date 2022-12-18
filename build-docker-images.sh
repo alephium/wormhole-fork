@@ -43,4 +43,4 @@ docker build -f ./alephium/Dockerfile . -t alephium/alephium-contracts:$VERSION
 docker build -f ./bridge_ui/Dockerfile . -t alephium/bridge-ui:$VERSION --build-arg network=$network
 
 ## Build Wormhole Explorer
-docker build -f ./explorer/Dockerfile . -t alephium/wormhole-explorer:$VERSION
+docker build -f ./explorer/Dockerfile . -t alephium/wormhole-explorer:$VERSION --build-arg network=$network
