@@ -12,7 +12,7 @@ fi
 
 set -euo pipefail xtrace
 
-VERSION=0.2.78
+VERSION=0.2.79
 export DOCKER_BUILDKIT=1
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
@@ -23,7 +23,7 @@ else
     exit 1
 fi
 
-docker build -f Dockerfile.init . -t alephium/devnet-init:$VERSION
+#docker build -f Dockerfile.init . -t alephium/devnet-init:$VERSION
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
