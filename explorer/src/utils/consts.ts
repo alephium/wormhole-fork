@@ -179,12 +179,17 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
             contractType.toUpperCase(),
             "BRIDGE",
           ].join("_");
+          console.log("env name", envVarName);
           let address = envVarMap[envVarName];
+          console.log("address", address);
+          console.log(address);
+          console.log("remei");
           if (address === undefined) throw `missing environment variable: ${envVarName}`;
           const desc = `${contractType} Bridge`;
           // index by: description, contract address, and emitter address
           try {
             const emitterAddress = await getEmitterAddress[chainName](address);
+            console.log("emitterAddress", emitterAddress);
             contractsOfChain[emitterAddress] = desc;
           } catch (_) {
             console.log("failed getting emitterAddress for: ", address);
