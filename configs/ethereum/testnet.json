@@ -2,13 +2,14 @@
   "chainId": 2,
   "wrappedNative": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
   "contracts": {
-    "governance": "",
-    "tokenBridge": "",
-    "weth": "",
-    "testToken": ""
+    "governance": "0x4370eE0D87282A329595D98c285Ac4A3725490fb",
+    "tokenBridge": "0x4722495183669f1b85d8A2dFA2C6F5dd8FA627b4",
+    "weth": "0xA8fBA95689B6a7B19a5E37619f153bfC1160A9C0"
   },
-  "nodeUrl": "",
-  "coreEmitterAddress": "",
-  "tokenBridgeEmitterAddress": "",
-  "bridgeTokens": []
+  "nodeUrl": "https://goerli.infura.io/v3/8853e0fb94aa4336be2175c73ef0acd4",
+  "coreEmitterAddress": "0000000000000000000000004370eE0D87282A329595D98c285Ac4A3725490fb",
+  "tokenBridgeEmitterAddress": "0000000000000000000000004722495183669f1b85d8A2dFA2C6F5dd8FA627b4",
+  "bridgeTokens": [
+    "0xA8fBA95689B6a7B19a5E37619f153bfC1160A9C0"
+  ]
 }
