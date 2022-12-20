@@ -76,6 +76,9 @@ var tokenTransferEmitters = map[string]string{
 	"00000000000000000000000088d8004A9BdbfD9D28090A02010C19897a29605c": "0x88d8004A9BdbfD9D28090A02010C19897a29605c",   // oasis
 	"000000000000000000000000F174F9A837536C449321df1Ca093Bb96948D5386": "0xF174F9A837536C449321df1Ca093Bb96948D5386",   // ethereum ropesten
 	// TODO "": "",  // fantom
+
+	// testnet
+	"0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz", // alephium
 }
 
 var muTokenTransferEmitters sync.RWMutex
