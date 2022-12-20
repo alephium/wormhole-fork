@@ -43,11 +43,6 @@ var nftEmitters = map[string]string{
 	"0000000000000000000000002b048Da40f69c8dc386a56705915f8E966fe1eba": "0x2b048Da40f69c8dc386a56705915f8E966fe1eba",   // ethereum ropesten
 	"3b170d6d5db622a22c8b953dd8b3250bfde84217745616eb74879db4006ce103": "xfcZ7phvcDs9hwYbXNsTzdiWePWkYGrp44a2a9xYK2Yz", // alephium
 	// TODO "": "",  // fantom
-
-	// testnet
-	"0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz", // alephium
-	"00000000000000000000000014cAD5A8A887020e1198B26fFA2814bC6415D18F": "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F",   // ethereum goerli
-
 }
 var muNFTEmitters sync.RWMutex
 
@@ -79,6 +74,7 @@ var tokenTransferEmitters = map[string]string{
 
 	// testnet
 	"0140a16e45690ba9c12d87766ee0c529e362d5b5b6156ce507cb956dc601438f": "tmqgPpqiuEAv6SN1o4k363j5KLpHqC2BVumx8YzYPnNz", // alephium
+	"00000000000000000000000014cAD5A8A887020e1198B26fFA2814bC6415D18F": "0x14cAD5A8A887020e1198B26fFA2814bC6415D18F",   // ethereum goerli
 }
 
 var muTokenTransferEmitters sync.RWMutex
@@ -139,6 +135,8 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
 		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
 	}
+
+	log.Printf("Processing Transfer: targetAddressSize %v\n", fmt.Sprint(targetAddressSize))
 
 	targetAddress := make([]byte, targetAddressSize)
 	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
@@ -315,6 +313,9 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 				return decodeErr
 			}
 			log.Printf("Processing Transfer: Amount %v\n", fmt.Sprint(payload.Amount[3]))
+			log.Printf("Processing Transfer: OriginalAddress %v\n", hex.EncodeToString(payload.OriginAddress[:]))
+			log.Printf("Processing Transfer: OriginChain %v\n", fmt.Sprint(payload.OriginChain))
+			log.Printf("Processing Transfer: TargetAddress %v\n", hex.EncodeToString(payload.TargetAddress[:]))
 
 			// save payload to bigtable, then publish a new PubSub message for further processing
 			colFam := columnFamilies[2]
