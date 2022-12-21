@@ -91,7 +91,7 @@ type (
 		Amount        uint256.Int
 		OriginAddress [32]byte
 		OriginChain   uint16
-		TargetAddress []byte
+		TargetAddress [32]byte
 	}
 	NFTTransfer struct {
 		PayloadId     uint8
@@ -131,18 +131,23 @@ func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
 		return nil, fmt.Errorf("failed to read OriginChain: %w", err)
 	}
 
-	var targetAddressSize uint16
-	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
-		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
-	}
-
-	log.Printf("Processing Transfer: targetAddressSize %v\n", fmt.Sprint(targetAddressSize))
-
-	targetAddress := make([]byte, targetAddressSize)
-	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
+	if err := binary.Read(reader, binary.BigEndian, &tt.TargetAddress); err != nil {
 		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
 	}
-	tt.TargetAddress = targetAddress
+	log.Printf("Processing Transfer: targetAddress %v\n", fmt.Sprint(tt.TargetAddress))
+
+	//	var targetAddressSize uint16
+	//	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
+	//		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
+	//	}
+	//
+	//	log.Printf("Processing Transfer: targetAddressSize %v\n", fmt.Sprint(targetAddressSize))
+	//
+	//	targetAddress := make([]byte, targetAddressSize)
+	//	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
+	//		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
+	//	}
+	//	tt.TargetAddress = targetAddress
 
 	return tt, nil
 }
@@ -312,10 +317,6 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 				log.Println("failed decoding payload for row ", rowKey)
 				return decodeErr
 			}
-			log.Printf("Processing Transfer: Amount %v\n", fmt.Sprint(payload.Amount[3]))
-			log.Printf("Processing Transfer: OriginalAddress %v\n", hex.EncodeToString(payload.OriginAddress[:]))
-			log.Printf("Processing Transfer: OriginChain %v\n", fmt.Sprint(payload.OriginChain))
-			log.Printf("Processing Transfer: TargetAddress %v\n", hex.EncodeToString(payload.TargetAddress[:]))
 
 			// save payload to bigtable, then publish a new PubSub message for further processing
 			colFam := columnFamilies[2]

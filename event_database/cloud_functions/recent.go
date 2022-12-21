@@ -86,10 +86,9 @@ func getLatestOfEachEmitterAddress(tbl *bigtable.Table, ctx context.Context, pre
 
 	mostRecentByKeySegment := map[string]string{}
 	err := tbl.ReadRows(ctx, rowSet, func(row bigtable.Row) bool {
-
 		keyParts := strings.Split(row.Key(), ":")
-		groupByKey := strings.Join(keyParts[:2], ":")
-		mostRecentByKeySegment[groupByKey] = keyParts[2]
+		groupByKey := strings.Join(keyParts[:3], ":")
+		mostRecentByKeySegment[groupByKey] = keyParts[3]
 
 		return true
 	}, bigtable.RowFilter(
@@ -141,9 +140,9 @@ func fetchMostRecentRows(tbl *bigtable.Table, ctx context.Context, prefix string
 		}
 		lowSequence := highSequence - numRows
 		// create a rowKey to use as the start of the range query
-		rangeQueryStart := fmt.Sprintf("%v:%v:%016d", rowKeyParts[0], rowKeyParts[1], lowSequence)
+		rangeQueryStart := fmt.Sprintf("%v:%v:%v:%016d", rowKeyParts[0], rowKeyParts[1], rowKeyParts[2], lowSequence)
 		// create a rowKey with the highest seen sequence + 1, because range end is exclusive
-		rangeQueryEnd := fmt.Sprintf("%v:%v:%016d", rowKeyParts[0], rowKeyParts[1], highSequence+1)
+		rangeQueryEnd := fmt.Sprintf("%v:%v:%v:%016d", rowKeyParts[0], rowKeyParts[1], rowKeyParts[2], highSequence+1)
 		if highSequence >= lowSequence {
 			rangePairs[rangeQueryStart] = rangeQueryEnd
 		} else {
@@ -160,7 +159,6 @@ func fetchMostRecentRows(tbl *bigtable.Table, ctx context.Context, prefix string
 	results := map[string][]bigtable.Row{}
 
 	err := tbl.ReadRows(ctx, rangeList, func(row bigtable.Row) bool {
-
 		var groupByKey string
 		if keySegments == 0 {
 			groupByKey = "*"
