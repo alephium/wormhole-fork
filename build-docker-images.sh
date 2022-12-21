@@ -12,7 +12,7 @@ fi
 
 set -euo pipefail xtrace
 
-VERSION=0.2.83
+VERSION=0.2.84
 export DOCKER_BUILDKIT=1
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
