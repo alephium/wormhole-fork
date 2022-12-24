@@ -24,11 +24,11 @@ function isDevnet(network) {
 }
 
 function isTestnet(network) {
-  return network === 'goerli'
+  return network === 'goerli' || network === 'goerli-fork'
 }
 
 function isMainnet(network) {
-  return network === 'mainnet'
+  return network === 'mainnet' || network === 'mainnet-fork'
 }
 
 function getDeploymentsFileName(network) {
