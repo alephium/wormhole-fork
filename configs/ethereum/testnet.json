@@ -2,16 +2,16 @@
   "chainId": 2,
   "wrappedNative": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
   "contracts": {
-    "governance": "0xb445d009a6F0712f88d4a18Fc4db834E92d569E2",
-    "tokenBridge": "0x640D6a5E0448B8AD0c1F24A666f259862ba0A71f",
+    "governance": "0xb4d3cbd7BF0503eBFd34637C43B8b6E836611204",
+    "tokenBridge": "0xC81f0FFf78eD7f332c3e84902c279cB1d6636a1C",
     "weth": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
-    "testToken": "0xCb625765e27C6B7B1d7b72b8aE7E17c3DdFC8e53"
+    "testToken": "0x5C8Df04D8Ee942f07b2446022e4d4E18FeDe779C"
   },
-  "nodeUrl": "",
-  "coreEmitterAddress": "000000000000000000000000b445d009a6F0712f88d4a18Fc4db834E92d569E2",
-  "tokenBridgeEmitterAddress": "000000000000000000000000640D6a5E0448B8AD0c1F24A666f259862ba0A71f",
+  "nodeUrl": "https://goerli.infura.io/v3/",
+  "coreEmitterAddress": "000000000000000000000000b4d3cbd7BF0503eBFd34637C43B8b6E836611204",
+  "tokenBridgeEmitterAddress": "000000000000000000000000C81f0FFf78eD7f332c3e84902c279cB1d6636a1C",
   "bridgeTokens": [
     "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
-    "0xCb625765e27C6B7B1d7b72b8aE7E17c3DdFC8e53"
+    "0x5C8Df04D8Ee942f07b2446022e4d4E18FeDe779C"
   ]
 }
