@@ -7,7 +7,9 @@ import {
   addressFromContractId,
   Fields,
   contractIdFromAddress,
-  binToHex
+  subContractId,
+  binToHex,
+  ALPH_TOKEN_ID
 } from '@alephium/web3'
 import { createGovernance } from './governance-fixture'
 import {
@@ -18,15 +20,13 @@ import {
   randomContractAddress,
   randomContractId,
   alph,
-  randomAssetAddress,
-  subContractIdWithGroup
+  randomAssetAddress
 } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUnexecutedSequence } from './sequence-fixture'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
 export const minimalConsistencyLevel = 105n
-export const ALPHTokenId = ''.padStart(64, '0')
 
 // Doc: https://github.com/certusone/wormhole/blob/dev.v2/whitepapers/0003_token_bridge.md
 export class AttestToken {
@@ -313,11 +313,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts): 
   return new ContractInfo(tokenBridgeFactory, state, templateContracts.states(), address)
 }
 
-export function createTokenBridge(
-  address?: string,
-  receivedSequence?: bigint,
-  messageFee?: bigint
-): TokenBridgeInfo {
+export function createTokenBridge(address?: string, receivedSequence?: bigint, messageFee?: bigint): TokenBridgeInfo {
   const tokenBridge = Project.contract('TokenBridge')
   const governance = createGovernance(undefined, messageFee)
   const templateContracts = createTemplateContracts()
@@ -334,18 +330,11 @@ export function createTokenBridge(
   }
   const state = tokenBridge.toState(initFields, initAsset, tokenBridgeAddress)
   const deps = Array.prototype.concat(governance.states(), tokenBridgeFactory.states())
-  return new TokenBridgeInfo(
-    tokenBridge,
-    state,
-    deps,
-    tokenBridgeAddress,
-    governance,
-    templateContracts
-  )
+  return new TokenBridgeInfo(tokenBridge, state, deps, tokenBridgeAddress, governance, templateContracts)
 }
 
 function subContractAddress(parentId: string, pathHex: string): string {
-  return addressFromContractId(subContractIdWithGroup(parentId, pathHex))
+  return addressFromContractId(subContractId(parentId, pathHex, 0))
 }
 
 export function chainIdHex(chainId: number): string {
@@ -465,8 +454,8 @@ export function newLocalTokenPoolFixture(
   const tokenBridgeForChainInfo = fixture.tokenBridgeForChainInfo
   const address = tokenPoolAddress(tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, localTokenId)
   const asset: Asset = {
-    alphAmount: localTokenId === ALPHTokenId ? minimalAlphInContract + totalBridged : minimalAlphInContract,
-    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: totalBridged }]
+    alphAmount: localTokenId === ALPH_TOKEN_ID ? minimalAlphInContract + totalBridged : minimalAlphInContract,
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: totalBridged }]
   }
   const localTokenPoolInfo = createContract(
     'LocalTokenPool',

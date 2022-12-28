@@ -6,6 +6,7 @@ import { Sequence } from './sequence'
 import path from 'path'
 import {
   addressFromContractId,
+  ALPH_TOKEN_ID,
   binToHex,
   ContractState,
   encodeI256,
@@ -30,8 +31,7 @@ import {
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
   deposit as tokenBridgeForChainDeposit,
-  deserializeTransferTokenVAA,
-  ALPHTokenId
+  deserializeTransferTokenVAA
 } from 'alephium-wormhole-sdk'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
@@ -139,7 +139,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     const contractState = await nodeWallet.nodeProvider.contracts.getContractsAddressState(contractAddress, {
       group: groupIndex
     })
-    if (tokenId === ALPHTokenId) {
+    if (tokenId === ALPH_TOKEN_ID) {
       const total = BigInt(contractState.asset.attoAlphAmount)
       return total - oneAlph // minus `MinimalAlphInContract`
     }
@@ -148,7 +148,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const getLockedNativeBalance = async (): Promise<bigint> => {
-    return getLocalLockedTokenBalance(ALPHTokenId)
+    return getLocalLockedTokenBalance(ALPH_TOKEN_ID)
   }
 
   const getLockedTokenBalance = async (tokenId: string): Promise<bigint> => {
@@ -222,7 +222,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
       nodeWallet,
       tokenBridgeContractId,
       accountAddress,
-      ALPHTokenId,
+      ALPH_TOKEN_ID,
       toChainId,
       binToHex(toAddress),
       amount,
@@ -335,7 +335,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
-    wrappedNativeTokenId: ALPHTokenId,
+    wrappedNativeTokenId: ALPH_TOKEN_ID,
     recipientAddress: recipientAddress,
     messageFee: currentMessageFee,
     oneCoin: oneAlph,

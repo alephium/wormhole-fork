@@ -13,14 +13,14 @@ import {
   getTokenPoolId,
   contractExists,
   extractBodyFromVAA,
-  getRemoteTokenInfoFromContractState,
-  ALPHTokenId
+  getRemoteTokenInfoFromContractState
 } from 'alephium-wormhole-sdk';
 import {
   NodeProvider,
   node,
   addressFromContractId,
-  groupOfAddress
+  groupOfAddress,
+  ALPH_TOKEN_ID
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -122,7 +122,7 @@ export class TokenInfo {
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
   // TODO: get symbol and name from configs
-  if (tokenId === ALPHTokenId) {
+  if (tokenId === ALPH_TOKEN_ID) {
     return new TokenInfo(0, 'ALPH', 'ALPH')
   }
 
@@ -144,7 +144,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
-  if (tokenId === ALPHTokenId) {
+  if (tokenId === ALPH_TOKEN_ID) {
     return {
       isWrapped: false,
       chainId: CHAIN_ID_ALEPHIUM,

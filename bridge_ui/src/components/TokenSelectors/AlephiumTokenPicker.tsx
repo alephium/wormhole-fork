@@ -1,9 +1,9 @@
-import { ALPHTokenId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
 import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
-import { NodeProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
 import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
@@ -25,8 +25,8 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   let tokenAmounts = new Map<string, bigint>()
   utxos.utxos.forEach(utxo => {
     alphAmount = alphAmount + BigInt(utxo.amount)
-    if (now > utxo.lockTime) {
-      utxo.tokens.forEach(token => {
+    if (utxo.lockTime === undefined || now > utxo.lockTime) {
+      utxo.tokens?.forEach(token => {
         const amount = tokenAmounts.get(token.id)
         if (amount) {
           tokenAmounts.set(token.id, amount + BigInt(token.amount))
@@ -40,7 +40,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   const alphUIAmount = formatUnits(alphAmount, 18)
   const alph = createParsedTokenAccount(
     address,
-    ALPHTokenId,
+    ALPH_TOKEN_ID,
     alphAmount.toString(),
     18,
     parseFloat(alphUIAmount),

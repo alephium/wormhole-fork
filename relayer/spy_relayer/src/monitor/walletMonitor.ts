@@ -10,8 +10,7 @@ import {
   tryNativeToHexString,
   coalesceChainName,
   contractExists,
-  getRemoteTokenInfo,
-  ALPHTokenId
+  getRemoteTokenInfo
 } from "alephium-wormhole-sdk";
 import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
@@ -31,9 +30,8 @@ import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
 import {
   addressFromContractId,
-  binToHex,
+  ALPH_TOKEN_ID,
   NodeProvider,
-  tokenIdFromAddress,
   web3
 } from "@alephium/web3"
 import { sleep } from "../helpers/utils";
@@ -420,7 +418,7 @@ async function pullAllAlephiumBalances(
 
       for (const token of supportedTokens) {
         const originTokenId = tryNativeToHexString(token.address, token.chainId)
-        if (originTokenId === ALPHTokenId) {
+        if (originTokenId === ALPH_TOKEN_ID) {
           continue
         }
         if (token.chainId === CHAIN_ID_ALEPHIUM) {
