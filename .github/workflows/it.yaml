@@ -23,15 +23,9 @@ jobs:
       - name: start docker images
         working-directory: ./integration_test/docker
         run: docker-compose up -d
-      - name: wait until ETH contracts are deployed
+      - name: wait until contracts are deployed
         working-directory: ./integration_test/docker
         run: ./wait-until-services-up.sh
-      - name: deploy ALPH contracts
-        working-directory: ./alephium
-        run: |
-          npx --yes @h0ngcha0/alephium-cli wallets restore -w alephium-web3-test-only-wallet \
-            -c "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava" -p alph
-          npm install && npm run compile-contracts && npm run deploy:devnet
       - name: build clients
         working-directory: ./clients/js
         run: npm install && npm run build
