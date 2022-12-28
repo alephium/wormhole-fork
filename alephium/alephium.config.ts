@@ -7,6 +7,8 @@ import { default as guardianTestnetConfig } from '../configs/guardian/testnet.js
 import { default as guardianMainnetConfig } from '../configs/guardian/mainnet.json'
 
 export type Settings = {
+  nodeUrl: string
+  networkId: number
   initSigners: string[]
   chainId: number
   governanceChainId: number
@@ -23,6 +25,8 @@ function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
       ? [alephiumTestnetConfig, guardianTestnetConfig]
       : [alephiumMainnetConfig, guardianMainnetConfig]
   return {
+    nodeUrl: alephiumConfig.nodeUrl,
+    networkId: alephiumConfig.networkId,
     initSigners: guardianConfig.initSigners as string[],
     chainId: alephiumConfig.chainId as number,
     governanceChainId: guardianConfig.governanceChainId as number,
@@ -31,6 +35,10 @@ function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
     messageFee: BigInt(alephiumConfig.messageFee)
   }
 }
+
+const devnetSettings = loadSettings('devnet')
+const testnetSettings = loadSettings('testnet')
+const mainnetSettings = loadSettings('mainnet')
 
 const configuration: Configuration<Settings> = {
   artifactDir: '../sdk/js/src/alephium/artifacts',
@@ -44,28 +52,28 @@ const configuration: Configuration<Settings> = {
   defaultNetwork: 'devnet',
   networks: {
     devnet: {
-      networkId: 4,
-      nodeUrl: 'http://localhost:22973',
+      networkId: devnetSettings.networkId,
+      nodeUrl: devnetSettings.nodeUrl,
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 1,
-      settings: loadSettings('devnet')
+      settings: devnetSettings
     },
 
     testnet: {
-      networkId: 1,
-      nodeUrl: process.env.ALPH_NODE_URL as string,
+      networkId: testnetSettings.networkId,
+      nodeUrl: testnetSettings.nodeUrl,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
-      settings: loadSettings('testnet')
+      settings: testnetSettings
     },
 
     mainnet: {
-      networkId: 0,
-      nodeUrl: process.env.ALPH_NODE_URL as string,
+      networkId: mainnetSettings.networkId,
+      nodeUrl: mainnetSettings.nodeUrl,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
-      settings: loadSettings('mainnet')
+      settings: mainnetSettings
     }
   }
 }

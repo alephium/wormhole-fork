@@ -41,14 +41,7 @@ function updateEthConfig(network: string) {
 }
 
 function updateAlphConfig(network: string) {
-  const alphDir = path.join(process.cwd(), '..', 'alephium')
-  const deployConfigPath = path.join(alphDir, 'alephium.config.ts')
-  const deployConfig = require(deployConfigPath).default
-  const networkConfig = deployConfig.networks[`${network}`]
-
   const func = (deployments: any, config: any): void => {
-    config.nodeUrl = networkConfig.nodeUrl
-    config.networkId = networkConfig.networkId
     const deployContractResults = deployments[config.groupIndex].deployContractResults
     const contracts: any = {
       governance: deployContractResults.Governance.contractId,
@@ -68,6 +61,7 @@ function updateAlphConfig(network: string) {
     config.bridgeTokens = bridgeTokens
   }
 
+  const alphDir = path.join(process.cwd(), '..', 'alephium')
   updateConfig(alphDir, network, 'alephium', func)
 }
 
