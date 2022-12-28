@@ -6,7 +6,7 @@ volumes:
 
 services:
   alph-full-node:
-    image: alephium/alephium-contracts:0.2.78
+    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.78
     restart: unless-stopped
     ports:
       - 19973:19973/tcp
@@ -23,7 +23,7 @@ services:
       - "npx @alephium/cli devnet start && sh /alephium/deploy.sh"
 
   eth-devnet:
-    image: alephium/eth-node:0.2.78
+    image: eu.gcr.io/alephium-org/eth-node:0.2.78
     restart: unless-stopped
     user: root
     ports:
@@ -40,21 +40,21 @@ services:
       - --db=/eth-full-node/
 
   eth-devnet-deploy-contracts:
-    image: alephium/eth-node:0.2.78
+    image: eu.gcr.io/alephium-org/eth-node:0.2.78
     command:
       - /bin/sh
       - -c
       - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && npm run migrate -- --network docker && npx truffle exec mine.js --network docker"
 
   devnet-init:
-    image: alephium/devnet-init:0.2.78
+    image: eu.gcr.io/alephium-org/devnet-init:0.2.78
     command:
       - /bin/sh
       - -c
       - "/scripts/devnet-init.sh 1"
 
   guardian-0:
-    image: alephium/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.78
     hostname: guardian-0
     restart: unless-stopped
     ports:
@@ -87,7 +87,7 @@ services:
       - --logLevel=debug
 
   guardian-1:
-    image: alephium/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.78
     hostname: guardian-1
     restart: unless-stopped
     ports:
@@ -122,7 +122,7 @@ services:
       - --logLevel=debug
 
   spy:
-    image: alephium/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.78
     restart: unless-stopped
     ports:
       - 127.0.0.1:7072:7072

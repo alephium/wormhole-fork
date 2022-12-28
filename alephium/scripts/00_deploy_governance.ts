@@ -3,14 +3,25 @@ import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { zeroPad } from '../lib/utils'
 import { Settings } from '../alephium.config'
 
+function removePrefix(str: string): string {
+  if (str.startsWith('0x') || str.startsWith('0X')) {
+    return str.slice(2)
+  }
+  return str
+}
+
 const deployGovernance: DeployFunction<Settings> = async (
   deployer: Deployer,
   network: Network<Settings>
 ): Promise<void> => {
   const governance = Project.contract('Governance')
-  const initGuardianSet = network.settings.initSigners
+  const initGuardianSet = network.settings.initSigners.map(removePrefix)
+  if (initGuardianSet.length === 0) {
+    throw new Error('empty init guardian set')
+  }
   const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
   const currentGuardianSet = sizePrefix + initGuardianSet.join('')
+  console.log(`init guardian set: ${currentGuardianSet}`)
   const initialFields = {
     guardianSets: ['', currentGuardianSet],
     guardianSetIndexes: [0n, 0n],

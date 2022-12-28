@@ -255,7 +255,6 @@ docker_build(
   ref = "alephium",
   context = ".",
   only = [
-    "./alephium/alephium-1.5.3.jar",
     "./alephium/contracts",
     "./alephium/lib",
     "./alephium/scripts",
@@ -549,8 +548,15 @@ if explorer:
 
     docker_build(
         ref = "cloud-functions",
-        context = "./event_database",
+        context = ".",
         dockerfile = "./event_database/functions_server/Dockerfile",
+        only = [
+            "./event_database/cloud_functions",
+            "./event_database/devnet_key.json",
+            "./event_database/functions_server",
+            "./event_database/initialize_db",
+            "./configs"
+        ],
         live_update = [
             sync("./event_database/cloud_functions", "/app/cloud_functions"),
         ],

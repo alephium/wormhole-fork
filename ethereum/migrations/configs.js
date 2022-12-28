@@ -24,11 +24,11 @@ function isDevnet(network) {
 }
 
 function isTestnet(network) {
-  return network === 'goerli'
+  return network === 'goerli' || network === 'goerli-fork'
 }
 
 function isMainnet(network) {
-  return network === 'mainnet'
+  return network === 'mainnet' || network === 'mainnet-fork'
 }
 
 function getDeploymentsFileName(network) {
@@ -45,9 +45,9 @@ function getWETHAddress(network) {
   return isDevnet(network)
     ? artifacts.require("MockWETH9").address
     : isTestnet(network)
-    ? ethTestnetConfig.weth // weth address on goerli testnet
+    ? ethTestnetConfig.contracts.weth // weth address on goerli testnet
     : isMainnet(network)
-    ? ethMainnetConfig.weth // weth address on ethereum mainnet
+    ? ethMainnetConfig.contracts.weth // weth address on ethereum mainnet
     : invalidNetwork(network)
 }
 
