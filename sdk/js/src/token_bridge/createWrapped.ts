@@ -1,4 +1,4 @@
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
@@ -12,7 +12,6 @@ import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
-import { ALPHTokenId } from "./alephium";
 
 export async function createRemoteTokenPoolOnAlph(
   signerProvider: SignerProvider,
@@ -50,7 +49,7 @@ export async function createLocalTokenPoolOnAlph(
       alphAmount: alphAmount
     },
     attoAlphAmount: alphAmount,
-    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: BigInt(1) }]
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 

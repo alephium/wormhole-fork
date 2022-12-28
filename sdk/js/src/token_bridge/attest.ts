@@ -20,8 +20,7 @@ import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
 import { attestTokenScript } from '../alephium/token_bridge';
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
-import { ALPHTokenId } from "./alephium";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 
 export async function attestFromAlph(
   signerProvider: SignerProvider,
@@ -44,7 +43,7 @@ export async function attestFromAlph(
       consistencyLevel: BigInt(consistencyLevel)
     },
     attoAlphAmount: messageFee,
-    tokens: tokenId === ALPHTokenId ? [] : [{ id: tokenId, amount: BigInt(1) }]
+    tokens: tokenId === ALPH_TOKEN_ID ? [] : [{ id: tokenId, amount: BigInt(1) }]
   })
 }
 

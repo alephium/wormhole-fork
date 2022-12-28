@@ -1,4 +1,4 @@
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -50,7 +50,6 @@ import {
   WSOL_ADDRESS,
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
-import { ALPHTokenId } from "./alephium";
 
 export async function transferLocalTokenFromAlph(
   signerProvider: SignerProvider,
@@ -81,8 +80,8 @@ export async function transferLocalTokenFromAlph(
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
-    attoAlphAmount: localTokenId === ALPHTokenId ? messageFee + tokenAmount : messageFee,
-    tokens: localTokenId === ALPHTokenId ? [] : [{ id: localTokenId, amount: tokenAmount }]
+    attoAlphAmount: localTokenId === ALPH_TOKEN_ID ? messageFee + tokenAmount : messageFee,
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: tokenAmount }]
   })
 }
 

@@ -16,8 +16,6 @@ import {
 } from "../alephium/token_bridge"
 import { bytes32ToUtf8String, ChainId } from "../utils"
 
-export const ALPHTokenId = ''.padStart(64, '0')
-
 export async function registerChain(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
@@ -93,18 +91,13 @@ export function zeroPad(value: string, byteLength: number): string {
   return value
 }
 
-export function subContractIdWithGroup(parentId: string, path: string, groupIndex: number): string {
-  const contractId = subContractId(parentId, path)
-  return contractId.slice(0, -2) + groupIndex.toString(16).padStart(2, '0')
-}
-
 export function getAttestTokenHandlerId(
   tokenBridgeId: string,
   remoteChainId: number,
   groupIndex: number
 ): string {
   const pathHex = '00' + zeroPad(remoteChainId.toString(16), 2)
-  return subContractIdWithGroup(tokenBridgeId, pathHex, groupIndex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getTokenBridgeForChainId(
@@ -113,7 +106,7 @@ export function getTokenBridgeForChainId(
   groupIndex: number
 ): string {
   const pathHex = '01' + zeroPad(remoteChainId.toString(16), 2)
-  return subContractIdWithGroup(tokenBridgeId, pathHex, groupIndex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getTokenPoolId(
@@ -126,7 +119,7 @@ export function getTokenPoolId(
     throw new Error(`Invalid token id ${tokenId}, expect 32 bytes hex string`)
   }
   const pathHex = '02' + zeroPad(tokenChainId.toString(16), 2) + tokenId
-  return subContractIdWithGroup(tokenBridgeId, pathHex, groupIndex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getUnexecutedSequenceId(
@@ -135,7 +128,7 @@ export function getUnexecutedSequenceId(
   groupIndex: number
 ): string {
   const pathHex = zeroPad(index.toString(16), 8)
-  return subContractIdWithGroup(tokenBridgeForChainId, pathHex, groupIndex)
+  return subContractId(tokenBridgeForChainId, pathHex, groupIndex)
 }
 
 export async function contractExists(contractId: string, provider: NodeProvider): Promise<boolean> {

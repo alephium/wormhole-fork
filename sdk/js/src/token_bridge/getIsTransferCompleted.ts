@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
 import { extractSequenceFromVAA } from "../utils";
-import { addressFromContractId } from "@alephium/web3";
+import { addressFromContractId, subContractId } from "@alephium/web3";
 import {
   BITS_PER_KEY,
   calcLogicSigAccount,
@@ -21,7 +21,7 @@ import {
   tokenBridgeForChainContract,
   unexecutedSequenceContract
 } from '../alephium/token_bridge'
-import { subContractIdWithGroup, zeroPad } from "./alephium";
+import { zeroPad } from "./alephium";
 
 const bigInt512 = BigInt(512)
 const bigInt256 = BigInt(256)
@@ -33,7 +33,7 @@ async function isSequenceExecuted(
   groupIndex: number
 ): Promise<boolean> {
   const path = zeroPad(Math.floor(Number(sequence) / 256).toString(16), 8)
-  const contractId = subContractIdWithGroup(tokenBridgeForChainId, path, groupIndex)
+  const contractId = subContractId(tokenBridgeForChainId, path, groupIndex)
   const contractAddress = addressFromContractId(contractId)
   try {
     const contract = unexecutedSequenceContract()
