@@ -562,27 +562,7 @@ export const CELO_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? "0x05ca6037eC51F8b712eD2E6Fa72219FEaE74E153"
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
 );
-export const NEON_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? "0x0000000000000000000000000000000000000000"
-    : CLUSTER === "testnet"
-    ? ""
-    : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
-);
-export const NEON_NFT_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? "0x0000000000000000000000000000000000000000"
-    : CLUSTER === "testnet"
-    ? ""
-    : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
-);
-export const NEON_TOKEN_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? "0x0000000000000000000000000000000000000000"
-    : CLUSTER === "testnet"
-    ? ""
-    : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
-);
+
 export const SOL_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
     ? "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth"
@@ -729,9 +709,7 @@ export const getBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_BRIDGE_ADDRESS
-    : "";
+    : ""
 export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_NFT_BRIDGE_ADDRESS
@@ -759,9 +737,7 @@ export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_NFT_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_NFT_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_NFT_BRIDGE_ADDRESS
-    : "";
+    : ""
 export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_TOKEN_BRIDGE_ADDRESS
@@ -793,8 +769,6 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_TOKEN_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_TOKEN_BRIDGE_ADDRESS
     : "";
 
 export const COVALENT_API_KEY = process.env.REACT_APP_COVALENT_API_KEY
