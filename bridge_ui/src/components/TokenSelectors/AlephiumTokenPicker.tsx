@@ -24,6 +24,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   const now = Date.now()
   let alphAmount: bigint = BigInt(0)
   let tokenAmounts = new Map<string, bigint>()
+  console.log("Get token from address", address)
   utxos.utxos.forEach(utxo => {
     alphAmount = alphAmount + BigInt(utxo.amount)
     if (now > utxo.lockTime) {
@@ -37,7 +38,6 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
       })
     }
   });
-
   const alphUIAmount = formatUnits(alphAmount, 18)
   const alph = createParsedTokenAccount(
     address,
@@ -51,6 +51,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
     alephiumIcon,
     true
   )
+  console.log("ALPH token", address)
 
   let tokenAccounts = [alph]
   for (let [tokenId, amount] of tokenAmounts) {
@@ -64,6 +65,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
     )
     tokenAccounts.push(tokenAccount)
   }
+  console.log("tokenAccounts", tokenAccounts)
   return tokenAccounts
 }
 
