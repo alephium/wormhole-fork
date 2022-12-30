@@ -51,7 +51,8 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
     alephiumIcon,
     true
   )
-  console.log("ALPH token", address)
+  console.log("ALPH token", ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID)
+  console.log("tokenAmounts", tokenAmounts)
 
   let tokenAccounts = [alph]
   for (let [tokenId, amount] of tokenAmounts) {
