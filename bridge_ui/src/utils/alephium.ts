@@ -104,7 +104,9 @@ async function getLocalTokenPoolId(nodeProvider: NodeProvider, tokenId: string):
     throw Error("invalid token id " + tokenId)
   }
   const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId)
+  console.log("is local toke pool", localTokenPoolId)
   const tokenPoolCreated = await contractExists(localTokenPoolId, nodeProvider)
+  console.log("token pool created", tokenPoolCreated)
   return tokenPoolCreated ? localTokenPoolId : null
 }
 
@@ -130,6 +132,8 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
   try {
     const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
     const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: group.group })
+    console.log("tokenId", tokenId)
+    console.log("is remote token pool", state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH)
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
       const tokenInfo = getRemoteTokenInfoFromContractState(state)
       return new TokenInfo(tokenInfo.decimals, tokenInfo.symbol, tokenInfo.name)

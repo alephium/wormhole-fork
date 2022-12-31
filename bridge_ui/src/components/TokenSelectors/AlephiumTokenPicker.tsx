@@ -57,6 +57,7 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
   let tokenAccounts = [alph]
   for (let [tokenId, amount] of tokenAmounts) {
     const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
+    console.log("tokenInfo", tokenId, tokenInfo)
     if (typeof tokenInfo === 'undefined') {
       continue
     }
