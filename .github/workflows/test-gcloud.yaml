@@ -22,4 +22,4 @@ jobs:
     - name: auth docker
       run: gcloud auth configure-docker
     - name: pull images
-      run: docker pull eu.gcr.io/alephium-org/bridge-ui:0.2.85@sha256:89967a4b871203013ec8674cd9be8c1902b6708cbd56876c927e179ec1ebb9b3
+      run: gcloud storage ls --project=alephium-org
