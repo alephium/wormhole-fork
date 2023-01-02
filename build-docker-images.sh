@@ -14,7 +14,7 @@ fi
 
 set -euo pipefail xtrace
 
-VERSION=0.2.83
+VERSION=0.2.85
 
 export DOCKER_BUILDKIT=1
 
