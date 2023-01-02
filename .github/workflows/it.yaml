@@ -4,9 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - build-docker-images
       - refactor-configs
-      - refactor-configs-u
 jobs:
   test:
     runs-on: ubuntu-20.04
