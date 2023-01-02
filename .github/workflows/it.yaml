@@ -47,5 +47,8 @@ jobs:
         service_account: wormhole-fork-repo@alephium-org.iam.gserviceaccount.com
     - name: auth docker
       run: gcloud auth configure-docker
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: build and push testnet docker images
       run: ./build-docker-images.sh "testnet" true
