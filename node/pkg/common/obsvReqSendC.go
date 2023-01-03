@@ -3,7 +3,7 @@ package common
 import (
 	"errors"
 
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
 )
 
 const ObsvReqChannelSize = 50
