@@ -20,7 +20,8 @@ import {
   node,
   addressFromContractId,
   groupOfAddress,
-  ALPH_TOKEN_ID
+  ALPH_TOKEN_ID,
+  isHexString
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -178,4 +179,8 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
   const address = base58.encode(recipient)
   return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
+}
+
+export function isValidAlephiumTokenId(tokenId: string): boolean {
+  return tokenId.length === 64 && isHexString(tokenId)
 }
