@@ -11,7 +11,6 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
-	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/holiman/uint256"
 )
@@ -204,20 +203,6 @@ func addReceiverAddressToMutation(mut *bigtable.Mutation, ts bigtable.Timestamp,
 	if nativeAddress != "" {
 		mut.Set(columnFamilies[6], "ReceiverAddress", ts, []byte(nativeAddress))
 	}
-}
-
-func loadTokenTransferEmitters() (map[string]string, error) {
-	networks := []string{"mainnet", "devnet", "testnet"}
-	emitters := make(map[string]string)
-	for _, network := range networks {
-		configs, err := common.ReadConfigsByNetwork(network)
-		if err != nil {
-			return nil, err
-		}
-		emitters[configs.Alephium.TokenBridgeEmitterAddress] = configs.Alephium.Contracts.TokenBridge
-		emitters[configs.Ethereum.TokenBridgeEmitterAddress] = configs.Ethereum.Contracts.TokenBridge
-	}
-	return emitters, nil
 }
 
 // ProcessVAA is triggered by a PubSub message, emitted after row is saved to BigTable by guardiand
