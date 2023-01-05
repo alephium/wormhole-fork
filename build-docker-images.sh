@@ -51,6 +51,6 @@ docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explo
 if [ "${pushImage}" = true ]
 then
     docker push eu.gcr.io/alephium-org/guardiand:$VERSION
-    docker push eu.gcr.io/alephium-org/bridge-ui:$VERSION
+    docker push eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION
     docker push eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
 fi
