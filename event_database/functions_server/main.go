@@ -6,12 +6,34 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
 	p "github.com/alephium/wormhole-fork/event_database/cloud_functions"
+	"github.com/alephium/wormhole-fork/node/pkg/common"
 )
+
+func loadEmitters() (*p.Emitters, error) {
+	// TODO: add mainnet after we deployed contracts on mainnet
+	networks := []string{"devnet", "testnet"}
+	nftEmitters := make(map[string]string)
+	tokenTransferEmitters := make(map[string]string)
+	for _, network := range networks {
+		configs, err := common.ReadConfigsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+		tokenTransferEmitters[strings.ToLower(configs.Alephium.TokenBridgeEmitterAddress)] = strings.ToLower(configs.Alephium.Contracts.TokenBridge)
+		tokenTransferEmitters[strings.ToLower(configs.Ethereum.TokenBridgeEmitterAddress)] = strings.ToLower(configs.Ethereum.Contracts.TokenBridge)
+	}
+	emitters := &p.Emitters{
+		TokenTransferEmitters: tokenTransferEmitters,
+		NFTEmitters:           nftEmitters,
+	}
+	return emitters, nil
+}
 
 func createAndSubscribe(client *pubsub.Client, topicName, subscriptionName string, handler func(ctx context.Context, m p.PubSubMessage) error) {
 	var topic *pubsub.Topic
@@ -80,6 +102,11 @@ func newMux() *http.ServeMux {
 }
 
 func main() {
+	emitters, err := loadEmitters()
+	if err != nil {
+		log.Fatalf("failed to load emitters, err: %v", err)
+	}
+
 	var wg sync.WaitGroup
 
 	// http functions
@@ -111,8 +138,13 @@ func main() {
 
 	pubsubTopicVAA := os.Getenv("PUBSUB_NEW_VAA_TOPIC")
 	pubsubSubscriptionVAA := os.Getenv("PUBSUB_NEW_VAA_SUBSCRIPTION")
+
+	processVAA := func(ctx context.Context, m p.PubSubMessage) error {
+		return p.ProcessVAA(ctx, m, emitters)
+	}
+
 	wg.Add(1)
-	go createAndSubscribe(pubsubClient, pubsubTopicVAA, pubsubSubscriptionVAA, p.ProcessVAA)
+	go createAndSubscribe(pubsubClient, pubsubTopicVAA, pubsubSubscriptionVAA, processVAA)
 	wg.Done()
 
 	pubsubTopicTransfer := os.Getenv("PUBSUB_TOKEN_TRANSFER_DETAILS_TOPIC")

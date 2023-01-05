@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 
 	"cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
@@ -21,18 +20,10 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
-// The keys are emitterAddress hex values, so that we can quickly check a message against the index to see if it
-// meets the criteria for saving payload info: if it is a token transfer, or an NFT transfer.
-var nftEmitters = map[string]string{}
-var muNFTEmitters sync.RWMutex
-
-// NFTEmitters will be populated with lowercase addresses
-var NFTEmitters = map[string]string{}
-
-var muTokenTransferEmitters sync.RWMutex
-
-// TokenTransferEmitters will be populated with lowercase addresses
-var TokenTransferEmitters = map[string]string{}
+type Emitters struct {
+	TokenTransferEmitters map[string]string
+	NFTEmitters           map[string]string
+}
 
 // this address is an emitter for BSC and Polygon.
 var sharedEmitterAddress = "0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde"
@@ -230,27 +221,7 @@ func loadTokenTransferEmitters() (map[string]string, error) {
 }
 
 // ProcessVAA is triggered by a PubSub message, emitted after row is saved to BigTable by guardiand
-func ProcessVAA(ctx context.Context, m PubSubMessage) error {
-	muNFTEmitters.Lock()
-	if len(NFTEmitters) == 0 {
-		for k, v := range nftEmitters {
-			NFTEmitters[strings.ToLower(k)] = strings.ToLower(v)
-		}
-	}
-	muNFTEmitters.Unlock()
-	muTokenTransferEmitters.Lock()
-	if len(TokenTransferEmitters) == 0 {
-		tokenTransferEmitters, err := loadTokenTransferEmitters()
-		if err != nil {
-			muTokenTransferEmitters.Unlock()
-			return err
-		}
-		for k, v := range tokenTransferEmitters {
-			TokenTransferEmitters[strings.ToLower(k)] = strings.ToLower(v)
-		}
-	}
-	muTokenTransferEmitters.Unlock()
-
+func ProcessVAA(ctx context.Context, m PubSubMessage, emitters *Emitters) error {
 	data := string(m.Data)
 	if data == "" {
 		return fmt.Errorf("no data to process in message")
@@ -271,7 +242,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 	// The BSC contract is the NFT emitter address.
 	// The Polygon contract is the token transfer emitter address.
 	// Due to that, ensure that the block below only runs for token transfers by checking for chain == 4 and emitter addaress.
-	if _, ok := TokenTransferEmitters[emitterHex]; ok && !(signedVaa.EmitterChain == 4 && signedVaa.EmitterAddress.String() == sharedEmitterAddress) {
+	if _, ok := emitters.TokenTransferEmitters[emitterHex]; ok && !(signedVaa.EmitterChain == 4 && signedVaa.EmitterAddress.String() == sharedEmitterAddress) {
 		// figure out if it's a transfer or asset metadata
 
 		if payloadId == 1 {
@@ -358,7 +329,7 @@ func ProcessVAA(ctx context.Context, m PubSubMessage) error {
 			log.Println("encountered unknown payload type for row ", rowKey)
 			return nil
 		}
-	} else if _, ok := NFTEmitters[emitterHex]; ok {
+	} else if _, ok := emitters.NFTEmitters[emitterHex]; ok {
 		if payloadId == 1 {
 			// NFT transfer
 			payload, decodeErr := DecodeNFTTransfer(signedVaa.Payload)
