@@ -1246,6 +1246,7 @@ describe('test token bridge', () => {
       'updateMinimalConsistencyLevel',
       'getRefundAddress',
       'updateRefundAddress',
+      'getMessageFee',
       'attestToken',
       'createLocalTokenPool',
       'createRemoteTokenPool',

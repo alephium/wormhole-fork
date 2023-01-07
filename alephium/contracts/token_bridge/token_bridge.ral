@@ -7,7 +7,6 @@ Contract TokenBridge(
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
 ) extends TokenBridgeGovernance(governance, localChainId, receivedSequence, sendSequence, tokenBridgeFactory, minimalConsistencyLevel, refundAddress) {
-    @using(externalCallCheck = false)
     pub fn getMessageFee() -> U256 {
         return governance.getMessageFee()
     }

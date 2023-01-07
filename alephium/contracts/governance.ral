@@ -21,12 +21,11 @@ Contract Governance(
         TransferFee     = #04
     }
 
-    @using(externalCallCheck = false)
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true, externalCallCheck = false)
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn publishWormholeMessage(
         payer: Address,
         targetChainId: U256,
@@ -40,7 +39,7 @@ Contract Governance(
     }
 
     // parse VAA and verify signatures
-    @using(externalCallCheck = false)
+    @using(checkExternalCaller = false)
     pub fn parseAndVerifyVAA(data: ByteVec, isGovernanceVAA: Bool) -> (U256, U256, ByteVec, U256, ByteVec) {
         assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
@@ -91,7 +90,7 @@ Contract Governance(
         return emitterChainId, targetChainId, emitterAddress, sequence, payload
     }
 
-    @using(externalCallCheck = false)
+    @using(checkExternalCaller = false)
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, U256, ByteVec) {
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseAndVerifyVAA(vaa, true)
         assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)

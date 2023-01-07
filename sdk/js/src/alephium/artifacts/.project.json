@@ -5,11 +5,11 @@
     "ignoreUnusedFieldsWarnings": false,
     "ignoreUnusedPrivateFunctionsWarnings": false,
     "ignoreUpdateFieldsCheckWarnings": false,
-    "ignoreExternalCallCheckWarnings": false
+    "ignoreCheckExternalCallerWarnings": false
   },
   "infos": {
     "contracts/governance.ral": {
-      "sourceCodeHash": "d72c55c7cffe894d54e0c3ea86bde98e9fc21dd8f0ae6680c966df9aeeed19fc",
+      "sourceCodeHash": "9ab28d31df15f878f77cc1305f834f658c57febb5e21a989d027a0c3b88887d7",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "75a1ae06e2bf44eb5ac8006149467d7d87edf6bf02ff768643ffcb9c99ff7e68",
       "warnings": []
@@ -81,13 +81,13 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
-      "sourceCodeHash": "b9de42b0429c4911319478d6c3500d5322ce21e0c29c43c70285baf3091d459a",
+      "sourceCodeHash": "e9eeaa642efc0a3d06c90836a3d08685632178e35683aeb364ea456336d9d63d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "c1ddd7c82dbf72cc15e15c5896dc3c4f0f0cbe06ac3b3a29f21baddc8908e4c6",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
-      "sourceCodeHash": "dd0a8039fe20612cfcd65f45700ad1a156f6d16bcd55b3b9401f477fc28bbb93",
+      "sourceCodeHash": "016257fa39cd592058f2a2b45619cfe041890df82ce233e2adaa666f56dfc9c0",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "5987d02ad82f2d834725ef84ad994e02f355b7c6498b6b7709c3981e72a26ad0",
       "warnings": []
@@ -237,7 +237,7 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_governance.ral": {
-      "sourceCodeHash": "d969208b0118fa0b8de5fbfe94062d786cc513b6422ebf78a0bdc9f8775d8632",
+      "sourceCodeHash": "bfe6b4a92ddc4d9637b5c14533964c5c835b6027f93eb1e0624ae927d6838083",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
