@@ -75,7 +75,6 @@ export async function transferLocalTokenFromAlph(
       toChainId: BigInt(toChainId),
       toAddress: toAddress,
       tokenAmount: tokenAmount,
-      messageFee: messageFee,
       arbiterFee: arbiterFee,
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
@@ -112,7 +111,6 @@ export async function transferRemoteTokenFromAlph(
       toChainId: BigInt(toChainId),
       toAddress: toAddress,
       tokenAmount: tokenAmount,
-      messageFee: messageFee,
       arbiterFee: arbiterFee,
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)

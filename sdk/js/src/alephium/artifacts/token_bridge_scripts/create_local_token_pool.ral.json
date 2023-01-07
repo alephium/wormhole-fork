@@ -1,7 +1,7 @@
 {
   "version": "v1.6.0",
   "name": "CreateLocalTokenPool",
-  "bytecodeTemplate": "0101030000000e{0}7a{3}a2{2}0da3{2}{0}{3}0f0c{1}010a",
+  "bytecodeTemplate": "0101030000000e{0}7a{3}a2{2}0da3{2}{0}{3}0f0c{1}010b",
   "fieldsSig": {
     "names": [
       "payer",

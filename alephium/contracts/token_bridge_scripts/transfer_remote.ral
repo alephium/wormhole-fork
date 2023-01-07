@@ -7,11 +7,11 @@ TxScript TransferRemote(
     toChainId: U256,
     toAddress: ByteVec,
     tokenAmount: U256,
-    messageFee: U256,
     arbiterFee: U256,
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
+    let messageFee = tokenBridge.getMessageFee()
     tokenBridge.transferToken{
         fromAddress -> ALPH: messageFee, tokenPoolId: tokenAmount
     }(

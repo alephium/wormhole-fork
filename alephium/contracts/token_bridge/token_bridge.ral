@@ -7,6 +7,11 @@ Contract TokenBridge(
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
 ) extends TokenBridgeGovernance(governance, localChainId, receivedSequence, sendSequence, tokenBridgeFactory, minimalConsistencyLevel, refundAddress) {
+    @using(externalCallCheck = false)
+    pub fn getMessageFee() -> U256 {
+        return governance.getMessageFee()
+    }
+
     @using(preapprovedAssets = true)
     pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
         assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)

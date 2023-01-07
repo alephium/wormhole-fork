@@ -65,7 +65,7 @@
     "contracts/token_bridge/attest_token_handler.ral": {
       "sourceCodeHash": "64746107d64592f32a1060b25da4ff465bcbcf47d13f9d58a46b8b6bce5fa590",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "3ca927f053a247cbcbde028b76cb5df13be57b43147637a32903de8bdb155419",
+      "codeHashDebug": "9ea3f23e8e99dbd6d9bf5144306e2fc1e969e85346569ed0244c6d18f6b93c3c",
       "warnings": []
     },
     "contracts/token_bridge/local_token_pool.ral": {
@@ -81,9 +81,9 @@
       "warnings": []
     },
     "contracts/token_bridge/token_bridge.ral": {
-      "sourceCodeHash": "997308fc813e92f03ec58b1309e41e57d379bb71895c6610f81949a1321b7bdb",
+      "sourceCodeHash": "b9de42b0429c4911319478d6c3500d5322ce21e0c29c43c70285baf3091d459a",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "8dc103ab87acb96784c6f40d211410919ce7cb197037f80f2eb1476797c042d9",
+      "codeHashDebug": "c1ddd7c82dbf72cc15e15c5896dc3c4f0f0cbe06ac3b3a29f21baddc8908e4c6",
       "warnings": []
     },
     "contracts/token_bridge/token_bridge_factory.ral": {
@@ -129,7 +129,7 @@
       "warnings": []
     },
     "contracts/token_bridge_scripts/attest_token.ral": {
-      "sourceCodeHash": "81ad710242a54c515d5df6e8fad432b0175b2362ad19e781b5855c17da0a61f7",
+      "sourceCodeHash": "c8d0a94d14009939bc16f0b3d34f30bb6533124d647070b5d9763dc10fd15c48",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -171,13 +171,13 @@
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_local.ral": {
-      "sourceCodeHash": "f7c7fd0c2caf533bd5599f412bcee82a15fdc7cfa98821475c8b32bdac95a4a3",
+      "sourceCodeHash": "ff683baae08db7e2547602adf683b7773de59be65d822180a9f0b8991d9d29df",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "contracts/token_bridge_scripts/transfer_remote.ral": {
-      "sourceCodeHash": "c98c599b02af9c5aa15fb69c55f4258b0be3cd41c82686b93a69e4141cbf9113",
+      "sourceCodeHash": "30864c0ba18695e957da394e758cfa0cc91f5457fa847e3ef03a664566df48ad",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []

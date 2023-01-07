@@ -38,7 +38,6 @@ export async function attestFromAlph(
       payer: payer,
       tokenBridge: tokenBridgeId,
       localTokenId: tokenId,
-      messageFee: messageFee,
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
