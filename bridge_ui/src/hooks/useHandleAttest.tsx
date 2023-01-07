@@ -52,7 +52,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -300,6 +300,9 @@ async function alephium(
 ) {
   dispatch(setIsSending(true));
   try {
+    if (!isValidAlephiumTokenId(localTokenId)) {
+      throw new Error(`Invalid local token: ${localTokenId}`)
+    }
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
         const result = await attestFromAlph(

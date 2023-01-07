@@ -32,11 +32,13 @@ type PollFinalizer interface {
 }
 
 type PollImpl struct {
-	BaseEth   EthImpl
-	Finalizer PollFinalizer
-	DelayInMs int
-	logger    *zap.Logger
-	rawClient *ethRpc.Client
+	BaseEth             EthImpl
+	Finalizer           PollFinalizer
+	DelayInMs           int
+	IsEthPoS            bool
+	hasEthSwitchedToPoS bool
+	logger              *zap.Logger
+	rawClient           *ethRpc.Client
 }
 
 func (e *PollImpl) SetLogger(l *zap.Logger) {
@@ -45,6 +47,11 @@ func (e *PollImpl) SetLogger(l *zap.Logger) {
 	if e.Finalizer != nil {
 		e.Finalizer.SetLogger(l, e.BaseEth.NetworkName)
 	}
+}
+
+func (e *PollImpl) SetEthSwitched() {
+	e.hasEthSwitchedToPoS = true
+	e.logger.Info("switching from latest to finalized", zap.String("eth_network", e.BaseEth.NetworkName), zap.Int("delay_in_ms", e.DelayInMs))
 }
 
 func (e *PollImpl) DialContext(ctx context.Context, rawurl string) (err error) {
@@ -160,13 +167,14 @@ func (e *PollImpl) SubscribeForBlocks(ctx context.Context, sink chan<- *common.N
 
 					// See if the next block has been created yet.
 					if currentBlockNumber.Cmp(latestBlock.Number) > 0 {
-						latestBlock, err = e.getBlock(ctx, nil)
-						if err != nil {
+						tmpLatestBlock, latestBlockErr := e.getBlock(ctx, nil)
+						if latestBlockErr != nil {
 							errorOccurred = true
 							e.logger.Error("failed to look up latest block", zap.String("eth_network", e.BaseEth.NetworkName),
-								zap.Uint64("block", currentBlockNumber.Uint64()), zap.Error(err))
+								zap.Uint64("block", currentBlockNumber.Uint64()), zap.Error(latestBlockErr))
 							break
 						}
+						latestBlock = tmpLatestBlock
 
 						if currentBlockNumber.Cmp(latestBlock.Number) > 0 {
 							// We have to wait for this block to become available.
@@ -228,13 +236,16 @@ func (e *PollImpl) getBlock(ctx context.Context, number *big.Int) (*common.NewBl
 	var numStr string
 	if number != nil {
 		numStr = ethHexUtils.EncodeBig(number)
+	} else if e.hasEthSwitchedToPoS {
+		numStr = "finalized"
 	} else {
 		numStr = "latest"
 	}
 
 	type Marshaller struct {
-		Number *ethHexUtils.Big
-		Hash   ethCommon.Hash `json:"hash"`
+		Number     *ethHexUtils.Big
+		Hash       ethCommon.Hash `json:"hash"`
+		Difficulty *ethHexUtils.Big
 	}
 
 	var m Marshaller
@@ -244,7 +255,17 @@ func (e *PollImpl) getBlock(ctx context.Context, number *big.Int) (*common.NewBl
 			zap.String("requested_block", numStr), zap.Error(err))
 		return nil, err
 	}
-
+	if m.Number == nil {
+		e.logger.Error("failed to unmarshal block", zap.String("eth_network", e.BaseEth.NetworkName),
+			zap.String("requested_block", numStr),
+		)
+		return nil, fmt.Errorf("failed to unmarshal block: Number is nil")
+	}
+	d := big.Int(*m.Difficulty)
+	if e.IsEthPoS && !e.hasEthSwitchedToPoS && d.Cmp(big.NewInt(0)) == 0 {
+		e.SetEthSwitched()
+		return e.getBlock(ctx, number)
+	}
 	n := big.Int(*m.Number)
 	return &common.NewBlock{
 		Number: &n,
