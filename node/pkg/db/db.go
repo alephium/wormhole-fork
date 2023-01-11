@@ -125,7 +125,8 @@ func (d *Database) StoreSignedVAA(v *vaa.VAA) error {
 	return nil
 }
 
-func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
+func (d *Database) NextGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
+	hasGovernanceVAA := false
 	maxSequence := uint64(0)
 	vaaId := &VAAID{
 		EmitterChain:   governanceChainId,
@@ -140,6 +141,7 @@ func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, gover
 		defer it.Close()
 
 		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
+			hasGovernanceVAA = true
 			keyStr := string(it.Item().Key())
 			index := strings.LastIndex(keyStr, "/")
 			if index == -1 {
@@ -157,7 +159,12 @@ func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, gover
 	}); err != nil {
 		return nil, err
 	}
-	return &maxSequence, nil
+	if !hasGovernanceVAA {
+		nextSequence := uint64(0)
+		return &nextSequence, nil
+	}
+	nextSequence := maxSequence + 1
+	return &nextSequence, nil
 }
 
 func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
