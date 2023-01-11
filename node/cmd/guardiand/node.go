@@ -648,7 +648,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// provides methods for reporting progress toward message attestation, and channels for receiving attestation lifecyclye events.
 	attestationEvents := reporter.EventListener(logger)
 
-	publicrpcService, publicrpcServer, err := publicrpcServiceRunnable(logger, *publicRPC, db, gst)
+	publicrpcService, publicrpcServer, err := publicrpcServiceRunnable(logger, *publicRPC, db, gst, governanceChainId, governanceEmitterAddress)
 
 	if err != nil {
 		log.Fatal("failed to create publicrpc service socket", zap.Error(err))

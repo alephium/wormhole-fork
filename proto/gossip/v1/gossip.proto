@@ -80,7 +80,7 @@ message SignedObservation {
   // Transaction hash this observation was made from.
   // Optional, included for observability.
   bytes tx_hash = 4;
-  // Message ID (chain/emitter/seq) for this observation.
+  // Message ID (emitter_chain/emitter/target_chain/seq) for this observation.
   // Optional, included for observability.
   string message_id = 5;
 }

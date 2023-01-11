@@ -325,7 +325,7 @@ type SignedObservation struct {
 	// Transaction hash this observation was made from.
 	// Optional, included for observability.
 	TxHash []byte `protobuf:"bytes,4,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
-	// Message ID (chain/emitter/seq) for this observation.
+	// Message ID (emitter_chain/emitter/target_chain/seq) for this observation.
 	// Optional, included for observability.
 	MessageId string `protobuf:"bytes,5,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }

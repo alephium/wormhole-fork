@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/rand"
 	mathRand "math/rand"
@@ -94,6 +95,69 @@ func randomGovernanceVAA(targetChainId vaa.ChainID) *vaa.VAA {
 		Signatures:     []*vaa.Signature{randomSignature()},
 		Payload:        randomPayload(),
 	}
+}
+
+func TestGetGovernanceVAASequence(t *testing.T) {
+	db, err := Open(t.TempDir())
+	assert.Nil(t, err)
+
+	vaas := make([]*GovernanceVAA, 0)
+	for i := 0; i < 5; i++ {
+		v := randomGovernanceVAA(vaa.ChainIDUnset)
+		v.Sequence = uint64(i)
+		err = db.StoreSignedVAA(v)
+		assert.Nil(t, err)
+		vaaBytes, err := v.Marshal()
+		assert.Nil(t, err)
+		vaas = append(vaas, &GovernanceVAA{
+			TargetChain: vaa.ChainIDUnset,
+			Sequence:    v.Sequence,
+			VaaBytes:    vaaBytes,
+		})
+	}
+
+	checkEqual := func(left, right []*GovernanceVAA) {
+		assert.Equal(t, len(left), len(right))
+		for i := 0; i < len(left); i++ {
+			l := left[i]
+			r := right[i]
+			assert.Equal(t, l.TargetChain, r.TargetChain)
+			assert.Equal(t, l.Sequence, r.Sequence)
+			assert.True(t, bytes.Equal(l.VaaBytes, r.VaaBytes))
+		}
+	}
+
+	test := func(sequences []uint64, expected []*GovernanceVAA) {
+		res, err := db.GetGovernanceVAABatch(GovernanceChain, GovernanceEmitter, sequences)
+		assert.Nil(t, err)
+		checkEqual(res, expected)
+	}
+
+	sequences := make([]uint64, 0)
+	for i := 0; i < 5; i++ {
+		sequences = append(sequences, uint64(i))
+		test(sequences, vaas[0:(i+1)])
+	}
+
+	test([]uint64{2, 4}, []*GovernanceVAA{vaas[2], vaas[4]})
+	test([]uint64{0, 1, 2, 3, 4, 5, 6, 7}, vaas)
+
+	for i := 0; i < 5; i++ {
+		v := randomGovernanceVAA(vaa.ChainIDAlephium)
+		v.Sequence = uint64(i + 10)
+		err = db.StoreSignedVAA(v)
+		assert.Nil(t, err)
+		vaaBytes, err := v.Marshal()
+		assert.Nil(t, err)
+		vaas = append(vaas, &GovernanceVAA{
+			TargetChain: vaa.ChainIDAlephium,
+			Sequence:    v.Sequence,
+			VaaBytes:    vaaBytes,
+		})
+	}
+
+	test([]uint64{4, 5, 6, 7, 8, 9, 10}, vaas[4:6])
+	test([]uint64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, vaas)
 }
 
 func TestNextGovernanceVAASequence(t *testing.T) {
