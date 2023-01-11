@@ -541,7 +541,7 @@ func adminServiceRunnable(
 		governanceEmitterAddress: governanceEmitterAddress,
 	}
 
-	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst)
+	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst, governanceChainId, governanceEmitterAddress)
 
 	grpcServer := common.NewInstrumentedGRPCServer(logger)
 	nodev1.RegisterNodePrivilegedServiceServer(grpcServer, nodeService)

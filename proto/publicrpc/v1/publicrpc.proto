@@ -61,6 +61,12 @@ service PublicRPCService {
     };
   }
 
+  rpc GetNonGovernanceVAABatch (GetNonGovernanceVAABatchRequest) returns (GetNonGovernanceVAABatchResponse) {
+  }
+
+  rpc GetGovernanceVAABatch (GetGovernanceVAABatchRequest) returns (GetGovernanceVAABatchResponse) {
+  }
+
   rpc GetCurrentGuardianSet (GetCurrentGuardianSetRequest) returns (GetCurrentGuardianSetResponse) {
     option (google.api.http) = {
       get: "/v1/guardianset/current"
@@ -75,6 +81,41 @@ message GetSignedVAARequest {
 
 message GetSignedVAAResponse {
   bytes vaa_bytes = 1;
+}
+
+message GetNonGovernanceVAABatchRequest {
+  // Emitter chain ID.
+  ChainID emitter_chain = 1;
+  // Hex-encoded (without leading 0x) emitter address.
+  string emitter_address = 2;
+  // Target chain ID.
+  ChainID target_chain = 3;
+  // Sequences
+  repeated uint64 sequences = 4;
+}
+
+message GetNonGovernanceVAABatchResponse {
+  message Entry {
+    uint64 sequence = 1;
+    bytes vaa_bytes = 2;
+  }
+
+  repeated Entry entries = 1;
+}
+
+message GetGovernanceVAABatchRequest {
+  // Sequences
+  repeated uint64 sequences = 1;
+}
+
+message GetGovernanceVAABatchResponse {
+  message Entry {
+    ChainID target_chain = 1;
+    uint64 sequence = 2;
+    bytes vaa_bytes = 3;
+  }
+
+  repeated Entry entries = 1;
 }
 
 message GetLastHeartbeatsRequest {

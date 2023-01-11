@@ -20,17 +20,25 @@ type PublicrpcServer struct {
 	logger *zap.Logger
 	db     *db.Database
 	gst    *common.GuardianSetState
+
+	governanceChainId vaa.ChainID
+	governanceEmitter vaa.Address
 }
 
 func NewPublicrpcServer(
 	logger *zap.Logger,
 	db *db.Database,
 	gst *common.GuardianSetState,
+	governanceChainId vaa.ChainID,
+	governanceEmitterAddress vaa.Address,
 ) *PublicrpcServer {
 	return &PublicrpcServer{
 		logger: logger.Named("publicrpcserver"),
 		db:     db,
 		gst:    gst,
+
+		governanceChainId: governanceChainId,
+		governanceEmitter: governanceEmitterAddress,
 	}
 }
 
@@ -59,12 +67,8 @@ func (s *PublicrpcServer) GetLastHeartbeats(ctx context.Context, req *publicrpcv
 	return resp, nil
 }
 
-func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.GetSignedVAARequest) (*publicrpcv1.GetSignedVAAResponse, error) {
-	if req.MessageId == nil {
-		return nil, status.Error(codes.InvalidArgument, "no message ID specified")
-	}
-
-	address, err := hex.DecodeString(req.MessageId.EmitterAddress)
+func decodeEmitterAddress(emitterAddress string) (*vaa.Address, error) {
+	address, err := hex.DecodeString(emitterAddress)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode address: %v", err))
 	}
@@ -74,10 +78,22 @@ func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.Get
 
 	addr := vaa.Address{}
 	copy(addr[:], address)
+	return &addr, nil
+}
+
+func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.GetSignedVAARequest) (*publicrpcv1.GetSignedVAAResponse, error) {
+	if req.MessageId == nil {
+		return nil, status.Error(codes.InvalidArgument, "no message ID specified")
+	}
+
+	emitterAddress, err := decodeEmitterAddress(req.MessageId.EmitterAddress)
+	if err != nil {
+		return nil, err
+	}
 
 	b, err := s.db.GetSignedVAABytes(db.VAAID{
 		EmitterChain:   vaa.ChainID(req.MessageId.EmitterChain.Number()),
-		EmitterAddress: addr,
+		EmitterAddress: *emitterAddress,
 		TargetChain:    vaa.ChainID(req.MessageId.TargetChain.Number()),
 		Sequence:       req.MessageId.Sequence,
 	})
@@ -87,11 +103,75 @@ func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.Get
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		s.logger.Error("failed to fetch VAA", zap.Error(err), zap.Any("request", req))
-		return nil, status.Error(codes.Internal, "internal server error")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("internal server error: %v", err))
 	}
 
 	return &publicrpcv1.GetSignedVAAResponse{
 		VaaBytes: b,
+	}, nil
+}
+
+func validateBatchSize(size int) error {
+	if size > 20 {
+		return status.Error(codes.InvalidArgument, "batch size exceed 20")
+	}
+	return nil
+}
+
+func (s *PublicrpcServer) GetNonGovernanceVAABatch(ctx context.Context, req *publicrpcv1.GetNonGovernanceVAABatchRequest) (*publicrpcv1.GetNonGovernanceVAABatchResponse, error) {
+	if err := validateBatchSize(len(req.Sequences)); err != nil {
+		return nil, err
+	}
+
+	emitterAddress, err := decodeEmitterAddress(req.EmitterAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]*publicrpcv1.GetNonGovernanceVAABatchResponse_Entry, 0)
+	for _, sequence := range req.Sequences {
+		b, err := s.db.GetSignedVAABytes(db.VAAID{
+			EmitterChain:   vaa.ChainID(req.EmitterChain.Number()),
+			EmitterAddress: *emitterAddress,
+			TargetChain:    vaa.ChainID(req.TargetChain.Number()),
+			Sequence:       sequence,
+		})
+		if err != nil {
+			if err == db.ErrVAANotFound {
+				// skip the current sequence
+				continue
+			}
+			s.logger.Error("failed to fetch VAA", zap.Error(err), zap.Any("request", req))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("internal server error: %v", err))
+		}
+		entries = append(entries, &publicrpcv1.GetNonGovernanceVAABatchResponse_Entry{
+			Sequence: sequence,
+			VaaBytes: b,
+		})
+	}
+
+	return &publicrpcv1.GetNonGovernanceVAABatchResponse{Entries: entries}, nil
+}
+
+func (s *PublicrpcServer) GetGovernanceVAABatch(ctx context.Context, req *publicrpcv1.GetGovernanceVAABatchRequest) (*publicrpcv1.GetGovernanceVAABatchResponse, error) {
+	if err := validateBatchSize(len(req.Sequences)); err != nil {
+		return nil, err
+	}
+
+	entries := make([]*publicrpcv1.GetGovernanceVAABatchResponse_Entry, 0)
+	vaas, err := s.db.GetGovernanceVAABatch(s.governanceChainId, s.governanceEmitter, req.Sequences)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("internal server error: %v", err))
+	}
+	for _, vaa := range vaas {
+		entries = append(entries, &publicrpcv1.GetGovernanceVAABatchResponse_Entry{
+			TargetChain: publicrpcv1.ChainID(vaa.TargetChain),
+			Sequence:    vaa.Sequence,
+			VaaBytes:    vaa.VaaBytes,
+		})
+	}
+	return &publicrpcv1.GetGovernanceVAABatchResponse{
+		Entries: entries,
 	}, nil
 }
 
