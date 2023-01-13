@@ -278,9 +278,10 @@ function createAttestTokenHandlerTemplate(): ContractInfo {
   return createContract('AttestTokenHandler', {
     governance: '',
     localTokenBridge: '',
-    remoteChainId: 0n,
-    remoteTokenBridgeId: '',
-    receivedSequence: 0n
+    chainId: 0n,
+    tokenBridgeId: '',
+    receivedSequence: 0n,
+    isLocalHandler: false
   })
 }
 
@@ -367,9 +368,10 @@ export function createAttestTokenHandler(
     governance: tokenBridge.governance.contractId,
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
     localTokenBridge: tokenBridge.contractId,
-    remoteChainId: BigInt(remoteChainId),
-    remoteTokenBridgeId: remoteTokenBridgeId,
-    receivedSequence: 0n
+    chainId: BigInt(remoteChainId),
+    tokenBridgeId: remoteTokenBridgeId,
+    receivedSequence: 0n,
+    isLocalHandler: remoteChainId === CHAIN_ID_ALEPHIUM
   }
   const state = attestTokenHandlerContract.toState(initFields, initAsset, contractAddress)
   return new ContractInfo(attestTokenHandlerContract, state, tokenBridge.states(), contractAddress)

@@ -16,7 +16,7 @@ export const minimalAlphInContract = oneAlph
 export const initAsset: Asset = {
   alphAmount: minimalAlphInContract
 }
-export const u256Max = 1n << 255n
+export const tokenMax = 1n << 255n
 export const gasPrice = BigInt('100000000000')
 export const maxGasPerTx = BigInt('625000')
 export const defaultGasFee = gasPrice * maxGasPerTx
