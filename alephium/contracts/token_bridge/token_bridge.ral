@@ -45,14 +45,21 @@ Contract TokenBridge(
     }
 
     @using(preapprovedAssets = true)
-    pub fn createLocalTokenPool(localTokenId: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
+    pub fn createLocalTokenPool(
+        localTokenId: ByteVec,
+        decimals: U256,
+        payer: Address,
+        createContractAlphAmount: U256
+    ) -> () {
+        let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(localChainId))
+        checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
         let encodedFields = encodeToByteVec!(
             selfContractId!(),
             localChainId,
             localTokenId,
             0,
-            0
+            decimals
         )
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(

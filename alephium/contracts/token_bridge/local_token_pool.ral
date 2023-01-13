@@ -3,7 +3,7 @@ Contract LocalTokenPool(
     tokenChainId: U256, // local chain id
     bridgeTokenId: ByteVec, // local token id
     mut totalBridged: U256,
-    decimals_: U256 // should be 0
+    decimals_: U256
 ) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn transfer(

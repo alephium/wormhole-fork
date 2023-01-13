@@ -24,6 +24,25 @@ Abstract Contract TokenBridgeGovernance(
         return targetChainId, payload
     }
 
+    @using(preapprovedAssets = true)
+    pub fn createLocalAttestTokenHandler(payer: Address, createContractAlphAmount: U256) -> () {
+        let localTokenBridgeId = selfContractId!()
+        let fields = encodeToByteVec!(
+            governance,
+            localTokenBridgeId,
+            localChainId,
+            localTokenBridgeId,
+            0,
+            true
+        )
+        let path = Path.AttestTokenHandler ++ u256To2Byte!(localChainId)
+        copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
+            path,
+            tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
+            fields
+        )
+    }
+
     fn parseAndVerifyRegisterChain(vaa: ByteVec) -> (U256, ByteVec) {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.RegisterChain)
         assert!(targetChainId == localChainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
@@ -44,7 +63,8 @@ Abstract Contract TokenBridgeGovernance(
             selfContractId!(),
             remoteChainId,
             remoteTokenBridgeId,
-            0
+            0,
+            false
         )
         let attestTokenHandlerPath = Path.AttestTokenHandler ++ remoteChainIdBytes
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
