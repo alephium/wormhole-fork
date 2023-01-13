@@ -42,9 +42,10 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
   const attestTokenHandlerId = await deployTemplateContract(deployer, 'AttestTokenHandler', {
     governance: '',
     localTokenBridge: '',
-    remoteChainId: 0n,
-    remoteTokenBridgeId: '',
-    receivedSequence: 0n
+    chainId: 0n,
+    tokenBridgeId: '',
+    receivedSequence: 0n,
+    isLocalHandler: false
   })
   const unexecutedSequenceId = await deployTemplateContract(deployer, 'UnexecutedSequence', {
     parentId: '',
