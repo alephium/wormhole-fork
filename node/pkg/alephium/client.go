@@ -177,3 +177,68 @@ func (c *Client) IsCliqueSynced(ctx context.Context) (*bool, error) {
 	}
 	return &response.Synced, nil
 }
+
+func (c *Client) CallContract(ctx context.Context, callContract *sdk.CallContract) (*sdk.CallContractResult, error) {
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
+	defer cancel()
+
+	request := c.impl.ContractsApi.PostContractsCallContract(timeoutCtx).CallContract(*callContract)
+	response, _, err := requestWithMetric[*sdk.CallContractResult](request, timestamp, "call_contract")
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (c *Client) GetTokenInfo(ctx context.Context, tokenId Byte32) (*TokenInfo, error) {
+	if tokenId == ALPHTokenId {
+		return &ALPHTokenInfo, nil
+	}
+
+	groupIndex := tokenId[31]
+	contractAddress, err := ToContractAddress(tokenId.ToHex())
+	if err != nil {
+		return nil, err
+	}
+	callContract := sdk.CallContract{
+		Group:   int32(groupIndex),
+		Address: *contractAddress,
+	}
+
+	callContract.MethodIndex = 0
+	getSymbolResult, err := c.CallContract(ctx, &callContract)
+	if err != nil || len(getSymbolResult.Returns) != 1 {
+		return nil, err
+	}
+
+	callContract.MethodIndex = 1
+	getNameResult, err := c.CallContract(ctx, &callContract)
+	if err != nil || len(getNameResult.Returns) != 1 {
+		return nil, err
+	}
+
+	callContract.MethodIndex = 2
+	getDecimalsResult, err := c.CallContract(ctx, &callContract)
+	if err != nil || len(getDecimalsResult.Returns) != 1 {
+		return nil, err
+	}
+
+	symbolBs, err := toByteVec(getSymbolResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	name, err := toByteVec(getNameResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	decimals, err := toUint8(getDecimalsResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	return &TokenInfo{
+		TokenId:  tokenId,
+		Decimals: *decimals,
+		Symbol:   bytesToString(symbolBs),
+		Name:     bytesToString(name),
+	}, nil
+}

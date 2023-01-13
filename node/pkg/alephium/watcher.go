@@ -174,6 +174,21 @@ func (w *Watcher) Run(ctx context.Context) error {
 	}
 }
 
+func (w *Watcher) validateAttestToken(ctx context.Context, msg *WormholeMessage) error {
+	tokenInfo, err := parseAttestToken(msg.payload)
+	if err != nil {
+		return err
+	}
+	tokenInfoFromChain, err := w.client.GetTokenInfo(ctx, tokenInfo.TokenId)
+	if err != nil {
+		return err
+	}
+	if *tokenInfo != *tokenInfoFromChain {
+		return fmt.Errorf("invalid token info")
+	}
+	return nil
+}
+
 func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC chan<- []*UnconfirmedEvent) {
 	contractAddress := w.governanceContractAddress
 	currentEventCount, err := client.GetContractEventsCount(ctx, contractAddress)
@@ -220,6 +235,12 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
 						errC <- err
 						return
+					}
+					if unconfirmed.msg.isAttestTokenVAA() {
+						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
+							logger.Error("ignore invalid attest token event", zap.Error(err))
+							continue
+						}
 					}
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}
