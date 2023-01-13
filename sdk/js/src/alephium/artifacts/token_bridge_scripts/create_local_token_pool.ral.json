@@ -1,21 +1,24 @@
 {
-  "version": "v1.6.0",
+  "version": "v1.6.4",
   "name": "CreateLocalTokenPool",
-  "bytecodeTemplate": "0101030000000e{0}7a{3}a2{2}0da3{2}{0}{3}0f0c{1}010b",
+  "bytecodeTemplate": "0101030000000f{0}7a{4}a2{2}0da3{3}{0}{4}0d100c{1}0101",
   "fieldsSig": {
     "names": [
       "payer",
-      "tokenBridge",
+      "attestTokenHandler",
       "localTokenId",
+      "vaa",
       "alphAmount"
     ],
     "types": [
       "Address",
       "ByteVec",
       "ByteVec",
+      "ByteVec",
       "U256"
     ],
     "isMutable": [
+      false,
       false,
       false,
       false,

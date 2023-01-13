@@ -1,7 +1,7 @@
 {
-  "version": "v1.6.0",
+  "version": "v1.6.4",
   "name": "RegisterChain",
-  "bytecodeTemplate": "0101030000000c{0}{3}0e2ca2{2}{0}{3}0f0c{1}0102",
+  "bytecodeTemplate": "0101030000000c{0}{3}0e2ca2{2}{0}{3}0f0c{1}0103",
   "fieldsSig": {
     "names": [
       "payer",

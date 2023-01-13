@@ -1,34 +1,19 @@
 {
   "version": "v1.6.4",
-  "name": "AttestToken",
-  "bytecodeTemplate": "010103000100170c0d{1}01091700{0}7a1600a2{2}0da3{0}{2}{3}{4}{5}{6}{7}13070c{1}010a",
+  "name": "CreateLocalAttestTokenHandler",
+  "bytecodeTemplate": "01010300000009{1}{2}a2{1}{2}0e0c{0}0101",
   "fieldsSig": {
     "names": [
-      "payer",
       "tokenBridge",
-      "localTokenId",
-      "decimals",
-      "symbol",
-      "name",
-      "nonce",
-      "consistencyLevel"
+      "payer",
+      "alphAmount"
     ],
     "types": [
+      "ByteVec",
       "Address",
-      "ByteVec",
-      "ByteVec",
-      "U256",
-      "ByteVec",
-      "ByteVec",
-      "ByteVec",
       "U256"
     ],
     "isMutable": [
-      false,
-      false,
-      false,
-      false,
-      false,
       false,
       false,
       false

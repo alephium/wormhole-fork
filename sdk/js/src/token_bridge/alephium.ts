@@ -1,7 +1,10 @@
 import {
   addressFromContractId,
+  ALPH_TOKEN_ID,
+  binToHex,
   BuildScriptTxResult,
   ContractState,
+  fromApiVal,
   node,
   NodeProvider,
   SignerProvider,
@@ -23,10 +26,10 @@ export async function registerChain(
   alphAmount: bigint
 ): Promise<BuildScriptTxResult> {
   const script = registerChainScript()
-  const account = await signerProvider.getSelectedAccount()
+  const address = await signerProvider.getSelectedAddress()
   return script.execute(signerProvider, {
     initialFields: {
-      payer: account.address,
+      payer: address,
       tokenBridge: tokenBridgeId,
       vaa: Buffer.from(signedVAA).toString('hex'),
       alphAmount: alphAmount
@@ -41,11 +44,11 @@ export async function deposit(
   amount: bigint
 ): Promise<BuildScriptTxResult> {
   const script = depositScript()
-  const account = await signerProvider.getSelectedAccount()
+  const address = await signerProvider.getSelectedAddress()
   return script.execute(signerProvider, {
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
-      payer: account.address,
+      payer: address,
       amount: amount
     },
     attoAlphAmount: amount
@@ -145,12 +148,15 @@ export async function contractExists(contractId: string, provider: NodeProvider)
       })
 }
 
-export interface RemoteTokenInfo {
+export interface TokenInfo {
   tokenId: string
-  tokenChainId: ChainId
   symbol: string
   name: string
   decimals: number
+}
+
+export interface RemoteTokenInfo extends TokenInfo {
+  tokenChainId: ChainId
 }
 
 function _getRemoteTokenInfo(contractState: ContractState): RemoteTokenInfo {
@@ -177,4 +183,73 @@ export async function getRemoteTokenInfo(address: string, groupIndex: number): P
   const contract = remoteTokenPoolContract()
   const contractState = await contract.fetchState(address, groupIndex)
   return _getRemoteTokenInfo(contractState)
+}
+
+export function stringToByte32Hex(str: string): string {
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(str)
+  if (bytes.length > 32) {
+    throw new Error('string exceed 32 bytes')
+  }
+  return binToHex(bytes).padStart(64, '0')
+}
+
+function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+  return txStatus.type === 'Confirmed'
+}
+
+export async function waitAlphTxConfirmed(
+  provider: NodeProvider,
+  txId: string,
+  confirmations: number
+): Promise<node.Confirmed> {
+  const status = await provider.transactions.getTransactionsStatus({ txId: txId })
+  if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
+    return status
+  }
+  await new Promise((r) => setTimeout(r, 1000))
+  return waitAlphTxConfirmed(provider, txId, confirmations)
+}
+
+export const ALPHTokenInfo: TokenInfo = {
+  tokenId: ALPH_TOKEN_ID,
+  symbol: 'ALPH',
+  name: 'ALPH',
+  decimals: 18
+}
+
+// TODO: move this to tokens-meta repo
+export async function getLocalTokenInfo(nodeProvider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return ALPHTokenInfo
+  }
+
+  const groupIndex = parseInt(tokenId.slice(-2), 16)
+  const contractAddress = addressFromContractId(tokenId)
+  const callData: node.CallContract = {
+    group: groupIndex,
+    address: contractAddress,
+    methodIndex: 0
+  }
+  const getSymbolResult = await nodeProvider.contracts.postContractsCallContract(callData)
+  const getNameResult = await nodeProvider.contracts.postContractsCallContract({ ...callData, methodIndex: 1 })
+  const getDecimalsResult = await nodeProvider.contracts.postContractsCallContract({ ...callData, methodIndex: 2 })
+
+  if (
+    getSymbolResult.returns.length !== 1 ||
+    getNameResult.returns.length !== 1 ||
+    getDecimalsResult.returns.length !== 1
+  ) {
+    throw new Error(`Invalid token ${tokenId}`)
+  }
+
+  const symbolHex = fromApiVal(getSymbolResult.returns[0], 'ByteVec') as string
+  const nameHex = fromApiVal(getNameResult.returns[0], 'ByteVec') as string
+  const decimals = fromApiVal(getDecimalsResult.returns[0], 'U256') as bigint
+  return {
+    tokenId: tokenId,
+    symbol: Buffer.from(symbolHex, 'hex').toString('utf8'),
+    name: Buffer.from(nameHex, 'hex').toString('utf8'),
+    decimals: Number(decimals)
+  }
 }

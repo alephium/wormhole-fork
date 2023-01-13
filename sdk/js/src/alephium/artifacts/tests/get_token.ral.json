@@ -1,19 +1,22 @@
 {
-  "version": "v1.6.0",
+  "version": "v1.6.4",
   "name": "GetToken",
-  "bytecodeTemplate": "01010300000009{0}{2}a2{0}{2}0e0c{1}0100",
+  "bytecodeTemplate": "0101030000000a{0}{2}a2{0}{2}{3}0f0c{1}0104",
   "fieldsSig": {
     "names": [
       "sender",
       "token",
-      "amount"
+      "amount",
+      "factor"
     ],
     "types": [
       "Address",
       "ByteVec",
+      "U256",
       "U256"
     ],
     "isMutable": [
+      false,
       false,
       false,
       false

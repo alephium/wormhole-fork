@@ -11,7 +11,7 @@ import {
   SuggestedParams,
 } from "algosdk";
 import { ethers, PayableOverrides } from "ethers";
-import { isNativeDenom } from "..";
+import { isNativeDenom, stringToByte32Hex } from "..";
 import { getMessageFee, optin, TransactionSignerPair } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { getBridgeFeeIx, ixFromRust } from "../solana";
@@ -20,12 +20,22 @@ import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
 import { attestTokenScript } from '../alephium/token_bridge';
-import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, isHexString, SignerProvider } from "@alephium/web3";
+
+function normalizeString(str: string): string {
+  if (isHexString(str) && str.length === 64) {
+    return str
+  }
+  return stringToByte32Hex(str)
+}
 
 export async function attestFromAlph(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
-  tokenId: string,
+  localTokenId: string,
+  decimals: number,
+  symbol: string,
+  name: string,
   payer: string,
   messageFee: bigint,
   consistencyLevel: number,
@@ -37,12 +47,15 @@ export async function attestFromAlph(
     initialFields: {
       payer: payer,
       tokenBridge: tokenBridgeId,
-      localTokenId: tokenId,
+      localTokenId: localTokenId,
+      decimals: BigInt(decimals),
+      symbol: normalizeString(symbol),
+      name: normalizeString(name),
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
     attoAlphAmount: messageFee,
-    tokens: tokenId === ALPH_TOKEN_ID ? [] : [{ id: tokenId, amount: BigInt(1) }]
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 

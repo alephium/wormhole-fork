@@ -35,17 +35,20 @@ export async function createRemoteTokenPoolOnAlph(
 
 export async function createLocalTokenPoolOnAlph(
   signerProvider: SignerProvider,
-  tokenBridgeId: string,
+  attestTokenHandlerId: string,
   localTokenId: string,
+  signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint
 ): Promise<BuildScriptTxResult> {
+  const vaaHex = Buffer.from(signedVAA).toString('hex')
   const script = createLocalTokenPoolScript()
   return script.execute(signerProvider, {
     initialFields: {
       payer: payer,
-      tokenBridge: tokenBridgeId,
-      tokenId: localTokenId,
+      attestTokenHandler: attestTokenHandlerId,
+      localTokenId: localTokenId,
+      vaa: vaaHex,
       alphAmount: alphAmount
     },
     attoAlphAmount: alphAmount,
