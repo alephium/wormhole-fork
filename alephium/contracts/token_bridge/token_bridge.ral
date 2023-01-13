@@ -12,18 +12,27 @@ Contract TokenBridge(
     }
 
     @using(preapprovedAssets = true)
-    pub fn attestToken(payer: Address, localTokenId: ByteVec, nonce: ByteVec, consistencyLevel: U256) -> () {
+    pub fn attestToken(
+        payer: Address,
+        localTokenId: ByteVec,
+        decimals: U256,
+        symbol: ByteVec,
+        name: ByteVec,
+        nonce: ByteVec,
+        consistencyLevel: U256
+    ) -> () {
+        assert!(size!(symbol) == 32, ErrorCodes.InvalidAttestTokenArg)
+        assert!(size!(name) == 32, ErrorCodes.InvalidAttestTokenArg)
         assert!(size!(localTokenId) == 32, ErrorCodes.InvalidTokenId)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
 
-        // We don't set decimals, symbol and name for local token due to sharding
         let payload = PayloadId.AttestToken ++
             localTokenId ++
             u256To2Byte!(localChainId) ++
-            #00 ++  // zero decimals
-            zeros!(32) ++ // no symbol
-            zeros!(32) // no name
+            u256To1Byte!(decimals) ++
+            symbol ++
+            name
 
         governance.publishWormholeMessage{payer -> ALPH: governance.getMessageFee()}(payer, 0, nextSendSequence(), nonce, payload, consistencyLevel)
     }

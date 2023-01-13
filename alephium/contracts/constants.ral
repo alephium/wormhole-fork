@@ -32,5 +32,6 @@ Abstract Contract Constants() {
     InvalidConsistencyLevel                 = 27
     InvalidUpdateRefundAddressMessage       = 28
     TransferAmountLessThanMessageFee        = 29
+    InvalidAttestTokenArg                   = 30
   }
 }
