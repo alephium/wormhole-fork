@@ -8,8 +8,8 @@ const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void
   const result = await deployer.deployContract(token, {
     initialFields: {
       decimals: 18n,
-      symbol: encodeString("TT"),
-      name: encodeString("TestToken"),
+      symbol: encodeString('TT'),
+      name: encodeString('TestToken'),
       totalSupply: tokenSupply
     },
     issueTokenAmount: tokenSupply

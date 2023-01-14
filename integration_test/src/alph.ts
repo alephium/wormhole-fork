@@ -165,7 +165,12 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getLocalLockedTokenBalance(tokenId)
   }
 
-  const attestWithTokenInfo = async (tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array> => {
+  const attestWithTokenInfo = async (
+    tokenId: string,
+    decimals: number,
+    symbol: string,
+    name: string
+  ): Promise<Uint8Array> => {
     const attestResult = await attestFromAlph(
       nodeWallet,
       tokenBridgeContractId,

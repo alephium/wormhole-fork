@@ -314,18 +314,26 @@ describe('test token bridge', () => {
 
       const localTokenPoolAddress = tokenPoolAddress(localTokenBridgeId, CHAIN_ID_ALEPHIUM, ALPH_TOKEN_ID)
       const localTokenPoolState = testResult.contracts.find((c) => c.address === localTokenPoolAddress)!
-      expect(localTokenPoolState.fields["decimals_"]).toEqual(BigInt(decimals))
+      expect(localTokenPoolState.fields['decimals_']).toEqual(BigInt(decimals))
 
       const localTokenPoolOutput = testResult.txOutputs.find((o) => o.address === localTokenPoolAddress)!
       expect(localTokenPoolOutput.alphAmount).toEqual(minimalAlphInContract)
       expect(localTokenPoolOutput.tokens).toEqual([])
     }
 
-    const attestTokenHandlerInfo = createAttestTokenHandler(fixture.tokenBridgeInfo, CHAIN_ID_ALEPHIUM, localTokenBridgeId)
+    const attestTokenHandlerInfo = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      CHAIN_ID_ALEPHIUM,
+      localTokenBridgeId
+    )
     await testCreateAlphTokenPool(attestTokenHandlerInfo, 0)
     await expectAssertionFailed(async () => testCreateAlphTokenPool(attestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
 
-    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(fixture.tokenBridgeInfo, remoteChainId, remoteTokenBridgeId)
+    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      remoteChainId,
+      remoteTokenBridgeId
+    )
     await expectAssertionFailed(async () => testCreateAlphTokenPool(invalidAttestTokenHandlerInfo, 0))
     await expectAssertionFailed(async () => testCreateAlphTokenPool(invalidAttestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
   })
@@ -476,18 +484,26 @@ describe('test token bridge', () => {
 
       const localTokenPoolAddress = tokenPoolAddress(localTokenBridgeId, CHAIN_ID_ALEPHIUM, testToken.contractId)
       const localTokenPoolState = testResult.contracts.find((c) => c.address === localTokenPoolAddress)!
-      expect(localTokenPoolState.fields["decimals_"]).toEqual(BigInt(decimals))
+      expect(localTokenPoolState.fields['decimals_']).toEqual(BigInt(decimals))
 
       const localTokenPoolOutput = testResult.txOutputs.find((o) => o.address === localTokenPoolAddress)!
       expect(localTokenPoolOutput.alphAmount).toEqual(minimalAlphInContract)
       expect(localTokenPoolOutput.tokens).toEqual([])
     }
 
-    const attestTokenHandlerInfo = createAttestTokenHandler(fixture.tokenBridgeInfo, CHAIN_ID_ALEPHIUM, localTokenBridgeId)
+    const attestTokenHandlerInfo = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      CHAIN_ID_ALEPHIUM,
+      localTokenBridgeId
+    )
     await testCreateLocalTokenPool(attestTokenHandlerInfo, 0)
     await expectAssertionFailed(async () => testCreateLocalTokenPool(attestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
 
-    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(fixture.tokenBridgeInfo, remoteChainId, remoteTokenBridgeId)
+    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      remoteChainId,
+      remoteTokenBridgeId
+    )
     await expectAssertionFailed(async () => testCreateLocalTokenPool(invalidAttestTokenHandlerInfo, 0))
     await expectAssertionFailed(async () => testCreateLocalTokenPool(invalidAttestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
   }, 10000)
@@ -691,7 +707,11 @@ describe('test token bridge', () => {
     await testCreateRemoteTokenPool(attestTokenHandlerInfo, 0)
     await expectAssertionFailed(async () => testCreateRemoteTokenPool(attestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
 
-    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(fixture.tokenBridgeInfo, CHAIN_ID_ALEPHIUM, localTokenBridgeId)
+    const invalidAttestTokenHandlerInfo = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      CHAIN_ID_ALEPHIUM,
+      localTokenBridgeId
+    )
     await expectAssertionFailed(async () => testCreateRemoteTokenPool(invalidAttestTokenHandlerInfo, 0))
     await expectAssertionFailed(async () => testCreateRemoteTokenPool(invalidAttestTokenHandlerInfo, CHAIN_ID_ALEPHIUM))
   }, 10000)
@@ -745,7 +765,9 @@ describe('test token bridge', () => {
         existingContracts: fixture.remoteTokenPoolInfo.states()
       })
 
-      const remoteTokenPoolState = result.contracts.find((c) => c.contractId === fixture.remoteTokenPoolInfo.contractId)!
+      const remoteTokenPoolState = result.contracts.find(
+        (c) => c.contractId === fixture.remoteTokenPoolInfo.contractId
+      )!
       expect(remoteTokenPoolState.fields['symbol_']).toEqual(newSymbol)
       expect(remoteTokenPoolState.fields['name_']).toEqual(newName)
       expect(remoteTokenPoolState.fields['sequence_']).toEqual(2n)
@@ -758,7 +780,11 @@ describe('test token bridge', () => {
     await expectAssertionFailed(async () => update(attestTokenHandlerInfo, 0, 1)) // invalid sequence
     await expectAssertionFailed(async () => update(attestTokenHandlerInfo, 0, 0)) // invalid sequence
 
-    const invalidAttestTokenHandler = createAttestTokenHandler(fixture.tokenBridgeInfo, CHAIN_ID_ALEPHIUM, fixture.tokenBridgeInfo.contractId)
+    const invalidAttestTokenHandler = createAttestTokenHandler(
+      fixture.tokenBridgeInfo,
+      CHAIN_ID_ALEPHIUM,
+      fixture.tokenBridgeInfo.contractId
+    )
     await expectAssertionFailed(async () => update(invalidAttestTokenHandler, 0, 2))
     await expectAssertionFailed(async () => update(invalidAttestTokenHandler, CHAIN_ID_ALEPHIUM, 2))
     await expectAssertionFailed(async () => update(invalidAttestTokenHandler, 0, 1))

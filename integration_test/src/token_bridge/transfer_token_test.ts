@@ -9,9 +9,9 @@ import { ALPHTokenInfo } from 'alephium-wormhole-sdk'
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
   const testTokenInfos = [
-    {...testTokenInfo, decimals: testTokenInfo.decimals + 1},
-    {...testTokenInfo, symbol: testTokenInfo.symbol + 'XX'},
-    {...testTokenInfo, name: testTokenInfo.name + 'XX'},
+    { ...testTokenInfo, decimals: testTokenInfo.decimals + 1 },
+    { ...testTokenInfo, symbol: testTokenInfo.symbol + 'XX' },
+    { ...testTokenInfo, name: testTokenInfo.name + 'XX' }
   ]
 
   const test = async (info: any) => {
