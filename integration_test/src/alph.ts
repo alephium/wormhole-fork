@@ -1,6 +1,6 @@
 import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
-import { getSignedVAA, normalizeTokenId, waitAlphTxConfirmed } from './utils'
+import { getSignedVAA, normalizeTokenId } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import path from 'path'
@@ -31,7 +31,11 @@ import {
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
   deposit as tokenBridgeForChainDeposit,
-  deserializeTransferTokenVAA
+  deserializeTransferTokenVAA,
+  createLocalTokenPoolOnAlph,
+  getLocalTokenInfo,
+  waitAlphTxConfirmed,
+  TokenInfo
 } from 'alephium-wormhole-sdk'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
@@ -39,6 +43,8 @@ import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.j
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
+  getLocalTokenInfo(tokenId: string): Promise<TokenInfo>
+  attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
   getContractState(address: string, contractName: string): Promise<ContractState>
   getTokenBridgeContractState(): Promise<ContractState>
   deposit(remoteChainId: ChainId, amount: bigint): Promise<void>
@@ -50,6 +56,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const bridgeRootPath = path.join(process.cwd(), '..')
   await Project.build(
     { ignoreUnusedConstantsWarnings: true },
+    path.join(bridgeRootPath, 'alephium'),
     path.join(bridgeRootPath, 'alephium', 'contracts'),
     path.join(bridgeRootPath, 'alephium', 'artifacts')
   )
@@ -76,7 +83,10 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
   const currentMessageFee = await getCurrentMessageFee()
 
-  const normalizeTransferAmount = (amount: bigint): bigint => amount
+  const normalizeTransferAmount = (amount: bigint): bigint => {
+    const unit = 10n ** 10n
+    return (amount / unit) * unit
+  }
 
   const normalizeAddress = (address: string): Uint8Array => {
     const decoded = base58.decode(address)
@@ -155,17 +165,40 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getLocalLockedTokenBalance(tokenId)
   }
 
-  const attestToken = async (tokenId: string): Promise<Uint8Array> => {
-    const result = await attestFromAlph(
+  const attestWithTokenInfo = async (tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array> => {
+    const attestResult = await attestFromAlph(
       nodeWallet,
       tokenBridgeContractId,
       tokenId,
+      decimals,
+      symbol,
+      name,
       accountAddress,
       currentMessageFee,
       1
     )
-    console.log(`attest alph token, token id: ${tokenId}, tx id: ${result.txId}`)
-    return await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
+    console.log(`attest token from alephium, token id: ${tokenId}, tx id: ${attestResult.txId}`)
+    const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
+    const attestTokenHandlerId = getAttestTokenHandlerId(tokenBridgeContractId, CHAIN_ID_ALEPHIUM, groupIndex)
+    const createLocalTokenPoolResult = await createLocalTokenPoolOnAlph(
+      nodeWallet,
+      attestTokenHandlerId,
+      tokenId,
+      signedVaa,
+      accountAddress,
+      oneAlph
+    )
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, createLocalTokenPoolResult.txId, 1)
+    console.log(`create local token pool succeed, token id: ${tokenId}, tx id: ${createLocalTokenPoolResult.txId}`)
+    return signedVaa
+  }
+
+  const _getLocalTokenInfo = async (tokenId: string): Promise<TokenInfo> => {
+    return getLocalTokenInfo(nodeProvider, tokenId)
+  }
+
+  const attestToken = async (tokenId: string): Promise<Uint8Array> => {
+    throw new Error('not support')
   }
 
   const createWrapped = async (signedVaa: Uint8Array): Promise<void> => {
@@ -370,6 +403,8 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     groupIndex: groupIndex,
     tokenBridgeContractId: tokenBridgeContractId,
+    getLocalTokenInfo: _getLocalTokenInfo,
+    attestWithTokenInfo: attestWithTokenInfo,
     getContractState: getContractState,
     getTokenBridgeContractState: getTokenBridgeContractState,
     deposit: deposit

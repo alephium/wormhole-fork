@@ -1,12 +1,50 @@
 import { execSync } from 'child_process'
+import { AlephiumBridgeChain } from '../alph'
 import { BridgeChain } from '../bridge_chain'
-import { getBridgeChains, randomBigInt } from '../utils'
+import { assert, getBridgeChains, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
+import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
+import { ALPHTokenInfo } from 'alephium-wormhole-sdk'
 
-async function attestTokens(alph: BridgeChain, eth: BridgeChain) {
-  const signedVaa0 = await alph.attestToken(alph.testTokenId)
+async function attestInvalidToken(alph: AlephiumBridgeChain) {
+  const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
+  const testTokenInfos = [
+    {...testTokenInfo, decimals: testTokenInfo.decimals + 1},
+    {...testTokenInfo, symbol: testTokenInfo.symbol + 'XX'},
+    {...testTokenInfo, name: testTokenInfo.name + 'XX'},
+  ]
+
+  const test = async (info: any) => {
+    console.log(`trying to attest invalid token: ${JSON.stringify(info)}`)
+    try {
+      await alph.attestWithTokenInfo(alph.testTokenId, info.decimals, info.symbol, info.name)
+    } catch (error) {
+      console.log(`failed to attest invalid token, error: ${error}`)
+      return
+    }
+    assert(false)
+  }
+
+  for (let i = 0; i < testTokenInfos.length; i++) {
+    await test(testTokenInfos[i])
+  }
+}
+
+async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
+  const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
+  const signedVaa0 = await alph.attestWithTokenInfo(
+    alph.testTokenId,
+    testTokenInfo.decimals,
+    testTokenInfo.symbol,
+    testTokenInfo.name
+  )
   await eth.createWrapped(signedVaa0)
-  const signedVaa1 = await alph.attestToken(alph.wrappedNativeTokenId)
+  const signedVaa1 = await alph.attestWithTokenInfo(
+    alph.wrappedNativeTokenId,
+    ALPHTokenInfo.decimals,
+    ALPHTokenInfo.symbol,
+    ALPHTokenInfo.name
+  )
   await eth.createWrapped(signedVaa1)
 
   const signedVaa2 = await eth.attestToken(eth.testTokenId)
@@ -19,6 +57,9 @@ async function test() {
   const chains = await getBridgeChains()
   const alph = chains.alph
   const eth = chains.eth
+
+  console.log('================== attest invalid tokens ==================')
+  await attestInvalidToken(alph)
 
   console.log('================== attest tokens ==================')
   await attestTokens(alph, eth)

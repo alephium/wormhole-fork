@@ -22,8 +22,7 @@ import {
   CHAIN_ID_UNSET,
   createLocalTokenPoolOnAlph,
   getAttestTokenHandlerId,
-  CHAIN_ID_ALEPHIUM,
-  stringToByte32Hex
+  CHAIN_ID_ALEPHIUM
 } from 'alephium-wormhole-sdk'
 import { default as GovernanceContractJson } from 'alephium-wormhole-sdk/lib/cjs/alephium/artifacts/governance.ral.json'
 
@@ -95,8 +94,8 @@ async function attestToken(
     tokenBridgeId,
     localTokenId,
     decimals,
-    stringToByte32Hex(symbol),
-    stringToByte32Hex(name),
+    symbol,
+    name,
     wallet.address,
     messageFee,
     1
