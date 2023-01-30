@@ -165,3 +165,15 @@ func (c *Client) GetNodeInfo(ctx context.Context) (*sdk.NodeInfo, error) {
 	}
 	return response, nil
 }
+
+func (c *Client) IsCliqueSynced(ctx context.Context) (*bool, error) {
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
+	defer cancel()
+
+	request := c.impl.InfosApi.GetInfosSelfClique(timeoutCtx)
+	response, _, err := requestWithMetric[*sdk.SelfClique](request, timestamp, "is_clique_synced")
+	if err != nil {
+		return nil, err
+	}
+	return &response.Synced, nil
+}

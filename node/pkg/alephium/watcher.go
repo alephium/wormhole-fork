@@ -144,6 +144,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 		logger.Error("failed to get node info", zap.Error(err))
 		return err
 	}
+
+	isSynced, err := w.client.IsCliqueSynced(ctx)
+	if err != nil {
+		logger.Error("failed to get self cliqued synced", zap.Error(err))
+		return err
+	}
+	if !*isSynced {
+		return fmt.Errorf("clique not synced")
+	}
+
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
 	readiness.SetReady(w.readiness)

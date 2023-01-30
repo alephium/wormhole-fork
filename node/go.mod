@@ -52,8 +52,9 @@ require (
 	cloud.google.com/go/kms v1.0.0
 	cloud.google.com/go/logging v1.4.2
 	cloud.google.com/go/pubsub v1.17.1
-	github.com/alephium/go-sdk v0.0.0-20220919082855-4fb3b6e48fc7
+	github.com/alephium/go-sdk v0.0.0-20230130013956-c85ab2bc81a9
 	github.com/algorand/go-algorand-sdk v1.15.0
+	github.com/benbjohnson/clock v1.3.0
 	github.com/blendle/zapdriver v1.3.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.44.5
@@ -75,7 +76,6 @@ require (
 	github.com/algorand/go-codec/codec v1.1.8 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/armon/go-metrics v0.3.9 // indirect
-	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
