@@ -17,7 +17,9 @@ import {
   getIsTransferCompletedEth,
   transferLocalTokenFromAlph,
   getSignedVAAWithRetry,
-  uint8ArrayToHex
+  uint8ArrayToHex,
+  createLocalTokenPoolOnAlph,
+  waitAlphTxConfirmed
 } from 'alephium-wormhole-sdk'
 import { parseUnits } from '@ethersproject/units'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
@@ -36,12 +38,11 @@ import {
   ALPH_MNEMONIC,
   ALPH_GROUP_INDEX,
   ALPH_TOKEN_BRIDGE_ID,
-  ONE_ALPH,
-  ALPH_TEST_TOKEN_ID
+  ONE_ALPH
 } from './env'
 import { sleep } from '../helpers/utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { web3, node, NodeProvider, binToHex, bs58 } from '@alephium/web3'
+import { web3, binToHex, bs58, ALPH_TOKEN_ID } from '@alephium/web3'
 import { arrayify } from 'ethers/lib/utils'
 
 jest.setTimeout(60000)
@@ -73,12 +74,16 @@ describe('Alephium to Ethereum', () => {
       const attestResult = await attestFromAlph(
         alphWallet,
         ALPH_TOKEN_BRIDGE_ID,
-        ALPH_TEST_TOKEN_ID,
+        ALPH_TOKEN_ID,
+        18,
+        'ALPH',
+        'ALPH',
         alphWallet.account.address,
         ONE_ALPH,
         1
       )
-      await waitAlphTxConfirmed(web3.getCurrentNodeProvider(), attestResult.txId, 1)
+      const nodeProvider = web3.getCurrentNodeProvider()
+      await waitAlphTxConfirmed(nodeProvider, attestResult.txId, 1)
       console.log(`Attest transaction ${attestResult.txId} confirmed`)
       // get the sequence from the logs (needed to fetch the vaa)
       const events = await web3.getCurrentNodeProvider()
@@ -99,6 +104,16 @@ describe('Alephium to Ethereum', () => {
         }
       )
       console.log(`Got signed vaa: ${binToHex(signedVAA)}`)
+      const createLocalTokenPoolResult = await createLocalTokenPoolOnAlph(
+        alphWallet,
+        getAttestTokenHandlerId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ALEPHIUM, ALPH_GROUP_INDEX),
+        ALPH_TOKEN_ID,
+        signedVAA,
+        alphWallet.account.address,
+        ONE_ALPH
+      )
+      console.log(`Create local token pool tx id: ${createLocalTokenPoolResult.txId}`)
+      await waitAlphTxConfirmed(nodeProvider, createLocalTokenPoolResult.txId, 1)
       try {
         await createWrappedOnEth(ETH_TOKEN_BRIDGE_ADDRESS, ethWallet, signedVAA)
       } catch (e) {
@@ -114,12 +129,12 @@ describe('Alephium to Ethereum', () => {
   test('Send Alephium test token to Ethereum', async () => {
     try {
       const recipientAddress = await ethWallet.getAddress()
-      const amount = 1000n
+      const amount = ONE_ALPH * 4n
       const transferResult = await transferLocalTokenFromAlph(
         alphWallet,
         ALPH_TOKEN_BRIDGE_ID,
         alphWallet.account.address,
-        ALPH_TEST_TOKEN_ID,
+        ALPH_TOKEN_ID,
         CHAIN_ID_ETH,
         uint8ArrayToHex(arrayify(recipientAddress)),
         amount,
@@ -285,21 +300,3 @@ describe('Ethereum to Alephium', () => {
     }
   })
 })
-
-function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
-  return txStatus.type === 'Confirmed'
-}
-
-// TODO: add this to SDK
-export async function waitAlphTxConfirmed(
-  provider: NodeProvider,
-  txId: string,
-  confirmations: number
-): Promise<node.Confirmed> {
-  const status = await provider.transactions.getTransactionsStatus({ txId: txId })
-  if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
-    return status
-  }
-  await new Promise((r) => setTimeout(r, 1000))
-  return waitAlphTxConfirmed(provider, txId, confirmations)
-}

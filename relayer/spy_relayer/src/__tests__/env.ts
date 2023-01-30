@@ -31,13 +31,11 @@ export const ETH_PRIVATE_KEY = ETH_CONFIG.walletPrivateKeys![0] as string
 export const TEST_ERC20 = ETH_TOKENS[1].address
 
 export const ALPH_CONFIG = testEnv.relayerEnv.supportedChains.find(c => c.chainId === CHAIN_ID_ALEPHIUM)! as AlephiumChainConfigInfo
-export const ALPH_TOKENS = testEnv.listenerEnv.supportedTokens.filter(c => c.chainId === CHAIN_ID_ALEPHIUM)!
 export const ALPH_GROUP_INDEX = ALPH_CONFIG.groupIndex
 export const ALPH_NODE_URL = ALPH_CONFIG.nodeUrl
 export const ALPH_MNEMONIC = ALPH_CONFIG.walletPrivateKeys![0] as string
 export const ALPH_TOKEN_BRIDGE_ID = ALPH_CONFIG.tokenBridgeAddress
 export const ONE_ALPH = 10n ** 18n
-export const ALPH_TEST_TOKEN_ID = binToHex(contractIdFromAddress(ALPH_TOKENS[1].address))
 
 export const WORMHOLE_RPC_HOSTS = ['http://localhost:7071']
 export const SPY_RELAY_URL = `http://localhost:${testEnv.listenerEnv.restPort}`
