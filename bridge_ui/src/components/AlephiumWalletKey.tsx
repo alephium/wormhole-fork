@@ -24,7 +24,7 @@ const AlephiumWalletKey = () => {
         connect={openDialog}
         disconnect={disconnect}
         connected={!!signer}
-        pk={signer?.account.address || ""}
+        pk={signer?.address || ""}
       />
       <AlephiumConnectWalletDialog
         isOpen={isDialogOpen}

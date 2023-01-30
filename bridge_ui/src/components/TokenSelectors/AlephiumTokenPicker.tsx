@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, ALPHTokenInfo } from "alephium-wormhole-sdk";
 import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
@@ -42,11 +42,11 @@ async function getAlephiumTokenAccounts(address: string, client: NodeProvider): 
     address,
     ALPH_TOKEN_ID,
     alphAmount.toString(),
-    18,
+    ALPHTokenInfo.decimals,
     parseFloat(alphUIAmount),
     alphUIAmount,
-    "ALPH",
-    "ALPH",
+    ALPHTokenInfo.symbol,
+    ALPHTokenInfo.name,
     alephiumIcon,
     true
   )
@@ -86,7 +86,7 @@ function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
       setIsLoading(false)
       setTokenAccounts([])
     } else {
-      getAlephiumTokenAccounts(signer.account.address, signer.nodeProvider)
+      getAlephiumTokenAccounts(signer.address, signer.nodeProvider)
         .then((tokenAccounts) => {
           setTokenAccounts(tokenAccounts)
           setIsLoading(false)

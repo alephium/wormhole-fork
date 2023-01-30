@@ -101,12 +101,12 @@ function useIsWalletReady(
   }, [provider, correctEvmNetwork, chainId, connectType, disconnect]);
 
   return useMemo(() => {
-    if (chainId === CHAIN_ID_ALEPHIUM && alphSigner?.account.address) {
+    if (chainId === CHAIN_ID_ALEPHIUM && alphSigner) {
       return createWalletStatus(
         true,
         undefined,
         forceNetworkSwitch,
-        alphSigner.account.address
+        alphSigner.address
       );
     }
     if (

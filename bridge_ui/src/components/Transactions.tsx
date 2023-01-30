@@ -315,7 +315,7 @@ export default function Transactions() {
       setIsLoading(true)
       syncFromExplorer(
         alphSigner.nodeProvider,
-        alphSigner.account.address,
+        alphSigner.address,
         txTargetChain,
         isTransferCompleted,
         pageNumber + 1
@@ -372,7 +372,7 @@ export default function Transactions() {
           setIsLoading(true)
           await syncFromExplorer(
             alphSigner.nodeProvider,
-            alphSigner.account.address,
+            alphSigner.address,
             txTargetChain,
             isTransferCompleted,
             pageNumber

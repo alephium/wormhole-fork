@@ -252,7 +252,7 @@ async function alephium(
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
-      signer.account.group,
+      signer.group,
       signedVAA
     )
     dispatch(

@@ -20,7 +20,9 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
-  parseTargetChainFromLogEth
+  parseTargetChainFromLogEth,
+  waitAlphTxConfirmed,
+  getLocalTokenInfo
 } from "alephium-wormhole-sdk";
 import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
@@ -52,7 +54,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { createLocalTokenPool, isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -303,13 +305,17 @@ async function alephium(
     if (!isValidAlephiumTokenId(localTokenId)) {
       throw new Error(`Invalid local token: ${localTokenId}`)
     }
+    const tokenInfo = await getLocalTokenInfo(signer.nodeProvider, localTokenId)
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
         const result = await attestFromAlph(
           signer.signerProvider,
           ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
           localTokenId,
-          signer.account.address,
+          tokenInfo.decimals,
+          tokenInfo.symbol,
+          tokenInfo.name,
+          signer.address,
           ALEPHIUM_MESSAGE_FEE,
           ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
         )
@@ -329,6 +335,17 @@ async function alephium(
       txInfo.targetChain,
       txInfo.sequence
     );
+    const createLocalTokenPoolTxId = await createLocalTokenPool(
+      signer.signerProvider,
+      signer.nodeProvider,
+      signer.address,
+      localTokenId,
+      vaaBytes
+    )
+    if (createLocalTokenPoolTxId !== undefined) {
+      console.log(`create local token pool tx id: ${createLocalTokenPoolTxId}`)
+      await waitAlphTxConfirmed(signer.nodeProvider, createLocalTokenPoolTxId, 1)
+    }
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Fetched Signed VAA</Alert>,

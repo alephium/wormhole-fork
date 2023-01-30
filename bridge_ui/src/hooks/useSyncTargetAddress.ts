@@ -115,7 +115,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
           )
         );
       } else if(targetChain === CHAIN_ID_ALEPHIUM && alphSigner) {
-        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphSigner.account.address))))
+        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphSigner.address))))
       } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
         dispatch(
           setTargetAddressHex(

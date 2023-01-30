@@ -684,7 +684,6 @@ export const ALEPHIUM_NETWORK_ID =
     : CLUSTER === "testnet"
     ? alephiumTestnetConfig.networkId
     : alephiumDevnetConfig.networkId
-// TODO: update this after contract deployed to mainnet and testnet
 export const ALEPHIUM_BRIDGE_GROUP_INDEX =
   CLUSTER === 'mainnet'
     ? alephiumMainnetConfig.groupIndex

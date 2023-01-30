@@ -354,7 +354,7 @@ async function alephium(
           result = await transferLocalTokenFromAlph(
             signer.signerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.account.address,
+            signer.address,
             tokenId,
             targetChain,
             uint8ArrayToHex(targetAddress),
@@ -367,7 +367,7 @@ async function alephium(
           result = await transferRemoteTokenFromAlph(
             signer.signerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.account.address,
+            signer.address,
             tokenId,
             originAsset,
             tokenChainId,
@@ -384,7 +384,7 @@ async function alephium(
     )
     await TransactionDB.getInstance().txs.put(new Transaction(
       txInfo.txId,
-      signer.account.address,
+      signer.address,
       CHAIN_ID_ALEPHIUM,
       targetChain,
       txInfo.sequence,

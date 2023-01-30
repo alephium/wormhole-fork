@@ -257,7 +257,7 @@ async function alephium(
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = shouldUpdate
       ? await updateRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA)
-      : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
+      : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.address, minimalAlphInContract)
     const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
     const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(

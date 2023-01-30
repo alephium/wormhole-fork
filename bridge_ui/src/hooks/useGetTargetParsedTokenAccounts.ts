@@ -106,7 +106,7 @@ function useGetTargetParsedTokenAccounts() {
     let cancelled = false;
 
     if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
-      getAlephiumTargetAsset(alphSigner.account.address, targetAsset, alphSigner.nodeProvider)
+      getAlephiumTargetAsset(alphSigner.address, targetAsset, alphSigner.nodeProvider)
         .then((target) => dispatch(setTargetParsedTokenAccount(target)))
         .catch(() => {
           if (!cancelled) {
