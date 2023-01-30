@@ -20,7 +20,8 @@ import {
   randomContractAddress,
   randomContractId,
   alph,
-  randomAssetAddress
+  randomAssetAddress,
+  randomByte32Hex
 } from './wormhole-fixture'
 import { zeroPad } from '../../lib/utils'
 import { createUnexecutedSequence } from './sequence-fixture'
@@ -166,7 +167,13 @@ export class Transfer {
 export function createTestToken(): ContractInfo {
   const token = Project.contract('TestToken')
   const address = randomContractAddress()
-  const state = token.toState({}, { alphAmount: minimalAlphInContract }, address)
+  const initFields = {
+    symbol: randomByte32Hex(),
+    name: randomByte32Hex(),
+    decimals: 18n,
+    totalSupply: 1n << 255n
+  }
+  const state = token.toState(initFields, { alphAmount: minimalAlphInContract }, address)
   return new ContractInfo(token, state, [], address)
 }
 
