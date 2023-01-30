@@ -34,13 +34,8 @@ spec:
         - name: alph-full-node
           image: alephium
           command: ["/bin/sh", "-c"]
-          # TODO: remove this once explorer-backend direct-access-mode works
           args:
-            - npx @alephium/cli devnet start;
-              npx @alephium/cli devnet stop;
-              echo 'alephium.network.internal-address="alph-full-node:19973"\nalephium.network.coordinator-address="alph-full-node:19973"' >> ~/.alephium-dev/user.conf;
-              ALEPHIUM_HOME=~/.alephium-dev/ java -jar ~/.alephium-dev/alephium*.jar &
-              sh /alephium/deploy.sh;
+            - npx @alephium/cli devnet start && sh /alephium/deploy.sh;
           ports:
             - containerPort: 22973
               name: alph-rest
