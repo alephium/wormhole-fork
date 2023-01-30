@@ -31,9 +31,9 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
-import { executeGovernanceAlph } from "./alph";
+import { createLocalTokenPool, executeGovernanceAlph } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
-import { CONFIGS } from "./configs";
+import { CONFIGS, NetworkType } from "./configs";
 
 setDefaultWasm("node");
 
@@ -495,6 +495,71 @@ yargs(hideBin(process.argv))
             );
           }
         );
+    },
+    (_) => {
+      yargs.showHelp();
+    }
+  )
+  .command(
+    "alph",
+    "Alephium utilities",
+    (yargs) => {
+      return yargs
+        .command(
+          "create-local-token-pool",
+          "Create token pool for alephium token",
+          (yargs) => {
+            return yargs
+              .option("token-id", {
+                describe: "Token id",
+                type: "string",
+                required: true,
+              })
+              .option("decimals", {
+                describe: "Token decimals",
+                type: "number",
+                required: true,
+              })
+              .option("symbol", {
+                describe: "Token symbol",
+                type: "string",
+                required: true,
+              })
+              .option("name", {
+                decsribe: "Token name",
+                type: "string",
+                required: true,
+              })
+              .option("network", {
+                describe: "network",
+                type: "string",
+                choices: ["mainnet", "testnet", "devnet"],
+                required: true,
+              })
+              .option("guardian-url", {
+                describe: "Guardian rpc url",
+                type: "string",
+                required: false,
+              })
+              .option("node-url", {
+                describe: "Alephium full node url",
+                type: "string",
+                required: false,
+              });
+          },
+          async (argv) => {
+            const network = argv.network.toUpperCase();
+            await createLocalTokenPool(
+              argv['token-id'],
+              argv['decimals'],
+              argv['symbol'],
+              argv['name'],
+              network as NetworkType,
+              argv["guardian-url"],
+              argv["node-url"]
+            )
+          }
+        )
     },
     (_) => {
       yargs.showHelp();

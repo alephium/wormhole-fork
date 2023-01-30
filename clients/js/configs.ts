@@ -5,6 +5,9 @@ import { default as alephiumMainnetConfig } from '../../configs/alephium/mainnet
 import { default as ethereumDevnetConfig } from '../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../configs/ethereum/mainnet.json'
+import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
+import { default as guardianTestnetConfig } from '../../configs/guardian/testnet.json'
+import { default as guardianMainnetConfig } from '../../configs/guardian/mainnet.json'
 
 require("dotenv").config({ path: `${process.env.HOME}/.wormhole/.env` });
 
@@ -106,7 +109,8 @@ const MAINNET = {
     rpc: alephiumMainnetConfig.nodeUrl,
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumMainnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumMainnetConfig.contracts.governance
+    governanceAddress: alephiumMainnetConfig.contracts.governance,
+    groupIndex: alephiumMainnetConfig.groupIndex,
   }
 };
 
@@ -194,7 +198,8 @@ const TESTNET = {
     rpc: alephiumTestnetConfig.nodeUrl,
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumTestnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumTestnetConfig.contracts.governance
+    governanceAddress: alephiumTestnetConfig.contracts.governance,
+    groupIndex: alephiumTestnetConfig.groupIndex
   }
 };
 
@@ -282,9 +287,28 @@ const DEVNET = {
     rpc: alephiumDevnetConfig.nodeUrl,
     key: alephiumDevnetConfig.mnemonic,
     tokenBridgeAddress: alephiumDevnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumDevnetConfig.contracts.governance
+    governanceAddress: alephiumDevnetConfig.contracts.governance,
+    groupIndex: alephiumDevnetConfig.groupIndex
   }
 };
+
+export const Guardians = {
+  DEVNET: {
+    governanceEmitterAddress: guardianDevnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianDevnetConfig.governanceChainId,
+    guardianUrls: guardianDevnetConfig.guardianUrls
+  },
+  TESTNET: {
+    governanceEmitterAddress: guardianTestnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianTestnetConfig.governanceChainId,
+    guardianUrls: guardianTestnetConfig.guardianUrls
+  },
+  MAINNET: {
+    governanceEmitterAddress: guardianMainnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianMainnetConfig.governanceChainId,
+    guardianUrls: guardianMainnetConfig.guardianUrls
+  }
+}
 
 /**
  *
@@ -315,3 +339,5 @@ const isMainnetConnections: ChainConnections = MAINNET;
 const isDevnetConnections: ChainConnections = DEVNET;
 
 export const CONFIGS = { MAINNET, TESTNET, DEVNET };
+
+export type NetworkType = 'MAINNET' | 'TESTNET' | 'DEVNET'
