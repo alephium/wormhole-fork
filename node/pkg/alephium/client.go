@@ -131,13 +131,13 @@ func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress str
 
 	request := c.impl.EventsApi.GetEventsContractContractaddressCurrentCount(timeoutCtx, contractAddress)
 	response, r, err := requestWithMetric[int32](request, timestamp, "get_contract_events_count")
+	if err != nil {
+		return nil, err
+	}
 	if r.StatusCode == 404 {
 		// subscribe event from 0 if contract count not found
 		count := int32(0)
 		return &count, nil
-	}
-	if err != nil {
-		return nil, err
 	}
 	return &response, nil
 }

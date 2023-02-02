@@ -14,7 +14,8 @@ var (
 	// SECURITY: Hardcoded ABI identifier for the LogMessagePublished topic. When using the watcher, we don't need this
 	// since the node will only hand us pre-filtered events. In this case, we need to manually verify it
 	// since ParseLogMessagePublished will only verify whether it parses.
-	logMessagePublishedTopic = eth_common.HexToHash("0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2")
+	// keccak256("LogMessagePublished(address,uint16,uint64,uint32,bytes,uint8)")
+	logMessagePublishedTopic = eth_common.HexToHash("0xcd7b525350dfac7e06deb9b3a8f19ceb75cf6cd2914cd0b2d7bf9d9a3d9babff")
 )
 
 // MessageEventsForTransaction returns the lockup events for a given transaction.
