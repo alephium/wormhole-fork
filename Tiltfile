@@ -549,11 +549,10 @@ if explorer:
     docker_build(
         ref = "cloud-functions",
         context = ".",
-        dockerfile = "./event_database/functions_server/Dockerfile",
+        dockerfile = "./event_database/cloud_functions/Dockerfile",
         only = [
             "./event_database/cloud_functions",
             "./event_database/devnet_key.json",
-            "./event_database/functions_server",
             "./event_database/initialize_db",
             "./configs"
         ],

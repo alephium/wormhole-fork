@@ -6,8 +6,8 @@ WORKDIR /app
 COPY ./configs /configs
 ADD ./event_database .
 
-WORKDIR /app/functions_server
+WORKDIR /app/cloud_functions
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
-    go build -mod=readonly -o /functions main.go
+    go build -mod=readonly -o /functions server/main.go
 
 CMD ["/functions"]
