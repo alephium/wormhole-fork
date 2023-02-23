@@ -21,7 +21,6 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  waitAlphTxConfirmed,
   getLocalTokenInfo
 } from "alephium-wormhole-sdk";
 import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
@@ -53,7 +52,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { createLocalTokenPool, getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -335,17 +334,6 @@ async function alephium(
       txInfo.targetChain,
       txInfo.sequence
     );
-    const createLocalTokenPoolTxId = await createLocalTokenPool(
-      wallet.signer,
-      wallet.nodeProvider,
-      wallet.address,
-      localTokenId,
-      vaaBytes
-    )
-    if (createLocalTokenPoolTxId !== undefined) {
-      console.log(`create local token pool tx id: ${createLocalTokenPoolTxId}`)
-      await waitAlphTxConfirmed(wallet.nodeProvider, createLocalTokenPoolTxId, 1)
-    }
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Fetched Signed VAA</Alert>,
