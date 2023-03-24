@@ -44,6 +44,7 @@ import { sleep } from '../helpers/utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { web3, binToHex, bs58, ALPH_TOKEN_ID } from '@alephium/web3'
 import { arrayify } from 'ethers/lib/utils'
+import { ALPH } from '@alephium/token-list'
 
 jest.setTimeout(60000)
 
@@ -75,9 +76,9 @@ describe('Alephium to Ethereum', () => {
         alphWallet,
         ALPH_TOKEN_BRIDGE_ID,
         ALPH_TOKEN_ID,
-        18,
-        'ALPH',
-        'ALPH',
+        ALPH.decimals,
+        ALPH.symbol,
+        ALPH.name,
         alphWallet.account.address,
         ONE_ALPH,
         1
