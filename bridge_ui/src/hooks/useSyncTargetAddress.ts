@@ -17,7 +17,6 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
@@ -32,6 +31,7 @@ import {
 import { setTargetAddressHex as setTransferTargetAddressHex } from "../store/transferSlice";
 import * as base58 from 'bs58';
 import { decodeAddress } from "algosdk";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   const dispatch = useDispatch();
@@ -49,7 +49,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   );
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
   const terraWallet = useConnectedWallet();
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const setTargetAddressHex = nft
     ? setNFTTargetAddressHex
@@ -114,8 +114,8 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
             )
           )
         );
-      } else if(targetChain === CHAIN_ID_ALEPHIUM && alphSigner) {
-        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphSigner.address))))
+      } else if(targetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
+        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphWallet.address))))
       } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
         dispatch(
           setTargetAddressHex(
@@ -138,7 +138,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     targetAsset,
     targetTokenAccountPublicKey,
     terraWallet,
-    alphSigner,
+    alphWallet,
     nft,
     setTargetAddressHex,
     algoAccounts,

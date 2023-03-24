@@ -1,14 +1,15 @@
-import { CHAIN_ID_ALEPHIUM, ALPHTokenInfo } from "alephium-wormhole-sdk";
-import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { ALPH as ALPHTokenInfo } from '@alephium/token-list'
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
 import { formatUnits } from "ethers/lib/utils";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
-import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
-import { getAlephiumTokenInfo } from "../../utils/alephium";
+import { getAlephiumTokenInfo, getAvailableBalances } from "../../utils/alephium";
 import alephiumIcon from "../../icons/alephium.svg";
+import { useAlephiumWallet } from "../../hooks/useAlephiumWallet";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -18,99 +19,80 @@ type AlephiumTokenPickerProps = {
   resetAccounts: (() => void) | undefined;
 };
 
-async function getAlephiumTokenAccounts(address: string, client: NodeProvider): Promise<ParsedTokenAccount[]> {
-  const utxos = await client.addresses.getAddressesAddressUtxos(address)
-  const now = Date.now()
-  let alphAmount: bigint = BigInt(0)
-  let tokenAmounts = new Map<string, bigint>()
-  utxos.utxos.forEach(utxo => {
-    alphAmount = alphAmount + BigInt(utxo.amount)
-    if (utxo.lockTime === undefined || now > utxo.lockTime) {
-      utxo.tokens?.forEach(token => {
-        const amount = tokenAmounts.get(token.id)
-        if (amount) {
-          tokenAmounts.set(token.id, amount + BigInt(token.amount))
-        } else {
-          tokenAmounts.set(token.id, BigInt(token.amount))
-        }
-      })
-    }
-  });
-
-  const alphUIAmount = formatUnits(alphAmount, 18)
-  const alph = createParsedTokenAccount(
-    address,
-    ALPH_TOKEN_ID,
-    alphAmount.toString(),
-    ALPHTokenInfo.decimals,
-    parseFloat(alphUIAmount),
-    alphUIAmount,
-    ALPHTokenInfo.symbol,
-    ALPHTokenInfo.name,
-    alephiumIcon,
-    true
-  )
-
-  let tokenAccounts = [alph]
-  for (let [tokenId, amount] of tokenAmounts) {
-    const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
-    if (typeof tokenInfo === 'undefined') {
+async function getAlephiumTokenAccounts(provider: NodeProvider, address: string): Promise<ParsedTokenAccount[]> {
+  const balances = await getAvailableBalances(provider, address)
+  const tokenAccounts: ParsedTokenAccount[] = []
+  for (const [tokenId, amount] of balances) {
+    const tokenInfo = tokenId === ALPH_TOKEN_ID ? ALPHTokenInfo : (await getAlephiumTokenInfo(provider, tokenId))
+    if (tokenInfo === undefined) {
       continue
     }
     const uiAmount = formatUnits(amount, tokenInfo.decimals)
-    const tokenAccount = createParsedTokenAccount(
-      address, tokenId, amount.toString(), tokenInfo.decimals, parseFloat(uiAmount), uiAmount
-    )
-    tokenAccounts.push(tokenAccount)
+    tokenAccounts.push(createParsedTokenAccount(
+      address,
+      tokenId,
+      amount.toString(),
+      tokenInfo.decimals,
+      parseFloat(uiAmount),
+      uiAmount,
+      tokenInfo.symbol,
+      tokenInfo.name,
+      tokenId === ALPH_TOKEN_ID ? alephiumIcon : tokenInfo.logoURI,
+      tokenId === ALPH_TOKEN_ID
+    ))
   }
+
   return tokenAccounts
 }
 
-function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
+function useAlephiumTokenAccounts(refresh: Boolean, onRefreshCompleted: () => void) {
   const [isLoading, setIsLoading] = useState(true);
   const [tokenAccounts, setTokenAccounts] = useState<ParsedTokenAccount[]>([]);
-  const [refresh, setRefresh] = useState(false);
-  const { signer } = useAlephiumWallet()
+  const wallet = useAlephiumWallet()
+
   useEffect(() => {
-    if (refreshRef) {
-      refreshRef.current = () => {
-        setRefresh(true)
-        setTokenAccounts([])
-      };
+    if (!refresh) {
+      return
     }
-  }, [refreshRef]);
-  useEffect(() => {
-    setRefresh(false)
-    setIsLoading(true)
-    if (typeof signer === 'undefined') {
+    if (wallet?.nodeProvider === undefined) {
       setIsLoading(false)
       setTokenAccounts([])
     } else {
-      getAlephiumTokenAccounts(signer.address, signer.nodeProvider)
+      setIsLoading(true)
+      setTokenAccounts([])
+      getAlephiumTokenAccounts(wallet.nodeProvider, wallet.address)
         .then((tokenAccounts) => {
           setTokenAccounts(tokenAccounts)
+          onRefreshCompleted()
           setIsLoading(false)
         })
         .catch((e) => {
           console.log("failed to load alephium token accounts, error: " + e)
           setIsLoading(false)
+          onRefreshCompleted()
           setTokenAccounts([])
         })
       }
-    }, [signer, refresh])
-    const value = useMemo(() => ({isLoading, tokenAccounts}), [isLoading, tokenAccounts])
-    return value
+    }, [wallet, refresh, onRefreshCompleted])
+  return useMemo(() => ({isLoading, tokenAccounts}), [isLoading, tokenAccounts])
 }
 
 const returnsFalse = () => false;
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   const { value, onChange, disabled } = props;
-  const nativeRefresh = useRef<() => void>(() => {});
-  const resetAccountWrapper = useCallback(() => {
-    nativeRefresh.current()
-  }, []);
-  const { isLoading, tokenAccounts } = useAlephiumTokenAccounts(nativeRefresh);
+  const [refresh, setRefresh] = useState<boolean>(true)
+
+  const onRefreshCompleted = useCallback(() => setRefresh(false), [])
+
+  const { isLoading, tokenAccounts } = useAlephiumTokenAccounts(refresh, onRefreshCompleted);
+
+  const resetAccounts = useCallback(() => {
+    if (isLoading) {
+      return
+    }
+    setRefresh(true)
+  }, [isLoading])
 
   const onChangeWrapper = useCallback(
     async (account: ParsedTokenAccount | null) => {
@@ -143,7 +125,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
       onChange={onChangeWrapper}
       isValidAddress={isSearchableAddress}
       disabled={disabled}
-      resetAccounts={resetAccountWrapper}
+      resetAccounts={resetAccounts}
       error={""}
       showLoader={isLoading}
       nft={false}

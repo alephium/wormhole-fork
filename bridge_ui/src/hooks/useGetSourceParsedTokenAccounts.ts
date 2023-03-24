@@ -18,7 +18,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
-  TokenImplementation__factory,
+  ethers_contracts,
   WSOL_ADDRESS,
   WSOL_DECIMALS,
 } from "alephium-wormhole-sdk";
@@ -434,7 +434,7 @@ const createNativeKaruraParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(KAR_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(KAR_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, KAR_DECIMALS);
@@ -459,7 +459,7 @@ const createNativeAcalaParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(ACA_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(ACA_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, ACA_DECIMALS);
@@ -509,7 +509,7 @@ const createNativeCeloParsedTokenAccount = (
   // https://docs.celo.org/developer-guide/celo-for-eth-devs
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(CELO_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(CELO_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, CELO_DECIMALS);

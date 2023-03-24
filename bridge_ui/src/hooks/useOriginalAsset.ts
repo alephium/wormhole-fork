@@ -30,7 +30,6 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
-  ALEPHIUM_HOST,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
   getNFTBridgeAddressForChain,
@@ -44,6 +43,7 @@ import {
 import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 export type OriginalAssetInfo = {
   originChain: ChainId | null;
@@ -54,14 +54,15 @@ export type OriginalAssetInfo = {
 export async function getOriginalAssetToken(
   foreignChain: ChainId,
   foreignNativeStringAddress: string,
-  provider?: Web3Provider
+  ethProvider?: Web3Provider,
+  alphNodeProvider?: NodeProvider
 ) {
   let promise = null;
   try {
-    if (isEVMChain(foreignChain) && provider) {
+    if (isEVMChain(foreignChain) && ethProvider) {
       promise = await getOriginalAssetEth(
         getTokenBridgeAddressForChain(foreignChain),
-        provider,
+        ethProvider,
         foreignNativeStringAddress,
         foreignChain
       );
@@ -75,9 +76,8 @@ export async function getOriginalAssetToken(
     } else if (foreignChain === CHAIN_ID_TERRA) {
       const lcd = new LCDClient(TERRA_HOST);
       promise = await getOriginalAssetTerra(lcd, foreignNativeStringAddress);
-    } else if (foreignChain === CHAIN_ID_ALEPHIUM) {
-      const provider = new NodeProvider(ALEPHIUM_HOST)
-      promise = await getAlephiumTokenWrappedInfo(foreignNativeStringAddress, provider)
+    } else if (foreignChain === CHAIN_ID_ALEPHIUM && alphNodeProvider) {
+      promise = await getAlephiumTokenWrappedInfo(foreignNativeStringAddress, alphNodeProvider)
     } else if (foreignChain === CHAIN_ID_ALGORAND) {
       const algodClient = new Algodv2(
         ALGORAND_HOST.algodToken,
@@ -138,19 +138,21 @@ export async function getOriginalAsset(
   foreignNativeStringAddress: string,
   nft: boolean,
   tokenId?: string,
-  provider?: Provider
+  ethProvider?: Provider,
+  alphNodeProvider?: NodeProvider
 ): Promise<WormholeWrappedNFTInfo> {
   const result = nft
     ? await getOriginalAssetNFT(
         foreignChain,
         foreignNativeStringAddress,
         tokenId,
-        provider
+        ethProvider
       )
     : await getOriginalAssetToken(
         foreignChain,
         foreignNativeStringAddress,
-        provider
+        ethProvider,
+        alphNodeProvider
       );
 
   if (
@@ -201,6 +203,7 @@ function useOriginalAsset(
     () => setPreviousArgs({ foreignChain, foreignAddress, nft, tokenId }),
     [foreignChain, foreignAddress, nft, tokenId]
   );
+  const alphWallet = useAlephiumWallet()
 
   const argumentError = useMemo(
     () =>
@@ -226,7 +229,7 @@ function useOriginalAsset(
     let cancelled = false;
     setIsLoading(true);
 
-    getOriginalAsset(foreignChain, foreignAddress, nft, tokenId, provider)
+    getOriginalAsset(foreignChain, foreignAddress, nft, tokenId, provider, alphWallet?.nodeProvider)
       .then((result) => {
         if (!cancelled) {
           setIsLoading(false);
@@ -256,6 +259,7 @@ function useOriginalAsset(
     argumentError,
     tokenId,
     argsEqual,
+    alphWallet
   ]);
 
   const output: DataWrapper<OriginalAssetInfo> = useMemo(

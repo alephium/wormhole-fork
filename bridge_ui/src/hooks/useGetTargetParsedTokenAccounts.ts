@@ -5,7 +5,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
   isNativeDenom,
-  TokenImplementation__factory,
+  ethers_contracts
 } from "alephium-wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
@@ -13,7 +13,6 @@ import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { formatUnits } from "ethers/lib/utils";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
@@ -22,8 +21,8 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
-import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { getAlephiumTokenInfo } from "../utils/alephium";
+import { NodeProvider } from "@alephium/web3";
+import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
 import {
   ALGORAND_HOST,
   getEvmChainId,
@@ -34,26 +33,15 @@ import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
 import { Algodv2 } from "algosdk";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 async function getAlephiumTargetAsset(address: string, targetAsset: string, provider: NodeProvider): Promise<ParsedTokenAccount> {
-  const utxos = await provider.addresses.getAddressesAddressUtxos(address)
-  const now = Date.now()
-  let balance = BigInt(0)
-  if (targetAsset === ALPH_TOKEN_ID) {
-    utxos.utxos.forEach(utxo => balance = balance + BigInt(utxo.amount))
-  } else {
-    utxos.utxos.forEach(utxo => {
-      if (utxo.lockTime === undefined || now > utxo.lockTime) {
-        utxo.tokens?.filter(t => t.id === targetAsset).forEach(t =>
-          balance = balance + BigInt(t.amount)
-        )
-      }
-    });
-  }
+  const balances = await getAvailableBalances(provider, address)
+  const balance = balances.get(targetAsset) ?? BigInt(0)
 
   return getAlephiumTokenInfo(provider, targetAsset)
     .then((tokenInfo) => {
-      if (typeof tokenInfo === 'undefined') {
+      if (tokenInfo === undefined) {
         throw Error("failed to get alephium token info")
       }
       const uiAmount = formatUnits(balance, tokenInfo.decimals)
@@ -88,7 +76,7 @@ function useGetTargetParsedTokenAccounts() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const {
     provider,
     signerAddress,
@@ -105,8 +93,8 @@ function useGetTargetParsedTokenAccounts() {
     }
     let cancelled = false;
 
-    if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
-      getAlephiumTargetAsset(alphSigner.address, targetAsset, alphSigner.nodeProvider)
+    if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
+      getAlephiumTargetAsset(alphWallet.address, targetAsset, alphWallet.nodeProvider)
         .then((target) => dispatch(setTargetParsedTokenAccount(target)))
         .catch(() => {
           if (!cancelled) {
@@ -229,7 +217,7 @@ function useGetTargetParsedTokenAccounts() {
       signerAddress &&
       hasCorrectEvmNetwork
     ) {
-      const token = TokenImplementation__factory.connect(targetAsset, provider);
+      const token = ethers_contracts.TokenImplementation__factory.connect(targetAsset, provider);
       token
         .decimals()
         .then((decimals) => {
@@ -329,7 +317,7 @@ function useGetTargetParsedTokenAccounts() {
     solanaWallet,
     solPK,
     terraWallet,
-    alphSigner,
+    alphWallet,
     hasCorrectEvmNetwork,
     hasResolvedMetadata,
     symbol,

@@ -15,10 +15,10 @@ import {
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,7 +41,7 @@ export default function TransactionProgress({
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
-  const { signer: alphSigner } = useAlephiumWallet()
+  const alphWallet = useAlephiumWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
   useEffect(() => {
     if (isSendComplete || !tx) return;
@@ -77,16 +77,16 @@ export default function TransactionProgress({
         connection.removeSlotChangeListener(sub);
       };
     }
-    if (chainId === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+    if (chainId === CHAIN_ID_ALEPHIUM && !!alphWallet) {
       let cancelled = false;
       (async () => {
         while (!cancelled) {
           const timeout = CLUSTER === "devnet" ? 1000 : 10000
           await new Promise((resolve) => setTimeout(resolve, timeout));
           try {
-            const chainInfo = await alphSigner.nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: alphSigner.group,
-              toGroup: alphSigner.group
+            const chainInfo = await alphWallet.nodeProvider.blockflow.getBlockflowChainInfo({
+              fromGroup: alphWallet.group,
+              toGroup: alphWallet.group
             });
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight);
@@ -100,7 +100,7 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-  }, [isSendComplete, chainId, provider, alphSigner, tx]);
+  }, [isSendComplete, chainId, provider, alphWallet, tx]);
   const blockDiff =
     tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
   const expectedBlocks = // minimum confirmations enforced by guardians or specified by the contract
