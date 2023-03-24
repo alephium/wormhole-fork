@@ -90,7 +90,7 @@ import {
 } from '../artifacts/ts'
 
 describe('test token bridge', () => {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+  web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
 
   const payer = randomAssetAddress()
   const defaultInputAsset: InputAsset = alphInputAsset(payer, alph(4))

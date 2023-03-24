@@ -41,7 +41,7 @@ describe('test governance', () => {
   const testGuardianSet = GuardianSet.random(18, 1)
 
   beforeAll(async () => {
-    web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+    web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
     await buildProject()
   })
 

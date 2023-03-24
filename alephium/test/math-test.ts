@@ -3,7 +3,7 @@ import { buildProject } from './fixtures/wormhole-fixture'
 import { MathTest } from '../artifacts/ts'
 
 describe('test math', () => {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+  web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
 
   interface TestCase {
     decimals: bigint

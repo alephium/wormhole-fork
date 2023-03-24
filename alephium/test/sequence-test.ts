@@ -18,7 +18,7 @@ import {
 } from './fixtures/wormhole-fixture'
 
 describe('test sequence', () => {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+  web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
   const allExecuted = (BigInt(1) << BigInt(256)) - 1n
   const caller = randomAssetAddress()
   const inputAsset: InputAsset[] = [
