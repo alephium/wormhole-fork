@@ -10,7 +10,8 @@
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
     "build": "rm -rf dist && npx tsc --build .",
-    "compile-contracts": "npx @alephium/cli compile",
+    "compile": "npx @alephium/cli compile",
+    "codegen": "npx @alephium/cli compile && cp -r artifacts/. ../sdk/js/src/alephium-contracts",
     "test": "npx @alephium/cli test -i -v",
     "deploy:devnet": "npx @alephium/cli deploy -n devnet",
     "auto-mine": "npx ts-node scripts/auto_mine.ts"
@@ -29,9 +30,9 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "0.3.0-rc.8",
-    "@alephium/web3-wallet": "0.3.0-rc.8",
-    "@alephium/cli": "0.3.0-rc.8",
+    "@alephium/web3": "^0.7.1",
+    "@alephium/web3-wallet": "^0.7.1",
+    "@alephium/cli": "^0.7.1",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",

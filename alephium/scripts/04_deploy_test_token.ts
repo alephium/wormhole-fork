@@ -1,11 +1,10 @@
-import { Project } from '@alephium/web3'
 import { Configuration, Deployer, DeployFunction } from '@alephium/cli'
+import { TestToken } from '../artifacts/ts'
 
 const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-  const token = Project.contract('TestToken')
   const encodeString = (str: string): string => Buffer.from(str, 'utf8').toString('hex')
-  const result = await deployer.deployContract(token, {
+  const result = await deployer.deployContract(TestToken, {
     initialFields: {
       decimals: 18n,
       symbol: encodeString('TT'),

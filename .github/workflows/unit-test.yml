@@ -53,11 +53,12 @@ jobs:
         run: |
           npm audit --production
           npm ci
-          npm run build
-          npm run lint
           npx @alephium/cli devnet start
+          npm run compile
+          npm run build
           npm test
           npx @alephium/cli devnet stop
+          npm run lint
 
   sdk:
     runs-on: ubuntu-20.04

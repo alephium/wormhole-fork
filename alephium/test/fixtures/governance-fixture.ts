@@ -1,6 +1,7 @@
-import { Project, stringToHex } from '@alephium/web3'
+import { stringToHex } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
-import { CHAIN_ID_ALEPHIUM, ContractInfo, initAsset, GuardianSet, randomContractAddress } from './wormhole-fixture'
+import { CHAIN_ID_ALEPHIUM, ContractFixture, GuardianSet, randomContractAddress } from './wormhole-fixture'
+import { Governance, GovernanceTypes } from '../../artifacts/ts'
 
 export const governanceModule = zeroPad(stringToHex('Core'), 32)
 export const initGuardianSet = GuardianSet.random(12, 0)
@@ -67,10 +68,9 @@ export class SubmitTransferFee {
   }
 }
 
-export function createGovernance(receivedSequence?: bigint, messageFee?: bigint): ContractInfo {
+export function createGovernance(receivedSequence?: bigint, messageFee?: bigint) {
   const address = randomContractAddress()
-  const governanceContract = Project.contract('Governance')
-  const initFields = {
+  const initFields: GovernanceTypes.Fields = {
     chainId: BigInt(CHAIN_ID_ALEPHIUM),
     governanceChainId: BigInt(governanceChainId),
     governanceEmitterAddress: governanceEmitterAddress,
@@ -80,6 +80,6 @@ export function createGovernance(receivedSequence?: bigint, messageFee?: bigint)
     guardianSetIndexes: [0n, BigInt(initGuardianSet.index)],
     previousGuardianSetExpirationTimeMS: 0n
   }
-  const contractState = governanceContract.toState(initFields, initAsset, address)
-  return new ContractInfo(governanceContract, contractState, [], address)
+  const contractState = Governance.stateForTest(initFields, undefined, address)
+  return new ContractFixture(contractState, [], address)
 }

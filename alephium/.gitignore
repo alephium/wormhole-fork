@@ -1,3 +1,3 @@
 dist/
 artifacts/
-.deployments.*.json
+.project.json

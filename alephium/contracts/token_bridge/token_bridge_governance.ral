@@ -6,7 +6,7 @@ Abstract Contract TokenBridgeGovernance(
     tokenBridgeFactory: TokenBridgeFactory,
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
-) extends Constants(), TokenBridgeConstants() {
+) extends Constants(), TokenBridgeConstants(), Upgradable() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
 
     enum ActionId {
@@ -25,21 +25,38 @@ Abstract Contract TokenBridgeGovernance(
     }
 
     @using(preapprovedAssets = true)
-    pub fn createLocalAttestTokenHandler(payer: Address, createContractAlphAmount: U256) -> () {
-        let localTokenBridgeId = selfContractId!()
-        let fields = encodeToByteVec!(
+    fn createAttestTokenHandler(
+        payer: Address,
+        createContractAlphAmount: U256,
+        remoteChainId: U256,
+        remoteTokenBridgeId: ByteVec,
+        isLocal: Bool
+    ) -> () {
+        let encodedImmutableFields = encodeToByteVec!(
             governance,
-            localTokenBridgeId,
-            localChainId,
-            localTokenBridgeId,
-            0,
-            true
+            selfContractId!(),
+            remoteChainId,
+            remoteTokenBridgeId,
+            isLocal
         )
-        let path = Path.AttestTokenHandler ++ u256To2Byte!(localChainId)
+        let encodedMutableFields = encodeToByteVec!(0)
+        let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
-            fields
+            encodedImmutableFields,
+            encodedMutableFields
+        )
+    }
+
+    @using(preapprovedAssets = true)
+    pub fn createLocalAttestTokenHandler(payer: Address, createContractAlphAmount: U256) -> () {
+        createAttestTokenHandler{payer -> ALPH: createContractAlphAmount}(
+            payer,
+            createContractAlphAmount,
+            localChainId,
+            selfContractId!(),
+            true
         )
     }
 
@@ -57,39 +74,29 @@ Abstract Contract TokenBridgeGovernance(
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
 
-        let remoteChainIdBytes = u256To2Byte!(remoteChainId)
-        let attestTokenHandlerFields = encodeToByteVec!(
-            governance,
-            selfContractId!(),
+        createAttestTokenHandler{payer -> ALPH: createContractAlphAmount}(
+            payer,
+            createContractAlphAmount,
             remoteChainId,
             remoteTokenBridgeId,
-            0,
             false
         )
-        let attestTokenHandlerPath = Path.AttestTokenHandler ++ remoteChainIdBytes
-        copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
-            attestTokenHandlerPath,
-            tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
-            attestTokenHandlerFields
-        )
 
-        let tokenBridgeForChainFields = encodeToByteVec!(
+        let encodedImmutableFields = encodeToByteVec!(
             governance,
             localChainId,
             selfContractId!(),
             remoteChainId,
             remoteTokenBridgeId,
-            0,
-            0,
-            0,
-            tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
-            0
+            tokenBridgeFactory.getUnexecutedSequenceTemplateId()
         )
-        let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
+        let encodedMutableFields = encodeToByteVec!(0, 0, 0, 0)
+        let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             tokenBridgeForChainPath,
             tokenBridgeFactory.getTokenBridgeForChainTemplateId(),
-            tokenBridgeForChainFields
+            encodedImmutableFields,
+            encodedMutableFields
         )
     }
 
@@ -97,27 +104,17 @@ Abstract Contract TokenBridgeGovernance(
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        let mut offset = 35 + contractCodeLength
-        let newContractCode = byteVecSlice!(payload, 35, offset)
-        let payloadLength = size!(payload)
-        if (payloadLength == offset) {
-            migrate!(newContractCode)
+        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = parseConractUpgrade(payload)
+        if (prevStateHash == #) {
+            migrate!(newCode)
         } else {
-            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
-            offset = offset + 32
             let currentEncodedFields =
                 u256To32Byte!(receivedSequence) ++
                 u256To32Byte!(sendSequence) ++
                 u256To1Byte!(minimalConsistencyLevel) ++
                 toByteVec!(refundAddress)
             assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
-            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
-            offset = offset + 2
-            let newContractFields = byteVecSlice!(payload, offset, offset + stateLength)
-            offset = offset + stateLength
-            assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
-            migrateWithFields!(newContractCode, newContractFields)
+            migrateWithFields!(newCode, newEncodedImmutableFields, newEncodedMutableFields)
         }
     }
 

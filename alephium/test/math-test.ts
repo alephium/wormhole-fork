@@ -1,5 +1,6 @@
-import { Number256, web3 } from '@alephium/web3'
-import { buildProject, createMath } from './fixtures/wormhole-fixture'
+import { web3 } from '@alephium/web3'
+import { buildProject } from './fixtures/wormhole-fixture'
+import { MathTest } from '../artifacts/ts'
 
 describe('test math', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -13,9 +14,6 @@ describe('test math', () => {
 
   it('should test math methods', async () => {
     await buildProject()
-    const mathInfo = createMath()
-    const contract = mathInfo.contract
-
     const cases: TestCase[] = [
       {
         decimals: 6n,
@@ -37,25 +35,15 @@ describe('test math', () => {
       }
     ]
     for (const tc of cases) {
-      let testResult = await contract.testPublicMethod('normalizeAmount', {
-        testArgs: {
-          amount: tc.amount,
-          decimals: tc.decimals
-        }
+      let testResult = await MathTest.testNormalizeAmountMethod({
+        testArgs: { amount: tc.amount, decimals: tc.decimals }
       })
-      expect(testResult.returns.length).toEqual(1)
-      const normalizedAmount = testResult.returns[0] as Number256
-      expect(normalizedAmount).toEqual(tc.normalizedAmount)
+      expect(testResult.returns).toEqual(tc.normalizedAmount)
 
-      testResult = await contract.testPublicMethod('deNormalizeAmount', {
-        testArgs: {
-          amount: tc.normalizedAmount,
-          decimals: tc.decimals
-        }
+      testResult = await MathTest.testDeNormalizeAmountMethod({
+        testArgs: { amount: tc.normalizedAmount, decimals: tc.decimals }
       })
-      expect(testResult.returns.length).toEqual(1)
-      const deNormalizedAmount = testResult.returns[0] as Number256
-      expect(deNormalizedAmount).toEqual(tc.deNormalizedAmount)
+      expect(testResult.returns).toEqual(tc.deNormalizedAmount)
     }
   })
 })

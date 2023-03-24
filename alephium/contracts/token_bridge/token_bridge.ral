@@ -54,18 +54,19 @@ Contract TokenBridge(
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(localChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
-        let encodedFields = encodeToByteVec!(
+        let encodedImmutableFields = encodeToByteVec!(
             selfContractId!(),
             localChainId,
             localTokenId,
-            0,
             decimals
         )
+        let encodedMutableFields = encodeToByteVec!(0)
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getLocalTokenPoolTemplateId(),
-            encodedFields
+            encodedImmutableFields,
+            encodedMutableFields
         )
     }
 
@@ -82,22 +83,20 @@ Contract TokenBridge(
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
-        let encodedFields = encodeToByteVec!(
+        let encodedImmutableFields = encodeToByteVec!(
             selfContractId!(),
             tokenChainId,
             bridgeTokenId,
-            0,
-            symbol,
-            name,
-            decimals,
-            msgSequence
+            decimals
         )
+        let encodedMutableFields = encodeToByteVec!(0, symbol, name, msgSequence)
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         let tokenAmount = 1 << 255 // save some space from 0xff...ff
         copyCreateSubContractWithToken!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getRemoteTokenPoolTemplateId(),
-            encodedFields,
+            encodedImmutableFields,
+            encodedMutableFields,
             tokenAmount
         )
     }

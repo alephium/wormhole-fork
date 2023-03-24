@@ -13,13 +13,15 @@ Abstract Contract Sequence(
 
     @using(assetsInContract = true, updateFields = true)
     fn compact() -> () {
-        if (firstNext256 != SequenceExecutedFlag) {
-            let encodedState = encodeToByteVec!(
-                selfContractId!(),
-                start,
-                firstNext256
+        if (firstNext256 != u256Max!()) {
+            let encodedImmutableFields = encodeToByteVec!(selfContractId!(), start)
+            let encodedMutableFields = encodeToByteVec!(firstNext256)
+            copyCreateSubContract!{selfAddress!() -> ALPH: 1 alph}(
+                u256To8Byte!(start / 256),
+                unexecutedSequenceTemplateId,
+                encodedImmutableFields,
+                encodedMutableFields
             )
-            copyCreateSubContract!{selfAddress!() -> ALPH: 1 alph}(u256To8Byte!(start / 256), unexecutedSequenceTemplateId, encodedState)
         }
         start = start + 256
         firstNext256 = secondNext256

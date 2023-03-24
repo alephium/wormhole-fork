@@ -1,4 +1,13 @@
-import { Asset, InputAsset, TestContractResult, Val, binToHex, Project, web3 } from '@alephium/web3'
+import {
+  Asset,
+  InputAsset,
+  TestContractResult,
+  binToHex,
+  Project,
+  web3,
+  TestContractParams,
+  HexString
+} from '@alephium/web3'
 import {
   CHAIN_ID_ALEPHIUM,
   ContractUpgrade,
@@ -26,29 +35,31 @@ import {
   GuardianSetUpgrade
 } from './fixtures/governance-fixture'
 import * as blake from 'blakejs'
+import { Governance, GovernanceTypes } from '../artifacts/ts'
 
 describe('test governance', () => {
-  web3.setCurrentNodeProvider('http://127.0.0.1:22973')
   const testGuardianSet = GuardianSet.random(18, 1)
 
-  async function testCase(
+  beforeAll(async () => {
+    web3.setCurrentNodeProvider('http://127.0.0.1:22973')
+    await buildProject()
+  })
+
+  function createTestParams(
     vaa: VAA,
-    method: string,
     initialAsset?: Asset,
     inputAssets?: InputAsset[],
     receivedSequence?: bigint
-  ): Promise<TestContractResult> {
-    await buildProject()
-    const governanceInfo = createGovernance(receivedSequence)
-    const contract = governanceInfo.contract
-    return await contract.testPublicMethod(method, {
-      initialFields: governanceInfo.selfState.fields,
-      address: governanceInfo.address,
-      existingContracts: governanceInfo.dependencies,
+  ): TestContractParams<GovernanceTypes.Fields, { vaa: HexString }> {
+    const governanceFixture = createGovernance(receivedSequence)
+    return {
+      initialFields: governanceFixture.selfState.fields,
+      address: governanceFixture.address,
+      existingContracts: governanceFixture.dependencies,
       testArgs: { vaa: binToHex(vaa.encode()) },
       initialAsset: initialAsset,
       inputAssets: inputAssets
-    })
+    }
   }
 
   it('should update guardian set succeed if target chain id is valid', async () => {
@@ -57,13 +68,13 @@ describe('test governance', () => {
     for (const chainId of validChainIds) {
       const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      const testResult = await testCase(vaa, 'submitNewGuardianSet')
-      const governanceState = testResult.contracts[0]
-      expect(governanceState.fields['guardianSets']).toEqual([
+      const testResult = await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
+      const governanceState = testResult.contracts[0] as GovernanceTypes.State
+      expect(governanceState.fields.guardianSets).toEqual([
         initGuardianSet.encodeAddresses().toLowerCase(),
         guardianSetUpgrade.newGuardianSet.encodeAddresses().toLowerCase()
       ])
-      expect(governanceState.fields['guardianSetIndexes']).toEqual([
+      expect(governanceState.fields.guardianSetIndexes).toEqual([
         BigInt(initGuardianSet.index),
         BigInt(guardianSetUpgrade.newGuardianSet.index)
       ])
@@ -77,7 +88,7 @@ describe('test governance', () => {
       const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       await expectAssertionFailed(async () => {
-        return await testCase(vaa, 'submitNewGuardianSet')
+        return await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
       })
     }
   })
@@ -93,7 +104,7 @@ describe('test governance', () => {
         sequence
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), body)
-      return testCase(vaa, 'submitNewGuardianSet', undefined, undefined, 3n)
+      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa, undefined, undefined, 3n))
     }
     for (let seq = 0; seq < 3; seq += 1) {
       await expectAssertionFailed(async () => await test(seq))
@@ -110,7 +121,7 @@ describe('test governance', () => {
     const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, 0, governanceEmitterAddress, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     await expectAssertionFailed(async () => {
-      await testCase(vaa, 'submitNewGuardianSet')
+      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
     })
   })
 
@@ -125,7 +136,7 @@ describe('test governance', () => {
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
     await expectAssertionFailed(async () => {
-      return await testCase(vaa, 'submitNewGuardianSet')
+      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
     })
   })
 
@@ -142,7 +153,7 @@ describe('test governance', () => {
     const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
     const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
     await expectAssertionFailed(async () => {
-      return await testCase(invalidVaa, 'submitNewGuardianSet')
+      await Governance.testSubmitNewGuardianSetMethod(createTestParams(invalidVaa))
     })
   })
 
@@ -158,10 +169,10 @@ describe('test governance', () => {
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     const invalidSignatures = Array(vaa.signatures.length)
       .fill(0)
-      .map((_) => randomBytes(66))
+      .map(() => randomBytes(66))
     const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
     await expectOneOfError(
-      async () => await testCase(invalidVaa, 'submitNewGuardianSet'),
+      async () => await Governance.testSubmitNewGuardianSetMethod(createTestParams(invalidVaa)),
       ['AssertionFailed', 'FailedInRecoverEthAddress', 'InvalidConversion', 'InvalidBytesSliceArg']
     )
   })
@@ -176,9 +187,9 @@ describe('test governance', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await testCase(vaa, 'submitSetMessageFee')
-    const governanceState = testResult.contracts[0]
-    expect(governanceState.fields['messageFee']).toEqual(setMessageFee.newMessageFee)
+    const testResult = await Governance.testSubmitSetMessageFeeMethod(createTestParams(vaa))
+    const governanceState = testResult.contracts[0] as GovernanceTypes.State
+    expect(governanceState.fields.messageFee).toEqual(setMessageFee.newMessageFee)
   })
 
   it('should transfer message fee to recipient', async () => {
@@ -202,7 +213,7 @@ describe('test governance', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await testCase(vaa, 'submitTransferFees', asset, [inputAsset])
+    const testResult = await Governance.testSubmitTransferFeesMethod(createTestParams(vaa, asset, [inputAsset]))
     const assetOutput = testResult.txOutputs[0]
     expect(assetOutput.type).toEqual('AssetOutput')
     expect(assetOutput.address).toEqual(base58.encode(Buffer.concat([Buffer.from([0x00]), recipient])))
@@ -217,9 +228,8 @@ describe('test governance', () => {
 
   it('should test upgrade contract', async () => {
     await buildProject()
-    const governanceInfo = createGovernance()
-    const contract = governanceInfo.contract
-    async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult> {
+    const governanceFixture = createGovernance()
+    async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult<null>> {
       const vaaBody = new VAABody(
         contractUpgrade.encode(governanceModule, 1),
         governanceChainId,
@@ -228,10 +238,10 @@ describe('test governance', () => {
         0
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      return await contract.testPublicMethod('submitContractUpgrade', {
-        initialFields: governanceInfo.selfState.fields,
-        address: governanceInfo.address,
-        existingContracts: governanceInfo.dependencies,
+      return await Governance.testSubmitContractUpgradeMethod({
+        initialFields: governanceFixture.selfState.fields,
+        address: governanceFixture.address,
+        existingContracts: governanceFixture.dependencies,
         testArgs: { vaa: binToHex(vaa.encode()) }
       })
     }
@@ -242,7 +252,7 @@ describe('test governance', () => {
       const contractUpgrade = new ContractUpgrade(newContractCode)
       const testResult = await upgrade(contractUpgrade)
       const newContract = testResult.contracts[testResult.contracts.length - 1]
-      expect(newContract.address).toEqual(governanceInfo.address)
+      expect(newContract.address).toEqual(governanceFixture.address)
       expect(newContract.bytecode).toEqual(newContractCode)
     }
 
@@ -251,33 +261,29 @@ describe('test governance', () => {
       await expectAssertionFailed(async () => {
         const newContractCode = v2.bytecode
         const prevStateHash = randomBytes(32).toString('hex')
-        const newState = '00'
-        const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+        const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, '010200', '010201')
         await upgrade(contractUpgrade)
       })
     }
 
     {
-      const receivedSequence = governanceInfo.selfState.fields['receivedSequence'] as bigint
-      const messageFee = governanceInfo.selfState.fields['messageFee'] as bigint
-      const guardianSetIndexes = governanceInfo.selfState.fields['guardianSetIndexes'] as Val[]
-      const guardianSetIndex0 = guardianSetIndexes[0] as bigint
-      const guardianSetIndex1 = guardianSetIndexes[1] as bigint
+      const receivedSequence = governanceFixture.selfState.fields.receivedSequence
+      const messageFee = governanceFixture.selfState.fields.messageFee
+      const guardianSetIndexes = governanceFixture.selfState.fields.guardianSetIndexes
       const prevEncodedState = Buffer.concat([
         encodeU256(BigInt(receivedSequence) + 1n),
         encodeU256(messageFee),
-        encodeU256(guardianSetIndex0),
-        encodeU256(guardianSetIndex1)
+        encodeU256(guardianSetIndexes[0]),
+        encodeU256(guardianSetIndexes[1])
       ])
       const prevStateHash = Buffer.from(blake.blake2b(prevEncodedState, undefined, 32)).toString('hex')
       const newContractCode = v2.bytecode
-      const newState = '00'
-      const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, newState)
+      const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, '010200', '010201')
       const testResult = await upgrade(contractUpgrade)
       const newContract = testResult.contracts[testResult.contracts.length - 1]
-      expect(newContract.address).toEqual(governanceInfo.address)
+      expect(newContract.address).toEqual(governanceFixture.address)
       expect(newContract.bytecode).toEqual(newContractCode)
-      expect(newContract.fields).toEqual({})
+      expect(newContract.fields).toEqual({ a: 0n, b: 1n })
     }
-  })
+  }, 10000)
 })

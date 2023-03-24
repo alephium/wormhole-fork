@@ -1,23 +1,32 @@
-import { Fields, Project } from '@alephium/web3'
+import { Fields, ContractFactory } from '@alephium/web3'
 import { Deployer, DeployFunction } from '@alephium/cli'
+import {
+  AttestTokenHandler,
+  LocalTokenPool,
+  RemoteTokenPool,
+  TokenBridgeFactory,
+  TokenBridgeForChain,
+  UnexecutedSequence
+} from '../artifacts/ts'
 
-async function deployTemplateContract(deployer: Deployer, name: string, initialFields: Fields): Promise<string> {
-  const contract = Project.contract(name)
-  const result = await deployer.deployContract(contract, {
-    initialFields: initialFields
-  })
+async function deployTemplateContract<F extends Fields>(
+  deployer: Deployer,
+  factory: ContractFactory<any, F>,
+  initialFields: Fields
+): Promise<string> {
+  const result = await deployer.deployContract(factory, { initialFields: initialFields })
   return result.contractId
 }
 
 const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
-  const localTokenPoolId = await deployTemplateContract(deployer, 'LocalTokenPool', {
+  const localTokenPoolId = await deployTemplateContract(deployer, LocalTokenPool, {
     tokenBridgeId: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
     totalBridged: 0n,
     decimals_: 0n
   })
-  const remoteTokenPoolId = await deployTemplateContract(deployer, 'RemoteTokenPool', {
+  const remoteTokenPoolId = await deployTemplateContract(deployer, RemoteTokenPool, {
     tokenBridgeId: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
@@ -27,7 +36,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     decimals_: 0n,
     sequence_: 0n
   })
-  const tokenBridgeForChainId = await deployTemplateContract(deployer, 'TokenBridgeForChain', {
+  const tokenBridgeForChainId = await deployTemplateContract(deployer, TokenBridgeForChain, {
     governance: '',
     localChainId: 0n,
     localTokenBridgeId: '',
@@ -39,7 +48,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     unexecutedSequenceTemplateId: '',
     sendSequence: 0n
   })
-  const attestTokenHandlerId = await deployTemplateContract(deployer, 'AttestTokenHandler', {
+  const attestTokenHandlerId = await deployTemplateContract(deployer, AttestTokenHandler, {
     governance: '',
     localTokenBridge: '',
     chainId: 0n,
@@ -47,12 +56,11 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     receivedSequence: 0n,
     isLocalHandler: false
   })
-  const unexecutedSequenceId = await deployTemplateContract(deployer, 'UnexecutedSequence', {
+  const unexecutedSequenceId = await deployTemplateContract(deployer, UnexecutedSequence, {
     parentId: '',
     begin: 0n,
     sequences: 0n
   })
-  const tokenBridgeFactory = Project.contract('TokenBridgeFactory')
   const initialFields = {
     localTokenPoolTemplateId: localTokenPoolId,
     remoteTokenPoolTemplateId: remoteTokenPoolId,
@@ -60,9 +68,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     attestTokenHandlerTemplateId: attestTokenHandlerId,
     unexecutedSequenceTemplateId: unexecutedSequenceId
   }
-  await deployer.deployContract(tokenBridgeFactory, {
-    initialFields: initialFields
-  })
+  await deployer.deployContract(TokenBridgeFactory, { initialFields: initialFields })
 }
 
 export default deployTokenBridgeFactory

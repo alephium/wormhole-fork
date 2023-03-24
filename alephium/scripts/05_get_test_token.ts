@@ -1,17 +1,18 @@
-import { Project } from '@alephium/web3'
 import { Configuration, Deployer, DeployFunction } from '@alephium/cli'
+import { DUST_AMOUNT, ONE_ALPH } from '@alephium/web3'
+import { GetToken } from '../artifacts/ts'
 
 const getTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
-  const script = Project.script('GetToken')
   const token = deployer.getDeployContractResult('TestToken')
   const initialFields = {
     sender: deployer.account.address,
-    amount: 10n ** 18n,
+    amount: ONE_ALPH,
     factor: 10n ** 8n,
     token: token.contractId
   }
-  await deployer.runScript(script, {
-    initialFields: initialFields
+  await deployer.runScript(GetToken.execute, GetToken.script, {
+    initialFields: initialFields,
+    attoAlphAmount: ONE_ALPH + DUST_AMOUNT
   })
 }
 

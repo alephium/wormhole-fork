@@ -1,12 +1,11 @@
-import { Project } from '@alephium/web3'
 import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { Settings } from '../alephium.config'
+import { TokenBridge } from '../artifacts/ts'
 
 const deployTokenBridge: DeployFunction<Settings> = async (
   deployer: Deployer,
   network: Network<Settings>
 ): Promise<void> => {
-  const tokenBridge = Project.contract('TokenBridge')
   const tokenBridgeFactory = deployer.getDeployContractResult('TokenBridgeFactory')
   const governanceId = deployer.getDeployContractResult('Governance').contractId
   const initialFields = {
@@ -19,9 +18,7 @@ const deployTokenBridge: DeployFunction<Settings> = async (
     refundAddress: deployer.account.address
   }
 
-  const result = await deployer.deployContract(tokenBridge, {
-    initialFields: initialFields
-  })
+  const result = await deployer.deployContract(TokenBridge, { initialFields: initialFields })
   console.log(`TokenBridge contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
 }
 

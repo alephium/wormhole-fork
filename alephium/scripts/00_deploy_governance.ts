@@ -1,7 +1,7 @@
-import { Project } from '@alephium/web3'
 import { Deployer, DeployFunction, Network } from '@alephium/cli'
 import { zeroPad } from '../lib/utils'
 import { Settings } from '../alephium.config'
+import { Governance } from '../artifacts/ts'
 
 function removePrefix(str: string): string {
   if (str.startsWith('0x') || str.startsWith('0X')) {
@@ -14,7 +14,6 @@ const deployGovernance: DeployFunction<Settings> = async (
   deployer: Deployer,
   network: Network<Settings>
 ): Promise<void> => {
-  const governance = Project.contract('Governance')
   const initGuardianSet = network.settings.initSigners.map(removePrefix)
   if (initGuardianSet.length === 0) {
     throw new Error('empty init guardian set')
@@ -33,9 +32,7 @@ const deployGovernance: DeployFunction<Settings> = async (
     previousGuardianSetExpirationTimeMS: 0n
   }
 
-  const result = await deployer.deployContract(governance, {
-    initialFields: initialFields
-  })
+  const result = await deployer.deployContract(Governance, { initialFields: initialFields })
   console.log(`Governance contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
 }
 

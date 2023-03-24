@@ -1,17 +1,18 @@
-import { Project } from '@alephium/web3'
 import { Deployer, DeployFunction } from '@alephium/cli'
+import { ONE_ALPH } from '@alephium/web3'
 import { Settings } from '../alephium.config'
+import { CreateLocalAttestTokenHandler } from '../artifacts/ts'
 
 const deployLocalAttestTokenHandler: DeployFunction<Settings> = async (deployer: Deployer): Promise<void> => {
-  const script = Project.script('CreateLocalAttestTokenHandler')
   const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractId
   const initialFields = {
     tokenBridge: tokenBridgeId,
     payer: deployer.account.address,
-    alphAmount: 10n ** 18n
+    alphAmount: ONE_ALPH
   }
-  await deployer.runScript(script, {
-    initialFields: initialFields
+  await deployer.runScript(CreateLocalAttestTokenHandler.execute, CreateLocalAttestTokenHandler.script, {
+    initialFields: initialFields,
+    attoAlphAmount: ONE_ALPH
   })
 }
 

@@ -1,6 +1,4 @@
 Abstract Contract Constants() {
-  const SequenceExecutedFlag = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
   enum ErrorCodes {
     InvalidEmitChainId                      = 0
     InvalidEmitAddress                      = 1
