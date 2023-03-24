@@ -24,7 +24,7 @@ async function updateRefundAddress() {
   const alph = (await getBridgeChains()).alph
   const seq = await getNextGovernanceSequence()
   const updateRefundAddressVaa = createUpdateRefundAddressVaa(seq)
-  const currentRefundAddress = (await alph.getTokenBridgeContractState()).fields['refundAddress'] as string
+  const currentRefundAddress = (await alph.getTokenBridgeContractState()).fields.refundAddress
   assert(currentRefundAddress.toLowerCase() !== newRefundAddress.toLowerCase())
 
   for (const guardianIndex of [0, 1]) {
@@ -33,7 +33,7 @@ async function updateRefundAddress() {
 
   await submitGovernanceVAA('UpdateRefundAddress', seq, CHAIN_ID_ALEPHIUM)
 
-  const expectedRefundAddress = (await alph.getTokenBridgeContractState()).fields['refundAddress'] as string
+  const expectedRefundAddress = (await alph.getTokenBridgeContractState()).fields.refundAddress
   assert(expectedRefundAddress.toLowerCase() === newRefundAddress.toLowerCase())
 }
 

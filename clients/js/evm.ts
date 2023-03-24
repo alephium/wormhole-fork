@@ -1,9 +1,7 @@
 import {
-  BridgeImplementation__factory,
   CHAINS,
   GovernancePayload,
-  Implementation__factory,
-  NFTBridgeImplementation__factory
+  ethers_contracts
 } from "alephium-wormhole-sdk"
 import { ethers } from "ethers"
 import { CONFIGS } from "./configs"
@@ -65,7 +63,7 @@ export async function executeGovernanceEvm(
       if (governanceAddress === undefined) {
         throw Error(`Unknown core contract on ${network} for ${chain}`)
       }
-      let c = new Implementation__factory(signer)
+      let c = new ethers_contracts.Implementation__factory(signer)
       let cb = c.attach(governanceAddress)
       switch (payload.type) {
         case "GuardianSetUpgrade":
@@ -93,7 +91,7 @@ export async function executeGovernanceEvm(
       if (nftBridgeAddress === undefined) {
         throw Error(`Unknown nft bridge contract on ${network} for ${chain}`)
       }
-      let nftBridge = new NFTBridgeImplementation__factory(signer)
+      let nftBridge = new ethers_contracts.NFTBridgeImplementation__factory(signer)
       let nb = nftBridge.attach(nftBridgeAddress)
       switch (payload.type) {
         case "ContractUpgrade":
@@ -115,7 +113,7 @@ export async function executeGovernanceEvm(
       if (tokenBridgeAddress === undefined) {
         throw Error(`Unknown token bridge contract on ${network} for ${chain}`)
       }
-      let t = new BridgeImplementation__factory(signer)
+      let t = new ethers_contracts.BridgeImplementation__factory(signer)
       let tb = t.attach(tokenBridgeAddress)
       switch (payload.type) {
         case "ContractUpgrade":
@@ -214,7 +212,7 @@ export async function queryContractEvm(
       if (contractAddress === undefined) {
         throw Error(`Unknown core contract on ${network} for ${chain}`)
       }
-      const core = Implementation__factory.connect(contractAddress, provider)
+      const core = ethers_contracts.Implementation__factory.connect(contractAddress, provider)
       result.address = contractAddress
       result.currentGuardianSetIndex = await core.getCurrentGuardianSetIndex()
       result.guardianSet = {}
@@ -235,7 +233,7 @@ export async function queryContractEvm(
       if (contractAddress === undefined) {
         throw Error(`Unknown token bridge contract on ${network} for ${chain}`)
       }
-      const tb = BridgeImplementation__factory.connect(contractAddress, provider)
+      const tb = ethers_contracts.BridgeImplementation__factory.connect(contractAddress, provider)
       result.address = contractAddress
       result.wormhole = await tb.wormhole()
       result.implementation = (await getStorageAt(rpc, contractAddress, _IMPLEMENTATION_SLOT, ["address"]))[0]
@@ -293,7 +291,7 @@ export async function queryContractEvm(
   const GUARDIAN_SET_INDEX_SLOT = 0x3
 
   const provider = new ethers.providers.JsonRpcProvider(rpc)
-  const core = Implementation__factory.connect(contractAddress, provider)
+  const core = ethers_contracts.Implementation__factory.connect(contractAddress, provider)
   let guardianSetIndex: number
   let guardianSetExpiry: number
   [guardianSetIndex, guardianSetExpiry] = await getStorageAt(rpc, contractAddress, GUARDIAN_SET_INDEX_SLOT, ["uint32", "uint32"])

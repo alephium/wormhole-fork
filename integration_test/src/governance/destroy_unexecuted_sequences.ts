@@ -9,7 +9,8 @@ import {
   TransferToken,
   VAA,
   signVAABody,
-  VAABody
+  VAABody,
+  alephium_contracts
 } from 'alephium-wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
@@ -72,8 +73,8 @@ async function destroyUnexecutedSequences() {
 
   const tokenBridgeForChainId = getTokenBridgeForChainId(alph.tokenBridgeContractId, CHAIN_ID_ETH, alph.groupIndex)
   const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
-  const state0 = await alph.getContractState(tokenBridgeForChainAddress, 'TokenBridgeForChain')
-  assert(Number(state0.fields['start'] as bigint) === 0)
+  const state0 = await alph.getContractState(alephium_contracts.TokenBridgeForChain, tokenBridgeForChainAddress)
+  assert(state0.fields.start === 0n)
 
   const unexecutedSequenceContractId = getUnexecutedSequenceId(
     tokenBridgeForChainId,
@@ -84,8 +85,8 @@ async function destroyUnexecutedSequences() {
   assert(!exists0)
 
   await createUnexecutedSequence()
-  const state1 = await alph.getContractState(tokenBridgeForChainAddress, 'TokenBridgeForChain')
-  assert(Number(state1.fields['start'] as bigint) === 256)
+  const state1 = await alph.getContractState(alephium_contracts.TokenBridgeForChain, tokenBridgeForChainAddress)
+  assert(state1.fields.start === 256n)
 
   const exists1 = await contractExists(unexecutedSequenceContractId, web3.getCurrentNodeProvider())
   assert(exists1)

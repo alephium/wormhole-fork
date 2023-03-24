@@ -4,7 +4,7 @@ import { BridgeChain } from '../bridge_chain'
 import { assert, getBridgeChains, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
-import { ALPHTokenInfo } from 'alephium-wormhole-sdk'
+import { ALPH as ALPHTokenInfo } from '@alephium/token-list'
 
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
