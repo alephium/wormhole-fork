@@ -44,17 +44,16 @@ function updateEthConfig(network: string) {
 
 function updateAlphConfig(network: string) {
   const func = (deployments: any, config: any): void => {
-    const deployContractResults = deployments[config.groupIndex].deployContractResults
     const contracts: any = {
-      governance: deployContractResults.Governance.contractId,
-      nativeGovernance: deployContractResults.Governance.contractAddress,
-      tokenBridge: deployContractResults.TokenBridge.contractId,
-      nativeTokenBridge: deployContractResults.TokenBridge.contractAddress
+      governance: deployments.contracts.Governance.contractId,
+      nativeGovernance: deployments.contracts.Governance.contractAddress,
+      tokenBridge: deployments.contracts.TokenBridge.contractId,
+      nativeTokenBridge: deployments.contracts.TokenBridge.contractAddress
     }
     const bridgeTokens = [ALPHTokenAddress]
-    if (deployContractResults.TestToken !== undefined) {
-      contracts.testToken = deployContractResults.TestToken.contractId
-      bridgeTokens.push(deployContractResults.TestToken.contractAddress)
+    if (deployments.contracts.TestToken !== undefined) {
+      contracts.testToken = deployments.contracts.TestToken.contractId
+      bridgeTokens.push(deployments.contracts.TestToken.contractAddress)
     }
     config.contracts = contracts
     config.coreEmitterAddress = contracts.governance
@@ -62,7 +61,7 @@ function updateAlphConfig(network: string) {
     config.bridgeTokens = bridgeTokens
   }
 
-  const alphDir = path.join(process.cwd(), '..', 'alephium')
+  const alphDir = path.join(process.cwd(), '..', 'alephium', 'artifacts')
   updateConfig(alphDir, network, 'alephium', func)
 }
 
