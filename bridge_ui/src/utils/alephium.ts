@@ -21,7 +21,8 @@ import {
   getAttestTokenHandlerId,
   getLocalTokenInfo
 } from 'alephium-wormhole-sdk';
-import { TokenInfo, ALPH as ALPHTokenInfo } from "@alephium/token-list";
+import { TokenInfo, ALPH } from "@alephium/token-list";
+import alephiumIcon from "../icons/alephium.svg";
 import {
   NodeProvider,
   node,
@@ -121,6 +122,11 @@ function getContractGroupIndex(contractId: string): number {
     throw new Error('Invalid contract id length')
   }
   return parseInt(contractId.slice(-2), 16)
+}
+
+export const ALPHTokenInfo: TokenInfo = {
+  ...ALPH,
+  logoURI: alephiumIcon
 }
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
