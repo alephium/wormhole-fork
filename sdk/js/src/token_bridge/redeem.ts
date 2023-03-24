@@ -1,4 +1,4 @@
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -11,7 +11,7 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import { completeTransferScript } from "../alephium/token_bridge";
+import { CompleteTransfer } from "../alephium-contracts/ts/scripts";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
@@ -29,14 +29,13 @@ export async function redeemOnAlph(
   signerProvider: SignerProvider,
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = completeTransferScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return CompleteTransfer.execute(signerProvider, {
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
-      vaa: vaaHex
-    }
+      vaa: binToHex(signedVAA)
+    },
+    attoAlphAmount: DUST_AMOUNT * BigInt(2)
   })
 }
 

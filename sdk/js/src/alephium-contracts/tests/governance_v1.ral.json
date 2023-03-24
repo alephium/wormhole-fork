@@ -1,0 +1,51 @@
+{
+  "version": "v2.0.1",
+  "name": "GovernanceV1",
+  "bytecode": "0a0106010000000000",
+  "codeHash": "351ea4360d2b31bf059c790536801450128a88d1ed1ce5c0d6c0f0eee8d313ac",
+  "fieldsSig": {
+    "names": [
+      "chainId",
+      "governanceChainId",
+      "governanceEmitterAddress",
+      "receivedSequence",
+      "messageFee",
+      "guardianSets",
+      "guardianSetIndexes",
+      "previousGuardianSetExpirationTimeMS"
+    ],
+    "types": [
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256",
+      "[ByteVec;2]",
+      "[U256;2]",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "foo",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

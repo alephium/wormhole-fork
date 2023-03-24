@@ -1,0 +1,56 @@
+{
+  "version": "v2.0.1",
+  "name": "MathTest",
+  "bytecode": "00021c403801000202010e16011308334c081600130a160113082b832d0216000201000202010e16011308334c081600130a160113082b832c02160002",
+  "codeHash": "69d44b2a740c60e15d881653e1f90da2c11e3d3bec68a30601beb64b072f343c",
+  "fieldsSig": {
+    "names": [],
+    "types": [],
+    "isMutable": []
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "normalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "deNormalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    }
+  ]
+}

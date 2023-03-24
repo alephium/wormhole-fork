@@ -19,8 +19,8 @@ import { importTokenWasm } from "../solana/wasm";
 import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
-import { attestTokenScript } from '../alephium/token_bridge';
-import { ALPH_TOKEN_ID, BuildScriptTxResult, isHexString, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, DUST_AMOUNT, ExecuteScriptResult, isHexString, SignerProvider } from "@alephium/web3";
+import { AttestToken } from "../alephium-contracts/ts/scripts"
 
 function normalizeString(str: string): string {
   if (isHexString(str) && str.length === 64) {
@@ -40,10 +40,9 @@ export async function attestFromAlph(
   messageFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): Promise<BuildScriptTxResult> {
+): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const script = attestTokenScript()
-  return script.execute(signerProvider, {
+  return AttestToken.execute(signerProvider, {
     initialFields: {
       payer: payer,
       tokenBridge: tokenBridgeId,
@@ -54,8 +53,8 @@ export async function attestFromAlph(
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
-    attoAlphAmount: messageFee,
-    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: BigInt(1) }]
+    attoAlphAmount: messageFee + (localTokenId === ALPH_TOKEN_ID ? DUST_AMOUNT : DUST_AMOUNT * BigInt(2)),
+    tokens: [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 

@@ -1,0 +1,203 @@
+{
+  "version": "v2.0.1",
+  "name": "LocalTokenPool",
+  "bytecode": "0506404b40a340f2410e412a415001010709004023b31600160116021603160500021708170716061604464c041606160413c3038d7ea4c68000a71604ce021607ab16080c334c041606ce021608aba00016072b16082ba100000005090240321600ce004113157b160443102f13117b1602ce03000317051603ce0300031706160616053113167b14010116056b44ce0244ce016744160143674416014416066b4417071605ce030004170816071608020000060a02402ace0014010116016744cc1706160616004113157b1603ce024113197b1604ce012f13197b1602ce03000417071605ce0300041708160716083313167b160716082b1709160916080201000202010e16011308334c081600130a160113082b832d0216000201000202010e16011308334c081600130a160113082b832c02160002010105070112b316011602160316040001170617051600ce021606aca00016062aa100160502",
+  "codeHash": "444de82e20bcede3089a91a26ae45c8d28e47b7d903c97c18c24e195b47df769",
+  "fieldsSig": {
+    "names": [
+      "tokenBridgeId",
+      "tokenChainId",
+      "bridgeTokenId",
+      "totalBridged",
+      "decimals_"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "completeTransfer",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "emitterChainId",
+        "amount",
+        "vaaTokenId",
+        "vaaTokenChainId",
+        "recipient",
+        "normalizedArbiterFee",
+        "caller"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "Address",
+        "U256",
+        "Address"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "prepareTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "callerContractId",
+        "toAddress",
+        "amount",
+        "arbiterFee",
+        "nonce"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec",
+        "U256"
+      ]
+    },
+    {
+      "name": "prepareCompleteTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "callerContractId",
+        "emitterChainId",
+        "amount",
+        "vaaTokenId",
+        "vaaTokenChainId",
+        "normalizedArbiterFee"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec",
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256",
+        "U256"
+      ]
+    },
+    {
+      "name": "normalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "deNormalizeAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "amount",
+        "decimals"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "transfer",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "fromAddress",
+        "toAddress",
+        "amount",
+        "arbiterFee",
+        "nonce"
+      ],
+      "paramTypes": [
+        "Address",
+        "ByteVec",
+        "U256",
+        "U256",
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    }
+  ]
+}
