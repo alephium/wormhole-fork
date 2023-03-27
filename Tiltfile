@@ -502,6 +502,72 @@ if e2e:
 # explorer
 
 if explorer:
+    # mongodb
+    k8s_yaml("devnet/mongo.yaml")
+
+    k8s_resource(
+        "mongo",
+        port_forwards = [
+            port_forward(27017, name = "Mongo [:27017]", host = webHost),
+        ]
+    )
+
+    k8s_yaml("devnet/mongo-rs-config.yaml")
+
+    k8s_resource(
+        "mongo-rs-config",
+        resource_deps = ["mongo"]
+    )
+
+    # mongo express
+    k8s_yaml("devnet/mongo-express.yaml")
+
+    k8s_resource(
+        "mongo-express",
+        port_forwards = [
+            port_forward(8081, name = "Mongo Express [:8081]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config"]
+    )
+
+    # explorer backend
+    docker_build(
+        ref = "indexer-api",
+        context = ".",
+        dockerfile = "explorer-backend/api/Dockerfile",
+        only = ["./explorer-backend/api"]
+    )
+
+    k8s_yaml("devnet/indexer-api.yaml")
+
+    k8s_resource(
+        "indexer-api",
+        port_forwards = [
+            port_forward(8100, name = "Server [:8100]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config"]
+    )
+
+    docker_build(
+        ref = "fly",
+        context = ".",
+        dockerfile = "./explorer-backend/fly/Dockerfile",
+        only = [
+            "./explorer-backend/fly",
+            "./configs"
+        ]
+    )
+
+    k8s_yaml("devnet/fly.yaml")
+
+    k8s_resource(
+        "fly",
+        port_forwards = [
+            port_forward(8101, name = "Server [:8101]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config", "guardian"]
+    )
+
     # explorer web app
     docker_build(
         ref = "explorer",
