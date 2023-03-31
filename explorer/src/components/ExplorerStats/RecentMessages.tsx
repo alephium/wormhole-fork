@@ -105,35 +105,15 @@ const RecentMessages = (props: RecentMessagesProps) => {
   //     },
   //   ];
 
-  const formatKey = (key: string) => {
-    if (props.hideTableTitles) {
-      return null;
+  const toTargetChain = (chain: string | number): number => {
+    if (typeof chain === 'number') {
+      return chain
     }
-    if (key.includes(":")) {
-      const parts = key.split(":");
-      const link = `${explorer}?emitterChain=${parts[0]}&emitterAddress=${parts[1]}`;
-      return (
-        <Typography variant="subtitle1" gutterBottom>
-          From {ChainID[Number(parts[0])]} contract:{" "}
-          <Link component={RouterLink} to={link} color="inherit">
-            {contractNameFormatter(parts[1], Number(parts[0]))}
-          </Link>
-        </Typography>
-      );
-    } else if (key === "*") {
-      return (
-        <Typography variant="subtitle1" gutterBottom>
-          From all chains and addresses
-        </Typography>
-      );
-    } else {
-      return (
-        <Typography variant="subtitle1" gutterBottom>
-          From {ChainID[Number(key)]}
-        </Typography>
-      );
+    if (chain === 'unset') {
+      return 0
     }
-  };
+    return chainIDs[chain]
+  }
 
   return (
     <Card
@@ -147,83 +127,76 @@ const RecentMessages = (props: RecentMessagesProps) => {
       <Typography variant="h4" gutterBottom>
         {props.title}
       </Typography>
-      {Object.keys(props.recent).map((key) => (
-        <TableContainer key={key}>
-          {formatKey(key)}
-          <Table size="small">
-            <TableBody>
-              {props.recent[key].map((item) => (
-                <TableRow key={item.EmitterAddress + item.Sequence}>
-                  <TableCell>
-                    <ChainIcon chainId={chainIDs[item.EmitterChain]} />
-                  </TableCell>
-                  <TableCell>
-                    {contractNameFormatter(
-                      item.EmitterAddress,
-                      chainIDs[item.EmitterChain]
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {item.SignedVAABytes
-                      ? <DecodePayload
-                        base64VAA={item.SignedVAABytes}
-                        emitterChainName={item.EmitterChain}
-                        emitterAddress={item.EmitterAddress}
-                        targetChainName={item.TargetChain}
-                        showType={true}
-                        showSummary={true}
-                        transferDetails={item.TransferDetails}
-                      /> : null}
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {item.Sequence.replace(/^0+/, "") || "0"}
-                  </TableCell>
-                  <TableCell sx={{ "& > time": { whiteSpace: "nowrap" } }}>
-                    {
-                      <ReactTimeAgo
-                        date={
-                          item.QuorumTime
-                            ? Date.parse(formatQuorumDate(item.QuorumTime))
-                            : new Date()
-                        }
-                        timeStyle={"round"}
-                      />
-                    }
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      component={RouterLink}
-                      to={`${explorer}?emitterChain=${
-                        chainIDs[item.EmitterChain]
-                      }&emitterAddress=${item.EmitterAddress}&sequence=${
-                        item.Sequence
-                      }`}
-                      color="inherit"
-                    >
-                      View
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  sx={{ textAlign: "right", borderBottom: "none" }}
-                >
-                  {props.lastFetched ? (
+      <TableContainer>
+        <Table size="small">
+          <TableBody>
+            {props.recent.vaas.map((item) => (
+              <TableRow key={item.EmitterChain + item.EmitterAddress + item.TargetChain + item.Sequence}>
+                <TableCell>
+                  <ChainIcon chainId={chainIDs[item.EmitterChain]} />
+                </TableCell>
+                <TableCell>
+                  {contractNameFormatter(
+                    item.EmitterAddress,
+                    chainIDs[item.EmitterChain]
+                  )}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap" }}>
+                  {item.SignedVAABytes
+                    ? <DecodePayload
+                      payload={item.SignedVAA.Payload}
+                      emitterChainName={item.EmitterChain}
+                      emitterAddress={item.EmitterAddress}
+                      targetChainName={item.TargetChain}
+                      showType={true}
+                      showSummary={true}
+                      transferDetails={item.TransferDetails}
+                    /> : null}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap" }}>
+                  {item.Sequence.replace(/^0+/, "") || "0"}
+                </TableCell>
+                <TableCell sx={{ "& > time": { whiteSpace: "nowrap" } }}>
+                  {
                     <ReactTimeAgo
-                      date={new Date(props.lastFetched)}
-                      timeStyle="round"
+                      date={
+                        item.QuorumTime
+                          ? Date.parse(formatQuorumDate(item.QuorumTime))
+                          : new Date()
+                      }
+                      timeStyle={"round"}
                     />
-                  ) : null}
+                  }
+                </TableCell>
+                <TableCell>
+                  <Link
+                    component={RouterLink}
+                    to={`${explorer}?emitterChain=${chainIDs[item.EmitterChain]}&emitterAddress=${item.EmitterAddress}&targetChain=${toTargetChain(item.TargetChain)}&sequence=${item.Sequence}`}
+                    color="inherit"
+                  >
+                    View
+                  </Link>
                 </TableCell>
               </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
-      ))}
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                sx={{ textAlign: "right", borderBottom: "none" }}
+              >
+                {props.lastFetched ? (
+                  <ReactTimeAgo
+                    date={new Date(props.lastFetched)}
+                    timeStyle="round"
+                  />
+                ) : null}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
     </Card>
   );
 };

@@ -206,25 +206,25 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
 );
 
 export interface NetworkConfig {
-  bigtableFunctionsBase: string;
+  backendUrl: string;
   guardianRpcBase: string;
 }
 export const endpoints: { [network: string]: NetworkConfig } = {
   devnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_DEVNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_DEVNET_BACKEND_URL
     ),
     guardianRpcBase: (guardianDevnetConfig.guardianUrls as string[])[0],
   },
   testnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_TESTNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_TESTNET_BACKEND_URL
     ),
     guardianRpcBase: (guardianTestnetConfig.guardianUrls as string[])[0],
   },
   mainnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_MAINNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_MAINNET_BACKEND_URL
     ),
     guardianRpcBase: (guardianMainnetConfig.guardianUrls as string[])[0],
   },

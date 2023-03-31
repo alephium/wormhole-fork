@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button, Link, Typography } from "@mui/material";
 
-import { BigTableMessage } from "./ExplorerQuery";
+import { VAAMessage } from "./ExplorerQuery";
 import { DecodePayload } from "../DecodePayload";
 import ReactTimeAgo from "react-time-ago";
 import { Link as RouterLink } from "gatsby";
@@ -10,12 +10,13 @@ import {
   getNativeAddress,
   nativeExplorerContractUri,
   nativeExplorerTxUri,
+  stringifyJson,
   truncateAddress,
   usdFormatter,
 } from "../../utils/explorer";
 import { OutboundLink } from "gatsby-plugin-google-gtag";
 import { ChainID, chainIDs } from "../../utils/consts";
-import { hexToNativeString } from "alephium-wormhole-sdk";
+import { hexToNativeString, uint8ArrayToHex } from "alephium-wormhole-sdk";
 import { explorer } from "../../utils/urls";
 
 interface SummaryProps {
@@ -24,8 +25,7 @@ interface SummaryProps {
   targetChain?: number;
   sequence?: string;
   txId?: string;
-  message: BigTableMessage;
-  polling?: boolean;
+  message: VAAMessage;
   lastFetched?: number;
   refetch: () => void;
 }
@@ -76,19 +76,12 @@ const ExplorerSummary = (props: SummaryProps) => {
         }}
       >
         <Typography variant="h4">Message Summary</Typography>
-        {props.polling ? (
-          <>
-            <div style={{ flexGrow: 1 }}></div>
-            <Typography variant="caption">listening</Typography>
-          </>
-        ) : (
           <div>
             <Button onClick={props.refetch}>Refresh</Button>
             <Button component={RouterLink} to={explorer} sx={{ ml: 1 }}>
               Clear
             </Button>
           </div>
-        )}
       </div>
       <div
         style={{
@@ -219,11 +212,11 @@ const ExplorerSummary = (props: SummaryProps) => {
       <Typography variant="h4">Raw message data:</Typography>
       <Box component="div" sx={{ overflow: "auto", mb: 2.5 }}>
         <pre style={{ fontSize: 14 }}>
-          {JSON.stringify(message, undefined, 2)}
+          {stringifyJson(message)}
         </pre>
       </Box>
       <DecodePayload
-        base64VAA={props.message.SignedVAABytes}
+        payload={props.message.SignedVAA.Payload}
         emitterChainName={props.message.EmitterChain}
         emitterAddress={props.message.EmitterAddress}
         targetChainName={props.message.TargetChain}
@@ -233,7 +226,7 @@ const ExplorerSummary = (props: SummaryProps) => {
       <Box component="div" sx={{ overflow: "auto", mb: 2.5 }}>
         <Typography variant="h4">Signed VAA</Typography>
         <pre style={{ fontSize: 12 }}>
-          {JSON.stringify(SignedVAA, undefined, 2)}
+          {stringifyJson(SignedVAA)}
         </pre>
       </Box>
       <div style={{ display: "flex", justifyContent: "flex-end" }}>

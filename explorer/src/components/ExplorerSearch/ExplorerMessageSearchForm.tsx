@@ -204,7 +204,7 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
         </Button>
       </Box>
 
-      {emitterChain && emitterAddress && targetChain && sequence ? (
+      {(emitterChain !== undefined) && emitterAddress && (targetChain !== undefined) && sequence ? (
         <ExplorerQuery
           emitterChain={emitterChain}
           emitterAddress={emitterAddress}

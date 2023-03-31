@@ -2,19 +2,12 @@ import { Box, Card, CircularProgress } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNetworkContext } from "../../contexts/NetworkContext";
 import { ChainID } from "../../utils/consts";
-import { contractNameFormatter } from "../../utils/explorer";
-import { BigTableMessage } from "../ExplorerSearch/ExplorerQuery";
+import { getVAAFromJson, Response, VAAMessage } from "../ExplorerSearch/ExplorerQuery";
 import RecentMessages from "./RecentMessages";
 import ChainOverviewCard from "./ChainOverviewCard";
 import PastWeekCard from "./PastWeekCard";
 
-import binanceChainIcon from "../../images/bsc.svg";
 import ethereumIcon from "../../images/eth.svg";
-import solanaIcon from "../../images//solana.svg";
-import terraIcon from "../../images/terra.svg";
-import polygonIcon from "../../images/polygon.svg";
-import avalancheIcon from "../../images/avalanche.svg";
-import oasisIcon from "../../images/oasis.svg";
 import fantomIcon from "../../images/fantom.svg"
 import alephiumIcon from "../../images/alephium.svg"
 import GridWithCards from "../GridWithCards";
@@ -28,10 +21,19 @@ export interface Totals {
     [date: string]: { [groupByKey: string]: number };
   };
 }
-// type GroupByKey = "*" | "emitterChain" | "emitterChain:emitterAddress"
 export interface Recent {
-  [groupByKey: string]: Array<BigTableMessage>;
+  vaas: Array<VAAMessage>;
 }
+
+function toRecent(response: Response): Recent {
+  if (response.data) {
+    return {
+      vaas: response.data.map((vaa: any) => getVAAFromJson(vaa))
+    }
+  }
+  return { vaas: [] }
+}
+
 interface BidirectionalTransferData {
   [leavingChainId: string]: {
     [destinationChainId: string]: {
@@ -166,38 +168,35 @@ const ExplorerStats: React.FC<StatsProps> = ({
   const fetchRecent = (
     baseUrl: string,
     groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
+    emitterChain: number | undefined,
+    emitterAddress: string | undefined,
     signal: AbortSignal
   ) => {
-    const recentUrl = `${baseUrl}recent`;
+    const recentUrl = `${baseUrl}api/vaas/recent`;
     let numRows = 10
-    if (forChain) {
+    if (emitterChain) {
       numRows = 30
     }
-    if (forAddress) {
+    if (emitterAddress) {
       numRows = 80
     }
     let url = `${recentUrl}?numRows=${numRows}`;
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
+    if (emitterChain) {
+      url = `${url}&emitterChain=${emitterChain}`;
     }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
+    if (emitterAddress) {
+      url = `${url}&emitterAddr=${emitterAddress}`;
     }
 
     return fetch(url, { signal })
-      .then<Recent>((res) => {
+      .then<Response>((res) => {
         if (res.ok) return res.json();
         // throw an error with specific message, rather than letting the json decoding throw.
         throw "explorer.stats.failedFetchingRecent";
       })
       .then(
         (result) => {
-          setRecent(result);
+          setRecent(toRecent(result));
           setLastFetched(Date.now());
         },
         (error) => {
@@ -364,17 +363,17 @@ const ExplorerStats: React.FC<StatsProps> = ({
     forAddress: string | undefined,
     signal: AbortSignal) => {
     return Promise.all([
-      fetchTotals(baseUrl, totalsGroupBy, forChain, forAddress, signal),
+      // fetchTotals(baseUrl, totalsGroupBy, forChain, forAddress, signal),
       fetchRecent(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferred(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferredTo(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferredToCumulative(
-        baseUrl,
-        recentGroupBy,
-        forChain,
-        forAddress,
-        signal
-      ),
+      // fetchTransferred(baseUrl, recentGroupBy, forChain, forAddress, signal),
+      // fetchTransferredTo(baseUrl, recentGroupBy, forChain, forAddress, signal),
+      // fetchTransferredToCumulative(
+      //   baseUrl,
+      //   recentGroupBy,
+      //   forChain,
+      //   forAddress,
+      //   signal
+      // ),
     ]);
   };
   const getRecents = (
@@ -421,7 +420,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
       setController(newController);
       getData(
         { emitterChain, emitterAddress },
-        activeNetwork.endpoints.bigtableFunctionsBase,
+        activeNetwork.endpoints.backendUrl,
         newController.signal,
         getAllEndpoints
       );
@@ -435,7 +434,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
     pollingController(
       emitterChain,
       emitterAddress,
-      activeNetwork.endpoints.bigtableFunctionsBase
+      activeNetwork.endpoints.backendUrl
     );
     // hold chain & address in state to detect changes
     setChain(emitterChain);
@@ -443,7 +442,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
   }, [
     emitterChain,
     emitterAddress,
-    activeNetwork.endpoints.bigtableFunctionsBase,
+    activeNetwork.endpoints.backendUrl,
   ]);
 
   useEffect(() => {
@@ -453,13 +452,124 @@ const ExplorerStats: React.FC<StatsProps> = ({
         clearInterval(pollInterval);
       }
     };
-  }, [pollInterval, activeNetwork.endpoints.bigtableFunctionsBase]);
+  }, [pollInterval, activeNetwork.endpoints.backendUrl]);
 
   let title = "Recent messages";
   let hideTableTitles = false;
   if (emitterChain) {
     title = `Recent ${ChainID[Number(emitterChain)]} messages`;
   }
+
+  // TODO: support stats
+  // const stats =
+  //   <div>
+  //     {!emitterChain && !emitterAddress ? (
+  //       totals && notionalTransferredToCumulative && notionalTransferred ? (
+  //         <GridWithCards
+  //           spacing={3}
+  //           sm={6}
+  //           md={3}
+  //           cardPaddingTop={3}
+  //           imgAlignMd="center"
+  //           imgOffsetRightMd="0px"
+  //           imgOffsetTopXs="0px"
+  //           imgOffsetTopMd="-36px"
+  //           imgOffsetTopMdHover="-52px"
+  //           imgPaddingBottomXs={3}
+  //           headerTextAlign="center"
+  //           data={[
+  //             {
+  //               header: ChainID[2],
+  //               src: ethereumIcon,
+  //               to: `${explorer}?emitterChain=2`,
+  //               description: (
+  //                 <ChainOverviewCard
+  //                   totals={totals}
+  //                   notionalTransferredToCumulative={
+  //                     notionalTransferredToCumulative
+  //                   }
+  //                   notionalTransferred={notionalTransferred}
+  //                   dataKey="2"
+  //                 />
+  //               ),
+  //               imgStyle: { height: 110 },
+  //             },
+  //             {
+  //               header: ChainID[255],
+  //               src: alephiumIcon,
+  //               to: `${explorer}?emitterChain=255`,
+  //               description: (
+  //                 <ChainOverviewCard
+  //                   totals={totals}
+  //                   notionalTransferredToCumulative={
+  //                     notionalTransferredToCumulative
+  //                   }
+  //                   notionalTransferred={notionalTransferred}
+  //                   dataKey="13"
+  //                 />
+  //               ),
+  //               imgStyle: { height: 110 },
+  //             }
+  //           ].concat(
+  //             // check the we have transfer data before adding the fantom card
+  //             ("10" in notionalTransferredToCumulative.AllTime) &&
+  //               ("*" in notionalTransferredToCumulative.AllTime["10"]) ?
+  //               [{
+  //                 header: ChainID[10],
+  //                 src: fantomIcon,
+  //                 to: `${explorer}?emitterChain=10`,
+  //                 description: (
+  //                   <ChainOverviewCard
+  //                     totals={totals}
+  //                     notionalTransferredToCumulative={
+  //                       notionalTransferredToCumulative
+  //                     }
+  //                     notionalTransferred={notionalTransferred}
+  //                     dataKey="10"
+  //                   />
+  //                 ),
+  //                 imgStyle: { height: 110 },
+  //               }] : []
+  //           )}
+  //         />
+  //       ) : (
+  //         <Box
+  //           sx={{
+  //             padding: "24px",
+  //             textAlign: "center",
+  //           }}
+  //         >
+  //           <CircularProgress />
+  //         </Box>
+  //       )
+  //     ) : null}
+
+  //     <div style={{ margin: "40px 0" }}>
+  //       {!emitterChain && !emitterAddress ? (
+  //         notionalTransferredTo && totals ? (
+  //           <PastWeekCard
+  //             title="Last 7 Days"
+  //             numDaysToShow={7}
+  //             messages={totals}
+  //             notionalTransferredTo={notionalTransferredTo}
+  //             notionalTransferred={notionalTransferred}
+  //           />
+  //         ) : (
+  //           <Card
+  //             sx={{
+  //               backgroundColor: "rgba(255,255,255,.07)",
+  //               backgroundImage: "none",
+  //               borderRadius: "28px",
+  //               padding: "24px",
+  //               textAlign: "center",
+  //             }}
+  //           >
+  //             <CircularProgress />
+  //           </Card>
+  //         )
+  //       ) : null}
+  //     </div>
+  //   </div>
 
   return (
     <>
@@ -488,113 +598,6 @@ const ExplorerStats: React.FC<StatsProps> = ({
               />
             </div>
           )}
-
-          {!emitterChain && !emitterAddress ? (
-            totals && notionalTransferredToCumulative && notionalTransferred ? (
-              <GridWithCards
-                spacing={3}
-                sm={6}
-                md={3}
-                cardPaddingTop={3}
-                imgAlignMd="center"
-                imgOffsetRightMd="0px"
-                imgOffsetTopXs="0px"
-                imgOffsetTopMd="-36px"
-                imgOffsetTopMdHover="-52px"
-                imgPaddingBottomXs={3}
-                headerTextAlign="center"
-                data={[
-                  {
-                    header: ChainID[2],
-                    src: ethereumIcon,
-                    to: `${explorer}?emitterChain=2`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="2"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[255],
-                    src: alephiumIcon,
-                    to: `${explorer}?emitterChain=255`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="13"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  }
-                ].concat(
-                  // check the we have transfer data before adding the fantom card
-                  ("10" in notionalTransferredToCumulative.AllTime) &&
-                    ("*" in notionalTransferredToCumulative.AllTime["10"]) ?
-                    [{
-                      header: ChainID[10],
-                      src: fantomIcon,
-                      to: `${explorer}?emitterChain=10`,
-                      description: (
-                        <ChainOverviewCard
-                          totals={totals}
-                          notionalTransferredToCumulative={
-                            notionalTransferredToCumulative
-                          }
-                          notionalTransferred={notionalTransferred}
-                          dataKey="10"
-                        />
-                      ),
-                      imgStyle: { height: 110 },
-                    }] : []
-                )}
-              />
-            ) : (
-              <Box
-                sx={{
-                  padding: "24px",
-                  textAlign: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )
-          ) : null}
-
-          <div style={{ margin: "40px 0" }}>
-            {!emitterChain && !emitterAddress ? (
-              notionalTransferredTo && totals ? (
-                <PastWeekCard
-                  title="Last 7 Days"
-                  numDaysToShow={7}
-                  messages={totals}
-                  notionalTransferredTo={notionalTransferredTo}
-                  notionalTransferred={notionalTransferred}
-                />
-              ) : (
-                <Card
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,.07)",
-                    backgroundImage: "none",
-                    borderRadius: "28px",
-                    padding: "24px",
-                    textAlign: "center",
-                  }}
-                >
-                  <CircularProgress />
-                </Card>
-              )
-            ) : null}
-          </div>
         </>
       )}
     </>
