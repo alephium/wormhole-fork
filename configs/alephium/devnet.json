@@ -9,7 +9,7 @@
     "nativeGovernance": "25RHZEJE4X3r7C4paJk3yuvuTUjBS282KDHnva744CrFh",
     "tokenBridge": "e4e7733f35e009582a51923a353967dedbb88f29e89f97ca8ef9a9e392da6400",
     "nativeTokenBridge": "2A6VmEg7SvmMxKvADj6qnXP8K5ZNV8fNj11qKpSdBhgLP",
-    "testToken": "7c8447f22ab086876967834b8736299472724a96d5859f8e32b77ce89a21f800"
+    "testToken": "a2c3d3fb3b514f3e7d40297eb19b68c3b5038a6c076abfa67893b724e30ef200"
   },
   "nodeUrl": "http://localhost:22973",
   "explorerUrl": "http://localhost:9090",
@@ -18,6 +18,6 @@
   "tokenBridgeEmitterAddress": "e4e7733f35e009582a51923a353967dedbb88f29e89f97ca8ef9a9e392da6400",
   "bridgeTokens": [
     "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
-    "2351f5DHXpT1FkTTvp6bRNBCwrmVSuYMgjyPXTmYKVCGo"
+    "25eKMKD3acDDJs5kH8N6LvReqopir22nHx6AbMXvHqfVq"
   ]
 }

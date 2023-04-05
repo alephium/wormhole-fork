@@ -48,48 +48,47 @@ class Factory extends ContractFactory<
     return new AttestTokenHandlerInstance(address);
   }
 
-  async testParseAttestTokenMethod(
-    params: TestContractParams<
-      AttestTokenHandlerTypes.Fields,
-      { vaa: HexString }
-    >
-  ): Promise<
-    TestContractResult<[HexString, HexString, HexString, bigint, bigint]>
-  > {
-    return testMethod(this, "parseAttestToken", params);
-  }
-
-  async testCreateLocalTokenPoolMethod(
-    params: TestContractParams<
-      AttestTokenHandlerTypes.Fields,
-      {
-        vaa: HexString;
-        payer: HexString;
-        createContractAlphAmount: bigint;
-        tokenAmount: bigint;
-      }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "createLocalTokenPool", params);
-  }
-
-  async testCreateRemoteTokenPoolMethod(
-    params: TestContractParams<
-      AttestTokenHandlerTypes.Fields,
-      { vaa: HexString; payer: HexString; createContractAlphAmount: bigint }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "createRemoteTokenPool", params);
-  }
-
-  async testUpdateRemoteTokenPoolMethod(
-    params: TestContractParams<
-      AttestTokenHandlerTypes.Fields,
-      { vaa: HexString }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "updateRemoteTokenPool", params);
-  }
+  tests = {
+    parseAttestToken: async (
+      params: TestContractParams<
+        AttestTokenHandlerTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<
+      TestContractResult<[HexString, HexString, HexString, bigint, bigint]>
+    > => {
+      return testMethod(this, "parseAttestToken", params);
+    },
+    createLocalTokenPool: async (
+      params: TestContractParams<
+        AttestTokenHandlerTypes.Fields,
+        {
+          vaa: HexString;
+          payer: HexString;
+          createContractAlphAmount: bigint;
+          tokenAmount: bigint;
+        }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "createLocalTokenPool", params);
+    },
+    createRemoteTokenPool: async (
+      params: TestContractParams<
+        AttestTokenHandlerTypes.Fields,
+        { vaa: HexString; payer: HexString; createContractAlphAmount: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "createRemoteTokenPool", params);
+    },
+    updateRemoteTokenPool: async (
+      params: TestContractParams<
+        AttestTokenHandlerTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "updateRemoteTokenPool", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract

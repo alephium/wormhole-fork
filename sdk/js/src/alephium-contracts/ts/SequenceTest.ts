@@ -65,41 +65,39 @@ class Factory extends ContractFactory<
     return new SequenceTestInstance(address);
   }
 
-  async testSetExecutedMethod(
-    params: TestContractParams<
-      SequenceTestTypes.Fields,
-      { offset: bigint; current: bigint }
-    >
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "setExecuted", params);
-  }
-
-  async testCompactMethod(
-    params: Omit<
-      TestContractParams<SequenceTestTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "compact", params);
-  }
-
-  async testCheckSequenceInSubContractMethod(
-    params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "checkSequenceInSubContract", params);
-  }
-
-  async testCheckSequenceMethod(
-    params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-  ): Promise<TestContractResult<boolean>> {
-    return testMethod(this, "checkSequence", params);
-  }
-
-  async testCheckMethod(
-    params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-  ): Promise<TestContractResult<boolean>> {
-    return testMethod(this, "check", params);
-  }
+  tests = {
+    setExecuted: async (
+      params: TestContractParams<
+        SequenceTestTypes.Fields,
+        { offset: bigint; current: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "setExecuted", params);
+    },
+    compact: async (
+      params: Omit<
+        TestContractParams<SequenceTestTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "compact", params);
+    },
+    checkSequenceInSubContract: async (
+      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "checkSequenceInSubContract", params);
+    },
+    checkSequence: async (
+      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "checkSequence", params);
+    },
+    check: async (
+      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "check", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract
@@ -121,11 +119,13 @@ export class SequenceTestInstance extends ContractInstance {
     return fetchContractState(SequenceTest, this);
   }
 
-  async callCheckMethod(
-    params: SequenceTestTypes.CallMethodParams<"check">
-  ): Promise<SequenceTestTypes.CallMethodResult<"check">> {
-    return callMethod(SequenceTest, this, "check", params);
-  }
+  methods = {
+    check: async (
+      params: SequenceTestTypes.CallMethodParams<"check">
+    ): Promise<SequenceTestTypes.CallMethodResult<"check">> => {
+      return callMethod(SequenceTest, this, "check", params);
+    },
+  };
 
   async multicall<Calls extends SequenceTestTypes.MultiCallParams>(
     calls: Calls

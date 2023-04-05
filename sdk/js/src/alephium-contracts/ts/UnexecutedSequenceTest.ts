@@ -43,23 +43,24 @@ class Factory extends ContractFactory<
     return new UnexecutedSequenceTestInstance(address);
   }
 
-  async testCheckSequenceMethod(
-    params: TestContractParams<
-      UnexecutedSequenceTestTypes.Fields,
-      { seq: bigint }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "checkSequence", params);
-  }
-
-  async testDestroyMethod(
-    params: Omit<
-      TestContractParams<UnexecutedSequenceTestTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "destroy", params);
-  }
+  tests = {
+    checkSequence: async (
+      params: TestContractParams<
+        UnexecutedSequenceTestTypes.Fields,
+        { seq: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "checkSequence", params);
+    },
+    destroy: async (
+      params: Omit<
+        TestContractParams<UnexecutedSequenceTestTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "destroy", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract

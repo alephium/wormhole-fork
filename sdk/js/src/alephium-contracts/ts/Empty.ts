@@ -41,11 +41,13 @@ class Factory extends ContractFactory<EmptyInstance, EmptyTypes.Fields> {
     return new EmptyInstance(address);
   }
 
-  async testFooMethod(
-    params: Omit<TestContractParams<EmptyTypes.Fields, never>, "testArgs">
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "foo", params);
-  }
+  tests = {
+    foo: async (
+      params: Omit<TestContractParams<EmptyTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "foo", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract

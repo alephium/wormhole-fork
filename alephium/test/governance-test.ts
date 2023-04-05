@@ -68,7 +68,7 @@ describe('test governance', () => {
     for (const chainId of validChainIds) {
       const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      const testResult = await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
+      const testResult = await Governance.tests.submitNewGuardianSet(createTestParams(vaa))
       const governanceState = testResult.contracts[0] as GovernanceTypes.State
       expect(governanceState.fields.guardianSets).toEqual([
         initGuardianSet.encodeAddresses().toLowerCase(),
@@ -88,7 +88,7 @@ describe('test governance', () => {
       const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       await expectAssertionFailed(async () => {
-        return await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
+        return await Governance.tests.submitNewGuardianSet(createTestParams(vaa))
       })
     }
   })
@@ -104,7 +104,7 @@ describe('test governance', () => {
         sequence
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), body)
-      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa, undefined, undefined, 3n))
+      await Governance.tests.submitNewGuardianSet(createTestParams(vaa, undefined, undefined, 3n))
     }
     for (let seq = 0; seq < 3; seq += 1) {
       await expectAssertionFailed(async () => await test(seq))
@@ -121,7 +121,7 @@ describe('test governance', () => {
     const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, 0, governanceEmitterAddress, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     await expectAssertionFailed(async () => {
-      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
+      await Governance.tests.submitNewGuardianSet(createTestParams(vaa))
     })
   })
 
@@ -136,7 +136,7 @@ describe('test governance', () => {
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize() - 1, vaaBody)
     await expectAssertionFailed(async () => {
-      await Governance.testSubmitNewGuardianSetMethod(createTestParams(vaa))
+      await Governance.tests.submitNewGuardianSet(createTestParams(vaa))
     })
   })
 
@@ -153,7 +153,7 @@ describe('test governance', () => {
     const invalidSignatures = Array(vaa.signatures.length).fill(vaa.signatures[0])
     const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
     await expectAssertionFailed(async () => {
-      await Governance.testSubmitNewGuardianSetMethod(createTestParams(invalidVaa))
+      await Governance.tests.submitNewGuardianSet(createTestParams(invalidVaa))
     })
   })
 
@@ -172,7 +172,7 @@ describe('test governance', () => {
       .map(() => randomBytes(66))
     const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
     await expectOneOfError(
-      async () => await Governance.testSubmitNewGuardianSetMethod(createTestParams(invalidVaa)),
+      async () => await Governance.tests.submitNewGuardianSet(createTestParams(invalidVaa)),
       ['AssertionFailed', 'FailedInRecoverEthAddress', 'InvalidConversion', 'InvalidBytesSliceArg']
     )
   })
@@ -187,7 +187,7 @@ describe('test governance', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await Governance.testSubmitSetMessageFeeMethod(createTestParams(vaa))
+    const testResult = await Governance.tests.submitSetMessageFee(createTestParams(vaa))
     const governanceState = testResult.contracts[0] as GovernanceTypes.State
     expect(governanceState.fields.messageFee).toEqual(setMessageFee.newMessageFee)
   })
@@ -213,7 +213,7 @@ describe('test governance', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await Governance.testSubmitTransferFeesMethod(createTestParams(vaa, asset, [inputAsset]))
+    const testResult = await Governance.tests.submitTransferFees(createTestParams(vaa, asset, [inputAsset]))
     const assetOutput = testResult.txOutputs[0]
     expect(assetOutput.type).toEqual('AssetOutput')
     expect(assetOutput.address).toEqual(base58.encode(Buffer.concat([Buffer.from([0x00]), recipient])))
@@ -238,7 +238,7 @@ describe('test governance', () => {
         0
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      return await Governance.testSubmitContractUpgradeMethod({
+      return await Governance.tests.submitContractUpgrade({
         initialFields: governanceFixture.selfState.fields,
         address: governanceFixture.address,
         existingContracts: governanceFixture.dependencies,

@@ -50,14 +50,16 @@ class Factory extends ContractFactory<
     return new GovernanceV1Instance(address);
   }
 
-  async testFooMethod(
-    params: Omit<
-      TestContractParams<GovernanceV1Types.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "foo", params);
-  }
+  tests = {
+    foo: async (
+      params: Omit<
+        TestContractParams<GovernanceV1Types.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "foo", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract

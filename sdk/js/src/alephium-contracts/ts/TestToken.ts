@@ -77,38 +77,36 @@ class Factory extends ContractFactory<
     return new TestTokenInstance(address);
   }
 
-  async testGetSymbolMethod(
-    params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getSymbol", params);
-  }
-
-  async testGetNameMethod(
-    params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getName", params);
-  }
-
-  async testGetDecimalsMethod(
-    params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "getDecimals", params);
-  }
-
-  async testGetTotalSupplyMethod(
-    params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "getTotalSupply", params);
-  }
-
-  async testBuyMethod(
-    params: TestContractParams<
-      TestTokenTypes.Fields,
-      { from: HexString; amount: bigint; factor: bigint }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "buy", params);
-  }
+  tests = {
+    getSymbol: async (
+      params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getSymbol", params);
+    },
+    getName: async (
+      params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getName", params);
+    },
+    getDecimals: async (
+      params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDecimals", params);
+    },
+    getTotalSupply: async (
+      params: Omit<TestContractParams<TestTokenTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTotalSupply", params);
+    },
+    buy: async (
+      params: TestContractParams<
+        TestTokenTypes.Fields,
+        { from: HexString; amount: bigint; factor: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "buy", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract
@@ -116,7 +114,7 @@ export const TestToken = new Factory(
   Contract.fromJson(
     TestTokenContractJson,
     "",
-    "36000f2a170887bb3ee079c1a565120623a6f24a8d75e22210e3f0dcdaa8fc30"
+    "de33924ab0e8e07c90c855bfdde7f3b859de0ba8b192de514ecbc49ff52c16bc"
   )
 );
 
@@ -130,49 +128,48 @@ export class TestTokenInstance extends ContractInstance {
     return fetchContractState(TestToken, this);
   }
 
-  async callGetSymbolMethod(
-    params?: TestTokenTypes.CallMethodParams<"getSymbol">
-  ): Promise<TestTokenTypes.CallMethodResult<"getSymbol">> {
-    return callMethod(
-      TestToken,
-      this,
-      "getSymbol",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetNameMethod(
-    params?: TestTokenTypes.CallMethodParams<"getName">
-  ): Promise<TestTokenTypes.CallMethodResult<"getName">> {
-    return callMethod(
-      TestToken,
-      this,
-      "getName",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetDecimalsMethod(
-    params?: TestTokenTypes.CallMethodParams<"getDecimals">
-  ): Promise<TestTokenTypes.CallMethodResult<"getDecimals">> {
-    return callMethod(
-      TestToken,
-      this,
-      "getDecimals",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetTotalSupplyMethod(
-    params?: TestTokenTypes.CallMethodParams<"getTotalSupply">
-  ): Promise<TestTokenTypes.CallMethodResult<"getTotalSupply">> {
-    return callMethod(
-      TestToken,
-      this,
-      "getTotalSupply",
-      params === undefined ? {} : params
-    );
-  }
+  methods = {
+    getSymbol: async (
+      params?: TestTokenTypes.CallMethodParams<"getSymbol">
+    ): Promise<TestTokenTypes.CallMethodResult<"getSymbol">> => {
+      return callMethod(
+        TestToken,
+        this,
+        "getSymbol",
+        params === undefined ? {} : params
+      );
+    },
+    getName: async (
+      params?: TestTokenTypes.CallMethodParams<"getName">
+    ): Promise<TestTokenTypes.CallMethodResult<"getName">> => {
+      return callMethod(
+        TestToken,
+        this,
+        "getName",
+        params === undefined ? {} : params
+      );
+    },
+    getDecimals: async (
+      params?: TestTokenTypes.CallMethodParams<"getDecimals">
+    ): Promise<TestTokenTypes.CallMethodResult<"getDecimals">> => {
+      return callMethod(
+        TestToken,
+        this,
+        "getDecimals",
+        params === undefined ? {} : params
+      );
+    },
+    getTotalSupply: async (
+      params?: TestTokenTypes.CallMethodParams<"getTotalSupply">
+    ): Promise<TestTokenTypes.CallMethodResult<"getTotalSupply">> => {
+      return callMethod(
+        TestToken,
+        this,
+        "getTotalSupply",
+        params === undefined ? {} : params
+      );
+    },
+  };
 
   async multicall<Calls extends TestTokenTypes.MultiCallParams>(
     calls: Calls

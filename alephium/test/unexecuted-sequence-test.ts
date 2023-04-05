@@ -22,7 +22,7 @@ describe('test unexecuted sequence', () => {
     let sequences = 0n
     for (let seq = 0n; seq < 255n; seq++) {
       const unexecutedSequenceFixture = createUnexecutedSequence(parentId, startSequence, sequences)
-      const testResult = await UnexecutedSequenceTest.testCheckSequenceMethod({
+      const testResult = await UnexecutedSequenceTest.tests.checkSequence({
         initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
         address: addressFromContractId(parentId),
         testArgs: { seq: seq + startSequence },
@@ -44,7 +44,7 @@ describe('test unexecuted sequence', () => {
       const unexecutedSequenceFixture = createUnexecutedSequence(parentId, startSequence, sequences)
       await expectAssertionFailed(
         async () =>
-          await UnexecutedSequenceTest.testCheckSequenceMethod({
+          await UnexecutedSequenceTest.tests.checkSequence({
             initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
             address: addressFromContractId(parentId),
             testArgs: { seq: seq + startSequence },
@@ -64,7 +64,7 @@ describe('test unexecuted sequence', () => {
     for (const seq of sequences) {
       await expectAssertionFailed(
         async () =>
-          await UnexecutedSequenceTest.testCheckSequenceMethod({
+          await UnexecutedSequenceTest.tests.checkSequence({
             initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
             address: addressFromContractId(parentId),
             testArgs: { seq: seq },
@@ -82,7 +82,7 @@ describe('test unexecuted sequence', () => {
     const unexecutedSequenceOffset = 1n
     const sequences = allExecuted - (1n << unexecutedSequenceOffset)
     const unexecutedSequenceFixture = createUnexecutedSequence(parentId, startSequence, sequences)
-    const testResult = await UnexecutedSequenceTest.testCheckSequenceMethod({
+    const testResult = await UnexecutedSequenceTest.tests.checkSequence({
       initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
       address: addressFromContractId(parentId),
       testArgs: { seq: startSequence + unexecutedSequenceOffset },
@@ -102,7 +102,7 @@ describe('test unexecuted sequence', () => {
     await buildProject()
     const parentId = randomContractId()
     const unexecutedSequenceFixture = createUnexecutedSequence(parentId, 0n, 0n)
-    const testResult = await UnexecutedSequenceTest.testDestroyMethod({
+    const testResult = await UnexecutedSequenceTest.tests.destroy({
       initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
       address: addressFromContractId(parentId),
       existingContracts: unexecutedSequenceFixture.states(),
@@ -122,7 +122,7 @@ describe('test unexecuted sequence', () => {
     const parentId = randomContractId()
     const unexecutedSequenceFixture = createUnexecutedSequence(randomContractId(), 0n, 0n)
     expectAssertionFailed(async () => {
-      await UnexecutedSequenceTest.testCheckSequenceMethod({
+      await UnexecutedSequenceTest.tests.checkSequence({
         initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
         address: addressFromContractId(parentId),
         testArgs: { seq: 1n },
@@ -131,7 +131,7 @@ describe('test unexecuted sequence', () => {
       })
     })
     expectAssertionFailed(async () => {
-      await UnexecutedSequenceTest.testDestroyMethod({
+      await UnexecutedSequenceTest.tests.destroy({
         initialFields: { unexecutedSequenceId: unexecutedSequenceFixture.contractId },
         address: addressFromContractId(parentId),
         existingContracts: unexecutedSequenceFixture.states(),

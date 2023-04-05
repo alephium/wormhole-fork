@@ -30,9 +30,9 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^0.7.1",
-    "@alephium/web3-wallet": "^0.7.1",
-    "@alephium/cli": "^0.7.1",
+    "@alephium/web3": "^0.10.0-rc.1",
+    "@alephium/web3-wallet": "^0.10.0-rc.1",
+    "@alephium/cli": "^0.10.0-rc.1",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",

@@ -80,86 +80,83 @@ class Factory extends ContractFactory<
     return new LocalTokenPoolInstance(address);
   }
 
-  async testCompleteTransferMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      {
-        emitterChainId: bigint;
-        amount: bigint;
-        vaaTokenId: HexString;
-        vaaTokenChainId: bigint;
-        recipient: HexString;
-        normalizedArbiterFee: bigint;
-        caller: HexString;
-      }
-    >
-  ): Promise<TestContractResult<null>> {
-    return testMethod(this, "completeTransfer", params);
-  }
-
-  async testPrepareTransferMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      {
-        callerContractId: HexString;
-        toAddress: HexString;
-        amount: bigint;
-        arbiterFee: bigint;
-        nonce: HexString;
-      }
-    >
-  ): Promise<TestContractResult<[HexString, bigint]>> {
-    return testMethod(this, "prepareTransfer", params);
-  }
-
-  async testPrepareCompleteTransferMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      {
-        callerContractId: HexString;
-        emitterChainId: bigint;
-        amount: bigint;
-        vaaTokenId: HexString;
-        vaaTokenChainId: bigint;
-        normalizedArbiterFee: bigint;
-      }
-    >
-  ): Promise<TestContractResult<[bigint, bigint]>> {
-    return testMethod(this, "prepareCompleteTransfer", params);
-  }
-
-  async testNormalizeAmountMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      { amount: bigint; decimals: bigint }
-    >
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "normalizeAmount", params);
-  }
-
-  async testDeNormalizeAmountMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      { amount: bigint; decimals: bigint }
-    >
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "deNormalizeAmount", params);
-  }
-
-  async testTransferMethod(
-    params: TestContractParams<
-      LocalTokenPoolTypes.Fields,
-      {
-        fromAddress: HexString;
-        toAddress: HexString;
-        amount: bigint;
-        arbiterFee: bigint;
-        nonce: HexString;
-      }
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "transfer", params);
-  }
+  tests = {
+    completeTransfer: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        {
+          emitterChainId: bigint;
+          amount: bigint;
+          vaaTokenId: HexString;
+          vaaTokenChainId: bigint;
+          recipient: HexString;
+          normalizedArbiterFee: bigint;
+          caller: HexString;
+        }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "completeTransfer", params);
+    },
+    prepareTransfer: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        {
+          callerContractId: HexString;
+          toAddress: HexString;
+          amount: bigint;
+          arbiterFee: bigint;
+          nonce: HexString;
+        }
+      >
+    ): Promise<TestContractResult<[HexString, bigint]>> => {
+      return testMethod(this, "prepareTransfer", params);
+    },
+    prepareCompleteTransfer: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        {
+          callerContractId: HexString;
+          emitterChainId: bigint;
+          amount: bigint;
+          vaaTokenId: HexString;
+          vaaTokenChainId: bigint;
+          normalizedArbiterFee: bigint;
+        }
+      >
+    ): Promise<TestContractResult<[bigint, bigint]>> => {
+      return testMethod(this, "prepareCompleteTransfer", params);
+    },
+    normalizeAmount: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        { amount: bigint; decimals: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        { amount: bigint; decimals: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "deNormalizeAmount", params);
+    },
+    transfer: async (
+      params: TestContractParams<
+        LocalTokenPoolTypes.Fields,
+        {
+          fromAddress: HexString;
+          toAddress: HexString;
+          amount: bigint;
+          arbiterFee: bigint;
+          nonce: HexString;
+        }
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "transfer", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract
@@ -181,23 +178,23 @@ export class LocalTokenPoolInstance extends ContractInstance {
     return fetchContractState(LocalTokenPool, this);
   }
 
-  async callNormalizeAmountMethod(
-    params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
-  ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> {
-    return callMethod(LocalTokenPool, this, "normalizeAmount", params);
-  }
-
-  async callDeNormalizeAmountMethod(
-    params: LocalTokenPoolTypes.CallMethodParams<"deNormalizeAmount">
-  ): Promise<LocalTokenPoolTypes.CallMethodResult<"deNormalizeAmount">> {
-    return callMethod(LocalTokenPool, this, "deNormalizeAmount", params);
-  }
-
-  async callTransferMethod(
-    params: LocalTokenPoolTypes.CallMethodParams<"transfer">
-  ): Promise<LocalTokenPoolTypes.CallMethodResult<"transfer">> {
-    return callMethod(LocalTokenPool, this, "transfer", params);
-  }
+  methods = {
+    normalizeAmount: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
+      return callMethod(LocalTokenPool, this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"deNormalizeAmount">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"deNormalizeAmount">> => {
+      return callMethod(LocalTokenPool, this, "deNormalizeAmount", params);
+    },
+    transfer: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"transfer">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"transfer">> => {
+      return callMethod(LocalTokenPool, this, "transfer", params);
+    },
+  };
 
   async multicall<Calls extends LocalTokenPoolTypes.MultiCallParams>(
     calls: Calls

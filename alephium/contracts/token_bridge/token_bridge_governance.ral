@@ -32,14 +32,14 @@ Abstract Contract TokenBridgeGovernance(
         remoteTokenBridgeId: ByteVec,
         isLocal: Bool
     ) -> () {
-        let encodedImmutableFields = encodeToByteVec!(
+        let encodedImmutableFields = AttestTokenHandler.encodeImmFields!(
             governance,
-            selfContractId!(),
+            TokenBridge(selfContractId!()),
             remoteChainId,
             remoteTokenBridgeId,
             isLocal
         )
-        let encodedMutableFields = encodeToByteVec!(0)
+        let encodedMutableFields = AttestTokenHandler.encodeMutFields!(0)
         let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
@@ -82,7 +82,7 @@ Abstract Contract TokenBridgeGovernance(
             false
         )
 
-        let encodedImmutableFields = encodeToByteVec!(
+        let encodedImmutableFields = TokenBridgeForChain.encodeImmFields!(
             governance,
             localChainId,
             selfContractId!(),
@@ -90,7 +90,7 @@ Abstract Contract TokenBridgeGovernance(
             remoteTokenBridgeId,
             tokenBridgeFactory.getUnexecutedSequenceTemplateId()
         )
-        let encodedMutableFields = encodeToByteVec!(0, 0, 0, 0)
+        let encodedMutableFields = TokenBridgeForChain.encodeMutFields!(0, 0, 0, 0)
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             tokenBridgeForChainPath,

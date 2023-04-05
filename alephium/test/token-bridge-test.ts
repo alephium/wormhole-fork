@@ -133,7 +133,7 @@ describe('test token bridge', () => {
     const testToken = createTestToken()
     const nonceHex = nonce()
     const inputAsset = alphAndTokenInputAsset(payer, alph(2), testToken.contractId, 1n)
-    const testResult = await TokenBridge.testAttestTokenMethod({
+    const testResult = await TokenBridge.tests.attestToken({
       address: tokenBridge.address,
       initialFields: tokenBridge.selfState.fields,
       testArgs: {
@@ -171,7 +171,7 @@ describe('test token bridge', () => {
     const tokenBridge = createTokenBridge()
     const nonceHex = nonce()
     const inputAsset = alphInputAsset(payer, alph(2))
-    const testResult = await TokenBridge.testAttestTokenMethod({
+    const testResult = await TokenBridge.tests.attestToken({
       address: tokenBridge.address,
       initialFields: tokenBridge.selfState.fields,
       testArgs: {
@@ -211,7 +211,7 @@ describe('test token bridge', () => {
     const message = new UpdateMinimalConsistencyLevel(newMinimalConsistencyLevel)
     const vaaBody = new VAABody(message.encode(), governanceChainId, CHAIN_ID_ALEPHIUM, governanceEmitterAddress, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridge.testUpdateMinimalConsistencyLevelMethod({
+    const testResult = await TokenBridge.tests.updateMinimalConsistencyLevel({
       address: tokenBridge.address,
       initialFields: tokenBridge.selfState.fields,
       testArgs: { vaa: binToHex(vaa.encode()) },
@@ -235,7 +235,7 @@ describe('test token bridge', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridge.testRegisterChainMethod({
+    const testResult = await TokenBridge.tests.registerChain({
       address: tokenBridge.address,
       initialFields: tokenBridge.selfState.fields,
       testArgs: {
@@ -268,7 +268,7 @@ describe('test token bridge', () => {
         sequence
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      return TokenBridge.testRegisterChainMethod({
+      return TokenBridge.tests.registerChain({
         address: tokenBridge.address,
         initialFields: tokenBridge.selfState.fields,
         testArgs: {
@@ -302,7 +302,7 @@ describe('test token bridge', () => {
       const vaaBody = new VAABody(attestToken.encode(), CHAIN_ID_ALEPHIUM, targetChainId, localTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       const inputAsset = alphInputAsset(payer, alph(3))
-      const testResult = await AttestTokenHandler.testCreateLocalTokenPoolMethod({
+      const testResult = await AttestTokenHandler.tests.createLocalTokenPool({
         address: attestTokenHandler.address,
         initialFields: attestTokenHandler.selfState.fields,
         testArgs: {
@@ -346,7 +346,7 @@ describe('test token bridge', () => {
 
     async function test(messageFee: bigint, arbiterFee: bigint) {
       const fixture = newLocalTokenPoolTestFixture(remoteChainId, remoteTokenBridgeId, ALPH_TOKEN_ID, messageFee)
-      const testResult = await TokenBridge.testTransferTokenMethod({
+      const testResult = await TokenBridge.tests.transferToken({
         address: fixture.tokenBridge.address,
         initialFields: fixture.tokenBridge.selfState.fields,
         testArgs: {
@@ -419,7 +419,7 @@ describe('test token bridge', () => {
       const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
-      const testResult = await TokenBridgeForChain.testCompleteTransferMethod({
+      const testResult = await TokenBridgeForChain.tests.completeTransfer({
         address: fixture.tokenBridgeForChain.address,
         initialFields: fixture.tokenBridgeForChain.selfState.fields,
         testArgs: {
@@ -474,7 +474,7 @@ describe('test token bridge', () => {
       const vaaBody = new VAABody(attestToken.encode(), CHAIN_ID_ALEPHIUM, targetChainId, localTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       const inputAsset = alphAndTokenInputAsset(payer, alph(2), testToken.contractId, 1n)
-      const testResult = await AttestTokenHandler.testCreateLocalTokenPoolMethod({
+      const testResult = await AttestTokenHandler.tests.createLocalTokenPool({
         address: attestTokenHandler.address,
         initialFields: attestTokenHandler.selfState.fields,
         testArgs: {
@@ -520,7 +520,7 @@ describe('test token bridge', () => {
     const arbiterFee = defaultMessageFee
     const nonceHex = nonce()
     const inputAsset = alphAndTokenInputAsset(fromAddress, oneAlph, testToken.contractId, transferAmount)
-    const testResult = await TokenBridge.testTransferTokenMethod({
+    const testResult = await TokenBridge.tests.transferToken({
       address: fixture.tokenBridge.address,
       initialFields: fixture.tokenBridge.selfState.fields,
       testArgs: {
@@ -589,7 +589,7 @@ describe('test token bridge', () => {
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
     async function testWithCaller(inputAsset: InputAsset) {
-      return TokenBridgeForChain.testCompleteTransferMethod({
+      return TokenBridgeForChain.tests.completeTransfer({
         address: fixture.tokenBridgeForChain.address,
         initialFields: fixture.tokenBridgeForChain.selfState.fields,
         testArgs: {
@@ -673,7 +673,7 @@ describe('test token bridge', () => {
       const attestToken = new AttestToken(remoteTokenId, remoteChainId, symbol, name, decimals)
       const vaaBody = new VAABody(attestToken.encode(), remoteChainId, targetChainId, remoteTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      const result = await AttestTokenHandler.testCreateRemoteTokenPoolMethod({
+      const result = await AttestTokenHandler.tests.createRemoteTokenPool({
         address: attestTokenHandler.address,
         initialFields: attestTokenHandler.selfState.fields,
         testArgs: {
@@ -727,7 +727,7 @@ describe('test token bridge', () => {
     // invalid caller
     expectError(
       async () =>
-        await RemoteTokenPool.testUpdateDetailsMethod({
+        await RemoteTokenPool.tests.updateDetails({
           address: fixture.remoteTokenPool.selfState.address,
           initialFields: fixture.remoteTokenPool.selfState.fields,
           testArgs: {
@@ -749,7 +749,7 @@ describe('test token bridge', () => {
       const attestToken = new AttestToken(remoteTokenId, remoteChainId, newSymbol, newName, newDecimals)
       const vaaBody = new VAABody(attestToken.encode(), remoteChainId, targetChainId, remoteTokenBridgeId, sequence)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      const result = await AttestTokenHandler.testUpdateRemoteTokenPoolMethod({
+      const result = await AttestTokenHandler.tests.updateRemoteTokenPool({
         address: attestTokenHandler.address,
         initialFields: attestTokenHandler.selfState.fields,
         testArgs: { vaa: binToHex(vaa.encode()) },
@@ -803,7 +803,7 @@ describe('test token bridge', () => {
     const inputAsset = alphAndTokenInputAsset(fromAddress, oneAlph, fixture.remoteTokenPool.contractId, transferAmount)
 
     async function transferToken(consistencyLevel: bigint) {
-      return TokenBridge.testTransferTokenMethod({
+      return TokenBridge.tests.transferToken({
         address: fixture.tokenBridge.address,
         initialFields: fixture.tokenBridge.selfState.fields,
         testArgs: {
@@ -885,7 +885,7 @@ describe('test token bridge', () => {
     const nonceHex = nonce()
     const inputAsset = alphAndTokenInputAsset(fromAddress, oneAlph, fixture.remoteTokenPool.contractId, transferAmount)
     await expectNotEnoughBalance(async () => {
-      await TokenBridge.testTransferTokenMethod({
+      await TokenBridge.tests.transferToken({
         address: fixture.tokenBridge.address,
         initialFields: fixture.tokenBridge.selfState.fields,
         testArgs: {
@@ -924,7 +924,7 @@ describe('test token bridge', () => {
     const transfer = new Transfer(transferAmount, remoteTokenId, remoteChainId, toAddress, arbiterFee)
     const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridgeForChain.testCompleteTransferMethod({
+    const testResult = await TokenBridgeForChain.tests.completeTransfer({
       address: fixture.tokenBridgeForChain.address,
       initialFields: fixture.tokenBridgeForChain.selfState.fields,
       testArgs: {
@@ -986,7 +986,7 @@ describe('test token bridge', () => {
     const transfer = new Transfer(transferAmount, testTokenInfo.contractId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
     const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 768)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridgeForChain.testCompleteTransferMethod({
+    const testResult = await TokenBridgeForChain.tests.completeTransfer({
       address: fixture.tokenBridgeForChain.address,
       initialFields: fixture.tokenBridgeForChain.selfState.fields,
       testArgs: {
@@ -1045,7 +1045,7 @@ describe('test token bridge', () => {
     const inputAsset = alphAndTokenInputAsset(fromAddress, oneAlph, fixture.remoteTokenPool.contractId, transferAmount)
 
     async function transferToken(consistencyLevel: bigint) {
-      return TokenBridge.testTransferTokenMethod({
+      return TokenBridge.tests.transferToken({
         address: fixture.tokenBridge.address,
         initialFields: fixture.tokenBridge.selfState.fields,
         testArgs: {
@@ -1125,7 +1125,7 @@ describe('test token bridge', () => {
     const transfer = new Transfer(transferAmount, remoteTokenId, chainB, toAddress, arbiterFee)
     const vaaBody = new VAABody(transfer.encode(), chainC, CHAIN_ID_ALEPHIUM, chainCTokenBridgeId, 0)
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridgeForChain.testCompleteTransferMethod({
+    const testResult = await TokenBridgeForChain.tests.completeTransfer({
       address: tokenBridgeForChainC.address,
       initialFields: tokenBridgeForChainC.selfState.fields,
       testArgs: { vaa: binToHex(vaa.encode()), caller: payer },
@@ -1210,7 +1210,7 @@ describe('test token bridge', () => {
       0
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-    const testResult = await TokenBridge.testDestroyUnexecutedSequenceContractsMethod({
+    const testResult = await TokenBridge.tests.destroyUnexecutedSequenceContracts({
       address: fixture.tokenBridge.address,
       initialFields: fixture.tokenBridge.selfState.fields,
       testArgs: { vaa: binToHex(vaa.encode()) },
@@ -1243,7 +1243,7 @@ describe('test token bridge', () => {
         0
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      return TokenBridge.testUpgradeContractMethod({
+      return TokenBridge.tests.upgradeContract({
         address: tokenBridge.address,
         initialFields: tokenBridge.selfState.fields,
         testArgs: { vaa: binToHex(vaa.encode()) },
@@ -1328,7 +1328,7 @@ describe('test token bridge', () => {
         0
       )
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
-      const result = await TokenBridge.testUpdateRefundAddressMethod({
+      const result = await TokenBridge.tests.updateRefundAddress({
         address: fixture.address,
         initialFields: fixture.selfState.fields,
         testArgs: { vaa: binToHex(vaa.encode()) },
@@ -1351,7 +1351,7 @@ describe('test token bridge', () => {
   it('should test deposit/withdraw', async () => {
     await buildProject()
     const fixture = newTokenBridgeForChainTestFixture(remoteChainId, randomByte32Hex())
-    const testResult0 = await TokenBridgeForChain.testDepositMethod({
+    const testResult0 = await TokenBridgeForChain.tests.deposit({
       initialFields: fixture.tokenBridgeForChain.selfState.fields,
       initialAsset: { alphAmount: oneAlph },
       address: fixture.tokenBridgeForChain.address,
@@ -1368,7 +1368,7 @@ describe('test token bridge', () => {
     expect(payerOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
 
     const refundAddress = fixture.tokenBridge.selfState.fields.refundAddress
-    const testResult1 = await TokenBridgeForChain.testWithdrawMethod({
+    const testResult1 = await TokenBridgeForChain.tests.withdraw({
       initialFields: fixture.tokenBridgeForChain.selfState.fields,
       initialAsset: { alphAmount: alph(4) },
       address: fixture.tokenBridgeForChain.address,

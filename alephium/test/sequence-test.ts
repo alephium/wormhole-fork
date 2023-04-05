@@ -32,7 +32,7 @@ describe('test sequence', () => {
     await buildProject()
     const sequenceFixture = createSequence(0n, 0n, 0n)
     for (let seq = 0n; seq < 256n; seq++) {
-      const testResult = await SequenceTest.testCheckMethod({
+      const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
         address: sequenceFixture.address,
         testArgs: { seq: seq },
@@ -49,7 +49,7 @@ describe('test sequence', () => {
     }
 
     for (let seq = 256n; seq < 512n; seq++) {
-      const testResult = await SequenceTest.testCheckMethod({
+      const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
         address: sequenceFixture.address,
         testArgs: { seq: seq },
@@ -69,7 +69,7 @@ describe('test sequence', () => {
   it('should increase executed sequence', async () => {
     await buildProject()
     const sequenceFixture = createSequence(512n, allExecuted, allExecuted)
-    const testResult = await SequenceTest.testCheckMethod({
+    const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       address: sequenceFixture.address,
       testArgs: { seq: 1025n },
@@ -87,7 +87,7 @@ describe('test sequence', () => {
   it('should check sequence failed and create unexecuted sequence subcontract', async () => {
     await buildProject()
     const sequenceFixture = createSequence(0n, 1n, 1n)
-    const testResult = await SequenceTest.testCheckMethod({
+    const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: oneAlph * 2n },
       address: sequenceFixture.address,
@@ -119,7 +119,7 @@ describe('test sequence', () => {
     const sequenceFixture = createSequence(0n, allExecuted, 0n)
     for (let seq = 0n; seq < 256n; seq++) {
       await expectAssertionFailed(async () => {
-        return await SequenceTest.testCheckMethod({
+        return await SequenceTest.tests.check({
           initialFields: sequenceFixture.selfState.fields,
           address: sequenceFixture.address,
           testArgs: { seq: seq },
@@ -131,7 +131,7 @@ describe('test sequence', () => {
 
     for (let seq = 256n; seq < 512n; seq++) {
       await expectAssertionFailed(async () => {
-        return await SequenceTest.testCheckMethod({
+        return await SequenceTest.tests.check({
           initialFields: {
             start: 0n,
             firstNext256: 0n,
@@ -152,7 +152,7 @@ describe('test sequence', () => {
     const start = 256n
     const firstNext256 = BigInt(0xff) << 248n
     const sequenceFixture = createSequence(start, firstNext256, 0n)
-    const testResult = await SequenceTest.testCheckMethod({
+    const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: oneAlph * 2n },
       address: sequenceFixture.address,
@@ -185,7 +185,7 @@ describe('test sequence', () => {
     const sequences = allExecuted - 0xffn
     const unexecutedSequenceFixture = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceContractId)
     for (let seq = 0n; seq < 8n; seq++) {
-      const testResult = await SequenceTest.testCheckMethod({
+      const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
         initialAsset: { alphAmount: oneAlph * 10n },
         address: sequenceFixture.address,
@@ -213,7 +213,7 @@ describe('test sequence', () => {
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceContractId)
     for (let seq = 1n; seq < 256n; seq++) {
       await expectAssertionFailed(async () => {
-        await SequenceTest.testCheckMethod({
+        await SequenceTest.tests.check({
           initialFields: sequenceInfo.selfState.fields,
           initialAsset: { alphAmount: oneAlph * 10n },
           address: sequenceInfo.address,
@@ -232,7 +232,7 @@ describe('test sequence', () => {
     const unexecutedSequenceFixture = subContractId(parentId, '0000000000000001', 0)
     const sequences = allExecuted - 1n
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceFixture)
-    const testResult = await SequenceTest.testCheckMethod({
+    const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: oneAlph },
       address: sequenceFixture.address,

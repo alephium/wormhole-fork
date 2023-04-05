@@ -59,23 +59,24 @@ class Factory extends ContractFactory<MathTestInstance, {}> {
     return new MathTestInstance(address);
   }
 
-  async testNormalizeAmountMethod(
-    params: Omit<
-      TestContractParams<never, { amount: bigint; decimals: bigint }>,
-      "initialFields"
-    >
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "normalizeAmount", params);
-  }
-
-  async testDeNormalizeAmountMethod(
-    params: Omit<
-      TestContractParams<never, { amount: bigint; decimals: bigint }>,
-      "initialFields"
-    >
-  ): Promise<TestContractResult<bigint>> {
-    return testMethod(this, "deNormalizeAmount", params);
-  }
+  tests = {
+    normalizeAmount: async (
+      params: Omit<
+        TestContractParams<never, { amount: bigint; decimals: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: Omit<
+        TestContractParams<never, { amount: bigint; decimals: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "deNormalizeAmount", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract
@@ -97,17 +98,18 @@ export class MathTestInstance extends ContractInstance {
     return fetchContractState(MathTest, this);
   }
 
-  async callNormalizeAmountMethod(
-    params: MathTestTypes.CallMethodParams<"normalizeAmount">
-  ): Promise<MathTestTypes.CallMethodResult<"normalizeAmount">> {
-    return callMethod(MathTest, this, "normalizeAmount", params);
-  }
-
-  async callDeNormalizeAmountMethod(
-    params: MathTestTypes.CallMethodParams<"deNormalizeAmount">
-  ): Promise<MathTestTypes.CallMethodResult<"deNormalizeAmount">> {
-    return callMethod(MathTest, this, "deNormalizeAmount", params);
-  }
+  methods = {
+    normalizeAmount: async (
+      params: MathTestTypes.CallMethodParams<"normalizeAmount">
+    ): Promise<MathTestTypes.CallMethodResult<"normalizeAmount">> => {
+      return callMethod(MathTest, this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: MathTestTypes.CallMethodParams<"deNormalizeAmount">
+    ): Promise<MathTestTypes.CallMethodResult<"deNormalizeAmount">> => {
+      return callMethod(MathTest, this, "deNormalizeAmount", params);
+    },
+  };
 
   async multicall<Calls extends MathTestTypes.MultiCallParams>(
     calls: Calls

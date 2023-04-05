@@ -82,50 +82,48 @@ class Factory extends ContractFactory<
     return new TokenBridgeFactoryInstance(address);
   }
 
-  async testGetLocalTokenPoolTemplateIdMethod(
-    params: Omit<
-      TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getLocalTokenPoolTemplateId", params);
-  }
-
-  async testGetRemoteTokenPoolTemplateIdMethod(
-    params: Omit<
-      TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getRemoteTokenPoolTemplateId", params);
-  }
-
-  async testGetTokenBridgeForChainTemplateIdMethod(
-    params: Omit<
-      TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getTokenBridgeForChainTemplateId", params);
-  }
-
-  async testGetAttestTokenHandlerTemplateIdMethod(
-    params: Omit<
-      TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getAttestTokenHandlerTemplateId", params);
-  }
-
-  async testGetUnexecutedSequenceTemplateIdMethod(
-    params: Omit<
-      TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
-      "testArgs"
-    >
-  ): Promise<TestContractResult<HexString>> {
-    return testMethod(this, "getUnexecutedSequenceTemplateId", params);
-  }
+  tests = {
+    getLocalTokenPoolTemplateId: async (
+      params: Omit<
+        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getLocalTokenPoolTemplateId", params);
+    },
+    getRemoteTokenPoolTemplateId: async (
+      params: Omit<
+        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getRemoteTokenPoolTemplateId", params);
+    },
+    getTokenBridgeForChainTemplateId: async (
+      params: Omit<
+        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getTokenBridgeForChainTemplateId", params);
+    },
+    getAttestTokenHandlerTemplateId: async (
+      params: Omit<
+        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getAttestTokenHandlerTemplateId", params);
+    },
+    getUnexecutedSequenceTemplateId: async (
+      params: Omit<
+        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getUnexecutedSequenceTemplateId", params);
+    },
+  };
 }
 
 // Use this object to test and deploy the contract
@@ -147,70 +145,68 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     return fetchContractState(TokenBridgeFactory, this);
   }
 
-  async callGetLocalTokenPoolTemplateIdMethod(
-    params?: TokenBridgeFactoryTypes.CallMethodParams<"getLocalTokenPoolTemplateId">
-  ): Promise<
-    TokenBridgeFactoryTypes.CallMethodResult<"getLocalTokenPoolTemplateId">
-  > {
-    return callMethod(
-      TokenBridgeFactory,
-      this,
-      "getLocalTokenPoolTemplateId",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetRemoteTokenPoolTemplateIdMethod(
-    params?: TokenBridgeFactoryTypes.CallMethodParams<"getRemoteTokenPoolTemplateId">
-  ): Promise<
-    TokenBridgeFactoryTypes.CallMethodResult<"getRemoteTokenPoolTemplateId">
-  > {
-    return callMethod(
-      TokenBridgeFactory,
-      this,
-      "getRemoteTokenPoolTemplateId",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetTokenBridgeForChainTemplateIdMethod(
-    params?: TokenBridgeFactoryTypes.CallMethodParams<"getTokenBridgeForChainTemplateId">
-  ): Promise<
-    TokenBridgeFactoryTypes.CallMethodResult<"getTokenBridgeForChainTemplateId">
-  > {
-    return callMethod(
-      TokenBridgeFactory,
-      this,
-      "getTokenBridgeForChainTemplateId",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetAttestTokenHandlerTemplateIdMethod(
-    params?: TokenBridgeFactoryTypes.CallMethodParams<"getAttestTokenHandlerTemplateId">
-  ): Promise<
-    TokenBridgeFactoryTypes.CallMethodResult<"getAttestTokenHandlerTemplateId">
-  > {
-    return callMethod(
-      TokenBridgeFactory,
-      this,
-      "getAttestTokenHandlerTemplateId",
-      params === undefined ? {} : params
-    );
-  }
-
-  async callGetUnexecutedSequenceTemplateIdMethod(
-    params?: TokenBridgeFactoryTypes.CallMethodParams<"getUnexecutedSequenceTemplateId">
-  ): Promise<
-    TokenBridgeFactoryTypes.CallMethodResult<"getUnexecutedSequenceTemplateId">
-  > {
-    return callMethod(
-      TokenBridgeFactory,
-      this,
-      "getUnexecutedSequenceTemplateId",
-      params === undefined ? {} : params
-    );
-  }
+  methods = {
+    getLocalTokenPoolTemplateId: async (
+      params?: TokenBridgeFactoryTypes.CallMethodParams<"getLocalTokenPoolTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"getLocalTokenPoolTemplateId">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "getLocalTokenPoolTemplateId",
+        params === undefined ? {} : params
+      );
+    },
+    getRemoteTokenPoolTemplateId: async (
+      params?: TokenBridgeFactoryTypes.CallMethodParams<"getRemoteTokenPoolTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"getRemoteTokenPoolTemplateId">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "getRemoteTokenPoolTemplateId",
+        params === undefined ? {} : params
+      );
+    },
+    getTokenBridgeForChainTemplateId: async (
+      params?: TokenBridgeFactoryTypes.CallMethodParams<"getTokenBridgeForChainTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"getTokenBridgeForChainTemplateId">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "getTokenBridgeForChainTemplateId",
+        params === undefined ? {} : params
+      );
+    },
+    getAttestTokenHandlerTemplateId: async (
+      params?: TokenBridgeFactoryTypes.CallMethodParams<"getAttestTokenHandlerTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"getAttestTokenHandlerTemplateId">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "getAttestTokenHandlerTemplateId",
+        params === undefined ? {} : params
+      );
+    },
+    getUnexecutedSequenceTemplateId: async (
+      params?: TokenBridgeFactoryTypes.CallMethodParams<"getUnexecutedSequenceTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"getUnexecutedSequenceTemplateId">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "getUnexecutedSequenceTemplateId",
+        params === undefined ? {} : params
+      );
+    },
+  };
 
   async multicall<Calls extends TokenBridgeFactoryTypes.MultiCallParams>(
     calls: Calls
