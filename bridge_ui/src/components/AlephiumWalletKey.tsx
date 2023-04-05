@@ -1,8 +1,8 @@
 import ToggleConnectedButton from "./ToggleConnectedButton";
-import { AlephiumConnectButton, useConnect, useContext } from "@alephium/web3-react"
+import { AlephiumConnectButton, useConnect, useAlephiumConnectContext } from "@alephium/web3-react"
 
 const AlephiumWalletKey = () => {
-  const context = useContext()
+  const context = useAlephiumConnectContext()
   const { disconnect } = useConnect({
     chainGroup: context.addressGroup,
     keyType: context.keyType,

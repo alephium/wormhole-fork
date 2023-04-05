@@ -1,6 +1,6 @@
 import { NodeProvider, SignerProvider, Address, groupOfAddress, web3 } from '@alephium/web3'
 import { useEffect, useState } from 'react'
-import { useAccount, useContext } from "@alephium/web3-react"
+import { useAccount, useAlephiumConnectContext } from "@alephium/web3-react"
 
 export class AlephiumWallet {
   signer: SignerProvider
@@ -17,7 +17,7 @@ export class AlephiumWallet {
 }
 
 export function useAlephiumWallet() {
-  const context = useContext()
+  const context = useAlephiumConnectContext()
   const { account, isConnected } = useAccount()
   const [wallet, setWallet] = useState<AlephiumWallet | undefined>(undefined)
 
