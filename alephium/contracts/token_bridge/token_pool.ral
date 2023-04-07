@@ -1,4 +1,6 @@
-Interface TokenPool {
+import "std/fungible_token_interface"
+
+Interface TokenPool extends IFungibleToken {
     @using(preapprovedAssets = true, assetsInContract = true, updateFields = true)
     pub fn completeTransfer(
         emitterChainId: U256,

@@ -4,7 +4,7 @@ import { Settings } from '../alephium.config'
 import { CreateLocalAttestTokenHandler } from '../artifacts/ts'
 
 const deployLocalAttestTokenHandler: DeployFunction<Settings> = async (deployer: Deployer): Promise<void> => {
-  const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractId
+  const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractInstance.contractId
   const initialFields = {
     tokenBridge: tokenBridgeId,
     payer: deployer.account.address,

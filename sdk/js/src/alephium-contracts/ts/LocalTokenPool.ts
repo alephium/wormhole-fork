@@ -39,6 +39,22 @@ export namespace LocalTokenPoolTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    getSymbol: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<HexString>;
+    };
+    getName: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<HexString>;
+    };
+    getDecimals: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getTotalSupply: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
@@ -81,6 +97,38 @@ class Factory extends ContractFactory<
   }
 
   tests = {
+    getSymbol: async (
+      params: Omit<
+        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getSymbol", params);
+    },
+    getName: async (
+      params: Omit<
+        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getName", params);
+    },
+    getDecimals: async (
+      params: Omit<
+        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDecimals", params);
+    },
+    getTotalSupply: async (
+      params: Omit<
+        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTotalSupply", params);
+    },
     completeTransfer: async (
       params: TestContractParams<
         LocalTokenPoolTypes.Fields,
@@ -164,7 +212,7 @@ export const LocalTokenPool = new Factory(
   Contract.fromJson(
     LocalTokenPoolContractJson,
     "",
-    "444de82e20bcede3089a91a26ae45c8d28e47b7d903c97c18c24e195b47df769"
+    "c4d692cf35e935517d6057381da21cd17a346c77b1b66753c36c51ecdb59a167"
   )
 );
 
@@ -179,6 +227,46 @@ export class LocalTokenPoolInstance extends ContractInstance {
   }
 
   methods = {
+    getSymbol: async (
+      params?: LocalTokenPoolTypes.CallMethodParams<"getSymbol">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"getSymbol">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "getSymbol",
+        params === undefined ? {} : params
+      );
+    },
+    getName: async (
+      params?: LocalTokenPoolTypes.CallMethodParams<"getName">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"getName">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "getName",
+        params === undefined ? {} : params
+      );
+    },
+    getDecimals: async (
+      params?: LocalTokenPoolTypes.CallMethodParams<"getDecimals">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"getDecimals">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "getDecimals",
+        params === undefined ? {} : params
+      );
+    },
+    getTotalSupply: async (
+      params?: LocalTokenPoolTypes.CallMethodParams<"getTotalSupply">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"getTotalSupply">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "getTotalSupply",
+        params === undefined ? {} : params
+      );
+    },
     normalizeAmount: async (
       params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {

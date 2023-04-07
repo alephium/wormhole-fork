@@ -33,7 +33,9 @@ const deployGovernance: DeployFunction<Settings> = async (
   }
 
   const result = await deployer.deployContract(Governance, { initialFields: initialFields })
-  console.log(`Governance contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
+  console.log(
+    `Governance contract address: ${result.contractInstance.address}, contract id: ${result.contractInstance.contractId}`
+  )
 }
 
 export default deployGovernance

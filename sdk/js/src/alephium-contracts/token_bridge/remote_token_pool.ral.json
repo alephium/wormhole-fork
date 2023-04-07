@@ -1,8 +1,8 @@
 {
-  "version": "v2.1.0",
+  "version": "v2.0.4",
   "name": "RemoteTokenPool",
-  "bytecode": "080a404e40a640f54111412d4136413f41484168418d0101070a004025b31600160116021603160500021708170716061604464c041606160413c3038d7ea4c68000a7b11709160416091607ab16080c334c04160616091608aba00016072a16082aa100000005090240321600ce004113157b160443102f13117b1602ce03000317051603ce0300031706160616053113167b14010116056b44ce0244ce016744160143674416014416066b4417071605ce030004170816071608020000060a02402ace0014010116016744cc1706160616004113157b1603ce024113197b1604ce012f13197b1602ce03000417071605ce0300041708160716083313167b160716082b1709160916080201000202010e16011308334c081600130a160113082b832d0216000201000202010e16011308334c081600130a160113082b832c02160002010000000102a00202010000000102a00102010000000102ce0302010003030010b3ce004113157ba0031602310f7b1600a1011601a1021602a103010105070112b316011602160316040001170617051600b11606aca00016062ba100160502",
-  "codeHash": "beed1be1ba36def0fd93c0a453398674b180f8f26e0c404f30b3443ab33fe902",
+  "bytecode": "090b09121b4024407240ca41194135415141714196010000000102a00102010000000102a00202010000000102ce0302010000000102a000020101070a004025b31600160116021603160500061708170716061604464c041606160413c3038d7ea4c68000a7b11709160416091607ab16080c334c04160616091608aba00016072a16082aa100000005090240321600ce004113157b160443102f13117b1602ce03000717051603ce0300071706160616053113167b14010116056b44ce0244ce016744160143674416014416066b4417071605ce030008170816071608020000060a02402ace0014010116016744cc1706160616004113157b1603ce024113197b1604ce012f13197b1602ce03000817071605ce0300081708160716083313167b160716082b1709160916080201000202010e16011308334c081600130a160113082b832d0216000201000202010e16011308334c081600130a160113082b832c02160002010003030010b3ce004113157ba0031602310f7b1600a1011601a1021602a103010105070112b316011602160316040005170617051600b11606aca00016062ba100160502",
+  "codeHash": "7e5c370bdc4a049066f3405b0eeda465d7dabb026065abf067616f7c523ce715",
   "fieldsSig": {
     "names": [
       "tokenBridgeId",
@@ -12,7 +12,8 @@
       "symbol_",
       "name_",
       "decimals_",
-      "sequence_"
+      "sequence_",
+      "__stdInterfaceId"
     ],
     "types": [
       "ByteVec",
@@ -22,7 +23,8 @@
       "ByteVec",
       "ByteVec",
       "U256",
-      "U256"
+      "U256",
+      "ByteVec"
     ],
     "isMutable": [
       false,
@@ -32,11 +34,60 @@
       true,
       true,
       false,
-      true
+      true,
+      false
     ]
   },
   "eventsSig": [],
   "functions": [
+    {
+      "name": "getSymbol",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "getName",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "getDecimals",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "getTotalSupply",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
     {
       "name": "completeTransfer",
       "usePreapprovedAssets": true,
@@ -179,42 +230,6 @@
       ]
     },
     {
-      "name": "name",
-      "usePreapprovedAssets": false,
-      "useAssetsInContract": false,
-      "isPublic": true,
-      "paramNames": [],
-      "paramTypes": [],
-      "paramIsMutable": [],
-      "returnTypes": [
-        "ByteVec"
-      ]
-    },
-    {
-      "name": "symbol",
-      "usePreapprovedAssets": false,
-      "useAssetsInContract": false,
-      "isPublic": true,
-      "paramNames": [],
-      "paramTypes": [],
-      "paramIsMutable": [],
-      "returnTypes": [
-        "ByteVec"
-      ]
-    },
-    {
-      "name": "decimals",
-      "usePreapprovedAssets": false,
-      "useAssetsInContract": false,
-      "isPublic": true,
-      "paramNames": [],
-      "paramTypes": [],
-      "paramIsMutable": [],
-      "returnTypes": [
-        "U256"
-      ]
-    },
-    {
       "name": "updateDetails",
       "usePreapprovedAssets": false,
       "useAssetsInContract": false,
@@ -266,5 +281,6 @@
         "ByteVec"
       ]
     }
-  ]
+  ],
+  "stdInterfaceId": "0001"
 }

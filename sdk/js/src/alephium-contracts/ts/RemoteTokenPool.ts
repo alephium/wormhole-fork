@@ -42,24 +42,28 @@ export namespace RemoteTokenPoolTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    getSymbol: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<HexString>;
+    };
+    getName: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<HexString>;
+    };
+    getDecimals: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getTotalSupply: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
     };
     deNormalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    name: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<HexString>;
-    };
-    symbol: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<HexString>;
-    };
-    decimals: {
-      params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
     transfer: {
@@ -96,6 +100,38 @@ class Factory extends ContractFactory<
   }
 
   tests = {
+    getSymbol: async (
+      params: Omit<
+        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getSymbol", params);
+    },
+    getName: async (
+      params: Omit<
+        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "getName", params);
+    },
+    getDecimals: async (
+      params: Omit<
+        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDecimals", params);
+    },
+    getTotalSupply: async (
+      params: Omit<
+        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTotalSupply", params);
+    },
     completeTransfer: async (
       params: TestContractParams<
         RemoteTokenPoolTypes.Fields,
@@ -157,30 +193,6 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "deNormalizeAmount", params);
     },
-    name: async (
-      params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
-        "testArgs"
-      >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "name", params);
-    },
-    symbol: async (
-      params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
-        "testArgs"
-      >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "symbol", params);
-    },
-    decimals: async (
-      params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
-        "testArgs"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "decimals", params);
-    },
     updateDetails: async (
       params: TestContractParams<
         RemoteTokenPoolTypes.Fields,
@@ -211,7 +223,7 @@ export const RemoteTokenPool = new Factory(
   Contract.fromJson(
     RemoteTokenPoolContractJson,
     "",
-    "beed1be1ba36def0fd93c0a453398674b180f8f26e0c404f30b3443ab33fe902"
+    "7e5c370bdc4a049066f3405b0eeda465d7dabb026065abf067616f7c523ce715"
   )
 );
 
@@ -226,6 +238,46 @@ export class RemoteTokenPoolInstance extends ContractInstance {
   }
 
   methods = {
+    getSymbol: async (
+      params?: RemoteTokenPoolTypes.CallMethodParams<"getSymbol">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"getSymbol">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "getSymbol",
+        params === undefined ? {} : params
+      );
+    },
+    getName: async (
+      params?: RemoteTokenPoolTypes.CallMethodParams<"getName">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"getName">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "getName",
+        params === undefined ? {} : params
+      );
+    },
+    getDecimals: async (
+      params?: RemoteTokenPoolTypes.CallMethodParams<"getDecimals">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"getDecimals">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "getDecimals",
+        params === undefined ? {} : params
+      );
+    },
+    getTotalSupply: async (
+      params?: RemoteTokenPoolTypes.CallMethodParams<"getTotalSupply">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"getTotalSupply">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "getTotalSupply",
+        params === undefined ? {} : params
+      );
+    },
     normalizeAmount: async (
       params: RemoteTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<RemoteTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
@@ -235,36 +287,6 @@ export class RemoteTokenPoolInstance extends ContractInstance {
       params: RemoteTokenPoolTypes.CallMethodParams<"deNormalizeAmount">
     ): Promise<RemoteTokenPoolTypes.CallMethodResult<"deNormalizeAmount">> => {
       return callMethod(RemoteTokenPool, this, "deNormalizeAmount", params);
-    },
-    name: async (
-      params?: RemoteTokenPoolTypes.CallMethodParams<"name">
-    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"name">> => {
-      return callMethod(
-        RemoteTokenPool,
-        this,
-        "name",
-        params === undefined ? {} : params
-      );
-    },
-    symbol: async (
-      params?: RemoteTokenPoolTypes.CallMethodParams<"symbol">
-    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"symbol">> => {
-      return callMethod(
-        RemoteTokenPool,
-        this,
-        "symbol",
-        params === undefined ? {} : params
-      );
-    },
-    decimals: async (
-      params?: RemoteTokenPoolTypes.CallMethodParams<"decimals">
-    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"decimals">> => {
-      return callMethod(
-        RemoteTokenPool,
-        this,
-        "decimals",
-        params === undefined ? {} : params
-      );
     },
     transfer: async (
       params: RemoteTokenPoolTypes.CallMethodParams<"transfer">

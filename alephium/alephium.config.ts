@@ -47,7 +47,6 @@ const configuration: Configuration<Settings> = {
     ignoreUnusedConstantsWarnings: true
   },
 
-  defaultNetwork: 'devnet',
   networks: {
     devnet: {
       networkId: devnetSettings.networkId,

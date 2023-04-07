@@ -43,11 +43,13 @@ import {
 import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
+import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
   getLocalTokenInfo(tokenId: string): Promise<TokenInfo>
+  getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
   attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
   getContractState<I extends ContractInstance, F extends Fields>(
     factory: ContractFactory<I, F>,
@@ -379,6 +381,12 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return genMultiSigAddress()
   }
 
+  const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
+    const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
+    const tokenPoolInstance = RemoteTokenPool.at(addressFromContractId(tokenPoolId))
+    return (await tokenPoolInstance.methods.getTotalSupply()).returns
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -418,6 +426,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     groupIndex: groupIndex,
     tokenBridgeContractId: tokenBridgeContractId,
     getLocalTokenInfo: _getLocalTokenInfo,
+    getWrappedTokenTotalSupply: getWrappedTokenTotalSupply,
     attestWithTokenInfo: attestWithTokenInfo,
     getContractState: getContractState,
     getTokenBridgeContractState: getTokenBridgeContractState,

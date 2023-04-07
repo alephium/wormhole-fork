@@ -1,5 +1,5 @@
 {
-  "version": "v2.1.0",
+  "version": "v2.0.4",
   "name": "DestroyUnexecutedSequenceContracts",
   "bytecodeTemplate": "01010300000005{1}0d0c{0}0106",
   "fieldsSig": {

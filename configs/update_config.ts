@@ -45,15 +45,15 @@ function updateEthConfig(network: string) {
 function updateAlphConfig(network: string) {
   const func = (deployments: any, config: any): void => {
     const contracts: any = {
-      governance: deployments.contracts.Governance.contractId,
-      nativeGovernance: deployments.contracts.Governance.contractAddress,
-      tokenBridge: deployments.contracts.TokenBridge.contractId,
-      nativeTokenBridge: deployments.contracts.TokenBridge.contractAddress
+      governance: deployments.contracts.Governance.contractInstance.contractId,
+      nativeGovernance: deployments.contracts.Governance.contractInstance.address,
+      tokenBridge: deployments.contracts.TokenBridge.contractInstance.contractId,
+      nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address
     }
     const bridgeTokens = [ALPHTokenAddress]
     if (deployments.contracts.TestToken !== undefined) {
-      contracts.testToken = deployments.contracts.TestToken.contractId
-      bridgeTokens.push(deployments.contracts.TestToken.contractAddress)
+      contracts.testToken = deployments.contracts.TestToken.contractInstance.contractId
+      bridgeTokens.push(deployments.contracts.TestToken.contractInstance.address)
     }
     config.contracts = contracts
     config.coreEmitterAddress = contracts.governance

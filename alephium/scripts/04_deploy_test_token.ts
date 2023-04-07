@@ -1,4 +1,5 @@
-import { Configuration, Deployer, DeployFunction } from '@alephium/cli'
+import { Deployer, DeployFunction } from '@alephium/cli'
+import { NetworkId } from '@alephium/web3'
 import { TestToken } from '../artifacts/ts'
 
 const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
@@ -13,9 +14,11 @@ const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void
     },
     issueTokenAmount: tokenSupply
   })
-  console.log(`TestToken contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
+  console.log(
+    `TestToken contract address: ${result.contractInstance.address}, contract id: ${result.contractInstance.contractId}`
+  )
 }
 
-deployTestToken.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
+deployTestToken.skip = async (_, networkId: NetworkId) => networkId !== 'devnet'
 
 export default deployTestToken

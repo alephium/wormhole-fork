@@ -32,5 +32,6 @@ Abstract Contract Constants() {
     TransferAmountLessThanMessageFee        = 29
     InvalidAttestTokenArg                   = 30
     InvalidAttestTokenHandler               = 31
+    NotSupported                            = 32
   }
 }

@@ -1,4 +1,3 @@
-import { NodeProvider, node, binToHex } from '@alephium/web3'
 import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { BridgeChain } from './bridge_chain'

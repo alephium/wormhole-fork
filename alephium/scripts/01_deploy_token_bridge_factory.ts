@@ -15,7 +15,7 @@ async function deployTemplateContract<F extends Fields>(
   initialFields: Fields
 ): Promise<string> {
   const result = await deployer.deployContract(factory, { initialFields: initialFields })
-  return result.contractId
+  return result.contractInstance.contractId
 }
 
 const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
