@@ -95,7 +95,11 @@ function useGetTargetParsedTokenAccounts() {
 
     if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
       getAlephiumTargetAsset(alphWallet.address, targetAsset, alphWallet.nodeProvider)
-        .then((target) => dispatch(setTargetParsedTokenAccount(target)))
+        .then((target) => {
+          if (!cancelled) {
+            dispatch(setTargetParsedTokenAccount(target))
+          }
+        })
         .catch(() => {
           if (!cancelled) {
             // TODO: error state

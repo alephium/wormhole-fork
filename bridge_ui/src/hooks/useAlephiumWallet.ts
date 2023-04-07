@@ -1,6 +1,6 @@
 import { NodeProvider, SignerProvider, Address, groupOfAddress, web3 } from '@alephium/web3'
 import { useEffect, useState } from 'react'
-import { useAccount, useAlephiumConnectContext } from "@alephium/web3-react"
+import { useAlephiumConnectContext } from "@alephium/web3-react"
 
 export class AlephiumWallet {
   signer: SignerProvider
@@ -18,18 +18,17 @@ export class AlephiumWallet {
 
 export function useAlephiumWallet() {
   const context = useAlephiumConnectContext()
-  const { account, isConnected } = useAccount()
   const [wallet, setWallet] = useState<AlephiumWallet | undefined>(undefined)
 
   useEffect(() => {
-    if (isConnected && account !== undefined && context.signerProvider?.nodeProvider !== undefined) {
-      const wallet = new AlephiumWallet(context.signerProvider, context.signerProvider.nodeProvider, account.address)
+    if (context.account !== undefined && context.signerProvider?.nodeProvider !== undefined) {
+      const wallet = new AlephiumWallet(context.signerProvider, context.signerProvider.nodeProvider, context.account.address)
       web3.setCurrentNodeProvider(wallet.nodeProvider)
       setWallet(wallet)
       return
     }
     setWallet(undefined)
-  }, [account, isConnected, context])
+  }, [context])
 
   return wallet
 }

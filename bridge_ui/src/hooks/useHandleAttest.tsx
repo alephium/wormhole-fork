@@ -20,8 +20,7 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
-  parseTargetChainFromLogEth,
-  getLocalTokenInfo
+  parseTargetChainFromLogEth
 } from "alephium-wormhole-sdk";
 import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
