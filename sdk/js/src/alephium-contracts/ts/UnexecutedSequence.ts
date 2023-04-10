@@ -49,7 +49,7 @@ class Factory extends ContractFactory<
     checkSequence: async (
       params: TestContractParams<
         UnexecutedSequenceTypes.Fields,
-        { seq: bigint; refundAddress: HexString }
+        { seq: bigint; refundAddress: Address }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "checkSequence", params);
@@ -57,7 +57,7 @@ class Factory extends ContractFactory<
     destroy: async (
       params: TestContractParams<
         UnexecutedSequenceTypes.Fields,
-        { refundAddress: HexString }
+        { refundAddress: Address }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "destroy", params);

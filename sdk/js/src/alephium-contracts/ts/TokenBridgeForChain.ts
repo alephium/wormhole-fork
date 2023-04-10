@@ -126,14 +126,14 @@ class Factory extends ContractFactory<
         { payload: HexString }
       >
     ): Promise<
-      TestContractResult<[bigint, HexString, bigint, HexString, bigint]>
+      TestContractResult<[bigint, HexString, bigint, Address, bigint]>
     > => {
       return testMethod(this, "parseCompleteTransfer", params);
     },
     completeTransfer: async (
       params: TestContractParams<
         TokenBridgeForChainTypes.Fields,
-        { vaa: HexString; caller: HexString }
+        { vaa: HexString; caller: Address }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "completeTransfer", params);
@@ -149,7 +149,7 @@ class Factory extends ContractFactory<
     deposit: async (
       params: TestContractParams<
         TokenBridgeForChainTypes.Fields,
-        { from: HexString; alphAmount: bigint }
+        { from: Address; alphAmount: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "deposit", params);

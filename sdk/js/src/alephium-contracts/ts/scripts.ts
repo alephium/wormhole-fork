@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 import {
+  Address,
   ExecuteScriptParams,
   ExecuteScriptResult,
   Script,
@@ -81,7 +82,7 @@ export namespace GetToken {
   export async function execute(
     signer: SignerProvider,
     params: ExecuteScriptParams<{
-      sender: HexString;
+      sender: Address;
       token: HexString;
       amount: bigint;
       factor: bigint;
@@ -98,7 +99,7 @@ export namespace AttestToken {
   export async function execute(
     signer: SignerProvider,
     params: ExecuteScriptParams<{
-      payer: HexString;
+      payer: Address;
       tokenBridge: HexString;
       localTokenId: HexString;
       decimals: bigint;
@@ -135,7 +136,7 @@ export namespace CreateLocalAttestTokenHandler {
     signer: SignerProvider,
     params: ExecuteScriptParams<{
       tokenBridge: HexString;
-      payer: HexString;
+      payer: Address;
       alphAmount: bigint;
     }>
   ): Promise<ExecuteScriptResult> {
@@ -152,7 +153,7 @@ export namespace CreateLocalTokenPool {
   export async function execute(
     signer: SignerProvider,
     params: ExecuteScriptParams<{
-      payer: HexString;
+      payer: Address;
       attestTokenHandler: HexString;
       localTokenId: HexString;
       vaa: HexString;
@@ -170,7 +171,7 @@ export namespace CreateRemoteTokenPool {
   export async function execute(
     signer: SignerProvider,
     params: ExecuteScriptParams<{
-      payer: HexString;
+      payer: Address;
       attestTokenHandler: HexString;
       vaa: HexString;
       alphAmount: bigint;
@@ -188,7 +189,7 @@ export namespace Deposit {
     signer: SignerProvider,
     params: ExecuteScriptParams<{
       tokenBridgeForChain: HexString;
-      payer: HexString;
+      payer: Address;
       amount: bigint;
     }>
   ): Promise<ExecuteScriptResult> {
@@ -217,7 +218,7 @@ export namespace RegisterChain {
   export async function execute(
     signer: SignerProvider,
     params: ExecuteScriptParams<{
-      payer: HexString;
+      payer: Address;
       tokenBridge: HexString;
       vaa: HexString;
       alphAmount: bigint;
@@ -235,7 +236,7 @@ export namespace TransferLocal {
     signer: SignerProvider,
     params: ExecuteScriptParams<{
       tokenBridge: HexString;
-      fromAddress: HexString;
+      fromAddress: Address;
       localTokenId: HexString;
       alphChainId: bigint;
       toChainId: bigint;
@@ -258,7 +259,7 @@ export namespace TransferRemote {
     signer: SignerProvider,
     params: ExecuteScriptParams<{
       tokenBridge: HexString;
-      fromAddress: HexString;
+      fromAddress: Address;
       tokenPoolId: HexString;
       remoteTokenId: HexString;
       tokenChainId: bigint;

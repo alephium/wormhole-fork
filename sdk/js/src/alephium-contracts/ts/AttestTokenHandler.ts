@@ -64,7 +64,7 @@ class Factory extends ContractFactory<
         AttestTokenHandlerTypes.Fields,
         {
           vaa: HexString;
-          payer: HexString;
+          payer: Address;
           createContractAlphAmount: bigint;
           tokenAmount: bigint;
         }
@@ -75,7 +75,7 @@ class Factory extends ContractFactory<
     createRemoteTokenPool: async (
       params: TestContractParams<
         AttestTokenHandlerTypes.Fields,
-        { vaa: HexString; payer: HexString; createContractAlphAmount: bigint }
+        { vaa: HexString; payer: Address; createContractAlphAmount: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "createRemoteTokenPool", params);

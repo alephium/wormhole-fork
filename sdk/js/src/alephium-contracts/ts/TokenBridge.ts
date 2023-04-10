@@ -35,7 +35,7 @@ export namespace TokenBridgeTypes {
     sendSequence: bigint;
     tokenBridgeFactory: HexString;
     minimalConsistencyLevel: bigint;
-    refundAddress: HexString;
+    refundAddress: Address;
   };
 
   export type State = ContractState<Fields>;
@@ -43,7 +43,7 @@ export namespace TokenBridgeTypes {
   export interface CallMethodTable {
     getRefundAddress: {
       params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<HexString>;
+      result: CallContractResult<Address>;
     };
     getMessageFee: {
       params: Omit<CallContractParams<{}>, "args">;
@@ -85,7 +85,7 @@ class Factory extends ContractFactory<
       params: TestContractParams<
         TokenBridgeTypes.Fields,
         {
-          payer: HexString;
+          payer: Address;
           createContractAlphAmount: bigint;
           remoteChainId: bigint;
           remoteTokenBridgeId: HexString;
@@ -98,7 +98,7 @@ class Factory extends ContractFactory<
     createLocalAttestTokenHandler: async (
       params: TestContractParams<
         TokenBridgeTypes.Fields,
-        { payer: HexString; createContractAlphAmount: bigint }
+        { payer: Address; createContractAlphAmount: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "createLocalAttestTokenHandler", params);
@@ -111,7 +111,7 @@ class Factory extends ContractFactory<
     registerChain: async (
       params: TestContractParams<
         TokenBridgeTypes.Fields,
-        { vaa: HexString; payer: HexString; createContractAlphAmount: bigint }
+        { vaa: HexString; payer: Address; createContractAlphAmount: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "registerChain", params);
@@ -136,7 +136,7 @@ class Factory extends ContractFactory<
         TestContractParams<TokenBridgeTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
+    ): Promise<TestContractResult<Address>> => {
       return testMethod(this, "getRefundAddress", params);
     },
     updateRefundAddress: async (
@@ -166,7 +166,7 @@ class Factory extends ContractFactory<
       params: TestContractParams<
         TokenBridgeTypes.Fields,
         {
-          payer: HexString;
+          payer: Address;
           localTokenId: HexString;
           decimals: bigint;
           symbol: HexString;
@@ -192,7 +192,7 @@ class Factory extends ContractFactory<
         {
           localTokenId: HexString;
           decimals: bigint;
-          payer: HexString;
+          payer: Address;
           createContractAlphAmount: bigint;
         }
       >
@@ -209,7 +209,7 @@ class Factory extends ContractFactory<
           symbol: HexString;
           name: HexString;
           msgSequence: bigint;
-          payer: HexString;
+          payer: Address;
           createContractAlphAmount: bigint;
         }
       >
@@ -234,7 +234,7 @@ class Factory extends ContractFactory<
       params: TestContractParams<
         TokenBridgeTypes.Fields,
         {
-          fromAddress: HexString;
+          fromAddress: Address;
           bridgeTokenId: HexString;
           tokenChainId: bigint;
           toChainId: bigint;

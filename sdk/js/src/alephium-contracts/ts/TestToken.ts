@@ -101,7 +101,7 @@ class Factory extends ContractFactory<
     buy: async (
       params: TestContractParams<
         TestTokenTypes.Fields,
-        { from: HexString; amount: bigint; factor: bigint }
+        { from: Address; amount: bigint; factor: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "buy", params);

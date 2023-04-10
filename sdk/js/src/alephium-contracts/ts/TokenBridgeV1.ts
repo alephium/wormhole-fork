@@ -35,7 +35,7 @@ export namespace TokenBridgeV1Types {
     sendSequence: bigint;
     tokenBridgeFactory: HexString;
     minimalConsistencyLevel: bigint;
-    refundAddress: HexString;
+    refundAddress: Address;
   };
 
   export type State = ContractState<Fields>;

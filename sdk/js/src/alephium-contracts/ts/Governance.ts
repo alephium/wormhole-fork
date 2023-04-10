@@ -113,7 +113,7 @@ class Factory extends ContractFactory<
       params: TestContractParams<
         GovernanceTypes.Fields,
         {
-          payer: HexString;
+          payer: Address;
           targetChainId: bigint;
           sequence: bigint;
           nonce: HexString;

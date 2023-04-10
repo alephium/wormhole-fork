@@ -1,6 +1,6 @@
 {
   "name": "alephium-wormhole-sdk",
-  "version": "0.2.0-rc.8",
+  "version": "0.2.0-rc.9",
   "description": "SDK for interacting with Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",
@@ -57,8 +57,8 @@
     "web3": "^1.6.1"
   },
   "dependencies": {
-    "@alephium/web3": "^0.10.0",
-    "@alephium/cli": "^0.10.0",
+    "@alephium/web3": "^0.10.1",
+    "@alephium/cli": "^0.10.1",
     "@alephium/token-list": "0.0.7",
     "@improbable-eng/grpc-web": "^0.14.0",
     "@solana/spl-token": "^0.1.8",

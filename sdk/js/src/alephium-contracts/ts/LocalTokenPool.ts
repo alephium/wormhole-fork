@@ -65,7 +65,7 @@ export namespace LocalTokenPoolTypes {
     };
     transfer: {
       params: CallContractParams<{
-        fromAddress: HexString;
+        fromAddress: Address;
         toAddress: HexString;
         amount: bigint;
         arbiterFee: bigint;
@@ -137,9 +137,9 @@ class Factory extends ContractFactory<
           amount: bigint;
           vaaTokenId: HexString;
           vaaTokenChainId: bigint;
-          recipient: HexString;
+          recipient: Address;
           normalizedArbiterFee: bigint;
-          caller: HexString;
+          caller: Address;
         }
       >
     ): Promise<TestContractResult<null>> => {
@@ -194,7 +194,7 @@ class Factory extends ContractFactory<
       params: TestContractParams<
         LocalTokenPoolTypes.Fields,
         {
-          fromAddress: HexString;
+          fromAddress: Address;
           toAddress: HexString;
           amount: bigint;
           arbiterFee: bigint;
