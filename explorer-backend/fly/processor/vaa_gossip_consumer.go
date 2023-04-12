@@ -61,7 +61,7 @@ func verifyVAA(v *vaa.VAA, addresses []ethCommon.Address) error {
 
 // Push handles incoming VAAs depending on whether it is a pyth or non pyth.
 func (p *vaaGossipConsumer) Push(ctx context.Context, v *vaa.VAA, serializedVaa []byte) error {
-	guardianSet, err := p.guardianSets.GetGuardianSet(int(v.GuardianSetIndex))
+	guardianSet, err := p.guardianSets.GetGuardianSet(ctx, int(v.GuardianSetIndex))
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"fmt"
@@ -100,7 +99,7 @@ func init() {
 	logLevel = rootCmd.Flags().String("logLevel", "debug", "Log level")
 	fetchMissingVaasInterval = rootCmd.Flags().Uint("fetchMissingVaasInterval", 300, "Fetch missing vaas interval")
 	fetchVaaBatchSize = rootCmd.Flags().Uint("fetchVaaBatchSize", 20, "Fetch vaa batch size")
-	fetchGuardianSetInterval = rootCmd.Flags().Uint("fetchGuardianSetInterval", 5, "Fetch guardian set interval")
+	fetchGuardianSetInterval = rootCmd.Flags().Uint("fetchGuardianSetInterval", 900, "Fetch guardian set interval")
 	enableCache = rootCmd.Flags().Bool("enableCache", false, "Enable last sequence cache")
 	redisUri = rootCmd.Flags().String("redisUri", "", "Redis URI(you need to specify this if enableCache is true)")
 	mongodbUri = rootCmd.Flags().String("mongodbUri", "", "Mongodb URI")
@@ -182,7 +181,7 @@ func run(cmd *cobra.Command, args []string) {
 	heartbeatC := make(chan *gossipv1.Heartbeat, 50)
 
 	ethGovernanceAddress := eth_common.HexToAddress(bridgeConfig.Ethereum.CoreEmitterAddress)
-	guardianSetList, err := guardiansets.GetGuardianSetsFromChain(rootCtx, *ethRpcUrl, ethGovernanceAddress)
+	guardianSetList, err := guardiansets.GetGuardianSetsFromChain(rootCtx, *ethRpcUrl, ethGovernanceAddress, 0)
 	if err != nil {
 		logger.Fatal("failed to get guardian sets from chain", zap.Error(err))
 	}
@@ -190,7 +189,6 @@ func run(cmd *cobra.Command, args []string) {
 	guardianSetC := make(chan *common.GuardianSet, 1)
 	guardianSets := guardiansets.NewGuardianSets(
 		guardianSetList,
-		*guardianGrpcUrl,
 		*ethRpcUrl,
 		logger,
 		time.Duration(*fetchGuardianSetInterval)*time.Second,
@@ -361,13 +359,6 @@ func discardMessages[T any](ctx context.Context, obsvReqC chan T) {
 			}
 		}
 	}()
-}
-
-func getEthRpcUrl(url string) string {
-	if strings.HasPrefix(url, "http") {
-		return url
-	}
-	return fmt.Sprintf("http://%s", url)
 }
 
 func main() {
