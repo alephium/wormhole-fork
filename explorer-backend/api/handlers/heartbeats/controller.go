@@ -3,8 +3,6 @@ package heartbeats
 import (
 	"strconv"
 
-	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/guardian"
-	"github.com/alephium/wormhole-fork/explorer-backend/api/response"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
@@ -54,18 +52,9 @@ type HeartbeatNetworkResponse struct {
 
 // GetLastHeartbeats handler for the endpoint /guardian_public_api/v1/heartbeats
 // This endpoint has been migrated from the guardian grpc api.
-func (c *Controller) GetLastHeartbeats(ctx *fiber.Ctx) error {
-	// check guardianSet exists.
-	if len(guardian.ByIndex) == 0 {
-		return response.NewApiError(ctx, fiber.StatusServiceUnavailable, response.Unavailable,
-			"guardian set not fetched from chain yet", nil)
-	}
-	// get lasted guardianSet.
-	guardianSet := guardian.GetLatest()
-	guardianAddresses := guardianSet.KeysAsHexStrings()
-
+func (c *Controller) GetLastHeartbeats(ctx *fiber.Ctx, addresses []string) error {
 	// get last heartbeats by ids.
-	heartbeats, err := c.srv.GetHeartbeatsByIds(ctx.Context(), guardianAddresses)
+	heartbeats, err := c.srv.GetHeartbeatsByIds(ctx.Context(), addresses)
 	if err != nil {
 		return err
 	}

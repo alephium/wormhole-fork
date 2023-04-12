@@ -112,18 +112,20 @@ func run(cmd *cobra.Command, args []string) {
 	obsRepo := observations.NewRepository(db, rootLogger)
 	infraestructureRepo := infraestructure.NewRepository(db, rootLogger)
 	heartbeatsRepo := heartbeats.NewRepository(db, rootLogger)
+	guardianSetRepo := guardian.NewRepository(db, rootLogger)
 
 	// Setup services
 	vaaService := vaa.NewService(vaaRepo, cacheGetFunc, rootLogger)
 	obsService := observations.NewService(obsRepo, rootLogger)
 	infraestructureService := infraestructure.NewService(infraestructureRepo, rootLogger)
 	heartbeatsService := heartbeats.NewService(heartbeatsRepo, rootLogger)
+	guardianService := guardian.NewService(guardianSetRepo, rootLogger)
 
 	// Setup controllers
 	vaaCtrl := vaa.NewController(vaaService, rootLogger)
 	observationsCtrl := observations.NewController(obsService, rootLogger)
 	infraestructureCtrl := infraestructure.NewController(infraestructureService)
-	guardianCtrl := guardian.NewController(rootLogger)
+	guardianCtrl := guardian.NewController(guardianService, rootLogger)
 	heartbeatsCtrl := heartbeats.NewController(heartbeatsService, rootLogger)
 
 	// Setup app with custom error handling.
@@ -166,17 +168,18 @@ func run(cmd *cobra.Command, args []string) {
 	observations.Get("/:emitterChain/:emitterAddress/:targetChain/:sequence", observationsCtrl.FindAllByVAA)
 	observations.Get("/:emitterChain/:emitterAddress/:targetChain/:sequence/:signer/:hash", observationsCtrl.FindOne)
 
-	// v1 guardian public api.
-	publicAPIV1 := app.Group("/guardian_public_api/v1")
-	// signedVAA resource.
-	signedVAA := publicAPIV1.Group("/signed_vaa")
-	signedVAA.Get("/:emitterChain/:emitterAddress/:targetChain/:sequence", vaaCtrl.FindSignedVAAByID)
 	// guardianSet resource.
-	guardianSet := publicAPIV1.Group("/guardianset")
+	guardianSet := api.Group("/guardianset")
 	guardianSet.Get("/current", guardianCtrl.GetGuardianSet)
 	// heartbeats resource.
-	heartbeats := publicAPIV1.Group("/heartbeats")
-	heartbeats.Get("", heartbeatsCtrl.GetLastHeartbeats)
+	heartbeats := api.Group("/heartbeats")
+	heartbeats.Get("", func(ctx *fiber.Ctx) error {
+		gs, err := guardianCtrl.GetCurrentGuardianSet(ctx.Context())
+		if err != nil {
+			return err
+		}
+		return heartbeatsCtrl.GetLastHeartbeats(ctx, gs.Addresses)
+	})
 
 	app.Listen(":" + strconv.Itoa(int(*port)))
 }
