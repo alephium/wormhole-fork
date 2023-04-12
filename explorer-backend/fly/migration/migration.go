@@ -8,68 +8,59 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// TODO: move this to migration tool that support mongodb.
-func Run(db *mongo.Database) error {
-	// Created heartbeats collection.
-	err := db.CreateCollection(context.TODO(), "heartbeats")
+func checkError(err error) error {
 	if err != nil {
 		target := &mongo.CommandError{}
 		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
+		if !isCommandError || err.(mongo.CommandError).Code != 48 { // collection already exists
 			return err
 		}
+	}
+	return nil
+}
+
+func createCollection(db *mongo.Database, name string) error {
+	err := db.CreateCollection(context.TODO(), name)
+	return checkError(err)
+}
+
+// TODO: move this to migration tool that support mongodb.
+func Run(db *mongo.Database) error {
+	// Created guardianset collection
+	if err := createCollection(db, "guardianSets"); err != nil {
+		return err
+	}
+
+	// Created heartbeats collection.
+	if err := createCollection(db, "heartbeats"); err != nil {
+		return err
 	}
 
 	// Created observations collection.
-	err = db.CreateCollection(context.TODO(), "observations")
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if err := createCollection(db, "observations"); err != nil {
+		return err
 	}
 
 	// Created vaaCounts collection.
-	err = db.CreateCollection(context.TODO(), "vaaCounts")
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if err := createCollection(db, "vaaCounts"); err != nil {
+		return err
 	}
 
 	// Create vaas collection.
-	err = db.CreateCollection(context.TODO(), "vaas")
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if err := createCollection(db, "vaas"); err != nil {
+		return err
 	}
 
 	// Create missing vaas collection.
-	err = db.CreateCollection(context.TODO(), "missingVaas")
-	// TODO: improve error handling
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if err := createCollection(db, "missingVaas"); err != nil {
+		return err
 	}
 
 	missingVaaIndexes := mongo.IndexModel{Keys: bson.D{{Key: "indexedAt", Value: -1}}}
 	// create indexes in missing vaas collection
-	_, err = db.Collection("missingVaas").Indexes().CreateOne(context.TODO(), missingVaaIndexes)
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	_, err := db.Collection("missingVaas").Indexes().CreateOne(context.TODO(), missingVaaIndexes)
+	if checkError(err) != nil {
+		return err
 	}
 
 	vaaIndexes := []mongo.IndexModel{
@@ -100,12 +91,8 @@ func Run(db *mongo.Database) error {
 
 	// create indexes in vaas collection
 	_, err = db.Collection("vaas").Indexes().CreateMany(context.TODO(), vaaIndexes)
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if checkError(err) != nil {
+		return err
 	}
 
 	observationIndexes := []mongo.IndexModel{
@@ -127,12 +114,16 @@ func Run(db *mongo.Database) error {
 
 	// create indexes in observations collection
 	_, err = db.Collection("observations").Indexes().CreateMany(context.TODO(), observationIndexes)
-	if err != nil {
-		target := &mongo.CommandError{}
-		isCommandError := errors.As(err, target)
-		if !isCommandError || err.(mongo.CommandError).Code != 48 {
-			return err
-		}
+	if checkError(err) != nil {
+		return err
 	}
+
+	guardianSetIndex := mongo.IndexModel{Keys: bson.D{{Key: "index", Value: 1}}}
+	// create indexes in guardiansets collection
+	_, err = db.Collection("guardianSets").Indexes().CreateOne(context.TODO(), guardianSetIndex)
+	if checkError(err) != nil {
+		return err
+	}
+
 	return nil
 }

@@ -228,6 +228,7 @@ func run(cmd *cobra.Command, args []string) {
 				return
 			case latestGuardianSet := <-guardianSetC:
 				gst.Set(latestGuardianSet)
+				repository.UpsertGuardianSet(latestGuardianSet)
 			case o := <-obsvC:
 				ok := verifyObservation(logger, o, gst.Get())
 				if !ok {

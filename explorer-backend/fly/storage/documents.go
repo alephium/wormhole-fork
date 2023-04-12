@@ -64,3 +64,8 @@ type MongoConnections struct {
 	Available    int32 `bson:"available"`
 	TotalCreated int32 `bson:"totalCreated"`
 }
+
+type GuardianSetDoc struct {
+	Addresses []string `bson:"addresses"`
+	Index     uint32   `bson:"index"`
+}

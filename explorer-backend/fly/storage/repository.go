@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alephium/wormhole-fork/node/pkg/common"
 	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	eth_common "github.com/ethereum/go-ethereum/common"
@@ -31,6 +32,7 @@ type Repository struct {
 		heartbeats   *mongo.Collection
 		observations *mongo.Collection
 		vaaCounts    *mongo.Collection
+		guardianSets *mongo.Collection
 	}
 }
 
@@ -43,12 +45,14 @@ func NewRepository(db *mongo.Database, log *zap.Logger, governanceChain vaa.Chai
 		heartbeats   *mongo.Collection
 		observations *mongo.Collection
 		vaaCounts    *mongo.Collection
+		guardianSets *mongo.Collection
 	}{
 		vaas:         db.Collection("vaas"),
 		missingVaas:  db.Collection("missingVaas"),
 		heartbeats:   db.Collection("heartbeats"),
 		observations: db.Collection("observations"),
-		vaaCounts:    db.Collection("vaaCounts")}}
+		vaaCounts:    db.Collection("vaaCounts"),
+		guardianSets: db.Collection("guardianSets")}}
 }
 
 func (s *Repository) getMissingSequences(ctx context.Context, emitterId *emitterId, sequence uint64) ([]uint64, error) {
@@ -316,6 +320,22 @@ func (s *Repository) UpsertObservation(o *gossipv1.SignedObservation) error {
 	if err != nil {
 		s.log.Error("Error inserting observation", zap.Error(err))
 	}
+	return err
+}
+
+func (s *Repository) UpsertGuardianSet(gs *common.GuardianSet) error {
+	addresses := make([]string, len(gs.Keys))
+	for i, key := range gs.Keys {
+		addresses[i] = key.Hex()
+	}
+	doc := &GuardianSetDoc{
+		Addresses: addresses,
+		Index:     gs.Index,
+	}
+	filter := bson.D{{Key: "index", Value: doc.Index}}
+	update := bson.D{{Key: "$set", Value: doc}}
+	opts := options.Update().SetUpsert(true)
+	_, err := s.collections.guardianSets.UpdateOne(context.Background(), filter, update, opts)
 	return err
 }
 

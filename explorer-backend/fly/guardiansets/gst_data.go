@@ -33,7 +33,7 @@ func NewGuardianSets(
 	ethGovernanceAddress eth_common.Address,
 	guardianSetC chan<- *common.GuardianSet,
 ) *GuardianSets {
-	return &GuardianSets{
+	gs := &GuardianSets{
 		lock:                    sync.Mutex{},
 		currentGuardianSetIndex: len(guardianSets) - 1,
 		guardianSetLists:        guardianSets,
@@ -43,6 +43,8 @@ func NewGuardianSets(
 		ethGovernanceAddress:    ethGovernanceAddress,
 		guardianSetC:            guardianSetC,
 	}
+	guardianSetC <- gs.GetCurrentGuardianSet()
+	return gs
 }
 
 func (gs *GuardianSets) GetGuardianSet(ctx context.Context, index int) (*common.GuardianSet, error) {
