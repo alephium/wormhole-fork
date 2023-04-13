@@ -7,6 +7,8 @@ import (
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
+	"github.com/alephium/wormhole-fork/node/pkg/p2p"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 type Request[T any] interface {
@@ -17,6 +19,7 @@ func requestWithMetric[T any](req Request[T], timestamp *time.Time, label string
 	result, response, err := req.Execute()
 	queryLatency.WithLabelValues(label).Observe(time.Since(*timestamp).Seconds())
 	if err != nil {
+		p2p.DefaultRegistry.AddErrorCount(vaa.ChainIDAlephium, 1)
 		alphConnectionErrors.WithLabelValues(label).Inc()
 	}
 	return result, response, err

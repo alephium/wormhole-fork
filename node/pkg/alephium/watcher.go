@@ -281,6 +281,10 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 
 			previousHeight := atomic.LoadInt32(&w.currentHeight)
 			if *height != previousHeight {
+				p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
+					ContractAddress: w.governanceContractAddress,
+					Height:          int64(*height),
+				})
 				currentAlphHeight.Set(float64(*height))
 				atomic.StoreInt32(&w.currentHeight, *height)
 				heightC <- *height
