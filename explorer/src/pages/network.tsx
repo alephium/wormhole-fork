@@ -17,10 +17,6 @@ import HeroText from "../components/HeroText";
 import Layout from "../components/Layout";
 import shape1 from "../images/index/shape2.svg";
 import { Heartbeat } from "alephium-wormhole-sdk/lib/esm/proto/gossip/v1/gossip";
-import {
-  GrpcWebImpl,
-  PublicRPCServiceClientImpl,
-} from "alephium-wormhole-sdk/lib/esm/proto/publicrpc/v1/publicrpc";
 import ReactTimeAgo from "react-time-ago";
 import NetworkSelect from "../components/NetworkSelect";
 import { useNetworkContext } from "../contexts/NetworkContext";
@@ -128,22 +124,25 @@ const GuardiansList = () => {
 
   React.useEffect(() => {
     let cancelled = false;
-    const rpc = new GrpcWebImpl(
-      String(activeNetwork.endpoints.guardianRpcBase),
-      {}
-    );
-    const publicRpc = new PublicRPCServiceClientImpl(rpc);
+    const url = `${activeNetwork.endpoints.backendUrl}api/heartbeats`
     const interval = setInterval(() => {
       (async () => {
         try {
-          const response = await publicRpc.GetLastHeartbeats({});
-          if (!cancelled) {
-            response.entries.map((entry) =>
-              entry.rawHeartbeat
-                ? addHeartbeat(activeNetwork.name, entry.rawHeartbeat)
-                : null
-            );
+          const res = await fetch(url)
+          if (res.ok) {
+            const json = await res.json()
+            if (!cancelled) {
+              json.entries.map((entry: any) =>
+                entry.rawHeartbeat
+                  ? addHeartbeat(activeNetwork.name, entry.rawHeartbeat)
+                  : null
+              )
+            }
           }
+          if (res.status === 404) {
+            throw 'explorer.notFound'
+          }
+          throw 'explorer.failedFetching'
         } catch (e) {
           console.error("GetLastHeartbeats error:", e);
         }

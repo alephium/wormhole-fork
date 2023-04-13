@@ -10,9 +10,6 @@ import { default as alephiumMainnetConfig } from '../../../configs/alephium/main
 import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
-import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
-import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
-import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
 export const chainEnums = [
   "",
@@ -207,25 +204,21 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
 
 export interface NetworkConfig {
   backendUrl: string;
-  guardianRpcBase: string;
 }
 export const endpoints: { [network: string]: NetworkConfig } = {
   devnet: {
     backendUrl: String(
       process.env.GATSBY_DEVNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianDevnetConfig.guardianUrls as string[])[0],
   },
   testnet: {
     backendUrl: String(
       process.env.GATSBY_TESTNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianTestnetConfig.guardianUrls as string[])[0],
   },
   mainnet: {
     backendUrl: String(
       process.env.GATSBY_MAINNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianMainnetConfig.guardianUrls as string[])[0],
   },
 };

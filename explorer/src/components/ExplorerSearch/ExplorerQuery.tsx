@@ -181,7 +181,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         }
 
         fetch(url)
-            .then<Response>(res => {
+            .then(res => {
                 if (res.ok) return res.json()
                 if (res.status === 404) {
                     // show a specific message to the user if the query returned 404.
