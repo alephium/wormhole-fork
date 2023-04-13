@@ -26,4 +26,3 @@ bigtable-writer.json
 /solana/artifacts-mainnet/
 go.work
 go.work.sum
-**/.deployments.*.json

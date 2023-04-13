@@ -212,7 +212,7 @@ export const LocalTokenPool = new Factory(
   Contract.fromJson(
     LocalTokenPoolContractJson,
     "",
-    "c4d692cf35e935517d6057381da21cd17a346c77b1b66753c36c51ecdb59a167"
+    "6330d3736eef41d3bc9c5026d0608def44267cc00ed8d8be0620d01f4627f035"
   )
 );
 
