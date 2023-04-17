@@ -24,6 +24,18 @@ type VaaUpdate struct {
 	UpdatedAt        *time.Time  `bson:"updatedAt"`
 }
 
+type TokenUpdate struct {
+	ID              string      `bson:"_id"`
+	TokenAddress    string      `bson:"tokenAddress"`
+	TokenChain      vaa.ChainID `bson:"tokenChain"`
+	Decimals        uint8       `bson:"decimals"`
+	Symbol          string      `bson:"symbol"`
+	Name            string      `bson:"name"`
+	NativeAddress   string      `bson:"nativeAddress"`
+	CoinGeckoCoinId string      `bson:"coinGeckoCoinId"`
+	UpdatedAt       *time.Time  `bson:"updatedAt"`
+}
+
 type MissingVaaUpdate struct {
 	ID string `bson:"_id"`
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alephium/wormhole-fork/explorer-backend/fly/utils"
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -18,6 +19,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
+
+const AttestTokenPayloadId = 2
 
 // TODO separate and maybe share between fly and web
 type Repository struct {
@@ -33,6 +36,7 @@ type Repository struct {
 		observations *mongo.Collection
 		vaaCounts    *mongo.Collection
 		guardianSets *mongo.Collection
+		tokens       *mongo.Collection
 	}
 }
 
@@ -46,13 +50,16 @@ func NewRepository(db *mongo.Database, log *zap.Logger, governanceChain vaa.Chai
 		observations *mongo.Collection
 		vaaCounts    *mongo.Collection
 		guardianSets *mongo.Collection
+		tokens       *mongo.Collection
 	}{
 		vaas:         db.Collection("vaas"),
 		missingVaas:  db.Collection("missingVaas"),
 		heartbeats:   db.Collection("heartbeats"),
 		observations: db.Collection("observations"),
 		vaaCounts:    db.Collection("vaaCounts"),
-		guardianSets: db.Collection("guardianSets")}}
+		guardianSets: db.Collection("guardianSets"),
+		tokens:       db.Collection("tokens"),
+	}}
 }
 
 func (s *Repository) getMissingSequences(ctx context.Context, emitterId *emitterId, sequence uint64) ([]uint64, error) {
@@ -141,6 +148,9 @@ func (s *Repository) upsertVaa(ctx context.Context, v *vaa.VAA, serialized []byt
 		s.log.Warn("failed to get the tx id", zap.String("messageId", id), zap.Error(err))
 	}
 	now := time.Now()
+	if err = s.processVaa(ctx, v, &now); err != nil {
+		s.log.Error("failed to process vaa", zap.String("messageId", id), zap.Error(err))
+	}
 	vaaDoc := VaaUpdate{
 		ID:               id,
 		Timestamp:        &v.Timestamp,
@@ -166,6 +176,52 @@ func (s *Repository) upsertVaa(ctx context.Context, v *vaa.VAA, serialized []byt
 	if err == nil && s.isNewRecord(result) {
 		s.updateVAACount(v.EmitterChain)
 	}
+	return err
+}
+
+func (s *Repository) processVaa(ctx context.Context, v *vaa.VAA, now *time.Time) error {
+	if v.EmitterChain == s.governanceChain && v.EmitterAddress == s.governanceEmitter {
+		return nil
+	}
+	switch v.Payload[0] {
+	case AttestTokenPayloadId:
+		attestToken, err := DecodeAttestToken(v.Payload)
+		if err != nil {
+			return err
+		}
+		return s.upsertToken(ctx, v, attestToken, now)
+	default:
+		return fmt.Errorf("unknown payload id %v", v.Payload[0])
+	}
+}
+
+func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *AttestToken, now *time.Time) error {
+	id := v.MessageID()
+	nativeAddress, err := toNativeAddress(attestToken.TokenChain, attestToken.TokenAddress)
+	if err != nil {
+		return err
+	}
+	coin := utils.FetchCoinGeckoCoin(attestToken.TokenChain, attestToken.Symbol, attestToken.Name)
+	tokenDoc := TokenUpdate{
+		ID:            id,
+		TokenAddress:  hex.EncodeToString(attestToken.TokenAddress[:]),
+		TokenChain:    attestToken.TokenChain,
+		Decimals:      attestToken.Decimals,
+		NativeAddress: nativeAddress,
+		UpdatedAt:     now,
+	}
+	if coin != nil {
+		tokenDoc.Symbol = coin.Symbol
+		tokenDoc.Name = coin.Name
+		tokenDoc.CoinGeckoCoinId = coin.Id
+	} else {
+		tokenDoc.Symbol = attestToken.Symbol
+		tokenDoc.Name = attestToken.Name
+		tokenDoc.CoinGeckoCoinId = ""
+	}
+	update := bson.D{{Key: "$set", Value: tokenDoc}}
+	opts := options.Update().SetUpsert(true)
+	_, err = s.collections.tokens.UpdateByID(context.TODO(), id, update, opts)
 	return err
 }
 

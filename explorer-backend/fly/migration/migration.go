@@ -31,6 +31,11 @@ func Run(db *mongo.Database) error {
 		return err
 	}
 
+	// Created tokens collection
+	if err := createCollection(db, "tokens"); err != nil {
+		return err
+	}
+
 	// Created heartbeats collection.
 	if err := createCollection(db, "heartbeats"); err != nil {
 		return err
@@ -121,6 +126,12 @@ func Run(db *mongo.Database) error {
 	guardianSetIndex := mongo.IndexModel{Keys: bson.D{{Key: "index", Value: 1}}}
 	// create indexes in guardiansets collection
 	_, err = db.Collection("guardianSets").Indexes().CreateOne(context.TODO(), guardianSetIndex)
+	if checkError(err) != nil {
+		return err
+	}
+
+	tokenIdIndex := mongo.IndexModel{Keys: bson.D{{Key: "tokenId", Value: 1}}}
+	_, err = db.Collection("tokens").Indexes().CreateOne(context.TODO(), tokenIdIndex)
 	if checkError(err) != nil {
 		return err
 	}
