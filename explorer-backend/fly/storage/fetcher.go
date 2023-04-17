@@ -7,6 +7,7 @@ import (
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	publicrpcv1 "github.com/alephium/wormhole-fork/node/pkg/proto/publicrpc/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -109,7 +110,7 @@ func (f *Fetcher) start(ctx context.Context) {
 		select {
 		case <-tick.C:
 			for _, emitterId := range f.emitterIds {
-				if err := f.fetchMissingVaas(ctx, client, emitterId); err != nil {
+				if err := f.tryFetchMissingVaas(ctx, client, emitterId); err != nil {
 					f.logger.Error(
 						"failed to fetch missing vaas",
 						zap.Error(err),
@@ -122,6 +123,25 @@ func (f *Fetcher) start(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (f *Fetcher) tryFetchMissingVaas(
+	ctx context.Context,
+	client publicrpcv1.PublicRPCServiceClient,
+	emitterId *emitterId,
+) error {
+	err := f.fetchMissingVaas(ctx, client, emitterId)
+	if err != nil {
+		return err
+	}
+	count, err := f.repository.collections.missingVaas.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return f.tryFetchMissingVaas(ctx, client, emitterId)
+	}
+	return nil
 }
 
 func (f *Fetcher) fetchMissingVaas(
