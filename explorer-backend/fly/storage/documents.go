@@ -36,6 +36,20 @@ type TokenUpdate struct {
 	UpdatedAt       *time.Time  `bson:"updatedAt"`
 }
 
+type TokenTransferUpdate struct {
+	ID           string      `bson:"_id"`
+	EmitterChain vaa.ChainID `bson:"emitterChain"`
+	EmitterAddr  string      `bson:"emitterAddr"`
+	TargetChain  vaa.ChainID `bson:"targetChain"`
+	TokenAddress string      `bson:"tokenAddress"`
+	TokenChain   vaa.ChainID `bson:"tokenChain"`
+	ToAddress    string      `bson:"toAddress"`
+	Amount       string      `bson:"amount"`
+	NotionalUSD  string      `bson:"notionalUSD"`
+	PriceUSD     string      `bson:"priceUSD"`
+	Timestamp    *time.Time  `bson:"timestamp"`
+}
+
 type MissingVaaUpdate struct {
 	ID string `bson:"_id"`
 }

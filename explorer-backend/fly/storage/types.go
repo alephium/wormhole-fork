@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -46,6 +47,13 @@ type AttestToken struct {
 	Name         string
 }
 
+type TokenTransfer struct {
+	Amount        big.Int
+	TokenAddress  vaa.Address
+	TokenChain    vaa.ChainID
+	TargetAddress []byte
+}
+
 func DecodeAttestToken(data []byte) (*AttestToken, error) {
 	var attestToken AttestToken
 	reader := bytes.NewReader(data[1:])
@@ -74,6 +82,38 @@ func DecodeAttestToken(data []byte) (*AttestToken, error) {
 	attestToken.Name = bytesToString(nameBytes)
 
 	return &attestToken, nil
+}
+
+func DecodeTokenTransfer(data []byte) (*TokenTransfer, error) {
+	var tokenTransfer TokenTransfer
+	reader := bytes.NewReader(data[1:])
+
+	amountBytes := make([]byte, 32)
+	if err := binary.Read(reader, binary.BigEndian, &amountBytes); err != nil {
+		return nil, fmt.Errorf("failed to read Amount: %w", err)
+	}
+	tokenTransfer.Amount.SetBytes(amountBytes)
+
+	if n, err := reader.Read(tokenTransfer.TokenAddress[:]); err != nil || n != 32 {
+		return nil, fmt.Errorf("failed to read OriginAddress: %w", err)
+	}
+
+	if err := binary.Read(reader, binary.BigEndian, &tokenTransfer.TokenChain); err != nil {
+		return nil, fmt.Errorf("failed to read OriginChain: %w", err)
+	}
+
+	var targetAddressSize uint16
+	if err := binary.Read(reader, binary.BigEndian, &targetAddressSize); err != nil {
+		return nil, fmt.Errorf("failed to read TargetAddressSize: %w", err)
+	}
+
+	targetAddress := make([]byte, targetAddressSize)
+	if err := binary.Read(reader, binary.BigEndian, &targetAddress); err != nil {
+		return nil, fmt.Errorf("failed to read TargetAddress: %w", err)
+	}
+	tokenTransfer.TargetAddress = targetAddress
+
+	return &tokenTransfer, nil
 }
 
 func bytesToString(bs []byte) string {

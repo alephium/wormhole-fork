@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
@@ -72,4 +73,70 @@ func FetchCoinGeckoCoin(chainId vaa.ChainID, symbol, name string) *CoinGeckoCoin
 		}
 	}
 	return nil
+}
+
+type CoinGeckoMarket [2]float64
+
+type CoinGeckoMarketRes struct {
+	Prices []CoinGeckoMarket `json:"prices"`
+}
+
+type CoinGeckoErrorRes struct {
+	Error string `json:"error"`
+}
+
+func rangeFromTime(t time.Time, hours int) (start time.Time, end time.Time) {
+	duration := time.Duration(hours) * time.Hour
+	return t.Add(-duration), t.Add(duration)
+}
+
+func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
+	hourAgo := time.Now().Add(-time.Duration(1) * time.Hour)
+	withinLastHour := timestamp.After(hourAgo)
+	start, end := rangeFromTime(timestamp, 12)
+
+	priceUrl := fmt.Sprintf("%vcoins/%v/market_chart/range?vs_currency=usd&from=%v&to=%v", coinGeckoUrl, coinId, start.Unix(), end.Unix())
+	req, reqErr := http.NewRequest("GET", priceUrl, nil)
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	res, resErr := http.DefaultClient.Do(req)
+	if resErr != nil {
+		return nil, resErr
+	}
+	if res.StatusCode >= 400 {
+		return nil, fmt.Errorf("failed to get CoinGecko prices")
+	}
+
+	defer res.Body.Close()
+	body, bodyErr := ioutil.ReadAll(res.Body)
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+
+	var parsed CoinGeckoMarketRes
+	parseErr := json.Unmarshal(body, &parsed)
+	if parseErr != nil {
+		var errRes CoinGeckoErrorRes
+		if err := json.Unmarshal(body, &errRes); err == nil {
+			return nil, fmt.Errorf(errRes.Error)
+		}
+		return nil, parseErr
+	}
+	if len(parsed.Prices) >= 1 {
+		var priceIndex int
+		if withinLastHour {
+			// use the last price in the list, latest price
+			priceIndex = len(parsed.Prices) - 1
+		} else {
+			// use a price from the middle of the list, as that should be
+			// closest to the timestamp.
+			numPrices := len(parsed.Prices)
+			priceIndex = numPrices / 2
+		}
+		price := parsed.Prices[priceIndex][1]
+		return &price, nil
+	}
+	return nil, fmt.Errorf("no price found for %v", coinId)
 }

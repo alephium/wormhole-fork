@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
+const TokenTransferPayloadId = 1
 const AttestTokenPayloadId = 2
 
 // TODO separate and maybe share between fly and web
@@ -30,13 +32,14 @@ type Repository struct {
 	governanceEmitter vaa.Address
 	cache             *sequencesCache
 	collections       struct {
-		vaas         *mongo.Collection
-		missingVaas  *mongo.Collection
-		heartbeats   *mongo.Collection
-		observations *mongo.Collection
-		vaaCounts    *mongo.Collection
-		guardianSets *mongo.Collection
-		tokens       *mongo.Collection
+		vaas           *mongo.Collection
+		missingVaas    *mongo.Collection
+		heartbeats     *mongo.Collection
+		observations   *mongo.Collection
+		vaaCounts      *mongo.Collection
+		guardianSets   *mongo.Collection
+		tokens         *mongo.Collection
+		tokenTransfers *mongo.Collection
 	}
 }
 
@@ -44,21 +47,23 @@ type Repository struct {
 func NewRepository(db *mongo.Database, log *zap.Logger, governanceChain vaa.ChainID, governanceEmitter vaa.Address) *Repository {
 	cache := newSequencesCache()
 	return &Repository{db, log, governanceChain, governanceEmitter, cache, struct {
-		vaas         *mongo.Collection
-		missingVaas  *mongo.Collection
-		heartbeats   *mongo.Collection
-		observations *mongo.Collection
-		vaaCounts    *mongo.Collection
-		guardianSets *mongo.Collection
-		tokens       *mongo.Collection
+		vaas           *mongo.Collection
+		missingVaas    *mongo.Collection
+		heartbeats     *mongo.Collection
+		observations   *mongo.Collection
+		vaaCounts      *mongo.Collection
+		guardianSets   *mongo.Collection
+		tokens         *mongo.Collection
+		tokenTransfers *mongo.Collection
 	}{
-		vaas:         db.Collection("vaas"),
-		missingVaas:  db.Collection("missingVaas"),
-		heartbeats:   db.Collection("heartbeats"),
-		observations: db.Collection("observations"),
-		vaaCounts:    db.Collection("vaaCounts"),
-		guardianSets: db.Collection("guardianSets"),
-		tokens:       db.Collection("tokens"),
+		vaas:           db.Collection("vaas"),
+		missingVaas:    db.Collection("missingVaas"),
+		heartbeats:     db.Collection("heartbeats"),
+		observations:   db.Collection("observations"),
+		vaaCounts:      db.Collection("vaaCounts"),
+		guardianSets:   db.Collection("guardianSets"),
+		tokens:         db.Collection("tokens"),
+		tokenTransfers: db.Collection("tokenTransfers"),
 	}}
 }
 
@@ -184,6 +189,12 @@ func (s *Repository) processVaa(ctx context.Context, v *vaa.VAA, now *time.Time)
 		return nil
 	}
 	switch v.Payload[0] {
+	case TokenTransferPayloadId:
+		tokenTransfer, err := DecodeTokenTransfer(v.Payload)
+		if err != nil {
+			return err
+		}
+		return s.upsertTokenTransfer(ctx, v, tokenTransfer, now)
 	case AttestTokenPayloadId:
 		attestToken, err := DecodeAttestToken(v.Payload)
 		if err != nil {
@@ -195,6 +206,67 @@ func (s *Repository) processVaa(ctx context.Context, v *vaa.VAA, now *time.Time)
 	}
 }
 
+func calcNotionalAmount(amount *big.Int, decimals uint8, price float64) *big.Float {
+	// transfers created by the bridge UI will have at most 8 decimals.
+	if decimals > 8 {
+		decimals = 8
+	}
+	unit := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	result := big.NewFloat(0).SetInt(amount)
+	result.Quo(result, big.NewFloat(0).SetInt(unit))
+	result.Mul(result, big.NewFloat(price))
+	return result
+}
+
+func (s *Repository) upsertTokenTransfer(ctx context.Context, v *vaa.VAA, tokenTransfer *TokenTransfer, now *time.Time) error {
+	id := v.MessageID()
+	tokenAddress := strings.ToLower(hex.EncodeToString(tokenTransfer.TokenAddress[:]))
+	tokenDoc, err := s.getToken(ctx, tokenAddress)
+	if err != nil {
+		return fmt.Errorf("the token does not exist, address: %v, chainId: %v", tokenAddress, tokenTransfer.TokenChain)
+	}
+	if tokenDoc.CoinGeckoCoinId == "" {
+		return fmt.Errorf("cannot get token info from coingecko")
+	}
+	timestamp := v.Timestamp.UTC()
+	price, err := utils.FetchCoinGeckoPrice(tokenDoc.CoinGeckoCoinId, timestamp)
+	if err != nil {
+		return err
+	}
+	notionalUSD := calcNotionalAmount(&tokenTransfer.Amount, tokenDoc.Decimals, *price)
+	tokenTransferDoc := TokenTransferUpdate{
+		ID:           id,
+		EmitterChain: v.EmitterChain,
+		EmitterAddr:  hex.EncodeToString(v.EmitterAddress[:]),
+		TargetChain:  v.TargetChain,
+		TokenAddress: tokenAddress,
+		TokenChain:   tokenDoc.TokenChain,
+		ToAddress:    hex.EncodeToString(tokenTransfer.TargetAddress),
+		Amount:       tokenTransfer.Amount.String(),
+		NotionalUSD:  notionalUSD.String(),
+		PriceUSD:     fmt.Sprintf("%v", *price),
+		Timestamp:    &v.Timestamp,
+	}
+	update := bson.D{{Key: "$set", Value: tokenTransferDoc}}
+	opts := options.Update().SetUpsert(true)
+	_, err = s.collections.tokenTransfers.UpdateByID(context.TODO(), id, update, opts)
+	return err
+}
+
+func (s *Repository) getToken(ctx context.Context, tokenAddress string) (*TokenUpdate, error) {
+	filter := bson.D{{Key: "tokenAddress", Value: tokenAddress}}
+	result := s.collections.tokens.FindOne(ctx, filter)
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	var doc TokenUpdate
+	if err := result.Decode(&doc); err != nil {
+		return nil, err
+	}
+
+	return &doc, nil
+}
+
 func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *AttestToken, now *time.Time) error {
 	id := v.MessageID()
 	nativeAddress, err := toNativeAddress(attestToken.TokenChain, attestToken.TokenAddress)
@@ -204,7 +276,7 @@ func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *A
 	coin := utils.FetchCoinGeckoCoin(attestToken.TokenChain, attestToken.Symbol, attestToken.Name)
 	tokenDoc := TokenUpdate{
 		ID:            id,
-		TokenAddress:  hex.EncodeToString(attestToken.TokenAddress[:]),
+		TokenAddress:  strings.ToLower(hex.EncodeToString(attestToken.TokenAddress[:])),
 		TokenChain:    attestToken.TokenChain,
 		Decimals:      attestToken.Decimals,
 		NativeAddress: nativeAddress,
