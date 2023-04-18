@@ -135,8 +135,8 @@ func Run(db *mongo.Database) error {
 		return err
 	}
 
-	tokenIdIndex := mongo.IndexModel{Keys: bson.D{{Key: "tokenId", Value: 1}}}
-	_, err = db.Collection("tokens").Indexes().CreateOne(context.TODO(), tokenIdIndex)
+	tokenAddressIndex := mongo.IndexModel{Keys: bson.D{{Key: "tokenAddress", Value: 1}}}
+	_, err = db.Collection("tokens").Indexes().CreateOne(context.TODO(), tokenAddressIndex)
 	if checkError(err) != nil {
 		return err
 	}

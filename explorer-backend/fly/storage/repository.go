@@ -221,7 +221,8 @@ func calcNotionalAmount(amount *big.Int, decimals uint8, price float64) *big.Flo
 func (s *Repository) upsertTokenTransfer(ctx context.Context, v *vaa.VAA, tokenTransfer *TokenTransfer, now *time.Time) error {
 	id := v.MessageID()
 	tokenAddress := strings.ToLower(hex.EncodeToString(tokenTransfer.TokenAddress[:]))
-	tokenDoc, err := s.getToken(ctx, tokenAddress)
+	s.log.Debug("new token transfer vaa", zap.String("tokenAddress", tokenAddress), zap.Uint16("tokenChain", uint16(tokenTransfer.TokenChain)), zap.String("amount", tokenTransfer.Amount.String()))
+	tokenDoc, err := s.getToken(ctx, tokenAddress, tokenTransfer.TokenChain)
 	if err != nil {
 		return fmt.Errorf("the token does not exist, address: %v, chainId: %v", tokenAddress, tokenTransfer.TokenChain)
 	}
@@ -253,8 +254,8 @@ func (s *Repository) upsertTokenTransfer(ctx context.Context, v *vaa.VAA, tokenT
 	return err
 }
 
-func (s *Repository) getToken(ctx context.Context, tokenAddress string) (*TokenUpdate, error) {
-	filter := bson.D{{Key: "tokenAddress", Value: tokenAddress}}
+func (s *Repository) getToken(ctx context.Context, tokenAddress string, tokenChain vaa.ChainID) (*TokenUpdate, error) {
+	filter := bson.D{{Key: "_id", Value: getTokenId(tokenAddress, tokenChain)}}
 	result := s.collections.tokens.FindOne(ctx, filter)
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -267,8 +268,14 @@ func (s *Repository) getToken(ctx context.Context, tokenAddress string) (*TokenU
 	return &doc, nil
 }
 
+func getTokenId(address string, tokenChain vaa.ChainID) string {
+	return fmt.Sprintf("%v:%v", address, tokenChain)
+}
+
 func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *AttestToken, now *time.Time) error {
-	id := v.MessageID()
+	tokenAddress := strings.ToLower(hex.EncodeToString(attestToken.TokenAddress[:]))
+	s.log.Debug("new attest token vaa", zap.String("tokenAddress", tokenAddress), zap.Uint16("tokenChain", uint16(attestToken.TokenChain)))
+	id := getTokenId(tokenAddress, attestToken.TokenChain)
 	nativeAddress, err := toNativeAddress(attestToken.TokenChain, attestToken.TokenAddress)
 	if err != nil {
 		return err
@@ -276,7 +283,7 @@ func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *A
 	coin := utils.FetchCoinGeckoCoin(attestToken.TokenChain, attestToken.Symbol, attestToken.Name)
 	tokenDoc := TokenUpdate{
 		ID:            id,
-		TokenAddress:  strings.ToLower(hex.EncodeToString(attestToken.TokenAddress[:])),
+		TokenAddress:  tokenAddress,
 		TokenChain:    attestToken.TokenChain,
 		Decimals:      attestToken.Decimals,
 		NativeAddress: nativeAddress,

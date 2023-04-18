@@ -47,7 +47,7 @@ func fetchCoinGeckoCoins() map[string][]CoinGeckoCoin {
 	var parsed []CoinGeckoCoin
 	parseErr := json.Unmarshal(body, &parsed)
 	if parseErr != nil {
-		log.Printf("fetchCoinGeckoCoins failed parsing body. err %v\n", parseErr)
+		log.Fatalf("fetchCoinGeckoCoins failed parsing body. err %v\n", parseErr)
 	}
 
 	var geckoCoins = map[string][]CoinGeckoCoin{}
@@ -91,10 +91,7 @@ func rangeFromTime(t time.Time, hours int) (start time.Time, end time.Time) {
 }
 
 func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
-	hourAgo := time.Now().Add(-time.Duration(1) * time.Hour)
-	withinLastHour := timestamp.After(hourAgo)
 	start, end := rangeFromTime(timestamp, 12)
-
 	priceUrl := fmt.Sprintf("%vcoins/%v/market_chart/range?vs_currency=usd&from=%v&to=%v", coinGeckoUrl, coinId, start.Unix(), end.Unix())
 	req, reqErr := http.NewRequest("GET", priceUrl, nil)
 	if reqErr != nil {
@@ -125,6 +122,8 @@ func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
 		return nil, parseErr
 	}
 	if len(parsed.Prices) >= 1 {
+		hourAgo := time.Now().Add(-time.Duration(1) * time.Hour)
+		withinLastHour := timestamp.After(hourAgo)
 		var priceIndex int
 		if withinLastHour {
 			// use the last price in the list, latest price
