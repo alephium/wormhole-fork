@@ -42,12 +42,27 @@ type TokenTransferUpdate struct {
 	EmitterAddr  string      `bson:"emitterAddr"`
 	TargetChain  vaa.ChainID `bson:"targetChain"`
 	TokenAddress string      `bson:"tokenAddress"`
+	Symbol       string      `bson:"symbol"`
 	TokenChain   vaa.ChainID `bson:"tokenChain"`
 	ToAddress    string      `bson:"toAddress"`
 	Amount       string      `bson:"amount"`
-	NotionalUSD  string      `bson:"notionalUSD"`
+	NotionalUSD  float64     `bson:"notionalUSD"`
 	PriceUSD     string      `bson:"priceUSD"`
 	Timestamp    *time.Time  `bson:"timestamp"`
+}
+
+type StatisticUpdate struct {
+	ID                  string      `bson:"_id"`
+	Date                *time.Time  `bson:"date"`
+	EmitterChain        vaa.ChainID `bson:"emitterChain"`
+	EmitterAddr         string      `bson:"emitterAddr"`
+	TargetChain         vaa.ChainID `bson:"targetChain"`
+	TokenChain          vaa.ChainID `bson:"tokenChain"`
+	TokenAddress        string      `bson:"tokenAddress"`
+	TotalVAACount       uint32      `bson:"totalVAACount"`
+	TotalTransferAmount string      `bson:"totalTransferAmount"`
+	TotalNotionalUSD    float64     `bson:"totalNotionalUSD"`
+	UpdatedAt           *time.Time  `bson:"updatedAt"`
 }
 
 type MissingVaaUpdate struct {

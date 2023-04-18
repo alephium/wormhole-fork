@@ -14,6 +14,7 @@ import (
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/processor"
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/server"
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/storage"
+	"github.com/alephium/wormhole-fork/explorer-backend/fly/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
 
@@ -81,6 +82,7 @@ var (
 	fetchMissingVaasInterval *uint
 	fetchVaaBatchSize        *uint
 	fetchGuardianSetInterval *uint
+	statInterval             *uint
 	enableCache              *bool
 	redisUri                 *string
 	mongodbUri               *string
@@ -100,6 +102,7 @@ func init() {
 	fetchMissingVaasInterval = rootCmd.Flags().Uint("fetchMissingVaasInterval", 300, "Fetch missing vaas interval")
 	fetchVaaBatchSize = rootCmd.Flags().Uint("fetchVaaBatchSize", 20, "Fetch vaa batch size")
 	fetchGuardianSetInterval = rootCmd.Flags().Uint("fetchGuardianSetInterval", 900, "Fetch guardian set interval")
+	statInterval = rootCmd.Flags().Uint("statInterval", 300, "Update statistic interval")
 	enableCache = rootCmd.Flags().Bool("enableCache", false, "Enable last sequence cache")
 	redisUri = rootCmd.Flags().String("redisUri", "", "Redis URI(you need to specify this if enableCache is true)")
 	mongodbUri = rootCmd.Flags().String("mongodbUri", "", "Mongodb URI")
@@ -125,6 +128,7 @@ func checkConfigs(logger *zap.Logger) {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	utils.FetchCoinGeckoCoins()
 	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
 	if err != nil {
 		fmt.Printf("failed to read bridge config, error: %v\n", err)
@@ -163,7 +167,7 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal("invalid governance emitter")
 	}
-	repository := storage.NewRepository(db, logger, vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId), governanceEmitter)
+	repository := storage.NewRepository(rootCtx, db, logger, vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId), governanceEmitter, time.Duration(*statInterval)*time.Second)
 
 	// Outbound gossip message queue
 	sendC := make(chan []byte)

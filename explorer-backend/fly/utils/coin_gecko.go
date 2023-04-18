@@ -22,11 +22,7 @@ const coinGeckoUrl = "https://api.coingecko.com/api/v3/"
 
 var CoinGeckoCoins map[string][]CoinGeckoCoin
 
-func init() {
-	CoinGeckoCoins = fetchCoinGeckoCoins()
-}
-
-func fetchCoinGeckoCoins() map[string][]CoinGeckoCoin {
+func FetchCoinGeckoCoins() {
 	url := fmt.Sprintf("%vcoins/list", coinGeckoUrl)
 	req, reqErr := http.NewRequest("GET", url, nil)
 	if reqErr != nil {
@@ -55,7 +51,7 @@ func fetchCoinGeckoCoins() map[string][]CoinGeckoCoin {
 		symbol := strings.ToLower(coin.Symbol)
 		geckoCoins[symbol] = append(geckoCoins[symbol], coin)
 	}
-	return geckoCoins
+	CoinGeckoCoins = geckoCoins
 }
 
 func FetchCoinGeckoCoin(chainId vaa.ChainID, symbol, name string) *CoinGeckoCoin {
@@ -90,26 +86,26 @@ func rangeFromTime(t time.Time, hours int) (start time.Time, end time.Time) {
 	return t.Add(-duration), t.Add(duration)
 }
 
-func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
+func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (float64, error) {
 	start, end := rangeFromTime(timestamp, 12)
 	priceUrl := fmt.Sprintf("%vcoins/%v/market_chart/range?vs_currency=usd&from=%v&to=%v", coinGeckoUrl, coinId, start.Unix(), end.Unix())
 	req, reqErr := http.NewRequest("GET", priceUrl, nil)
 	if reqErr != nil {
-		return nil, reqErr
+		return 0, reqErr
 	}
 
 	res, resErr := http.DefaultClient.Do(req)
 	if resErr != nil {
-		return nil, resErr
+		return 0, resErr
 	}
 	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf("failed to get CoinGecko prices")
+		return 0, fmt.Errorf("failed to get CoinGecko prices")
 	}
 
 	defer res.Body.Close()
 	body, bodyErr := ioutil.ReadAll(res.Body)
 	if bodyErr != nil {
-		return nil, bodyErr
+		return 0, bodyErr
 	}
 
 	var parsed CoinGeckoMarketRes
@@ -117,9 +113,9 @@ func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
 	if parseErr != nil {
 		var errRes CoinGeckoErrorRes
 		if err := json.Unmarshal(body, &errRes); err == nil {
-			return nil, fmt.Errorf(errRes.Error)
+			return 0, fmt.Errorf(errRes.Error)
 		}
-		return nil, parseErr
+		return 0, parseErr
 	}
 	if len(parsed.Prices) >= 1 {
 		hourAgo := time.Now().Add(-time.Duration(1) * time.Hour)
@@ -135,7 +131,7 @@ func FetchCoinGeckoPrice(coinId string, timestamp time.Time) (*float64, error) {
 			priceIndex = numPrices / 2
 		}
 		price := parsed.Prices[priceIndex][1]
-		return &price, nil
+		return price, nil
 	}
-	return nil, fmt.Errorf("no price found for %v", coinId)
+	return 0, fmt.Errorf("no price found for %v", coinId)
 }

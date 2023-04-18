@@ -41,6 +41,11 @@ func Run(db *mongo.Database) error {
 		return err
 	}
 
+	// Created statistics collection
+	if err := createCollection(db, "statistics"); err != nil {
+		return err
+	}
+
 	// Created heartbeats collection.
 	if err := createCollection(db, "heartbeats"); err != nil {
 		return err
@@ -142,6 +147,7 @@ func Run(db *mongo.Database) error {
 	}
 
 	tokenTransferIndexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "timestamp", Value: 1}}},
 		{
 			Keys: bson.D{{Key: "tokenAddress", Value: 1}},
 		},
@@ -160,6 +166,45 @@ func Run(db *mongo.Database) error {
 		},
 	}
 	_, err = db.Collection("tokenTransfers").Indexes().CreateMany(context.TODO(), tokenTransferIndexes)
+	if checkError(err) != nil {
+		return err
+	}
+
+	statsIndexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "date", Value: 1}}},
+		{
+			Keys: bson.D{
+				{Key: "date", Value: 1},
+				{Key: "emitterChain", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "date", Value: 1},
+				{Key: "emitterChain", Value: 1},
+				{Key: "emitterAddr", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "date", Value: 1},
+				{Key: "emitterChain", Value: 1},
+				{Key: "emitterAddr", Value: 1},
+				{Key: "targetChain", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "date", Value: 1},
+				{Key: "emitterChain", Value: 1},
+				{Key: "emitterAddr", Value: 1},
+				{Key: "targetChain", Value: 1},
+				{Key: "tokenChain", Value: 1},
+				{Key: "tokenAddress", Value: 1},
+			},
+		},
+	}
+	_, err = db.Collection("statistics").Indexes().CreateMany(context.TODO(), statsIndexes)
 	if checkError(err) != nil {
 		return err
 	}
