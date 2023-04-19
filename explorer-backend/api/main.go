@@ -11,6 +11,7 @@ import (
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/heartbeats"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/infraestructure"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/observations"
+	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/statistics"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/vaa"
 	wormscanCache "github.com/alephium/wormhole-fork/explorer-backend/api/internal/cache"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/internal/db"
@@ -113,6 +114,10 @@ func run(cmd *cobra.Command, args []string) {
 	infraestructureRepo := infraestructure.NewRepository(db, rootLogger)
 	heartbeatsRepo := heartbeats.NewRepository(db, rootLogger)
 	guardianSetRepo := guardian.NewRepository(db, rootLogger)
+	statisticsRepo, err := statistics.NewRepository(appCtx, db, rootLogger)
+	if err != nil {
+		rootLogger.Fatal("failed to create statistic repository", zap.Error(err))
+	}
 
 	// Setup services
 	vaaService := vaa.NewService(vaaRepo, cacheGetFunc, rootLogger)
@@ -120,6 +125,7 @@ func run(cmd *cobra.Command, args []string) {
 	infraestructureService := infraestructure.NewService(infraestructureRepo, rootLogger)
 	heartbeatsService := heartbeats.NewService(heartbeatsRepo, rootLogger)
 	guardianService := guardian.NewService(guardianSetRepo, rootLogger)
+	statisticsService := statistics.NewService(statisticsRepo, rootLogger)
 
 	// Setup controllers
 	vaaCtrl := vaa.NewController(vaaService, rootLogger)
@@ -127,6 +133,7 @@ func run(cmd *cobra.Command, args []string) {
 	infraestructureCtrl := infraestructure.NewController(infraestructureService)
 	guardianCtrl := guardian.NewController(guardianService, rootLogger)
 	heartbeatsCtrl := heartbeats.NewController(heartbeatsService, rootLogger)
+	statisticsCtrl := statistics.NewController(statisticsService, rootLogger)
 
 	// Setup app with custom error handling.
 	response.SetEnableStackTrace(*enableStackTrace)
@@ -180,6 +187,12 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		return heartbeatsCtrl.GetLastHeartbeats(ctx, gs.Addresses)
 	})
+
+	stats := api.Group("/stats")
+	stats.Get("/totalmessages", statisticsCtrl.TotalMessages)
+	stats.Get("/totalnotionaltransferred", statisticsCtrl.TotalNotionalTransferred)
+	stats.Get("/totalnotionaltransferredto", statisticsCtrl.TotalNotionalTransferredTo)
+	stats.Get("/notionaltvl", statisticsCtrl.NotionalTVL)
 
 	app.Listen(":" + strconv.Itoa(int(*port)))
 }
