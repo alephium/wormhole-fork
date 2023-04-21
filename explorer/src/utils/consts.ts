@@ -12,19 +12,7 @@ import { default as ethereumTestnetConfig } from '../../../configs/ethereum/test
 import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
 
 export const chainEnums = [
-  "",
-  "Solana",
   "Ethereum",
-  "Terra",
-  "BSC",
-  "Polygon",
-  "Avalanche",
-  "Oasis",
-  "Algorand",
-  "Aurora",
-  "Fantom",
-  "Karura",
-  "Acala",
   "Alephium"
 ];
 
@@ -184,7 +172,7 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
             const emitterAddress = await getEmitterAddress[chainName](address);
             contractsOfChain[emitterAddress] = desc;
           } catch (_) {
-            console.log("failed getting emitterAddress for: ", address);
+            console.log(`failed getting emitterAddress for: ${address}, env: ${envVarName}, chainName: ${chainName}`);
           }
           if (chainName != "solana") {
             address = address.toLowerCase();

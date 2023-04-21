@@ -3,7 +3,7 @@ import { NotionalTransferredTo } from './ExplorerStats';
 import { Typography } from '@mui/material';
 import { ResponsiveBar, BarDatum } from '@nivo/bar'
 
-import { makeDate, makeGroupName, chainColors, amountFormatter, usdFormatter, chainIdColors } from "../../utils/explorer"
+import { makeDate, makeGroupName, amountFormatter, usdFormatter, chainIdColors } from "../../utils/explorer"
 import { useNetworkContext } from '../../contexts/NetworkContext';
 import { chainEnums, } from '../../utils/consts';
 
@@ -74,7 +74,7 @@ const DailyNotionalBarChart = (props: DailyCountProps) => {
 
     }, [props.daily, activeNetwork])
 
-    const keys = chainEnums.slice(1)
+    const keys = chainEnums
     const today = new Date().toISOString().slice(0, 10)
 
     return (
@@ -83,7 +83,7 @@ const DailyNotionalBarChart = (props: DailyCountProps) => {
 
             <ResponsiveBar
                 theme={{ textColor: "rgba(255, 255, 255, 0.85)" }}
-                colors={chainIdColors.slice(1)}
+                colors={chainIdColors}
                 data={barData}
                 keys={keys}
                 enableLabel={false}

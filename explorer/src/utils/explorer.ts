@@ -179,25 +179,10 @@ const nativeExplorerTxUri = (
 
 // define colors to represent chains in charts/graphs
 const chainColors: { [chain: string]: string } = {
-  "*": "hsl(183, 100%, 61%)",
-  "1": "hsl(297, 100%, 61%)",
   "2": "hsl(235, 5%, 43%)",
-  "3": "hsl(235, 100%, 61%)",
-  "4": "hsl(54, 100%, 61%)",
-  "5": "hsl(271, 100%, 61%)",
-  "6": "hsl(360, 100%, 61%)",
-  "7": "hsl(204, 100%, 48%)",
-  "10": "hsl(220, 78%, 92%)",
   "255": "hsl(54, 100%, 61%)",
 };
-const chainIdColors = Object.entries(chainColors).reduce<Array<string>>(
-  // returns an array of hsl colors, indexed by chainId
-  (accum, [chain, color]) => {
-    accum[Number(chain) || 0] = color;
-    return accum;
-  },
-  []
-);
+const chainIdColors = Object.entries(chainColors).map(([, color]) => color)
 
 const amountFormatter = (num: number, decimals?: number): string => {
   let absNum = Math.abs(num);

@@ -9,7 +9,7 @@ import {
   makeGroupName,
 } from "../../utils/explorer";
 import { useNetworkContext } from "../../contexts/NetworkContext";
-import { chainEnums } from "../../utils/consts";
+import { chainEnums, chainIDs } from "../../utils/consts";
 import { Typography } from "@mui/material";
 
 interface DailyCountProps {
@@ -45,7 +45,7 @@ const DailyCountBarChart = (props: DailyCountProps) => {
     setData(datum);
   }, [props.dailyCount, activeNetwork]);
 
-  const keys = chainEnums.slice(1);
+  const keys = chainEnums;
   const today = new Date().toISOString().slice(0, 10);
 
   return (
@@ -55,7 +55,7 @@ const DailyCountBarChart = (props: DailyCountProps) => {
         theme={{ textColor: "rgba(255, 255, 255, 0.85)" }}
         data={data}
         keys={keys}
-        colors={chainIdColors.slice(1)}
+        colors={chainIdColors}
         groupMode="stacked"
         indexBy="date"
         margin={{
@@ -122,11 +122,11 @@ const DailyCountBarChart = (props: DailyCountProps) => {
             width: "100%",
           }}
         >
-          {chainEnums.slice(1).map((chain, index) => (
+          {Object.values(chainIDs).map((chain) => (
             <div key={chain} style={{ display: "flex", alignItems: "center" }}>
               <div
                 style={{
-                  background: chainColors[String(index + 1)],
+                  background: chainColors[String(chain)],
                   height: 16,
                   width: 16,
                   display: "inline-block",
