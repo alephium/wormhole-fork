@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -220,18 +219,6 @@ func (s *Repository) processVaa(ctx context.Context, v *vaa.VAA, now *time.Time)
 	}
 }
 
-func calcNotionalAmount(amount *big.Int, decimals uint8, price float64) *big.Float {
-	// transfers created by the bridge UI will have at most 8 decimals.
-	if decimals > 8 {
-		decimals = 8
-	}
-	unit := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
-	result := big.NewFloat(0).SetInt(amount)
-	result.Quo(result, big.NewFloat(0).SetInt(unit))
-	result.Mul(result, big.NewFloat(price))
-	return result
-}
-
 func (s *Repository) getTokenPrice(coinGeckoCoinId, symbol string, timestamp time.Time) float64 {
 	if coinGeckoCoinId == "" {
 		return 0
@@ -254,7 +241,7 @@ func (s *Repository) upsertTokenTransfer(ctx context.Context, v *vaa.VAA, tokenT
 	}
 
 	price := s.getTokenPrice(tokenDoc.CoinGeckoCoinId, tokenDoc.Symbol, v.Timestamp.UTC())
-	notionalUSD, _ := calcNotionalAmount(&tokenTransfer.Amount, tokenDoc.Decimals, price).Float64()
+	notionalUSD, _ := utils.CalcNotionalAmount(&tokenTransfer.Amount, tokenDoc.Decimals, price).Float64()
 	emitterAddr := hex.EncodeToString(v.EmitterAddress[:])
 	tokenTransferDoc := TokenTransferUpdate{
 		ID:           id,
