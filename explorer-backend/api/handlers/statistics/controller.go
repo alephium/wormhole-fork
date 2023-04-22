@@ -1,16 +1,9 @@
 package statistics
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"math/big"
-	"net/http"
-	"strings"
-	"time"
 
+	"github.com/alephium/wormhole-fork/explorer-backend/fly/utils"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
@@ -94,95 +87,6 @@ func (c *Controller) TotalNotionalTransferredTo(ctx *fiber.Ctx) error {
 	return ctx.JSON(response)
 }
 
-// TODO: improve this
-func fetchTokenPrices(ctx context.Context, coinIds []string) (map[string]float64, error) {
-	allPrices := map[string]float64{}
-
-	// Split the list into batches, otherwise the request could be too large
-	batch := 100
-
-	for i := 0; i < len(coinIds); i += batch {
-		j := i + batch
-		if j > len(coinIds) {
-			j = len(coinIds)
-		}
-
-		prices, err := fetchCoinGeckoPrices(coinIds[i:j])
-		if err != nil {
-			return nil, err
-		}
-		for coinId, price := range prices {
-			allPrices[coinId] = price
-		}
-
-		// CoinGecko rate limit is low (5/second), be very cautious about bursty requests
-		time.Sleep(time.Millisecond * 200)
-	}
-
-	return allPrices, nil
-}
-
-type Price struct {
-	USD float64 `json:"usd"`
-}
-type CoinGeckoCoinPrices map[string]Price
-type CoinGeckoErrorRes struct {
-	Error string `json:"error"`
-}
-
-// takes a list of CoinGeckoCoinIds, returns a map of { coinId: price }.
-func fetchCoinGeckoPrices(coinIds []string) (map[string]float64, error) {
-	baseUrl := "https://api.coingecko.com/api/v3/"
-	url := fmt.Sprintf("%vsimple/price?ids=%v&vs_currencies=usd", baseUrl, strings.Join(coinIds, ","))
-	req, reqErr := http.NewRequest("GET", url, nil)
-	if reqErr != nil {
-		log.Fatalf("failed coins request, err: %v\n", reqErr)
-	}
-
-	res, resErr := http.DefaultClient.Do(req)
-	if resErr != nil {
-		return nil, fmt.Errorf("failed to fetch prices, err: %v", resErr)
-	}
-	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf("failed to get coingecko prices, status: %v", res.Status)
-	}
-
-	defer res.Body.Close()
-	body, bodyErr := ioutil.ReadAll(res.Body)
-	if bodyErr != nil {
-		return nil, fmt.Errorf("failed to decode response body, err: %v", bodyErr)
-	}
-
-	var parsed CoinGeckoCoinPrices
-	parseErr := json.Unmarshal(body, &parsed)
-	if parseErr != nil {
-		var errRes CoinGeckoErrorRes
-		if err := json.Unmarshal(body, &errRes); err == nil {
-			return nil, fmt.Errorf(errRes.Error)
-		}
-		return nil, fmt.Errorf("failed to decode payload, err: %v", parseErr)
-	}
-	priceMap := map[string]float64{}
-	for coinId, price := range parsed {
-		price := price.USD
-		priceMap[coinId] = price
-
-	}
-	return priceMap, nil
-}
-
-func calcNotionalAmount(amount *big.Int, decimals uint8, price float64) *big.Float {
-	// transfers created by the bridge UI will have at most 8 decimals.
-	if decimals > 8 {
-		decimals = 8
-	}
-	unit := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
-	result := big.NewFloat(0).SetInt(amount)
-	result.Quo(result, big.NewFloat(0).SetInt(unit))
-	result.Mul(result, big.NewFloat(price))
-	return result
-}
-
 func (c *Controller) NotionalTVL(ctx *fiber.Ctx) error {
 	tvl, err := c.srv.TVL(ctx.Context())
 	if err != nil {
@@ -203,7 +107,7 @@ func (c *Controller) NotionalTVL(ctx *fiber.Ctx) error {
 		tokens[k] = token
 	}
 
-	prices, err := fetchTokenPrices(ctx.Context(), coinIds)
+	prices, err := utils.FetchTokenPrices(ctx.Context(), coinIds)
 	if err != nil {
 		return err
 	}
@@ -215,7 +119,7 @@ func (c *Controller) NotionalTVL(ctx *fiber.Ctx) error {
 			continue
 		}
 		price := prices[token.CoinGeckoCoinId]
-		notionalUSD := calcNotionalAmount(v, token.Decimals, price)
+		notionalUSD := utils.CalcNotionalAmount(v, token.Decimals, price)
 		key := fmt.Sprintf("%v:%v", uint16(k.tokenChain), token.Symbol)
 		notionalTVL[key] = fmt.Sprintf("%v", notionalUSD)
 	}
