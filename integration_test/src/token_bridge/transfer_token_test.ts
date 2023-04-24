@@ -34,7 +34,7 @@ async function test() {
     await ethToAlph.transferWrappedTestToken(amount)
   }
 
-  const transferWALPHFromAlphToEth = async () => {
+  const transferALPHFromAlphToEth = async () => {
     const remain = await alph.getNativeTokenBalance()
     // minus 1 alph for tx fee
     const amount = randomBigInt(remain - alph.oneCoin, alph.normalizeTransferAmount)
@@ -59,7 +59,7 @@ async function test() {
 
   const transfers = [
     transferTestTokenFromAlphToEth,
-    transferWALPHFromAlphToEth,
+    transferALPHFromAlphToEth,
     transferTestTokenFromEthToAlph,
     transferWETHFromEthToAlph
   ]

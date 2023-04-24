@@ -9,10 +9,8 @@ const deployTokenBridge: DeployFunction<Settings> = async (
   const tokenBridge = Project.contract('TokenBridge')
   const tokenBridgeFactory = deployer.getDeployContractResult('TokenBridgeFactory')
   const governanceId = deployer.getDeployContractResult('Governance').contractId
-  const wrappedAlphId = deployer.getDeployContractResult('WrappedAlph').contractId
   const initialFields = {
     governance: governanceId,
-    wrappedAlphId: wrappedAlphId,
     localChainId: BigInt(network.settings.chainId),
     receivedSequence: 0n,
     sendSequence: 0n,

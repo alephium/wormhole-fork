@@ -6,14 +6,13 @@ TxScript TransferLocal(
     toChainId: U256,
     toAddress: ByteVec,
     tokenAmount: U256,
-    messageFee: U256,
     arbiterFee: U256,
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
+    let messageFee = tokenBridge.getMessageFee()
     tokenBridge.transferToken{
-        fromAddress -> messageFee,
-            localTokenId: tokenAmount
+        fromAddress -> ALPH: messageFee, localTokenId: tokenAmount
     }(
         fromAddress,
         localTokenId,
@@ -21,6 +20,7 @@ TxScript TransferLocal(
         toChainId,
         toAddress,
         tokenAmount,
+        messageFee,
         arbiterFee,
         nonce,
         consistencyLevel

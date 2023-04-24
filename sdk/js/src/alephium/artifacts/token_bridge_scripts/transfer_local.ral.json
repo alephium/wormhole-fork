@@ -1,7 +1,7 @@
 {
-  "version": "v1.5.5",
+  "version": "v1.6.0",
   "name": "TransferLocal",
-  "bytecodeTemplate": "01010300000014{1}7a{7}a2{2}{6}a3{1}{2}{3}{4}{5}{6}{8}{9}{10}13090c{0}010d",
+  "bytecodeTemplate": "0101030001001a0c0d{0}01081700{1}7a1600a2{2}{6}a3{1}{2}{3}{4}{5}{6}1600{7}{8}{9}130a0c{0}010e",
   "fieldsSig": {
     "names": [
       "tokenBridge",
@@ -11,7 +11,6 @@
       "toChainId",
       "toAddress",
       "tokenAmount",
-      "messageFee",
       "arbiterFee",
       "nonce",
       "consistencyLevel"
@@ -25,12 +24,10 @@
       "ByteVec",
       "U256",
       "U256",
-      "U256",
       "ByteVec",
       "U256"
     ],
     "isMutable": [
-      false,
       false,
       false,
       false,

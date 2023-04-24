@@ -1,4 +1,4 @@
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -22,7 +22,6 @@ import {
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import {
-  transferAlphScript,
   transferLocalTokenScript,
   transferRemoteTokenScript
 } from "../alephium/token_bridge";
@@ -52,34 +51,6 @@ import {
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 
-export async function transferAlph(
-  signerProvider: SignerProvider,
-  tokenBridgeId: string,
-  fromAddress: string,
-  toChainId: ChainId,
-  toAddress: string,
-  alphAmount: bigint,
-  arbiterFee: bigint,
-  consistencyLevel: number,
-  nonce?: string
-): Promise<BuildScriptTxResult> {
-  const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const script = transferAlphScript()
-  return script.execute(signerProvider, {
-    initialFields: {
-      tokenBridge: tokenBridgeId,
-      fromAddress: fromAddress,
-      toChainId: BigInt(toChainId),
-      toAddress: toAddress,
-      alphAmount: alphAmount,
-      arbiterFee: arbiterFee,
-      nonce: nonceHex,
-      consistencyLevel: BigInt(consistencyLevel),
-    },
-    attoAlphAmount: alphAmount
-  })
-}
-
 export async function transferLocalTokenFromAlph(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
@@ -104,16 +75,12 @@ export async function transferLocalTokenFromAlph(
       toChainId: BigInt(toChainId),
       toAddress: toAddress,
       tokenAmount: tokenAmount,
-      messageFee: messageFee,
       arbiterFee: arbiterFee,
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)
     },
-    attoAlphAmount: messageFee,
-    tokens: [{
-      id: localTokenId,
-      amount: tokenAmount
-    }]
+    attoAlphAmount: localTokenId === ALPH_TOKEN_ID ? messageFee + tokenAmount : messageFee,
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: tokenAmount }]
   })
 }
 
@@ -144,7 +111,6 @@ export async function transferRemoteTokenFromAlph(
       toChainId: BigInt(toChainId),
       toAddress: toAddress,
       tokenAmount: tokenAmount,
-      messageFee: messageFee,
       arbiterFee: arbiterFee,
       nonce: nonceHex,
       consistencyLevel: BigInt(consistencyLevel)

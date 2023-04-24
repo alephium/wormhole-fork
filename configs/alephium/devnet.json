@@ -5,20 +5,19 @@
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
   "contracts": {
-    "governance": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c",
-    "nativeGovernance": "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM",
-    "tokenBridge": "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7",
-    "nativeTokenBridge": "xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU",
-    "walph": "1697eb1aac440db3f1359701e301424ae974eae8e080238d212e79dfc7ab4cda",
-    "testToken": "9b1e7b838873c0196bd300e663966ff257375d640a3e068ddbc359c81c476c2f"
+    "governance": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea800",
+    "nativeGovernance": "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPG3",
+    "tokenBridge": "a7509e822b59dd01aa00c0b65f22d2c21394bf200bd3cc89a23cb64fa382c300",
+    "nativeTokenBridge": "25x5VrJBqA2Fktmcu9QMVz2sDQaVuc9wsVLodahVTA2fy",
+    "testToken": "82bd215330cd11a0b12dba518211dc4b10135167ccc628fb5cb89853268cd000"
   },
   "nodeUrl": "http://localhost:22973",
   "explorerUrl": "http://localhost:9090",
   "networkId": 4,
-  "coreEmitterAddress": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea84c",
-  "tokenBridgeEmitterAddress": "3d202f07c32070f67f3b1314ffa8532be2c253ff9cb8bbada649abdbf43a0fd7",
+  "coreEmitterAddress": "ec7c197a6566a479a477fba9dbd8a8f1b85eed7475c2ba08fa7aa3ec6edea800",
+  "tokenBridgeEmitterAddress": "a7509e822b59dd01aa00c0b65f22d2c21394bf200bd3cc89a23cb64fa382c300",
   "bridgeTokens": [
-    "vD9SSVfaZ7msnk37DKsom21c5G9V9MQZXeFhqwigCzob",
-    "258UGJj4DyKGaUKQ4qMApXNDAdpqmXLVN5v2ZUovxf8y4"
+    "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
+    "23VJP4FMXiZ6WKg1f7AZPXgKGeG2hoorEWBTVfsxrzwod"
   ]
 }

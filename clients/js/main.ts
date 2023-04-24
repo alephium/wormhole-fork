@@ -16,12 +16,12 @@ import {
   deserializeVAA,
   isGovernanceVAA,
   uint8ArrayToHex,
-  signVAABody
+  signVAABody,
+  assertEVMChain
 } from "alephium-wormhole-sdk";
+import { ethers } from "ethers";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { executeGovernanceSolana } from "./solana";
 import { executeGovernanceEvm } from "./evm";
-import { executeGovernanceTerra } from "./terra";
 import { impossible } from "./utils";
 import {
   assertChain,
@@ -33,6 +33,7 @@ import {
 } from "alephium-wormhole-sdk";
 import { executeGovernanceAlph } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
+import { CONFIGS } from "./configs";
 
 setDefaultWasm("node");
 
@@ -175,7 +176,8 @@ yargs(hideBin(process.argv))
                 | "Core"
                 | "NFTBridge"
                 | "TokenBridge";
-              const address = Buffer.from(argv["contract-address"].padStart(64, "0"), "hex")
+              const contractAddress = removePrefix(argv["contract-address"])
+              const address = Buffer.from(contractAddress.padStart(64, "0"), "hex")
               const payload: ContractUpgrade<typeof module> = {
                 type: 'ContractUpgrade',
                 module,
@@ -309,6 +311,196 @@ yargs(hideBin(process.argv))
     }
   )
   ////////////////////////////////////////////////////////////////////////////////
+  // Evm utilities
+  .command(
+    "evm",
+    "EVM utilites",
+    (yargs) => {
+      const evm = require("./evm")
+      return yargs
+        .option("rpc", {
+          describe: "RPC endpoint",
+          type: "string",
+          required: false,
+        })
+        .command(
+          "address-from-secret <secret>",
+          "Compute a 20 byte eth address from a 32 byte private key",
+          (yargs) => {
+            return yargs.positional("secret", {
+              type: "string",
+              describe: "Secret key (32 bytes)",
+            });
+          },
+          (argv) => {
+            console.log(ethers.utils.computeAddress(argv["secret"]));
+          }
+        )
+        .command(
+          "storage-update",
+          "Update a storage slot on an EVM fork during testing (anvil or hardhat)",
+          (yargs) => {
+            return yargs
+              .option("contract-address", {
+                alias: "a",
+                describe: "Contract address",
+                type: "string",
+                required: true,
+              })
+              .option("storage-slot", {
+                alias: "k",
+                describe: "Storage slot to modify",
+                type: "string",
+                required: true,
+              })
+              .option("value", {
+                alias: "v",
+                describe: "Value to write into the slot (32 bytes)",
+                type: "string",
+                required: true,
+              });
+          },
+          async (argv) => {
+            const result = await evm.setStorageAt(
+              argv["rpc"],
+              toEvmAddress(argv["contract-address"]),
+              argv["storage-slot"],
+              ["uint256"],
+              [argv["value"]]
+            );
+            console.log(result);
+          }
+        )
+        .command("chains", "Return all EVM chains", async (_) => {
+          console.log(
+            Object.values(CHAINS)
+              .map((id) => toChainName(id))
+              .filter((name) => isEVMChain(name))
+              .join(" ")
+          );
+        })
+        .command(
+          "info",
+          "Query info about the on-chain state of the contract",
+          (yargs) => {
+            return yargs
+              .option("chain", {
+                alias: "c",
+                describe: "Chain to query",
+                type: "string",
+                choices: Object.keys(CHAINS),
+                required: true,
+              })
+              .option("module", {
+                alias: "m",
+                describe: "Module to query",
+                type: "string",
+                choices: ["Core", "NFTBridge", "TokenBridge"],
+                required: true,
+              })
+              .option("network", {
+                alias: "n",
+                describe: "network",
+                type: "string",
+                choices: ["mainnet", "testnet", "devnet"],
+                required: true,
+              })
+              .option("contract-address", {
+                alias: "a",
+                describe: "Contract to query (override config)",
+                type: "string",
+                required: false,
+              })
+              .option("implementation-only", {
+                alias: "i",
+                describe: "Only query implementation (faster)",
+                type: "boolean",
+                default: false,
+                required: false,
+              });
+          },
+          async (argv) => {
+            assertChain(argv["chain"]);
+            assertEVMChain(argv["chain"]);
+            const network = argv.network.toUpperCase();
+            if (
+              network !== "MAINNET" &&
+              network !== "TESTNET" &&
+              network !== "DEVNET"
+            ) {
+              throw Error(`Unknown network: ${network}`);
+            }
+            let module = argv["module"] as "Core" | "NFTBridge" | "TokenBridge";
+            let rpc = argv["rpc"] ?? CONFIGS[network][argv["chain"]].rpc;
+            if (argv["implementation-only"]) {
+              console.log(
+                await evm.getImplementation(
+                  network,
+                  argv["chain"],
+                  module,
+                  argv["contract-address"],
+                  rpc
+                )
+              );
+            } else {
+              console.log(
+                JSON.stringify(
+                  await evm.queryContractEvm(
+                    network,
+                    argv["chain"],
+                    module,
+                    argv["contract-address"],
+                    rpc
+                  ),
+                  null,
+                  2
+                )
+              );
+            }
+          }
+        )
+        .command(
+          "hijack",
+          "Override the guardian set of the core bridge contract during testing (anvil or hardhat)",
+          (yargs) => {
+            return yargs
+              .option("core-contract-address", {
+                alias: "a",
+                describe: "Core contract address",
+                type: "string",
+                default: CONFIGS.MAINNET.ethereum.governanceAddress,
+              })
+              .option("guardian-address", {
+                alias: "g",
+                required: true,
+                describe: "Guardians' public addresses (CSV)",
+                type: "string",
+              })
+              .option("guardian-set-index", {
+                alias: "i",
+                required: false,
+                describe:
+                  "New guardian set index (if unspecified, default to overriding the current index)",
+                type: "number",
+              });
+          },
+          async (argv) => {
+            const guardian_addresses = argv["guardian-address"].split(",");
+            let rpc = argv["rpc"] ?? CONFIGS.DEVNET.ethereum.rpc;
+            await evm.hijackEvm(
+              rpc,
+              argv["core-contract-address"],
+              guardian_addresses,
+              argv["guardian-set-index"]
+            );
+          }
+        );
+    },
+    (_) => {
+      yargs.showHelp();
+    }
+  )
+  ////////////////////////////////////////////////////////////////////////////////
   // Submit
   .command(
     "submit <vaa>",
@@ -401,9 +593,9 @@ yargs(hideBin(process.argv))
       } else if (isEVMChain(chain)) {
         await executeGovernanceEvm(parsedVaa.body.payload, buf, network, chain, nodeUrl);
       } else if (chain === "terra") {
-        await executeGovernanceTerra(parsedVaa.body.payload, buf, network);
+        throw Error("Terra is not supported yet");
       } else if (chain === "solana") {
-        await executeGovernanceSolana(parsedVaa, buf, network);
+        throw Error("Solana is not supported yet");
       } else if (chain === "algorand") {
         throw Error("Algorand is not supported yet");
       } else if (chain === "near") {
@@ -421,4 +613,16 @@ yargs(hideBin(process.argv))
 function exitOnError(msg: string) {
   console.log(msg)
   process.exit(1)
+}
+
+function removePrefix(str: string): string {
+  return (str.startsWith('0x') || str.startsWith('0X')) ? str.slice(2) : str
+}
+
+function hex(x: string): string {
+  return ethers.utils.hexlify(x, { allowMissingPrefix: true });
+}
+
+function toEvmAddress(x: string): string {
+  return hex(x).substring(2).padStart(64, "0");
 }

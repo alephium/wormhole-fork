@@ -5,6 +5,7 @@ Contract AttestTokenHandler(
   remoteTokenBridgeId: ByteVec,
   mut receivedSequence: U256
 ) extends Constants(), TokenBridgeConstants() {
+  @using(updateFields = true)
   fn parseAttestToken(vaa: ByteVec) -> (ByteVec, ByteVec, ByteVec, U256, U256) {
     let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
     assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
@@ -24,19 +25,18 @@ Contract AttestTokenHandler(
     return tokenId, symbol, name, decimals, msgSequence
   }
 
-  @using(preapprovedAssets = true, updateFields = true)
+  @using(preapprovedAssets = true)
   pub fn createRemoteTokenPool(
     vaa: ByteVec,
     payer: Address,
     createContractAlphAmount: U256
   ) -> () {
     let (tokenId, symbol, name, decimals, msgSequence) = parseAttestToken(vaa)
-    localTokenBridge.createRemoteTokenPool{payer -> createContractAlphAmount}(
+    localTokenBridge.createRemoteTokenPool{payer -> ALPH: createContractAlphAmount}(
       tokenId, remoteChainId, decimals, symbol, name, msgSequence, payer, createContractAlphAmount
     )
   }
 
-  @using(updateFields = true)
   pub fn updateRemoteTokenPool(vaa: ByteVec) -> () {
     let (tokenId, symbol, name, _, msgSequence) = parseAttestToken(vaa)
     localTokenBridge.updateRemoteTokenPool(tokenId, remoteChainId, symbol, name, msgSequence)

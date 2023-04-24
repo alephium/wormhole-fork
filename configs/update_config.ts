@@ -1,6 +1,8 @@
 import path from 'path'
 import fs from 'fs'
 
+const ALPHTokenAddress = 'tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq'
+
 function updateConfig(
   baseDir: string,
   network: string,
@@ -47,10 +49,9 @@ function updateAlphConfig(network: string) {
       governance: deployContractResults.Governance.contractId,
       nativeGovernance: deployContractResults.Governance.contractAddress,
       tokenBridge: deployContractResults.TokenBridge.contractId,
-      nativeTokenBridge: deployContractResults.TokenBridge.contractAddress,
-      walph: deployContractResults.WrappedAlph.contractId
+      nativeTokenBridge: deployContractResults.TokenBridge.contractAddress
     }
-    const bridgeTokens = [deployContractResults.WrappedAlph.contractAddress]
+    const bridgeTokens = [ALPHTokenAddress]
     if (deployContractResults.TestToken !== undefined) {
       contracts.testToken = deployContractResults.TestToken.contractId
       bridgeTokens.push(deployContractResults.TestToken.contractAddress)

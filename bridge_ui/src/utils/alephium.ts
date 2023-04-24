@@ -2,8 +2,7 @@ import {
   ALEPHIUM_BRIDGE_ADDRESS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
 } from "./consts";
 import {
   ChainId,
@@ -20,7 +19,9 @@ import {
   NodeProvider,
   node,
   addressFromContractId,
-  groupOfAddress
+  groupOfAddress,
+  ALPH_TOKEN_ID,
+  isHexString
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -103,7 +104,7 @@ async function getLocalTokenPoolId(nodeProvider: NodeProvider, tokenId: string):
   if (tokenId.length !== 64) {
     throw Error("invalid token id " + tokenId)
   }
-  const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId)
+  const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId, ALEPHIUM_BRIDGE_GROUP_INDEX)
   const tokenPoolCreated = await contractExists(localTokenPoolId, nodeProvider)
   return tokenPoolCreated ? localTokenPoolId : null
 }
@@ -122,8 +123,8 @@ export class TokenInfo {
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
   // TODO: get symbol and name from configs
-  if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
-    return new TokenInfo(0, 'wrapped-alph', 'wrapped-alph')
+  if (tokenId === ALPH_TOKEN_ID) {
+    return new TokenInfo(0, 'ALPH', 'ALPH')
   }
 
   const tokenAddress = addressFromContractId(tokenId)
@@ -144,6 +145,13 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return {
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: Buffer.from(tokenId, 'hex')
+    }
+  }
   const tokenAddress = addressFromContractId(tokenId)
   const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
   return provider
@@ -171,4 +179,8 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
   const address = base58.encode(recipient)
   return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
+}
+
+export function isValidAlephiumTokenId(tokenId: string): boolean {
+  return tokenId.length === 64 && isHexString(tokenId)
 }

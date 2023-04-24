@@ -21,12 +21,11 @@ Contract Governance(
         TransferFee     = #04
     }
 
-    @using(updateFields = false)
     pub fn getMessageFee() -> (U256) {
         return messageFee
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true, externalCallCheck = false, updateFields = false)
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn publishWormholeMessage(
         payer: Address,
         targetChainId: U256,
@@ -35,12 +34,12 @@ Contract Governance(
         payload: ByteVec,
         consistencyLevel: U256
     ) -> () {
-        transferAlphToSelf!(payer, messageFee)
+        transferTokenToSelf!(payer, ALPH, messageFee)
         emit WormholeMessage(callerContractId!(), targetChainId, sequence, nonce, payload, consistencyLevel)
     }
 
     // parse VAA and verify signatures
-    @using(updateFields = false)
+    @using(checkExternalCaller = false)
     pub fn parseAndVerifyVAA(data: ByteVec, isGovernanceVAA: Bool) -> (U256, U256, ByteVec, U256, ByteVec) {
         assert!(byteVecSlice!(data, 0, 1) == Version, ErrorCodes.InvalidVersion)
         let guardianSetIndex = u256From4Byte!(byteVecSlice!(data, 1, 5))
@@ -91,7 +90,7 @@ Contract Governance(
         return emitterChainId, targetChainId, emitterAddress, sequence, payload
     }
 
-    @using(updateFields = false)
+    @using(checkExternalCaller = false)
     pub fn parseAndVerifyGovernanceVAAGeneric(vaa: ByteVec, targetSequence: U256, coreModule: U256, action: ByteVec) -> (U256, U256, ByteVec) {
         let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = parseAndVerifyVAA(vaa, true)
         assert!(emitterChainId == governanceChainId, ErrorCodes.InvalidEmitChainId)
@@ -105,13 +104,13 @@ Contract Governance(
         return msgSequence, targetChainId, payload
     }
 
+    @using(updateFields = true)
     fn parseAndVerifyGovernanceVAA(vaa: ByteVec, action: ByteVec) -> (U256, ByteVec) {
         let (msgSequence, targetChainId, payload) = parseAndVerifyGovernanceVAAGeneric(vaa, receivedSequence, CoreModule, action)
         receivedSequence = msgSequence + 1
         return targetChainId, payload
     }
 
-    @using(updateFields = false)
     fn getGuardiansInfo(guardianSetIndex: U256) -> ByteVec {
         if (guardianSetIndex == guardianSetIndexes[1]) {
             return guardianSets[1]
@@ -150,6 +149,7 @@ Contract Governance(
         }
     }
 
+    @using(updateFields = true)
     fn updatePreviousGuardianSet() -> () {
         guardianSets[0] = guardianSets[1]
         guardianSetIndexes[0] = guardianSetIndexes[1]
@@ -180,13 +180,13 @@ Contract Governance(
         messageFee = fee
     }
 
-    @using(assetsInContract = true, updateFields = true)
+    @using(assetsInContract = true)
     pub fn submitTransferFees(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.TransferFee)
         assert!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)
         let amount = u256From32Byte!(byteVecSlice!(payload, 33, 65))
         let recipient = byteVecSlice!(payload, 65, 97)
         assert!(size!(payload) == 97, ErrorCodes.InvalidMessageSize)
-        transferAlphFromSelf!(byteVecToAddress!(#00 ++ recipient), amount)
+        transferTokenFromSelf!(byteVecToAddress!(#00 ++ recipient), ALPH, amount)
     }
 }

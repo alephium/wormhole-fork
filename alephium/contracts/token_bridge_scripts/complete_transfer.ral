@@ -3,5 +3,5 @@ TxScript CompleteTransfer(
     vaa: ByteVec
 ) {
     let caller = callerAddress!()
-    tokenBridgeForChain.completeTransfer{caller -> dustAmount!()}(vaa, caller)
+    tokenBridgeForChain.completeTransfer{caller -> ALPH: dustAmount!()}(vaa, caller)
 }

@@ -1,4 +1,4 @@
-import { BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
@@ -6,8 +6,7 @@ import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import {
   createLocalTokenPoolScript,
-  createRemoteTokenPoolScript,
-  createWrappedAlphPoolScript
+  createRemoteTokenPoolScript
 } from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
@@ -49,26 +48,8 @@ export async function createLocalTokenPoolOnAlph(
       tokenId: localTokenId,
       alphAmount: alphAmount
     },
-    attoAlphAmount: alphAmount
-  })
-}
-
-export async function createWrappedAlphPool(
-  signerProvider: SignerProvider,
-  tokenBridgeId: string,
-  wrappedAlphId: string,
-  payer: string,
-  alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = createWrappedAlphPoolScript()
-  return script.execute(signerProvider, {
-    initialFields: {
-      payer: payer,
-      wrappedAlphId: wrappedAlphId,
-      tokenBridge: tokenBridgeId,
-      alphAmount: alphAmount
-    },
-    attoAlphAmount: alphAmount
+    attoAlphAmount: alphAmount,
+    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 

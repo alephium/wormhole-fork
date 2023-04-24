@@ -134,6 +134,8 @@ func NewEthWatcher(
 		// When we are running in mainnet or testnet, we need to use the Celo ethereum library rather than go-ethereum.
 		// However, in devnet, we currently run the standard ETH node for Celo, so we need to use the standard go-ethereum.
 		ethIntf = &celo.CeloImpl{NetworkName: networkName}
+	} else if chainID == vaa.ChainIDEthereum && !unsafeDevMode {
+		ethIntf = &PollImpl{BaseEth: EthImpl{NetworkName: networkName}, DelayInMs: 250, IsEthPoS: true}
 	} else if chainID == vaa.ChainIDMoonbeam && !unsafeDevMode {
 		ethIntf = &PollImpl{BaseEth: EthImpl{NetworkName: networkName}, Finalizer: &MoonbeamFinalizer{}, DelayInMs: 250}
 	} else if chainID == vaa.ChainIDNeon {
@@ -336,7 +338,8 @@ func (e *Watcher) Run(ctx context.Context) error {
 				if err != nil {
 					ethConnectionErrors.WithLabelValues(e.networkName, "block_by_number_error").Inc()
 					p2p.DefaultRegistry.AddErrorCount(e.chainID, 1)
-					errC <- fmt.Errorf("failed to request timestamp for block %d: %w", ev.Raw.BlockNumber, err)
+					errC <- fmt.Errorf("failed to request timestamp for block %d, hash %s: %w",
+						ev.Raw.BlockNumber, ev.Raw.BlockHash.String(), err)
 					return
 				}
 
@@ -400,8 +403,13 @@ func (e *Watcher) Run(ctx context.Context) error {
 				p2p.DefaultRegistry.AddErrorCount(e.chainID, 1)
 				return
 			case ev := <-headSink:
+				// These two pointers should have been checked before the event was placed on the channel, but just being safe.
 				if ev == nil {
 					logger.Error("new header event is nil", zap.String("eth_network", e.networkName))
+					continue
+				}
+				if ev.Number == nil {
+					logger.Error("new header block number is nil", zap.String("eth_network", e.networkName))
 					continue
 				}
 

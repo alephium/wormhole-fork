@@ -1,4 +1,4 @@
-import { addressFromContractId, web3, subContractId, InputAsset } from '@alephium/web3'
+import { addressFromContractId, web3, InputAsset, subContractId } from '@alephium/web3'
 import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
 import {
   buildProject,
@@ -101,7 +101,7 @@ describe('test sequence', () => {
     expect(sequenceOutput.alphAmount).toEqual(oneAlph)
     const unexecutedSequenceOutput = testResult.txOutputs[0]
     expect(unexecutedSequenceOutput.address).toEqual(
-      addressFromContractId(subContractId(sequenceInfo.contractId, '0000000000000000'))
+      addressFromContractId(subContractId(sequenceInfo.contractId, '0000000000000000', 0))
     )
   })
 
@@ -164,7 +164,7 @@ describe('test sequence', () => {
     const subContractOutput = testResult.contracts[0]
     expect(subContractOutput.fields['begin']).toEqual(256n)
     expect(subContractOutput.fields['sequences']).toEqual(firstNext256)
-    const expectedContractId = subContractId(sequenceInfo.contractId, '0000000000000001')
+    const expectedContractId = subContractId(sequenceInfo.contractId, '0000000000000001', 0)
     expect(subContractOutput.contractId).toEqual(expectedContractId)
     expect(testResult.events.length).toEqual(1)
   })
@@ -173,7 +173,7 @@ describe('test sequence', () => {
     await buildProject()
     const parentId = randomContractId()
     const sequenceInfo = createSequence(512n, 0n, 0n, parentId)
-    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001', 0)
     const sequences = allExecuted - 0xffn
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract
@@ -200,7 +200,7 @@ describe('test sequence', () => {
     await buildProject()
     const parentId = randomContractId()
     const sequenceInfo = createSequence(512n, 0n, 0n, parentId)
-    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001', 0)
     const sequences = allExecuted - 1n
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract
@@ -222,7 +222,7 @@ describe('test sequence', () => {
     await buildProject()
     const parentId = randomContractId()
     const sequenceInfo = createSequence(512n, 0n, 0n, parentId)
-    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001')
+    const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001', 0)
     const sequences = allExecuted - 1n
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceContractId)
     const sequence = sequenceInfo.contract

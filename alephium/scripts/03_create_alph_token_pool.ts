@@ -1,15 +1,14 @@
-import { Project } from '@alephium/web3'
+import { ALPH_TOKEN_ID, Project } from '@alephium/web3'
 import { Deployer, DeployFunction } from '@alephium/cli'
 
 const oneAlph = BigInt('1000000000000000000')
 
-const createWrappedAlphPool: DeployFunction = async (deployer: Deployer): Promise<void> => {
-  const script = Project.script('CreateWrappedAlphPool')
+const createAlphTokenPool: DeployFunction = async (deployer: Deployer): Promise<void> => {
+  const script = Project.script('CreateLocalTokenPool')
   const tokenBridgeId = deployer.getDeployContractResult('TokenBridge').contractId
-  const wrappedAlphId = deployer.getDeployContractResult('WrappedAlph').contractId
   const initialFields = {
     tokenBridge: tokenBridgeId,
-    wrappedAlphId: wrappedAlphId,
+    localTokenId: ALPH_TOKEN_ID,
     payer: deployer.account.address,
     alphAmount: oneAlph
   }
@@ -18,4 +17,4 @@ const createWrappedAlphPool: DeployFunction = async (deployer: Deployer): Promis
   })
 }
 
-export default createWrappedAlphPool
+export default createAlphTokenPool

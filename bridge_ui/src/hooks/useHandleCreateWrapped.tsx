@@ -56,6 +56,7 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
 } from "../utils/consts";
 import { getKaruraGasParams } from "../utils/karura";
 import parseError from "../utils/parseError";
@@ -253,7 +254,7 @@ async function alephium(
 ) {
   dispatch(setIsCreating(true));
   try {
-    const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain)
+    const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = shouldUpdate
       ? await updateRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA)
       : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)

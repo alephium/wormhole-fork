@@ -23,9 +23,10 @@ export async function getForeignAssetAlephium(
   tokenBridgeId: string,
   provider: NodeProvider,
   originChain: ChainId | ChainName,
-  originAsset: Uint8Array
+  originAsset: Uint8Array,
+  groupIndex: number
 ): Promise<string | null> {
-  const remoteTokenPoolId = getTokenPoolId(tokenBridgeId, coalesceChainId(originChain), binToHex(originAsset))
+  const remoteTokenPoolId = getTokenPoolId(tokenBridgeId, coalesceChainId(originChain), binToHex(originAsset), groupIndex)
   try {
     const exists = await contractExists(remoteTokenPoolId, provider)
     return exists ? remoteTokenPoolId : null

@@ -28,7 +28,7 @@ func VaaIDFromString(s string) (*VAAID, error) {
 		return nil, errors.New("invalid message id")
 	}
 
-	emitterChain, err := strconv.Atoi(parts[0])
+	emitterChain, err := strconv.ParseUint(parts[0], 10, 16)
 	if err != nil {
 		return nil, fmt.Errorf("invalid emitter chain: %s", err)
 	}
@@ -38,7 +38,7 @@ func VaaIDFromString(s string) (*VAAID, error) {
 		return nil, fmt.Errorf("invalid emitter address: %s", err)
 	}
 
-	targetChain, err := strconv.Atoi(parts[2])
+	targetChain, err := strconv.ParseUint(parts[2], 10, 16)
 	if err != nil {
 		return nil, fmt.Errorf("invalid target chain: %s", err)
 	}

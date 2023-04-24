@@ -4,13 +4,13 @@ import {
   Output,
   TestContractResult,
   Token,
-  subContractId,
   ContractState,
   contractIdFromAddress,
   binToHex,
-  addressFromContractId,
   Project,
-  web3
+  web3,
+  subContractId,
+  ALPH_TOKEN_ID
 } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import {
@@ -32,7 +32,6 @@ import {
   newRemoteTokenPoolFixture,
   newTokenBridgeFixture,
   newTokenBridgeForChainFixture,
-  newWrappedAlphPoolFixture,
   RegisterChain,
   tokenBridgeForChainAddress,
   tokenBridgeModule,
@@ -158,7 +157,7 @@ describe('test token bridge', () => {
     })
   })
 
-  it('should attest wrapped alph', async () => {
+  it('should attest alph', async () => {
     await buildProject()
     const tokenBridgeInfo = createTokenBridge()
     const tokenBridge = tokenBridgeInfo.contract
@@ -169,7 +168,7 @@ describe('test token bridge', () => {
       initialFields: tokenBridgeInfo.selfState.fields,
       testArgs: {
         payer: payer,
-        localTokenId: tokenBridgeInfo.wrappedAlphId,
+        localTokenId: ALPH_TOKEN_ID,
         nonce: nonceHex,
         consistencyLevel: 0n
       },
@@ -181,7 +180,7 @@ describe('test token bridge', () => {
     expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + defaultMessageFee))
 
     const byte32Zero = '0'.repeat(64)
-    const message = new AttestToken(tokenBridgeInfo.wrappedAlphId, CHAIN_ID_ALEPHIUM, byte32Zero, byte32Zero, 0)
+    const message = new AttestToken(ALPH_TOKEN_ID, CHAIN_ID_ALEPHIUM, byte32Zero, byte32Zero, 0)
     const events = testResult.events
     expect(events.length).toEqual(1)
     expect(events[0].name).toEqual('WormholeMessage')
@@ -252,7 +251,7 @@ describe('test token bridge', () => {
 
   it('should register chain failed if sequence is invalid', async () => {
     await buildProject()
-    const tokenBridgeInfo = createTokenBridge(0n, undefined, 3n)
+    const tokenBridgeInfo = createTokenBridge(undefined, 3n)
     const tokenBridge = tokenBridgeInfo.contract
     const registerChain = new RegisterChain(remoteChainId, randomContractId())
     async function test(sequence: number) {
@@ -285,16 +284,15 @@ describe('test token bridge', () => {
     }
   }, 10000)
 
-  it('should create wrapped alph pool', async () => {
+  it('should create alph token pool', async () => {
     await buildProject()
     const fixture = newTokenBridgeFixture()
-    const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
     const tokenBridge = fixture.tokenBridgeInfo.contract
     const testResult = await tokenBridge.testPublicMethod('createLocalTokenPool', {
       address: fixture.tokenBridgeInfo.address,
       initialFields: fixture.tokenBridgeInfo.selfState.fields,
       testArgs: {
-        localTokenId: wrappedAlphId,
+        localTokenId: ALPH_TOKEN_ID,
         payer: payer,
         createContractAlphAmount: minimalAlphInContract
       },
@@ -303,7 +301,7 @@ describe('test token bridge', () => {
     })
 
     const tokenPoolOutput = testResult.txOutputs[0]
-    const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, wrappedAlphId)
+    const expectedAddress = tokenPoolAddress(fixture.tokenBridgeInfo.contractId, CHAIN_ID_ALEPHIUM, ALPH_TOKEN_ID)
     expect(tokenPoolOutput.address).toEqual(expectedAddress)
     expect(BigInt(tokenPoolOutput.alphAmount)).toEqual(minimalAlphInContract)
     expect(tokenPoolOutput.tokens).toEqual([])
@@ -318,23 +316,25 @@ describe('test token bridge', () => {
     const inputAsset = alphInputAsset(fromAddress, transferAmount * 2n)
 
     async function test(messageFee: bigint, arbiterFee: bigint) {
-      const fixture = newWrappedAlphPoolFixture(remoteChainId, remoteTokenBridgeId, messageFee)
-      const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
+      const fixture = newLocalTokenPoolFixture(remoteChainId, remoteTokenBridgeId, ALPH_TOKEN_ID, messageFee)
       const tokenBridge = fixture.tokenBridgeInfo.contract
-      const testResult = await tokenBridge.testPublicMethod('transferAlph', {
+      const testResult = await tokenBridge.testPublicMethod('transferToken', {
         address: fixture.tokenBridgeInfo.address,
         initialFields: fixture.tokenBridgeInfo.selfState.fields,
         testArgs: {
           fromAddress: fromAddress,
+          bridgeTokenId: ALPH_TOKEN_ID,
+          tokenChainId: BigInt(CHAIN_ID_ALEPHIUM),
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
-          alphAmount: transferAmount,
+          tokenAmount: transferAmount,
+          messageFee: messageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: minimalConsistencyLevel
         },
         inputAssets: [inputAsset],
-        existingContracts: fixture.wrappedAlphPoolInfo.states()
+        existingContracts: fixture.localTokenPoolInfo.states()
       })
 
       const tokenBridgeForChainState = testResult.contracts.find(
@@ -343,30 +343,13 @@ describe('test token bridge', () => {
       expect(tokenBridgeForChainState.fields['sendSequence']).toEqual(1n)
 
       // check `totalBridged`
-      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId)!
-      const realTransferAmount = transferAmount - messageFee
-      expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + realTransferAmount)
+      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.localTokenPoolInfo.contractId)!
+      expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged + transferAmount)
+      expect(tokenPoolState.asset.alphAmount).toEqual(fixture.totalBridged + transferAmount + minimalAlphInContract)
 
-      // check `totalWrapped`
-      const wrappedAlphState = testResult.contracts.find((c) => c.contractId === wrappedAlphId)!
-      expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalBridged + realTransferAmount)
-
-      const wrappedAlphOutput = testResult.txOutputs.find((c) => c.address === addressFromContractId(wrappedAlphId))!
-      expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph + realTransferAmount)
-      expect(wrappedAlphOutput.tokens).toEqual([
-        {
-          id: wrappedAlphId,
-          amount: fixture.totalWrappedAlph - realTransferAmount
-        }
-      ])
-
-      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.wrappedAlphPoolInfo.address)!
-      expect(tokenPoolOutput.tokens).toEqual([
-        {
-          id: wrappedAlphId,
-          amount: fixture.totalBridged + realTransferAmount
-        }
-      ])
+      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.localTokenPoolInfo.address)!
+      expect(tokenPoolOutput.alphAmount).toEqual(fixture.totalBridged + transferAmount + minimalAlphInContract)
+      expect(tokenPoolOutput.tokens).toEqual([])
 
       if (messageFee !== 0n) {
         const governanceOutput = testResult.txOutputs.find(
@@ -375,7 +358,7 @@ describe('test token bridge', () => {
         expect(BigInt(governanceOutput.alphAmount)).toEqual(BigInt(minimalAlphInContract + messageFee))
       }
 
-      const transferMessage = new Transfer(realTransferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
+      const transferMessage = new Transfer(transferAmount, ALPH_TOKEN_ID, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
       expect(testResult.events.length).toEqual(1)
       const event = testResult.events[0]
       expect(event.name).toEqual('WormholeMessage')
@@ -397,14 +380,13 @@ describe('test token bridge', () => {
 
   it('should complete transfer alph', async () => {
     await buildProject()
-    const fixture = newWrappedAlphPoolFixture(remoteChainId, remoteTokenBridgeId)
-    const wrappedAlphId = fixture.tokenBridgeInfo.wrappedAlphId
+    const fixture = newLocalTokenPoolFixture(remoteChainId, remoteTokenBridgeId, ALPH_TOKEN_ID)
     const toAddress = randomAssetAddressHex()
     const transferAmount = oneAlph
     const tokenBridgeForChain = fixture.tokenBridgeForChainInfo.contract
 
     async function test(arbiterFee: bigint) {
-      const transfer = new Transfer(transferAmount, wrappedAlphId, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
+      const transfer = new Transfer(transferAmount, ALPH_TOKEN_ID, CHAIN_ID_ALEPHIUM, toAddress, arbiterFee)
       const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
@@ -417,30 +399,18 @@ describe('test token bridge', () => {
         },
         initialAsset: fixture.tokenBridgeForChainInfo.selfState.asset,
         inputAssets: [defaultInputAsset],
-        existingContracts: fixture.wrappedAlphPoolInfo.states()
+        existingContracts: fixture.localTokenPoolInfo.states()
       })
 
       // check `totalBridged`
-      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.wrappedAlphPoolInfo.contractId)!
+      const tokenPoolState = testResult.contracts.find((c) => c.contractId === fixture.localTokenPoolInfo.contractId)!
       expect(tokenPoolState.fields['totalBridged']).toEqual(fixture.totalBridged - transferAmount)
-
-      // check `totalWrapped`
-      const wrappedAlphState = testResult.contracts.find((c) => c.contractId === wrappedAlphId)!
-      expect(wrappedAlphState.fields['totalWrapped']).toEqual(fixture.totalWrappedAlph - transferAmount)
+      expect(tokenPoolState.asset.alphAmount).toEqual(fixture.totalBridged - transferAmount + minimalAlphInContract)
 
       const tokenBridgeForChainState = testResult.contracts.find(
         (c) => c.contractId === fixture.tokenBridgeForChainInfo.contractId
       )!
       expect(tokenBridgeForChainState.fields['firstNext256']).toEqual(1n)
-
-      const wrappedAlphOutput = testResult.txOutputs.find((c) => c.address === addressFromContractId(wrappedAlphId))!
-      expect(wrappedAlphOutput.alphAmount).toEqual(fixture.totalWrappedAlph - transferAmount)
-      expect(wrappedAlphOutput.tokens).toEqual([
-        {
-          id: wrappedAlphId,
-          amount: fixture.totalWrappedAlph + transferAmount
-        }
-      ])
 
       const recipientOutput = testResult.txOutputs.find((c) => c.address === hexToBase58(toAddress))!
       expect(BigInt(recipientOutput.alphAmount)).toEqual(transferAmount - arbiterFee + dustAmount)
@@ -448,13 +418,9 @@ describe('test token bridge', () => {
       const callerOutput = testResult.txOutputs.find((c) => c.address === defaultInputAsset.address)!
       checkTxCallerBalance(callerOutput, dustAmount - arbiterFee)
 
-      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.wrappedAlphPoolInfo.address)!
-      expect(tokenPoolOutput.tokens).toEqual([
-        {
-          id: wrappedAlphId,
-          amount: fixture.totalBridged - transferAmount
-        }
-      ])
+      const tokenPoolOutput = testResult.txOutputs.find((c) => c.address === fixture.localTokenPoolInfo.address)!
+      expect(tokenPoolOutput.alphAmount).toEqual(fixture.totalBridged - transferAmount + minimalAlphInContract)
+      expect(tokenPoolOutput.tokens).toEqual([])
     }
 
     await test(10n ** 12n)
@@ -511,6 +477,7 @@ describe('test token bridge', () => {
         toChainId: BigInt(remoteChainId),
         toAddress: toAddress,
         tokenAmount: transferAmount,
+        messageFee: defaultMessageFee,
         arbiterFee: arbiterFee,
         nonce: nonceHex,
         consistencyLevel: minimalConsistencyLevel
@@ -785,6 +752,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: consistencyLevel
@@ -870,6 +838,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(remoteChainId),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: minimalConsistencyLevel
@@ -984,7 +953,11 @@ describe('test token bridge', () => {
     expect(tokenPoolState.asset.alphAmount).toEqual(tokenPoolInitAsset.alphAmount)
     expect(tokenPoolState.asset.tokens).toEqual(tokenPoolInitAsset.tokens)
 
-    const unexecutedSequenceContractId = subContractId(fixture.tokenBridgeForChainInfo.contractId, '0000000000000000')
+    const unexecutedSequenceContractId = subContractId(
+      fixture.tokenBridgeForChainInfo.contractId,
+      '0000000000000000',
+      0
+    )
     const unexecutedSequenceState = testResult.contracts.find((c) => c.contractId === unexecutedSequenceContractId)!
     expect(unexecutedSequenceState.fields['begin']).toEqual(0n)
     expect(unexecutedSequenceState.fields['sequences']).toEqual(0n)
@@ -1024,6 +997,7 @@ describe('test token bridge', () => {
           toChainId: BigInt(chainC),
           toAddress: toAddress,
           tokenAmount: transferAmount,
+          messageFee: defaultMessageFee,
           arbiterFee: arbiterFee,
           nonce: nonceHex,
           consistencyLevel: consistencyLevel
@@ -1154,7 +1128,8 @@ describe('test token bridge', () => {
     for (const path of paths) {
       const unexecutedSequenceContractId = subContractId(
         fixture.tokenBridgeForChainInfo.contractId,
-        zeroPad(path.toString(16), 8)
+        zeroPad(path.toString(16), 8),
+        0
       )
       const contractInfo = createUnexecutedSequence(
         fixture.tokenBridgeForChainInfo.contractId,
@@ -1271,12 +1246,12 @@ describe('test token bridge', () => {
       'updateMinimalConsistencyLevel',
       'getRefundAddress',
       'updateRefundAddress',
+      'getMessageFee',
       'attestToken',
       'createLocalTokenPool',
       'createRemoteTokenPool',
       'updateRemoteTokenPool',
-      'transferToken',
-      'transferAlph'
+      'transferToken'
     ])
   })
 

@@ -171,24 +171,25 @@ export async function createEth(): Promise<BridgeChain> {
     toAddress: Uint8Array,
     sequence: number
   ): Promise<TransferResult> => {
-    const approveReceipt = await approveEth(tokenBridgeAddress, wethAddress, wallet, amount)
+    const transferAmount = currentMessageFee + amount
     const transferReceipt = await transferFromEthNative(
       tokenBridgeAddress,
       wallet,
-      amount,
+      transferAmount,
       toChainId,
       toAddress,
       undefined,
-      ethTxOptions
+      {
+        ...ethTxOptions,
+        value: transferAmount
+      }
     )
     console.log(
       `transfer weth to ${coalesceChainName(toChainId)} succeed, amount: ${amount}, tx id: ${
         transferReceipt.transactionHash
       }`
     )
-    const approveTxFee = await getTransactionFee(approveReceipt.transactionHash)
-    const transferTxFee = await getTransactionFee(transferReceipt.transactionHash)
-    const txFee = approveTxFee + transferTxFee
+    const txFee = await getTransactionFee(transferReceipt.transactionHash)
     const signedVaa = await getSignedVAA(CHAIN_ID_ETH, tokenBridgeEmitterAddress, toChainId, sequence)
     return { signedVaa, txFee }
   }

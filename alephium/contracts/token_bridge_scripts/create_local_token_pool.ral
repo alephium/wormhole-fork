@@ -5,6 +5,6 @@ TxScript CreateLocalTokenPool(
     alphAmount: U256
 ) {
     tokenBridge.createLocalTokenPool{
-        payer -> alphAmount, localTokenId: 1
+        payer -> ALPH: alphAmount, localTokenId: 1
     }(localTokenId, payer, alphAmount)
 }

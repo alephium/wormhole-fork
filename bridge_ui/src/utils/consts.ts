@@ -21,7 +21,7 @@ import {
   isEVMChain,
   MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
-  DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
+  DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
 } from "alephium-wormhole-sdk";
 import { clusterApiUrl } from "@solana/web3.js";
 import { getAddress } from "ethers/lib/utils";
@@ -652,12 +652,6 @@ export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
     ? alephiumTestnetConfig.contracts.tokenBridge
     : alephiumDevnetConfig.contracts.tokenBridge
 export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = remoteTokenPoolContract().codeHash
-export const ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID =
-  CLUSTER === "mainnet"
-    ? alephiumMainnetConfig.contracts.walph
-    : CLUSTER === "testnet"
-    ? alephiumTestnetConfig.contracts.walph
-    : alephiumDevnetConfig.contracts.walph
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL

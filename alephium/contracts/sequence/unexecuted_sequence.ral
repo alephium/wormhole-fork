@@ -3,7 +3,7 @@ Contract UnexecutedSequence(
     begin: U256,
     mut sequences: U256
 ) extends Constants() {
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, updateFields = true)
     pub fn checkSequence(seq: U256, refundAddress: Address) -> () {
         checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
         assert!(seq >= begin, ErrorCodes.InvalidSequence)

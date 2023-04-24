@@ -1,8 +1,8 @@
 Contract TestToken() {
-    @using(preapprovedAssets = true, assetsInContract = true, updateFields = false)
+    @using(preapprovedAssets = true, assetsInContract = true)
     pub fn buy(from: Address, amount: U256) -> () {
         let tokenAmount = amount
-        transferAlphToSelf!(from, amount)
+        transferTokenToSelf!(from, ALPH, amount)
         transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)
     }
 }

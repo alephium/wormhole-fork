@@ -414,7 +414,7 @@ async function doWorkerThread(workerInfo: WorkerInfo) {
       workerInfo,
       relayLogger
     );
-    relayLogger.debug(`Found items: ${workableItems}`);
+    relayLogger.debug(`Found items: ${JSON.stringify(workableItems)}`);
     for (let i = 0; i < workableItems.length; i++) {
       const workItem: WorkableItem = workableItems[i];
       if (workItem) {

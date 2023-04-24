@@ -22,10 +22,9 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
-import { NodeProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenInfo } from "../utils/alephium";
 import {
-  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
   ALGORAND_HOST,
   getEvmChainId,
   SOLANA_HOST,
@@ -40,12 +39,12 @@ async function getAlephiumTargetAsset(address: string, targetAsset: string, prov
   const utxos = await provider.addresses.getAddressesAddressUtxos(address)
   const now = Date.now()
   let balance = BigInt(0)
-  if (targetAsset === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
+  if (targetAsset === ALPH_TOKEN_ID) {
     utxos.utxos.forEach(utxo => balance = balance + BigInt(utxo.amount))
   } else {
     utxos.utxos.forEach(utxo => {
-      if (now > utxo.lockTime) {
-        utxo.tokens.filter(t => t.id === targetAsset).forEach(t =>
+      if (utxo.lockTime === undefined || now > utxo.lockTime) {
+        utxo.tokens?.filter(t => t.id === targetAsset).forEach(t =>
           balance = balance + BigInt(t.amount)
         )
       }

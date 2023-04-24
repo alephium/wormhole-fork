@@ -33,7 +33,7 @@ async function isSequenceExecuted(
   groupIndex: number
 ): Promise<boolean> {
   const path = zeroPad(Math.floor(Number(sequence) / 256).toString(16), 8)
-  const contractId = subContractId(tokenBridgeForChainId, path)
+  const contractId = subContractId(tokenBridgeForChainId, path, groupIndex)
   const contractAddress = addressFromContractId(contractId)
   try {
     const contract = unexecutedSequenceContract()

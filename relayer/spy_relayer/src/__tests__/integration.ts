@@ -209,7 +209,7 @@ describe('Ethereum to Alephium', () => {
       )
       console.log(`Got signed vaa: ${binToHex(signedVAA)}`)
 
-      const attestTokenHandlerId = getAttestTokenHandlerId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ETH)
+      const attestTokenHandlerId = getAttestTokenHandlerId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ETH, ALPH_GROUP_INDEX)
       const createWrappedResult = await createRemoteTokenPoolOnAlph(
         alphWallet,
         attestTokenHandlerId,
@@ -264,7 +264,7 @@ describe('Ethereum to Alephium', () => {
 
   test('Spy Relay redeemed on Alephium', async () => {
     try {
-      const tokenBridgeForChainId = getTokenBridgeForChainId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ETH)
+      const tokenBridgeForChainId = getTokenBridgeForChainId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ETH, ALPH_GROUP_INDEX)
       let success: boolean = false
       for (let count = 0; count < 5 && !success; ++count) {
         console.log(`Sleeping before querying spy relay: timestamp: ${new Date().toLocaleString()}`)

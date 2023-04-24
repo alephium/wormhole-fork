@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -126,7 +127,8 @@ function useFetchForeignAsset(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             alphSigner!.nodeProvider,
             originChain,
-            hexToUint8Array(originAssetHex)
+            hexToUint8Array(originAssetHex),
+            ALEPHIUM_BRIDGE_GROUP_INDEX
           )
         }
         : foreignChain === CHAIN_ID_TERRA

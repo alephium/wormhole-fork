@@ -20,7 +20,7 @@ build: node_modules $(SOURCE_FILES)
 
 install: build
 	@echo Linking binaries
-	chmod +x build/main.js
+	chmod +x build/clients/js/main.js
 	npm link
 
 clean:

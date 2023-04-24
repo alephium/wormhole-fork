@@ -93,38 +93,42 @@ export function zeroPad(value: string, byteLength: number): string {
 
 export function getAttestTokenHandlerId(
   tokenBridgeId: string,
-  remoteChainId: number
+  remoteChainId: number,
+  groupIndex: number
 ): string {
   const pathHex = '00' + zeroPad(remoteChainId.toString(16), 2)
-  return subContractId(tokenBridgeId, pathHex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getTokenBridgeForChainId(
   tokenBridgeId: string,
-  remoteChainId: number
+  remoteChainId: number,
+  groupIndex: number
 ): string {
   const pathHex = '01' + zeroPad(remoteChainId.toString(16), 2)
-  return subContractId(tokenBridgeId, pathHex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getTokenPoolId(
   tokenBridgeId: string,
   tokenChainId: number,
-  tokenId: string
+  tokenId: string,
+  groupIndex: number
 ): string {
   if (tokenId.length !== 64) {
     throw new Error(`Invalid token id ${tokenId}, expect 32 bytes hex string`)
   }
   const pathHex = '02' + zeroPad(tokenChainId.toString(16), 2) + tokenId
-  return subContractId(tokenBridgeId, pathHex)
+  return subContractId(tokenBridgeId, pathHex, groupIndex)
 }
 
 export function getUnexecutedSequenceId(
   tokenBridgeForChainId: string,
-  index: number
+  index: number,
+  groupIndex: number
 ): string {
   const pathHex = zeroPad(index.toString(16), 8)
-  return subContractId(tokenBridgeForChainId, pathHex)
+  return subContractId(tokenBridgeForChainId, pathHex, groupIndex)
 }
 
 export async function contractExists(contractId: string, provider: NodeProvider): Promise<boolean> {

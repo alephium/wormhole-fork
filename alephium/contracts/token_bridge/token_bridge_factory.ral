@@ -1,37 +1,26 @@
 Contract TokenBridgeFactory(
-  wrappedAlphPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
   localTokenPoolTemplateId: ByteVec,       // used to create contract by copyCreateContract
   remoteTokenPoolTemplateId: ByteVec,      // used to create contract by copyCreateContract
   tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
   attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
   unexecutedSequenceTemplateId: ByteVec    // used to create contract by copyCreateContract
 ) {
-  @using(updateFields = false)
-  pub fn getWrappedAlphPoolTemplateId() -> ByteVec {
-    return wrappedAlphPoolTemplateId
-  }
-
-  @using(updateFields = false)
   pub fn getLocalTokenPoolTemplateId() -> ByteVec {
     return localTokenPoolTemplateId
   }
 
-  @using(updateFields = false)
   pub fn getRemoteTokenPoolTemplateId() -> ByteVec {
     return remoteTokenPoolTemplateId
   }
 
-  @using(updateFields = false)
   pub fn getTokenBridgeForChainTemplateId() -> ByteVec {
     return tokenBridgeForChainTemplateId
   }
 
-  @using(updateFields = false)
   pub fn getAttestTokenHandlerTemplateId() -> ByteVec {
     return attestTokenHandlerTemplateId
   }
 
-  @using(updateFields = false)
   pub fn getUnexecutedSequenceTemplateId() -> ByteVec {
     return unexecutedSequenceTemplateId
   }

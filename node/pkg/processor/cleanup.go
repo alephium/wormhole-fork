@@ -3,12 +3,14 @@ package processor
 import (
 	"context"
 	"encoding/hex"
+	"time"
+
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/db"
+	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -53,6 +55,7 @@ var (
 
 const (
 	settlementTime = time.Second * 30
+	retryTime      = time.Minute * 5
 )
 
 // handleCleanup handles periodic retransmissions and cleanup of VAAs
@@ -63,13 +66,11 @@ func (p *Processor) handleCleanup(ctx context.Context) {
 	for hash, s := range p.state.vaaSignatures {
 		delta := time.Since(s.firstObserved)
 
-		switch {
-		case !s.submitted && s.ourVAA != nil && delta > settlementTime:
+		if !s.submitted && s.ourVAA != nil && delta > settlementTime {
 			// Expire pending VAAs post settlement time if we have a stored quorum VAA.
 			//
 			// This occurs when we observed a message after the cluster has already reached
 			// consensus on it, causing us to never achieve quorum.
-
 			if _, err := p.db.GetSignedVAABytes(*db.VaaIDFromVAA(s.ourVAA)); err == nil {
 				// If we have a stored quorum VAA, we can safely expire the state.
 				//
@@ -78,15 +79,16 @@ func (p *Processor) handleCleanup(ctx context.Context) {
 				p.logger.Info("Expiring late VAA", zap.String("digest", hash), zap.Duration("delta", delta))
 				aggregationStateLate.Inc()
 				delete(p.state.vaaSignatures, hash)
-				break
+				continue
 			} else if err != db.ErrVAANotFound {
 				p.logger.Error("failed to look up VAA in database",
 					zap.String("digest", hash),
 					zap.Error(err),
 				)
 			}
+		}
 
-			fallthrough
+		switch {
 		case !s.settled && delta > settlementTime:
 			// After 30 seconds, the VAA is considered settled - it's unlikely that more observations will
 			// arrive, barring special circumstances. This is a better time to count misses than submission,
@@ -171,19 +173,28 @@ func (p *Processor) handleCleanup(ctx context.Context) {
 			p.logger.Info("expiring unsubmitted VAA after exhausting retries", zap.String("digest", hash), zap.Duration("delta", delta))
 			delete(p.state.vaaSignatures, hash)
 			aggregationStateTimeout.Inc()
-		case !s.submitted && delta.Minutes() >= 5:
+		case !s.submitted && delta.Minutes() >= 5 && time.Since(s.lastRetry) >= retryTime:
 			// Poor VAA has been unsubmitted for five minutes - clearly, something went wrong.
 			// If we have previously submitted an observation, we can make another attempt to get it over
-			// the finish line by rebroadcasting our sig. If we do not have a VAA, it means we either never observed it,
-			// or it got revived by a malfunctioning guardian node, in which case, we can't do anything
-			// about it and just delete it to keep our state nice and lean.
+			// the finish line by sending a re-observation request to the network and rebroadcasting our
+			// sig. If we do not have an observation, it means we either never observed it, or it got
+			// revived by a malfunctioning guardian node, in which case, we can't do anything about it
+			// and just delete it to keep our state nice and lean.
 			if s.ourMsg != nil {
 				p.logger.Info("resubmitting VAA observation",
 					zap.String("digest", hash),
 					zap.Duration("delta", delta),
 					zap.Uint("retry", s.retryCount))
+				req := &gossipv1.ObservationRequest{
+					ChainId: uint32(s.ourVAA.EmitterChain),
+					TxHash:  s.txHash,
+				}
+				if err := common.PostObservationRequest(p.obsvReqSendC, req); err != nil {
+					p.logger.Warn("failed to broadcast re-observation request", zap.Error(err))
+				}
 				p.sendC <- s.ourMsg
 				s.retryCount += 1
+				s.lastRetry = time.Now()
 				aggregationStateRetries.Inc()
 			} else {
 				// For nil state entries, we log the quorum to determine whether the

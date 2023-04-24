@@ -23,8 +23,7 @@ import {
   transferNativeSol,
   uint8ArrayToHex,
   transferRemoteTokenFromAlph,
-  transferLocalTokenFromAlph,
-  transferAlph,
+  transferLocalTokenFromAlph
 } from "alephium-wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -77,7 +76,6 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
-  ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
@@ -352,18 +350,7 @@ async function alephium(
     const txInfo = await waitTxConfirmedAndGetTxInfo(
       signer.nodeProvider, async () => {
         let result: BuildScriptTxResult
-        if (tokenId === ALEPHIUM_WRAPPED_ALPH_CONTRACT_ID) {
-          result = await transferAlph(
-            signer.signerProvider,
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.account.address,
-            targetChain,
-            uint8ArrayToHex(targetAddress),
-            amountParsed,
-            alphArbiterFee,
-            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-          )
-        } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
+        if (tokenChainId === CHAIN_ID_ALEPHIUM) {
           result = await transferLocalTokenFromAlph(
             signer.signerProvider,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,

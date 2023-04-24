@@ -30,8 +30,8 @@ function createRegisterChainVaa(sequence: number): string {
 
 async function registerChain() {
   const alph = (await getBridgeChains()).alph
-  const attestTokenHandlerId0 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId)
-  const tokenBridgeForChainId0 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId)
+  const attestTokenHandlerId0 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId, alph.groupIndex)
+  const tokenBridgeForChainId0 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId, alph.groupIndex)
 
   assert(!(await contractExists(attestTokenHandlerId0, web3.getCurrentNodeProvider())))
   assert(!(await contractExists(tokenBridgeForChainId0, web3.getCurrentNodeProvider())))
@@ -44,8 +44,8 @@ async function registerChain() {
   }
   await submitGovernanceVAA('RegisterChain', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM])
 
-  const attestTokenHandlerId1 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId)
-  const tokenBridgeForChainId1 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId)
+  const attestTokenHandlerId1 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId, alph.groupIndex)
+  const tokenBridgeForChainId1 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId, alph.groupIndex)
 
   assert(await contractExists(attestTokenHandlerId1, web3.getCurrentNodeProvider()))
   assert(await contractExists(tokenBridgeForChainId1, web3.getCurrentNodeProvider()))

@@ -2,9 +2,10 @@ package processor
 
 import (
 	"encoding/hex"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -55,6 +56,7 @@ func (p *Processor) broadcastSignature(v *vaa.VAA, signature []byte, txhash []by
 
 	p.state.vaaSignatures[hash].ourVAA = v
 	p.state.vaaSignatures[hash].ourMsg = msg
+	p.state.vaaSignatures[hash].txHash = txhash
 	p.state.vaaSignatures[hash].source = v.EmitterChain.String()
 	p.state.vaaSignatures[hash].gs = p.gs // guaranteed to match ourVAA - there's no concurrent access to p.gs
 

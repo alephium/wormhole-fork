@@ -46,6 +46,7 @@ import {
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
 import {
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -260,7 +261,8 @@ function useFetchTargetAsset(nft?: boolean) {
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
             alphSigner!.nodeProvider,
             originChain,
-            hexToUint8Array(originAsset)
+            hexToUint8Array(originAsset),
+            ALEPHIUM_BRIDGE_GROUP_INDEX
           )
           if (!cancelled) {
             dispatch(

@@ -30,12 +30,10 @@ import { formatNativeDenom } from "../utils/terra";
 import { newProvider } from "../relayer/evm";
 import {
   addressFromContractId,
-  binToHex,
+  ALPH_TOKEN_ID,
   NodeProvider,
-  tokenIdFromAddress,
   web3
 } from "@alephium/web3"
-import { ValByteVec, ValU256 } from "@alephium/web3/dist/src/api/api-alephium";
 import { sleep } from "../helpers/utils";
 
 let env: WalletMonitorEnvironment;
@@ -419,9 +417,12 @@ async function pullAllAlephiumBalances(
       })
 
       for (const token of supportedTokens) {
+        const originTokenId = tryNativeToHexString(token.address, token.chainId)
+        if (originTokenId === ALPH_TOKEN_ID) {
+          continue
+        }
         if (token.chainId === CHAIN_ID_ALEPHIUM) {
-          const tokenId = binToHex(tokenIdFromAddress(token.address))
-          const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+          const tokenBalance = balances.tokenBalances?.find(t => t.id === originTokenId)
           const amount = tokenBalance?.amount ?? '0'
           walletBalances.push({
             chainId: chainConfig.chainId,
@@ -435,15 +436,14 @@ async function pullAllAlephiumBalances(
           continue
         }
 
-        const originTokenId = tryNativeToHexString(token.address, token.chainId)
-        const tokenId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId)
-        const tokenExists = await contractExists(tokenId, nodeProvider)
+        const tokenPoolId = getTokenPoolId(chainConfig.tokenBridgeAddress, token.chainId, originTokenId, chainConfig.groupIndex)
+        const tokenExists = await contractExists(tokenPoolId, nodeProvider)
         if (!tokenExists) {
           continue
         }
-        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
+        const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenPoolId)
         const amount = tokenBalance?.amount ?? '0'
-        const contractAddress = addressFromContractId(tokenId)
+        const contractAddress = addressFromContractId(tokenPoolId)
         const tokenInfo = await getRemoteTokenInfo(contractAddress, groupIndex)
         walletBalances.push({
           chainId: chainConfig.chainId,

@@ -3,7 +3,6 @@ package guardiand
 import (
 	"context"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/alephium/wormhole-fork/node/pkg/notify/discord"
 	"github.com/alephium/wormhole-fork/node/pkg/telemetry"
 	"github.com/alephium/wormhole-fork/node/pkg/version"
+	"github.com/benbjohnson/clock"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/gorilla/mux"
@@ -288,6 +288,9 @@ var NodeCmd = &cobra.Command{
 	Short: "Run the guardiand node",
 	Run:   runNode,
 }
+
+// observationRequestBufferSize is the buffer size of the per-network reobservation channel
+const observationRequestBufferSize = 25
 
 func runNode(cmd *cobra.Command, args []string) {
 	if *network != "devnet" && *network != "testnet" && *network != "mainnet" {
@@ -590,10 +593,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
 
 	// Inbound observation requests from the p2p service (for all chains)
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
+	obsvReqC := make(chan *gossipv1.ObservationRequest, common.ObsvReqChannelSize)
 
 	// Outbound observation requests
-	obsvReqSendC := make(chan *gossipv1.ObservationRequest)
+	obsvReqSendC := make(chan *gossipv1.ObservationRequest, common.ObsvReqChannelSize)
 
 	// Injected VAAs (manually generated rather than created via observation)
 	injectC := make(chan *vaa.VAA)
@@ -605,28 +608,11 @@ func runNode(cmd *cobra.Command, args []string) {
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
 
 	// Observation request channel for each chain supporting observation requests.
-	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
+	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
+	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
+	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest, observationRequestBufferSize)
 
-	// Multiplex observation requests to the appropriate chain
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case req := <-obsvReqC:
-				if channel, ok := chainObsvReqC[vaa.ChainID(req.ChainId)]; ok {
-					channel <- req
-				} else {
-					logger.Error("unknown chain ID for reobservation request",
-						zap.Uint32("chain_id", req.ChainId),
-						zap.String("tx_hash", hex.EncodeToString(req.TxHash)))
-				}
-			}
-		}
-	}()
+	go handleReobservationRequests(rootCtx, clock.New(), logger, obsvReqC, chainObsvReqC)
 
 	var notifier *discord.DiscordNotifier
 	if *discordToken != "" {
@@ -742,6 +728,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			setC,
 			sendC,
 			obsvC,
+			obsvReqSendC,
 			injectC,
 			signedInC,
 			guardianSigner,
