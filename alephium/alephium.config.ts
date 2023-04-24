@@ -1,21 +1,44 @@
 import { Configuration } from '@alephium/cli'
-import * as dotenv from 'dotenv'
-import path from 'path'
+import { default as alephiumDevnetConfig } from '../configs/alephium/devnet.json'
+import { default as alephiumTestnetConfig } from '../configs/alephium/testnet.json'
+import { default as alephiumMainnetConfig } from '../configs/alephium/mainnet.json'
+import { default as guardianDevnetConfig } from '../configs/guardian/devnet.json'
+import { default as guardianTestnetConfig } from '../configs/guardian/testnet.json'
+import { default as guardianMainnetConfig } from '../configs/guardian/mainnet.json'
 
-dotenv.config({ path: path.join(process.cwd(), '.env') })
-
-const settingsTemplate = {
-  initSigners: JSON.parse(process.env.INIT_SIGNERS!) as string[],
-  initChainId: parseInt(process.env.INIT_CHAIN_ID!),
-  initGovChainId: parseInt(process.env.INIT_GOV_CHAIN_ID!),
-  initGovContract: process.env.INIT_GOV_CONTRACT!,
-  minimalConsistencyLevel: -1, // to be overwritten
-  registerETHVAA: process.env.REGISTER_ETH_TOKEN_BRIDGE_VAA!,
-  registerBSCVAA: process.env.REGISTER_BSC_TOKEN_BRIDGE_VAA!,
-  guardianSetUpgradeVAA: process.env.GUARDIAN_SET_UPGRADE_VAA
+export type Settings = {
+  nodeUrl: string
+  networkId: number
+  initSigners: string[]
+  chainId: number
+  governanceChainId: number
+  governanceEmitterAddress: string
+  minimalConsistencyLevel: number
+  messageFee: bigint
 }
 
-export type Settings = typeof settingsTemplate
+function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
+  const [alephiumConfig, guardianConfig] =
+    network === 'devnet'
+      ? [alephiumDevnetConfig, guardianDevnetConfig]
+      : network === 'testnet'
+      ? [alephiumTestnetConfig, guardianTestnetConfig]
+      : [alephiumMainnetConfig, guardianMainnetConfig]
+  return {
+    nodeUrl: alephiumConfig.nodeUrl,
+    networkId: alephiumConfig.networkId,
+    initSigners: guardianConfig.initSigners as string[],
+    chainId: alephiumConfig.chainId as number,
+    governanceChainId: guardianConfig.governanceChainId as number,
+    governanceEmitterAddress: guardianConfig.governanceEmitterAddress as string,
+    minimalConsistencyLevel: alephiumConfig.minimalConsistencyLevel as number,
+    messageFee: BigInt(alephiumConfig.messageFee)
+  }
+}
+
+const devnetSettings = loadSettings('devnet')
+const testnetSettings = loadSettings('testnet')
+const mainnetSettings = loadSettings('mainnet')
 
 const configuration: Configuration<Settings> = {
   artifactDir: '../sdk/js/src/alephium/artifacts',
@@ -29,31 +52,28 @@ const configuration: Configuration<Settings> = {
   defaultNetwork: 'devnet',
   networks: {
     devnet: {
-      networkId: 4,
-      nodeUrl: 'http://localhost:22973',
+      networkId: devnetSettings.networkId,
+      nodeUrl: devnetSettings.nodeUrl,
       mnemonic:
         'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
       confirmations: 1,
-      settings: {
-        ...settingsTemplate,
-        minimalConsistencyLevel: 10
-      }
+      settings: devnetSettings
     },
 
     testnet: {
-      networkId: 1,
-      nodeUrl: process.env.ALPH_NODE_URL as string,
+      networkId: testnetSettings.networkId,
+      nodeUrl: testnetSettings.nodeUrl,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
-      settings: { ...settingsTemplate, minimalConsistencyLevel: 10 }
+      settings: testnetSettings
     },
 
     mainnet: {
-      networkId: 0,
-      nodeUrl: process.env.ALPH_NODE_URL as string,
+      networkId: mainnetSettings.networkId,
+      nodeUrl: mainnetSettings.nodeUrl,
       mnemonic: process.env.MNEMONIC as string,
       confirmations: 2,
-      settings: { ...settingsTemplate, minimalConsistencyLevel: 105 }
+      settings: mainnetSettings
     }
   }
 }

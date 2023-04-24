@@ -8,6 +8,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 
 	"github.com/davecgh/go-spew/spew"
@@ -18,14 +19,26 @@ import (
 )
 
 var AdminClientGovernanceVAAVerifyCmd = &cobra.Command{
-	Use:   "governance-vaa-verify [FILENAME]",
+	Use:   "governance-vaa-verify [NETWORK] [FILENAME]",
 	Short: "Verify governance vaa in prototxt format (offline)",
 	Run:   runGovernanceVAAVerify,
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(2),
 }
 
 func runGovernanceVAAVerify(cmd *cobra.Command, args []string) {
-	path := args[0]
+	network := args[0]
+	guardianConfig, err := common.ReadGuardianConfig(network)
+	if err != nil {
+		log.Fatalf("failed to read configs, err: %v", err)
+	}
+
+	governanceChainId := vaa.ChainID(guardianConfig.GovernanceChainId)
+	governanceEmitterAddress, err := vaa.StringToAddress(guardianConfig.GovernanceEmitterAddress)
+	if err != nil {
+		log.Fatalf("invalid governance emitter address %s, error: %v", guardianConfig.GovernanceEmitterAddress, err)
+	}
+
+	path := args[1]
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -49,14 +62,24 @@ func runGovernanceVAAVerify(cmd *cobra.Command, args []string) {
 		}
 		targetChainId := vaa.ChainID(message.TargetChainId)
 		switch payload := message.Payload.(type) {
+		case *nodev1.GovernanceMessage_UpdateMessageFee:
+			v, err = adminUpdateMessageFeeToVAA(governanceChainId, governanceEmitterAddress, payload.UpdateMessageFee, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+		case *nodev1.GovernanceMessage_TransferFee:
+			v, err = adminTransferFeeToVAA(governanceChainId, governanceEmitterAddress, payload.TransferFee, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_GuardianSet:
-			v, err = adminGuardianSetUpgradeToVAA(payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = adminGuardianSetUpgradeToVAA(governanceChainId, governanceEmitterAddress, payload.GuardianSet, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_ContractUpgrade:
-			v, err = adminContractUpgradeToVAA(payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = adminContractUpgradeToVAA(governanceChainId, governanceEmitterAddress, payload.ContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeRegisterChain:
-			v, err = tokenBridgeRegisterChain(payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = tokenBridgeRegisterChain(governanceChainId, governanceEmitterAddress, payload.BridgeRegisterChain, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		case *nodev1.GovernanceMessage_BridgeContractUpgrade:
-			v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+			v, err = tokenBridgeUpgradeContract(governanceChainId, governanceEmitterAddress, payload.BridgeContractUpgrade, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+		case *nodev1.GovernanceMessage_DestroyUnexecutedSequenceContracts:
+			v, err = tokenBridgeDestroyUnexecutedSequenceContracts(governanceChainId, governanceEmitterAddress, payload.DestroyUnexecutedSequenceContracts, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+		case *nodev1.GovernanceMessage_UpdateMinimalConsistencyLevel:
+			v, err = tokenBridgeUpdateMinimalConsistencyLevel(governanceChainId, governanceEmitterAddress, payload.UpdateMinimalConsistencyLevel, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
+		case *nodev1.GovernanceMessage_UpdateRefundAddress:
+			v, err = tokenBridgeUpdateRefundAddress(governanceChainId, governanceEmitterAddress, payload.UpdateRefundAddress, timestamp, req.CurrentSetIndex, message.Nonce, message.Sequence, targetChainId)
 		default:
 			panic(fmt.Sprintf("unsupported VAA type: %T", payload))
 		}

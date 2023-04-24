@@ -73,10 +73,10 @@ var AdminClientInjectGovernanceVAACmd = &cobra.Command{
 }
 
 var AdminClientFindMissingMessagesCmd = &cobra.Command{
-	Use:   "find-missing-messages [EMITTER_CHAIN_ID] [EMITTER_ADDRESS_HEX] [TARGET_CHAIN_ID]",
+	Use:   "find-missing-messages [NETWORK] [EMITTER_CHAIN_ID] [EMITTER_ADDRESS_HEX] [TARGET_CHAIN_ID]",
 	Short: "Find sequence number gaps for the given chain ID and emitter address",
 	Run:   runFindMissingMessages,
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.ExactArgs(4),
 }
 
 var DumpVAAByMessageID = &cobra.Command{
@@ -155,13 +155,17 @@ func runInjectGovernanceVAA(cmd *cobra.Command, args []string) {
 }
 
 func runFindMissingMessages(cmd *cobra.Command, args []string) {
-	emitterChainId, err := strconv.Atoi(args[0])
+	guardianConfig, err := common.ReadGuardianConfig(args[0])
+	if err != nil {
+		log.Fatalf("failed to read configs, err: %v", err)
+	}
+	emitterChainId, err := strconv.Atoi(args[1])
 	if err != nil {
 		log.Fatalf("invalid emitter chain ID: %v", err)
 	}
-	emitterAddress := args[1]
+	emitterAddress := args[2]
 
-	targetChainId, err := strconv.Atoi(args[2])
+	targetChainId, err := strconv.Atoi(args[3])
 	if err != nil {
 		log.Fatalf("invalid target chain ID: %v", err)
 	}
@@ -180,7 +184,7 @@ func runFindMissingMessages(cmd *cobra.Command, args []string) {
 		TargetChain:    uint32(targetChainId),
 		EmitterAddress: emitterAddress,
 		RpcBackfill:    *shouldBackfill,
-		BackfillNodes:  common.PublicRPCEndpoints,
+		BackfillNodes:  guardianConfig.GuardianUrls,
 	}
 	resp, err := c.FindMissingMessages(ctx, &msg)
 	if err != nil {

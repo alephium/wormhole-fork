@@ -16,8 +16,7 @@ import {
   deserializeVAA,
   isGovernanceVAA,
   uint8ArrayToHex,
-  signVAABody,
-  serializeGuardianSetUpgradePayload
+  signVAABody
 } from "alephium-wormhole-sdk";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { executeGovernanceSolana } from "./solana";
@@ -33,12 +32,12 @@ import {
   toChainId,
 } from "alephium-wormhole-sdk";
 import { executeGovernanceAlph } from "./alph";
+import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 
 setDefaultWasm("node");
 
-const GOVERNANCE_CHAIN = 1;
-const GOVERNANCE_EMITTER =
-  "0000000000000000000000000000000000000000000000000000000000000004";
+const GOVERNANCE_CHAIN = guardianDevnetConfig.governanceChainId
+const GOVERNANCE_EMITTER = guardianDevnetConfig.governanceEmitterAddress
 
 function makeVAA(
   emitterChain: number,
@@ -75,7 +74,7 @@ yargs(hideBin(process.argv))
   // Generate
   .command(
     "generate",
-    "generate VAAs (devnet and testnet only)",
+    "generate VAAs (devnet only)",
     (yargs) => {
       return (
         yargs
@@ -334,6 +333,11 @@ yargs(hideBin(process.argv))
           type: "string",
           choices: ["mainnet", "testnet", "devnet"],
           required: true,
+        })
+        .option('node-url', {
+          describe: "full node url",
+          type: "string",
+          required: false,
         });
     },
     async (argv) => {
@@ -389,12 +393,13 @@ yargs(hideBin(process.argv))
         chain = targetChainName;
       }
 
+      const nodeUrl = argv['node-url']
       if (chain === "unset") {
         throw Error(
           "This VAA does not specify the target chain, please provide it by hand using the '--chain' flag."
         );
       } else if (isEVMChain(chain)) {
-        await executeGovernanceEvm(parsedVaa.body.payload, buf, network, chain);
+        await executeGovernanceEvm(parsedVaa.body.payload, buf, network, chain, nodeUrl);
       } else if (chain === "terra") {
         await executeGovernanceTerra(parsedVaa.body.payload, buf, network);
       } else if (chain === "solana") {
@@ -404,7 +409,7 @@ yargs(hideBin(process.argv))
       } else if (chain === "near") {
         throw Error("NEAR is not supported yet");
       } else if (chain === "alephium") {
-        await executeGovernanceAlph(parsedVaa.body.payload, buf, network)
+        await executeGovernanceAlph(parsedVaa.body.payload, buf, network, nodeUrl)
       } else {
         // If you get a type error here, hover over `chain`'s type and it tells you
         // which cases are not handled

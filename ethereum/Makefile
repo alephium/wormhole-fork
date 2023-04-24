@@ -15,10 +15,7 @@ build: node_modules ${SOURCE_FILES}
 	touch -m build
 	npm run build
 
-.env: .env.test
-	cp $< $@
-
-test: build .env dependencies
+test: build dependencies
 	@if pgrep ganache-cli; then echo "Error: ganache-cli already running. Stop it before running tests"; exit 1; fi
 	npx ganache-cli -e 10000 --deterministic --time="1970-01-01T00:00:00+00:00" > ganache.log &
 	sleep 5
@@ -26,4 +23,4 @@ test: build .env dependencies
 	pkill ganache-cli || true
 
 clean:
-	rm -rf ganache.log .env node_modules build
+	rm -rf ganache.log node_modules build

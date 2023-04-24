@@ -12,9 +12,9 @@ import (
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
+	"github.com/btcsuite/btcutil/base58"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -41,6 +41,16 @@ func ToContractAddress(contractId string) (*string, error) {
 	bytes = append(bytes, b[:]...)
 	address := base58.Encode(bytes)
 	return &address, nil
+}
+
+func HexToByte32(str string) (Byte32, error) {
+	var byte32 Byte32
+	bytes, err := HexToFixedSizeBytes(str, 32)
+	if err != nil {
+		return byte32, err
+	}
+	copy(byte32[:], bytes[:])
+	return byte32, nil
 }
 
 func HexToFixedSizeBytes(str string, length int) ([]byte, error) {

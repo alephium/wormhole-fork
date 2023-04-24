@@ -16,6 +16,7 @@ const testSigner2PK = "892330666a850761e7370376430bb8c2aa1494072d3bfeaed0c4fa3d5
 const WormholeImplementationFullABI = jsonfile.readFileSync("build/contracts/Implementation.json").abi
 const BridgeImplementationFullABI = jsonfile.readFileSync("build/contracts/BridgeImplementation.json").abi
 const TokenImplementationFullABI = jsonfile.readFileSync("build/contracts/TokenImplementation.json").abi
+const EthereumDevnetConfig = jsonfile.readFileSync("../configs/ethereum/devnet.json")
 
 contract("Bridge", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
@@ -23,7 +24,7 @@ contract("Bridge", function () {
     const testChainId = "2";
     const testGovernanceChainId = "1";
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
-    let WETH = process.env.BRIDGE_INIT_WETH;
+    let WETH = EthereumDevnetConfig.contracts.weth;
     const testForeignChainId = "1";
     const testForeignBridgeContract = "0x000000000000000000000000000000000000000000000000000000000000ffff";
     const testBridgedAssetChain = "0001";

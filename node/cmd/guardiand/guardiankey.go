@@ -81,7 +81,7 @@ func loadGuardianKey(filename string) (*ecdsa.PrivateKey, error) {
 		return nil, fmt.Errorf("failed to deserialize protobuf: %w", err)
 	}
 
-	if !*unsafeDevMode && m.UnsafeDeterministicKey {
+	if *network != "devnet" && m.UnsafeDeterministicKey {
 		return nil, errors.New("refusing to use deterministic key in production")
 	}
 

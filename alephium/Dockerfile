@@ -1,7 +1,13 @@
-FROM adoptopenjdk/openjdk11:jre-11.0.11_9
+FROM node:16-buster-slim@sha256:93c9fc3550f5f7d159f282027228e90e3a7f8bf38544758024f005e82607f546
 
-ARG RELEASE=1.5.3
+RUN apt update && apt install netcat -y && apt install default-jre -y
 
-RUN curl -L https://github.com/alephium/alephium/releases/download/v${RELEASE}/alephium-${RELEASE}.jar -o /alephium.jar
+RUN mkdir /alephium && mkdir /configs
 
-ENTRYPOINT ["java", "-jar", "/alephium.jar"]
+WORKDIR /alephium
+
+COPY ./configs /configs
+COPY ./alephium .
+
+RUN --mount=type=cache,target=/home/node/.npm \
+    npm ci

@@ -9,15 +9,17 @@ import (
 
 // Testing the expected default behavior of a CreateGovernanceVAA
 func TestCreateGovernanceVAA(t *testing.T) {
+	var governanceEmitterAddress = Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 4}
+	var governanceChainId = ChainIDAlephium
 	var nonce uint32 = 1
 	var sequence uint64 = 1
 	var targetChainId ChainID = ChainIDEthereum
 	var guardianSetIndex uint32 = 1
 	var payload = []byte{97, 97, 97, 97, 97, 97}
 	var timestamp = time.Unix(1000, 0)
-	var governanceEmitter = Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
+	var expectedGovernanceEmitter = Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 4}
 
-	got_vaa := CreateGovernanceVAA(timestamp, nonce, sequence, targetChainId, guardianSetIndex, payload)
+	got_vaa := CreateGovernanceVAA(governanceChainId, governanceEmitterAddress, timestamp, nonce, sequence, targetChainId, guardianSetIndex, payload)
 
 	want_vaa := &VAA{
 		Version:          uint8(1),
@@ -27,9 +29,9 @@ func TestCreateGovernanceVAA(t *testing.T) {
 		Nonce:            uint32(1),
 		Sequence:         uint64(1),
 		ConsistencyLevel: uint8(32),
-		EmitterChain:     ChainIDSolana,
+		EmitterChain:     ChainIDAlephium,
 		TargetChain:      ChainIDEthereum,
-		EmitterAddress:   governanceEmitter,
+		EmitterAddress:   expectedGovernanceEmitter,
 		Payload:          payload,
 	}
 

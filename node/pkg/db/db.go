@@ -125,11 +125,11 @@ func (d *Database) StoreSignedVAA(v *vaa.VAA) error {
 	return nil
 }
 
-func (d *Database) MaxGovernanceVAASequence() (*uint64, error) {
+func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
 	maxSequence := uint64(0)
 	vaaId := &VAAID{
-		EmitterChain:   vaa.GovernanceChain,
-		EmitterAddress: vaa.GovernanceEmitter,
+		EmitterChain:   governanceChainId,
+		EmitterAddress: governanceEmitter,
 	}
 	prefixBytes := vaaId.GovernanceEmitterPrefixBytes()
 	if err := d.db.View(func(txn *badger.Txn) error {

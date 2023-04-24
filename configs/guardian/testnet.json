@@ -1,0 +1,12 @@
+{
+  "governanceChainId": 0,
+  "governanceEmitterAddress": "0000000000000000000000000000000000000000000000000000000000000004",
+  "initSigners": [
+    "0xD5f4d28216544037CB228af1D11D6b5B45067233",
+    "0x0035219d9491e2A01EbA78BdafEe1c1C34d6F05B"
+  ],
+  "guardianUrls": [
+    "https://guardian-0.wormhole-testnet.softfork.se",
+    "https://guardian-1.wormhole-testnet.softfork.se"
+  ]
+}

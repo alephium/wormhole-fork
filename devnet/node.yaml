@@ -43,8 +43,7 @@ spec:
       volumes:
         # mount shared between containers for runtime state
         - name: node-data
-          persistentVolumeClaim:
-            claimName: guardian-node-pvc
+          emptyDir: {}
         - name: node-keysdir
           secret:
             secretName: node-bigtable-key
@@ -72,13 +71,8 @@ spec:
             - ws://eth-devnet:8545
             - --alphRPC
             - http://alph-full-node:22973
-            - --alphContractIds
-            - "2Ac65oYLMeatxePjYTZwKbBpVXwgHHsJfa5NvLL81mPHM,xoZSoaseF3K6rtw8Lw5dXfJGb9pXYJ3CbDVazLHo6ihU"
-            - --alphGroupIndex
-            - "0"
-            - --alphMinConfirmations
-            - "10"
-            - --unsafeDevMode
+            - --network
+            - "devnet"
             - --publicRPC
             - "[::]:7070"
             - --publicWeb
@@ -112,14 +106,3 @@ spec:
             - containerPort: 2345
               name: debugger
               protocol: TCP
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: guardian-node-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi

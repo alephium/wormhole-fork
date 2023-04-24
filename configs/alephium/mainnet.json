@@ -1,0 +1,20 @@
+{
+  "chainId": 255,
+  "groupIndex": 0,
+  "minimalConsistencyLevel": 105,
+  "messageFee": "0",
+  "contracts": {
+    "governance": "",
+    "nativeGovernance": "",
+    "tokenBridge": "",
+    "nativeTokenBridge": "",
+    "walph": "",
+    "testToken": ""
+  },
+  "nodeUrl": "",
+  "explorerUrl": "",
+  "networkId": 0,
+  "coreEmitterAddress": "",
+  "tokenBridgeEmitterAddress": "",
+  "bridgeTokens": []
+}

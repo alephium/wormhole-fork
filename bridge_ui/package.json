@@ -55,8 +55,8 @@
     "use-debounce": "^7.0.0"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired --max_old_space_size=4096 build",
+    "start": "rm -rf build && react-app-rewired start",
+    "build": "rm -rf build && react-app-rewired --max_old_space_size=4096 build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },

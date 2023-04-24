@@ -83,7 +83,7 @@ func (p *Processor) handleMessage(ctx context.Context, k *common.MessagePublicat
 	}
 
 	// A governance message should never be emitted on-chain
-	if v.EmitterAddress == vaa.GovernanceEmitter && v.EmitterChain == vaa.GovernanceChain {
+	if v.EmitterAddress == p.governanceEmitterAddress && v.EmitterChain == p.governanceChainId {
 		supervisor.Logger(ctx).Error(
 			"EMERGENCY: PLEASE REPORT THIS IMMEDIATELY! A Solana message was emitted from the governance emitter. This should never be possible.",
 			zap.Stringer("emitter_chain", k.EmitterChain),

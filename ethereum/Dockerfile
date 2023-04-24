@@ -6,27 +6,19 @@ RUN apk add git python make build-base
 
 # Run as user, otherwise, npx explodes.
 USER 1000
-RUN mkdir -p /home/node/app
+RUN mkdir -p /home/node/ethereum
 RUN mkdir -p /home/node/.npm
-WORKDIR /home/node/app
+RUN mkdir -p /home/node/configs
+WORKDIR /home/node/ethereum
+
+COPY --chown=node:node ./configs /home/node/configs
 
 # Fix git ssh error
 RUN git config --global url."https://".insteadOf ssh://
 
-# Support additional root CAs
-COPY README.md cert.pem* /certs/
-# Node
-ENV NODE_EXTRA_CA_CERTS=/certs/cert.pem
-ENV NODE_OPTIONS=--use-openssl-ca
-# npm
-RUN if [ -e /certs/cert.pem ]; then npm config set cafile /certs/cert.pem; fi
-# git
-RUN if [ -e /certs/cert.pem ]; then git config --global http.sslCAInfo /certs/cert.pem; fi
-
 # Only invalidate the npm install step if package.json changed
-ADD --chown=node:node package.json .
-ADD --chown=node:node package-lock.json .
-ADD --chown=node:node .env.test .env
+ADD --chown=node:node ./ethereum/package.json .
+ADD --chown=node:node ./ethereum/package-lock.json .
 
 # We want to cache node_modules *and* incorporate it into the final image.
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
@@ -39,4 +31,4 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 # could be a renameat syscall. Alpine does not have this bug.
 RUN rm -rf node_modules && mv node_modules_cache node_modules
 
-ADD --chown=node:node . .
+ADD --chown=node:node ./ethereum .

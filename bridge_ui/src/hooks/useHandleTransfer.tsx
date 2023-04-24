@@ -67,7 +67,7 @@ import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   alphArbiterFee,
-  alphMessageFee,
+  ALEPHIUM_MESSAGE_FEE,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -372,7 +372,7 @@ async function alephium(
             targetChain,
             uint8ArrayToHex(targetAddress),
             amountParsed,
-            alphMessageFee,
+            ALEPHIUM_MESSAGE_FEE,
             alphArbiterFee,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )
@@ -387,7 +387,7 @@ async function alephium(
             targetChain,
             uint8ArrayToHex(targetAddress),
             amountParsed,
-            alphMessageFee,
+            ALEPHIUM_MESSAGE_FEE,
             alphArbiterFee,
             ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
           )

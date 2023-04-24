@@ -14,26 +14,22 @@ import {
   redeemOnEthNative,
   TokenImplementation__factory,
   transferFromEth,
-  transferFromEthNative,
-  zeroPad
+  transferFromEthNative
 } from 'alephium-wormhole-sdk'
 import { Wallet as ETHWallet, providers } from 'ethers'
 import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
-import { binToHex } from '@alephium/web3'
+import { default as ethDevnetConfig } from '../../configs/ethereum/devnet.json'
 
 export async function createEth(): Promise<BridgeChain> {
-  // Eth contract addresses are deterministic on devnet
-  const governanceAddress = '0xC89Ce4735882C9F0f0FE26686c53074E09B0D550'
-  const tokenBridgeAddress = '0x0290FB167208Af455bB137780163b7B7a9a10C16'
-  const tokenBridgeEmitterAddress = zeroPad(tokenBridgeAddress.slice(2), 32)
-  const wethAddress = '0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E'
-  const testTokenAddress = '0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A'
-  const wallet = new ETHWallet(
-    '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d',
-    new providers.JsonRpcProvider('http://127.0.0.1:8545')
-  )
+  const contracts = ethDevnetConfig.contracts
+  const governanceAddress = contracts.governance
+  const tokenBridgeAddress = contracts.tokenBridge
+  const tokenBridgeEmitterAddress = ethDevnetConfig.tokenBridgeEmitterAddress
+  const wethAddress = contracts.weth
+  const testTokenAddress = contracts.testToken
+  const wallet = new ETHWallet(ethDevnetConfig.privateKey, new providers.JsonRpcProvider('http://127.0.0.1:8545'))
   const recipientAddress = hexToUint8Array(wallet.address.slice(2))
   const sequence = new Sequence()
 

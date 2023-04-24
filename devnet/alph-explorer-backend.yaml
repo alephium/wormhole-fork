@@ -32,8 +32,10 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: alph-explorer-backend
-          image: alephium/dev-explorer-backend:1.9.0-rc1
+          image: alephium/dev-explorer-backend:1.9.0
           env:
+            - name: EXPLORER_LOG_LEVEL
+              value: "DEBUG"
             - name: EXPLORER_HOST
               value: "0.0.0.0"
             - name: EXPLORER_PORT
@@ -44,6 +46,8 @@ spec:
               value: "22973"
             - name: BLOCKFLOW_NETWORK_ID
               value: "4"
+            - name: BLOCKFLOW_DIRECT_CLIQUE_ACCESS
+              value: "false"
             - name: DB_NAME
               value: "explorer"
             - name: DB_HOST

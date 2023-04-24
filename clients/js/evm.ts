@@ -5,9 +5,9 @@ import {
   NFTBridgeImplementation__factory
 } from "alephium-wormhole-sdk"
 import { ethers } from "ethers"
-import { NETWORKS } from "./networks"
+import { CONFIGS } from "./configs"
 import { impossible } from "./utils"
-import { Contracts, CONTRACTS, EVMChainName } from "alephium-wormhole-sdk"
+import { EVMChainName } from "alephium-wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 
@@ -15,19 +15,18 @@ export async function executeGovernanceEvm(
   payload: GovernancePayload,
   vaa: Buffer,
   network: "MAINNET" | "TESTNET" | "DEVNET",
-  chain: EVMChainName
+  chain: EVMChainName,
+  nodeUrl?: string
 ) {
-  let n = NETWORKS[network][chain]
-  if (!n.rpc) {
+  const n = CONFIGS[network][chain]
+  const rpc = nodeUrl ?? n.rpc
+  if (rpc === undefined) {
     throw Error(`No ${network} rpc defined for ${chain} (see networks.ts)`)
   }
   if (!n.key) {
     throw Error(`No ${network} key defined for ${chain} (see networks.ts)`)
   }
-  let rpc: string = n.rpc
-  let key: string = n.key
-
-  let contracts: Contracts = CONTRACTS[network][chain]
+  const key: string = n.key
 
   let provider = undefined
   let signer = undefined
@@ -58,11 +57,12 @@ export async function executeGovernanceEvm(
 
   switch (payload.module) {
     case "Core":
-      if (contracts.core === undefined) {
+      const governanceAddress = (n as any).governanceAddress
+      if (governanceAddress === undefined) {
         throw Error(`Unknown core contract on ${network} for ${chain}`)
       }
       let c = new Implementation__factory(signer)
-      let cb = c.attach(contracts.core)
+      let cb = c.attach(governanceAddress)
       switch (payload.type) {
         case "GuardianSetUpgrade":
           console.log("Submitting new guardian set")
@@ -85,11 +85,12 @@ export async function executeGovernanceEvm(
       }
       break
     case "NFTBridge":
-      if (contracts.nft_bridge === undefined) {
+      const nftBridgeAddress = (n as any).nftBridgeAddress
+      if (nftBridgeAddress === undefined) {
         throw Error(`Unknown nft bridge contract on ${network} for ${chain}`)
       }
-      let n = new NFTBridgeImplementation__factory(signer)
-      let nb = n.attach(contracts.nft_bridge)
+      let nftBridge = new NFTBridgeImplementation__factory(signer)
+      let nb = nftBridge.attach(nftBridgeAddress)
       switch (payload.type) {
         case "ContractUpgrade":
           console.log("Upgrading contract")
@@ -106,11 +107,12 @@ export async function executeGovernanceEvm(
       }
       break
     case "TokenBridge":
-      if (contracts.token_bridge === undefined) {
+      const tokenBridgeAddress = (n as any).tokenBridgeAddress
+      if (tokenBridgeAddress === undefined) {
         throw Error(`Unknown token bridge contract on ${network} for ${chain}`)
       }
       let t = new BridgeImplementation__factory(signer)
-      let tb = t.attach(contracts.token_bridge)
+      let tb = t.attach(tokenBridgeAddress)
       switch (payload.type) {
         case "ContractUpgrade":
           console.log("Upgrading contract")

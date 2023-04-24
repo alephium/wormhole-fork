@@ -33,8 +33,8 @@ async function registerChain() {
   const attestTokenHandlerId0 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId)
   const tokenBridgeForChainId0 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId)
 
-  assert((await contractExists(attestTokenHandlerId0, web3.getCurrentNodeProvider())) == false)
-  assert((await contractExists(tokenBridgeForChainId0, web3.getCurrentNodeProvider())) == false)
+  assert(!(await contractExists(attestTokenHandlerId0, web3.getCurrentNodeProvider())))
+  assert(!(await contractExists(tokenBridgeForChainId0, web3.getCurrentNodeProvider())))
 
   const seq = await getNextGovernanceSequence()
   const registerChainVaa = createRegisterChainVaa(seq)
@@ -47,8 +47,8 @@ async function registerChain() {
   const attestTokenHandlerId1 = getAttestTokenHandlerId(alph.tokenBridgeContractId, testChainId)
   const tokenBridgeForChainId1 = getTokenBridgeForChainId(alph.tokenBridgeContractId, testChainId)
 
-  assert((await contractExists(attestTokenHandlerId1, web3.getCurrentNodeProvider())) == true)
-  assert((await contractExists(tokenBridgeForChainId1, web3.getCurrentNodeProvider())) == true)
+  assert(await contractExists(attestTokenHandlerId1, web3.getCurrentNodeProvider()))
+  assert(await contractExists(tokenBridgeForChainId1, web3.getCurrentNodeProvider()))
 }
 
 registerChain()

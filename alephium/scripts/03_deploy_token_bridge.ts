@@ -13,7 +13,7 @@ const deployTokenBridge: DeployFunction<Settings> = async (
   const initialFields = {
     governance: governanceId,
     wrappedAlphId: wrappedAlphId,
-    localChainId: BigInt(network.settings.initChainId),
+    localChainId: BigInt(network.settings.chainId),
     receivedSequence: 0n,
     sendSequence: 0n,
     tokenBridgeFactory: tokenBridgeFactory.contractId,

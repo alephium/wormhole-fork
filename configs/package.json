@@ -1,0 +1,33 @@
+{
+  "name": "wormhole-configs",
+  "version": "0.0.0",
+  "license": "GPL",
+  "type": "commonjs",
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && npx tsc --build .",
+    "update_config": "npm run update_config:devnet",
+    "update_config:devnet": "npx ts-node update_config.ts devnet",
+    "update_config:testnet": "npx ts-node update_config.ts testnet",
+    "update_config:mainnet": "npx ts-node update_config.ts mainnet"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "ts-node": "^10.9.1"
+  }
+}

@@ -13,6 +13,7 @@ import {
 } from 'alephium-wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
+import { default as ethDevnetConfig } from '../../../configs/ethereum/devnet.json'
 
 const unexecutedSequenceIndex = 0
 const guardianKeys = [
@@ -41,7 +42,7 @@ async function createUnexecutedSequence() {
   const transferTokenPayload: TransferToken = {
     type: 'TransferToken',
     amount: 1000000000000000000n,
-    originAddress: Buffer.from('000000000000000000000000ddb64fe46a91d46ee29420539fc25fd07c5fea3e', 'hex'),
+    originAddress: Buffer.from(ethDevnetConfig.contracts.weth.slice(2).padStart(64, '0'), 'hex'),
     originChain: CHAIN_ID_ETH,
     targetAddress: Buffer.from('00bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a', 'hex'),
     fee: 0n
@@ -51,7 +52,7 @@ async function createUnexecutedSequence() {
     nonce: 0,
     emitterChainId: CHAIN_ID_ETH,
     targetChainId: CHAIN_ID_ALEPHIUM,
-    emitterAddress: Buffer.from('0000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16', 'hex'),
+    emitterAddress: Buffer.from(ethDevnetConfig.tokenBridgeEmitterAddress, 'hex'),
     sequence: 513n,
     consistencyLevel: 15,
     payload: transferTokenPayload

@@ -1,5 +1,5 @@
 import * as web3s from '@solana/web3.js'
-import { NETWORKS } from "./networks";
+import { CONFIGS } from "./configs";
 import { impossible } from "./utils";
 import base58 from "bs58";
 import { GovernancePayload, importCoreWasm, importNftWasm, importTokenWasm, ixFromRust } from "alephium-wormhole-sdk";
@@ -12,12 +12,12 @@ export async function executeGovernanceSolana(
   network: "MAINNET" | "TESTNET" | "DEVNET"
 ) {
   let ix: web3s.TransactionInstruction
-  let connection = setupConnection(NETWORKS[network].solana.rpc)
+  let connection = setupConnection(CONFIGS[network].solana.rpc)
   let bridge_id = new web3s.PublicKey(CONTRACTS[network].solana.core)
   let token_bridge_id = new web3s.PublicKey(CONTRACTS[network].solana.token_bridge)
   let nft_bridge_id = new web3s.PublicKey(CONTRACTS[network].solana.nft_bridge)
 
-  let from = web3s.Keypair.fromSecretKey(base58.decode(NETWORKS[network].solana.key))
+  let from = web3s.Keypair.fromSecretKey(base58.decode(CONFIGS[network].solana.key))
 
   switch (v.body.payload.module) {
     case "Core":

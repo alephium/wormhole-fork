@@ -16,9 +16,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-const GovernanceContractId = "2be99b190097814d425f659d78bd4f97a3041c41c38f626eecdab6d1357ea8f6"
-
 var (
+	network     = flag.String("network", "", "Network type (devnet, testnet, mainnet)")
 	alphRPC     = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
 	apiKey      = flag.String("apiKey", "", "Alephium RPC api key")
 	adminRPC    = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
@@ -40,6 +39,11 @@ func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.
 func main() {
 	flag.Parse()
 
+	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
+	if err != nil {
+		log.Fatalf("failed to read configs, network: %s", *network)
+	}
+
 	if *targetChain > math.MaxUint16 {
 		log.Fatalf("invalid target chain id: %d", *targetChain)
 	}
@@ -51,21 +55,15 @@ func main() {
 	}
 	defer conn.Close()
 
-	var alphEmitter string
-	for _, emitter := range common.KnownEmitters {
-		if emitter.ChainID == vaa.ChainIDAlephium {
-			alphEmitter = emitter.Emitter
-		}
-	}
-
-	log.Printf("Requesting missing messages for %s", alphEmitter)
+	alphTokenBridgeAddress := bridgeConfig.Alephium.TokenBridgeEmitterAddress
+	log.Printf("Requesting missing messages for %s", alphTokenBridgeAddress)
 
 	msg := nodev1.FindMissingMessagesRequest{
 		EmitterChain:   uint32(vaa.ChainIDAlephium),
 		TargetChain:    uint32(*targetChain),
-		EmitterAddress: alphEmitter,
+		EmitterAddress: alphTokenBridgeAddress,
 		RpcBackfill:    true,
-		BackfillNodes:  common.PublicRPCEndpoints,
+		BackfillNodes:  bridgeConfig.Guardian.GuardianUrls,
 	}
 	resp, err := admin.FindMissingMessages(ctx, &msg)
 	if err != nil {
@@ -82,7 +80,7 @@ func main() {
 	}
 
 	if len(msgs) == 0 {
-		log.Printf("No missing messages found for %s", alphEmitter)
+		log.Printf("No missing messages found for %s", alphTokenBridgeAddress)
 		return
 	}
 
@@ -90,7 +88,7 @@ func main() {
 	lowest := msgs[0].Sequence
 	highest := msgs[missingMessageSize-1].Sequence
 
-	log.Printf("Found %d missing messages for %s: %d - %d", len(msgs), alphEmitter, lowest, highest)
+	log.Printf("Found %d missing messages for %s: %d - %d", len(msgs), alphTokenBridgeAddress, lowest, highest)
 
 	missingMessages := make(map[uint64]bool)
 	for _, msg := range msgs {
@@ -98,7 +96,7 @@ func main() {
 	}
 
 	log.Printf("Starting search for missing sequence numbers...")
-	alphEmitterAddress, err := alephium.ToContractAddress(GovernanceContractId)
+	alphGovernanceAddress, err := alephium.ToContractAddress(bridgeConfig.Alephium.Contracts.Governance)
 	if err != nil {
 		log.Fatalf("invalid governance contract id, err: %v", err)
 	}
@@ -107,7 +105,7 @@ func main() {
 		remain    int   = missingMessageSize
 	)
 	client := alephium.NewClient(*alphRPC, *apiKey, 10)
-	eventCount, err := client.GetContractEventsCount(ctx, *alphEmitterAddress)
+	eventCount, err := client.GetContractEventsCount(ctx, *alphGovernanceAddress)
 	if err != nil {
 		log.Fatalf("Failed to get event count, err: %v", err)
 	}
@@ -126,7 +124,7 @@ func main() {
 		if toIndex >= batchSize {
 			fromIndex = toIndex - batchSize
 		}
-		events, err := client.GetContractEventsByRange(ctx, *alphEmitterAddress, fromIndex, batchSize, int32(*groupIndex))
+		events, err := client.GetContractEventsByRange(ctx, *alphGovernanceAddress, fromIndex, batchSize, int32(*groupIndex))
 		if err != nil {
 			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}

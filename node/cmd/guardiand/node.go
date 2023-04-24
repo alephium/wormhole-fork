@@ -61,8 +61,7 @@ var (
 	guardianKeyPath *string
 	// solanaContract  *string
 
-	ethRPC      *string
-	ethContract *string
+	ethRPC *string
 
 	// bscRPC      *string
 	// bscContract *string
@@ -118,8 +117,6 @@ var (
 
 	alphRPC              *string
 	alphApiKey           *string
-	alphContractIds      *[]string
-	alphGroupIndex       *uint8
 	alphMinConfirmations *uint8
 	alphFetchPeriod      *uint8
 
@@ -128,9 +125,8 @@ var (
 	devnetGuardianIndex *int
 	integrationTest     *bool
 
-	unsafeDevMode *bool
-	testnetMode   *bool
-	nodeName      *string
+	network  *string
+	nodeName *string
 
 	publicRPC *string
 	publicWeb *string
@@ -158,7 +154,7 @@ var (
 )
 
 func init() {
-	p2pNetworkID = NodeCmd.Flags().String("network", "/wormhole/dev", "P2P network identifier")
+	p2pNetworkID = NodeCmd.Flags().String("id", "/wormhole/dev", "P2P network identifier")
 	p2pPort = NodeCmd.Flags().Uint("port", 8999, "P2P UDP listener port")
 	p2pBootstrap = NodeCmd.Flags().String("bootstrap", "", "P2P bootstrap peers (comma-separated)")
 
@@ -174,7 +170,6 @@ func init() {
 	// solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
-	ethContract = NodeCmd.Flags().String("ethContract", "", "Ethereum contract address")
 
 	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
 	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
@@ -230,9 +225,7 @@ func init() {
 
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
-	alphContractIds = NodeCmd.Flags().StringSlice("alphContractIds", []string{}, "Alephium contract ids (required)")
-	alphGroupIndex = NodeCmd.Flags().Uint8("alphGroupIndex", 0, "The group index where contracts are deployed (required)")
-	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 10, "The min confirmations for alephium tx")
+	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
 	alphFetchPeriod = NodeCmd.Flags().Uint8("alphFetchPeriod", 10, "The fetch events period for alwphium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
@@ -240,8 +233,7 @@ func init() {
 	devnetGuardianIndex = NodeCmd.Flags().Int("devnetGuardianIndex", 0, "Specify devnet guardian index")
 	integrationTest = NodeCmd.Flags().Bool("integrationTest", false, "Launch node for integration testing")
 
-	unsafeDevMode = NodeCmd.Flags().Bool("unsafeDevMode", false, "Launch node in unsafe, deterministic devnet mode")
-	testnetMode = NodeCmd.Flags().Bool("testnetMode", false, "Launch node in testnet mode (enables testnet-only features like Ropsten)")
+	network = NodeCmd.Flags().String("network", "", "Network type (devnet, testnet, mainnet)")
 	nodeName = NodeCmd.Flags().String("nodeName", "", "Node name to announce in gossip heartbeats")
 
 	publicRPC = NodeCmd.Flags().String("publicRPC", "", "Listen address for public gRPC interface")
@@ -285,7 +277,7 @@ const devwarning = `
         +++++++++++++++++++++++++++++++++++++++++++++++++++
         |   NODE IS RUNNING IN INSECURE DEVELOPMENT MODE  |
         |                                                 |
-        |      Do not use -unsafeDevMode in prod.         |
+        |      Do not use network=devnet in prod.         |
         +++++++++++++++++++++++++++++++++++++++++++++++++++
 
 `
@@ -298,11 +290,17 @@ var NodeCmd = &cobra.Command{
 }
 
 func runNode(cmd *cobra.Command, args []string) {
-	if *unsafeDevMode {
+	if *network != "devnet" && *network != "testnet" && *network != "mainnet" {
+		fmt.Printf("invalid network type %s\n", *network)
+		os.Exit(1)
+	}
+
+	unsafeDevMode := *network == "devnet"
+	if unsafeDevMode {
 		fmt.Print(devwarning)
 	}
 
-	if *integrationTest && !*unsafeDevMode {
+	if *integrationTest && !unsafeDevMode {
 		fmt.Println("Integration tests can only be run in devnet mode")
 		os.Exit(1)
 	}
@@ -313,7 +311,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	common.SetRestrictiveUmask()
 
 	// Refuse to run as root in production mode.
-	if !*unsafeDevMode && os.Geteuid() == 0 {
+	if !unsafeDevMode && os.Geteuid() == 0 {
 		fmt.Println("can't run as uid 0")
 		os.Exit(1)
 	}
@@ -332,7 +330,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		zapcore.AddSync(zapcore.Lock(os.Stderr)),
 		zap.NewAtomicLevelAt(zapcore.Level(lvl))))
 
-	if *unsafeDevMode {
+	if unsafeDevMode {
 		// Use the hostname as nodeName. For production, we don't want to do this to
 		// prevent accidentally leaking sensitive hostnames.
 		hostname, err := os.Hostname()
@@ -350,9 +348,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
-	if *testnetMode || *unsafeDevMode {
-		readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
-	}
+	readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 
 	if *statusAddr != "" {
 		// Use a custom routing instead of using http.DefaultServeMux directly to avoid accidentally exposing packages
@@ -362,7 +358,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		// pprof server. NOT necessarily safe to expose publicly - only enable it in dev mode to avoid exposing it by
 		// accident. There's benefit to having pprof enabled on production nodes, but we would likely want to expose it
 		// via a dedicated port listening on localhost, or via the admin UNIX socket.
-		if *unsafeDevMode {
+		if unsafeDevMode {
 			// Pass requests to http.DefaultServeMux, which pprof automatically registers with as an import side-effect.
 			router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 		}
@@ -380,8 +376,25 @@ func runNode(cmd *cobra.Command, args []string) {
 		}()
 	}
 
+	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
+	if err != nil {
+		logger.Fatal("failed to read configs", zap.String("network", *network), zap.Error(err))
+	}
+	alphConfig := bridgeConfig.Alephium
+	ethConfig := bridgeConfig.Ethereum
+
+	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
+	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
+	alphGroupIndex := alphConfig.GroupIndex
+
+	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
+	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
+	if err != nil {
+		logger.Fatal("invalid governance emitter address", zap.String("address", bridgeConfig.Guardian.GovernanceEmitterAddress), zap.Error(err))
+	}
+
 	// In devnet mode, we automatically set a number of flags that rely on deterministic keys.
-	if *unsafeDevMode {
+	if unsafeDevMode {
 
 		// Use the first guardian node as bootstrap if it is not specified
 		if *p2pBootstrap == "" {
@@ -392,33 +405,27 @@ func runNode(cmd *cobra.Command, args []string) {
 
 			*p2pBootstrap = fmt.Sprintf("/dns4/guardian-0.guardian/udp/%d/quic/p2p/%s", *p2pPort, g0key.String())
 		}
-
-		// Deterministic ganache ETH devnet address.
-		*ethContract = devnet.GanacheWormholeContractAddress.Hex()
 	}
 
 	// Verify flags
 
-	if *nodeKeyPath == "" && !*unsafeDevMode { // In devnet mode, keys are deterministically generated.
+	if *nodeKeyPath == "" && !unsafeDevMode { // In devnet mode, keys are deterministically generated.
 		logger.Fatal("Please specify --nodeKey")
 	}
-	if *guardianKeyPath == "" && !*cloudKMSEnabled && !*unsafeDevMode {
+	if *guardianKeyPath == "" && !*cloudKMSEnabled && !unsafeDevMode {
 		logger.Fatal("Please either specify --guardianKey or --cloudKMSEnabled")
 	}
-	if *cloudKMSEnabled && *unsafeDevMode {
+	if *cloudKMSEnabled && unsafeDevMode {
 		logger.Fatal("Please do not specify --cloudKMSEnabled in devnet")
 	}
 	if *adminSocketPath == "" {
 		logger.Fatal("Please specify --adminSocket")
 	}
-	if *dataDir == "" && !*unsafeDevMode {
+	if *dataDir == "" && !unsafeDevMode {
 		logger.Fatal("Please specify --dataDir")
 	}
 	if *ethRPC == "" {
 		logger.Fatal("Please specify --ethRPC")
-	}
-	if *ethContract == "" {
-		logger.Fatal("Please specify --ethContract")
 	}
 	if *nodeName == "" {
 		logger.Fatal("Please specify --nodeName")
@@ -467,7 +474,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Infura is known to send incorrect blocks - please use your own nodes")
 	}
 
-	ethContractAddr := eth_common.HexToAddress(*ethContract)
 	// bscContractAddr := eth_common.HexToAddress(*bscContract)
 	// polygonContractAddr := eth_common.HexToAddress(*polygonContract)
 	// ethRopstenContractAddr := eth_common.HexToAddress(*ethRopstenContract)
@@ -486,7 +492,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// 	logger.Fatal("invalid Solana contract address", zap.Error(err))
 	// }
 
-	if *unsafeDevMode {
+	if unsafeDevMode {
 		idx, err := devnet.GetDevnetIndex()
 		if err == nil {
 			*devnetGuardianIndex = idx
@@ -496,13 +502,13 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	// the first guardian node is the bootstrap node on the devnet
-	if *unsafeDevMode && *devnetGuardianIndex != 0 {
+	if unsafeDevMode && *devnetGuardianIndex != 0 {
 		logger.Info("wait for the bootstrap node to establish networking", zap.Int("index", *devnetGuardianIndex))
 		time.Sleep(15 * time.Second)
 	}
 
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
-	if *unsafeDevMode {
+	if unsafeDevMode {
 
 		// Set the guardian key path if it is not specified
 		if *guardianKeyPath == "" {
@@ -602,10 +608,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// chainObsvReqC[vaa.ChainIDSolana] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDEthereum] = make(chan *gossipv1.ObservationRequest)
 	chainObsvReqC[vaa.ChainIDBSC] = make(chan *gossipv1.ObservationRequest)
-
-	if *unsafeDevMode {
-		chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
-	}
+	chainObsvReqC[vaa.ChainIDAlephium] = make(chan *gossipv1.ObservationRequest)
 
 	// Multiplex observation requests to the appropriate chain
 	go func() {
@@ -635,7 +638,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Load p2p private key
 	var priv crypto.PrivKey
-	if *unsafeDevMode {
+	if unsafeDevMode {
 		priv = devnet.DeterministicP2PPrivKeyByIndex(int64(*devnetGuardianIndex))
 	} else {
 		priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
@@ -645,7 +648,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	// Enable unless it is disabled. For devnet, only when --telemetryKey is set.
-	if !*disableTelemetry && (!*unsafeDevMode || *unsafeDevMode && *telemetryKey != "") {
+	if !*disableTelemetry && (!unsafeDevMode || unsafeDevMode && *telemetryKey != "") {
 		logger.Info("Telemetry enabled")
 
 		if *telemetryKey == "" {
@@ -693,7 +696,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	// local admin service socket
-	adminService, err := adminServiceRunnable(logger, *adminSocketPath, injectC, signedInC, obsvReqSendC, db, gst)
+	adminService, err := adminServiceRunnable(logger, *adminSocketPath, injectC, signedInC, obsvReqSendC, db, gst, governanceChainId, governanceEmitterAddress)
 	if err != nil {
 		logger.Fatal("failed to create admin service socket", zap.Error(err))
 	}
@@ -712,27 +715,25 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if err := supervisor.Run(ctx, "ethwatch",
-			ethereum.NewEthWatcher(*ethRPC, ethContractAddr, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], *unsafeDevMode).Run); err != nil {
+			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode).Run); err != nil {
 			return err
 		}
 
-		if *testnetMode || *unsafeDevMode {
-			// if err := supervisor.Run(ctx, "algorandwatch",
-			// 	algorand.NewWatcher(*algorandIndexerRPC, *algorandIndexerToken, *algorandAlgodRPC, *algorandAlgodToken, *algorandAppID, lockC, setC, chainObsvReqC[vaa.ChainIDAlgorand]).Run); err != nil {
-			// 	return err
-			// }
+		// if err := supervisor.Run(ctx, "algorandwatch",
+		// 	algorand.NewWatcher(*algorandIndexerRPC, *algorandIndexerToken, *algorandAlgodRPC, *algorandAlgodToken, *algorandAppID, lockC, setC, chainObsvReqC[vaa.ChainIDAlgorand]).Run); err != nil {
+		// 	return err
+		// }
 
-			alphWatcher, err := alephium.NewAlephiumWatcher(
-				*alphRPC, *alphApiKey, *alphGroupIndex, *alphGroupIndex, *alphContractIds, common.ReadinessAlephiumSyncing,
-				lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
-			)
-			if err != nil {
-				logger.Error("failed to create alephium watcher", zap.Error(err))
-				return err
-			}
-			if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
-				logger.Error("failed to run alephium watcher", zap.Error((err)))
-			}
+		alphWatcher, err := alephium.NewAlephiumWatcher(
+			*alphRPC, *alphApiKey, alphGroupIndex, alphGroupIndex, alphContracts, common.ReadinessAlephiumSyncing,
+			lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
+		)
+		if err != nil {
+			logger.Error("failed to create alephium watcher", zap.Error(err))
+			return err
+		}
+		if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run); err != nil {
+			logger.Error("failed to run alephium watcher", zap.Error((err)))
 		}
 
 		p := processor.NewProcessor(ctx,
@@ -747,6 +748,8 @@ func runNode(cmd *cobra.Command, args []string) {
 			gst,
 			attestationEvents,
 			notifier,
+			governanceChainId,
+			governanceEmitterAddress,
 		)
 		if err := supervisor.Run(ctx, "processor", p.Run); err != nil {
 			return err

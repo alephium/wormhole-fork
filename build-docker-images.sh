@@ -3,11 +3,19 @@
 NETWORKS=('mainnet' 'testnet' 'devnet')
 
 network=$1
-NUM_GUARDIANS=1
+
+pushImage=${2:-false}
+
+if [ -z "${network// }" ]
+then
+    echo "Please specify the network type"
+    exit 1
+fi
 
 set -euo pipefail xtrace
 
-VERSION=0.2.78
+VERSION=0.2.85
+
 export DOCKER_BUILDKIT=1
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
@@ -18,47 +26,31 @@ else
     exit 1
 fi
 
+docker build -f Dockerfile.init . -t eu.gcr.io/alephium-org/devnet-init:$VERSION
+
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
 
 # Build proto-gen-web
 docker build --target node-export -f Dockerfile.proto -o type=local,dest=. .
 
-# Build const-gen
-docker build --target const-export -f Dockerfile.const -o type=local,dest=. --build-arg num_guardians=$NUM_GUARDIANS .
-
 # Build guardian image (used for both guardian & spy)
-pushd node
-docker build . -t alephium/guardiand:$VERSION --build-arg network=$network
-popd
+docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION
 
 ## Build eth-node image
-pushd ethereum
-if [[ "$network" == 'devnet' ]] ; then
-    cp .env.devnet .env
-    git apply 1conf.patch
-    git apply truffle-config.patch
-fi
-docker build . -t alephium/eth-node:$VERSION
-if [[ "$network" == 'devnet' ]] ; then
-    git apply -R 1conf.patch
-    git apply -R truffle-config.patch
-fi
-popd
+docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$VERSION
 
-## Build auto miner for alephium
-if [[ "$network" == 'devnet' ]] ; then
-    pushd alephium
-    docker build -f Dockerfile.automine . -t alephium/automine:$VERSION
-    popd
-fi
+docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contracts:$VERSION
 
 ## Build Bridge UI
-pushd bridge_ui
-docker build . -t alephium/bridge-ui:$VERSION --build-arg network=$network
-popd
+docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION --build-arg network=$network
 
 ## Build Wormhole Explorer
-pushd explorer
-docker build . -t alephium/wormhole-explorer:$VERSION
-popd
+docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+
+if [ "${pushImage}" = true ]
+then
+    docker push eu.gcr.io/alephium-org/guardiand:$VERSION
+    docker push eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION
+    docker push eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+fi

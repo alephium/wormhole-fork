@@ -4,7 +4,6 @@ import { getSignedVAA, normalizeTokenId, waitAlphTxConfirmed } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import path from 'path'
-import fs from 'fs'
 import {
   addressFromContractId,
   binToHex,
@@ -36,6 +35,7 @@ import {
   deserializeTransferTokenVAA
 } from 'alephium-wormhole-sdk'
 import { randomBytes } from 'ethers/lib/utils'
+import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
 
 export type AlephiumBridgeChain = BridgeChain & {
   tokenBridgeContractId: string
@@ -58,14 +58,12 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const accountAddress = accounts[0].address
   const groupIndex = groupOfAddress(accountAddress)
   const recipientAddress = base58.decode(accountAddress)
-  const deploymentsFile = path.join(process.cwd(), '..', 'alephium', '.deployments.devnet.json')
-  const content = fs.readFileSync(deploymentsFile).toString()
-  const contracts = JSON.parse(content)['0'].deployContractResults
-  const tokenBridgeAddress = contracts.TokenBridge.contractAddress
-  const tokenBridgeContractId = contracts.TokenBridge.contractId
-  const wrappedAlphContractId = contracts.WrappedAlph.contractId
-  const testTokenContractId = contracts.TestToken.contractId
-  const governanceAddress = contracts.Governance.contractAddress
+  const contracts = alephiumDevnetConfig.contracts
+  const tokenBridgeAddress = contracts.nativeTokenBridge
+  const tokenBridgeContractId = contracts.tokenBridge
+  const wrappedAlphContractId = contracts.walph
+  const testTokenContractId = contracts.testToken
+  const governanceAddress = contracts.nativeGovernance
   const sequence = new Sequence()
   const defaultArbiterFee = 0n
   const defaultConfirmations = 1
@@ -126,7 +124,11 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getWrappedTokenBalanceByAddress(originTokenId, tokenChainId, accountAddress)
   }
 
-  const getWrappedTokenBalanceByAddress = async (originTokenId: string, tokenChainId: ChainId, address: string): Promise<bigint> => {
+  const getWrappedTokenBalanceByAddress = async (
+    originTokenId: string,
+    tokenChainId: ChainId,
+    address: string
+  ): Promise<bigint> => {
     const remoteTokenId = normalizeTokenId(originTokenId)
     const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, remoteTokenId)
     return getTokenBalanceByAddress(tokenPoolId, address)

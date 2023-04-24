@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: devnet-init
+  labels:
+    app: devnet-init
+spec:
+  restartPolicy: Never
+  containers:
+    - name: devnet-init
+      image: devnet-init-image
+      command:
+        - /bin/sh
+        - -c
+        # the command will be added in the Tiltfile

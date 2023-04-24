@@ -93,6 +93,9 @@ type Processor struct {
 	cleanup *time.Ticker
 
 	notifier *discord.DiscordNotifier
+
+	governanceChainId        vaa.ChainID
+	governanceEmitterAddress vaa.Address
 }
 
 func NewProcessor(
@@ -108,6 +111,8 @@ func NewProcessor(
 	gst *common.GuardianSetState,
 	attestationEvents *reporter.AttestationEventReporter,
 	notifier *discord.DiscordNotifier,
+	governanceChainId vaa.ChainID,
+	governanceEmitterAddress vaa.Address,
 ) *Processor {
 
 	return &Processor{
@@ -128,6 +133,9 @@ func NewProcessor(
 		logger:  supervisor.Logger(ctx),
 		state:   &aggregationState{vaaMap{}},
 		ourAddr: crypto.PubkeyToAddress(guardianSigner.PublicKey()),
+
+		governanceChainId:        governanceChainId,
+		governanceEmitterAddress: governanceEmitterAddress,
 	}
 }
 
