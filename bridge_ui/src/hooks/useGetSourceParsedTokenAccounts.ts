@@ -811,9 +811,7 @@ const getAlgorandParsedTokenAccounts = async (
   }
 };
 
-const getAlephiumParsedTokenAccounts = async (dispatch: Dispatch, address: string, provider: NodeProvider) => {
-  dispatch(fetchSourceParsedTokenAccounts())
-
+const getAlephiumParsedTokenAccounts = async (address: string, provider: NodeProvider) => {
   try {
     const balances = await getAvailableBalances(provider, address)
     const tokenAccounts: ParsedTokenAccount[] = []
@@ -836,11 +834,11 @@ const getAlephiumParsedTokenAccounts = async (dispatch: Dispatch, address: strin
         tokenId === ALPH_TOKEN_ID
       ))
     }
-
-    dispatch(receiveSourceParsedTokenAccounts(tokenAccounts))
+    return tokenAccounts
   } catch (error) {
-    console.error(error)
-    dispatch(errorSourceParsedTokenAccounts("Failed to load alephium token metadata"))
+    const errMsg = `Failed to load alephium token metadata: ${error}`
+    console.error(errMsg)
+    throw new Error(errMsg)
   }
 }
 
@@ -871,6 +869,10 @@ function useGetAvailableTokens(nft: boolean = false) {
   const [covalentError, setCovalentError] = useState<string | undefined>(
     undefined
   );
+
+  const [alphTokens, setAlphTokens] = useState<ParsedTokenAccount[]>()
+  const [alphTokenLoading, setAlphTokenLoading] = useState(false)
+  const [alphTokenError, setAlphTokenError] = useState<string>()
 
   const [ethNativeAccount, setEthNativeAccount] = useState<any>(undefined);
   const [ethNativeAccountLoading, setEthNativeAccountLoading] = useState(false);
@@ -920,6 +922,10 @@ function useGetAvailableTokens(nft: boolean = false) {
     setCovalent(undefined); //These need to be included in the reset because they have balances on them.
     setCovalentLoading(false);
     setCovalentError("");
+
+    setAlphTokens(undefined)
+    setAlphTokenLoading(false)
+    setAlphTokenError(undefined)
 
     setEthNativeAccount(undefined);
     setEthNativeAccountLoading(false);
@@ -1530,6 +1536,30 @@ function useGetAvailableTokens(nft: boolean = false) {
     }
   }, [lookupChain, provider, signerAddress, dispatch, nft, covalent]);
 
+  useEffect(() => {
+    if (
+      lookupChain === CHAIN_ID_ALEPHIUM &&
+      currentSourceWalletAddress !== undefined &&
+      alphTokens === undefined &&
+      alphWallet?.nodeProvider !== undefined &&
+      !alphTokenLoading
+    ) {
+      setAlphTokenLoading(true)
+      dispatch(fetchSourceParsedTokenAccounts())
+      getAlephiumParsedTokenAccounts(currentSourceWalletAddress, alphWallet.nodeProvider)
+        .then((tokenAccounts) => {
+          setAlphTokens(tokenAccounts)
+          setAlphTokenLoading(false)
+          setAlphTokenError(undefined)
+        })
+        .catch((error) => {
+          console.log(`failed to load tokens from alephium, error: ${error}`)
+          setAlphTokenLoading(false)
+          setAlphTokenError(`${error}`)
+        })
+    }
+  }, [dispatch, lookupChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
+
   //Terra accounts load
   //At present, we don't have any mechanism for doing this.
   useEffect(() => {}, []);
@@ -1549,17 +1579,6 @@ function useGetAvailableTokens(nft: boolean = false) {
 
     return () => {};
   }, [dispatch, lookupChain, currentSourceWalletAddress, tokenAccounts, nft]);
-
-  //Alephium account load
-  useEffect(() => {
-    if (lookupChain === CHAIN_ID_ALEPHIUM && currentSourceWalletAddress !== undefined && alphWallet?.nodeProvider !== undefined) {
-      if (
-        !(tokenAccounts.data || tokenAccounts.isFetching || tokenAccounts.error)
-      ) {
-        getAlephiumParsedTokenAccounts(dispatch, currentSourceWalletAddress, alphWallet.nodeProvider)
-      }
-    }
-  }, [dispatch, lookupChain, currentSourceWalletAddress, tokenAccounts, alphWallet?.nodeProvider])
 
   const ethAccounts = useMemo(() => {
     const output = { ...tokenAccounts };
@@ -1603,7 +1622,9 @@ function useGetAvailableTokens(nft: boolean = false) {
       }
     : lookupChain === CHAIN_ID_ALEPHIUM
     ? {
-        tokenAccounts,
+        tokens: alphTokens,
+        isFetching: alphTokenLoading,
+        error: alphTokenError,
         resetAccounts: resetSourceAccounts,
       }
     : lookupChain === CHAIN_ID_ALGORAND
