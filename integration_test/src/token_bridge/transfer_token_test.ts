@@ -32,10 +32,10 @@ async function attestInvalidToken(alph: AlephiumBridgeChain) {
 
 async function checkWrappedToken(sourceChain: BridgeChain, targetChain: BridgeChain, tokenId: string) {
   const sourceTokenInfo = await sourceChain.getLocalTokenInfo(tokenId)
-  const wrappedTokenId = await targetChain.getWrappedTokenId(sourceChain.chainId, tokenId)
+  const wrappedTokenId = await targetChain.getWrappedTokenId(sourceChain.chainId, normalizeTokenId(tokenId))
   const wrappedTokenInfo = await targetChain.getLocalTokenInfo(wrappedTokenId)
   assert(wrappedTokenInfo.symbol === sourceTokenInfo.symbol)
-  assert(wrappedTokenInfo.name === sourceTokenInfo.name)
+  assert(wrappedTokenInfo.name === sourceTokenInfo.name || wrappedTokenInfo.name === `${sourceTokenInfo.name} (Wormhole)`)
   assert(wrappedTokenInfo.decimals === sourceTokenInfo.decimals)
 }
 

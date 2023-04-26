@@ -11,22 +11,22 @@ import {
   SuggestedParams,
 } from "algosdk";
 import { ethers, PayableOverrides } from "ethers";
-import { isNativeDenom, stringToByte32Hex } from "..";
+import { isNativeDenom } from "..";
 import { getMessageFee, optin, TransactionSignerPair } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { getBridgeFeeIx, ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
-import { textToHexString, textToUint8Array, uint8ArrayToHex } from "../utils";
+import { textToHexString, textToUint8Array, uint8ArrayToHex, utf8StringTo32Bytes } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
-import { ALPH_TOKEN_ID, DUST_AMOUNT, ExecuteScriptResult, isHexString, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, isHexString, SignerProvider } from "@alephium/web3";
 import { AttestToken } from "../alephium-contracts/ts/scripts"
 
 function normalizeString(str: string): string {
   if (isHexString(str) && str.length === 64) {
     return str
   }
-  return stringToByte32Hex(str)
+  return binToHex(utf8StringTo32Bytes(str))
 }
 
 export async function attestFromAlph(

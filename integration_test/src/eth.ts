@@ -17,7 +17,7 @@ import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
 import { default as ethDevnetConfig } from '../../configs/ethereum/devnet.json'
-import { Bridge__factory, ERC20__factory } from 'alephium-wormhole-sdk/lib/cjs/ethers-contracts'
+import { Bridge__factory, ERC20__factory, TokenImplementation__factory } from 'alephium-wormhole-sdk/lib/cjs/ethers-contracts'
 import { TokenInfo } from '@alephium/token-list'
 
 export async function createEth(): Promise<BridgeChain> {
@@ -134,7 +134,7 @@ export async function createEth(): Promise<BridgeChain> {
 
   const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
     const bridge = Bridge__factory.connect(tokenBridgeAddress, wallet)
-    return bridge.wrappedAsset(tokenChain, tokenId)
+    return bridge.wrappedAsset(tokenChain, Buffer.from(tokenId, 'hex'))
   }
 
   const transferToken = async (
