@@ -28,19 +28,19 @@ Abstract Contract TokenBridgeGovernance(
     fn createAttestTokenHandler(
         payer: Address,
         createContractAlphAmount: U256,
-        remoteChainId: U256,
-        remoteTokenBridgeId: ByteVec,
+        targetChainId: U256,
+        targetTokenBridgeId: ByteVec,
         isLocal: Bool
     ) -> () {
         let encodedImmutableFields = AttestTokenHandler.encodeImmFields!(
             governance,
             TokenBridge(selfContractId!()),
-            remoteChainId,
-            remoteTokenBridgeId,
+            targetChainId,
+            TokenBridge(targetTokenBridgeId),
             isLocal
         )
         let encodedMutableFields = AttestTokenHandler.encodeMutFields!(0)
-        let path = Path.AttestTokenHandler ++ u256To2Byte!(remoteChainId)
+        let path = Path.AttestTokenHandler ++ u256To2Byte!(targetChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getAttestTokenHandlerTemplateId(),

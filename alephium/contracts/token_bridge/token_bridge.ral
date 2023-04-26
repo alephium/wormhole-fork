@@ -91,13 +91,12 @@ Contract TokenBridge(
         )
         let encodedMutableFields = RemoteTokenPool.encodeMutFields!(0, symbol, name, msgSequence)
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
-        let tokenAmount = 1 << 255 // save some space from 0xff...ff
         copyCreateSubContractWithToken!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getRemoteTokenPoolTemplateId(),
             encodedImmutableFields,
             encodedMutableFields,
-            tokenAmount
+            u256Max!()
         )
     }
 

@@ -51,8 +51,8 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
   const attestTokenHandlerId = await deployTemplateContract(deployer, AttestTokenHandler, {
     governance: '',
     localTokenBridge: '',
-    chainId: 0n,
-    tokenBridgeId: '',
+    targetChainId: 0n,
+    targetTokenBridge: '',
     receivedSequence: 0n,
     isLocalHandler: false
   })
