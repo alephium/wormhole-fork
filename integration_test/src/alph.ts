@@ -48,7 +48,6 @@ import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contract
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
-  getLocalTokenInfo(tokenId: string): Promise<TokenInfo>
   getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
   attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
   getContractState<I extends ContractInstance, F extends Fields>(
@@ -227,6 +226,10 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     )
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`create wrapped token on alph succeed, tx id: ${result.txId}`)
+  }
+
+  const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
+    return getTokenPoolId(tokenBridgeContractId, tokenChain, tokenId, groupIndex)
   }
 
   const transferToken = async (
@@ -410,6 +413,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     attestToken: attestToken,
     createWrapped: createWrapped,
+    getWrappedTokenId: getWrappedTokenId,
 
     transferToken: transferToken,
     transferNative: transferNative,

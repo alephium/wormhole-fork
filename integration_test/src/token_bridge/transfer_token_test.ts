@@ -1,10 +1,10 @@
 import { execSync } from 'child_process'
 import { AlephiumBridgeChain } from '../alph'
-import { BridgeChain } from '../bridge_chain'
 import { assert, getBridgeChains, normalizeTokenId, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
 import { ALPH as ALPHTokenInfo } from '@alephium/token-list'
+import { BridgeChain } from '../bridge_chain'
 
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
@@ -30,6 +30,15 @@ async function attestInvalidToken(alph: AlephiumBridgeChain) {
   }
 }
 
+async function checkWrappedToken(sourceChain: BridgeChain, targetChain: BridgeChain, tokenId: string) {
+  const sourceTokenInfo = await sourceChain.getLocalTokenInfo(tokenId)
+  const wrappedTokenId = await targetChain.getWrappedTokenId(sourceChain.chainId, tokenId)
+  const wrappedTokenInfo = await targetChain.getLocalTokenInfo(wrappedTokenId)
+  assert(wrappedTokenInfo.symbol === sourceTokenInfo.symbol)
+  assert(wrappedTokenInfo.name === sourceTokenInfo.name)
+  assert(wrappedTokenInfo.decimals === sourceTokenInfo.decimals)
+}
+
 async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
   const signedVaa0 = await alph.attestWithTokenInfo(
@@ -39,6 +48,8 @@ async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
     testTokenInfo.name
   )
   await eth.createWrapped(signedVaa0)
+  await checkWrappedToken(alph, eth, alph.testTokenId)
+
   const signedVaa1 = await alph.attestWithTokenInfo(
     alph.wrappedNativeTokenId,
     ALPHTokenInfo.decimals,
@@ -46,11 +57,15 @@ async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
     ALPHTokenInfo.name
   )
   await eth.createWrapped(signedVaa1)
+  await checkWrappedToken(alph, eth, alph.wrappedNativeTokenId)
 
   const signedVaa2 = await eth.attestToken(eth.testTokenId)
   await alph.createWrapped(signedVaa2)
+  await checkWrappedToken(eth, alph, eth.testTokenId)
+
   const signedVaa3 = await eth.attestToken(eth.wrappedNativeTokenId)
   await alph.createWrapped(signedVaa3)
+  await checkWrappedToken(eth, alph, eth.wrappedNativeTokenId)
 }
 
 async function test() {

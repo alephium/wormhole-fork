@@ -1,8 +1,8 @@
 import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { BridgeChain } from './bridge_chain'
 import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'
+import { BridgeChain } from './bridge_chain'
 
 export function assert(condition: boolean) {
   if (!condition) {
