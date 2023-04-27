@@ -41,8 +41,7 @@
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.1",
     "eslint": "^7.32.0",
-    "ethers": "5.4.4",
-    "web3": "^1.7.1"
+    "ethers": "5.4.4"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",

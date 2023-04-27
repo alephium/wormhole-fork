@@ -1,14 +1,10 @@
-import Web3 from 'web3'
 import { randomBytes } from 'crypto'
+import { ethers } from 'ethers'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
 import { ContractState, contractIdFromAddress, binToHex, Project, encodeI256, Fields } from '@alephium/web3'
 import { MathTest } from '../../artifacts/ts'
-
-export const web3 = new Web3()
-export const ethAccounts = web3.eth.accounts
-export const web3Utils = web3.utils
 
 export const CHAIN_ID_ALEPHIUM = 255
 export const dustAmount = BigInt('1000000000000000')
@@ -61,10 +57,11 @@ export class GuardianSet {
   }
 
   static random(size: number, index: number): GuardianSet {
-    const pks = Array(size)
+    const accounts = Array(size)
       .fill(0)
-      .map(() => ethAccounts.create().privateKey)
-    const addresses = pks.map((key) => ethAccounts.privateKeyToAccount(key).address.slice(2)) // drop the 0x prefix
+      .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+    const addresses = accounts.map((account) => account.address.slice(2)) // drop the 0x prefix
+    const pks = accounts.map((account) => account.privateKey)
     return new GuardianSet(pks, index, addresses)
   }
 
@@ -87,7 +84,7 @@ export class GuardianSet {
       .sort((a, b) => a[0] - b[0])
       .slice(0, size)
       .sort((a, b) => a[1] - b[1])
-    const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + binToHex(body.encode())))
+    const hash = ethers.utils.keccak256(ethers.utils.keccak256('0x' + binToHex(body.encode())))
     const signatures = keys.map((element) => {
       const keyIndex = element[1]
       const ec = new elliptic.ec('secp256k1')
