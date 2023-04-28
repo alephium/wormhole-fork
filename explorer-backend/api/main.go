@@ -9,7 +9,7 @@ import (
 
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/guardian"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/heartbeats"
-	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/infraestructure"
+	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/infrastructure"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/observations"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/statistics"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/vaa"
@@ -111,7 +111,7 @@ func run(cmd *cobra.Command, args []string) {
 	// Setup repositories
 	vaaRepo := vaa.NewRepository(db, rootLogger)
 	obsRepo := observations.NewRepository(db, rootLogger)
-	infraestructureRepo := infraestructure.NewRepository(db, rootLogger)
+	infrastructureRepo := infrastructure.NewRepository(db, rootLogger)
 	heartbeatsRepo := heartbeats.NewRepository(db, rootLogger)
 	guardianSetRepo := guardian.NewRepository(db, rootLogger)
 	statisticsRepo, err := statistics.NewRepository(appCtx, db, rootLogger)
@@ -122,7 +122,7 @@ func run(cmd *cobra.Command, args []string) {
 	// Setup services
 	vaaService := vaa.NewService(vaaRepo, cacheGetFunc, rootLogger)
 	obsService := observations.NewService(obsRepo, rootLogger)
-	infraestructureService := infraestructure.NewService(infraestructureRepo, rootLogger)
+	infrastructureService := infrastructure.NewService(infrastructureRepo, rootLogger)
 	heartbeatsService := heartbeats.NewService(heartbeatsRepo, rootLogger)
 	guardianService := guardian.NewService(guardianSetRepo, rootLogger)
 	statisticsService := statistics.NewService(statisticsRepo, rootLogger)
@@ -130,7 +130,7 @@ func run(cmd *cobra.Command, args []string) {
 	// Setup controllers
 	vaaCtrl := vaa.NewController(vaaService, rootLogger)
 	observationsCtrl := observations.NewController(obsService, rootLogger)
-	infraestructureCtrl := infraestructure.NewController(infraestructureService)
+	infrastructureCtrl := infrastructure.NewController(infrastructureService)
 	guardianCtrl := guardian.NewController(guardianService, rootLogger)
 	heartbeatsCtrl := heartbeats.NewController(heartbeatsService, rootLogger)
 	statisticsCtrl := statistics.NewController(statisticsService, rootLogger)
@@ -153,8 +153,8 @@ func run(cmd *cobra.Command, args []string) {
 	api.Use(cors.New()) // TODO CORS restrictions?
 	api.Use(middleware.ExtractPagination)
 
-	api.Get("/health", infraestructureCtrl.HealthCheck)
-	api.Get("/ready", infraestructureCtrl.ReadyCheck)
+	api.Get("/health", infrastructureCtrl.HealthCheck)
+	api.Get("/ready", infrastructureCtrl.ReadyCheck)
 
 	// vaas resource
 	vaas := api.Group("/vaas")
