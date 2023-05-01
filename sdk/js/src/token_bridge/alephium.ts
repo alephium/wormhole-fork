@@ -172,15 +172,6 @@ export async function getRemoteTokenInfo(address: string): Promise<RemoteTokenIn
   }
 }
 
-export function stringToByte32Hex(str: string): string {
-  const encoder = new TextEncoder()
-  const bytes = encoder.encode(str)
-  if (bytes.length > 32) {
-    throw new Error('string exceed 32 bytes')
-  }
-  return binToHex(bytes).padStart(64, '0')
-}
-
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }

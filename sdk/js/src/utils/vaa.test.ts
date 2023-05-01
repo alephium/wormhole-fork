@@ -288,7 +288,7 @@ describe('serialize/deserialize vaa', () => {
   })
 
   it('should test serialize/deserialize AttestToken payload', () => {
-    const data = Buffer.from('02eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a00ff0a000000000000000000000000000000000000000000000054657374546f6b656e00000000000000000000000000000000000000000054657374546f6b656e2d30', 'hex')
+    const data = Buffer.from('02eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a00ff0a54657374546f6b656e000000000000000000000000000000000000000000000054657374546f6b656e2d30000000000000000000000000000000000000000000', 'hex')
     const payload = deserializeAttestTokenPayload(data)
     expect(payload).toEqual({
       type: 'AttestToken',

@@ -13,12 +13,14 @@ export type EvmMetadata = {
   logo?: string;
   tokenName?: string;
   decimals?: number;
+  balance?: bigint;
 };
 
 const ERC20_BASIC_ABI = [
   "function name() view returns (string name)",
   "function symbol() view returns (string symbol)",
   "function decimals() view returns (uint8 decimals)",
+  "function balanceOf(address) view returns (uint256)",
 ];
 
 const handleError = () => {
@@ -27,24 +29,35 @@ const handleError = () => {
 
 const fetchSingleMetadata = async (
   address: string,
-  provider: Provider
+  provider: Provider,
+  walletAddress?: string
 ): Promise<EvmMetadata> => {
   const contract = new ethers.Contract(address, ERC20_BASIC_ABI, provider);
-  const [name, symbol, decimals] = await Promise.all([
+  const promises = [
     contract.name().catch(handleError),
     contract.symbol().catch(handleError),
     contract.decimals().catch(handleError),
-  ]);
-  return { tokenName: name, symbol, decimals };
+  ]
+  if (walletAddress !== undefined) promises.push(contract.balanceOf(walletAddress).catch(handleError))
+  const results = await Promise.all(promises);
+  return {
+    tokenName: results[0],
+    symbol: results[1],
+    decimals: results[2],
+    balance: walletAddress !== undefined ? results[3].toBigInt() : undefined
+  };
 };
 
-const fetchEthMetadata = async (addresses: string[], provider: Provider) => {
+const fetchEthMetadata = async (addresses: string[], provider: Provider, fetchBalance: boolean, walletAddress?: string) => {
+  const output = new Map<string, EvmMetadata>();
+  if (fetchBalance && walletAddress === undefined) {
+    return output
+  }
   const promises: Promise<EvmMetadata>[] = [];
   addresses.forEach((address) => {
-    promises.push(fetchSingleMetadata(address, provider));
+    promises.push(fetchSingleMetadata(address, provider, walletAddress));
   });
   const resultsArray = await Promise.all(promises);
-  const output = new Map<string, EvmMetadata>();
   addresses.forEach((address, index) => {
     output.set(address, resultsArray[index]);
   });
@@ -54,7 +67,9 @@ const fetchEthMetadata = async (addresses: string[], provider: Provider) => {
 
 function useEvmMetadata(
   addresses: string[],
-  chainId: ChainId
+  chainId: ChainId,
+  fetchBalance: boolean,
+  walletAddress?: string
 ): DataWrapper<Map<string, EvmMetadata>> {
   const { isReady } = useIsWalletReady(chainId, false);
   const { provider } = useEthereumProvider();
@@ -69,7 +84,7 @@ function useEvmMetadata(
       setIsFetching(true);
       setError("");
       setData(null);
-      fetchEthMetadata(addresses, provider).then(
+      fetchEthMetadata(addresses, provider, fetchBalance, walletAddress).then(
         (results) => {
           if (!cancelled) {
             setData(results);
@@ -87,7 +102,7 @@ function useEvmMetadata(
     return () => {
       cancelled = true;
     };
-  }, [addresses, provider, isReady, chainId]);
+  }, [addresses, provider, isReady, chainId, walletAddress, fetchBalance]);
 
   return useMemo(
     () => ({

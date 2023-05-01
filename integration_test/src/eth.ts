@@ -17,6 +17,8 @@ import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
 import { default as ethDevnetConfig } from '../../configs/ethereum/devnet.json'
+import { Bridge__factory, ERC20__factory, TokenImplementation__factory } from 'alephium-wormhole-sdk/lib/cjs/ethers-contracts'
+import { TokenInfo } from '@alephium/token-list'
 
 export async function createEth(): Promise<BridgeChain> {
   const contracts = ethDevnetConfig.contracts
@@ -128,6 +130,11 @@ export async function createEth(): Promise<BridgeChain> {
   const createWrapped = async (signedVaa: Uint8Array): Promise<void> => {
     const ethReceipt = await createWrappedOnEth(tokenBridgeAddress, wallet, signedVaa)
     console.log(`create wrapped succeed, tx id: ${ethReceipt.transactionHash}`)
+  }
+
+  const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
+    const bridge = Bridge__factory.connect(tokenBridgeAddress, wallet)
+    return bridge.wrappedAsset(tokenChain, Buffer.from(tokenId, 'hex'))
   }
 
   const transferToken = async (
@@ -245,6 +252,14 @@ export async function createEth(): Promise<BridgeChain> {
     throw new Error('Not supported')
   }
 
+  const getLocalTokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
+    const result = ERC20__factory.connect(tokenAddress, wallet)
+    const symbol = await result.symbol()
+    const name = await result.name()
+    const decimals = await result.decimals()
+    return { id: normalizeTokenId(tokenAddress), symbol, name, decimals }
+  }
+
   return {
     chainId: CHAIN_ID_ETH,
     testTokenId: testTokenAddress,
@@ -268,6 +283,8 @@ export async function createEth(): Promise<BridgeChain> {
 
     attestToken: attestToken,
     createWrapped: createWrapped,
+    getWrappedTokenId: getWrappedTokenId,
+    getLocalTokenInfo: getLocalTokenInfo,
 
     transferToken: transferToken,
     transferNative: transferNative,

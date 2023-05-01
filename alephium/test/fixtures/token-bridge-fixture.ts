@@ -296,8 +296,8 @@ function createAttestTokenHandlerTemplate() {
   return createContract(AttestTokenHandler, {
     governance: '',
     localTokenBridge: '',
-    chainId: 0n,
-    tokenBridgeId: '',
+    targetChainId: 0n,
+    targetTokenBridge: '',
     receivedSequence: 0n,
     isLocalHandler: false
   })
@@ -386,8 +386,8 @@ export function createAttestTokenHandler(
     governance: tokenBridge.governance.contractId,
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
     localTokenBridge: tokenBridge.contractId,
-    chainId: BigInt(remoteChainId),
-    tokenBridgeId: remoteTokenBridgeId,
+    targetChainId: BigInt(remoteChainId),
+    targetTokenBridge: remoteTokenBridgeId,
     receivedSequence: 0n,
     isLocalHandler: remoteChainId === CHAIN_ID_ALEPHIUM
   }

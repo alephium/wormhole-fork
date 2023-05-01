@@ -1,5 +1,5 @@
 {
-  "version": "v2.1.2",
+  "version": "v2.2.1",
   "name": "UpgradeTokenBridgeContract",
   "bytecodeTemplate": "01010300000005{1}0d0c{0}0105",
   "fieldsSig": {

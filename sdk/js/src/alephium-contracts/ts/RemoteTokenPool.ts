@@ -223,7 +223,7 @@ export const RemoteTokenPool = new Factory(
   Contract.fromJson(
     RemoteTokenPoolContractJson,
     "",
-    "7e5c370bdc4a049066f3405b0eeda465d7dabb026065abf067616f7c523ce715"
+    "9f9a0a641df62cf6d831fbd7e8cdbcc7511682dd9ebf9d988ce42ae7280c6ee9"
   )
 );
 

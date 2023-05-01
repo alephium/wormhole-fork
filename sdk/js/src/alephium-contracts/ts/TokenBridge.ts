@@ -87,8 +87,8 @@ class Factory extends ContractFactory<
         {
           payer: Address;
           createContractAlphAmount: bigint;
-          remoteChainId: bigint;
-          remoteTokenBridgeId: HexString;
+          targetChainId: bigint;
+          targetTokenBridgeId: HexString;
           isLocal: boolean;
         }
       >
@@ -257,7 +257,7 @@ export const TokenBridge = new Factory(
   Contract.fromJson(
     TokenBridgeContractJson,
     "",
-    "8948bfbf1c8ad0628a67586a029d6c2370cbc87c793f60e67eb5f39c1e5cd37e"
+    "4c453dd16db942a63749b73840abb630f6b959e135976eb7487084a5e9345bb0"
   )
 );
 

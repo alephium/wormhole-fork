@@ -121,9 +121,19 @@ describe('test token bridge', () => {
     return { address: fromAddress, asset: { alphAmount: alphAmount } }
   }
 
+  function stringToBytes32Hex(symbol: string): string {
+    return Buffer.from(symbol, 'utf8').toString('hex').padEnd(64, '0')
+  }
+
+  function bytes32HexToUtf8String(str: string): string {
+    let result = str
+    while (result.endsWith('00')) result = result.slice(0, -2)
+    return result
+  }
+
   const decimals = 8
-  const symbol = randomByte32Hex()
-  const name = randomByte32Hex()
+  const symbol = stringToBytes32Hex('TT')
+  const name = stringToBytes32Hex('TestToken')
   const remoteChainId = CHAIN_ID_ALEPHIUM + 1
   const remoteTokenBridgeId = randomByte32Hex()
 
@@ -691,8 +701,8 @@ describe('test token bridge', () => {
         remoteTokenPoolAddress
       )
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals))
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(symbol)
-      expect(remoteTokenPoolState.fields.name_).toEqual(name)
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(symbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(name))
 
       const remoteTokenPoolOutput = result.txOutputs.find((o) => o.address === remoteTokenPoolAddress)!
       expect(remoteTokenPoolOutput.alphAmount).toEqual(minimalAlphInContract)
@@ -721,8 +731,8 @@ describe('test token bridge', () => {
       decimals,
       1
     )
-    const newSymbol = randomByte32Hex()
-    const newName = randomByte32Hex()
+    const newSymbol = stringToBytes32Hex('TT0')
+    const newName = stringToBytes32Hex('TestToken0')
     const newDecimals = decimals + 1
     // invalid caller
     expectError(
@@ -761,8 +771,8 @@ describe('test token bridge', () => {
         result.contracts,
         fixture.remoteTokenPool.contractId
       )
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(newSymbol)
-      expect(remoteTokenPoolState.fields.name_).toEqual(newName)
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(newSymbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(newName))
       expect(remoteTokenPoolState.fields.sequence_).toEqual(2n)
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals)) // decimals never change
     }

@@ -31,8 +31,8 @@ export namespace AttestTokenHandlerTypes {
   export type Fields = {
     governance: HexString;
     localTokenBridge: HexString;
-    chainId: bigint;
-    tokenBridgeId: HexString;
+    targetChainId: bigint;
+    targetTokenBridge: HexString;
     receivedSequence: bigint;
     isLocalHandler: boolean;
   };
@@ -88,6 +88,14 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "updateRemoteTokenPool", params);
     },
+    bytes32ToString: async (
+      params: TestContractParams<
+        AttestTokenHandlerTypes.Fields,
+        { bytes: HexString }
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "bytes32ToString", params);
+    },
   };
 }
 
@@ -96,7 +104,7 @@ export const AttestTokenHandler = new Factory(
   Contract.fromJson(
     AttestTokenHandlerContractJson,
     "",
-    "741f7658d2746b8d678a329a1ebc1f433ef645c0d4c7e0dc425b958b0a87b8bb"
+    "3dc522b5704df3b46e139f579d7e823421c734276ecf72cfd665b439db8810f2"
   )
 );
 

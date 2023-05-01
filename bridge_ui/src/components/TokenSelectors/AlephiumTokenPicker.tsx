@@ -1,13 +1,13 @@
 import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
 import { useCallback } from "react";
-import { DataWrapper } from "../../store/helpers";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
   onChange: (newValue: ParsedTokenAccount | null) => void;
-  tokenAccounts: DataWrapper<ParsedTokenAccount[]> | undefined;
+  tokens: ParsedTokenAccount[] | undefined
+  isFetching: boolean;
   disabled: boolean;
   resetAccounts: (() => void) | undefined;
 };
@@ -15,12 +15,12 @@ type AlephiumTokenPickerProps = {
 const returnsFalse = () => false;
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
-  const { value, onChange, disabled, tokenAccounts, resetAccounts } = props
+  const { value, onChange, disabled, tokens, isFetching, resetAccounts } = props
 
   const resetAccountWrapper = useCallback(() => {
     resetAccounts && resetAccounts();
   }, [resetAccounts]);
-  const isLoading = tokenAccounts?.isFetching || false
+  const isLoading = isFetching || false
 
   const onChangeWrapper = useCallback(
     async (account: ParsedTokenAccount | null) => {
@@ -48,7 +48,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   return (
     <TokenPicker
       value={value}
-      options={tokenAccounts?.data || []}
+      options={tokens || []}
       RenderOption={RenderComp}
       onChange={onChangeWrapper}
       isValidAddress={isSearchableAddress}

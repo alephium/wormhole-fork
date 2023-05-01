@@ -4,8 +4,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
-  isNativeDenom,
-  ethers_contracts
+  isNativeDenom
 } from "alephium-wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
@@ -20,9 +19,7 @@ import {
   selectTransferTargetAsset,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { ParsedTokenAccount, setTargetParsedTokenAccount } from "../store/transferSlice";
-import { NodeProvider } from "@alephium/web3";
-import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { setTargetParsedTokenAccount } from "../store/transferSlice";
 import {
   ALGORAND_HOST,
   getEvmChainId,
@@ -35,27 +32,6 @@ import useMetadata from "./useMetadata";
 import { Algodv2 } from "algosdk";
 import { useAlephiumWallet } from "./useAlephiumWallet";
 
-async function getAlephiumTargetAsset(address: string, targetAsset: string, provider: NodeProvider): Promise<ParsedTokenAccount> {
-  const balances = await getAvailableBalances(provider, address)
-  const balance = balances.get(targetAsset) ?? BigInt(0)
-
-  return getAlephiumTokenInfo(provider, targetAsset)
-    .then((tokenInfo) => {
-      if (tokenInfo === undefined) {
-        throw Error("failed to get alephium token info")
-      }
-      const uiAmount = formatUnits(balance, tokenInfo.decimals)
-      return createParsedTokenAccount(
-        address,
-        targetAsset,
-        balance.toString(),
-        tokenInfo.decimals,
-        parseFloat(uiAmount),
-        uiAmount
-      )
-    })
-}
-
 function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
   const targetChain = useSelector(selectTransferTargetChain);
@@ -64,15 +40,6 @@ function useGetTargetParsedTokenAccounts() {
     () => (targetAsset ? [targetAsset] : []),
     [targetAsset]
   );
-  const metadata = useMetadata(targetChain, targetAssetArrayed);
-  const tokenName =
-    (targetAsset && metadata.data?.get(targetAsset)?.tokenName) || undefined;
-  const symbol =
-    (targetAsset && metadata.data?.get(targetAsset)?.symbol) || undefined;
-  const logo =
-    (targetAsset && metadata.data?.get(targetAsset)?.logo) || undefined;
-  const decimals =
-    (targetAsset && metadata.data?.get(targetAsset)?.decimals) || undefined;
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
@@ -82,8 +49,24 @@ function useGetTargetParsedTokenAccounts() {
     signerAddress,
     chainId: evmChainId,
   } = useEthereumProvider();
+  const walletAddress = isEVMChain(targetChain)
+    ? signerAddress
+    : targetChain === CHAIN_ID_ALEPHIUM
+    ? alphWallet?.address
+    : undefined;
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
   const { accounts: algoAccounts } = useAlgorandContext();
+  const metadata = useMetadata(targetChain, targetAssetArrayed, true, walletAddress);
+  const tokenName =
+    (targetAsset && metadata.data?.get(targetAsset)?.tokenName) || undefined;
+  const symbol =
+    (targetAsset && metadata.data?.get(targetAsset)?.symbol) || undefined;
+  const logo =
+    (targetAsset && metadata.data?.get(targetAsset)?.logo) || undefined;
+  const decimals =
+    (targetAsset && metadata.data?.get(targetAsset)?.decimals) || undefined;
+  const balance =
+    (targetAsset && metadata.data?.get(targetAsset)?.balances) || undefined
   const hasResolvedMetadata = metadata.data || metadata.error;
   useEffect(() => {
     // targetParsedTokenAccount is cleared on setTargetAsset, but we need to clear it on wallet changes too
@@ -94,17 +77,25 @@ function useGetTargetParsedTokenAccounts() {
     let cancelled = false;
 
     if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
-      getAlephiumTargetAsset(alphWallet.address, targetAsset, alphWallet.nodeProvider)
-        .then((target) => {
-          if (!cancelled) {
-            dispatch(setTargetParsedTokenAccount(target))
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            // TODO: error state
-          }
-        })
+        if (!cancelled && decimals !== undefined) {
+          const balanceStr = balance?.toString() || '0'
+          const uiAmount = formatUnits(balanceStr, decimals)
+          dispatch(
+            setTargetParsedTokenAccount(
+              createParsedTokenAccount(
+                alphWallet.address,
+                targetAsset,
+                balanceStr,
+                decimals,
+                Number(uiAmount),
+                uiAmount,
+                symbol,
+                tokenName,
+                logo
+              )
+            )
+          )
+        }
     }
     if (targetChain === CHAIN_ID_TERRA && terraWallet) {
       const lcd = new LCDClient(TERRA_HOST);
@@ -221,36 +212,26 @@ function useGetTargetParsedTokenAccounts() {
       signerAddress &&
       hasCorrectEvmNetwork
     ) {
-      const token = ethers_contracts.TokenImplementation__factory.connect(targetAsset, provider);
-      token
-        .decimals()
-        .then((decimals) => {
-          token.balanceOf(signerAddress).then((n) => {
-            if (!cancelled) {
-              dispatch(
-                setTargetParsedTokenAccount(
-                  // TODO: verify accuracy
-                  createParsedTokenAccount(
-                    signerAddress,
-                    token.address,
-                    n.toString(),
-                    decimals,
-                    Number(formatUnits(n, decimals)),
-                    formatUnits(n, decimals),
-                    symbol,
-                    tokenName,
-                    logo
-                  )
-                )
-              );
-            }
-          });
-        })
-        .catch(() => {
-          if (!cancelled) {
-            // TODO: error state
-          }
-        });
+      if (!cancelled && decimals !== undefined) {
+        const balanceStr = balance?.toString() || '0'
+        const uiAmount = formatUnits(balanceStr, decimals)
+        dispatch(
+          setTargetParsedTokenAccount(
+            // TODO: verify accuracy
+            createParsedTokenAccount(
+              signerAddress,
+              targetAsset,
+              balanceStr,
+              decimals,
+              Number(uiAmount),
+              uiAmount,
+              symbol,
+              tokenName,
+              logo
+            )
+          )
+        );
+      }
     }
     if (
       targetChain === CHAIN_ID_ALGORAND &&
@@ -329,6 +310,7 @@ function useGetTargetParsedTokenAccounts() {
     logo,
     algoAccounts,
     decimals,
+    balance
   ]);
 }
 
