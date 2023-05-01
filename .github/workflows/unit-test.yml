@@ -34,7 +34,7 @@ jobs:
           node-version: '16'
       - run: cd clients/js && make install
       - run: curl -L https://foundry.paradigm.xyz | bash
-      - run: $HOME/.foundry/bin/foundryup
+      - run: $HOME/.foundry/bin/foundryup -C 8f246e0
       - run: cd ethereum && PATH=$PATH:$HOME/.foundry/bin/ make test-upgrade
 
   alephium:
