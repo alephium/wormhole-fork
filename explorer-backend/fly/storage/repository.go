@@ -192,7 +192,7 @@ func (s *Repository) upsertVaa(ctx context.Context, v *vaa.VAA, serialized []byt
 	opts := options.Update().SetUpsert(true)
 	result, err := s.collections.vaas.UpdateByID(ctx, id, update, opts)
 	if err == nil && s.isNewRecord(result) {
-		s.updateVAACount(v.EmitterChain)
+		s.updateVAACount(ctx, v.EmitterChain)
 	}
 	return err
 }
@@ -259,9 +259,13 @@ func (s *Repository) upsertTokenTransfer(ctx context.Context, v *vaa.VAA, tokenT
 	}
 	update := bson.D{{Key: "$set", Value: tokenTransferDoc}}
 	opts := options.Update().SetUpsert(true)
-	_, err = s.collections.tokenTransfers.UpdateByID(context.TODO(), id, update, opts)
+	result, err := s.collections.tokenTransfers.UpdateByID(ctx, id, update, opts)
 	if err != nil {
 		return err
+	}
+	if result.ModifiedCount > 0 {
+		s.log.Info("ignore the duplicated token transfer vaa", zap.String("id", id))
+		return nil
 	}
 	details := &tokenTransferDetails{
 		emitterChain: v.EmitterChain,
@@ -323,7 +327,7 @@ func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *A
 	}
 	update := bson.D{{Key: "$set", Value: tokenDoc}}
 	opts := options.Update().SetUpsert(true)
-	_, err = s.collections.tokens.UpdateByID(context.TODO(), id, update, opts)
+	_, err = s.collections.tokens.UpdateByID(ctx, id, update, opts)
 	return err
 }
 
@@ -435,7 +439,7 @@ func (s *Repository) getTxIdByMessageId(ctx context.Context, messageId string) (
 	return observation.TxId, nil
 }
 
-func (s *Repository) UpsertObservation(o *gossipv1.SignedObservation) error {
+func (s *Repository) UpsertObservation(ctx context.Context, o *gossipv1.SignedObservation) error {
 	vaaID := strings.Split(o.MessageId, "/")
 	if len(vaaID) != 4 {
 		return fmt.Errorf("invalid vaa id: %s", o.MessageId)
@@ -474,14 +478,14 @@ func (s *Repository) UpsertObservation(o *gossipv1.SignedObservation) error {
 		"$setOnInsert": indexedAt(now),
 	}
 	opts := options.Update().SetUpsert(true)
-	_, err = s.collections.observations.UpdateByID(context.TODO(), id, update, opts)
+	_, err = s.collections.observations.UpdateByID(ctx, id, update, opts)
 	if err != nil {
 		s.log.Error("Error inserting observation", zap.Error(err))
 	}
 	return err
 }
 
-func (s *Repository) UpsertGuardianSet(gs *common.GuardianSet) error {
+func (s *Repository) UpsertGuardianSet(ctx context.Context, gs *common.GuardianSet) error {
 	addresses := make([]string, len(gs.Keys))
 	for i, key := range gs.Keys {
 		addresses[i] = key.Hex()
@@ -493,23 +497,23 @@ func (s *Repository) UpsertGuardianSet(gs *common.GuardianSet) error {
 	filter := bson.D{{Key: "index", Value: doc.Index}}
 	update := bson.D{{Key: "$set", Value: doc}}
 	opts := options.Update().SetUpsert(true)
-	_, err := s.collections.guardianSets.UpdateOne(context.Background(), filter, update, opts)
+	_, err := s.collections.guardianSets.UpdateOne(ctx, filter, update, opts)
 	return err
 }
 
-func (s *Repository) UpsertHeartbeat(hb *gossipv1.Heartbeat) error {
+func (s *Repository) UpsertHeartbeat(ctx context.Context, hb *gossipv1.Heartbeat) error {
 	id := hb.GuardianAddr
 	now := time.Now()
 	update := bson.D{{Key: "$set", Value: hb}, {Key: "$set", Value: bson.D{{Key: "updatedAt", Value: now}}}, {Key: "$setOnInsert", Value: bson.D{{Key: "indexedAt", Value: now}}}}
 	opts := options.Update().SetUpsert(true)
-	_, err := s.collections.heartbeats.UpdateByID(context.TODO(), id, update, opts)
+	_, err := s.collections.heartbeats.UpdateByID(ctx, id, update, opts)
 	return err
 }
 
-func (s *Repository) updateVAACount(chainID vaa.ChainID) {
+func (s *Repository) updateVAACount(ctx context.Context, chainID vaa.ChainID) {
 	update := bson.D{{Key: "$inc", Value: bson.D{{Key: "count", Value: uint64(1)}}}}
 	opts := options.Update().SetUpsert(true)
-	_, _ = s.collections.vaaCounts.UpdateByID(context.TODO(), chainID, update, opts)
+	_, _ = s.collections.vaaCounts.UpdateByID(ctx, chainID, update, opts)
 }
 
 func (s *Repository) isNewRecord(result *mongo.UpdateResult) bool {

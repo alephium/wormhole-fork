@@ -232,14 +232,14 @@ func run(cmd *cobra.Command, args []string) {
 				return
 			case latestGuardianSet := <-guardianSetC:
 				gst.Set(latestGuardianSet)
-				repository.UpsertGuardianSet(latestGuardianSet)
+				repository.UpsertGuardianSet(rootCtx, latestGuardianSet)
 			case o := <-obsvC:
 				ok := verifyObservation(logger, o, gst.Get())
 				if !ok {
 					logger.Error("Could not verify observation", zap.String("id", o.MessageId))
 					continue
 				}
-				err := repository.UpsertObservation(o)
+				err := repository.UpsertObservation(rootCtx, o)
 				if err != nil {
 					logger.Error("Error inserting observation", zap.Error(err))
 				}
@@ -293,7 +293,7 @@ func run(cmd *cobra.Command, args []string) {
 			case <-rootCtx.Done():
 				return
 			case hb := <-heartbeatC:
-				err := repository.UpsertHeartbeat(hb)
+				err := repository.UpsertHeartbeat(rootCtx, hb)
 				if err != nil {
 					logger.Error("Error inserting heartbeat", zap.Error(err))
 				}
