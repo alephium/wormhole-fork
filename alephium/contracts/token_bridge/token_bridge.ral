@@ -11,7 +11,7 @@ Contract TokenBridge(
         return governance.getMessageFee()
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn attestToken(
         payer: Address,
         localTokenId: ByteVec,
@@ -114,7 +114,7 @@ Contract TokenBridge(
         remoteTokenPool.updateDetails(symbol, name, msgSequence)
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn transferToken(
         fromAddress: Address,
         bridgeTokenId: ByteVec,

@@ -122,7 +122,7 @@ Contract Governance(
         panic!(ErrorCodes.InvalidGuardianSetIndex)
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn submitContractUpgrade(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
@@ -146,7 +146,7 @@ Contract Governance(
         previousGuardianSetExpirationTimeMS = blockTimeStamp!() + GuardianSetExpireDuration
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn submitNewGuardianSet(vaa: ByteVec) -> () {
         updatePreviousGuardianSet()
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewGuardianSet)
@@ -161,7 +161,7 @@ Contract Governance(
         guardianSets[1] = byteVecSlice!(payload, 37, payloadSize)
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn submitSetMessageFee(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.NewMessageFee)
         assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
@@ -170,7 +170,7 @@ Contract Governance(
         messageFee = fee
     }
 
-    @using(assetsInContract = true)
+    @using(assetsInContract = true, checkExternalCaller = false)
     pub fn submitTransferFees(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.TransferFee)
         assert!(targetChainId == chainId || targetChainId == 0, ErrorCodes.InvalidTargetChainId)

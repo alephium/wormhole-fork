@@ -26,7 +26,7 @@ Contract AttestTokenHandler(
     return tokenId, bytes32ToString(symbol), bytes32ToString(name), decimals, msgSequence
   }
 
-  @using(preapprovedAssets = true)
+  @using(preapprovedAssets = true, checkExternalCaller = false)
   pub fn createLocalTokenPool(
     vaa: ByteVec,
     payer: Address,
@@ -40,7 +40,7 @@ Contract AttestTokenHandler(
     )
   }
 
-  @using(preapprovedAssets = true)
+  @using(preapprovedAssets = true, checkExternalCaller = false)
   pub fn createRemoteTokenPool(
     vaa: ByteVec,
     payer: Address,
@@ -53,6 +53,7 @@ Contract AttestTokenHandler(
     )
   }
 
+  @using(checkExternalCaller = false)
   pub fn updateRemoteTokenPool(vaa: ByteVec) -> () {
     assert!(!isLocalHandler, ErrorCodes.InvalidAttestTokenHandler)
     let (tokenId, symbol, name, _, msgSequence) = parseAttestToken(vaa)
