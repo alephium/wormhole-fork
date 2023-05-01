@@ -1,10 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
 import axios from 'axios'
 import { assert, getBridgeChains, sleep } from '../utils'
-import { getNextGovernanceSequence, guardianRpcPorts, injectVAA, submitGovernanceVAA } from './governance_utils'
-
-const newGuardianSet = ['0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe', '0x88D7D8B32a9105d228100E72dFFe2Fae0705D31c']
-const newGuardianSetIndex = 1
+import { getNextGovernanceSequence, guardianRpcPorts, injectVAA, newGuardianSet, newGuardianSetIndex, submitGovernanceVAA } from './governance_utils'
 
 function createGuardianSetUpgradeVaa(sequence: number): string {
   return `
@@ -20,6 +17,10 @@ function createGuardianSetUpgradeVaa(sequence: number): string {
         guardians: {
           pubkey: "${newGuardianSet[1]}"
           name: "Guardian 1"
+        }
+        guardians: {
+          pubkey: "${newGuardianSet[2]}"
+          name: "Guardian 2"
         }
       }
     }
