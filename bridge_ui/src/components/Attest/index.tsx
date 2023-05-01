@@ -1,5 +1,6 @@
 import {
   Container,
+  makeStyles,
   Step,
   StepButton,
   StepContent,
@@ -26,7 +27,12 @@ import SourcePreview from "./SourcePreview";
 import Target from "./Target";
 import TargetPreview from "./TargetPreview";
 
+const useStyles = makeStyles((theme) => ({
+  spacer: { height: theme.spacing(2) }
+}))
+
 function Attest() {
+  const classes = useStyles()
   const dispatch = useDispatch();
   const activeStep = useSelector(selectAttestActiveStep);
   const isSending = useSelector(selectAttestIsSending);
@@ -50,6 +56,7 @@ function Attest() {
         This form allows you to register a token on a new foreign chain. Tokens
         must be registered before they can be transferred.
       </Alert>
+      <div className={classes.spacer} />
       <Stepper activeStep={activeStep} orientation="vertical">
         <Step
           expanded={activeStep >= 0}
