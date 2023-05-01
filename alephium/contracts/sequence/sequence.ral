@@ -14,8 +14,9 @@ Abstract Contract Sequence(
     @using(assetsInContract = true, updateFields = true)
     fn compact() -> () {
         if (firstNext256 != u256Max!()) {
-            let encodedImmutableFields = UnexecutedSequence.encodeImmFields!(selfContractId!(), start)
-            let encodedMutableFields = UnexecutedSequence.encodeMutFields!(firstNext256)
+            let (encodedImmutableFields, encodedMutableFields) = UnexecutedSequence.encodeFields!(
+                selfContractId!(), start, firstNext256
+            )
             copyCreateSubContract!{selfAddress!() -> ALPH: 1 alph}(
                 u256To8Byte!(start / 256),
                 unexecutedSequenceTemplateId,
