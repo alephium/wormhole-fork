@@ -4,7 +4,7 @@ Contract TokenBridgeFactory(
   tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
   attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
   unexecutedSequenceTemplateId: ByteVec    // used to create contract by copyCreateContract
-) {
+) extends Upgradable() {
   pub fn getLocalTokenPoolTemplateId() -> ByteVec {
     return localTokenPoolTemplateId
   }

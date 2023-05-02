@@ -6,7 +6,7 @@ Abstract Contract TokenBridgeGovernance(
     tokenBridgeFactory: TokenBridgeFactory,
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
-) extends Constants(), TokenBridgeConstants(), Upgradable() {
+) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
 
     enum ActionId {
@@ -104,7 +104,7 @@ Abstract Contract TokenBridgeGovernance(
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = parseConractUpgrade(payload)
+        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = tokenBridgeFactory.parseConractUpgrade(payload)
         if (prevStateHash == #) {
             migrate!(newCode)
         } else {

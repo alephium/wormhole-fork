@@ -144,16 +144,6 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "updateRefundAddress", params);
     },
-    parseConractUpgrade: async (
-      params: TestContractParams<
-        TokenBridgeTypes.Fields,
-        { payload: HexString }
-      >
-    ): Promise<
-      TestContractResult<[HexString, HexString, HexString, HexString]>
-    > => {
-      return testMethod(this, "parseConractUpgrade", params);
-    },
     getMessageFee: async (
       params: Omit<
         TestContractParams<TokenBridgeTypes.Fields, never>,
@@ -257,7 +247,7 @@ export const TokenBridge = new Factory(
   Contract.fromJson(
     TokenBridgeContractJson,
     "",
-    "4c453dd16db942a63749b73840abb630f6b959e135976eb7487084a5e9345bb0"
+    "03884f2efec6437111837123a502c119a7d02c4e79fa278f533d077c30288bfd"
   )
 );
 

@@ -1,5 +1,5 @@
 Abstract Contract Upgradable() extends Constants() {
-  fn parseConractUpgrade(payload: ByteVec) -> (ByteVec, ByteVec, ByteVec, ByteVec) {
+  pub fn parseConractUpgrade(payload: ByteVec) -> (ByteVec, ByteVec, ByteVec, ByteVec) {
     let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
     let mut offset = 35 + contractCodeLength
     let contractCode = byteVecSlice!(payload, 35, offset)

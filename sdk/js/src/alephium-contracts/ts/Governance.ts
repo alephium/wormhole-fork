@@ -51,6 +51,10 @@ export namespace GovernanceTypes {
   }>;
 
   export interface CallMethodTable {
+    parseConractUpgrade: {
+      params: CallContractParams<{ payload: HexString }>;
+      result: CallContractResult<[HexString, HexString, HexString, HexString]>;
+    };
     getMessageFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -199,7 +203,7 @@ export const Governance = new Factory(
   Contract.fromJson(
     GovernanceContractJson,
     "",
-    "59e000edbf5739884298899e54a4d2e34c6ebf30ac8273b7b1b00740248cf4cb"
+    "d93cff88ce7197260f5a2fb6a3fbdcc8e210e7ce183d8ae4a42cb36c2da7d03b"
   )
 );
 
@@ -231,6 +235,11 @@ export class GovernanceInstance extends ContractInstance {
   }
 
   methods = {
+    parseConractUpgrade: async (
+      params: GovernanceTypes.CallMethodParams<"parseConractUpgrade">
+    ): Promise<GovernanceTypes.CallMethodResult<"parseConractUpgrade">> => {
+      return callMethod(Governance, this, "parseConractUpgrade", params);
+    },
     getMessageFee: async (
       params?: GovernanceTypes.CallMethodParams<"getMessageFee">
     ): Promise<GovernanceTypes.CallMethodResult<"getMessageFee">> => {

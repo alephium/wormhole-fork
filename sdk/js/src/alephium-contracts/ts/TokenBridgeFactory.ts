@@ -39,6 +39,10 @@ export namespace TokenBridgeFactoryTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    parseConractUpgrade: {
+      params: CallContractParams<{ payload: HexString }>;
+      result: CallContractResult<[HexString, HexString, HexString, HexString]>;
+    };
     getLocalTokenPoolTemplateId: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<HexString>;
@@ -83,6 +87,16 @@ class Factory extends ContractFactory<
   }
 
   tests = {
+    parseConractUpgrade: async (
+      params: TestContractParams<
+        TokenBridgeFactoryTypes.Fields,
+        { payload: HexString }
+      >
+    ): Promise<
+      TestContractResult<[HexString, HexString, HexString, HexString]>
+    > => {
+      return testMethod(this, "parseConractUpgrade", params);
+    },
     getLocalTokenPoolTemplateId: async (
       params: Omit<
         TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
@@ -131,7 +145,7 @@ export const TokenBridgeFactory = new Factory(
   Contract.fromJson(
     TokenBridgeFactoryContractJson,
     "",
-    "b08890fe7fe29e80e21a7929ffd4a2658df0928fa1cdb5c45d63a90c55144b8f"
+    "5b857883b9d09ff0a521bf1742cec209f2253afb1b974e3d06eef1401692a32c"
   )
 );
 
@@ -146,6 +160,18 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
   }
 
   methods = {
+    parseConractUpgrade: async (
+      params: TokenBridgeFactoryTypes.CallMethodParams<"parseConractUpgrade">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"parseConractUpgrade">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "parseConractUpgrade",
+        params
+      );
+    },
     getLocalTokenPoolTemplateId: async (
       params?: TokenBridgeFactoryTypes.CallMethodParams<"getLocalTokenPoolTemplateId">
     ): Promise<
