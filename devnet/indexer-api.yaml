@@ -43,13 +43,6 @@ spec:
             - --logLevel=debug
             - --enableCache=false
             - --enableStackTrace=true
-          env:
-            - name: WORMSCAN_DB_URL
-              value: mongodb://mongo-0.mongo/?replicaSet=rs0
-            - name: WORMSCAN_PORT
-              value: "8100"
-            - name: WORMSCAN_CACHE_ENABLED
-              value: "false"
           readinessProbe:
             tcpSocket:
               port: 8100
