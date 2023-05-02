@@ -142,13 +142,6 @@ var (
 	discordToken   *string
 	discordChannel *string
 
-	bigTablePersistenceEnabled *bool
-	bigTableGCPProject         *string
-	bigTableInstanceName       *string
-	bigTableTableName          *string
-	bigTableTopicName          *string
-	bigTableKeyPath            *string
-
 	cloudKMSEnabled *bool
 	cloudKMSKeyName *string
 )
@@ -253,12 +246,6 @@ func init() {
 
 	discordToken = NodeCmd.Flags().String("discordToken", "", "Discord bot token (optional)")
 	discordChannel = NodeCmd.Flags().String("discordChannel", "", "Discord channel name (optional)")
-
-	bigTablePersistenceEnabled = NodeCmd.Flags().Bool("bigTablePersistenceEnabled", false, "Turn on forwarding events to BigTable")
-	bigTableGCPProject = NodeCmd.Flags().String("bigTableGCPProject", "", "Google Cloud project ID for storing events")
-	bigTableInstanceName = NodeCmd.Flags().String("bigTableInstanceName", "", "BigTable instance name for storing events")
-	bigTableTableName = NodeCmd.Flags().String("bigTableTableName", "", "BigTable table name to store events in")
-	bigTableTopicName = NodeCmd.Flags().String("bigTableTopicName", "", "GCP topic name to publish to")
 
 	cloudKMSEnabled = NodeCmd.Flags().Bool("cloudKMSEnabled", false, "Turn on Cloud KMS support for Guardian Key")
 	cloudKMSKeyName = NodeCmd.Flags().String("cloudKMSKeyName", "", "Cloud KMS key name for Guardian Key")
@@ -434,20 +421,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Please specify --nodeName")
 	}
 
-	if *bigTablePersistenceEnabled {
-		if *bigTableGCPProject == "" {
-			logger.Fatal("Please specify --bigTableGCPProject")
-		}
-		if *bigTableInstanceName == "" {
-			logger.Fatal("Please specify --bigTableInstanceName")
-		}
-		if *bigTableTableName == "" {
-			logger.Fatal("Please specify --bigTableTableName")
-		}
-		if *bigTableTopicName == "" {
-			logger.Fatal("Please specify --bigTableTopicName")
-		}
-	}
 	if *cloudKMSEnabled {
 		if *cloudKMSKeyName == "" {
 			logger.Fatal("Please specify --cloudKMSKeyName")
@@ -752,18 +725,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 		if *publicWeb != "" {
 			if err := supervisor.Run(ctx, "publicweb", publicwebService); err != nil {
-				return err
-			}
-		}
-
-		if *bigTablePersistenceEnabled {
-			bigTableConnection := &reporter.BigTableConnectionConfig{
-				GcpProjectID:    *bigTableGCPProject,
-				GcpInstanceName: *bigTableInstanceName,
-				TableName:       *bigTableTableName,
-				TopicName:       *bigTableTopicName,
-			}
-			if err := supervisor.Run(ctx, "bigtable", reporter.BigTableWriter(attestationEvents, bigTableConnection)); err != nil {
 				return err
 			}
 		}

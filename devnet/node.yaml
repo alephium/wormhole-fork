@@ -44,26 +44,12 @@ spec:
         # mount shared between containers for runtime state
         - name: node-data
           emptyDir: {}
-        - name: node-keysdir
-          secret:
-            secretName: node-bigtable-key
-            optional: true
-            items:
-              - key: bigtable-key.json
-                path: bigtable-key.json
       containers:
         - name: guardiand
           image: guardiand-image
           volumeMounts:
             - mountPath: /run/node/
               name: node-data
-            - mountPath: /tmp/mounted-keys
-              name: node-keysdir
-          env:
-            - name: BIGTABLE_EMULATOR_HOST
-              value: bigtable-emulator:8086
-            - name: PUBSUB_EMULATOR_HOST
-              value: pubsub-emulator:8085
           command:
             - /guardiand
             - node
