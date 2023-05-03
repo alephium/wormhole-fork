@@ -24,7 +24,7 @@ function updateEthConfig(network: string) {
   const ethDir = path.join(process.cwd(), '..', 'ethereum')
   const truffleConfigPath = path.join(ethDir, 'truffle-config.js')
   const truffleConfig = require(truffleConfigPath)
-  const networkConfig = truffleConfig.networks[`${network}`]
+  const networkConfig = truffleConfig.networks[`${network === 'testnet' ? 'goerli' : network}`]
   const nodeUrl = `${networkConfig.host}:${networkConfig.port}`
 
   const func = (deployments: any, config: any): void => {
