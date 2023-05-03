@@ -1,7 +1,8 @@
-import { stringToHex } from '@alephium/web3'
+import { stringToHex, ContractState } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
 import { CHAIN_ID_ALEPHIUM, ContractFixture, GuardianSet, randomContractAddress } from './wormhole-fixture'
-import { Governance, GovernanceTypes } from '../../artifacts/ts'
+import { Governance, GovernanceTypes, TokenBridgeFactoryTypes } from '../../artifacts/ts'
+import { createTemplateContracts, createTokenBridgeFactory, TemplateContracts } from './token-bridge-fixture'
 
 export const governanceModule = zeroPad(stringToHex('Core'), 32)
 export const initGuardianSet = GuardianSet.random(12, 0)
@@ -68,12 +69,31 @@ export class SubmitTransferFee {
   }
 }
 
-export function createGovernance(receivedSequence?: bigint, messageFee?: bigint) {
-  const address = randomContractAddress()
+export class GovernanceFixture extends ContractFixture<GovernanceTypes.Fields> {
+  templateContracts: TemplateContracts
+  tokenBridgeFactory: ContractFixture<TokenBridgeFactoryTypes.Fields>
+
+  constructor(
+    selfState: ContractState<GovernanceTypes.Fields>,
+    dependencies: ContractState[],
+    templateContracts: TemplateContracts,
+    tokenBridgeFactory: ContractFixture<TokenBridgeFactoryTypes.Fields>
+  ) {
+    super(selfState, dependencies)
+    this.templateContracts = templateContracts
+    this.tokenBridgeFactory = tokenBridgeFactory
+  }
+}
+
+export function createGovernance(receivedSequence?: bigint, messageFee?: bigint, contractAddress?: string) {
+  const templateContracts = createTemplateContracts()
+  const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
+  const address = contractAddress ?? randomContractAddress()
   const initFields: GovernanceTypes.Fields = {
     chainId: BigInt(CHAIN_ID_ALEPHIUM),
     governanceChainId: BigInt(governanceChainId),
     governanceEmitterAddress: governanceEmitterAddress,
+    tokenBridgeFactory: tokenBridgeFactory.contractId,
     receivedSequence: receivedSequence ?? 0n,
     messageFee: messageFee ?? defaultMessageFee,
     guardianSets: ['', initGuardianSet.encodeAddresses()],
@@ -81,5 +101,5 @@ export function createGovernance(receivedSequence?: bigint, messageFee?: bigint)
     previousGuardianSetExpirationTimeMS: 0n
   }
   const contractState = Governance.stateForTest(initFields, undefined, address)
-  return new ContractFixture(contractState, [], address)
+  return new GovernanceFixture(contractState, tokenBridgeFactory.states(), templateContracts, tokenBridgeFactory)
 }

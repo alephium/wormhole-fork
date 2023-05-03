@@ -3,6 +3,7 @@ Contract GovernanceV1(
     @unused chainId: U256,
     @unused governanceChainId: U256,
     @unused governanceEmitterAddress: ByteVec,
+    @unused tokenBridgeFactory: TokenBridgeFactory,
     @unused mut receivedSequence: U256,
     @unused mut messageFee: U256,
     @unused mut guardianSets: [ByteVec; 2],

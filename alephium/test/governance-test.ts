@@ -19,7 +19,9 @@ import {
   randomAssetAddress,
   VAA,
   VAABody,
-  buildProject
+  buildProject,
+  getContractState,
+  randomContractAddress
 } from './fixtures/wormhole-fixture'
 import { randomBytes } from 'crypto'
 import * as base58 from 'bs58'
@@ -39,6 +41,7 @@ import { Governance, GovernanceTypes } from '../artifacts/ts'
 
 describe('test governance', () => {
   const testGuardianSet = GuardianSet.random(18, 1)
+  const governanceContractAddress = randomContractAddress()
 
   beforeAll(async () => {
     web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
@@ -51,7 +54,7 @@ describe('test governance', () => {
     inputAssets?: InputAsset[],
     receivedSequence?: bigint
   ): TestContractParams<GovernanceTypes.Fields, { vaa: HexString }> {
-    const governanceFixture = createGovernance(receivedSequence)
+    const governanceFixture = createGovernance(receivedSequence, undefined, governanceContractAddress)
     return {
       initialFields: governanceFixture.selfState.fields,
       address: governanceFixture.address,
@@ -69,7 +72,7 @@ describe('test governance', () => {
       const vaaBody = new VAABody(guardianSetUpgrade.encode(), governanceChainId, chainId, governanceEmitterAddress, 0)
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       const testResult = await Governance.tests.submitNewGuardianSet(createTestParams(vaa))
-      const governanceState = testResult.contracts[0] as GovernanceTypes.State
+      const governanceState = getContractState<GovernanceTypes.Fields>(testResult.contracts, governanceContractAddress)
       expect(governanceState.fields.guardianSets).toEqual([
         initGuardianSet.encodeAddresses().toLowerCase(),
         guardianSetUpgrade.newGuardianSet.encodeAddresses().toLowerCase()
@@ -188,7 +191,7 @@ describe('test governance', () => {
     )
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
     const testResult = await Governance.tests.submitSetMessageFee(createTestParams(vaa))
-    const governanceState = testResult.contracts[0] as GovernanceTypes.State
+    const governanceState = getContractState<GovernanceTypes.Fields>(testResult.contracts, governanceContractAddress)
     expect(governanceState.fields.messageFee).toEqual(setMessageFee.newMessageFee)
   })
 
@@ -219,8 +222,8 @@ describe('test governance', () => {
     expect(assetOutput.address).toEqual(base58.encode(Buffer.concat([Buffer.from([0x00]), recipient])))
     expect(BigInt(assetOutput.alphAmount)).toEqual(amount)
 
-    const contractOutput = testResult.txOutputs[1]
-    const governanceState = testResult.contracts[0]
+    const contractOutput = testResult.txOutputs.find((o) => o.address === governanceContractAddress)!
+    const governanceState = getContractState<GovernanceTypes.Fields>(testResult.contracts, governanceContractAddress)
     expect(contractOutput.type).toEqual('ContractOutput')
     expect(contractOutput.address).toEqual(governanceState.address)
     expect(contractOutput.alphAmount).toEqual(BigInt(asset.alphAmount) - amount)
@@ -228,7 +231,7 @@ describe('test governance', () => {
 
   it('should test upgrade contract', async () => {
     await buildProject()
-    const governanceFixture = createGovernance()
+    const governanceFixture = createGovernance(undefined, undefined, governanceContractAddress)
     async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult<null>> {
       const vaaBody = new VAABody(
         contractUpgrade.encode(governanceModule, 1),
@@ -251,7 +254,7 @@ describe('test governance', () => {
       const newContractCode = v1.bytecode
       const contractUpgrade = new ContractUpgrade(newContractCode)
       const testResult = await upgrade(contractUpgrade)
-      const newContract = testResult.contracts[testResult.contracts.length - 1]
+      const newContract = getContractState<GovernanceTypes.Fields>(testResult.contracts, governanceContractAddress)
       expect(newContract.address).toEqual(governanceFixture.address)
       expect(newContract.bytecode).toEqual(newContractCode)
     }
@@ -280,7 +283,7 @@ describe('test governance', () => {
       const newContractCode = v2.bytecode
       const contractUpgrade = new ContractUpgrade(newContractCode, prevStateHash, '010200', '010201')
       const testResult = await upgrade(contractUpgrade)
-      const newContract = testResult.contracts[testResult.contracts.length - 1]
+      const newContract = getContractState<GovernanceTypes.Fields>(testResult.contracts, governanceContractAddress)
       expect(newContract.address).toEqual(governanceFixture.address)
       expect(newContract.bytecode).toEqual(newContractCode)
       expect(newContract.fields).toEqual({ a: 0n, b: 1n })
