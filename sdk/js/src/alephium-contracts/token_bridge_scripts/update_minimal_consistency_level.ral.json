@@ -1,5 +1,5 @@
 {
-  "version": "v2.2.1",
+  "version": "v2.2.2",
   "name": "UpdateMinimalConsistencyLevel",
   "bytecodeTemplate": "01010300000005{1}0d0c{0}0107",
   "fieldsSig": {

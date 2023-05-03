@@ -247,7 +247,7 @@ export const TokenBridge = new Factory(
   Contract.fromJson(
     TokenBridgeContractJson,
     "",
-    "03884f2efec6437111837123a502c119a7d02c4e79fa278f533d077c30288bfd"
+    "3921ab78ca073b5125b2ff7e4232e72f2c1c62554bbc8f81d39e769e6bcf349c"
   )
 );
 

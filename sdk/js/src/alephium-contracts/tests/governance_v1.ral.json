@@ -1,13 +1,14 @@
 {
-  "version": "v2.2.1",
+  "version": "v2.2.2",
   "name": "GovernanceV1",
-  "bytecode": "0a0106010000000000",
-  "codeHash": "351ea4360d2b31bf059c790536801450128a88d1ed1ce5c0d6c0f0eee8d313ac",
+  "bytecode": "0b0106010000000000",
+  "codeHash": "237ca92e965dc50e86cb94535a4ffc9c9074ee6a7f1a1a24374f7380c6416d99",
   "fieldsSig": {
     "names": [
       "chainId",
       "governanceChainId",
       "governanceEmitterAddress",
+      "tokenBridgeFactory",
       "receivedSequence",
       "messageFee",
       "guardianSets",
@@ -18,6 +19,7 @@
       "U256",
       "U256",
       "ByteVec",
+      "ByteVec",
       "U256",
       "U256",
       "[ByteVec;2]",
@@ -25,6 +27,7 @@
       "U256"
     ],
     "isMutable": [
+      false,
       false,
       false,
       false,

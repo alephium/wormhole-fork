@@ -4,7 +4,7 @@ import { AlephiumConnectButton, useConnect, useAlephiumConnectContext } from "@a
 const AlephiumWalletKey = () => {
   const context = useAlephiumConnectContext()
   const { disconnect } = useConnect({
-    chainGroup: context.addressGroup,
+    addressGroup: context.addressGroup,
     keyType: context.keyType,
     networkId: context.network
   })
