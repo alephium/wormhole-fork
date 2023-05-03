@@ -123,7 +123,6 @@ var (
 	logLevel *string
 
 	devnetGuardianIndex *int
-	integrationTest     *bool
 
 	network  *string
 	nodeName *string
@@ -224,7 +223,6 @@ func init() {
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
 	devnetGuardianIndex = NodeCmd.Flags().Int("devnetGuardianIndex", 0, "Specify devnet guardian index")
-	integrationTest = NodeCmd.Flags().Bool("integrationTest", false, "Launch node for integration testing")
 
 	network = NodeCmd.Flags().String("network", "", "Network type (devnet, testnet, mainnet)")
 	nodeName = NodeCmd.Flags().String("nodeName", "", "Node name to announce in gossip heartbeats")
@@ -290,14 +288,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		fmt.Print(devwarning)
 	}
 
-	if *integrationTest && !unsafeDevMode {
-		fmt.Println("Integration tests can only be run in devnet mode")
-		os.Exit(1)
-	}
-
-	if !*integrationTest {
-		common.LockMemory()
-	}
 	common.SetRestrictiveUmask()
 
 	// Refuse to run as root in production mode.
