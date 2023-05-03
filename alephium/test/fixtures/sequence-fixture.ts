@@ -10,7 +10,7 @@ export function createUnexecutedSequence(parentId: string, begin: bigint, sequen
     sequences: sequences
   }
   const state = UnexecutedSequence.stateForTest(initFields, undefined, address)
-  return new ContractFixture(state, [], address)
+  return new ContractFixture(state, [])
 }
 
 export function createSequence(start: bigint, firstNext256: bigint, secondNext256: bigint, contractId?: string) {
@@ -23,5 +23,5 @@ export function createSequence(start: bigint, firstNext256: bigint, secondNext25
     unexecutedSequenceTemplateId: unexecutedSequenceTemplate.contractId
   }
   const state = SequenceTest.stateForTest(initField, undefined, address)
-  return new ContractFixture(state, unexecutedSequenceTemplate.states(), address)
+  return new ContractFixture(state, unexecutedSequenceTemplate.states())
 }

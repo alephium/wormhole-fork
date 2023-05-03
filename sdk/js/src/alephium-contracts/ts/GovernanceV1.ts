@@ -32,6 +32,7 @@ export namespace GovernanceV1Types {
     chainId: bigint;
     governanceChainId: bigint;
     governanceEmitterAddress: HexString;
+    tokenBridgeFactory: HexString;
     receivedSequence: bigint;
     messageFee: bigint;
     guardianSets: [HexString, HexString];
@@ -67,7 +68,7 @@ export const GovernanceV1 = new Factory(
   Contract.fromJson(
     GovernanceV1ContractJson,
     "",
-    "351ea4360d2b31bf059c790536801450128a88d1ed1ce5c0d6c0f0eee8d313ac"
+    "237ca92e965dc50e86cb94535a4ffc9c9074ee6a7f1a1a24374f7380c6416d99"
   )
 );
 

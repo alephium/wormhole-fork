@@ -104,7 +104,7 @@ export const AttestTokenHandler = new Factory(
   Contract.fromJson(
     AttestTokenHandlerContractJson,
     "",
-    "3dc522b5704df3b46e139f579d7e823421c734276ecf72cfd665b439db8810f2"
+    "a8d5b3de6a6267d4a12eb793dc90832b0b0e5b84f54c5458d0fedfe73dc0871c"
   )
 );
 

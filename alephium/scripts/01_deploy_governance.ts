@@ -21,10 +21,12 @@ const deployGovernance: DeployFunction<Settings> = async (
   const sizePrefix = zeroPad(initGuardianSet.length.toString(16), 1)
   const currentGuardianSet = sizePrefix + initGuardianSet.join('')
   console.log(`init guardian set: ${currentGuardianSet}`)
+  const tokenBridgeFactoryId = deployer.getDeployContractResult('TokenBridgeFactory').contractInstance.contractId
   const initialFields = {
     guardianSets: ['', currentGuardianSet],
     guardianSetIndexes: [0n, 0n],
     chainId: BigInt(network.settings.chainId),
+    tokenBridgeFactory: tokenBridgeFactoryId,
     governanceChainId: BigInt(network.settings.governanceChainId),
     governanceEmitterAddress: network.settings.governanceEmitterAddress,
     receivedSequence: 0n,

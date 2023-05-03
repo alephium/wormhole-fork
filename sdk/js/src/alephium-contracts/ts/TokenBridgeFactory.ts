@@ -59,6 +59,10 @@ export namespace TokenBridgeFactoryTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<HexString>;
     };
+    parseContractUpgrade: {
+      params: CallContractParams<{ payload: HexString }>;
+      result: CallContractResult<[HexString, HexString, HexString, HexString]>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -123,6 +127,16 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<HexString>> => {
       return testMethod(this, "getUnexecutedSequenceTemplateId", params);
     },
+    parseContractUpgrade: async (
+      params: TestContractParams<
+        TokenBridgeFactoryTypes.Fields,
+        { payload: HexString }
+      >
+    ): Promise<
+      TestContractResult<[HexString, HexString, HexString, HexString]>
+    > => {
+      return testMethod(this, "parseContractUpgrade", params);
+    },
   };
 }
 
@@ -131,7 +145,7 @@ export const TokenBridgeFactory = new Factory(
   Contract.fromJson(
     TokenBridgeFactoryContractJson,
     "",
-    "b08890fe7fe29e80e21a7929ffd4a2658df0928fa1cdb5c45d63a90c55144b8f"
+    "b8f3d38c07e360496aaf83fe93eefc04ee4fee57fb5102a628a6c394c67c2e6a"
   )
 );
 
@@ -204,6 +218,18 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         this,
         "getUnexecutedSequenceTemplateId",
         params === undefined ? {} : params
+      );
+    },
+    parseContractUpgrade: async (
+      params: TokenBridgeFactoryTypes.CallMethodParams<"parseContractUpgrade">
+    ): Promise<
+      TokenBridgeFactoryTypes.CallMethodResult<"parseContractUpgrade">
+    > => {
+      return callMethod(
+        TokenBridgeFactory,
+        this,
+        "parseContractUpgrade",
+        params
       );
     },
   };

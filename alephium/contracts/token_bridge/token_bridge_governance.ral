@@ -6,7 +6,7 @@ Abstract Contract TokenBridgeGovernance(
     tokenBridgeFactory: TokenBridgeFactory,
     mut minimalConsistencyLevel: U256,
     mut refundAddress: Address
-) extends Constants(), TokenBridgeConstants(), Upgradable() {
+) extends Constants(), TokenBridgeConstants() {
     const TokenBridgeModule = 0x546f6b656e427269646765 // module identifier: "TokenBridge"
 
     enum ActionId {
@@ -32,14 +32,14 @@ Abstract Contract TokenBridgeGovernance(
         targetTokenBridgeId: ByteVec,
         isLocal: Bool
     ) -> () {
-        let encodedImmutableFields = AttestTokenHandler.encodeImmFields!(
+        let (encodedImmutableFields, encodedMutableFields) = AttestTokenHandler.encodeFields!(
             governance,
             TokenBridge(selfContractId!()),
             targetChainId,
             TokenBridge(targetTokenBridgeId),
+            0,
             isLocal
         )
-        let encodedMutableFields = AttestTokenHandler.encodeMutFields!(0)
         let path = Path.AttestTokenHandler ++ u256To2Byte!(targetChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
@@ -82,15 +82,18 @@ Abstract Contract TokenBridgeGovernance(
             false
         )
 
-        let encodedImmutableFields = TokenBridgeForChain.encodeImmFields!(
+        let (encodedImmutableFields, encodedMutableFields) = TokenBridgeForChain.encodeFields!(
             governance,
             localChainId,
             selfContractId!(),
             remoteChainId,
             remoteTokenBridgeId,
-            tokenBridgeFactory.getUnexecutedSequenceTemplateId()
+            0,
+            0,
+            0,
+            tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
+            0
         )
-        let encodedMutableFields = TokenBridgeForChain.encodeMutFields!(0, 0, 0, 0)
         let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             tokenBridgeForChainPath,
@@ -104,7 +107,7 @@ Abstract Contract TokenBridgeGovernance(
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = parseConractUpgrade(payload)
+        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = tokenBridgeFactory.parseContractUpgrade(payload)
         if (prevStateHash == #) {
             migrate!(newCode)
         } else {

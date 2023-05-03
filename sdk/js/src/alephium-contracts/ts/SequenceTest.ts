@@ -105,7 +105,7 @@ export const SequenceTest = new Factory(
   Contract.fromJson(
     SequenceTestContractJson,
     "",
-    "8e793a256d2939004cd121580a652fa74f9083b6a51bc11936604f87a0ec5fe5"
+    "e78956e3f4b52df13bc7a82b17c872b3cf6d78c56f8b7dd9edddea6c8c8ddf81"
   )
 );
 

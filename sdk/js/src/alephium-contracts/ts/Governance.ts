@@ -32,6 +32,7 @@ export namespace GovernanceTypes {
     chainId: bigint;
     governanceChainId: bigint;
     governanceEmitterAddress: HexString;
+    tokenBridgeFactory: HexString;
     receivedSequence: bigint;
     messageFee: bigint;
     guardianSets: [HexString, HexString];
@@ -94,13 +95,6 @@ class Factory extends ContractFactory<
   }
 
   tests = {
-    parseConractUpgrade: async (
-      params: TestContractParams<GovernanceTypes.Fields, { payload: HexString }>
-    ): Promise<
-      TestContractResult<[HexString, HexString, HexString, HexString]>
-    > => {
-      return testMethod(this, "parseConractUpgrade", params);
-    },
     getMessageFee: async (
       params: Omit<
         TestContractParams<GovernanceTypes.Fields, never>,
@@ -199,7 +193,7 @@ export const Governance = new Factory(
   Contract.fromJson(
     GovernanceContractJson,
     "",
-    "59e000edbf5739884298899e54a4d2e34c6ebf30ac8273b7b1b00740248cf4cb"
+    "7ebf06319b04aef7a7013a42ea2b7fccb3fc86178c27240aa2b2678d9068d9c7"
   )
 );
 

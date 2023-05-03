@@ -31,10 +31,10 @@ export class ContractFixture<T extends Fields> {
     return this.dependencies.concat([this.selfState])
   }
 
-  constructor(selfState: ContractState<T>, dependencies: ContractState[], address: string) {
+  constructor(selfState: ContractState<T>, dependencies: ContractState[]) {
     this.selfState = selfState
     this.dependencies = dependencies
-    this.address = address
+    this.address = selfState.address
     this.contractId = selfState.contractId
   }
 }
@@ -42,7 +42,7 @@ export class ContractFixture<T extends Fields> {
 export function createMath() {
   const address = randomContractAddress()
   const contractState = MathTest.stateForTest({}, undefined, address)
-  return new ContractFixture(contractState, [], address)
+  return new ContractFixture(contractState, [])
 }
 
 export class GuardianSet {

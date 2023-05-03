@@ -188,7 +188,7 @@ export function createTestToken() {
     totalSupply: 1n << 255n
   }
   const state = TestToken.stateForTest(initFields, undefined, address)
-  return new ContractFixture(state, [], address)
+  return new ContractFixture(state, [])
 }
 
 export interface TemplateContracts {
@@ -208,11 +208,10 @@ export class TokenBridgeFixture extends ContractFixture<TokenBridgeTypes.Fields>
   constructor(
     selfState: ContractState<TokenBridgeTypes.Fields>,
     deps: ContractState[],
-    address: string,
     governance: ContractFixture<GovernanceTypes.Fields>,
     templateContracts: TemplateContracts
   ) {
-    super(selfState, deps, address)
+    super(selfState, deps)
     this.governance = governance
     this.templateContracts = templateContracts
   }
@@ -221,18 +220,13 @@ export class TokenBridgeFixture extends ContractFixture<TokenBridgeTypes.Fields>
 export class TokenBridgeForChainFixture extends ContractFixture<TokenBridgeForChainTypes.Fields> {
   remoteChainId: number
 
-  constructor(
-    selfState: ContractState<TokenBridgeForChainTypes.Fields>,
-    deps: ContractState[],
-    address: string,
-    remoteChainId: number
-  ) {
-    super(selfState, deps, address)
+  constructor(selfState: ContractState<TokenBridgeForChainTypes.Fields>, deps: ContractState[], remoteChainId: number) {
+    super(selfState, deps)
     this.remoteChainId = remoteChainId
   }
 }
 
-function createTemplateContracts(): TemplateContracts {
+export function createTemplateContracts(): TemplateContracts {
   const localTokenPool = createLocalTokenPoolTemplate()
   const remoteTokenPool = createRemoteTokenPoolTemplate()
   const attestTokenHandler = createAttestTokenHandlerTemplate()
@@ -265,8 +259,8 @@ function createContract<T extends Fields>(
   address?: string
 ) {
   const contractAddress = address ?? randomContractAddress()
-  const state = factory.stateForTest(initFields, asset ?? undefined, address)
-  return new ContractFixture(state, deps, contractAddress)
+  const state = factory.stateForTest(initFields, asset ?? undefined, contractAddress)
+  return new ContractFixture(state, deps)
 }
 
 function createLocalTokenPoolTemplate() {
@@ -328,7 +322,7 @@ export function createTokenBridgeFactory(templateContracts: TemplateContracts) {
   }
   const address = randomContractAddress()
   const state = TokenBridgeFactory.stateForTest(initFields, undefined, address)
-  return new ContractFixture(state, templateContracts.states(), address)
+  return new ContractFixture(state, templateContracts.states())
 }
 
 export function createTokenBridge(
@@ -337,21 +331,19 @@ export function createTokenBridge(
   messageFee?: bigint
 ): TokenBridgeFixture {
   const governance = createGovernance(undefined, messageFee)
-  const templateContracts = createTemplateContracts()
-  const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
   const tokenBridgeAddress = address ?? randomContractAddress()
   const initFields = {
     governance: governance.contractId,
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
     receivedSequence: receivedSequence ?? 0n,
     sendSequence: 0n,
-    tokenBridgeFactory: tokenBridgeFactory.contractId,
+    tokenBridgeFactory: governance.tokenBridgeFactory.contractId,
     minimalConsistencyLevel: minimalConsistencyLevel,
     refundAddress: randomAssetAddress()
   }
   const state = TokenBridge.stateForTest(initFields, undefined, tokenBridgeAddress)
-  const deps = Array.prototype.concat(governance.states(), tokenBridgeFactory.states())
-  return new TokenBridgeFixture(state, deps, tokenBridgeAddress, governance, templateContracts)
+  const deps = Array.prototype.concat(governance.states(), governance.tokenBridgeFactory.states())
+  return new TokenBridgeFixture(state, deps, governance, governance.templateContracts)
 }
 
 function subContractAddress(parentId: string, pathHex: string): string {
@@ -392,7 +384,7 @@ export function createAttestTokenHandler(
     isLocalHandler: remoteChainId === CHAIN_ID_ALEPHIUM
   }
   const state = AttestTokenHandler.stateForTest(initFields, undefined, contractAddress)
-  return new ContractFixture(state, tokenBridge.states(), contractAddress)
+  return new ContractFixture(state, tokenBridge.states())
 }
 
 export function createTokenBridgeForChain(
@@ -416,7 +408,7 @@ export function createTokenBridgeForChain(
   }
   const contractAsset: Asset = { alphAmount: alph(2) }
   const state = TokenBridgeForChain.stateForTest(initFields, contractAsset, contractAddress)
-  return new TokenBridgeForChainFixture(state, tokenBridge.states(), contractAddress, remoteChainId)
+  return new TokenBridgeForChainFixture(state, tokenBridge.states(), remoteChainId)
 }
 
 export interface TokenBridgeForChainTestFixture {

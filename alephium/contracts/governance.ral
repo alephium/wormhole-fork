@@ -2,12 +2,13 @@ Contract Governance(
     chainId: U256,
     governanceChainId: U256,
     governanceEmitterAddress: ByteVec,
+    tokenBridgeFactory: TokenBridgeFactory,
     mut receivedSequence: U256,
     mut messageFee: U256,
     mut guardianSets: [ByteVec; 2], // keep previous and current guardian set
     mut guardianSetIndexes: [U256; 2],
     mut previousGuardianSetExpirationTimeMS: U256
-) extends Constants(), Upgradable() {
+) extends Constants() {
     event WormholeMessage(sender: ByteVec, targetChainId: U256, sequence: U256, nonce: ByteVec, payload: ByteVec, consistencyLevel: U256)
 
     const Version = #01
@@ -126,7 +127,7 @@ Contract Governance(
     pub fn submitContractUpgrade(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == chainId, ErrorCodes.InvalidTargetChainId)
-        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = parseConractUpgrade(payload)
+        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = tokenBridgeFactory.parseContractUpgrade(payload)
         if (prevStateHash == #) {
             migrate!(newCode)
         } else {

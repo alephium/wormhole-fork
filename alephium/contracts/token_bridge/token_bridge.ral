@@ -54,13 +54,13 @@ Contract TokenBridge(
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(localChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
-        let encodedImmutableFields = LocalTokenPool.encodeImmFields!(
+        let (encodedImmutableFields, encodedMutableFields) = LocalTokenPool.encodeFields!(
             selfContractId!(),
             localChainId,
             localTokenId,
+            0,
             decimals
         )
-        let encodedMutableFields = LocalTokenPool.encodeMutFields!(0)
         let path = Path.TokenPool ++ u256To2Byte!(localChainId) ++ localTokenId
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
@@ -83,13 +83,16 @@ Contract TokenBridge(
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
-        let encodedImmutableFields = RemoteTokenPool.encodeImmFields!(
+        let (encodedImmutableFields, encodedMutableFields) = RemoteTokenPool.encodeFields!(
             selfContractId!(),
             tokenChainId,
             bridgeTokenId,
-            decimals
+            0,
+            symbol,
+            name,
+            decimals,
+            msgSequence
         )
-        let encodedMutableFields = RemoteTokenPool.encodeMutFields!(0, symbol, name, msgSequence)
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
         copyCreateSubContractWithToken!{payer -> ALPH: createContractAlphAmount}(
             path,

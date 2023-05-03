@@ -33,11 +33,11 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^0.10.2",
-    "@alephium/web3-test": "^0.10.2",
-    "@alephium/web3-wallet": "^0.10.2",
+    "@alephium/web3": "^0.11.2",
+    "@alephium/web3-test": "^0.11.2",
+    "@alephium/web3-wallet": "^0.11.2",
     "@alephium/token-list": "0.0.7",
-    "alephium-wormhole-sdk": "0.2.0-rc.13",
+    "alephium-wormhole-sdk": "0.2.0-rc.15",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@types/elliptic": "^6.4.14",
     "axios": "^1.1.3",
