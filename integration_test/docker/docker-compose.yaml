@@ -171,3 +171,8 @@ services:
       - --bootstrap
       - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
       - --logLevel=debug
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379

@@ -1,4 +1,3 @@
-import { binToHex, contractIdFromAddress } from '@alephium/web3'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH } from 'alephium-wormhole-sdk'
 import { config } from 'dotenv'
 import { describe, test } from '@jest/globals'
@@ -19,7 +18,6 @@ function getTestEnv() {
     relayerEnv: getRelayerEnvironment()
   }
 }
-
 
 export const testEnv = getTestEnv()
 export const ETH_CONFIG = testEnv.relayerEnv.supportedChains.find(c => c.chainId === CHAIN_ID_ETH)! as EthereumChainConfigInfo

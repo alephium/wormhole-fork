@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
-const ALPHTokenAddress = 'tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq'
+const ALPHTokenId = ''.padStart(64, '0')
 
 function updateConfig(
   baseDir: string,
@@ -50,10 +50,10 @@ function updateAlphConfig(network: string) {
       tokenBridge: deployments.contracts.TokenBridge.contractInstance.contractId,
       nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address
     }
-    const bridgeTokens = [ALPHTokenAddress]
+    const bridgeTokens = [ALPHTokenId]
     if (deployments.contracts.TestToken !== undefined) {
       contracts.testToken = deployments.contracts.TestToken.contractInstance.contractId
-      bridgeTokens.push(deployments.contracts.TestToken.contractInstance.address)
+      bridgeTokens.push(deployments.contracts.TestToken.contractInstance.contractId)
     }
     config.contracts = contracts
     config.coreEmitterAddress = contracts.governance

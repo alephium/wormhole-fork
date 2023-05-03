@@ -32,6 +32,12 @@ jobs:
       - name: run integration test
         working-directory: ./integration_test
         run: npm install && npm run it
+      - name: run relayer integration test
+        working-directory: ./relayer/spy_relayer
+        run: |
+          npm install && npm run build
+          npm run spy_relay:it &
+          sleep 5 && npm run test
       - name: Collect Docker Logs
         if: success() || failure()
         uses: jwalton/gh-docker-logs@v2.2.1
