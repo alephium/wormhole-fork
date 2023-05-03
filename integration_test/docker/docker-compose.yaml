@@ -77,7 +77,6 @@ services:
       - "1"
       - --devnetGuardianIndex
       - "0"
-      - --integrationTest
       - --publicRPC
       - "[::]:7070"
       - --publicWeb
@@ -110,7 +109,6 @@ services:
       - "1"
       - --devnetGuardianIndex
       - "1"
-      - --integrationTest
       - --bootstrap
       - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
       - --publicRPC
