@@ -127,7 +127,9 @@ func NewEthWatcher(
 	setEvents chan *common.GuardianSet,
 	minConfirmations uint64,
 	obsvReqC chan *gossipv1.ObservationRequest,
-	unsafeDevMode bool) *Watcher {
+	unsafeDevMode bool,
+	pollIntervalMs uint,
+) *Watcher {
 
 	var ethIntf common.Ethish
 	if chainID == vaa.ChainIDCelo && !unsafeDevMode {
@@ -135,7 +137,7 @@ func NewEthWatcher(
 		// However, in devnet, we currently run the standard ETH node for Celo, so we need to use the standard go-ethereum.
 		ethIntf = &celo.CeloImpl{NetworkName: networkName}
 	} else if chainID == vaa.ChainIDEthereum && !unsafeDevMode {
-		ethIntf = &PollImpl{BaseEth: EthImpl{NetworkName: networkName}, DelayInMs: 250, IsEthPoS: true}
+		ethIntf = &PollImpl{BaseEth: EthImpl{NetworkName: networkName}, DelayInMs: int(pollIntervalMs), IsEthPoS: true}
 	} else if chainID == vaa.ChainIDMoonbeam && !unsafeDevMode {
 		ethIntf = &PollImpl{BaseEth: EthImpl{NetworkName: networkName}, Finalizer: &MoonbeamFinalizer{}, DelayInMs: 250}
 	} else if chainID == vaa.ChainIDNeon {
