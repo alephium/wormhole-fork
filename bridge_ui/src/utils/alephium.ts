@@ -158,7 +158,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 
 export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
   const localTokenInfo = await getLocalTokenInfo(provider, tokenId)
-  if (CLUSTER === 'devnet' || localTokenInfo === ALPH_TOKEN_ID) {
+  if (CLUSTER === 'devnet' || tokenId === ALPH_TOKEN_ID) {
     return localTokenInfo
   }
 
