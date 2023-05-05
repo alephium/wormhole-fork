@@ -61,7 +61,8 @@ var (
 	guardianKeyPath *string
 	// solanaContract  *string
 
-	ethRPC *string
+	ethRPC            *string
+	ethPollIntervalMs *uint
 
 	// bscRPC      *string
 	// bscContract *string
@@ -163,6 +164,7 @@ func init() {
 	// solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
+	ethPollIntervalMs = NodeCmd.Flags().Uint("ethPollIntervalMs", 1000, "The poll interval for ethereum watcher")
 
 	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
 	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
@@ -674,7 +676,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if err := supervisor.Run(ctx, "ethwatch",
-			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode).Run); err != nil {
+			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode, *ethPollIntervalMs).Run); err != nil {
 			return err
 		}
 
