@@ -1,3 +1,3 @@
 dist/
-artifacts/
+!artifacts/.deployments.devnet*
 .project.json
