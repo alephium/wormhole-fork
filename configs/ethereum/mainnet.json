@@ -4,11 +4,12 @@
   "contracts": {
     "governance": "",
     "tokenBridge": "",
-    "weth": "",
-    "testToken": ""
+    "wrappedNative": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
   },
   "nodeUrl": "",
   "coreEmitterAddress": "",
   "tokenBridgeEmitterAddress": "",
-  "bridgeTokens": []
+  "bridgeTokens": [
+    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+  ]
 }

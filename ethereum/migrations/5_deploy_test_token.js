@@ -2,7 +2,7 @@ const ERC20 = artifacts.require("ERC20PresetMinterPauser");
 const configs = require('./configs')
 
 module.exports = async function(deployer) {
-  if (deployer.network === 'mainnet') {
+  if (!configs.isDevnet(deployer.network)) {
     return
   }
 

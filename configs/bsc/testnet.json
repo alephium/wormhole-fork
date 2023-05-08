@@ -1,0 +1,15 @@
+{
+  "chainId": 4,
+  "wrappedNative": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
+  "contracts": {
+    "governance": "",
+    "tokenBridge": "",
+    "wrappedNative": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+  },
+  "nodeUrl": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  "coreEmitterAddress": "",
+  "tokenBridgeEmitterAddress": "",
+  "bridgeTokens": [
+    "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+  ]
+}
