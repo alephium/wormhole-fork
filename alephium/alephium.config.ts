@@ -1,4 +1,5 @@
 import { Configuration } from '@alephium/cli'
+import { testPrivateKey } from '@alephium/web3-test'
 import { default as alephiumDevnetConfig } from '../configs/alephium/devnet.json'
 import { default as alephiumTestnetConfig } from '../configs/alephium/testnet.json'
 import { default as alephiumMainnetConfig } from '../configs/alephium/mainnet.json'
@@ -51,7 +52,7 @@ const configuration: Configuration<Settings> = {
     devnet: {
       networkId: devnetSettings.networkId,
       nodeUrl: devnetSettings.nodeUrl,
-      privateKeys: ['a642942e67258589cd2b1822c631506632db5a12aabcf413604e785300d762a5'],
+      privateKeys: [testPrivateKey],
       confirmations: 1,
       settings: devnetSettings
     },

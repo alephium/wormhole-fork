@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@alephium/web3": "^0.11.2",
+    "@alephium/web3-test": "^0.11.2",
     "@alephium/web3-wallet": "^0.11.2",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
     "alephium-wormhole-sdk": "0.2.0-rc.15",
