@@ -16,6 +16,7 @@ import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import { Alert } from "@material-ui/lab";
 import { createLocalTokenPool } from "../utils/alephium";
 import { binToHex } from "@alephium/web3";
+import { useSnackbar } from "notistack";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -40,6 +41,7 @@ function CreateLocalTokenPool({
   onClick: () => void;
 }) {
   const alphWallet = useAlephiumWallet()
+  const { enqueueSnackbar } = useSnackbar()
   const targetChain = useSelector(selectAttestTargetChain)
   const chainName = CHAINS_BY_ID[targetChain].name
   const classes = useStyles()
@@ -59,9 +61,16 @@ function CreateLocalTokenPool({
       if (createLocalTokenPoolTxId !== undefined) {
         console.log(`create local token pool tx id: ${createLocalTokenPoolTxId}`)
         await waitAlphTxConfirmed(alphWallet.nodeProvider, createLocalTokenPoolTxId, 1)
+        enqueueSnackbar(null, {
+          content: <Alert severity="success">Transaction confirmed</Alert>
+        })
+      } else {
+        enqueueSnackbar(null, {
+          content: <Alert severity="info">Local token pool already exists</Alert>
+        })
       }
     }
-  }, [onClick, alphWallet, signedVAAHex])
+  }, [onClick, alphWallet, signedVAAHex, enqueueSnackbar])
 
   const confirmationContent = (
     <>

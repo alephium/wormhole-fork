@@ -1,7 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ETH,
+  CHAIN_ID_BSC
 } from "alephium-wormhole-sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Transaction } from "./transferSlice";
@@ -26,7 +26,7 @@ const initialState: AttestState = {
   activeStep: 0,
   sourceChain: CHAIN_ID_ALEPHIUM,
   sourceAsset: "",
-  targetChain: CHAIN_ID_ETH,
+  targetChain: CHAIN_ID_BSC,
   attestTx: undefined,
   signedVAAHex: undefined,
   isSending: false,
