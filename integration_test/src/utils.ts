@@ -3,6 +3,7 @@ import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'
 import { BridgeChain } from './bridge_chain'
+import { createBsc } from './bsc'
 
 export function assert(condition: boolean) {
   if (!condition) {
@@ -51,6 +52,7 @@ export function normalizeTokenId(tokenId: string): string {
 
 type BridgeChains = {
   eth: BridgeChain
+  bsc: BridgeChain
   alph: AlephiumBridgeChain
 }
 
@@ -60,9 +62,10 @@ export async function getBridgeChains(): Promise<BridgeChains> {
   if (bridgeChains !== undefined) {
     return bridgeChains
   }
-  const alph = await createAlephium()
   const eth = await createEth()
-  bridgeChains = { eth, alph }
+  const bsc = await createBsc()
+  const alph = await createAlephium()
+  bridgeChains = { eth, bsc, alph }
   return bridgeChains
 }
 

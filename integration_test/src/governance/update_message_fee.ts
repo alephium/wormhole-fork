@@ -1,4 +1,4 @@
-import { ChainId } from 'alephium-wormhole-sdk'
+import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
 import { BridgeChain } from '../bridge_chain'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
@@ -22,7 +22,7 @@ function createUpdateMessageFeeVaa(sequence: number, messageFee: bigint, chainId
 
 async function updateMessageFeeOnChain(chain: BridgeChain) {
   const currentMessageFee = await chain.getCurrentMessageFee()
-  console.log(`Current message fee on Alephium is ${currentMessageFee}`)
+  console.log(`Current message fee on ${coalesceChainName(chain.chainId)} is ${currentMessageFee}`)
   const newMessageFee = currentMessageFee + dustAmount
   const seq = await getNextGovernanceSequence()
   const updateMessageFeeVaa = createUpdateMessageFeeVaa(seq, newMessageFee, chain.chainId)
@@ -40,6 +40,7 @@ async function updateMessageFee() {
   const chains = await getBridgeChains()
   await updateMessageFeeOnChain(chains.alph)
   await updateMessageFeeOnChain(chains.eth)
+  await updateMessageFeeOnChain(chains.bsc)
 }
 
 updateMessageFee()
