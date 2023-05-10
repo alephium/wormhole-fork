@@ -50,7 +50,6 @@ require (
 require (
 	cloud.google.com/go/kms v1.0.0
 	cloud.google.com/go/logging v1.4.2
-	cloud.google.com/go/pubsub v1.17.1
 	github.com/alephium/go-sdk v0.0.0-20230130013956-c85ab2bc81a9
 	github.com/algorand/go-algorand-sdk v1.15.0
 	github.com/benbjohnson/clock v1.3.0
@@ -270,7 +269,6 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect

@@ -36,7 +36,11 @@ function getSignerProvider(network: any, nodeUrl?: string) {
     throw Error(`No key defined for alephium (see configs.ts)`)
   }
   web3.setCurrentNodeProvider(rpc)
-  return PrivateKeyWallet.FromMnemonicWithGroup(network.key, network.groupIndex)
+  const wallet = new PrivateKeyWallet({privateKey: network.key})
+  if (wallet.group !== network.groupIndex) {
+    throw Error(`Invalid key, expected group ${network.groupIndex}`)
+  }
+  return wallet
 }
 
 async function getMessageFee(governanceId: string): Promise<bigint> {

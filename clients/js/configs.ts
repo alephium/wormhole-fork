@@ -8,6 +8,7 @@ import { default as ethereumMainnetConfig } from '../../configs/ethereum/mainnet
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { default as guardianTestnetConfig } from '../../configs/guardian/testnet.json'
 import { default as guardianMainnetConfig } from '../../configs/guardian/mainnet.json'
+import { testPrivateKey } from "@alephium/web3-test";
 
 require("dotenv").config({ path: `${process.env.HOME}/.wormhole/.env` });
 
@@ -285,7 +286,7 @@ const DEVNET = {
   },
   alephium: {
     rpc: alephiumDevnetConfig.nodeUrl,
-    key: alephiumDevnetConfig.mnemonic,
+    key: testPrivateKey,
     tokenBridgeAddress: alephiumDevnetConfig.contracts.tokenBridge,
     governanceAddress: alephiumDevnetConfig.contracts.governance,
     groupIndex: alephiumDevnetConfig.groupIndex

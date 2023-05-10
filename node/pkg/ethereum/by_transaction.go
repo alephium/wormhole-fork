@@ -22,13 +22,13 @@ var (
 // Returns the block number and a list of MessagePublication events.
 func MessageEventsForTransaction(
 	ctx context.Context,
-	ethIntf common.Ethish,
+	ethConn Connector,
 	contract eth_common.Address,
 	chainId vaa.ChainID,
 	tx eth_common.Hash) (uint64, []*common.MessagePublication, error) {
 
 	// Get transactions logs from transaction
-	receipt, err := ethIntf.TransactionReceipt(ctx, tx)
+	receipt, err := ethConn.TransactionReceipt(ctx, tx)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to get transaction receipt: %w", err)
 	}
@@ -46,7 +46,7 @@ func MessageEventsForTransaction(
 	}
 
 	// Get block
-	blockTime, err := ethIntf.TimeOfBlockByHash(ctx, receipt.BlockHash)
+	blockTime, err := ethConn.TimeOfBlockByHash(ctx, receipt.BlockHash)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to get block time: %w", err)
 	}
@@ -68,7 +68,7 @@ func MessageEventsForTransaction(
 			continue
 		}
 
-		ev, err := ethIntf.ParseLogMessagePublished(*l)
+		ev, err := ethConn.ParseLogMessagePublished(*l)
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse log: %w", err)
 		}
