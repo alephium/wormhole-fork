@@ -82,11 +82,13 @@ type GuardianSetState struct {
 	// Last heartbeat message received per guardian per p2p node. Maintained
 	// across guardian set updates - these values don't change.
 	lastHeartbeats map[common.Address]map[peer.ID]*gossipv1.Heartbeat
+	updateC        chan *gossipv1.Heartbeat
 }
 
-func NewGuardianSetState() *GuardianSetState {
+func NewGuardianSetState(updateC chan *gossipv1.Heartbeat) *GuardianSetState {
 	return &GuardianSetState{
 		lastHeartbeats: map[common.Address]map[peer.ID]*gossipv1.Heartbeat{},
+		updateC:        updateC,
 	}
 }
 
@@ -136,6 +138,9 @@ func (st *GuardianSetState) SetHeartbeat(addr common.Address, peerId peer.ID, hb
 	}
 
 	v[peerId] = hb
+	if st.updateC != nil {
+		st.updateC <- hb
+	}
 	return nil
 }
 

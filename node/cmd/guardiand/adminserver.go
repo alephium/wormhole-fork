@@ -541,7 +541,7 @@ func adminServiceRunnable(
 		governanceEmitterAddress: governanceEmitterAddress,
 	}
 
-	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst)
+	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst, governanceChainId, governanceEmitterAddress)
 
 	grpcServer := common.NewInstrumentedGRPCServer(logger)
 	nodev1.RegisterNodePrivilegedServiceServer(grpcServer, nodeService)
@@ -559,12 +559,11 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 }
 
 func (s *nodePrivilegedService) GetNextGovernanceVAASequence(ctx context.Context, req *nodev1.GetNextGovernanceVAASequenceRequest) (*nodev1.GetNextGovernanceVAASequenceResponse, error) {
-	maxSequence, err := s.db.MaxGovernanceVAASequence(s.governanceChainId, s.governanceEmitterAddress)
+	nextSequence, err := s.db.NextGovernanceVAASequence(s.governanceChainId, s.governanceEmitterAddress)
 	if err != nil {
 		return nil, err
 	}
-	nextSequence := *maxSequence + 1
 	return &nodev1.GetNextGovernanceVAASequenceResponse{
-		Sequence: nextSequence,
+		Sequence: *nextSequence,
 	}, nil
 }

@@ -1,9 +1,10 @@
 package common
 
 import (
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestKeyIndex(t *testing.T) {
@@ -56,7 +57,7 @@ func TestKeysAsHexStrings(t *testing.T) {
 }
 
 func TestNewGuardianSetState(t *testing.T) {
-	gss := NewGuardianSetState()
+	gss := NewGuardianSetState(nil)
 	assert.NotNil(t, gss)
 	assert.Nil(t, gss.current)
 	assert.Nil(t, gss.Get())
@@ -71,7 +72,7 @@ func TestSet(t *testing.T) {
 		Index: 1,
 	}
 
-	gss := NewGuardianSetState()
+	gss := NewGuardianSetState(nil)
 	assert.Nil(t, gss.current)
 	gss.Set(&gs)
 	assert.Equal(t, gss.current, &gs)
@@ -86,7 +87,7 @@ func TestGet(t *testing.T) {
 		Index: 1,
 	}
 
-	gss := NewGuardianSetState()
+	gss := NewGuardianSetState(nil)
 	assert.Nil(t, gss.Get())
 	gss.Set(&gs)
 	assert.Equal(t, gss.Get(), &gs)
