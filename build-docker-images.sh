@@ -43,4 +43,7 @@ docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contr
 docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui:$VERSION --build-arg network=$network
 
 ## Build Wormhole Explorer
-docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+# docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+
+## Build Explorer Images
+docker build -f ./explorer-backend/api/Dockerfile . -t eu.gcr.io/alephium-org/indexer-api:$VERSION
