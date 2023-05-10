@@ -50,4 +50,4 @@ docker build -f ./explorer-backend/api/Dockerfile . -t eu.gcr.io/alephium-org/in
 docker build -f ./explorer-backend/fly/Dockerfile . -t eu.gcr.io/alephium-org/fly:$VERSION
 
 ### explorer
-docker build -f ./explorer-backend/explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
