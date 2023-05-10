@@ -17,7 +17,7 @@ import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import {
   AlephiumChainConfigInfo,
-  EthereumChainConfigInfo,
+  EvmChainConfigInfo,
   getWalletMonitorEnvironment,
   SupportedToken,
   TerraChainConfigInfo,
@@ -57,7 +57,7 @@ function init() {
   try {
     env = getWalletMonitorEnvironment();
   } catch (e) {
-    logger.error("Unable to instantiate the relayerEnv in wallet monitor");
+    logger.error(`Unable to instantiate the relayerEnv in wallet monitor, error: ${e}`);
   }
 }
 
@@ -72,7 +72,7 @@ async function pullBalances(metrics: PromHelper): Promise<WalletBalance[]> {
     if (!chainInfo) continue;
     try {
       if (isEVMChain(chainInfo.chainId)) {
-        const ethChainInfo = chainInfo as EthereumChainConfigInfo
+        const ethChainInfo = chainInfo as EvmChainConfigInfo
         for (const walletAddress of ethChainInfo.walletAddresses as string[] || []) {
           try {
             balancePromises.push(pullEVMNativeBalance(ethChainInfo, walletAddress));
@@ -146,7 +146,7 @@ export async function pullTerraBalance(
 }
 
 async function pullEVMNativeBalance(
-  chainInfo: EthereumChainConfigInfo,
+  chainInfo: EvmChainConfigInfo,
   address: string
 ): Promise<WalletBalance[]> {
   if (!address || !chainInfo.nodeUrl) {
@@ -157,18 +157,18 @@ async function pullEVMNativeBalance(
   if (!provider) throw new Error("bad provider");
   const weiAmount = await provider.getBalance(address);
   const balanceInEth = ethers.utils.formatEther(weiAmount);
+  const walletBalance = {
+    chainId: chainInfo.chainId,
+    balanceAbs: weiAmount.toString(),
+    balanceFormatted: balanceInEth.toString(),
+    currencyName: chainInfo.nativeCurrencySymbol,
+    currencyAddressNative: "",
+    isNative: true,
+    walletAddress: address,
+  }
+  logger.debug(`Evm native asset balance: ${JSON.stringify(walletBalance)}`)
 
-  return [
-    {
-      chainId: chainInfo.chainId,
-      balanceAbs: weiAmount.toString(),
-      balanceFormatted: balanceInEth.toString(),
-      currencyName: chainInfo.nativeCurrencySymbol,
-      currencyAddressNative: "",
-      isNative: true,
-      walletAddress: address,
-    },
-  ];
+  return [walletBalance]
 }
 
 async function pullTerraNativeBalance(
@@ -225,7 +225,7 @@ export async function collectWallets(metrics: PromHelper) {
 async function calcLocalAddressesEVM(
   provider: ethers.providers.JsonRpcBatchProvider,
   supportedTokens: SupportedToken[],
-  chainConfigInfo: EthereumChainConfigInfo
+  chainConfigInfo: EvmChainConfigInfo
 ): Promise<string[]> {
   const tokenBridge = ethers_contracts.Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
@@ -305,7 +305,7 @@ export async function calcLocalAddressesTerra(
 
 async function pullAllEVMTokens(
   supportedTokens: SupportedToken[],
-  chainConfig: EthereumChainConfigInfo,
+  chainConfig: EvmChainConfigInfo,
   metrics: PromHelper
 ) {
   try {
@@ -343,7 +343,7 @@ async function pullAllEVMTokens(
           isNative: false,
           walletAddress: walletAddress,
         }));
-        logger.debug(`Ethereum wallet balances: ${JSON.stringify(balances)}`)
+        logger.debug(`Evm wallet token balances: ${JSON.stringify(balances)}`)
         metrics.handleWalletBalances(balances);
       } catch (e) {
         logger.error(
