@@ -5,6 +5,7 @@ import {
   ExecuteScriptResult,
   node,
   NodeProvider,
+  ONE_ALPH,
   SignerProvider,
   subContractId
 } from "@alephium/web3"
@@ -24,15 +25,18 @@ export async function registerChain(
   signedVAA: Uint8Array,
   alphAmount: bigint
 ): Promise<ExecuteScriptResult> {
+  if (alphAmount < (BigInt(2) * ONE_ALPH)) {
+    throw new Error('Register chain will create two contracts, please approve at least 2 ALPH')
+  }
   const account = await signerProvider.getSelectedAccount()
   return RegisterChain.execute(signerProvider, {
     initialFields: {
       payer: account.address,
       tokenBridge: tokenBridgeId,
       vaa: binToHex(signedVAA),
-      alphAmount: alphAmount
+      alphAmount: ONE_ALPH
     },
-    attoAlphAmount: alphAmount * BigInt(2) // we will create two contracts
+    attoAlphAmount: alphAmount
   })
 }
 
