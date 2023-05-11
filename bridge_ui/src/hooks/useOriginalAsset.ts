@@ -42,7 +42,7 @@ import {
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
-import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
+import { getAlephiumTokenWrappedInfo, tryGetContractId } from "../utils/alephium";
 import { useAlephiumWallet } from "./useAlephiumWallet";
 
 export type OriginalAssetInfo = {
@@ -77,7 +77,8 @@ export async function getOriginalAssetToken(
       const lcd = new LCDClient(TERRA_HOST);
       promise = await getOriginalAssetTerra(lcd, foreignNativeStringAddress);
     } else if (foreignChain === CHAIN_ID_ALEPHIUM && alphNodeProvider) {
-      promise = await getAlephiumTokenWrappedInfo(foreignNativeStringAddress, alphNodeProvider)
+      const tokenId = tryGetContractId(foreignNativeStringAddress)
+      promise = await getAlephiumTokenWrappedInfo(tokenId, alphNodeProvider)
     } else if (foreignChain === CHAIN_ID_ALGORAND) {
       const algodClient = new Algodv2(
         ALGORAND_HOST.algodToken,

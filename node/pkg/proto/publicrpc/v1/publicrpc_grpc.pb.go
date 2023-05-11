@@ -23,6 +23,8 @@ type PublicRPCServiceClient interface {
 	// The heartbeat value is null if no heartbeat has yet been received.
 	GetLastHeartbeats(ctx context.Context, in *GetLastHeartbeatsRequest, opts ...grpc.CallOption) (*GetLastHeartbeatsResponse, error)
 	GetSignedVAA(ctx context.Context, in *GetSignedVAARequest, opts ...grpc.CallOption) (*GetSignedVAAResponse, error)
+	GetNonGovernanceVAABatch(ctx context.Context, in *GetNonGovernanceVAABatchRequest, opts ...grpc.CallOption) (*GetNonGovernanceVAABatchResponse, error)
+	GetGovernanceVAABatch(ctx context.Context, in *GetGovernanceVAABatchRequest, opts ...grpc.CallOption) (*GetGovernanceVAABatchResponse, error)
 	GetCurrentGuardianSet(ctx context.Context, in *GetCurrentGuardianSetRequest, opts ...grpc.CallOption) (*GetCurrentGuardianSetResponse, error)
 }
 
@@ -52,6 +54,24 @@ func (c *publicRPCServiceClient) GetSignedVAA(ctx context.Context, in *GetSigned
 	return out, nil
 }
 
+func (c *publicRPCServiceClient) GetNonGovernanceVAABatch(ctx context.Context, in *GetNonGovernanceVAABatchRequest, opts ...grpc.CallOption) (*GetNonGovernanceVAABatchResponse, error) {
+	out := new(GetNonGovernanceVAABatchResponse)
+	err := c.cc.Invoke(ctx, "/publicrpc.v1.PublicRPCService/GetNonGovernanceVAABatch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *publicRPCServiceClient) GetGovernanceVAABatch(ctx context.Context, in *GetGovernanceVAABatchRequest, opts ...grpc.CallOption) (*GetGovernanceVAABatchResponse, error) {
+	out := new(GetGovernanceVAABatchResponse)
+	err := c.cc.Invoke(ctx, "/publicrpc.v1.PublicRPCService/GetGovernanceVAABatch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *publicRPCServiceClient) GetCurrentGuardianSet(ctx context.Context, in *GetCurrentGuardianSetRequest, opts ...grpc.CallOption) (*GetCurrentGuardianSetResponse, error) {
 	out := new(GetCurrentGuardianSetResponse)
 	err := c.cc.Invoke(ctx, "/publicrpc.v1.PublicRPCService/GetCurrentGuardianSet", in, out, opts...)
@@ -70,6 +90,8 @@ type PublicRPCServiceServer interface {
 	// The heartbeat value is null if no heartbeat has yet been received.
 	GetLastHeartbeats(context.Context, *GetLastHeartbeatsRequest) (*GetLastHeartbeatsResponse, error)
 	GetSignedVAA(context.Context, *GetSignedVAARequest) (*GetSignedVAAResponse, error)
+	GetNonGovernanceVAABatch(context.Context, *GetNonGovernanceVAABatchRequest) (*GetNonGovernanceVAABatchResponse, error)
+	GetGovernanceVAABatch(context.Context, *GetGovernanceVAABatchRequest) (*GetGovernanceVAABatchResponse, error)
 	GetCurrentGuardianSet(context.Context, *GetCurrentGuardianSetRequest) (*GetCurrentGuardianSetResponse, error)
 	mustEmbedUnimplementedPublicRPCServiceServer()
 }
@@ -83,6 +105,12 @@ func (UnimplementedPublicRPCServiceServer) GetLastHeartbeats(context.Context, *G
 }
 func (UnimplementedPublicRPCServiceServer) GetSignedVAA(context.Context, *GetSignedVAARequest) (*GetSignedVAAResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSignedVAA not implemented")
+}
+func (UnimplementedPublicRPCServiceServer) GetNonGovernanceVAABatch(context.Context, *GetNonGovernanceVAABatchRequest) (*GetNonGovernanceVAABatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNonGovernanceVAABatch not implemented")
+}
+func (UnimplementedPublicRPCServiceServer) GetGovernanceVAABatch(context.Context, *GetGovernanceVAABatchRequest) (*GetGovernanceVAABatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGovernanceVAABatch not implemented")
 }
 func (UnimplementedPublicRPCServiceServer) GetCurrentGuardianSet(context.Context, *GetCurrentGuardianSetRequest) (*GetCurrentGuardianSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentGuardianSet not implemented")
@@ -136,6 +164,42 @@ func _PublicRPCService_GetSignedVAA_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PublicRPCService_GetNonGovernanceVAABatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNonGovernanceVAABatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PublicRPCServiceServer).GetNonGovernanceVAABatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/publicrpc.v1.PublicRPCService/GetNonGovernanceVAABatch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PublicRPCServiceServer).GetNonGovernanceVAABatch(ctx, req.(*GetNonGovernanceVAABatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PublicRPCService_GetGovernanceVAABatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGovernanceVAABatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PublicRPCServiceServer).GetGovernanceVAABatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/publicrpc.v1.PublicRPCService/GetGovernanceVAABatch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PublicRPCServiceServer).GetGovernanceVAABatch(ctx, req.(*GetGovernanceVAABatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PublicRPCService_GetCurrentGuardianSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetCurrentGuardianSetRequest)
 	if err := dec(in); err != nil {
@@ -168,6 +232,14 @@ var PublicRPCService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSignedVAA",
 			Handler:    _PublicRPCService_GetSignedVAA_Handler,
+		},
+		{
+			MethodName: "GetNonGovernanceVAABatch",
+			Handler:    _PublicRPCService_GetNonGovernanceVAABatch_Handler,
+		},
+		{
+			MethodName: "GetGovernanceVAABatch",
+			Handler:    _PublicRPCService_GetGovernanceVAABatch_Handler,
 		},
 		{
 			MethodName: "GetCurrentGuardianSet",

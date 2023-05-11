@@ -30,7 +30,10 @@ import {
   groupOfAddress,
   ALPH_TOKEN_ID,
   isHexString,
-  SignerProvider
+  SignerProvider,
+  isBase58,
+  binToHex,
+  contractIdFromAddress
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -206,6 +209,16 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
         }
       }
     })
+}
+
+export function tryGetContractId(idOrAddress: string): string {
+  if (idOrAddress.length === 64 && isHexString(idOrAddress)) {
+    return idOrAddress
+  }
+  if (isBase58(idOrAddress)) {
+    return binToHex(contractIdFromAddress(idOrAddress))
+  }
+  throw new Error(`Invalid contract id or contract address: ${idOrAddress}`)
 }
 
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
