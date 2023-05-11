@@ -9,6 +9,7 @@ import { fromHex } from "@cosmjs/encoding";
 import { PublicKey } from "@solana/web3.js";
 import { ActiveNetwork, useNetworkContext } from "../contexts/NetworkContext";
 import { ChainID, chainIDs } from "./consts";
+import { addressFromContractId } from '@alephium/web3'
 
 const makeDate = (date: string): string => {
   const [_, month, day] = date.split("-");
@@ -117,17 +118,25 @@ const nativeExplorerContractUri = (
     activeNetwork = useNetworkContext().activeNetwork;
   }
 
-  const nativeAddress = getNativeAddress(chainId, address, activeNetwork);
+  let nativeAddress = getNativeAddress(chainId, address, activeNetwork);
   if (nativeAddress) {
     let base = "";
     if (chainId === chainIDs["solana"]) {
       base = "https://explorer.solana.com/address/";
     } else if (chainId === chainIDs["ethereum"]) {
-      base = "https://etherscan.io/address/";
+      base = activeNetwork.name === 'testnet'
+        ? "https://goerli.etherscan.io/address/"
+        : activeNetwork.name === 'mainnet'
+        ? "https://etherscan.io/address/"
+        : "http://not_available"
     } else if (chainId === chainIDs["terra"]) {
       base = "https://finder.terra.money/columbus-5/address/";
     } else if (chainId === chainIDs["bsc"]) {
-      base = "https://bscscan.com/address/";
+      base = activeNetwork.name === 'testnet'
+        ? "https://testnet.bscscan.com/address/"
+        : activeNetwork.name === 'mainnet'
+        ? "https://bscscan.com/address/"
+        : "http://not_available/"
     } else if (chainId === chainIDs["polygon"]) {
       base = "https://polygonscan.com/address/";
     } else if (chainId === chainIDs["avalanche"]) {
@@ -139,8 +148,12 @@ const nativeExplorerContractUri = (
     } else if (chainId === chainIDs["aurora"]) {
       base = "https://aurorascan.dev/address/";
     } else if (chainId === chainIDs["alephium"]) {
-      // FIXME
-      base = "https://explorer.testnet.alephium.org/address"
+      nativeAddress = addressFromContractId(nativeAddress)
+      base = activeNetwork.name === 'testnet'
+        ? "https://explorer.testnet.alephium.org/addresses/"
+        : activeNetwork.name === 'mainnet'
+        ? "https://explorer.alephium.org/addresses/"
+        : "http://localhost:30000/"
     }
     return `${base}${nativeAddress}`;
   }
