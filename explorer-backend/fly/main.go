@@ -102,7 +102,7 @@ func init() {
 	fetchMissingVaasInterval = rootCmd.Flags().Uint("fetchMissingVaasInterval", 300, "Fetch missing vaas interval")
 	fetchVaaBatchSize = rootCmd.Flags().Uint("fetchVaaBatchSize", 20, "Fetch vaa batch size")
 	fetchGuardianSetInterval = rootCmd.Flags().Uint("fetchGuardianSetInterval", 900, "Fetch guardian set interval")
-	statInterval = rootCmd.Flags().Uint("statInterval", 300, "Update statistic interval")
+	statInterval = rootCmd.Flags().Uint("statInterval", 5, "Update statistic interval")
 	enableCache = rootCmd.Flags().Bool("enableCache", false, "Enable last sequence cache")
 	redisUri = rootCmd.Flags().String("redisUri", "", "Redis URI(you need to specify this if enableCache is true)")
 	mongodbUri = rootCmd.Flags().String("mongodbUri", "", "Mongodb URI")
