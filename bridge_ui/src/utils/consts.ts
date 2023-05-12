@@ -77,11 +77,6 @@ export const CHAINS: ChainInfo[] =
           name: "Ethereum (Goerli)",
           logo: ethIcon,
         },
-        {
-          id: CHAIN_ID_ETHEREUM_ROPSTEN,
-          name: "Ethereum (Ropsten)",
-          logo: ethIcon,
-        },
         alephiumChainInfo
       ]
     : [
