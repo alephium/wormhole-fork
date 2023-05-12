@@ -7,7 +7,6 @@ import (
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	publicrpcv1 "github.com/alephium/wormhole-fork/node/pkg/proto/publicrpc/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -134,11 +133,11 @@ func (f *Fetcher) tryFetchMissingVaas(
 	if err != nil {
 		return err
 	}
-	count, err := f.repository.collections.missingVaas.CountDocuments(ctx, bson.D{})
+	count, err := f.repository.GetMissingVaaCount(ctx, emitterId)
 	if err != nil {
 		return err
 	}
-	if count > 0 {
+	if *count > 0 {
 		return f.tryFetchMissingVaas(ctx, client, emitterId)
 	}
 	return nil
@@ -152,6 +151,10 @@ func (f *Fetcher) fetchMissingVaas(
 	seqs, err := f.repository.FindOldestMissingIds(ctx, emitterId, int64(f.batchSize))
 	if err != nil {
 		return err
+	}
+	if len(seqs) == 0 {
+		f.logger.Info("there is no missing vaas", zap.String("emitter", emitterId.toString()))
+		return nil
 	}
 	f.logger.Info("fetch missing vaas", zap.String("emitter", emitterId.toString()), zap.Uint64s("seqs", seqs))
 	filteredSeqs, removedSeqs := f.filterSeqs(ctx, emitterId, seqs)

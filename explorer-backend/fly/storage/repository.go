@@ -420,6 +420,9 @@ func extractSequenceFromCursor(ctx context.Context, cursor *mongo.Cursor) (*uint
 }
 
 func (s *Repository) removeMissingIds(ctx context.Context, emitterId *emitterId, seqs []uint64) error {
+	if len(seqs) == 0 {
+		return nil
+	}
 	vaaIds := make([]string, len(seqs))
 	for i, seq := range seqs {
 		vaaIds[i] = emitterId.toVaaId(seq)
@@ -566,6 +569,19 @@ func (r *Repository) FindOldestMissingIds(ctx context.Context, emitterId *emitte
 		seqs = append(seqs, seq)
 	}
 	return seqs, nil
+}
+
+func (r *Repository) GetMissingVaaCount(ctx context.Context, emitterId *emitterId) (*int64, error) {
+	regex := primitive.Regex{
+		Pattern: fmt.Sprintf("^%s.*", emitterId.toString()),
+		Options: "i",
+	}
+	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$regex", Value: regex}}}}
+	count, err := r.collections.missingVaas.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	return &count, nil
 }
 
 func toDoc(v interface{}) (*bson.D, error) {
