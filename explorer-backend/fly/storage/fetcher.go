@@ -109,7 +109,7 @@ func (f *Fetcher) start(ctx context.Context) {
 		select {
 		case <-tick.C:
 			for _, emitterId := range f.emitterIds {
-				if err := f.tryFetchMissingVaas(ctx, client, emitterId); err != nil {
+				if err := f.fetchMissingVaas(ctx, client, emitterId); err != nil {
 					f.logger.Error(
 						"failed to fetch missing vaas",
 						zap.Error(err),
@@ -122,25 +122,6 @@ func (f *Fetcher) start(ctx context.Context) {
 			return
 		}
 	}
-}
-
-func (f *Fetcher) tryFetchMissingVaas(
-	ctx context.Context,
-	client publicrpcv1.PublicRPCServiceClient,
-	emitterId *emitterId,
-) error {
-	err := f.fetchMissingVaas(ctx, client, emitterId)
-	if err != nil {
-		return err
-	}
-	count, err := f.repository.GetMissingVaaCount(ctx, emitterId)
-	if err != nil {
-		return err
-	}
-	if *count > 0 {
-		return f.tryFetchMissingVaas(ctx, client, emitterId)
-	}
-	return nil
 }
 
 func (f *Fetcher) fetchMissingVaas(
