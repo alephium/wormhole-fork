@@ -20,7 +20,6 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  CHAIN_ID_ETH,
   CHAIN_ID_UNSET,
   TransferToken,
   TransferNFT,
@@ -37,7 +36,6 @@ import {
   Container,
   Divider,
   makeStyles,
-  MenuItem,
   TextField,
   Typography,
 } from "@material-ui/core";
@@ -405,8 +403,7 @@ export default function Recovery() {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const { provider } = useEthereumProvider();
-  const [type, setType] = useState("Token");
-  const isNFT = type === "NFT";
+  const isNFT = false
   const [recoverySourceChain, setRecoverySourceChain] =
     useState<ChainId>(CHAIN_ID_ALEPHIUM);
   const [recoverySourceTx, setRecoverySourceTx] = useState("")
@@ -558,15 +555,6 @@ export default function Recovery() {
     isReady,
     alphWallet
   ]);
-  const handleTypeChange = useCallback((event: any) => {
-    setRecoverySourceChain((prevChain) =>
-      event.target.value === "NFT" &&
-      !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
-        ? CHAIN_ID_ETH
-        : prevChain
-    );
-    setType(event.target.value);
-  }, []);
   const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
@@ -672,19 +660,6 @@ export default function Recovery() {
           If you have sent your tokens but have not redeemed them, you may paste
           in the Source Transaction ID (from Step 3) to resume your transfer.
         </Alert>
-        <TextField
-          select
-          variant="outlined"
-          label="Type"
-          disabled={!!recoverySignedVAA}
-          value={type}
-          onChange={handleTypeChange}
-          fullWidth
-          margin="normal"
-        >
-          <MenuItem value="Token">Token</MenuItem>
-          <MenuItem value="NFT">NFT</MenuItem>
-        </TextField>
         <ChainSelect
           select
           variant="outlined"
