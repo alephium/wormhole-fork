@@ -30,7 +30,7 @@ ReactDOM.render(
                   <TerraWalletProvider>
                     <AlephiumConnectProvider
                       network={CLUSTER}
-                      chainGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
                     >
                       <AlgorandContextProvider>
                         <HashRouter>
