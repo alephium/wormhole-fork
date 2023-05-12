@@ -98,7 +98,7 @@ func (s *Repository) statistic(
 			return
 
 		case details := <-detailsC:
-			s.log.Debug("received new token transfer vaa",
+			s.log.Info("received new token transfer vaa",
 				zap.Uint16("emitterChain", uint16(details.emitterChain)),
 				zap.Uint16("targetChain", uint16(details.targetChain)),
 				zap.Uint16("tokenChain", uint16(details.tokenChain)),
@@ -111,7 +111,7 @@ func (s *Repository) statistic(
 			if len(detailsCache) == 0 {
 				break
 			}
-			s.log.Debug("update statistic tick", zap.Int("cacheSize", len(detailsCache)))
+			s.log.Info("update statistic tick", zap.Int("cacheSize", len(detailsCache)))
 			now := time.Now()
 			for _, details := range detailsCache {
 				ts := details.timestamp.UTC()

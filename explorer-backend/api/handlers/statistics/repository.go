@@ -117,6 +117,10 @@ func (r *Repository) init(ctx context.Context) error {
 	r.totalNotionalTransferredCache = totalNotionalTransferredCache
 	r.totalNotionalTransferredToCache = totalNotionalTransferredToCache
 	r.notionalTVLCache = notionalTVLCache
+	r.logger.Info("total messages", zap.Any("messagesPerEmitter", totalMessagesCache.stat.TotalMessagesPerEmitter))
+	r.logger.Info("total notional transferred", zap.Any("notionalTransferred", totalNotionalTransferredCache.stat.TotalTransferred))
+	r.logger.Info("total notional transferred to", zap.Any("notionalTransferredTo", totalNotionalTransferredToCache.stat.TotalTransferred))
+	r.logger.Info("notional tvl", zap.Any("notionalTVL", notionalTVLCache.stat.TVL))
 	return nil
 }
 
