@@ -48,7 +48,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useHistory, useLocation } from "react-router";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useAcalaRelayerInfo } from "../hooks/useAcalaRelayerInfo";
@@ -84,6 +84,7 @@ import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
 import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
+import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -404,6 +405,8 @@ export default function Recovery() {
   const dispatch = useDispatch();
   const { provider } = useEthereumProvider();
   const isNFT = false
+  const transferSourceChain = useSelector(selectTransferSourceChain)
+  const transferTx = useSelector(selectTransferTransferTx)
   const [recoverySourceChain, setRecoverySourceChain] =
     useState<ChainId>(CHAIN_ID_ALEPHIUM);
   const [recoverySourceTx, setRecoverySourceTx] = useState("")
@@ -434,6 +437,12 @@ export default function Recovery() {
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
+    if (!pathSourceChain) {
+      setRecoverySourceChain(transferSourceChain)
+    }
+    if (!pathSourceTransaction && transferTx !== undefined) {
+      setRecoverySourceTx(transferTx.id)
+    }
     if (!pathSourceChain && !pathSourceTransaction) {
       return;
     }
@@ -451,7 +460,7 @@ export default function Recovery() {
       console.error(e);
       console.error("Invalid path params specified.");
     }
-  }, [pathSourceChain, pathSourceTransaction]);
+  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx]);
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
