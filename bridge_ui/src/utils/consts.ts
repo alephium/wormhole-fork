@@ -813,6 +813,9 @@ export const COVALENT_GET_TOKENS_URL = (
   nft?: boolean,
   noNftMetadata?: boolean
 ) => {
+  if (COVALENT_API_KEY === '') {
+    return ''
+  }
   const chainNum =
     chainId === CHAIN_ID_ETH || chainId === CHAIN_ID_ETHEREUM_ROPSTEN
       ? COVALENT_ETHEREUM
@@ -844,7 +847,13 @@ export const BLOCKSCOUT_GET_TOKENS_URL = (
   walletAddress: string
 ) => {
   const baseUrl =
-    chainId === CHAIN_ID_OASIS
+    chainId === CHAIN_ID_ETH
+      ? CLUSTER === "mainnet"
+        ? "https://eth.blockscout.com"
+        : CLUSTER === "testnet"
+        ? "https://eth-goerli.blockscout.com"
+        : ""
+      : chainId === CHAIN_ID_OASIS
       ? CLUSTER === "mainnet"
         ? "https://explorer.emerald.oasis.dev"
         : CLUSTER === "testnet"
