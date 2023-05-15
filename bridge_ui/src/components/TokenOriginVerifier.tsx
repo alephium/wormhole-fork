@@ -342,6 +342,8 @@ export default function TokenOriginVerifier() {
       <div className={classes.centered}>
         {isEVMChain(secondaryLookupChain) ? (
           <KeyAndBalance chainId={secondaryLookupChain} />
+        ) : secondaryLookupChain === CHAIN_ID_ALEPHIUM ? (
+          <KeyAndBalance chainId={secondaryLookupChain} />
         ) : null}
         {secondaryError ? (
           <Typography color="error">{secondaryError}</Typography>
