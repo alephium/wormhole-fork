@@ -258,7 +258,7 @@ export async function getAvailableBalances(provider: NodeProvider, address: stri
   for (const token of tokens) {
     const locked = BigInt(rawBalance.lockedTokenBalances?.find((t) => t.id === token.id)?.amount ?? '0')
     const tokenAmount = BigInt(token.amount) - locked
-    balances.set(token.id, tokenAmount)
+    balances.set(token.id.toLowerCase(), tokenAmount)
   }
   return balances
 }

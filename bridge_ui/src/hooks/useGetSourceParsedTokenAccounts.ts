@@ -22,6 +22,9 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   hexToUint8Array,
+  getLocalTokenInfo,
+  getTokenPoolId,
+  getRemoteTokenInfo,
 } from "alephium-wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -113,7 +116,9 @@ import {
   WROSE_ADDRESS,
   WROSE_DECIMALS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
-  getTokenBridgeAddressForChain
+  getTokenBridgeAddressForChain,
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  ALEPHIUM_TOKEN_LIST
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -122,8 +127,8 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { useAlephiumWallet } from "./useAlephiumWallet";
-import { addressFromContractId, ALPH_TOKEN_ID, groupOfAddress, NodeProvider } from "@alephium/web3";
-import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { addressFromContractId, ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
+import { ALPHTokenInfo, getAvailableBalances } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
 
 export function createParsedTokenAccount(
@@ -753,19 +758,46 @@ const getAlgorandParsedTokenAccounts = async (
 const getAlephiumParsedTokenAccounts = async (address: string, provider: NodeProvider) => {
   try {
     const balances = await getAvailableBalances(provider, address)
+    const registeredTokens = await getRegisteredTokens()
+    const promises = registeredTokens.map(async (token) => {
+      if (token.tokenChain !== CHAIN_ID_ALEPHIUM) {
+        const tokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
+        return getRemoteTokenInfo(addressFromContractId(tokenPoolId))
+          .then((tokenInfo) => ({
+            ...tokenInfo,
+            id: tokenPoolId,
+            logoURI: tokenInfo.logoURI ?? token.logo
+          }))
+          .catch((error) => {
+            console.log(`Failed to get remote token info, token id: ${tokenPoolId}, error: ${error}`)
+            return Promise.resolve(undefined)
+          })
+      }
+      if (token.tokenAddress === ALPH_TOKEN_ID) {
+        return ALPHTokenInfo
+      }
+      return getLocalTokenInfo(provider, token.nativeAddress)
+        .then((tokenInfo) => ({
+          ...tokenInfo,
+          logoURI: tokenInfo.logoURI ?? token.logo ?? ALEPHIUM_TOKEN_LIST.find((t) => t.symbol === tokenInfo.symbol)?.logoURI
+        }))
+        .catch((error) => {
+          console.log(`Failed to get local token info, token id: ${token.nativeAddress}, error: ${error}`)
+          return Promise.resolve(undefined)
+        })
+    })
     const tokenAccounts: ParsedTokenAccount[] = []
-    const allTokenIds = Array.from(balances.keys()).filter((tokenId) => groupOfAddress(addressFromContractId(tokenId)) === ALEPHIUM_BRIDGE_GROUP_INDEX)
-    const promises = allTokenIds.map((tokenId) => getAlephiumTokenInfo(provider, tokenId))
     const allTokens = await Promise.all(promises)
-    for (let index = 0; index < allTokenIds.length; index++) {
-      const tokenId = allTokenIds[index]
-      const tokenInfo = allTokens[index]
-      if (tokenInfo !== undefined) {
-        const amount = balances.get(tokenId) ?? BigInt(0)
+    for (const tokenInfo of allTokens) {
+      if (tokenInfo === undefined) {
+        continue
+      }
+      const amount = balances.get(tokenInfo.id.toLowerCase()) ?? BigInt(0)
+      if (amount > BigInt(0)) {
         const uiAmount = formatUnits(amount, tokenInfo.decimals)
         tokenAccounts.push(createParsedTokenAccount(
           address,
-          tokenId,
+          tokenInfo.id,
           amount.toString(),
           tokenInfo.decimals,
           parseFloat(uiAmount),
@@ -773,11 +805,11 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
           tokenInfo.symbol,
           tokenInfo.name,
           tokenInfo.logoURI,
-          tokenId === ALPH_TOKEN_ID
+          tokenInfo.id === ALPH_TOKEN_ID
         ))
       }
     }
-    return tokenAccounts
+    return { tokenAccounts, balances}
   } catch (error) {
     const errMsg = `Failed to load alephium token metadata: ${error}`
     console.error(errMsg)
@@ -814,6 +846,7 @@ function useGetAvailableTokens(nft: boolean = false) {
   );
 
   const [alphTokens, setAlphTokens] = useState<ParsedTokenAccount[]>()
+  const [alphBalances, setAlphBalances] = useState<Map<string, bigint>>(new Map())
   const [alphTokenLoading, setAlphTokenLoading] = useState(false)
   const [alphTokenError, setAlphTokenError] = useState<string>()
 
@@ -1464,8 +1497,9 @@ function useGetAvailableTokens(nft: boolean = false) {
       setAlphTokenLoading(true)
       dispatch(fetchSourceParsedTokenAccounts())
       getAlephiumParsedTokenAccounts(currentSourceWalletAddress, alphWallet.nodeProvider)
-        .then((tokenAccounts) => {
-          setAlphTokens(tokenAccounts)
+        .then((result) => {
+          setAlphTokens(result.tokenAccounts)
+          setAlphBalances(result.balances)
           setAlphTokenLoading(false)
           setAlphTokenError(undefined)
         })
@@ -1540,6 +1574,7 @@ function useGetAvailableTokens(nft: boolean = false) {
     : lookupChain === CHAIN_ID_ALEPHIUM
     ? {
         tokens: alphTokens,
+        balances: alphBalances,
         isFetching: alphTokenLoading,
         error: alphTokenError,
         resetAccounts: resetSourceAccounts,
