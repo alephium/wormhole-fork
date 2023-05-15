@@ -135,6 +135,27 @@ func (r *Repository) getToken(ctx context.Context, tokenChain vaa.ChainID, token
 	return &doc, err
 }
 
+func (r *Repository) getAllTokens(ctx context.Context) ([]*TokenDoc, error) {
+	projection := bson.D{
+		{Key: "tokenAddress", Value: 1}, {Key: "tokenChain", Value: 1}, {Key: "decimals", Value: 1},
+		{Key: "symbol", Value: 1}, {Key: "name", Value: 1}, {Key: "nativeAddress", Value: 1},
+	}
+	cursor, err := r.collections.tokens.Find(ctx, bson.D{}, options.Find().SetProjection(projection))
+	if err != nil {
+		return nil, err
+	}
+	tokens := make([]*TokenDoc, 0)
+	for cursor.Next(ctx) {
+		var doc TokenDoc
+		if err := cursor.Decode(&doc); err != nil {
+			r.logger.Error("failed to decode doc", zap.String("_id", doc.ID), zap.Error(err))
+			continue
+		}
+		tokens = append(tokens, &doc)
+	}
+	return tokens, nil
+}
+
 func (r *Repository) getDocsFromInterval(ctx context.Context, start, end time.Time) ([]*StatisticDoc, error) {
 	filter := bson.M{"date": bson.M{"$gte": start, "$lt": end}}
 	var docs []*StatisticDoc

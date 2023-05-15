@@ -31,3 +31,7 @@ func (s *Service) TotalNotionalTransferredTo(ctx context.Context) (*TotalNotiona
 func (s *Service) TVL(ctx context.Context) (*TVL, error) {
 	return s.repo.TVL(ctx)
 }
+
+func (s *Service) GetAllTokens(ctx context.Context) ([]*TokenDoc, error) {
+	return s.repo.getAllTokens(ctx)
+}

@@ -193,6 +193,7 @@ func run(cmd *cobra.Command, args []string) {
 	stats.Get("/totalnotionaltransferred", statisticsCtrl.TotalNotionalTransferred)
 	stats.Get("/totalnotionaltransferredto", statisticsCtrl.TotalNotionalTransferredTo)
 	stats.Get("/notionaltvl", statisticsCtrl.NotionalTVL)
+	stats.Get("/tokens", statisticsCtrl.GetAllTokens)
 
 	app.Listen(":" + strconv.Itoa(int(*port)))
 }

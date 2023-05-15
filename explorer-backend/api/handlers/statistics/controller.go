@@ -131,3 +131,11 @@ func (c *Controller) NotionalTVL(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(response)
 }
+
+func (c *Controller) GetAllTokens(ctx *fiber.Ctx) error {
+	tokens, err := c.srv.GetAllTokens(ctx.Context())
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(tokens)
+}

@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
-	"github.com/mr-tron/base58"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
@@ -127,7 +126,7 @@ func toNativeAddress(chain vaa.ChainID, address vaa.Address) (string, error) {
 		addr := fmt.Sprintf("0x%v", hex.EncodeToString(bytes))
 		return addr, nil
 	case vaa.ChainIDAlephium:
-		return base58.Encode(append([]byte{0x00}, address[:]...)), nil
+		return hex.EncodeToString(address[:]), nil
 	default:
 		return "", fmt.Errorf("unknown address from chain %v", chain)
 	}
