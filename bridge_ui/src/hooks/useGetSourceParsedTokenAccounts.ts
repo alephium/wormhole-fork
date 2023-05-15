@@ -115,6 +115,7 @@ import {
   WROSE_ADDRESS,
   WROSE_DECIMALS,
   getDefaultNativeCurrencyAddressEvm,
+  ALEPHIUM_BRIDGE_GROUP_INDEX,
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -123,8 +124,8 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { useAlephiumWallet } from "./useAlephiumWallet";
-import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { ALPHTokenInfo, getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { addressFromContractId, ALPH_TOKEN_ID, groupOfAddress, NodeProvider } from "@alephium/web3";
+import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -815,24 +816,28 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
   try {
     const balances = await getAvailableBalances(provider, address)
     const tokenAccounts: ParsedTokenAccount[] = []
-    for (const [tokenId, amount] of balances) {
-      const tokenInfo = tokenId === ALPH_TOKEN_ID ? ALPHTokenInfo : (await getAlephiumTokenInfo(provider, tokenId))
-      if (tokenInfo === undefined) {
-        continue
+    const allTokenIds = Array.from(balances.keys()).filter((tokenId) => groupOfAddress(addressFromContractId(tokenId)) === ALEPHIUM_BRIDGE_GROUP_INDEX)
+    const promises = allTokenIds.map((tokenId) => getAlephiumTokenInfo(provider, tokenId))
+    const allTokens = await Promise.all(promises)
+    for (let index = 0; index < allTokenIds.length; index++) {
+      const tokenId = allTokenIds[index]
+      const tokenInfo = allTokens[index]
+      if (tokenInfo !== undefined) {
+        const amount = balances.get(tokenId) ?? BigInt(0)
+        const uiAmount = formatUnits(amount, tokenInfo.decimals)
+        tokenAccounts.push(createParsedTokenAccount(
+          address,
+          tokenId,
+          amount.toString(),
+          tokenInfo.decimals,
+          parseFloat(uiAmount),
+          uiAmount,
+          tokenInfo.symbol,
+          tokenInfo.name,
+          tokenInfo.logoURI,
+          tokenId === ALPH_TOKEN_ID
+        ))
       }
-      const uiAmount = formatUnits(amount, tokenInfo.decimals)
-      tokenAccounts.push(createParsedTokenAccount(
-        address,
-        tokenId,
-        amount.toString(),
-        tokenInfo.decimals,
-        parseFloat(uiAmount),
-        uiAmount,
-        tokenInfo.symbol,
-        tokenInfo.name,
-        tokenInfo.logoURI,
-        tokenId === ALPH_TOKEN_ID
-      ))
     }
     return tokenAccounts
   } catch (error) {

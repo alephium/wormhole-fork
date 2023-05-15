@@ -120,13 +120,6 @@ async function localTokenPoolExists(nodeProvider: NodeProvider, tokenId: string)
   return await contractExists(localTokenPoolId, nodeProvider)
 }
 
-function getContractGroupIndex(contractId: string): number {
-  if (contractId.length !== 64) {
-    throw new Error('Invalid contract id length')
-  }
-  return parseInt(contractId.slice(-2), 16)
-}
-
 export const ALPHTokenInfo: TokenInfo = {
   ...ALPH,
   logoURI: alephiumIcon
@@ -139,8 +132,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 
   const tokenAddress = addressFromContractId(tokenId)
   try {
-    const groupIndex = getContractGroupIndex(tokenId)
-    const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: groupIndex })
+    const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
       return getRemoteTokenInfoFromContractState(state)
     }
@@ -152,7 +144,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     if (CLUSTER === 'devnet') {
       return await getLocalTokenInfo(provider, tokenId)
     }
-    return ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
+    return ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
   } catch (error) {
     console.log("failed to get alephium token info, error: " + error)
     return undefined
@@ -188,10 +180,9 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     }
   }
   const tokenAddress = addressFromContractId(tokenId)
-  const groupIndex = getContractGroupIndex(tokenId)
   return provider
     .contracts
-    .getContractsAddressState(tokenAddress, { group: groupIndex })
+    .getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
     .then(state => {
       if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
         const tokenInfo = getRemoteTokenInfoFromContractState(state)
