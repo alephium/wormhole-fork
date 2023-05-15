@@ -21,6 +21,7 @@ import {
   ethers_contracts,
   WSOL_ADDRESS,
   WSOL_DECIMALS,
+  hexToUint8Array,
 } from "alephium-wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -31,7 +32,6 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import { Algodv2 } from "algosdk";
-import axios from "axios";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -86,8 +86,6 @@ import {
   ACA_DECIMALS,
   ALGORAND_HOST,
   ALGO_DECIMALS,
-  COVALENT_GET_TOKENS_URL,
-  BLOCKSCOUT_GET_TOKENS_URL,
   KAR_ADDRESS,
   KAR_DECIMALS,
   logoOverrides,
@@ -114,8 +112,8 @@ import {
   WNEON_DECIMALS,  
   WROSE_ADDRESS,
   WROSE_DECIMALS,
-  getDefaultNativeCurrencyAddressEvm,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -126,6 +124,7 @@ import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { useAlephiumWallet } from "./useAlephiumWallet";
 import { addressFromContractId, ALPH_TOKEN_ID, groupOfAddress, NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { getRegisteredTokens } from "../utils/tokens";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -555,37 +554,6 @@ const createNativeNeonParsedTokenAccount = (
       });
 };
 
-const createNFTParsedTokenAccountFromCovalent = (
-  walletAddress: string,
-  covalent: CovalentData,
-  nft_data: CovalentNFTData
-): NFTParsedTokenAccount => {
-  return {
-    publicKey: walletAddress,
-    mintKey: covalent.contract_address,
-    amount: nft_data.token_balance,
-    decimals: covalent.contract_decimals,
-    uiAmount: Number(
-      formatUnits(nft_data.token_balance, covalent.contract_decimals)
-    ),
-    uiAmountString: formatUnits(
-      nft_data.token_balance,
-      covalent.contract_decimals
-    ),
-    symbol: covalent.contract_ticker_symbol,
-    name: covalent.contract_name,
-    logo: covalent.logo_url,
-    tokenId: nft_data.token_id,
-    uri: nft_data.token_url,
-    animation_url: nft_data.external_data.animation_url,
-    external_url: nft_data.external_data.external_url,
-    image: nft_data.external_data.image,
-    image_256: nft_data.external_data.image_256,
-    nftName: nft_data.external_data.name,
-    description: nft_data.external_data.description,
-  };
-};
-
 export type CovalentData = {
   contract_decimals: number;
   contract_ticker_symbol: string;
@@ -614,81 +582,51 @@ export type CovalentNFTData = {
   token_url: string;
 };
 
-const getEthereumAccountsCovalent = async (
-  url: string,
-  nft: boolean,
-  chainId: ChainId
-): Promise<CovalentData[]> => {
+export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, walletAddress: string): Promise<CovalentData[]> => {
   try {
-    const output = [] as CovalentData[];
-    const response = await axios.get(url);
-    const tokens = response.data.data.items;
-
-    if (tokens instanceof Array && tokens.length) {
-      for (const item of tokens) {
-        // TODO: filter?
-        if (
-          item.contract_decimals !== undefined &&
-          item.contract_address &&
-          item.contract_address.toLowerCase() !==
-            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
-          item.balance &&
-          item.balance !== "0" &&
-          (nft
-            ? item.supports_erc?.includes("erc721")
-            : item.supports_erc?.includes("erc20"))
-        ) {
-          output.push({ ...item } as CovalentData);
+    const tokens = await getRegisteredTokens()
+    const promises = tokens.map(async (token) => {
+      try {
+        const tokenId = token.tokenChain === chainId
+          ? token.nativeAddress
+          : await ethers_contracts.BridgeImplementation__factory
+              .connect(getTokenBridgeAddressForChain(chainId), signer)
+              .wrappedAsset(token.tokenChain, hexToUint8Array(token.tokenAddress))
+        const tokenContract = ethers_contracts.ERC20__factory.connect(tokenId, signer)
+        const amount = await tokenContract.balanceOf(walletAddress)
+        return {
+          tokenId: tokenId,
+          balance: amount.toBigInt()
         }
+      } catch (error) {
+        console.log(`Failed to get balance, token address: ${token.nativeAddress}, error: ${error}`)
+        return undefined
       }
-    }
-
-    return output;
-  } catch (error) {
-    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
-  }
-};
-
-export const getEthereumAccountsBlockscout = async (
-  url: string,
-  nft: boolean,
-  chainId: ChainId
-): Promise<CovalentData[]> => {
-  try {
-    const output = [] as CovalentData[];
-    const response = await axios.get(url);
-    const tokens = response.data.result;
-
-    if (tokens instanceof Array && tokens.length) {
-      for (const item of tokens) {
-        if (
-          item.decimals !== undefined &&
-          item.contractAddress &&
-          item.contractAddress.toLowerCase() !==
-            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
-          item.balance &&
-          item.balance !== "0" &&
-          (nft ? item.type?.includes("ERC-721") : item.type?.includes("ERC-20"))
-        ) {
-          output.push({
-            contract_decimals: item.decimals,
-            contract_address: item.contractAddress,
-            balance: item.balance,
-            contract_ticker_symbol: item.symbol,
-            contract_name: item.name,
-            logo_url: "",
-            quote: 0,
-            quote_rate: 0,
-          });
-        }
+    })
+    const tokenAccounts: CovalentData[] = []
+    const results = await Promise.all(promises)
+    for (let index = 0; index < tokens.length; index++) {
+      const result = results[index]
+      const token = tokens[index]
+      if (result === undefined || result.balance === BigInt(0)) {
+        continue
       }
+      tokenAccounts.push({
+        contract_decimals: token.decimals,
+        contract_ticker_symbol: token.symbol,
+        contract_name: token.name,
+        contract_address: result.tokenId,
+        logo_url: token.logo,
+        balance: result.balance.toString(),
+        quote: undefined,
+        quote_rate: undefined
+      })
     }
-
-    return output;
+    return tokenAccounts
   } catch (error) {
-    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
+    return Promise.reject(`Unable to retrive your EVM tokens, error: ${error}`)
   }
-};
+}
 
 const getSolanaParsedTokenAccounts = async (
   walletAddress: string,
@@ -865,11 +803,11 @@ function useGetAvailableTokens(nft: boolean = false) {
   );
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
-  const { provider, signerAddress } = useEthereumProvider();
+  const { provider, signerAddress, signer } = useEthereumProvider();
   const { accounts: algoAccounts } = useAlgorandContext();
   const alphWallet = useAlephiumWallet()
 
-  const [covalent, setCovalent] = useState<any>(undefined);
+  const [covalent, setCovalent] = useState<CovalentData[] | undefined>()
   const [covalentLoading, setCovalentLoading] = useState(false);
   const [covalentError, setCovalentError] = useState<string | undefined>(
     undefined
@@ -1467,56 +1405,30 @@ function useGetAvailableTokens(nft: boolean = false) {
 
     let cancelled = false;
     const walletAddress = signerAddress;
-    if (walletAddress && isEVMChain(lookupChain) && !covalent) {
-      let url = COVALENT_GET_TOKENS_URL(lookupChain, walletAddress, nft);
-      let getAccounts;
-      if (url) {
-        getAccounts = getEthereumAccountsCovalent;
-      } else {
-        url = BLOCKSCOUT_GET_TOKENS_URL(lookupChain, walletAddress);
-        getAccounts = getEthereumAccountsBlockscout;
+    if (walletAddress && isEVMChain(lookupChain) && signer !== undefined) {
+      if (covalent) {
+        dispatch(receiveSourceParsedTokenAccounts(
+          covalent.map((x) =>
+            createParsedTokenAccountFromCovalent(walletAddress, x)
+          )
+        ))
+        return
       }
-      if (!url) {
-        return;
-      }
+
       //TODO less cancel
       !cancelled && setCovalentLoading(true);
-      !cancelled &&
-        dispatch(
-          nft
-            ? fetchSourceParsedTokenAccountsNFT()
-            : fetchSourceParsedTokenAccounts()
-        );
-      getAccounts(url, nft, lookupChain).then(
+      !cancelled && dispatch(fetchSourceParsedTokenAccounts());
+      getEVMAccounts(lookupChain, signer, walletAddress).then(
         (accounts) => {
           !cancelled && setCovalentLoading(false);
           !cancelled && setCovalentError(undefined);
           !cancelled && setCovalent(accounts);
           !cancelled &&
-            dispatch(
-              nft
-                ? receiveSourceParsedTokenAccountsNFT(
-                    accounts.reduce((arr, current) => {
-                      if (current.nft_data) {
-                        current.nft_data.forEach((x) =>
-                          arr.push(
-                            createNFTParsedTokenAccountFromCovalent(
-                              walletAddress,
-                              current,
-                              x
-                            )
-                          )
-                        );
-                      }
-                      return arr;
-                    }, [] as NFTParsedTokenAccount[])
-                  )
-                : receiveSourceParsedTokenAccounts(
-                    accounts.map((x) =>
-                      createParsedTokenAccountFromCovalent(walletAddress, x)
-                    )
-                  )
-            );
+            dispatch(receiveSourceParsedTokenAccounts(
+              accounts.map((x) =>
+                createParsedTokenAccountFromCovalent(walletAddress, x)
+              )
+            ))
         },
         () => {
           !cancelled &&
@@ -1539,7 +1451,7 @@ function useGetAvailableTokens(nft: boolean = false) {
         cancelled = true;
       };
     }
-  }, [lookupChain, provider, signerAddress, dispatch, nft, covalent]);
+  }, [lookupChain, provider, signerAddress, dispatch, nft, covalent, signer]);
 
   useEffect(() => {
     if (
