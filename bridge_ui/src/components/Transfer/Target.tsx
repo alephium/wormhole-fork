@@ -1,4 +1,5 @@
 import {
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   hexToNativeString,
   isEVMChain,
@@ -36,6 +37,7 @@ import SolanaCreateAssociatedAddress, {
 import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import RegisterNowButton from "./RegisterNowButton";
+import { hexToALPHAddress } from "../../utils/alephium";
 
 const useStyles = makeStyles((theme) => ({
   transferField: {
@@ -152,7 +154,7 @@ function Target() {
             <Typography component="div">
               <SmartAddress
                 chainId={targetChain}
-                address={readableTargetAddress}
+                address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress}
                 variant="h6"
               />
               {`(Current balance: ${uiAmountString || "0"})`}

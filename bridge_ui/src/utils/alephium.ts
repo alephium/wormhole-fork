@@ -262,3 +262,7 @@ export async function getAvailableBalances(provider: NodeProvider, address: stri
   }
   return balances
 }
+
+export function hexToALPHAddress(hex: string): string {
+  return base58.encode(Buffer.from(hex, 'hex'))
+}
