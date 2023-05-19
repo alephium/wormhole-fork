@@ -285,7 +285,7 @@ export const EXPLORER_API_SERVER_HOST =
   CLUSTER === 'mainnet'
     ? ''
     : CLUSTER === 'testnet'
-    ? 'https://indexer-api.explorer.wormhole-testnet.softfork.se/'
+    ? 'https://indexer-api.explorer.wormhole-testnet.alephium.org'
     : 'http://localhost:8100'
 
 export const ALEPHIUM_HOST =
