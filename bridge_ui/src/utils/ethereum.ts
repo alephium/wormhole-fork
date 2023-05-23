@@ -102,7 +102,7 @@ export async function getEVMCurrentBlockNumber(provider: ethers.providers.Provid
 export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock: number): boolean {
   checkEVMChainId(chainId)
   return chainId === CHAIN_ID_ETH
-    ? currentBlock > txBlock
+    ? currentBlock >= txBlock
     : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
 }
 
