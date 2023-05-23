@@ -16,7 +16,7 @@ export async function relayAlph(
   chainConfigInfo: AlephiumChainConfigInfo,
   signedVAA: string,
   checkOnly: boolean,
-  mnemonic: string,
+  privateKey: string,
   relayLogger: ScopedLogger,
   metrics: PromHelper
 ) {
@@ -24,7 +24,7 @@ export async function relayAlph(
 
   // we have validated the `groupIndex` at initialization
   const groupIndex = chainConfigInfo.groupIndex!
-  const signer = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
+  const signer = new PrivateKeyWallet({privateKey})
   const signedVaaArray = hexToUint8Array(signedVAA)
 
   logger.debug('Checking to see if vaa has already been redeemed.')

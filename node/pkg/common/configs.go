@@ -46,6 +46,7 @@ type BridgeConfig struct {
 	Network          NetworkId
 	Alephium         *ChainConfig
 	Ethereum         *ChainConfig
+	Bsc              *ChainConfig
 	Guardian         *GuardianConfig
 	EmitterAddresses []EmitterAddress
 }
@@ -138,6 +139,11 @@ func ReadEthereumConfig(network string) (*ChainConfig, error) {
 	return readAndValidateChainConfig("ethereum", fileName)
 }
 
+func ReadBscConfig(network string) (*ChainConfig, error) {
+	fileName := fmt.Sprintf("%s.json", network)
+	return readAndValidateChainConfig("bsc", fileName)
+}
+
 func toNetworkId(network string) (NetworkId, error) {
 	switch network {
 	case "mainnet":
@@ -164,6 +170,10 @@ func ReadConfigsByNetwork(network string) (*BridgeConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	bscConfig, err := ReadBscConfig(network)
+	if err != nil {
+		return nil, err
+	}
 	guardianConfig, err := ReadGuardianConfig(network)
 	if err != nil {
 		return nil, err
@@ -173,10 +183,11 @@ func ReadConfigsByNetwork(network string) (*BridgeConfig, error) {
 		{vaa.ChainIDAlephium, ethConfig.TokenBridgeEmitterAddress},
 	}
 	return &BridgeConfig{
-		networkId,
-		alphConfig,
-		ethConfig,
-		guardianConfig,
-		emitterAddresses,
+		Network:          networkId,
+		Alephium:         alphConfig,
+		Ethereum:         ethConfig,
+		Bsc:              bscConfig,
+		Guardian:         guardianConfig,
+		EmitterAddresses: emitterAddresses,
 	}, nil
 }

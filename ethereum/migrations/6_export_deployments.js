@@ -8,9 +8,9 @@ module.exports = async function(deployer) {
   const deployments = {
     governance: Wormhole.address,
     tokenBridge: TokenBridge.address,
-    weth: configs.getWETHAddress(deployer.network)
+    wrappedNative: configs.getWrappedNativeAddress(deployer.network)
   }
-  if (deployer.network !== 'mainnet') {
+  if (configs.isDevnet(deployer.network)) {
     const ERC20 = artifacts.require("ERC20PresetMinterPauser");
     deployments.testToken = ERC20.address
   }

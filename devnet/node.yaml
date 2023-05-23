@@ -55,6 +55,8 @@ spec:
             - node
             - --ethRPC
             - ws://eth-devnet:8545
+            - --bscRPC
+            - ws://bsc-devnet:8545
             - --alphRPC
             - http://alph-full-node:22973
             - --network

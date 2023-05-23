@@ -48,7 +48,6 @@ import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contract
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
-  getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
   attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
   getContractState<I extends ContractInstance, F extends Fields>(
     factory: ContractFactory<I, F>,

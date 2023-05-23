@@ -50,7 +50,7 @@ require (
 require (
 	cloud.google.com/go/kms v1.0.0
 	cloud.google.com/go/logging v1.4.2
-	github.com/alephium/go-sdk v0.0.0-20230130013956-c85ab2bc81a9
+	github.com/alephium/go-sdk v0.0.0-20230414022534-1a34a488e6d6
 	github.com/algorand/go-algorand-sdk v1.15.0
 	github.com/benbjohnson/clock v1.3.0
 	github.com/blendle/zapdriver v1.3.1

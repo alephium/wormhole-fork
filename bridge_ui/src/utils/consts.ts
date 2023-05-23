@@ -36,6 +36,9 @@ import { default as alephiumMainnetConfig } from '../../../configs/alephium/main
 import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
+import { default as bscDevnetConfig } from '../../../configs/bsc/devnet.json'
+import { default as bscTestnetConfig } from '../../../configs/bsc/testnet.json'
+import { default as bscMainnetConfig } from '../../../configs/bsc/mainnet.json'
 import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
 import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
 import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
@@ -64,14 +67,24 @@ export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
     ? [
         {
+          id: CHAIN_ID_BSC,
+          name: "Binance Smart Chain",
+          logo: bscIcon,
+        },
+        {
           id: CHAIN_ID_ETH,
           name: "Ethereum",
-          logo: ethIcon,
+          logo: ethIcon
         },
         alephiumChainInfo
       ]
     : CLUSTER === "testnet"
     ? [
+        {
+          id: CHAIN_ID_BSC,
+          name: "Binance Smart Chain",
+          logo: bscIcon,
+        },
         {
           id: CHAIN_ID_ETH,
           name: "Ethereum (Goerli)",
@@ -357,10 +370,10 @@ export const ETH_TOKEN_BRIDGE_ADDRESS = getAddress(
 );
 export const BSC_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+    ? bscMainnetConfig.contracts.governance
     : CLUSTER === "testnet"
-    ? "0x68605AD7b15c732a30b1BbC62BE8F2A509D74b4D"
-    : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
+    ? bscTestnetConfig.contracts.governance
+    : bscDevnetConfig.contracts.governance
 );
 export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
@@ -371,10 +384,10 @@ export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
 );
 export const BSC_TOKEN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
-    ? "0xB6F6D86a8f9879A9c87f643768d9efc38c1Da6E7"
+    ? bscMainnetConfig.contracts.tokenBridge
     : CLUSTER === "testnet"
-    ? "0x9dcF9D205C9De35334D646BeE44b2D2859712A09"
-    : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
+    ? bscTestnetConfig.contracts.tokenBridge
+    : bscDevnetConfig.contracts.tokenBridge
 );
 export const POLYGON_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
@@ -858,18 +871,18 @@ export const TERRA_SWAPRATE_URL =
 
 export const WETH_ADDRESS =
   CLUSTER === "mainnet"
-    ? ethereumMainnetConfig.contracts.weth
+    ? ethereumMainnetConfig.contracts.wrappedNative
     : CLUSTER === "testnet"
-    ? ethereumTestnetConfig.contracts.weth
-    : ethereumDevnetConfig.contracts.weth
+    ? ethereumTestnetConfig.contracts.wrappedNative
+    : ethereumDevnetConfig.contracts.wrappedNative
 export const WETH_DECIMALS = 18;
 
 export const WBNB_ADDRESS =
   CLUSTER === "mainnet"
-    ? "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+    ? bscMainnetConfig.contracts.wrappedNative
     : CLUSTER === "testnet"
-    ? "0xae13d989dac2f0debff460ac112a837c89baa7cd"
-    : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+    ? bscTestnetConfig.contracts.wrappedNative
+    : bscDevnetConfig.contracts.wrappedNative
 export const WBNB_DECIMALS = 18;
 
 export const WMATIC_ADDRESS =
@@ -1161,34 +1174,7 @@ export const ETH_MIGRATION_ASSET_MAP = new Map<string, string>(
       ]
 );
 
-export const BSC_MIGRATION_ASSET_MAP = new Map<string, string>(
-  CLUSTER === "mainnet"
-    ? [
-        [
-          // LUNA
-          getAddress("0xECCF35F941Ab67FfcAA9A1265C2fF88865caA005"),
-          getAddress("0x355A116ef1Cf566B12Ef3a8e409A64e303c53740"),
-        ],
-        [
-          // UST
-          getAddress("0x23396cF899Ca06c4472205fC903bDB4de249D6fC"),
-          getAddress("0x0F98AB919D04a291838B3b075c57181057D4CF75"),
-        ],
-        [
-          // ORION
-          getAddress("0x5530ec23f4ee1521182bd158c09f4ca7efec1ef0"),
-          getAddress("0x084fa354e65b521e6fb9d1602549cf8693cdb4f8"),
-        ],
-      ]
-    : CLUSTER === "testnet"
-    ? []
-    : [
-        // [
-        //   "0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A",
-        //   "0xFcCeD5E997E7fb1D0594518D3eD57245bB8ed17E",
-        // ],
-      ]
-);
+export const BSC_MIGRATION_ASSET_MAP = new Map<string, string>([]);
 
 export const getMigrationAssetMap = (chainId: ChainId) => {
   if (chainId === CHAIN_ID_BSC) {

@@ -19,6 +19,7 @@ func loadEmitterIds(config *common.BridgeConfig) ([]*emitterId, error) {
 	}{
 		{vaa.ChainIDAlephium, config.Alephium},
 		{vaa.ChainIDEthereum, config.Ethereum},
+		{vaa.ChainIDBSC, config.Bsc},
 	}
 	emitterIds := make([]*emitterId, 0)
 	for i := 0; i < len(chains); i++ {

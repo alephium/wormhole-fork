@@ -27,6 +27,7 @@ interface ExplorerMessageSearchValues {
 
 const chains = [
   { label: ChainID[2], value: chainIDs["ethereum"] },
+  { label: ChainID[4], value: chainIDs["bsc"] },
   { label: ChainID[255], value: chainIDs["alephium"] },
 ];
 

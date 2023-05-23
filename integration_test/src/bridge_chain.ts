@@ -23,6 +23,7 @@ export interface BridgeChain {
   getWrappedTokenBalanceByAddress(originTokenId: string, tokenChainId: ChainId, address: string): Promise<bigint>
   getLockedNativeBalance(): Promise<bigint>
   getLockedTokenBalance(tokenId: string): Promise<bigint>
+  getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
 
   attestToken(tokenId: string): Promise<Uint8Array>
   createWrapped(signedVaa: Uint8Array): Promise<void>

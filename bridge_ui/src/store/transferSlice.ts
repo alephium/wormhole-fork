@@ -1,7 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ETH
+  CHAIN_ID_BSC
 } from "alephium-wormhole-sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { StateSafeWormholeWrappedInfo } from "../hooks/useCheckIfWormholeWrapped";
@@ -76,7 +76,7 @@ const initialState: TransferState = {
   originChain: undefined,
   originAsset: undefined,
   amount: "",
-  targetChain: CHAIN_ID_ETH,
+  targetChain: CHAIN_ID_BSC,
   targetAddressHex: undefined,
   targetAsset: getEmptyDataWrapper(),
   targetParsedTokenAccount: undefined,

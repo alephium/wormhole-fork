@@ -109,7 +109,7 @@ type (
 		ethConn       Connector
 		unsafeDevMode bool
 
-		pollIntervalMs uint
+		pollIntervalMs *uint
 	}
 
 	pendingKey struct {
@@ -135,7 +135,8 @@ func NewEthWatcher(
 	setEvents chan *common.GuardianSet,
 	obsvReqC chan *gossipv1.ObservationRequest,
 	unsafeDevMode bool,
-	pollIntervalMs uint,
+	pollIntervalMs *uint,
+	waitForConfirmations bool,
 ) *Watcher {
 
 	return &Watcher{
@@ -143,7 +144,7 @@ func NewEthWatcher(
 		contract:             contract,
 		networkName:          networkName,
 		readiness:            readiness,
-		waitForConfirmations: false,
+		waitForConfirmations: waitForConfirmations,
 		maxWaitConfirmations: 60,
 		chainID:              chainID,
 		msgChan:              messageEvents,
@@ -178,7 +179,10 @@ func (w *Watcher) Run(ctx context.Context) error {
 			p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
 			return fmt.Errorf("dialing eth client failed: %w", err)
 		}
-		w.ethConn, err = NewBlockPollConnector(ctx, baseConnector, time.Duration(w.pollIntervalMs)*time.Millisecond, true)
+		if w.pollIntervalMs == nil {
+			return fmt.Errorf("invalid poll interval setting")
+		}
+		w.ethConn, err = NewBlockPollConnector(ctx, baseConnector, time.Duration(*w.pollIntervalMs)*time.Millisecond, true)
 		if err != nil {
 			ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
 			p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)

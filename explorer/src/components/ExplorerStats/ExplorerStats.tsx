@@ -8,6 +8,7 @@ import ChainOverviewCard from "./ChainOverviewCard";
 import PastWeekCard from "./PastWeekCard";
 
 import ethereumIcon from "../../images/eth.svg";
+import binanceChainIcon from "../../images/bsc.svg";
 import alephiumIcon from "../../images/alephium.svg"
 import GridWithCards from "../GridWithCards";
 import { explorer } from "../../utils/urls";
@@ -400,6 +401,20 @@ const ExplorerStats: React.FC<StatsProps> = ({
                     notionalTransferredTo={notionalTransferredTo}
                     notionalTransferred={notionalTransferred}
                     dataKey="2"
+                  />
+                ),
+                imgStyle: { height: 110 },
+              },
+              {
+                header: ChainID[4],
+                src: binanceChainIcon,
+                to: `${explorer}?emitterChain=4`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="4"
                   />
                 ),
                 imgStyle: { height: 110 },

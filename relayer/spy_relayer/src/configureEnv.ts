@@ -1,9 +1,5 @@
-import { NodeProvider, web3 } from "@alephium/web3";
-import {
-  ChainId,
-  CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ETH
-} from "alephium-wormhole-sdk";
+import { networkIds, NetworkId, NodeProvider, web3 } from "@alephium/web3";
+import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from "alephium-wormhole-sdk";
 import { getLogger } from "./helpers/logHelper";
 import * as alephiumDevnetConfig from '../../../configs/alephium/devnet.json'
 import * as alephiumTestnetConfig from '../../../configs/alephium/testnet.json'
@@ -11,6 +7,9 @@ import * as alephiumMainnetConfig from '../../../configs/alephium/mainnet.json'
 import * as ethereumDevnetConfig from '../../../configs/ethereum/devnet.json'
 import * as ethereumTestnetConfig from '../../../configs/ethereum/testnet.json'
 import * as ethereumMainnetConfig from '../../../configs/ethereum/mainnet.json'
+import * as bscDevnetConfig from '../../../configs/bsc/devnet.json'
+import * as bscTestnetConfig from '../../../configs/bsc/testnet.json'
+import * as bscMainnetConfig from '../../../configs/bsc/mainnet.json'
 
 export type SupportedToken = {
   chainId: ChainId;
@@ -31,9 +30,8 @@ function validateNetwork() {
   if (process.env.NETWORK === undefined) {
     throw new Error(`Missing NETWORK in config`)
   }
-  const networks = ['devnet', 'testnet', 'mainnet']
-  if (!networks.includes(process.env.NETWORK)) {
-    throw new Error(`Network has to be one of ${networks}`)
+  if (networkIds.find((n) => n === process.env.NETWORK) === undefined) {
+    throw new Error(`Network has to be one of ${networkIds}`)
   }
 }
 
@@ -121,7 +119,7 @@ export interface ChainConfigInfo {
   walletAddresses?: string[]
 }
 
-export interface EthereumChainConfigInfo extends ChainConfigInfo {
+export interface EvmChainConfigInfo extends ChainConfigInfo {
   chainName: string
   coreBridgeAddress: string
   wrappedNativeAsset: string
@@ -228,23 +226,55 @@ const createListenerEnvironment: () => ListenerEnvironment = () => {
   };
 };
 
-function getTokenBridgeAddress(chainId: ChainId): string {
-  switch (chainId) {
-    case CHAIN_ID_ALEPHIUM:
-      return process.env.NETWORK === 'devnet'
-        ? alephiumDevnetConfig.contracts.tokenBridge
-        : process.env.NETWORK === 'testnet'
-        ? alephiumTestnetConfig.contracts.tokenBridge
-        : alephiumMainnetConfig.contracts.tokenBridge
-    case CHAIN_ID_ETH:
-      return process.env.NETWORK === 'devnet'
-        ? ethereumDevnetConfig.contracts.tokenBridge
-        : process.env.NETWORK === 'testnet'
-        ? ethereumTestnetConfig.contracts.tokenBridge
-        : ethereumMainnetConfig.contracts.tokenBridge
-    default:
-      throw new Error(`Invalid chain: ${chainId}`)
+interface ChainContracts {
+  groupIndex?: number
+  contracts: {
+    governance: string
+    tokenBridge: string
+    wrappedNative?: string
+  },
+  bridgeTokens: string[]
+}
+
+const allChains: Map<ChainId, { [key in NetworkId]: ChainContracts }> = new Map([
+  [CHAIN_ID_ALEPHIUM, {
+    devnet: alephiumDevnetConfig,
+    testnet: alephiumTestnetConfig,
+    mainnet: alephiumMainnetConfig,
+  }],
+  [CHAIN_ID_ETH, {
+    devnet: ethereumDevnetConfig,
+    testnet: ethereumTestnetConfig,
+    mainnet: ethereumMainnetConfig,
+  }],
+  [CHAIN_ID_BSC, {
+    devnet: bscDevnetConfig,
+    testnet: bscTestnetConfig,
+    mainnet: bscMainnetConfig,
+  }]
+])
+
+function getChainContractsByChainId(chainId: ChainId): ChainContracts {
+  const chain = allChains.get(chainId)
+  if (chain === undefined) {
+    throw new Error(`Invalid chain id: ${chainId}`)
   }
+  return chain[process.env.NETWORK as NetworkId]
+}
+
+function getTokenBridgeAddress(chainId: ChainId): string {
+  const chainConfig = getChainContractsByChainId(chainId)
+  return chainConfig.contracts.tokenBridge
+}
+
+function getBridgeTokens(chainId: ChainId, minimalFee: bigint = 0n): SupportedToken[] {
+  const chainConfig = getChainContractsByChainId(chainId)
+  return chainConfig.bridgeTokens.map((token) => ({ chainId: chainId, address: token, minimalFee: minimalFee }))
+}
+
+function getChainContracts(chainId: ChainId) {
+  const chainConfig = getChainContractsByChainId(chainId)
+  return chainConfig.contracts
 }
 
 let relayerEnv: RelayerEnvironment | undefined = undefined;
@@ -356,30 +386,12 @@ export function loadSupportedTokens(): SupportedToken[] {
     })
   }
 
-  const [alphBridgeTokens, ethBridgeTokens]: [string[], string[]] = process.env.NETWORK === 'devnet'
-    ? [alephiumDevnetConfig.bridgeTokens, ethereumDevnetConfig.bridgeTokens]
-    : process.env.NETWORK === 'testnet'
-    ? [alephiumTestnetConfig.bridgeTokens, ethereumTestnetConfig.bridgeTokens]
-    : [alephiumMainnetConfig.bridgeTokens, ethereumMainnetConfig.bridgeTokens]
-  
-  const alphTokens = alphBridgeTokens.map(token => {
-    return {
-      chainId: CHAIN_ID_ALEPHIUM,
-      address: token,
-      minimalFee: 0n
-    }
-  })
-  const ethTokens = ethBridgeTokens.map(token => {
-    return {
-      chainId: CHAIN_ID_ETH,
-      address: token,
-      minimalFee: 0n
-    }
-  })
-  return Array.prototype.concat(alphTokens, ethTokens)
+  const alphTokens = getBridgeTokens(CHAIN_ID_ALEPHIUM)
+  const ethTokens = getBridgeTokens(CHAIN_ID_ETH)
+  const bscTokens = getBridgeTokens(CHAIN_ID_BSC)
+  return Array.prototype.concat(alphTokens, ethTokens, bscTokens)
 }
 
-//Polygon is not supported on local Tilt network atm.
 export function loadChainConfig(field: string, isRelayer: boolean): ChainConfigInfo[] {
   const chains = process.env[`${field}`]
   if (chains === undefined) {
@@ -395,32 +407,32 @@ export function loadChainConfig(field: string, isRelayer: boolean): ChainConfigI
 
   unformattedChains.forEach((element: any) => {
     if (!element.chainId) {
-      throw new Error("Invalid chain config: " + element);
+      throw new Error(`Chain id is not specified in the config: ${element}`);
     }
 
-    if (element.chainId === CHAIN_ID_ALEPHIUM) {
-      supportedChains.push(createAlephiumChainConfig(element, isRelayer))
-    } else if (element.chainId === CHAIN_ID_ETH) {
-      supportedChains.push(createEvmChainConfig(element, isRelayer))
-    } else {
-      throw new Error(`Invalid chain id: ${element.chainId}`)
+    switch (element.chainId) {
+      case CHAIN_ID_ALEPHIUM:
+        supportedChains.push(createAlephiumChainConfig(element, isRelayer))
+        break
+      case CHAIN_ID_ETH:
+      case CHAIN_ID_BSC:
+        const contracts = getChainContracts(element.chainId)
+        supportedChains.push(createEvmChainConfig(element, isRelayer, contracts))
+        break
+      default:
+        throw new Error(`Invalid chain id: ${element.chainId}`)
     }
   });
 
   return supportedChains;
 }
 
-function createEvmChainConfig(config: any, isRelayer: boolean): EthereumChainConfigInfo {
+function createEvmChainConfig(config: any, isRelayer: boolean, contracts: any): EvmChainConfigInfo {
   const chainConfig = createChainConfig(config, isRelayer)
   const chainName = (config.chainName ?? invalidConfigField('chainName')) as string
-  const ethereumConfig = process.env.NETWORK === 'devnet'
-    ? ethereumDevnetConfig
-    : process.env.NETWORK === 'testnet'
-    ? ethereumTestnetConfig
-    : ethereumMainnetConfig
-  const tokenBridgeAddress = ethereumConfig.contracts.tokenBridge
-  const wrappedNativeAsset = ethereumConfig.contracts.weth
-  const coreBridgeAddress = ethereumConfig.contracts.governance
+  const tokenBridgeAddress = contracts.tokenBridge
+  const wrappedNativeAsset = contracts.wrappedNative
+  const coreBridgeAddress = contracts.governance
   return {
     ...chainConfig,
     tokenBridgeAddress,
@@ -432,11 +444,10 @@ function createEvmChainConfig(config: any, isRelayer: boolean): EthereumChainCon
 
 function createAlephiumChainConfig(config: any, isRelayer: boolean): AlephiumChainConfigInfo {
   const chainConfig = createChainConfig(config, isRelayer)
-  const alephiumConfig = process.env.NETWORK === 'devnet'
-    ? alephiumDevnetConfig
-    : process.env.NETWORK === 'testnet'
-    ? alephiumTestnetConfig
-    : alephiumMainnetConfig
+  const alephiumConfig = getChainContractsByChainId(CHAIN_ID_ALEPHIUM)
+  if (alephiumConfig.groupIndex === undefined) {
+    throw new Error('No group index specified in the alephium config')
+  }
   const groupIndex = alephiumConfig.groupIndex
   const tokenBridgeAddress = alephiumConfig.contracts.tokenBridge
   return {

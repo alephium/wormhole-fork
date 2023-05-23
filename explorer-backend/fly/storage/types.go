@@ -121,7 +121,7 @@ func bytesToString(bs []byte) string {
 
 func toNativeAddress(chain vaa.ChainID, address vaa.Address) (string, error) {
 	switch chain {
-	case vaa.ChainIDEthereum:
+	case vaa.ChainIDEthereum, vaa.ChainIDBSC:
 		bytes := address[12:]
 		addr := fmt.Sprintf("0x%v", hex.EncodeToString(bytes))
 		return addr, nil

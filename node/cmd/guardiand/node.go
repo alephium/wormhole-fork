@@ -64,8 +64,7 @@ var (
 	ethRPC            *string
 	ethPollIntervalMs *uint
 
-	// bscRPC      *string
-	// bscContract *string
+	bscRPC *string
 
 	// polygonRPC      *string
 	// polygonContract *string
@@ -165,8 +164,7 @@ func init() {
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
 	ethPollIntervalMs = NodeCmd.Flags().Uint("ethPollIntervalMs", 1000, "The poll interval for ethereum watcher")
 
-	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
-	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
+	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
 
 	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
 	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
@@ -330,6 +328,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
+	readiness.RegisterComponent(common.ReadinessBSCSyncing)
 	readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 
 	if *statusAddr != "" {
@@ -364,8 +363,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	alphConfig := bridgeConfig.Alephium
 	ethConfig := bridgeConfig.Ethereum
+	bscConfig := bridgeConfig.Bsc
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
+	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
 	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
 	alphGroupIndex := alphConfig.GroupIndex
 
@@ -442,7 +443,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Infura is known to send incorrect blocks - please use your own nodes")
 	}
 
-	// bscContractAddr := eth_common.HexToAddress(*bscContract)
 	// polygonContractAddr := eth_common.HexToAddress(*polygonContract)
 	// ethRopstenContractAddr := eth_common.HexToAddress(*ethRopstenContract)
 	// avalancheContractAddr := eth_common.HexToAddress(*avalancheContract)
@@ -666,7 +666,12 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if err := supervisor.Run(ctx, "ethwatch",
-			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode, *ethPollIntervalMs).Run); err != nil {
+			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode, ethPollIntervalMs, false).Run); err != nil {
+			return err
+		}
+
+		if err := supervisor.Run(ctx, "bscwatch",
+			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, nil, true).Run); err != nil {
 			return err
 		}
 

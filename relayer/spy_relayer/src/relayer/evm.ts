@@ -8,7 +8,7 @@ import {
   hexToUint8Array
 } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
-import { EthereumChainConfigInfo } from "../configureEnv";
+import { EvmChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { CeloProvider, CeloWallet } from "@celo-tools/celo-ethers-wrapper";
@@ -29,7 +29,7 @@ export function newProvider(
 }
 
 export async function relayEVM(
-  chainConfigInfo: EthereumChainConfigInfo,
+  chainConfigInfo: EvmChainConfigInfo,
   signedVAA: string,
   unwrapNative: boolean,
   checkOnly: boolean,
