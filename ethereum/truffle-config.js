@@ -50,6 +50,7 @@ module.exports = {
     bscTestnet: {
       provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://data-seed-prebsc-1-s1.binance.org:8545'),
       network_id: "97",
+      networkCheckTimeout: 50000,
       confirmations: 10,
     },
   },
