@@ -45,13 +45,15 @@ export class AlphTxInfo {
   txId: string
   sequence: string
   targetChain: ChainId
+  confirmations: number
 
-  constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId) {
+  constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId, confirmations: number) {
     this.blockHash = blockHash
     this.blockHeight = blockHeight
     this.txId = txId
     this.sequence = sequence
     this.targetChain = targetChain
+    this.confirmations = confirmations
   }
 }
 
@@ -64,8 +66,8 @@ export async function waitTxConfirmed(provider: NodeProvider, txId: string): Pro
   return waitTxConfirmed(provider, txId)
 }
 
-async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string): Promise<AlphTxInfo> {
-  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(blockHash)
+async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.Confirmed): Promise<AlphTxInfo> {
+  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
   const events = await provider.events.getEventsTxIdTxid(txId, { group: blockHeader.chainFrom })
   const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
   if (typeof event === 'undefined') {
@@ -84,18 +86,18 @@ async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string
   }
   const sequence = parseSequenceFromLogAlph(event)
   const targetChain = parseTargetChainFromLogAlph(event)
-  return new AlphTxInfo(blockHash, blockHeader.height, txId, sequence, targetChain)
+  return new AlphTxInfo(confirmed.blockHash, blockHeader.height, txId, sequence, targetChain, confirmed.chainConfirmations)
 }
 
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
   const txId = await func()
   const confirmed = await waitTxConfirmed(provider, txId)
-  return getTxInfo(provider, txId, confirmed.blockHash)
+  return getTxInfo(provider, txId, confirmed)
 }
 
 export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
   const confirmed = await waitTxConfirmed(provider, txId)
-  return getTxInfo(provider, txId, confirmed.blockHash)
+  return getTxInfo(provider, txId, confirmed)
 }
 
 export function isAlphTxNotFound(txStatus: node.TxStatus): Boolean {

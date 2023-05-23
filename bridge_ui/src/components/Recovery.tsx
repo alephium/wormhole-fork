@@ -59,6 +59,7 @@ import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
 import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
+  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -85,6 +86,7 @@ import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
 import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
+import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -158,6 +160,10 @@ async function evm(
 ) {
   try {
     const receipt = await provider.getTransactionReceipt(tx);
+    const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
+    if (!isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
+      throw new Error('the transaction is awaiting confirmation')
+    }
     const sequence = parseSequenceFromLogEth(
       receipt,
       getBridgeAddressForChain(chainId)
@@ -247,6 +253,9 @@ async function terra(tx: string, enqueueSnackbar: any) {
 async function alephium(provider: NodeProvider, txId: string, enqueueSnackbar: any) {
   try {
     const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
+      throw new Error('the transaction is awaiting confirmation')
+    }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,

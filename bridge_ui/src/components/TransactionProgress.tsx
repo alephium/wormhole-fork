@@ -21,6 +21,7 @@ import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import SmartBlock from "./SmartBlock";
+import { DefaultEVMChainConfirmations, getEVMCurrentBlockNumber } from "../utils/ethereum";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -53,10 +54,7 @@ export default function TransactionProgress({
         while (!cancelled) {
           await new Promise((resolve) => setTimeout(resolve, 500));
           try {
-            const newBlock =
-              chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet'
-                ? (await provider.getBlock("finalized")).number
-                : await provider.getBlockNumber();
+            const newBlock = await getEVMCurrentBlockNumber(provider, chainId)
             if (!cancelled) {
               setCurrentBlock(newBlock);
             }
@@ -146,7 +144,7 @@ export default function TransactionProgress({
         : chainId === CHAIN_ID_SOLANA
         ? 32
         : isEVMChain(chainId)
-        ? 15
+        ? DefaultEVMChainConfirmations
         : chainId === CHAIN_ID_ALEPHIUM
         ? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
         : 1;

@@ -1,10 +1,13 @@
-import { ethers_contracts } from "alephium-wormhole-sdk";
+import { ChainId, CHAIN_ID_ETH, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {
   createNFTParsedTokenAccount,
   createParsedTokenAccount,
 } from "../hooks/useGetSourceParsedTokenAccounts";
+import { CLUSTER } from "./consts";
+
+export const DefaultEVMChainConfirmations = 15
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
 export async function getEthereumToken(
@@ -80,4 +83,24 @@ export async function ethNFTToNFTParsedTokenAccount(
 
 export function isValidEthereumAddress(address: string) {
   return ethers.utils.isAddress(address);
+}
+
+function checkEVMChainId(chainId: ChainId) {
+  if (!isEVMChain(chainId)) {
+    throw new Error(`invalid chain id ${chainId}, expected an evm chain`)
+  }
+}
+
+export async function getEVMCurrentBlockNumber(provider: ethers.providers.Web3Provider, chainId: ChainId): Promise<number> {
+  checkEVMChainId(chainId)
+  return chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet'
+    ? (await provider.getBlock("finalized")).number
+    : await provider.getBlockNumber()
+}
+
+export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock: number): boolean {
+  checkEVMChainId(chainId)
+  return chainId === CHAIN_ID_ETH
+    ? currentBlock > txBlock
+    : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
 }
