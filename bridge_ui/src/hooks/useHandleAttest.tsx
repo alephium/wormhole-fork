@@ -1,7 +1,6 @@
 import {
   attestFromAlph,
   attestFromAlgorand,
-  attestFromEth,
   attestFromSolana,
   attestFromTerra,
   ChainId,
@@ -41,6 +40,7 @@ import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
   setAttestTx,
   setIsSending,
+  setIsWalletApproved,
   setSignedVAAHex,
 } from "../store/attestSlice";
 import {
@@ -72,6 +72,7 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import { useAlephiumWallet, AlephiumWallet } from "./useAlephiumWallet";
+import { attestFromEthWithoutWait } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -143,12 +144,14 @@ async function evm(
       chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = await attestFromEth(
+    const result = await attestFromEthWithoutWait(
       getTokenBridgeAddressForChain(chainId),
       signer,
       sourceAsset,
       overrides
     );
+    dispatch(setIsWalletApproved(true))
+    const receipt = await result.wait()
     dispatch(
       setAttestTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
@@ -304,22 +307,19 @@ async function alephium(
       throw new Error(`Invalid local token: ${localTokenId}`)
     }
     const tokenInfo = await getAndCheckLocalTokenInfo(wallet.nodeProvider, localTokenId)
-    const txInfo = await waitTxConfirmedAndGetTxInfo(
-      wallet.nodeProvider, async () => {
-        const result = await attestFromAlph(
-          wallet.signer,
-          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-          localTokenId,
-          tokenInfo.decimals,
-          tokenInfo.symbol,
-          tokenInfo.name,
-          wallet.address,
-          ALEPHIUM_MESSAGE_FEE,
-          ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-        )
-        return result.txId;
-      }
-    );
+    const result = await attestFromAlph(
+      wallet.signer,
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      localTokenId,
+      tokenInfo.decimals,
+      tokenInfo.symbol,
+      tokenInfo.name,
+      wallet.address,
+      ALEPHIUM_MESSAGE_FEE,
+      ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    )
+    dispatch(setIsWalletApproved(true))
+    const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId);
     dispatch(setAttestTx({ id: txInfo.txId, block: txInfo.blockHeight }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,

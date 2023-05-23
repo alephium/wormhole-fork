@@ -89,8 +89,7 @@ async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.C
   return new AlphTxInfo(confirmed.blockHash, blockHeader.height, txId, sequence, targetChain, confirmed.chainConfirmations)
 }
 
-export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
-  const txId = await func()
+export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
   const confirmed = await waitTxConfirmed(provider, txId)
   return getTxInfo(provider, txId, confirmed)
 }

@@ -55,6 +55,7 @@ export interface TransferState {
   recoverySourceTxId: string | undefined;
   signedVAAHex: string | undefined;
   isSending: boolean;
+  isWalletApproved: boolean;
   isRedeeming: boolean;
   redeemTx: Transaction | undefined;
   isApproving: boolean;
@@ -83,6 +84,7 @@ const initialState: TransferState = {
   recoverySourceTxId: undefined,
   signedVAAHex: undefined,
   isSending: false,
+  isWalletApproved: false,
   isRedeeming: false,
   redeemTx: undefined,
   isApproving: false,
@@ -224,6 +226,9 @@ export const transferSlice = createSlice({
     setIsSending: (state, action: PayloadAction<boolean>) => {
       state.isSending = action.payload;
     },
+    setIsWalletApproved: (state, action: PayloadAction<boolean>) => {
+      state.isWalletApproved = action.payload
+    },
     setIsRedeeming: (state, action: PayloadAction<boolean>) => {
       state.isRedeeming = action.payload;
     },
@@ -332,6 +337,7 @@ export const {
   setRecoverySourceTxId,
   setSignedVAAHex,
   setIsSending,
+  setIsWalletApproved,
   setIsRedeeming,
   setRedeemTx,
   setIsApproving,

@@ -18,6 +18,7 @@ export interface AttestState {
   attestTx: Transaction | undefined;
   signedVAAHex: string | undefined;
   isSending: boolean;
+  isWalletApproved: boolean
   isCreating: boolean;
   createTx: Transaction | undefined;
 }
@@ -30,6 +31,7 @@ const initialState: AttestState = {
   attestTx: undefined,
   signedVAAHex: undefined,
   isSending: false,
+  isWalletApproved: false,
   isCreating: false,
   createTx: undefined,
 };
@@ -78,6 +80,9 @@ export const attestSlice = createSlice({
     setIsSending: (state, action: PayloadAction<boolean>) => {
       state.isSending = action.payload;
     },
+    setIsWalletApproved: (state, action: PayloadAction<boolean>) => {
+      state.isWalletApproved = action.payload
+    },
     setIsCreating: (state, action: PayloadAction<boolean>) => {
       state.isCreating = action.payload;
     },
@@ -103,6 +108,7 @@ export const {
   setAttestTx,
   setSignedVAAHex,
   setIsSending,
+  setIsWalletApproved,
   setIsCreating,
   setCreateTx,
   reset,

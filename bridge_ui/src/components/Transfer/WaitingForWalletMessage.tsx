@@ -5,6 +5,7 @@ import {
   selectTransferIsApproving,
   selectTransferIsRedeeming,
   selectTransferIsSending,
+  selectTransferIsWalletApproved,
   selectTransferRedeemTx,
   selectTransferTargetChain,
   selectTransferTransferTx,
@@ -18,13 +19,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const WAITING_FOR_WALLET_AND_CONF =
-  "Waiting for wallet approval (likely in a popup) and confirmation...";
+export const WAITING_FOR_WALLET_APPROVAL =
+  'Waiting for wallet approval...'
+
+export const WAITING_FOR_TX_CONFIRMATION =
+  'Waiting for transaction confirmation...'
 
 export default function WaitingForWalletMessage() {
   const classes = useStyles();
   const isApproving = useSelector(selectTransferIsApproving);
   const isSending = useSelector(selectTransferIsSending);
+  const isWalletApproved = useSelector(selectTransferIsWalletApproved)
   const transferTx = useSelector(selectTransferTransferTx);
   const targetChain = useSelector(selectTransferTargetChain);
   const isRedeeming = useSelector(selectTransferIsRedeeming);
@@ -33,7 +38,7 @@ export default function WaitingForWalletMessage() {
     isApproving || (isSending && !transferTx) || (isRedeeming && !redeemTx);
   return showWarning ? (
     <Typography className={classes.message} variant="body2">
-      {WAITING_FOR_WALLET_AND_CONF}{" "}
+      {isWalletApproved ? WAITING_FOR_TX_CONFIRMATION : WAITING_FOR_WALLET_APPROVAL}{" "}
       {targetChain === CHAIN_ID_SOLANA && isRedeeming
         ? "Note: there will be several transactions"
         : null}

@@ -1,4 +1,4 @@
-import { ChainId, CHAIN_ID_ETH, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, ChainName, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {
@@ -103,4 +103,61 @@ export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock
   return chainId === CHAIN_ID_ETH
     ? currentBlock > txBlock
     : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
+}
+
+// TODO: remove these functions to SDK
+export async function transferFromEthWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  tokenAddress: string,
+  amount: ethers.BigNumberish,
+  recipientChain: ChainId | ChainName,
+  recipientAddress: Uint8Array,
+  relayerFee: ethers.BigNumberish = 0,
+  overrides: ethers.PayableOverrides & { from?: string | Promise<string> } = {}
+) {
+  const recipientChainId = coalesceChainId(recipientChain);
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.transferTokens(
+    tokenAddress,
+    amount,
+    recipientChainId,
+    recipientAddress,
+    relayerFee,
+    createNonce(),
+    overrides
+  );
+}
+
+export async function transferFromEthNativeWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  amount: ethers.BigNumberish,
+  recipientChain: ChainId | ChainId,
+  recipientAddress: Uint8Array,
+  relayerFee: ethers.BigNumberish = 0,
+  overrides: ethers.PayableOverrides & { from?: string | Promise<string> } = {}
+) {
+  const recipientChainId = coalesceChainId(recipientChain);
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.wrapAndTransferETH(
+    recipientChainId,
+    recipientAddress,
+    relayerFee,
+    createNonce(),
+    {
+      ...overrides,
+      value: amount,
+    }
+  );
+}
+
+export async function attestFromEthWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  tokenAddress: string,
+  overrides: ethers.PayableOverrides & { from?: string | Promise<string> } = {}
+) {
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.attestToken(tokenAddress, createNonce(), overrides);
 }
