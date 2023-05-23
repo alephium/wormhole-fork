@@ -71,6 +71,11 @@ export const CHAINS: ChainInfo[] =
           name: "Binance Smart Chain",
           logo: bscIcon,
         },
+        {
+          id: CHAIN_ID_ETH,
+          name: "Ethereum",
+          logo: ethIcon
+        },
         alephiumChainInfo
       ]
     : CLUSTER === "testnet"
@@ -79,6 +84,11 @@ export const CHAINS: ChainInfo[] =
           id: CHAIN_ID_BSC,
           name: "Binance Smart Chain",
           logo: bscIcon,
+        },
+        {
+          id: CHAIN_ID_ETH,
+          name: "Ethereum (Goerli)",
+          logo: ethIcon,
         },
         alephiumChainInfo
       ]
@@ -283,6 +293,13 @@ export const TERRA_HOST =
         chainID: "columbus-5",
         name: "localterra",
       };
+
+export const EXPLORER_API_SERVER_HOST =
+  CLUSTER === 'mainnet'
+    ? ''
+    : CLUSTER === 'testnet'
+    ? 'https://indexer-api.explorer.wormhole-testnet.alephium.org'
+    : 'http://localhost:8100'
 
 export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
@@ -816,6 +833,9 @@ export const COVALENT_GET_TOKENS_URL = (
   nft?: boolean,
   noNftMetadata?: boolean
 ) => {
+  if (COVALENT_API_KEY === '') {
+    return ''
+  }
   const chainNum =
     chainId === CHAIN_ID_ETH || chainId === CHAIN_ID_ETHEREUM_ROPSTEN
       ? COVALENT_ETHEREUM
@@ -839,47 +859,6 @@ export const COVALENT_GET_TOKENS_URL = (
     ? `https://api.covalenthq.com/v1/${chainNum}/address/${walletAddress}/balances_v2/?key=${COVALENT_API_KEY}${
         nft ? "&nft=true" : ""
       }${noNftMetadata ? "&no-nft-fetch=true" : ""}`
-    : "";
-};
-
-export const BLOCKSCOUT_GET_TOKENS_URL = (
-  chainId: ChainId,
-  walletAddress: string
-) => {
-  const baseUrl =
-    chainId === CHAIN_ID_OASIS
-      ? CLUSTER === "mainnet"
-        ? "https://explorer.emerald.oasis.dev"
-        : CLUSTER === "testnet"
-        ? "https://testnet.explorer.emerald.oasis.dev"
-        : ""
-      : chainId === CHAIN_ID_AURORA
-      ? CLUSTER === "mainnet"
-        ? "https://explorer.mainnet.aurora.dev"
-        : CLUSTER === "testnet"
-        ? "https://explorer.testnet.aurora.dev"
-        : ""
-      : chainId === CHAIN_ID_ACALA
-      ? CLUSTER === "mainnet"
-        ? "https://blockscout.acala.network"
-        : CLUSTER === "testnet"
-        ? "https://blockscout.acala-dev.aca-dev.network"
-        : ""
-      : chainId === CHAIN_ID_KARURA
-      ? CLUSTER === "mainnet"
-        ? "https://blockscout.karura.network"
-        : CLUSTER === "testnet"
-        ? "https://blockscout.karura-dev.aca-dev.network"
-        : ""
-      : chainId === CHAIN_ID_CELO
-      ? CLUSTER === "mainnet"
-        ? "https://explorer.celo.org"
-        : CLUSTER === "testnet"
-        ? "https://alfajores-blockscout.celo-testnet.org"
-        : ""
-      : "";
-  return baseUrl
-    ? `${baseUrl}/api?module=account&action=tokenlist&address=${walletAddress}`
     : "";
 };
 

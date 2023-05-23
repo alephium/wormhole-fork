@@ -60,7 +60,7 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
-import { getEmitterChainId, waitTxConfirmed } from "../utils/alephium";
+import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { TransactionDB } from "../utils/db";
 import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
@@ -248,7 +248,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
-    const confirmedTx = await waitTxConfirmed(wallet.nodeProvider, result.txId)
+    const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,

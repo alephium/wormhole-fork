@@ -126,6 +126,7 @@ export const TokenSelector = (props: TokenSelectorProps) => {
       resetAccounts={maps?.resetAccounts}
       tokens={maps?.tokens}
       isFetching={maps?.isFetching || false}
+      balances={maps?.balances || new Map<string, bigint>()}
     />
   ) : lookupChain === CHAIN_ID_ALGORAND ? (
     <AlgoTokenPicker

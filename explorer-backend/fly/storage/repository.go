@@ -420,6 +420,9 @@ func extractSequenceFromCursor(ctx context.Context, cursor *mongo.Cursor) (*uint
 }
 
 func (s *Repository) removeMissingIds(ctx context.Context, emitterId *emitterId, seqs []uint64) error {
+	if len(seqs) == 0 {
+		return nil
+	}
 	vaaIds := make([]string, len(seqs))
 	for i, seq := range seqs {
 		vaaIds[i] = emitterId.toVaaId(seq)

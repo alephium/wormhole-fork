@@ -25,6 +25,8 @@ export const selectAttestSignedVAAHex = (state: RootState) =>
   state.attest.signedVAAHex;
 export const selectAttestIsSending = (state: RootState) =>
   state.attest.isSending;
+export const selectAttestIsWalletApproved = (state: RootState) =>
+  state.attest.isWalletApproved;
 export const selectAttestIsCreating = (state: RootState) =>
   state.attest.isCreating;
 export const selectAttestCreateTx = (state: RootState) => state.attest.createTx;
@@ -205,6 +207,8 @@ export const selectTransferSignedVAAHex = (state: RootState) =>
   state.transfer.signedVAAHex;
 export const selectTransferIsSending = (state: RootState) =>
   state.transfer.isSending;
+export const selectTransferIsWalletApproved = (state: RootState) =>
+  state.transfer.isWalletApproved
 export const selectTransferIsRedeeming = (state: RootState) =>
   state.transfer.isRedeeming;
 export const selectTransferRedeemTx = (state: RootState) =>

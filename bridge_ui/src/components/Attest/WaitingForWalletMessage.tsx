@@ -6,9 +6,10 @@ import {
   selectAttestCreateTx,
   selectAttestIsCreating,
   selectAttestIsSending,
+  selectAttestIsWalletApproved,
   selectAttestTargetChain,
 } from "../../store/selectors";
-import { WAITING_FOR_WALLET_AND_CONF } from "../Transfer/WaitingForWalletMessage";
+import { WAITING_FOR_TX_CONFIRMATION, WAITING_FOR_WALLET_APPROVAL } from "../Transfer/WaitingForWalletMessage";
 
 const useStyles = makeStyles((theme) => ({
   message: {
@@ -21,6 +22,7 @@ const useStyles = makeStyles((theme) => ({
 export default function WaitingForWalletMessage() {
   const classes = useStyles();
   const isSending = useSelector(selectAttestIsSending);
+  const isWalletApproved = useSelector(selectAttestIsWalletApproved)
   const attestTx = useSelector(selectAttestAttestTx);
   const targetChain = useSelector(selectAttestTargetChain);
   const isCreating = useSelector(selectAttestIsCreating);
@@ -28,7 +30,7 @@ export default function WaitingForWalletMessage() {
   const showWarning = (isSending && !attestTx) || (isCreating && !createTx);
   return showWarning ? (
     <Typography className={classes.message} variant="body2">
-      {WAITING_FOR_WALLET_AND_CONF}{" "}
+      {isWalletApproved ? WAITING_FOR_TX_CONFIRMATION : WAITING_FOR_WALLET_APPROVAL}{" "}
       {targetChain === CHAIN_ID_SOLANA && isCreating
         ? "Note: there will be several transactions"
         : null}

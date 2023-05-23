@@ -9,7 +9,7 @@
     "tokenBridge": "46a3aba5f89a9c8ca01d1bfbd73c1f66ee5f3f99c323a1eaead1ab3d9237f400",
     "nativeTokenBridge": "yShQJUGBZXgoVEAeB6g1vtTpwccgKDGpuykg3fpX6seF"
   },
-  "nodeUrl": "https://alephium-testnet.softfork.se",
+  "nodeUrl": "https://alephium-testnet.alephium.org",
   "explorerUrl": "https://backend-v113.testnet.alephium.org",
   "networkId": 1,
   "coreEmitterAddress": "e1584b0db74fef7d16d2123765e70cc0c1b779bcdbba664bbd6485794876f200",
