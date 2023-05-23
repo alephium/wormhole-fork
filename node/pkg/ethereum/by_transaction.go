@@ -15,7 +15,7 @@ var (
 	// since the node will only hand us pre-filtered events. In this case, we need to manually verify it
 	// since ParseLogMessagePublished will only verify whether it parses.
 	// keccak256("LogMessagePublished(address,uint16,uint64,uint32,bytes,uint8)")
-	logMessagePublishedTopic = eth_common.HexToHash("0xcd7b525350dfac7e06deb9b3a8f19ceb75cf6cd2914cd0b2d7bf9d9a3d9babff")
+	LogMessagePublishedTopic = eth_common.HexToHash("0xcd7b525350dfac7e06deb9b3a8f19ceb75cf6cd2914cd0b2d7bf9d9a3d9babff")
 )
 
 // MessageEventsForTransaction returns the lockup events for a given transaction.
@@ -64,7 +64,7 @@ func MessageEventsForTransaction(
 			continue
 		}
 
-		if l.Topics[0] != logMessagePublishedTopic {
+		if l.Topics[0] != LogMessagePublishedTopic {
 			continue
 		}
 

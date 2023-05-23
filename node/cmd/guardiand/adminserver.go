@@ -454,7 +454,7 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	emitterAddress := vaa.Address{}
 	copy(emitterAddress[:], b)
 
-	ids, first, last, err := s.db.FindEmitterSequenceGap(db.VAAID{
+	ids, first, last, err := s.db.FindEmitterSequenceGap(vaa.VAAID{
 		EmitterChain:   vaa.ChainID(req.EmitterChain),
 		EmitterAddress: emitterAddress,
 		TargetChain:    vaa.ChainID(req.TargetChain),

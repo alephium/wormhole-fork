@@ -69,6 +69,21 @@ func (c *Client) GetCurrentHeight(ctx context.Context, chainIndex *ChainIndex) (
 	return &response.CurrentHeight, nil
 }
 
+func (c *Client) GetBlockHashByHeight(ctx context.Context, chainIndex *ChainIndex, height uint32) (*string, error) {
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
+	defer cancel()
+
+	request := c.impl.BlockflowApi.GetBlockflowHashes(timeoutCtx).FromGroup(chainIndex.FromGroup).ToGroup(chainIndex.ToGroup).Height(int32(height))
+	response, _, err := requestWithMetric[*sdk.HashesAtHeight](request, timestamp, "get_block_hash_by_height")
+	if err != nil {
+		return nil, err
+	}
+	if len(response.Headers) == 0 {
+		return nil, fmt.Errorf("no block at height %v", height)
+	}
+	return &response.Headers[0], nil
+}
+
 func (c *Client) GetBlockHeader(ctx context.Context, hash string) (*sdk.BlockHeaderEntry, error) {
 	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()

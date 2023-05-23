@@ -14,52 +14,8 @@ type Database struct {
 	db *badger.DB
 }
 
-type VAAID struct {
-	EmitterChain   vaa.ChainID
-	EmitterAddress vaa.Address
-	TargetChain    vaa.ChainID
-	Sequence       uint64
-}
-
-// VaaIDFromString parses a <emitter_chain>/<address>/<target_chain>/<sequence> string into a VAAID.
-func VaaIDFromString(s string) (*VAAID, error) {
-	parts := strings.Split(s, "/")
-	if len(parts) != 4 {
-		return nil, errors.New("invalid message id")
-	}
-
-	emitterChain, err := strconv.ParseUint(parts[0], 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("invalid emitter chain: %s", err)
-	}
-
-	emitterAddress, err := vaa.StringToAddress(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid emitter address: %s", err)
-	}
-
-	targetChain, err := strconv.ParseUint(parts[2], 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("invalid target chain: %s", err)
-	}
-
-	sequence, err := strconv.ParseUint(parts[3], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid sequence: %s", err)
-	}
-
-	msgId := &VAAID{
-		EmitterChain:   vaa.ChainID(emitterChain),
-		EmitterAddress: emitterAddress,
-		TargetChain:    vaa.ChainID(targetChain),
-		Sequence:       sequence,
-	}
-
-	return msgId, nil
-}
-
-func VaaIDFromVAA(v *vaa.VAA) *VAAID {
-	return &VAAID{
+func VaaIDFromVAA(v *vaa.VAA) *vaa.VAAID {
+	return &vaa.VAAID{
 		EmitterChain:   v.EmitterChain,
 		EmitterAddress: v.EmitterAddress,
 		TargetChain:    v.TargetChain,
@@ -70,18 +26,6 @@ func VaaIDFromVAA(v *vaa.VAA) *VAAID {
 var (
 	ErrVAANotFound = errors.New("requested VAA not found in store")
 )
-
-func (i *VAAID) Bytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s/%d/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain, i.Sequence))
-}
-
-func (i *VAAID) GovernanceEmitterPrefixBytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s", i.EmitterChain, i.EmitterAddress))
-}
-
-func (i *VAAID) EmitterPrefixBytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain))
-}
 
 func Open(path string) (*Database, error) {
 	db, err := badger.Open(badger.DefaultOptions(path))
@@ -133,7 +77,7 @@ type GovernanceVAA struct {
 
 func (d *Database) GetGovernanceVAABatch(governanceChainId vaa.ChainID, governanceEmitter vaa.Address, sequences []uint64) ([]*GovernanceVAA, error) {
 	vaas := make([]*GovernanceVAA, 0)
-	vaaId := &VAAID{
+	vaaId := &vaa.VAAID{
 		EmitterChain:   governanceChainId,
 		EmitterAddress: governanceEmitter,
 	}
@@ -194,7 +138,7 @@ func (d *Database) GetGovernanceVAABatch(governanceChainId vaa.ChainID, governan
 func (d *Database) NextGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
 	hasGovernanceVAA := false
 	maxSequence := uint64(0)
-	vaaId := &VAAID{
+	vaaId := &vaa.VAAID{
 		EmitterChain:   governanceChainId,
 		EmitterAddress: governanceEmitter,
 	}
@@ -233,7 +177,7 @@ func (d *Database) NextGovernanceVAASequence(governanceChainId vaa.ChainID, gove
 	return &nextSequence, nil
 }
 
-func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
+func (d *Database) GetSignedVAABytes(id vaa.VAAID) (b []byte, err error) {
 	if err := d.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id.Bytes())
 		if err != nil {
@@ -254,7 +198,7 @@ func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
 	return
 }
 
-func (d *Database) FindEmitterSequenceGap(prefix VAAID) (resp []uint64, firstSeq uint64, lastSeq uint64, err error) {
+func (d *Database) FindEmitterSequenceGap(prefix vaa.VAAID) (resp []uint64, firstSeq uint64, lastSeq uint64, err error) {
 	resp = make([]uint64, 0)
 	if err = d.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)

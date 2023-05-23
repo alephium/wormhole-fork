@@ -140,7 +140,7 @@ func (w *Watcher) getGovernanceEventsByTxId(
 			return nil, err
 		}
 
-		if msg.isAttestTokenVAA() {
+		if msg.IsAttestTokenVAA() {
 			if err = w.validateAttestToken(ctx, msg); err != nil {
 				logger.Error("re-observe: ignore invalid attest token event", zap.Error(err))
 				continue

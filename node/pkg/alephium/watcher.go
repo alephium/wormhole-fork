@@ -236,7 +236,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						errC <- err
 						return
 					}
-					if unconfirmed.msg.isAttestTokenVAA() {
+					if unconfirmed.msg.IsAttestTokenVAA() {
 						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
 							logger.Error("ignore invalid attest token event", zap.Error(err))
 							continue
