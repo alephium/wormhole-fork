@@ -156,11 +156,11 @@ async function pullEVMNativeBalance(
   let provider = newProvider(chainInfo.nodeUrl);
   if (!provider) throw new Error("bad provider");
   const weiAmount = await provider.getBalance(address);
-  const balanceInEth = ethers.utils.formatEther(weiAmount);
+  const balanceInNativeToken = ethers.utils.formatEther(weiAmount);
   const walletBalance = {
     chainId: chainInfo.chainId,
     balanceAbs: weiAmount.toString(),
-    balanceFormatted: balanceInEth.toString(),
+    balanceFormatted: balanceInNativeToken.toString(),
     currencyName: chainInfo.nativeCurrencySymbol,
     currencyAddressNative: "",
     isNative: true,

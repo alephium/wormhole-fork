@@ -77,7 +77,7 @@ async function getCurrentMessageFee(evmChain: EvmChainConfig): Promise<bigint> {
   return messageFee.toBigInt()
 }
 
-async function transferFromEvmChainToALph(evmChain: EvmChainConfig, amount: bigint = ONE_ALPH) {
+async function transferFromEvmChainToAlph(evmChain: EvmChainConfig, amount: bigint = ONE_ALPH) {
   const currentMessageFee = await getCurrentMessageFee(evmChain)
   const evmTxOptions = {
     gasLimit: 5000000,
@@ -157,7 +157,7 @@ describe('Alephium to Ethereum', () => {
 describe('Ethereum to Alephium', () => {
   test('Send Ethereum ERC-20 to Alephium', async () => {
     try {
-      const receipt = await transferFromEvmChainToALph(ETH_CHAIN)
+      const receipt = await transferFromEvmChainToAlph(ETH_CHAIN)
       // get the sequence from the logs (needed to fetch the vaa)
       sequence = parseSequenceFromLogEth(receipt, ETH_CHAIN.coreBridgeAddress)
       console.log(`Transfer token sequence: ${sequence}`)
@@ -263,7 +263,7 @@ describe('Alephium to BSC', () => {
 describe('BSC to Alephium', () => {
   test('Send BSC test token to Alephium', async () => {
     try {
-      const receipt = await transferFromEvmChainToALph(BSC_CHAIN)
+      const receipt = await transferFromEvmChainToAlph(BSC_CHAIN)
       // get the sequence from the logs (needed to fetch the vaa)
       sequence = parseSequenceFromLogEth(receipt, BSC_CHAIN.coreBridgeAddress)
       console.log(`Transfer token sequence: ${sequence}`)

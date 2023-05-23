@@ -51,7 +51,7 @@ const MAINNET = {
   },
   bsc: {
     rpc: "https://bsc-dataseed.binance.org/",
-    key: get_env_var("ETH_KEY"),
+    key: get_env_var("BSC_KEY"),
     tokenBridgeAddress: bscMainnetConfig.contracts.tokenBridge,
     governanceAddress: bscMainnetConfig.contracts.governance
   },
@@ -142,7 +142,7 @@ const TESTNET = {
   },
   bsc: {
     rpc: "https://data-seed-prebsc-1-s1.binance.org:8545",
-    key: get_env_var("ETH_KEY"),
+    key: get_env_var("BSC_KEY"),
     tokenBridgeAddress: bscTestnetConfig.contracts.tokenBridge,
     governanceAddress: bscTestnetConfig.contracts.governance
   },
