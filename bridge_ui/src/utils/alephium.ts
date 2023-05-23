@@ -33,7 +33,8 @@ import {
   SignerProvider,
   isBase58,
   binToHex,
-  contractIdFromAddress
+  contractIdFromAddress,
+  sleep
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -57,13 +58,13 @@ export class AlphTxInfo {
   }
 }
 
-export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
+export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, confirmations: number): Promise<node.Confirmed> {
   const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
-  if (isAlphTxConfirmed(txStatus)) {
+  if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= confirmations) {
     return txStatus as node.Confirmed
   }
-  await new Promise(r => setTimeout(r, 10000))
-  return waitTxConfirmed(provider, txId)
+  await sleep(10000)
+  return waitALPHTxConfirmed(provider, txId, confirmations)
 }
 
 async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.Confirmed): Promise<AlphTxInfo> {
@@ -90,12 +91,12 @@ async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.C
 }
 
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
-  const confirmed = await waitTxConfirmed(provider, txId)
+  const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
   return getTxInfo(provider, txId, confirmed)
 }
 
 export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
-  const confirmed = await waitTxConfirmed(provider, txId)
+  const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
   return getTxInfo(provider, txId, confirmed)
 }
 

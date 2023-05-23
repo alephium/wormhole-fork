@@ -1,3 +1,4 @@
+import { sleep } from "@alephium/web3";
 import { ChainId, ChainName, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
@@ -91,7 +92,7 @@ function checkEVMChainId(chainId: ChainId) {
   }
 }
 
-export async function getEVMCurrentBlockNumber(provider: ethers.providers.Web3Provider, chainId: ChainId): Promise<number> {
+export async function getEVMCurrentBlockNumber(provider: ethers.providers.Provider, chainId: ChainId): Promise<number> {
   checkEVMChainId(chainId)
   return chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet'
     ? (await provider.getBlock("finalized")).number
@@ -103,6 +104,20 @@ export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock
   return chainId === CHAIN_ID_ETH
     ? currentBlock > txBlock
     : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
+}
+
+export async function waitEVMTxConfirmed(provider: ethers.providers.Provider, receipt: ethers.providers.TransactionReceipt, chainId: ChainId) {
+  checkEVMChainId(chainId)
+  await _waitEVMTxConfirmed(provider, receipt, chainId)
+}
+
+async function _waitEVMTxConfirmed(provider: ethers.providers.Provider, receipt: ethers.providers.TransactionReceipt, chainId: ChainId) {
+  const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
+  if (isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
+    return
+  }
+  await sleep(3000)
+  await _waitEVMTxConfirmed(provider, receipt, chainId)
 }
 
 // TODO: remove these functions to SDK

@@ -82,11 +82,11 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
-import { validateAlephiumRecipientAddress, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { ExecuteScriptResult } from "@alephium/web3";
 import { Transaction, TransactionDB } from "../utils/db";
 import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
-import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait } from "../utils/ethereum";
+import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -224,6 +224,9 @@ async function evm(
     const emitterAddress = getEmitterAddressEth(
       getTokenBridgeAddressForChain(chainId)
     );
+    if (signer.provider) {
+      await waitEVMTxConfirmed(signer.provider, receipt, chainId)
+    }
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
@@ -394,6 +397,7 @@ async function alephium(
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
+    await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL)
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
