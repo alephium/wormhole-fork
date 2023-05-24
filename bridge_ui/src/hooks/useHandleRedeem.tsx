@@ -248,18 +248,21 @@ async function alephium(
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
+    console.log('redeem on alephium')
     const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
+    console.log(`the redeem tx has been submitted, txId: ${result.txId}`)
     dispatch(setIsWalletApproved(true))
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    dispatch(
+      setRedeemTx({ id: result.txId, block: blockHeader.height })
+    );
+    console.log(`the redeem tx has been confirmed, txId: ${result.txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
       wallet.group,
       signedVAA
     )
-    dispatch(
-      setRedeemTx({ id: result.txId, block: blockHeader.height })
-    );
     if (isTransferCompleted) {
       enqueueSnackbar(null, {
         content: <Alert severity="success">Transaction confirmed</Alert>,
