@@ -75,6 +75,7 @@ export const attestSlice = createSlice({
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
       state.signedVAAHex = action.payload;
       state.isSending = false;
+      state.isWalletApproved = false;
       state.activeStep = 3;
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
@@ -89,6 +90,7 @@ export const attestSlice = createSlice({
     setCreateTx: (state, action: PayloadAction<Transaction>) => {
       state.createTx = action.payload;
       state.isCreating = false;
+      state.isWalletApproved = false;
     },
     reset: (state) => ({
       ...initialState,

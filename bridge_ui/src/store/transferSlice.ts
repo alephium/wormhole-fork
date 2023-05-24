@@ -221,6 +221,7 @@ export const transferSlice = createSlice({
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
       state.signedVAAHex = action.payload;
       state.isSending = false;
+      state.isWalletApproved = false;
       state.activeStep = 3;
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
@@ -235,6 +236,7 @@ export const transferSlice = createSlice({
     setRedeemTx: (state, action: PayloadAction<Transaction>) => {
       state.redeemTx = action.payload;
       state.isRedeeming = false;
+      state.isWalletApproved = false;
     },
     setIsApproving: (state, action: PayloadAction<boolean>) => {
       state.isApproving = action.payload;

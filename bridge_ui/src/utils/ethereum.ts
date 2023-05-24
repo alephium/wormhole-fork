@@ -176,3 +176,43 @@ export async function attestFromEthWithoutWait(
   const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
   return await bridge.attestToken(tokenAddress, createNonce(), overrides);
 }
+
+export async function redeemOnEthWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  signedVAA: Uint8Array,
+  overrides: ethers.Overrides & { from?: string | Promise<string> } = {}
+) {
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.completeTransfer(signedVAA, overrides);
+}
+
+export async function redeemOnEthNativeWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  signedVAA: Uint8Array,
+  overrides: ethers.Overrides & { from?: string | Promise<string> } = {}
+) {
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
+}
+
+export async function createWrappedOnEthWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  signedVAA: Uint8Array,
+  overrides: ethers.Overrides & { from?: string | Promise<string> } = {}
+) {
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.createWrapped(signedVAA, overrides);
+}
+
+export async function updateWrappedOnEthWithoutWait(
+  tokenBridgeAddress: string,
+  signer: ethers.Signer,
+  signedVAA: Uint8Array,
+  overrides: ethers.Overrides & { from?: string | Promise<string> } = {}
+) {
+  const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
+  return await bridge.updateWrapped(signedVAA, overrides);
+}

@@ -7,8 +7,6 @@ import {
   isEVMChain,
   redeemAndUnwrapOnSolana,
   redeemOnAlgorand,
-  redeemOnEth,
-  redeemOnEthNative,
   redeemOnSolana,
   redeemOnTerra,
   redeemOnAlph,
@@ -40,7 +38,7 @@ import {
   selectTransferSourceChain,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
+import { setIsRedeeming, setIsWalletApproved, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
@@ -64,6 +62,7 @@ import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { TransactionDB } from "../utils/db";
 import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
+import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -121,19 +120,21 @@ async function evm(
       targetChainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = isNative
-      ? await redeemOnEthNative(
+    const result = isNative
+      ? await redeemOnEthNativeWithoutWait(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         )
-      : await redeemOnEth(
+      : await redeemOnEthWithoutWait(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         );
+    dispatch(setIsWalletApproved(true))
+    const receipt = await result.wait()
     dispatch(
       setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
@@ -248,6 +249,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
+    dispatch(setIsWalletApproved(true))
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
