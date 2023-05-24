@@ -34,6 +34,7 @@ import { useHandleRedeem } from "../../hooks/useHandleRedeem";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import {
   selectTransferIsRecovery,
+  selectTransferIsRedeemComplete,
   selectTransferTargetAsset,
   selectTransferTargetChain,
   selectTransferUseRelayer,
@@ -86,6 +87,7 @@ function Redeem() {
     disabled,
     showLoader,
   } = useHandleRedeem();
+  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const useRelayer = useSelector(selectTransferUseRelayer);
   const [manualRedeem, setManualRedeem] = useState(!useRelayer);
   const handleManuallyRedeemClick = useCallback(() => {
@@ -278,6 +280,7 @@ function Redeem() {
         <ButtonWithLoader
           //TODO disable when the associated token account is confirmed to not exist
           disabled={
+            isRedeemComplete ||
             !isReady ||
             disabled ||
             (isRecovery && (isTransferCompletedLoading || isTransferCompleted)) ||

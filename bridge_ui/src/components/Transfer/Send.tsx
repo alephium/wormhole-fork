@@ -54,6 +54,7 @@ function Send() {
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
   );
+  const isTransferSendCompleted = useSelector(selectTransferIsSendComplete)
   const relayerFee = useSelector(selectTransferRelayerFee);
   const sourceDecimals = sourceParsedTokenAccount?.decimals;
   const sourceIsNative = sourceParsedTokenAccount?.isNativeAsset;
@@ -111,6 +112,7 @@ function Send() {
   const approveButtonNeeded = isEVMChain(sourceChain) && !sufficientAllowance;
   const notOne = shouldApproveUnlimited || transferAmountParsed !== oneParsed;
   const isDisabled =
+    isTransferSendCompleted ||
     !isReady ||
     isWrongWallet ||
     disabled ||
