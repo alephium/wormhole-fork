@@ -216,3 +216,14 @@ export async function updateWrappedOnEthWithoutWait(
   const bridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, signer);
   return await bridge.updateWrapped(signedVAA, overrides);
 }
+
+export async function approveEthWithoutWait(
+  tokenBridgeAddress: string,
+  tokenAddress: string,
+  signer: ethers.Signer,
+  amount: ethers.BigNumberish,
+  overrides: ethers.Overrides & { from?: string | Promise<string> } = {}
+) {
+  const token = ethers_contracts.TokenImplementation__factory.connect(tokenAddress, signer);
+  return await token.approve(tokenBridgeAddress, amount, overrides)
+}
