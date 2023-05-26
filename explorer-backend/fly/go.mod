@@ -30,7 +30,7 @@ require (
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/alephium/go-sdk v0.0.0-20230414022534-1a34a488e6d6 // indirect
-	github.com/alephium/wormhole-fork/node v0.0.0-20230511022219-d4dd90e1afbc // indirect
+	github.com/alephium/wormhole-fork/node v0.0.0-20230527022850-42486ede48db // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
