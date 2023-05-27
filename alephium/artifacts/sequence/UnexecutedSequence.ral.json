@@ -1,0 +1,300 @@
+{
+  "version": "v2.3.3",
+  "name": "UnexecutedSequence",
+  "bytecode": "0302404540550102020400402ab3ce004113157b1600ce01340f7b1600ce012b17021602134100310f7b0d16023b1703a0001603380c2f0f7ba000160339a100a0000c0d362f4c021601b0010201010007b3ce004113157b1600b0",
+  "codeHash": "69f7a18c525aa6707771af5733f39e89bde6ee39ddcc8001c98fd1220c5191c9",
+  "fieldsSig": {
+    "names": [
+      "parentId",
+      "begin",
+      "sequences"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "checkSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "seq",
+        "refundAddress"
+      ],
+      "paramTypes": [
+        "U256",
+        "Address"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "destroy",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "refundAddress"
+      ],
+      "paramTypes": [
+        "Address"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    }
+  ],
+  "constants": [],
+  "enums": [
+    {
+      "name": "ErrorCodes",
+      "fields": [
+        {
+          "name": "InvalidEmitChainId",
+          "value": {
+            "type": "U256",
+            "value": "0"
+          }
+        },
+        {
+          "name": "InvalidEmitAddress",
+          "value": {
+            "type": "U256",
+            "value": "1"
+          }
+        },
+        {
+          "name": "InvalidMessageSize",
+          "value": {
+            "type": "U256",
+            "value": "2"
+          }
+        },
+        {
+          "name": "InvalidSequence",
+          "value": {
+            "type": "U256",
+            "value": "3"
+          }
+        },
+        {
+          "name": "InvalidModule",
+          "value": {
+            "type": "U256",
+            "value": "4"
+          }
+        },
+        {
+          "name": "InvalidActionId",
+          "value": {
+            "type": "U256",
+            "value": "5"
+          }
+        },
+        {
+          "name": "InvalidVersion",
+          "value": {
+            "type": "U256",
+            "value": "6"
+          }
+        },
+        {
+          "name": "InvalidGuardianSetIndex",
+          "value": {
+            "type": "U256",
+            "value": "7"
+          }
+        },
+        {
+          "name": "InvalidGuardianSetSize",
+          "value": {
+            "type": "U256",
+            "value": "8"
+          }
+        },
+        {
+          "name": "InvalidSignatureSize",
+          "value": {
+            "type": "U256",
+            "value": "9"
+          }
+        },
+        {
+          "name": "InvalidSignatureGuardianIndex",
+          "value": {
+            "type": "U256",
+            "value": "10"
+          }
+        },
+        {
+          "name": "InvalidSignature",
+          "value": {
+            "type": "U256",
+            "value": "11"
+          }
+        },
+        {
+          "name": "GuardianSetExpired",
+          "value": {
+            "type": "U256",
+            "value": "12"
+          }
+        },
+        {
+          "name": "InvalidTargetChainId",
+          "value": {
+            "type": "U256",
+            "value": "13"
+          }
+        },
+        {
+          "name": "ContractStateMismatch",
+          "value": {
+            "type": "U256",
+            "value": "14"
+          }
+        },
+        {
+          "name": "InvalidRegisterChainMessage",
+          "value": {
+            "type": "U256",
+            "value": "15"
+          }
+        },
+        {
+          "name": "InvalidTokenId",
+          "value": {
+            "type": "U256",
+            "value": "16"
+          }
+        },
+        {
+          "name": "InvalidNonceSize",
+          "value": {
+            "type": "U256",
+            "value": "17"
+          }
+        },
+        {
+          "name": "TokenNotExist",
+          "value": {
+            "type": "U256",
+            "value": "18"
+          }
+        },
+        {
+          "name": "InvalidTransferTargetChain",
+          "value": {
+            "type": "U256",
+            "value": "19"
+          }
+        },
+        {
+          "name": "InvalidDestroyUnexecutedSequenceMessage",
+          "value": {
+            "type": "U256",
+            "value": "20"
+          }
+        },
+        {
+          "name": "InvalidCaller",
+          "value": {
+            "type": "U256",
+            "value": "21"
+          }
+        },
+        {
+          "name": "ArbiterFeeLessThanAmount",
+          "value": {
+            "type": "U256",
+            "value": "22"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenMessage",
+          "value": {
+            "type": "U256",
+            "value": "23"
+          }
+        },
+        {
+          "name": "InvalidPayloadId",
+          "value": {
+            "type": "U256",
+            "value": "24"
+          }
+        },
+        {
+          "name": "InvalidTransferMessage",
+          "value": {
+            "type": "U256",
+            "value": "25"
+          }
+        },
+        {
+          "name": "ExpectRemoteToken",
+          "value": {
+            "type": "U256",
+            "value": "26"
+          }
+        },
+        {
+          "name": "InvalidConsistencyLevel",
+          "value": {
+            "type": "U256",
+            "value": "27"
+          }
+        },
+        {
+          "name": "InvalidUpdateRefundAddressMessage",
+          "value": {
+            "type": "U256",
+            "value": "28"
+          }
+        },
+        {
+          "name": "TransferAmountLessThanMessageFee",
+          "value": {
+            "type": "U256",
+            "value": "29"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenArg",
+          "value": {
+            "type": "U256",
+            "value": "30"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenHandler",
+          "value": {
+            "type": "U256",
+            "value": "31"
+          }
+        },
+        {
+          "name": "NotSupported",
+          "value": {
+            "type": "U256",
+            "value": "32"
+          }
+        }
+      ]
+    }
+  ]
+}

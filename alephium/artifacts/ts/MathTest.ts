@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as MathTestContractJson } from "../tests/math_test.ral.json";
+import { default as MathTestContractJson } from "../tests/MathTest.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace MathTestTypes {
@@ -102,12 +103,24 @@ export class MathTestInstance extends ContractInstance {
     normalizeAmount: async (
       params: MathTestTypes.CallMethodParams<"normalizeAmount">
     ): Promise<MathTestTypes.CallMethodResult<"normalizeAmount">> => {
-      return callMethod(MathTest, this, "normalizeAmount", params);
+      return callMethod(
+        MathTest,
+        this,
+        "normalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
     deNormalizeAmount: async (
       params: MathTestTypes.CallMethodParams<"deNormalizeAmount">
     ): Promise<MathTestTypes.CallMethodResult<"deNormalizeAmount">> => {
-      return callMethod(MathTest, this, "deNormalizeAmount", params);
+      return callMethod(
+        MathTest,
+        this,
+        "deNormalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 
@@ -117,7 +130,8 @@ export class MathTestInstance extends ContractInstance {
     return (await multicallMethods(
       MathTest,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as MathTestTypes.MultiCallResults<Calls>;
   }
 }

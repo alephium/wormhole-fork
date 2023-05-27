@@ -1,0 +1,40 @@
+{
+  "version": "v2.3.3",
+  "name": "CreateLocalTokenPool",
+  "bytecodeTemplate": "0101030000000f{0}7a{4}a2{2}0da3{3}{0}{4}0d100c{1}0101",
+  "fieldsSig": {
+    "names": [
+      "payer",
+      "attestTokenHandler",
+      "localTokenId",
+      "vaa",
+      "alphAmount"
+    ],
+    "types": [
+      "Address",
+      "ByteVec",
+      "ByteVec",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

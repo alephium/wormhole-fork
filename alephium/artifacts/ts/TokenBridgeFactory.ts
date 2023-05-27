@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as TokenBridgeFactoryContractJson } from "../token_bridge/token_bridge_factory.ral.json";
+import { default as TokenBridgeFactoryContractJson } from "../token_bridge/TokenBridgeFactory.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace TokenBridgeFactoryTypes {
@@ -82,6 +83,44 @@ class Factory extends ContractFactory<
   TokenBridgeFactoryInstance,
   TokenBridgeFactoryTypes.Fields
 > {
+  consts = {
+    ErrorCodes: {
+      InvalidEmitChainId: BigInt(0),
+      InvalidEmitAddress: BigInt(1),
+      InvalidMessageSize: BigInt(2),
+      InvalidSequence: BigInt(3),
+      InvalidModule: BigInt(4),
+      InvalidActionId: BigInt(5),
+      InvalidVersion: BigInt(6),
+      InvalidGuardianSetIndex: BigInt(7),
+      InvalidGuardianSetSize: BigInt(8),
+      InvalidSignatureSize: BigInt(9),
+      InvalidSignatureGuardianIndex: BigInt(10),
+      InvalidSignature: BigInt(11),
+      GuardianSetExpired: BigInt(12),
+      InvalidTargetChainId: BigInt(13),
+      ContractStateMismatch: BigInt(14),
+      InvalidRegisterChainMessage: BigInt(15),
+      InvalidTokenId: BigInt(16),
+      InvalidNonceSize: BigInt(17),
+      TokenNotExist: BigInt(18),
+      InvalidTransferTargetChain: BigInt(19),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
+      InvalidCaller: BigInt(21),
+      ArbiterFeeLessThanAmount: BigInt(22),
+      InvalidAttestTokenMessage: BigInt(23),
+      InvalidPayloadId: BigInt(24),
+      InvalidTransferMessage: BigInt(25),
+      ExpectRemoteToken: BigInt(26),
+      InvalidConsistencyLevel: BigInt(27),
+      InvalidUpdateRefundAddressMessage: BigInt(28),
+      TransferAmountLessThanMessageFee: BigInt(29),
+      InvalidAttestTokenArg: BigInt(30),
+      InvalidAttestTokenHandler: BigInt(31),
+      NotSupported: BigInt(32),
+    },
+  };
+
   at(address: string): TokenBridgeFactoryInstance {
     return new TokenBridgeFactoryInstance(address);
   }
@@ -169,7 +208,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "getLocalTokenPoolTemplateId",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getRemoteTokenPoolTemplateId: async (
@@ -181,7 +221,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "getRemoteTokenPoolTemplateId",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getTokenBridgeForChainTemplateId: async (
@@ -193,7 +234,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "getTokenBridgeForChainTemplateId",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getAttestTokenHandlerTemplateId: async (
@@ -205,7 +247,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "getAttestTokenHandlerTemplateId",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getUnexecutedSequenceTemplateId: async (
@@ -217,7 +260,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "getUnexecutedSequenceTemplateId",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     parseContractUpgrade: async (
@@ -229,7 +273,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         TokenBridgeFactory,
         this,
         "parseContractUpgrade",
-        params
+        params,
+        getContractByCodeHash
       );
     },
   };
@@ -240,7 +285,8 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     return (await multicallMethods(
       TokenBridgeFactory,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as TokenBridgeFactoryTypes.MultiCallResults<Calls>;
   }
 }

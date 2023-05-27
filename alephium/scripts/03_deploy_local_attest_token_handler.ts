@@ -10,7 +10,7 @@ const deployLocalAttestTokenHandler: DeployFunction<Settings> = async (deployer:
     payer: deployer.account.address,
     alphAmount: ONE_ALPH
   }
-  await deployer.runScript(CreateLocalAttestTokenHandler.execute, CreateLocalAttestTokenHandler.script, {
+  await deployer.runScript(CreateLocalAttestTokenHandler, {
     initialFields: initialFields,
     attoAlphAmount: ONE_ALPH
   })

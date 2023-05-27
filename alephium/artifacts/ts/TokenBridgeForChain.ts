@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as TokenBridgeForChainContractJson } from "../token_bridge/token_bridge_for_chain.ral.json";
+import { default as TokenBridgeForChainContractJson } from "../token_bridge/TokenBridgeForChain.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace TokenBridgeForChainTypes {
@@ -67,6 +68,50 @@ class Factory extends ContractFactory<
   TokenBridgeForChainInstance,
   TokenBridgeForChainTypes.Fields
 > {
+  consts = {
+    Path: {
+      AttestTokenHandler: "00",
+      TokenBridgeForChain: "01",
+      TokenPool: "02",
+    },
+    ErrorCodes: {
+      InvalidEmitChainId: BigInt(0),
+      InvalidEmitAddress: BigInt(1),
+      InvalidMessageSize: BigInt(2),
+      InvalidSequence: BigInt(3),
+      InvalidModule: BigInt(4),
+      InvalidActionId: BigInt(5),
+      InvalidVersion: BigInt(6),
+      InvalidGuardianSetIndex: BigInt(7),
+      InvalidGuardianSetSize: BigInt(8),
+      InvalidSignatureSize: BigInt(9),
+      InvalidSignatureGuardianIndex: BigInt(10),
+      InvalidSignature: BigInt(11),
+      GuardianSetExpired: BigInt(12),
+      InvalidTargetChainId: BigInt(13),
+      ContractStateMismatch: BigInt(14),
+      InvalidRegisterChainMessage: BigInt(15),
+      InvalidTokenId: BigInt(16),
+      InvalidNonceSize: BigInt(17),
+      TokenNotExist: BigInt(18),
+      InvalidTransferTargetChain: BigInt(19),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
+      InvalidCaller: BigInt(21),
+      ArbiterFeeLessThanAmount: BigInt(22),
+      InvalidAttestTokenMessage: BigInt(23),
+      InvalidPayloadId: BigInt(24),
+      InvalidTransferMessage: BigInt(25),
+      ExpectRemoteToken: BigInt(26),
+      InvalidConsistencyLevel: BigInt(27),
+      InvalidUpdateRefundAddressMessage: BigInt(28),
+      TransferAmountLessThanMessageFee: BigInt(29),
+      InvalidAttestTokenArg: BigInt(30),
+      InvalidAttestTokenHandler: BigInt(31),
+      NotSupported: BigInt(32),
+    },
+    PayloadId: { Transfer: "01", AttestToken: "02" },
+  };
+
   at(address: string): TokenBridgeForChainInstance {
     return new TokenBridgeForChainInstance(address);
   }
@@ -194,7 +239,8 @@ export class TokenBridgeForChainInstance extends ContractInstance {
         TokenBridgeForChain,
         this,
         "nextSendSequence",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
   };
@@ -205,7 +251,8 @@ export class TokenBridgeForChainInstance extends ContractInstance {
     return (await multicallMethods(
       TokenBridgeForChain,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as TokenBridgeForChainTypes.MultiCallResults<Calls>;
   }
 }

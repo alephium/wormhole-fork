@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as SequenceTestContractJson } from "../tests/sequence_test.ral.json";
+import { default as SequenceTestContractJson } from "../tests/SequenceTest.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace SequenceTestTypes {
@@ -61,6 +62,44 @@ class Factory extends ContractFactory<
   SequenceTestInstance,
   SequenceTestTypes.Fields
 > {
+  consts = {
+    ErrorCodes: {
+      InvalidEmitChainId: BigInt(0),
+      InvalidEmitAddress: BigInt(1),
+      InvalidMessageSize: BigInt(2),
+      InvalidSequence: BigInt(3),
+      InvalidModule: BigInt(4),
+      InvalidActionId: BigInt(5),
+      InvalidVersion: BigInt(6),
+      InvalidGuardianSetIndex: BigInt(7),
+      InvalidGuardianSetSize: BigInt(8),
+      InvalidSignatureSize: BigInt(9),
+      InvalidSignatureGuardianIndex: BigInt(10),
+      InvalidSignature: BigInt(11),
+      GuardianSetExpired: BigInt(12),
+      InvalidTargetChainId: BigInt(13),
+      ContractStateMismatch: BigInt(14),
+      InvalidRegisterChainMessage: BigInt(15),
+      InvalidTokenId: BigInt(16),
+      InvalidNonceSize: BigInt(17),
+      TokenNotExist: BigInt(18),
+      InvalidTransferTargetChain: BigInt(19),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
+      InvalidCaller: BigInt(21),
+      ArbiterFeeLessThanAmount: BigInt(22),
+      InvalidAttestTokenMessage: BigInt(23),
+      InvalidPayloadId: BigInt(24),
+      InvalidTransferMessage: BigInt(25),
+      ExpectRemoteToken: BigInt(26),
+      InvalidConsistencyLevel: BigInt(27),
+      InvalidUpdateRefundAddressMessage: BigInt(28),
+      TransferAmountLessThanMessageFee: BigInt(29),
+      InvalidAttestTokenArg: BigInt(30),
+      InvalidAttestTokenHandler: BigInt(31),
+      NotSupported: BigInt(32),
+    },
+  };
+
   at(address: string): SequenceTestInstance {
     return new SequenceTestInstance(address);
   }
@@ -123,7 +162,13 @@ export class SequenceTestInstance extends ContractInstance {
     check: async (
       params: SequenceTestTypes.CallMethodParams<"check">
     ): Promise<SequenceTestTypes.CallMethodResult<"check">> => {
-      return callMethod(SequenceTest, this, "check", params);
+      return callMethod(
+        SequenceTest,
+        this,
+        "check",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 
@@ -133,7 +178,8 @@ export class SequenceTestInstance extends ContractInstance {
     return (await multicallMethods(
       SequenceTest,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as SequenceTestTypes.MultiCallResults<Calls>;
   }
 }

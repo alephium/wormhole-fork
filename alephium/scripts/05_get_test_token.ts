@@ -10,7 +10,7 @@ const getTestToken: DeployFunction = async (deployer: Deployer): Promise<void> =
     factor: 10n ** 8n,
     token: token.contractInstance.contractId
   }
-  await deployer.runScript(GetToken.execute, GetToken.script, {
+  await deployer.runScript(GetToken, {
     initialFields: initialFields,
     attoAlphAmount: ONE_ALPH + DUST_AMOUNT
   })
