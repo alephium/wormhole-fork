@@ -1,4 +1,5 @@
 import { makeStyles, Typography } from "@material-ui/core";
+import { CHAIN_ID_ALEPHIUM, isEVMChain } from "alephium-wormhole-sdk";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -8,6 +9,7 @@ import {
 import { reset } from "../../store/transferSlice";
 import ButtonWithLoader from "../ButtonWithLoader";
 import ShowTx from "../ShowTx";
+import AddToAlephium from "./AddToAlephium";
 import AddToMetamask from "./AddToMetamask";
 import FeaturedMarkets from "./FeaturedMarkets";
 
@@ -45,7 +47,8 @@ export default function RedeemPreview({
         {explainerString}
       </Typography>
       {redeemTx ? <ShowTx chainId={targetChain} tx={redeemTx} /> : null}
-      <AddToMetamask />
+      {targetChain === CHAIN_ID_ALEPHIUM ? <AddToAlephium /> : null}
+      {isEVMChain(targetChain) ? <AddToMetamask /> : null}
       <FeaturedMarkets />
       <ButtonWithLoader onClick={handleResetClick}>
         Transfer More Tokens!
