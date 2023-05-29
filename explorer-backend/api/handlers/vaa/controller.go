@@ -23,7 +23,10 @@ func NewController(serv *Service, logger *zap.Logger) *Controller {
 
 // FindAll handler for the endpoint /vaas/.
 func (c *Controller) FindAll(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	vaas, err := c.srv.FindAll(ctx.Context(), p)
 	if err != nil {
 		return err
@@ -59,7 +62,10 @@ func (c *Controller) FindRecent(ctx *fiber.Ctx) error {
 
 // FindByChain handler for the endpoint /vaas/:emitterChain.
 func (c *Controller) FindByChain(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	chainID, err := middleware.ExtractEmitterChainID(ctx, c.logger)
 	if err != nil {
 		return err
@@ -73,7 +79,10 @@ func (c *Controller) FindByChain(ctx *fiber.Ctx) error {
 
 // FindByEmitter handler for the endpoint /vaas/:emitterChain/:emitterAddress.
 func (c *Controller) FindByEmitter(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	chainID, emitter, err := middleware.ExtractVAAChainIDEmitter(ctx, c.logger)
 	if err != nil {
 		return err
@@ -87,7 +96,10 @@ func (c *Controller) FindByEmitter(ctx *fiber.Ctx) error {
 
 // FindByEmitterAndTargetChain handler for the endpoint /vaas/:emitterChain/:emitterAddress/:targetChain
 func (c *Controller) FindByEmitterAndTargetChain(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	emitterChain, emitterAddress, targetChain, err := middleware.ExtractVAAEmitterAndTargetChainId(ctx, c.logger)
 	if err != nil {
 		return err
@@ -152,7 +164,10 @@ func (c *Controller) FindSignedVAAByID(ctx *fiber.Ctx) error {
 
 // GetVaaCount handler for the endpoint /vaas/vaa-counts.
 func (c *Controller) GetVaaCount(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	vaas, err := c.srv.GetVaaCount(ctx.Context(), p)
 	if err != nil {
 		return err

@@ -155,7 +155,6 @@ func run(cmd *cobra.Command, args []string) {
 
 	api := app.Group("/api")
 	api.Use(cors.New()) // TODO CORS restrictions?
-	api.Use(middleware.ExtractPagination)
 
 	api.Get("/health", infrastructureCtrl.HealthCheck)
 	api.Get("/ready", infrastructureCtrl.ReadyCheck)

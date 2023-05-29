@@ -38,7 +38,10 @@ func (c *Controller) extractSender(ctx *fiber.Ctx) (*sender, error) {
 }
 
 func (c *Controller) GetTransactionsBySender(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	sender, err := c.extractSender(ctx)
 	if err != nil {
 		return err
