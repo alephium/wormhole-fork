@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as GovernanceContractJson } from "../governance.ral.json";
+import { default as GovernanceContractJson } from "../Governance.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace GovernanceTypes {
@@ -90,6 +91,53 @@ class Factory extends ContractFactory<
   GovernanceInstance,
   GovernanceTypes.Fields
 > {
+  consts = {
+    Version: "01",
+    GuardianSetExpireDuration: BigInt(86400000),
+    CoreModule: BigInt(1131377253),
+    ErrorCodes: {
+      InvalidEmitChainId: BigInt(0),
+      InvalidEmitAddress: BigInt(1),
+      InvalidMessageSize: BigInt(2),
+      InvalidSequence: BigInt(3),
+      InvalidModule: BigInt(4),
+      InvalidActionId: BigInt(5),
+      InvalidVersion: BigInt(6),
+      InvalidGuardianSetIndex: BigInt(7),
+      InvalidGuardianSetSize: BigInt(8),
+      InvalidSignatureSize: BigInt(9),
+      InvalidSignatureGuardianIndex: BigInt(10),
+      InvalidSignature: BigInt(11),
+      GuardianSetExpired: BigInt(12),
+      InvalidTargetChainId: BigInt(13),
+      ContractStateMismatch: BigInt(14),
+      InvalidRegisterChainMessage: BigInt(15),
+      InvalidTokenId: BigInt(16),
+      InvalidNonceSize: BigInt(17),
+      TokenNotExist: BigInt(18),
+      InvalidTransferTargetChain: BigInt(19),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
+      InvalidCaller: BigInt(21),
+      ArbiterFeeLessThanAmount: BigInt(22),
+      InvalidAttestTokenMessage: BigInt(23),
+      InvalidPayloadId: BigInt(24),
+      InvalidTransferMessage: BigInt(25),
+      ExpectRemoteToken: BigInt(26),
+      InvalidConsistencyLevel: BigInt(27),
+      InvalidUpdateRefundAddressMessage: BigInt(28),
+      TransferAmountLessThanMessageFee: BigInt(29),
+      InvalidAttestTokenArg: BigInt(30),
+      InvalidAttestTokenHandler: BigInt(31),
+      NotSupported: BigInt(32),
+    },
+    ActionId: {
+      ContractUpgrade: "01",
+      NewGuardianSet: "02",
+      NewMessageFee: "03",
+      TransferFee: "04",
+    },
+  };
+
   at(address: string): GovernanceInstance {
     return new GovernanceInstance(address);
   }
@@ -232,13 +280,20 @@ export class GovernanceInstance extends ContractInstance {
         Governance,
         this,
         "getMessageFee",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     parseAndVerifyVAA: async (
       params: GovernanceTypes.CallMethodParams<"parseAndVerifyVAA">
     ): Promise<GovernanceTypes.CallMethodResult<"parseAndVerifyVAA">> => {
-      return callMethod(Governance, this, "parseAndVerifyVAA", params);
+      return callMethod(
+        Governance,
+        this,
+        "parseAndVerifyVAA",
+        params,
+        getContractByCodeHash
+      );
     },
     parseAndVerifyGovernanceVAAGeneric: async (
       params: GovernanceTypes.CallMethodParams<"parseAndVerifyGovernanceVAAGeneric">
@@ -249,7 +304,8 @@ export class GovernanceInstance extends ContractInstance {
         Governance,
         this,
         "parseAndVerifyGovernanceVAAGeneric",
-        params
+        params,
+        getContractByCodeHash
       );
     },
   };
@@ -260,7 +316,8 @@ export class GovernanceInstance extends ContractInstance {
     return (await multicallMethods(
       Governance,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as GovernanceTypes.MultiCallResults<Calls>;
   }
 }

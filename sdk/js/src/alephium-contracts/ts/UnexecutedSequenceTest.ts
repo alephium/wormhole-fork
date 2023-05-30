@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as UnexecutedSequenceTestContractJson } from "../tests/unexecuted_sequence_test.ral.json";
+import { default as UnexecutedSequenceTestContractJson } from "../tests/UnexecutedSequenceTest.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace UnexecutedSequenceTestTypes {

@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as TokenBridgeV1ContractJson } from "../tests/token_bridge_v1.ral.json";
+import { default as TokenBridgeV1ContractJson } from "../tests/TokenBridgeV1.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace TokenBridgeV1Types {

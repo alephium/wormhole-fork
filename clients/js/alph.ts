@@ -1,7 +1,7 @@
 import { CONFIGS, Guardians, NetworkType } from './configs'
 import { impossible } from './utils'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString } from '@alephium/web3'
+import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import {
   registerChain,
@@ -161,10 +161,8 @@ export async function executeGovernanceAlph(
   const wallet = getSignerProvider(network, nodeUrl)
   const vaaHex = binToHex(vaa)
 
-  const executeGovernanceScript = async (
-    func: (signer: SignerProvider, params: ExecuteScriptParams<{ governance: HexString; vaa: HexString; }>) => Promise<ExecuteScriptResult>
-  ): Promise<ExecuteScriptResult> => {
-    return func(wallet, {
+  const executeGovernanceScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
+    return executableScript.execute(wallet, {
       initialFields: {
         'governance': network.governanceAddress,
         'vaa': vaa.toString('hex')
@@ -172,10 +170,8 @@ export async function executeGovernanceAlph(
     })
   }
 
-  const executeTokenBridgeScript = async (
-    func: (signer: SignerProvider, params: ExecuteScriptParams<{ tokenBridge: HexString; vaa: HexString; }>) => Promise<ExecuteScriptResult>
-  ): Promise<ExecuteScriptResult> => {
-    return func(wallet, {
+  const executeTokenBridgeScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
+    return executableScript.execute(wallet, {
       initialFields: {
         'tokenBridge': network.tokenBridgeAddress,
         'vaa': vaa.toString('hex')
@@ -191,11 +187,11 @@ export async function executeGovernanceAlph(
       switch (payload.type) {
         case 'GuardianSetUpgrade':
           console.log('Submitting new guardian set')
-          console.log(`TxId: ${(await executeGovernanceScript(UpdateGuardianSet.execute)).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(UpdateGuardianSet)).txId}`)
           break
         case 'UpdateMessageFee':
           console.log('Submitting update message fee')
-          console.log(`TxId: ${(await executeGovernanceScript(SetMessageFee.execute)).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(SetMessageFee)).txId}`)
           break
         case 'TransferFee':
           console.log('Submitting transfer fee')
@@ -211,7 +207,7 @@ export async function executeGovernanceAlph(
           break
         case 'AlphContractUpgrade':
           console.log(`Upgrading core contract`)
-          console.log(`TxId: ${(await executeGovernanceScript(UpdateGovernanceContract.execute)).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(UpdateGovernanceContract)).txId}`)
           break
         default:
           throw new Error(`Invalid governance payload type: ${payload.type}`)
@@ -224,7 +220,7 @@ export async function executeGovernanceAlph(
       switch (payload.type) {
         case 'ContractUpgrade':
           console.log('Upgrading contract')
-          console.log(`TxId: ${(await executeTokenBridgeScript(UpgradeTokenBridgeContract.execute)).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpgradeTokenBridgeContract)).txId}`)
           break
         case 'RegisterChain':
           console.log('Registering chain')
@@ -233,15 +229,15 @@ export async function executeGovernanceAlph(
           break
         case 'DestroyUnexecutedSequences':
           console.log('Submitting destroy unexecuted sequences')
-          console.log(`TxId: ${(await executeTokenBridgeScript(DestroyUnexecutedSequenceContracts.execute)).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(DestroyUnexecutedSequenceContracts)).txId}`)
           break
         case 'UpdateMinimalConsistencyLevel':
           console.log('Submitting update minimal consistency level')
-          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateMinimalConsistencyLevel.execute)).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateMinimalConsistencyLevel)).txId}`)
           break
         case 'UpdateRefundAddress':
           console.log('Submitting update refund address')
-          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateRefundAddress.execute)).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateRefundAddress)).txId}`)
           break
         default:
           throw new Error(`Invalid governance payload type: ${payload.type}`)

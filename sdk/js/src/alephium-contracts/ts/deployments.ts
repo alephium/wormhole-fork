@@ -5,8 +5,6 @@
 import { RunScriptResult, DeployContractExecutionResult } from "@alephium/cli";
 import { NetworkId } from "@alephium/web3";
 import {
-  Governance,
-  GovernanceInstance,
   LocalTokenPool,
   LocalTokenPoolInstance,
   RemoteTokenPool,
@@ -19,6 +17,8 @@ import {
   UnexecutedSequenceInstance,
   TokenBridgeFactory,
   TokenBridgeFactoryInstance,
+  Governance,
+  GovernanceInstance,
   TokenBridge,
   TokenBridgeInstance,
   TestToken,
@@ -29,13 +29,13 @@ import { default as devnetDeployments } from "../.deployments.devnet.json";
 export type Deployments = {
   deployerAddress: string;
   contracts: {
-    Governance: DeployContractExecutionResult<GovernanceInstance>;
     LocalTokenPool: DeployContractExecutionResult<LocalTokenPoolInstance>;
     RemoteTokenPool: DeployContractExecutionResult<RemoteTokenPoolInstance>;
     TokenBridgeForChain: DeployContractExecutionResult<TokenBridgeForChainInstance>;
     AttestTokenHandler: DeployContractExecutionResult<AttestTokenHandlerInstance>;
     UnexecutedSequence: DeployContractExecutionResult<UnexecutedSequenceInstance>;
     TokenBridgeFactory: DeployContractExecutionResult<TokenBridgeFactoryInstance>;
+    Governance: DeployContractExecutionResult<GovernanceInstance>;
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
     TestToken: DeployContractExecutionResult<TestTokenInstance>;
   };
@@ -47,12 +47,6 @@ export type Deployments = {
 
 function toDeployments(json: any): Deployments {
   const contracts = {
-    Governance: {
-      ...json.contracts.Governance,
-      contractInstance: Governance.at(
-        json.contracts.Governance.contractInstance.address
-      ),
-    },
     LocalTokenPool: {
       ...json.contracts.LocalTokenPool,
       contractInstance: LocalTokenPool.at(
@@ -87,6 +81,12 @@ function toDeployments(json: any): Deployments {
       ...json.contracts.TokenBridgeFactory,
       contractInstance: TokenBridgeFactory.at(
         json.contracts.TokenBridgeFactory.contractInstance.address
+      ),
+    },
+    Governance: {
+      ...json.contracts.Governance,
+      contractInstance: Governance.at(
+        json.contracts.Governance.contractInstance.address
       ),
     },
     TokenBridge: {

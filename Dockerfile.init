@@ -9,7 +9,7 @@ RUN if [ -e /certs/cert.pem ]; then cp /certs/cert.pem /etc/pki/tls/certs/ca-bun
 RUN dnf -y install jq
 
 # fetch clients/** deps
-RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash - && dnf -y install nodejs
+RUN dnf module install -y nodejs:16/common
 
 # configure node & npm to work with custom root CAs
 ENV NODE_EXTRA_CA_CERTS=/certs/cert.pem

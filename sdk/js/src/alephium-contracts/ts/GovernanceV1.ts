@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as GovernanceV1ContractJson } from "../tests/governance_v1.ral.json";
+import { default as GovernanceV1ContractJson } from "../tests/GovernanceV1.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace GovernanceV1Types {

@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as EmptyContractJson } from "../tests/empty.ral.json";
+import { default as EmptyContractJson } from "../tests/Empty.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace EmptyTypes {

@@ -24,7 +24,8 @@ import {
   ContractInstance,
   getContractEventsCurrentCount,
 } from "@alephium/web3";
-import { default as LocalTokenPoolContractJson } from "../token_bridge/local_token_pool.ral.json";
+import { default as LocalTokenPoolContractJson } from "../token_bridge/LocalTokenPool.ral.json";
+import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace LocalTokenPoolTypes {
@@ -92,6 +93,50 @@ class Factory extends ContractFactory<
   LocalTokenPoolInstance,
   LocalTokenPoolTypes.Fields
 > {
+  consts = {
+    Path: {
+      AttestTokenHandler: "00",
+      TokenBridgeForChain: "01",
+      TokenPool: "02",
+    },
+    ErrorCodes: {
+      InvalidEmitChainId: BigInt(0),
+      InvalidEmitAddress: BigInt(1),
+      InvalidMessageSize: BigInt(2),
+      InvalidSequence: BigInt(3),
+      InvalidModule: BigInt(4),
+      InvalidActionId: BigInt(5),
+      InvalidVersion: BigInt(6),
+      InvalidGuardianSetIndex: BigInt(7),
+      InvalidGuardianSetSize: BigInt(8),
+      InvalidSignatureSize: BigInt(9),
+      InvalidSignatureGuardianIndex: BigInt(10),
+      InvalidSignature: BigInt(11),
+      GuardianSetExpired: BigInt(12),
+      InvalidTargetChainId: BigInt(13),
+      ContractStateMismatch: BigInt(14),
+      InvalidRegisterChainMessage: BigInt(15),
+      InvalidTokenId: BigInt(16),
+      InvalidNonceSize: BigInt(17),
+      TokenNotExist: BigInt(18),
+      InvalidTransferTargetChain: BigInt(19),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
+      InvalidCaller: BigInt(21),
+      ArbiterFeeLessThanAmount: BigInt(22),
+      InvalidAttestTokenMessage: BigInt(23),
+      InvalidPayloadId: BigInt(24),
+      InvalidTransferMessage: BigInt(25),
+      ExpectRemoteToken: BigInt(26),
+      InvalidConsistencyLevel: BigInt(27),
+      InvalidUpdateRefundAddressMessage: BigInt(28),
+      TransferAmountLessThanMessageFee: BigInt(29),
+      InvalidAttestTokenArg: BigInt(30),
+      InvalidAttestTokenHandler: BigInt(31),
+      NotSupported: BigInt(32),
+    },
+    PayloadId: { Transfer: "01", AttestToken: "02" },
+  };
+
   at(address: string): LocalTokenPoolInstance {
     return new LocalTokenPoolInstance(address);
   }
@@ -234,7 +279,8 @@ export class LocalTokenPoolInstance extends ContractInstance {
         LocalTokenPool,
         this,
         "getSymbol",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getName: async (
@@ -244,7 +290,8 @@ export class LocalTokenPoolInstance extends ContractInstance {
         LocalTokenPool,
         this,
         "getName",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getDecimals: async (
@@ -254,7 +301,8 @@ export class LocalTokenPoolInstance extends ContractInstance {
         LocalTokenPool,
         this,
         "getDecimals",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     getTotalSupply: async (
@@ -264,23 +312,42 @@ export class LocalTokenPoolInstance extends ContractInstance {
         LocalTokenPool,
         this,
         "getTotalSupply",
-        params === undefined ? {} : params
+        params === undefined ? {} : params,
+        getContractByCodeHash
       );
     },
     normalizeAmount: async (
       params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
-      return callMethod(LocalTokenPool, this, "normalizeAmount", params);
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "normalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
     deNormalizeAmount: async (
       params: LocalTokenPoolTypes.CallMethodParams<"deNormalizeAmount">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"deNormalizeAmount">> => {
-      return callMethod(LocalTokenPool, this, "deNormalizeAmount", params);
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "deNormalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
     transfer: async (
       params: LocalTokenPoolTypes.CallMethodParams<"transfer">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"transfer">> => {
-      return callMethod(LocalTokenPool, this, "transfer", params);
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "transfer",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 
@@ -290,7 +357,8 @@ export class LocalTokenPoolInstance extends ContractInstance {
     return (await multicallMethods(
       LocalTokenPool,
       this,
-      calls
+      calls,
+      getContractByCodeHash
     )) as LocalTokenPoolTypes.MultiCallResults<Calls>;
   }
 }

@@ -1,0 +1,37 @@
+{
+  "version": "v2.3.3",
+  "name": "GetToken",
+  "bytecodeTemplate": "0101030000000a{0}{2}a2{0}{2}{3}0f0c{1}0104",
+  "fieldsSig": {
+    "names": [
+      "sender",
+      "token",
+      "amount",
+      "factor"
+    ],
+    "types": [
+      "Address",
+      "ByteVec",
+      "U256",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

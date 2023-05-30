@@ -1,5 +1,6 @@
 import {
   CHAIN_ID_ACALA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
@@ -65,6 +66,7 @@ import AddToMetamask from "./AddToMetamask";
 import RedeemPreview from "./RedeemPreview";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 import { useSnackbar, VariantType } from "notistack";
+import AddToAlephium from "./AddToAlephium";
 
 const useStyles = makeStyles((theme) => ({
   alert: {
@@ -335,6 +337,7 @@ function Redeem() {
               />
             </>
           ) : null}
+          {targetChain === CHAIN_ID_ALEPHIUM ? <AddToAlephium /> : null}
           {isEVMChain(targetChain) ? <AddToMetamask /> : null}
           <ButtonWithLoader onClick={handleResetClick}>
             Transfer More Tokens!
