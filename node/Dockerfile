@@ -22,11 +22,11 @@ RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
 
 ADD ./node .
 
-RUN apt-get update && apt-get install libcap2-bin -y
+RUN if [[ "$network" != "devnet" ]]; then apt-get update && apt-get install libcap2-bin -y; fi
 
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
   go build -race -gcflags="all=-N -l" --ldflags '-extldflags "-Wl,--allow-multiple-definition"' -mod=readonly -o /guardiand github.com/alephium/wormhole-fork/node
 
-RUN setcap cap_ipc_lock=+ep /guardiand
+RUN if [[ "$network" != "devnet" ]]; then setcap cap_ipc_lock=+ep /guardiand; else echo Argument is "$network" ; fi
 
 ENTRYPOINT /guardiand
