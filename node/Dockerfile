@@ -27,6 +27,15 @@ RUN if [[ "$network" != "devnet" ]]; then apt-get update && apt-get install libc
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/go \
   go build -race -gcflags="all=-N -l" --ldflags '-extldflags "-Wl,--allow-multiple-definition"' -mod=readonly -o /guardiand github.com/alephium/wormhole-fork/node
 
+RUN \
+if [[ "$network" != "devnet" ]] ; \
+then \
+echo ***Network is $network, setcap cap_ipc_lock*** ; \
+setcap cap_ipc_lock=+ep /guardiand ; \
+else \
+echo ***Network is $network, do not setcap cap_ipc_lock*** ; \
+fi
+
 RUN if [[ "$network" != "devnet" ]]; then setcap cap_ipc_lock=+ep /guardiand; else echo Argument is "$network" ; fi
 
 ENTRYPOINT /guardiand
