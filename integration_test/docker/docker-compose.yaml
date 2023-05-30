@@ -7,7 +7,7 @@ volumes:
 
 services:
   alph-full-node:
-    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.120
+    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.121
     restart: unless-stopped
     ports:
       - 19973:19973/tcp
@@ -24,7 +24,7 @@ services:
       - "npx @alephium/cli devnet start && sh /alephium/deploy.sh"
 
   eth-devnet:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.120
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     restart: unless-stopped
     user: root
     ports:
@@ -41,14 +41,14 @@ services:
       - --db=/eth-full-node/
 
   eth-devnet-deploy-contracts:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.120
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     command:
       - /bin/sh
       - -c
       - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=ethereum npm run migrate -- --network ethDocker && npx truffle exec mine.js --network ethDocker"
 
   bsc-devnet:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.120
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     restart: unless-stopped
     user: root
     ports:
@@ -65,21 +65,21 @@ services:
       - --db=/bsc-full-node/
 
   bsc-devnet-deploy-contracts:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.120
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     command:
       - /bin/sh
       - -c
       - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=bsc npm run migrate -- --network bscDocker && npx truffle exec mine.js --network bscDocker"
 
   devnet-init:
-    image: eu.gcr.io/alephium-org/devnet-init:0.2.120
+    image: eu.gcr.io/alephium-org/devnet-init:0.2.121
     command:
       - /bin/sh
       - -c
       - "/scripts/devnet-init.sh 1"
 
   guardian-0:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.120
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-0
     restart: unless-stopped
     ports:
@@ -114,7 +114,7 @@ services:
       - --logLevel=debug
 
   guardian-1:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.120
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-1
     restart: unless-stopped
     ports:
@@ -151,7 +151,7 @@ services:
       - --logLevel=debug
 
   guardian-2:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.120
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-2
     restart: unless-stopped
     ports:
@@ -187,7 +187,7 @@ services:
       - --logLevel=debug
 
   spy:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.120
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     restart: unless-stopped
     ports:
       - 127.0.0.1:7072:7072
