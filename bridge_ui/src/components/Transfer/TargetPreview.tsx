@@ -1,4 +1,6 @@
 import { makeStyles, Typography } from "@material-ui/core";
+import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { hexToALPHAddress } from "../../utils/alephium";
 import { CHAINS_BY_ID } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 import { useTargetInfo } from "./Target";
@@ -37,7 +39,7 @@ export default function TargetPreview() {
           </>
         ) : null}
         <span>to</span>
-        <SmartAddress chainId={targetChain} address={readableTargetAddress} />
+        <SmartAddress chainId={targetChain} address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress} />
         <span>on {CHAINS_BY_ID[targetChain].name}</span>
       </>
     ) : (
