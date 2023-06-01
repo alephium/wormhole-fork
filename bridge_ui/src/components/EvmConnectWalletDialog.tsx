@@ -18,6 +18,7 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { getEvmChainId } from "../utils/consts";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
+import useIsWalletReady from "../hooks/useIsWalletReady";
 
 const useStyles = makeStyles((theme) => ({
   flexTitle: {
@@ -40,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
 const WalletOptions = ({
   connection,
   connect,
-  onClose,
+  onClose
 }: {
   connection: Connection;
   connect: (connectType: ConnectType) => void;
@@ -76,7 +77,9 @@ const EvmConnectWalletDialog = ({
   onClose: () => void;
   chainId: ChainId;
 }) => {
-  const { availableConnections, connect } = useEthereumProvider();
+  const { availableConnections, connect, chainId: evmChainId } = useEthereumProvider();
+  const enableAutoSwitch = evmChainId === undefined
+  const { forceNetworkSwitch } = useIsWalletReady(chainId, enableAutoSwitch)
   const classes = useStyles();
 
   const availableWallets = availableConnections
@@ -96,7 +99,7 @@ const EvmConnectWalletDialog = ({
     .map((connection) => (
       <WalletOptions
         connection={connection}
-        connect={connect}
+        connect={(evmChainId === undefined || getEvmChainId(chainId) === evmChainId) ? connect : forceNetworkSwitch}
         onClose={onClose}
         key={connection.name}
       />
