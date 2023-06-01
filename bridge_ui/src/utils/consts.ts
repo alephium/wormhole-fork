@@ -712,6 +712,8 @@ export const ALEPHIUM_TOKEN_LIST: TokenInfo[] =
     : CLUSTER === 'testnet'
     ? testnetTokensMetadata.tokens
     : []
+export const ALEPHIUM_POLLING_INTERVAL: number =
+  CLUSTER === 'mainnet' ? 10000 : CLUSTER === 'testnet' ? 10000 : 1000
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
