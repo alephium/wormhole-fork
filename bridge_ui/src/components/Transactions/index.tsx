@@ -30,7 +30,7 @@ import useSWR from "swr";
 import { useSnackbar } from "notistack";
 import { PageSwitch, DefaultPageSize } from "./PageSwitch";
 import { getSignedVAAWithRetry } from "../../utils/getSignedVAAWithRetry";
-import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../../utils/ethereum";
+import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, isEVMTxConfirmed } from "../../utils/ethereum";
 import { TransactionTable } from "./TransactionTable";
 import { binToHex } from "@alephium/web3";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -98,7 +98,7 @@ const alphBlockNumberFetcher = (alphWallet?: AlephiumWallet) => {
       .then((chainInfo) => chainInfo.currentHeight)
 }
 
-const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Web3Provider) => {
+const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Provider) => {
   return provider === undefined
     ? Promise.resolve(undefined)
     : getEVMCurrentBlockNumber(provider, chainId)
@@ -214,16 +214,25 @@ export default function Transactions() {
   const [txNumber, setTxNumber] = useState<number>()
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [isLoading, setIsLoading] = useState(true)
+  const bothAreEvmChain = isEVMChain(txSourceChain) && isEVMChain(txTargetChain)
 
   const blockNumberFetcherGetter = useCallback((chainId: ChainId) => {
     if (chainId === CHAIN_ID_ALEPHIUM) {
       return () => alphBlockNumberFetcher(alphWallet)
     }
+    if (bothAreEvmChain) {
+      if (chainId === txSourceChain && sourceChainReady) {
+        return () => evmBlockNumberFetcher(chainId, evmProvider)
+      }
+      if (chainId === txTargetChain) {
+        return () => evmBlockNumberFetcher(chainId, getEvmJsonRpcProvider(chainId))
+      }
+    }
     if (isEVMChain(chainId)) {
       return () => evmBlockNumberFetcher(chainId, evmProvider)
     }
     return undefined
-  }, [alphWallet, evmProvider])
+  }, [alphWallet, evmProvider, bothAreEvmChain, txSourceChain, txTargetChain, sourceChainReady])
 
   const sourceChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txSourceChain)
   const targetChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txTargetChain)
@@ -233,16 +242,17 @@ export default function Transactions() {
       const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.group)
       return await getIsTransferCompletedAlph(tokenBridgeForChainId, alphWallet.group, signedVaa)
     }
-    if (isEVMChain(txTargetChain) && evmProvider) {
+    const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
+    if (isEVMChain(txTargetChain) && provider) {
       const tokenBridgeAddress = getTokenBridgeAddressForChain(txTargetChain)
-      return await getIsTransferCompletedEth(tokenBridgeAddress, evmProvider, signedVaa)
+      return await getIsTransferCompletedEth(tokenBridgeAddress, provider, signedVaa)
     }
     enqueueSnackbar(null, {
       content: <Alert severity="error">{`Wallet is not connected`}</Alert>,
       preventDuplicate: true
     })
     return false
-  }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider])
+  }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain])
 
   const reset = () => {
     setTxNumber(undefined)
@@ -307,14 +317,7 @@ export default function Transactions() {
 
   }, [walletAddress, txSourceChain, txTargetChain, pageNumber, enqueueSnackbar])
 
-  const bothAreEvmChain = isEVMChain(txSourceChain) && isEVMChain(txTargetChain)
-  useEffect(() => {
-    if (bothAreEvmChain) {
-      enqueueSnackbar(null, {
-        content: <Alert severity="error">{`Not support yet`}</Alert>,
-      })
-    }
-  }, [bothAreEvmChain, enqueueSnackbar])
+  const ready = bothAreEvmChain ? sourceChainReady : (sourceChainReady && targetChainReady)
 
   return (
     <Container maxWidth="md">
@@ -340,10 +343,10 @@ export default function Transactions() {
           margin="normal"
           chains={CHAINS.filter((c) => c.id !== txSourceChain)}
         />
-        <KeyAndBalance chainId={txTargetChain} />
+        {bothAreEvmChain ? null : <KeyAndBalance chainId={txTargetChain} />}
         {
           <>
-            {sourceChainReady && targetChainReady && !bothAreEvmChain
+            {ready
               ? <div>
                   <ListTransactions
                     txSourceChain={txSourceChain}
@@ -360,7 +363,7 @@ export default function Transactions() {
                     numberOfElementsLoaded={currentTransactions?.length}
                   />
                 </div>
-                : null
+              : null
             }
           </>
         }
