@@ -41,21 +41,17 @@ const testnetSettings = loadSettings('testnet')
 const mainnetSettings = loadSettings('mainnet')
 
 const configuration: Configuration<Settings> = {
-  artifactDir: '../sdk/js/src/alephium/artifacts',
-
   deploymentScriptDir: 'scripts',
   compilerOptions: {
     errorOnWarnings: true,
     ignoreUnusedConstantsWarnings: true
   },
 
-  defaultNetwork: 'devnet',
   networks: {
     devnet: {
       networkId: devnetSettings.networkId,
       nodeUrl: devnetSettings.nodeUrl,
-      mnemonic:
-        'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
+      privateKeys: ['a642942e67258589cd2b1822c631506632db5a12aabcf413604e785300d762a5'],
       confirmations: 1,
       settings: devnetSettings
     },
@@ -63,7 +59,7 @@ const configuration: Configuration<Settings> = {
     testnet: {
       networkId: testnetSettings.networkId,
       nodeUrl: testnetSettings.nodeUrl,
-      mnemonic: process.env.MNEMONIC as string,
+      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       confirmations: 2,
       settings: testnetSettings
     },
@@ -71,7 +67,7 @@ const configuration: Configuration<Settings> = {
     mainnet: {
       networkId: mainnetSettings.networkId,
       nodeUrl: mainnetSettings.nodeUrl,
-      mnemonic: process.env.MNEMONIC as string,
+      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       confirmations: 2,
       settings: mainnetSettings
     }

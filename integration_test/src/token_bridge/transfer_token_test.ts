@@ -1,10 +1,10 @@
 import { execSync } from 'child_process'
 import { AlephiumBridgeChain } from '../alph'
-import { BridgeChain } from '../bridge_chain'
-import { assert, getBridgeChains, randomBigInt } from '../utils'
+import { assert, getBridgeChains, normalizeTokenId, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
-import { ALPHTokenInfo } from 'alephium-wormhole-sdk'
+import { ALPH as ALPHTokenInfo } from '@alephium/token-list'
+import { BridgeChain } from '../bridge_chain'
 
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
@@ -30,6 +30,15 @@ async function attestInvalidToken(alph: AlephiumBridgeChain) {
   }
 }
 
+async function checkWrappedToken(sourceChain: BridgeChain, targetChain: BridgeChain, tokenId: string) {
+  const sourceTokenInfo = await sourceChain.getLocalTokenInfo(tokenId)
+  const wrappedTokenId = await targetChain.getWrappedTokenId(sourceChain.chainId, normalizeTokenId(tokenId))
+  const wrappedTokenInfo = await targetChain.getLocalTokenInfo(wrappedTokenId)
+  assert(wrappedTokenInfo.symbol === sourceTokenInfo.symbol)
+  assert(wrappedTokenInfo.name === `${sourceTokenInfo.name} (Wormhole)`)
+  assert(wrappedTokenInfo.decimals === sourceTokenInfo.decimals)
+}
+
 async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alephiumDevnetConfig.contracts.testToken)
   const signedVaa0 = await alph.attestWithTokenInfo(
@@ -39,6 +48,8 @@ async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
     testTokenInfo.name
   )
   await eth.createWrapped(signedVaa0)
+  await checkWrappedToken(alph, eth, alph.testTokenId)
+
   const signedVaa1 = await alph.attestWithTokenInfo(
     alph.wrappedNativeTokenId,
     ALPHTokenInfo.decimals,
@@ -46,11 +57,15 @@ async function attestTokens(alph: AlephiumBridgeChain, eth: BridgeChain) {
     ALPHTokenInfo.name
   )
   await eth.createWrapped(signedVaa1)
+  await checkWrappedToken(alph, eth, alph.wrappedNativeTokenId)
 
   const signedVaa2 = await eth.attestToken(eth.testTokenId)
   await alph.createWrapped(signedVaa2)
+  await checkWrappedToken(eth, alph, eth.testTokenId)
+
   const signedVaa3 = await eth.attestToken(eth.wrappedNativeTokenId)
   await alph.createWrapped(signedVaa3)
+  await checkWrappedToken(eth, alph, eth.wrappedNativeTokenId)
 }
 
 async function test() {
@@ -79,23 +94,31 @@ async function test() {
     const remain = await alph.getNativeTokenBalance()
     // minus 1 alph for tx fee
     const amount = randomBigInt(remain - alph.oneCoin, alph.normalizeTransferAmount)
-    await alphToEth.transferNativeToken(amount + alph.messageFee)
+    // we will add the `messageFee` to the `amount` in the `transferNativeToken` function
+    await alphToEth.transferNativeToken(amount)
     await ethToAlph.transferWrappedNativeToken(amount)
   }
 
   const transferTestTokenFromEthToAlph = async () => {
     const remain = await eth.getTokenBalance(eth.testTokenId)
     const amount = randomBigInt(remain, eth.normalizeTransferAmount)
+    const normalizedTokenId = normalizeTokenId(eth.testTokenId)
     await ethToAlph.transferTestToken(amount)
+    assert((await alph.getWrappedTokenTotalSupply(eth.chainId, normalizedTokenId)) === amount)
     await alphToEth.transferWrappedTestToken(amount)
+    assert((await alph.getWrappedTokenTotalSupply(eth.chainId, normalizedTokenId)) === 0n)
   }
 
   const transferWETHFromEthToAlph = async () => {
     const remain = await eth.getNativeTokenBalance()
     // minus 1 eth for tx fee
     const amount = randomBigInt(remain - eth.oneCoin, eth.normalizeTransferAmount)
-    await ethToAlph.transferNativeToken(amount + eth.messageFee)
+    const normalizedNativeTokenId = normalizeTokenId(eth.wrappedNativeTokenId)
+    // we will add the `messageFee` to the `amount` in the `transferNativeToken` function
+    await ethToAlph.transferNativeToken(amount)
+    assert((await alph.getWrappedTokenTotalSupply(eth.chainId, normalizedNativeTokenId)) === amount)
     await alphToEth.transferWrappedNativeToken(amount)
+    assert((await alph.getWrappedTokenTotalSupply(eth.chainId, normalizedNativeTokenId)) === 0n)
   }
 
   const transfers = [

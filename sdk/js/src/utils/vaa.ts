@@ -460,13 +460,13 @@ export function bytes32ToUtf8String(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('utf8').replace(METADATA_REPLACE, '')
 }
 
-function utf8StringTo32Bytes(str: string): Uint8Array {
+export function utf8StringTo32Bytes(str: string): Uint8Array {
   const buf = Buffer.from(str, 'utf8')
   if (buf.length > 32) {
     throw new Error(`String ${str} exceed 32 bytes`)
   }
-  const prefix = Buffer.alloc(32 - buf.length)
-  return Buffer.concat([prefix, buf])
+  const postfix = Buffer.alloc(32 - buf.length)
+  return Buffer.concat([buf, postfix])
 }
 
 export function deserializeTransferNFTPayload(payload: Uint8Array): TransferNFT {

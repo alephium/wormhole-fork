@@ -1,9 +1,4 @@
-import {
-  ChainId,
-  CHAIN_ID_ETH,
-  NFTImplementation,
-  TokenImplementation,
-} from "alephium-wormhole-sdk";
+import { ChainId, CHAIN_ID_ETH, ethers_contracts } from "alephium-wormhole-sdk";
 import { WormholeAbi__factory } from "alephium-wormhole-sdk/lib/esm/ethers-contracts/abi";
 import { getAddress as getEthAddress } from "@ethersproject/address";
 import React, { useCallback } from "react";
@@ -114,13 +109,13 @@ export default function EvmTokenPicker(
             return Promise.reject("Token ID is required.");
           } else if (nft && tokenId) {
             return ethNFTToNFTParsedTokenAccount(
-              tokenAccount as NFTImplementation,
+              tokenAccount as ethers_contracts.NFTImplementation,
               tokenId,
               signerAddress
             );
           } else {
             return ethTokenToParsedTokenAccount(
-              tokenAccount as TokenImplementation,
+              tokenAccount as ethers_contracts.TokenImplementation,
               signerAddress
             );
           }

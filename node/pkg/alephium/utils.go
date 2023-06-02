@@ -29,7 +29,7 @@ var ALPHTokenInfo TokenInfo = TokenInfo{
 	TokenId:  ALPHTokenId,
 	Decimals: 18,
 	Symbol:   "ALPH",
-	Name:     "ALPH",
+	Name:     "Alephium",
 }
 
 func ToContractId(address string) (Byte32, error) {

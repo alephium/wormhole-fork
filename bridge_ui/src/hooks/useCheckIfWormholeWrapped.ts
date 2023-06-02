@@ -42,10 +42,10 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_HOST,
 } from "../utils/consts";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { NodeProvider } from '@alephium/web3'
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -103,7 +103,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
   const isRecovery = useSelector(
     nft ? selectNFTIsRecovery : selectTransferIsRecovery
   );
-  const { signer: alphSigner } = useAlephiumWallet()
+  const alphWallet = useAlephiumWallet()
   useEffect(() => {
     if (isRecovery) {
       return;
@@ -164,9 +164,9 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {}
       }
-      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphSigner) {
+      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphWallet) {
         try {
-          const wrappedInfo = await getAlephiumTokenInfo(alphSigner.nodeProvider, sourceAsset)
+          const wrappedInfo = await getAlephiumTokenInfo(alphWallet.nodeProvider, sourceAsset)
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
           }
@@ -203,7 +203,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     sourceChain,
     sourceAsset,
     provider,
-    alphSigner,
+    alphWallet,
     nft,
     setSourceWormholeWrappedInfo,
     tokenId,

@@ -8,16 +8,22 @@ Contract RemoteTokenPool(
     decimals_: U256,
     mut sequence_: U256
 ) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
-    pub fn name() -> ByteVec {
-        return name_
-    }
+    const WormholePostfix = #2028576f726d686f6c6529 // ' (Wormhole)'
 
-    pub fn symbol() -> ByteVec {
+    pub fn getSymbol() -> ByteVec {
         return symbol_
     }
 
-    pub fn decimals() -> U256 {
+    pub fn getName() -> ByteVec {
+        return name_ ++ WormholePostfix
+    }
+
+    pub fn getDecimals() -> U256 {
         return decimals_
+    }
+
+    pub fn getTotalSupply() -> U256 {
+        return totalBridged
     }
 
     @using(updateFields = true)

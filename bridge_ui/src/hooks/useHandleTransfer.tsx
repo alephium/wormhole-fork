@@ -83,10 +83,10 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
-import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { validateAlephiumRecipientAddress, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
-import { BuildScriptTxResult } from "@alephium/web3";
+import { ExecuteScriptResult } from "@alephium/web3";
 import { Transaction, TransactionDB } from "../utils/db";
+import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
 
 async function algo(
   dispatch: any,
@@ -335,7 +335,7 @@ async function solana(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  signer: AlephiumWalletSigner,
+  wallet: AlephiumWallet,
   tokenId: string,
   originAsset: string,
   tokenChainId: ChainId,
@@ -348,13 +348,13 @@ async function alephium(
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
     const txInfo = await waitTxConfirmedAndGetTxInfo(
-      signer.nodeProvider, async () => {
-        let result: BuildScriptTxResult
+      wallet.nodeProvider, async () => {
+        let result: ExecuteScriptResult
         if (tokenChainId === CHAIN_ID_ALEPHIUM) {
           result = await transferLocalTokenFromAlph(
-            signer.signerProvider,
+            wallet.signer,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.address,
+            wallet.address,
             tokenId,
             targetChain,
             uint8ArrayToHex(targetAddress),
@@ -365,9 +365,9 @@ async function alephium(
           )
         } else {
           result = await transferRemoteTokenFromAlph(
-            signer.signerProvider,
+            wallet.signer,
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.address,
+            wallet.address,
             tokenId,
             originAsset,
             tokenChainId,
@@ -384,7 +384,7 @@ async function alephium(
     )
     await TransactionDB.getInstance().txs.put(new Transaction(
       txInfo.txId,
-      signer.address,
+      wallet.address,
       CHAIN_ID_ALEPHIUM,
       targetChain,
       txInfo.sequence,
@@ -502,7 +502,7 @@ export function useHandleTransfer() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const { accounts: algoAccounts } = useAlgorandContext();
   const sourceParsedTokenAccount = useSelector(
@@ -603,7 +603,7 @@ export function useHandleTransfer() {
       );
     } else if (
       sourceChain === CHAIN_ID_ALEPHIUM &&
-      !!alphSigner &&
+      !!alphWallet &&
       !!sourceAsset &&
       decimals !== undefined &&
       !!targetAddress &&
@@ -613,7 +613,7 @@ export function useHandleTransfer() {
       alephium(
         dispatch,
         enqueueSnackbar,
-        alphSigner,
+        alphWallet,
         sourceAsset,
         originAsset,
         originChain,
@@ -632,7 +632,7 @@ export function useHandleTransfer() {
     solanaWallet,
     solPK,
     terraWallet,
-    alphSigner,
+    alphWallet,
     sourceTokenPublicKey,
     sourceAsset,
     amount,

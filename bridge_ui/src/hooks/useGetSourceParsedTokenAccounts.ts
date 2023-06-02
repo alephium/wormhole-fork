@@ -18,7 +18,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   isEVMChain,
-  TokenImplementation__factory,
+  ethers_contracts,
   WSOL_ADDRESS,
   WSOL_DECIMALS,
 } from "alephium-wormhole-sdk";
@@ -122,6 +122,9 @@ import {
   getMultipleAccountsRPC,
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
+import { useAlephiumWallet } from "./useAlephiumWallet";
+import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
+import { ALPHTokenInfo, getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -434,7 +437,7 @@ const createNativeKaruraParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(KAR_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(KAR_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, KAR_DECIMALS);
@@ -459,7 +462,7 @@ const createNativeAcalaParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(ACA_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(ACA_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, ACA_DECIMALS);
@@ -509,7 +512,7 @@ const createNativeCeloParsedTokenAccount = (
   // https://docs.celo.org/developer-guide/celo-for-eth-devs
   return !(provider && signerAddress)
     ? Promise.reject()
-    : TokenImplementation__factory.connect(CELO_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(CELO_ADDRESS, provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, CELO_DECIMALS);
@@ -808,6 +811,37 @@ const getAlgorandParsedTokenAccounts = async (
   }
 };
 
+const getAlephiumParsedTokenAccounts = async (address: string, provider: NodeProvider) => {
+  try {
+    const balances = await getAvailableBalances(provider, address)
+    const tokenAccounts: ParsedTokenAccount[] = []
+    for (const [tokenId, amount] of balances) {
+      const tokenInfo = tokenId === ALPH_TOKEN_ID ? ALPHTokenInfo : (await getAlephiumTokenInfo(provider, tokenId))
+      if (tokenInfo === undefined) {
+        continue
+      }
+      const uiAmount = formatUnits(amount, tokenInfo.decimals)
+      tokenAccounts.push(createParsedTokenAccount(
+        address,
+        tokenId,
+        amount.toString(),
+        tokenInfo.decimals,
+        parseFloat(uiAmount),
+        uiAmount,
+        tokenInfo.symbol,
+        tokenInfo.name,
+        tokenInfo.logoURI,
+        tokenId === ALPH_TOKEN_ID
+      ))
+    }
+    return tokenAccounts
+  } catch (error) {
+    const errMsg = `Failed to load alephium token metadata: ${error}`
+    console.error(errMsg)
+    throw new Error(errMsg)
+  }
+}
+
 /**
  * Fetches the balance of an asset for the connected wallet
  * This should handle every type of chain in the future, but only reads the Transfer state.
@@ -828,12 +862,17 @@ function useGetAvailableTokens(nft: boolean = false) {
   const solPK = solanaWallet?.publicKey;
   const { provider, signerAddress } = useEthereumProvider();
   const { accounts: algoAccounts } = useAlgorandContext();
+  const alphWallet = useAlephiumWallet()
 
   const [covalent, setCovalent] = useState<any>(undefined);
   const [covalentLoading, setCovalentLoading] = useState(false);
   const [covalentError, setCovalentError] = useState<string | undefined>(
     undefined
   );
+
+  const [alphTokens, setAlphTokens] = useState<ParsedTokenAccount[]>()
+  const [alphTokenLoading, setAlphTokenLoading] = useState(false)
+  const [alphTokenError, setAlphTokenError] = useState<string>()
 
   const [ethNativeAccount, setEthNativeAccount] = useState<any>(undefined);
   const [ethNativeAccountLoading, setEthNativeAccountLoading] = useState(false);
@@ -859,6 +898,8 @@ function useGetAvailableTokens(nft: boolean = false) {
     ? solPK?.toString()
     : lookupChain === CHAIN_ID_ALGORAND
     ? algoAccounts[0]?.address
+    : lookupChain === CHAIN_ID_ALEPHIUM
+    ? alphWallet?.address
     : undefined;
 
   const resetSourceAccounts = useCallback(() => {
@@ -881,6 +922,10 @@ function useGetAvailableTokens(nft: boolean = false) {
     setCovalent(undefined); //These need to be included in the reset because they have balances on them.
     setCovalentLoading(false);
     setCovalentError("");
+
+    setAlphTokens(undefined)
+    setAlphTokenLoading(false)
+    setAlphTokenError(undefined)
 
     setEthNativeAccount(undefined);
     setEthNativeAccountLoading(false);
@@ -1491,6 +1536,30 @@ function useGetAvailableTokens(nft: boolean = false) {
     }
   }, [lookupChain, provider, signerAddress, dispatch, nft, covalent]);
 
+  useEffect(() => {
+    if (
+      lookupChain === CHAIN_ID_ALEPHIUM &&
+      currentSourceWalletAddress !== undefined &&
+      alphTokens === undefined &&
+      alphWallet?.nodeProvider !== undefined &&
+      !alphTokenLoading
+    ) {
+      setAlphTokenLoading(true)
+      dispatch(fetchSourceParsedTokenAccounts())
+      getAlephiumParsedTokenAccounts(currentSourceWalletAddress, alphWallet.nodeProvider)
+        .then((tokenAccounts) => {
+          setAlphTokens(tokenAccounts)
+          setAlphTokenLoading(false)
+          setAlphTokenError(undefined)
+        })
+        .catch((error) => {
+          console.log(`failed to load tokens from alephium, error: ${error}`)
+          setAlphTokenLoading(false)
+          setAlphTokenError(`${error}`)
+        })
+    }
+  }, [dispatch, lookupChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
+
   //Terra accounts load
   //At present, we don't have any mechanism for doing this.
   useEffect(() => {}, []);
@@ -1510,9 +1579,6 @@ function useGetAvailableTokens(nft: boolean = false) {
 
     return () => {};
   }, [dispatch, lookupChain, currentSourceWalletAddress, tokenAccounts, nft]);
-
-  //Alephium account load
-  useEffect(() => {}, [])
 
   const ethAccounts = useMemo(() => {
     const output = { ...tokenAccounts };
@@ -1556,8 +1622,11 @@ function useGetAvailableTokens(nft: boolean = false) {
       }
     : lookupChain === CHAIN_ID_ALEPHIUM
     ? {
+        tokens: alphTokens,
+        isFetching: alphTokenLoading,
+        error: alphTokenError,
         resetAccounts: resetSourceAccounts,
-    }
+      }
     : lookupChain === CHAIN_ID_ALGORAND
     ? {
         tokenAccounts,

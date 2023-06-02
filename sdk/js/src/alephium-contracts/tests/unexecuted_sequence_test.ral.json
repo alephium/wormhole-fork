@@ -1,0 +1,46 @@
+{
+  "version": "v2.2.2",
+  "name": "UnexecutedSequenceTest",
+  "bytecode": "0102134024010201020008ce0017011600b20e0c16010100010200010007ce001700b20d0c16000101",
+  "codeHash": "959eab90ef1db13a92de0fffd3b3c7bc5b04d8b0e61bcae7ff8c0713b3d89ea7",
+  "fieldsSig": {
+    "names": [
+      "unexecutedSequenceId"
+    ],
+    "types": [
+      "ByteVec"
+    ],
+    "isMutable": [
+      false
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "checkSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "destroy",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

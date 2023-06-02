@@ -1,116 +1,26 @@
-import { CHAIN_ID_ALEPHIUM, ALPHTokenInfo } from "alephium-wormhole-sdk";
-import { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DataWrapper } from "../../store/helpers";
+import { CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { useCallback } from "react";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
-import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { formatUnits } from "ethers/lib/utils";
-import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
-import { useAlephiumWallet } from "../../contexts/AlephiumWalletContext";
-import { getAlephiumTokenInfo } from "../../utils/alephium";
-import alephiumIcon from "../../icons/alephium.svg";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
   onChange: (newValue: ParsedTokenAccount | null) => void;
-  tokenAccounts: DataWrapper<ParsedTokenAccount[]> | undefined;
+  tokens: ParsedTokenAccount[] | undefined
+  isFetching: boolean;
   disabled: boolean;
   resetAccounts: (() => void) | undefined;
 };
 
-async function getAlephiumTokenAccounts(address: string, client: NodeProvider): Promise<ParsedTokenAccount[]> {
-  const utxos = await client.addresses.getAddressesAddressUtxos(address)
-  const now = Date.now()
-  let alphAmount: bigint = BigInt(0)
-  let tokenAmounts = new Map<string, bigint>()
-  utxos.utxos.forEach(utxo => {
-    alphAmount = alphAmount + BigInt(utxo.amount)
-    if (utxo.lockTime === undefined || now > utxo.lockTime) {
-      utxo.tokens?.forEach(token => {
-        const amount = tokenAmounts.get(token.id)
-        if (amount) {
-          tokenAmounts.set(token.id, amount + BigInt(token.amount))
-        } else {
-          tokenAmounts.set(token.id, BigInt(token.amount))
-        }
-      })
-    }
-  });
-
-  const alphUIAmount = formatUnits(alphAmount, 18)
-  const alph = createParsedTokenAccount(
-    address,
-    ALPH_TOKEN_ID,
-    alphAmount.toString(),
-    ALPHTokenInfo.decimals,
-    parseFloat(alphUIAmount),
-    alphUIAmount,
-    ALPHTokenInfo.symbol,
-    ALPHTokenInfo.name,
-    alephiumIcon,
-    true
-  )
-
-  let tokenAccounts = [alph]
-  for (let [tokenId, amount] of tokenAmounts) {
-    const tokenInfo = await getAlephiumTokenInfo(client, tokenId)
-    if (typeof tokenInfo === 'undefined') {
-      continue
-    }
-    const uiAmount = formatUnits(amount, tokenInfo.decimals)
-    const tokenAccount = createParsedTokenAccount(
-      address, tokenId, amount.toString(), tokenInfo.decimals, parseFloat(uiAmount), uiAmount
-    )
-    tokenAccounts.push(tokenAccount)
-  }
-  return tokenAccounts
-}
-
-function useAlephiumTokenAccounts(refreshRef: MutableRefObject<() => void>) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [tokenAccounts, setTokenAccounts] = useState<ParsedTokenAccount[]>([]);
-  const [refresh, setRefresh] = useState(false);
-  const { signer } = useAlephiumWallet()
-  useEffect(() => {
-    if (refreshRef) {
-      refreshRef.current = () => {
-        setRefresh(true)
-        setTokenAccounts([])
-      };
-    }
-  }, [refreshRef]);
-  useEffect(() => {
-    setRefresh(false)
-    setIsLoading(true)
-    if (typeof signer === 'undefined') {
-      setIsLoading(false)
-      setTokenAccounts([])
-    } else {
-      getAlephiumTokenAccounts(signer.address, signer.nodeProvider)
-        .then((tokenAccounts) => {
-          setTokenAccounts(tokenAccounts)
-          setIsLoading(false)
-        })
-        .catch((e) => {
-          console.log("failed to load alephium token accounts, error: " + e)
-          setIsLoading(false)
-          setTokenAccounts([])
-        })
-      }
-    }, [signer, refresh])
-    const value = useMemo(() => ({isLoading, tokenAccounts}), [isLoading, tokenAccounts])
-    return value
-}
-
 const returnsFalse = () => false;
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
-  const { value, onChange, disabled } = props;
-  const nativeRefresh = useRef<() => void>(() => {});
+  const { value, onChange, disabled, tokens, isFetching, resetAccounts } = props
+
   const resetAccountWrapper = useCallback(() => {
-    nativeRefresh.current()
-  }, []);
-  const { isLoading, tokenAccounts } = useAlephiumTokenAccounts(nativeRefresh);
+    resetAccounts && resetAccounts();
+  }, [resetAccounts]);
+  const isLoading = isFetching
 
   const onChangeWrapper = useCallback(
     async (account: ParsedTokenAccount | null) => {
@@ -125,7 +35,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   );
 
   const isSearchableAddress = useCallback((address: string) => {
-      return true
+      return false
   }, []);
 
   const RenderComp = useCallback(
@@ -138,7 +48,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   return (
     <TokenPicker
       value={value}
-      options={tokenAccounts}
+      options={tokens || []}
       RenderOption={RenderComp}
       onChange={onChangeWrapper}
       isValidAddress={isSearchableAddress}

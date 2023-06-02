@@ -28,9 +28,9 @@ ethNodeUrl="http://eth-devnet:8545"
 wait() {
   SECONDS=0
   until $(eval $1); do
-    if (( SECONDS > 120 ))
+    if (( SECONDS > 300 ))
     then
-       echo "Contracts are not deployed after 2 min..."
+       echo "Contracts are not deployed after 5 min..."
        exit 1
     fi
     echo "Waiting..."

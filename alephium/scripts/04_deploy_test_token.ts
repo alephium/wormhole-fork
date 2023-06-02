@@ -1,11 +1,11 @@
-import { Project } from '@alephium/web3'
-import { Configuration, Deployer, DeployFunction } from '@alephium/cli'
+import { Deployer, DeployFunction } from '@alephium/cli'
+import { NetworkId } from '@alephium/web3'
+import { TestToken } from '../artifacts/ts'
 
 const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const tokenSupply = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-  const token = Project.contract('TestToken')
   const encodeString = (str: string): string => Buffer.from(str, 'utf8').toString('hex')
-  const result = await deployer.deployContract(token, {
+  const result = await deployer.deployContract(TestToken, {
     initialFields: {
       decimals: 18n,
       symbol: encodeString('TT'),
@@ -14,9 +14,11 @@ const deployTestToken: DeployFunction = async (deployer: Deployer): Promise<void
     },
     issueTokenAmount: tokenSupply
   })
-  console.log(`TestToken contract address: ${result.contractAddress}, contract id: ${result.contractId}`)
+  console.log(
+    `TestToken contract address: ${result.contractInstance.address}, contract id: ${result.contractInstance.contractId}`
+  )
 }
 
-deployTestToken.skip = async (config: Configuration) => config.defaultNetwork !== 'devnet'
+deployTestToken.skip = async (_, networkId: NetworkId) => networkId !== 'devnet'
 
 export default deployTestToken

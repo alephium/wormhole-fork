@@ -61,7 +61,6 @@ import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
 import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
-  ALEPHIUM_HOST,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -86,6 +85,7 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
+import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -245,9 +245,8 @@ async function terra(tx: string, enqueueSnackbar: any) {
   }
 }
 
-async function alephium(txId: string, enqueueSnackbar: any) {
+async function alephium(provider: NodeProvider, txId: string, enqueueSnackbar: any) {
   try {
-    const provider = new NodeProvider(ALEPHIUM_HOST)
     const txInfo = await getAlphTxInfoByTxId(provider, txId);
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -434,6 +433,7 @@ export default function Recovery() {
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const pathSourceChain = query.get("sourceChain");
   const pathSourceTransaction = query.get("transactionId");
+  const alphWallet = useAlephiumWallet()
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
@@ -514,11 +514,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && alphWallet) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async () => {
-          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
+          const { vaa, error } = await alephium(alphWallet.nodeProvider, recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
@@ -556,6 +556,7 @@ export default function Recovery() {
     enqueueSnackbar,
     isNFT,
     isReady,
+    alphWallet
   ]);
   const handleTypeChange = useCallback((event: any) => {
     setRecoverySourceChain((prevChain) =>

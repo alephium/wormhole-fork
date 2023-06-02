@@ -25,21 +25,38 @@ Abstract Contract TokenBridgeGovernance(
     }
 
     @using(preapprovedAssets = true)
-    pub fn createLocalAttestTokenHandler(payer: Address, createContractAlphAmount: U256) -> () {
-        let localTokenBridgeId = selfContractId!()
-        let fields = encodeToByteVec!(
+    fn createAttestTokenHandler(
+        payer: Address,
+        createContractAlphAmount: U256,
+        targetChainId: U256,
+        targetTokenBridgeId: ByteVec,
+        isLocal: Bool
+    ) -> () {
+        let (encodedImmutableFields, encodedMutableFields) = AttestTokenHandler.encodeFields!(
             governance,
-            localTokenBridgeId,
-            localChainId,
-            localTokenBridgeId,
+            TokenBridge(selfContractId!()),
+            targetChainId,
+            TokenBridge(targetTokenBridgeId),
             0,
-            true
+            isLocal
         )
-        let path = Path.AttestTokenHandler ++ u256To2Byte!(localChainId)
+        let path = Path.AttestTokenHandler ++ u256To2Byte!(targetChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
-            fields
+            encodedImmutableFields,
+            encodedMutableFields
+        )
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn createLocalAttestTokenHandler(payer: Address, createContractAlphAmount: U256) -> () {
+        createAttestTokenHandler{payer -> ALPH: createContractAlphAmount}(
+            payer,
+            createContractAlphAmount,
+            localChainId,
+            selfContractId!(),
+            true
         )
     }
 
@@ -53,27 +70,19 @@ Abstract Contract TokenBridgeGovernance(
         return remoteChainId, remoteTokenBridgeId
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn registerChain(vaa: ByteVec, payer: Address, createContractAlphAmount: U256) -> () {
         let (remoteChainId, remoteTokenBridgeId) = parseAndVerifyRegisterChain(vaa)
 
-        let remoteChainIdBytes = u256To2Byte!(remoteChainId)
-        let attestTokenHandlerFields = encodeToByteVec!(
-            governance,
-            selfContractId!(),
+        createAttestTokenHandler{payer -> ALPH: createContractAlphAmount}(
+            payer,
+            createContractAlphAmount,
             remoteChainId,
             remoteTokenBridgeId,
-            0,
             false
         )
-        let attestTokenHandlerPath = Path.AttestTokenHandler ++ remoteChainIdBytes
-        copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
-            attestTokenHandlerPath,
-            tokenBridgeFactory.getAttestTokenHandlerTemplateId(),
-            attestTokenHandlerFields
-        )
 
-        let tokenBridgeForChainFields = encodeToByteVec!(
+        let (encodedImmutableFields, encodedMutableFields) = TokenBridgeForChain.encodeFields!(
             governance,
             localChainId,
             selfContractId!(),
@@ -85,42 +94,34 @@ Abstract Contract TokenBridgeGovernance(
             tokenBridgeFactory.getUnexecutedSequenceTemplateId(),
             0
         )
-        let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ remoteChainIdBytes
+        let tokenBridgeForChainPath = Path.TokenBridgeForChain ++ u256To2Byte!(remoteChainId)
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             tokenBridgeForChainPath,
             tokenBridgeFactory.getTokenBridgeForChainTemplateId(),
-            tokenBridgeForChainFields
+            encodedImmutableFields,
+            encodedMutableFields
         )
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn upgradeContract(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.ContractUpgrade)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
-        let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-        let mut offset = 35 + contractCodeLength
-        let newContractCode = byteVecSlice!(payload, 35, offset)
-        let payloadLength = size!(payload)
-        if (payloadLength == offset) {
-            migrate!(newContractCode)
+        let (newCode, prevStateHash, newEncodedImmutableFields, newEncodedMutableFields) = tokenBridgeFactory.parseContractUpgrade(payload)
+        if (prevStateHash == #) {
+            migrate!(newCode)
         } else {
-            let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
-            offset = offset + 32
             let currentEncodedFields =
                 u256To32Byte!(receivedSequence) ++
                 u256To32Byte!(sendSequence) ++
                 u256To1Byte!(minimalConsistencyLevel) ++
                 toByteVec!(refundAddress)
             assert!(prevStateHash == blake2b!(currentEncodedFields), ErrorCodes.ContractStateMismatch)
-            let stateLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
-            offset = offset + 2
-            let newContractFields = byteVecSlice!(payload, offset, offset + stateLength)
-            offset = offset + stateLength
-            assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
-            migrateWithFields!(newContractCode, newContractFields)
+            migrateWithFields!(newCode, newEncodedImmutableFields, newEncodedMutableFields)
         }
     }
 
+    @using(checkExternalCaller = false)
     pub fn destroyUnexecutedSequenceContracts(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.DestroyUnexecutedSequences)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -135,7 +136,7 @@ Abstract Contract TokenBridgeGovernance(
         TokenBridgeForChain(tokenBridgeForChainId).destroyUnexecutedSequenceContracts(paths)
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn updateMinimalConsistencyLevel(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateMinimalConsistencyLevel)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)
@@ -148,7 +149,7 @@ Abstract Contract TokenBridgeGovernance(
         return refundAddress
     }
 
-    @using(updateFields = true)
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn updateRefundAddress(vaa: ByteVec) -> () {
         let (targetChainId, payload) = parseAndVerifyGovernanceVAA(vaa, ActionId.UpdateRefundAddress)
         assert!(targetChainId == localChainId, ErrorCodes.InvalidTargetChainId)

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "downlevelIteration": true,
     "allowJs": true,
-    "lib": ["dom", "es5", "scripthost", "es2020.bigint"]
+    "lib": ["dom", "es6", "scripthost", "es2020.bigint"]
   },
   "include": ["src", "types"],
   "exclude": ["node_modules", "**/__tests__/*"]

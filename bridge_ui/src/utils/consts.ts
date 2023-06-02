@@ -1,5 +1,5 @@
 import {
-  remoteTokenPoolContract,
+  alephium_contracts,
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
@@ -29,6 +29,7 @@ import { CHAIN_CONFIG_MAP } from "../config";
 import bscIcon from "../icons/bsc.svg";
 import ethIcon from "../icons/eth.svg";
 import alephiumIcon from "../icons/alephium.svg";
+import { testnetTokensMetadata, mainnetTokensMetadata, TokenInfo } from '@alephium/token-list'
 import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
 import { default as alephiumTestnetConfig } from '../../../configs/alephium/testnet.json'
 import { default as alephiumMainnetConfig } from '../../../configs/alephium/mainnet.json'
@@ -671,7 +672,7 @@ export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
     : CLUSTER === "testnet"
     ? alephiumTestnetConfig.contracts.tokenBridge
     : alephiumDevnetConfig.contracts.tokenBridge
-export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = remoteTokenPoolContract().codeHash
+export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = alephium_contracts.RemoteTokenPool.contract.codeHash
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"
     ? MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
@@ -690,6 +691,12 @@ export const ALEPHIUM_BRIDGE_GROUP_INDEX =
     : CLUSTER === 'testnet'
     ? alephiumTestnetConfig.groupIndex
     : alephiumDevnetConfig.groupIndex
+export const ALEPHIUM_TOKEN_LIST: TokenInfo[] =
+  CLUSTER === 'mainnet'
+    ? mainnetTokensMetadata.tokens
+    : CLUSTER === 'testnet'
+    ? testnetTokensMetadata.tokens
+    : []
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

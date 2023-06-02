@@ -9,16 +9,18 @@ import {
   TransferToken,
   VAA,
   signVAABody,
-  VAABody
+  VAABody,
+  alephium_contracts
 } from 'alephium-wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
-import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
+import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 import { default as ethDevnetConfig } from '../../../configs/ethereum/devnet.json'
 
 const unexecutedSequenceIndex = 0
 const guardianKeys = [
   'cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0',
-  'c3b2e45c422a1602333a64078aeb42637370b0f48fe385f9cfa6ad54a8e0c47e'
+  'c3b2e45c422a1602333a64078aeb42637370b0f48fe385f9cfa6ad54a8e0c47e',
+  '9f790d3f08bc4b5cd910d4278f3deb406e57bb5e924906ccd52052bb078ccd47'
 ]
 
 function createDestroyUnexecutedSequencesVaa(sequence: number): string {
@@ -72,8 +74,8 @@ async function destroyUnexecutedSequences() {
 
   const tokenBridgeForChainId = getTokenBridgeForChainId(alph.tokenBridgeContractId, CHAIN_ID_ETH, alph.groupIndex)
   const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
-  const state0 = await alph.getContractState(tokenBridgeForChainAddress, 'TokenBridgeForChain')
-  assert(Number(state0.fields['start'] as bigint) === 0)
+  const state0 = await alph.getContractState(alephium_contracts.TokenBridgeForChain, tokenBridgeForChainAddress)
+  assert(state0.fields.start === 0n)
 
   const unexecutedSequenceContractId = getUnexecutedSequenceId(
     tokenBridgeForChainId,
@@ -84,8 +86,8 @@ async function destroyUnexecutedSequences() {
   assert(!exists0)
 
   await createUnexecutedSequence()
-  const state1 = await alph.getContractState(tokenBridgeForChainAddress, 'TokenBridgeForChain')
-  assert(Number(state1.fields['start'] as bigint) === 256)
+  const state1 = await alph.getContractState(alephium_contracts.TokenBridgeForChain, tokenBridgeForChainAddress)
+  assert(state1.fields.start === 256n)
 
   const exists1 = await contractExists(unexecutedSequenceContractId, web3.getCurrentNodeProvider())
   assert(exists1)
@@ -93,7 +95,7 @@ async function destroyUnexecutedSequences() {
   const seq = await getNextGovernanceSequence()
   const destroyUnexecutedSequencesVaa = createDestroyUnexecutedSequencesVaa(seq)
 
-  for (const guardianIndex of [0, 1]) {
+  for (const guardianIndex of guardianSetIndexes) {
     await injectVAA(destroyUnexecutedSequencesVaa, guardianIndex, 'destroy-unexecuted-sequences.proto')
   }
 

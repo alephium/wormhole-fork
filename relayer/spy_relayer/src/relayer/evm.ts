@@ -1,5 +1,5 @@
 import {
-  Bridge__factory,
+  ethers_contracts,
   CHAIN_ID_CELO,
   CHAIN_ID_FANTOM,
   CHAIN_ID_KLAYTN,
@@ -88,7 +88,7 @@ export async function relayEVM(
     // Klaytn and Fantom require specifying gasPrice
     overrides = { gasPrice: (await signer.getGasPrice()).toString() };
   }
-  const bridge = Bridge__factory.connect(
+  const bridge = ethers_contracts.Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
     signer
   );

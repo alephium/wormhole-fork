@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@alephium/walletconnect-provider": "0.2.2",
-    "@alephium/web3": "0.3.0-rc.8",
-    "alephium-wormhole-sdk": "0.1.0-rc28",
-    "@alephium/get-extension-wallet": "0.4.0-rc.6",
+    "@alephium/web3-react": "^0.11.3",
+    "@alephium/web3": "^0.11.3",
+    "@alephium/token-list": "0.0.7",
+    "alephium-wormhole-sdk": "0.2.0-rc.16",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
@@ -68,9 +68,11 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "chrome >= 67",
+      "edge >= 79",
+      "firefox >= 68",
+      "opera >= 54",
+      "safari >= 14"
     ],
     "development": [
       "last 1 chrome version",

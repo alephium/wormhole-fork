@@ -1,18 +1,14 @@
 import {
   approveEth,
   attestFromEth,
-  Bridge__factory,
+  ethers_contracts,
   ChainId,
   CHAIN_ID_ETH,
   coalesceChainName,
   createWrappedOnEth,
-  ERC20__factory,
-  Governance__factory,
   hexToUint8Array,
-  MockWETH9__factory,
   redeemOnEth,
   redeemOnEthNative,
-  TokenImplementation__factory,
   transferFromEth,
   transferFromEthNative
 } from 'alephium-wormhole-sdk'
@@ -21,6 +17,8 @@ import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { getSignedVAA, normalizeTokenId } from './utils'
 import { default as ethDevnetConfig } from '../../configs/ethereum/devnet.json'
+import { Bridge__factory, ERC20__factory, TokenImplementation__factory } from 'alephium-wormhole-sdk/lib/cjs/ethers-contracts'
+import { TokenInfo } from '@alephium/token-list'
 
 export async function createEth(): Promise<BridgeChain> {
   const contracts = ethDevnetConfig.contracts
@@ -34,7 +32,7 @@ export async function createEth(): Promise<BridgeChain> {
   const sequence = new Sequence()
 
   const getCurrentMessageFee = async (): Promise<bigint> => {
-    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const governance = ethers_contracts.Governance__factory.connect(governanceAddress, wallet)
     const messageFee = await governance.messageFee()
     return messageFee.toBigInt()
   }
@@ -83,12 +81,12 @@ export async function createEth(): Promise<BridgeChain> {
 
   const getWrappedToken = async (originTokenId: string, tokenChainId: ChainId): Promise<string> => {
     const remoteTokenId = normalizeTokenId(originTokenId)
-    const tokenBridge = Bridge__factory.connect(tokenBridgeAddress, wallet)
+    const tokenBridge = ethers_contracts.Bridge__factory.connect(tokenBridgeAddress, wallet)
     return await tokenBridge.wrappedAsset(tokenChainId, hexToUint8Array(remoteTokenId))
   }
 
   const getTokenBalanceOf = async (tokenId: string, address: string): Promise<bigint> => {
-    const erc20Token = ERC20__factory.connect(tokenId, wallet)
+    const erc20Token = ethers_contracts.ERC20__factory.connect(tokenId, wallet)
     const balance = await erc20Token.balanceOf(address)
     return balance.toBigInt()
   }
@@ -99,7 +97,7 @@ export async function createEth(): Promise<BridgeChain> {
     address: string
   ): Promise<bigint> => {
     const wrappedToken = await getWrappedToken(originTokenId, tokenChainId)
-    const token = TokenImplementation__factory.connect(wrappedToken, wallet)
+    const token = ethers_contracts.TokenImplementation__factory.connect(wrappedToken, wallet)
     const balance = await token.balanceOf(address)
     return balance.toBigInt()
   }
@@ -113,7 +111,7 @@ export async function createEth(): Promise<BridgeChain> {
   }
 
   const getLockedNativeBalance = async (): Promise<bigint> => {
-    const weth = MockWETH9__factory.connect(wethAddress, wallet)
+    const weth = ethers_contracts.MockWETH9__factory.connect(wethAddress, wallet)
     const balance = await weth.balanceOf(tokenBridgeAddress)
     return balance.toBigInt()
   }
@@ -132,6 +130,11 @@ export async function createEth(): Promise<BridgeChain> {
   const createWrapped = async (signedVaa: Uint8Array): Promise<void> => {
     const ethReceipt = await createWrappedOnEth(tokenBridgeAddress, wallet, signedVaa)
     console.log(`create wrapped succeed, tx id: ${ethReceipt.transactionHash}`)
+  }
+
+  const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
+    const bridge = Bridge__factory.connect(tokenBridgeAddress, wallet)
+    return bridge.wrappedAsset(tokenChain, Buffer.from(tokenId, 'hex'))
   }
 
   const transferToken = async (
@@ -239,7 +242,7 @@ export async function createEth(): Promise<BridgeChain> {
   }
 
   const getCurrentGuardianSet = async (): Promise<string[]> => {
-    const governance = Governance__factory.connect(governanceAddress, wallet)
+    const governance = ethers_contracts.Governance__factory.connect(governanceAddress, wallet)
     const guardianSetIndex = await governance.getCurrentGuardianSetIndex()
     const result = await governance.getGuardianSet(guardianSetIndex)
     return result[0]
@@ -247,6 +250,14 @@ export async function createEth(): Promise<BridgeChain> {
 
   const genMultiSigAddress = (): Uint8Array => {
     throw new Error('Not supported')
+  }
+
+  const getLocalTokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
+    const result = ERC20__factory.connect(tokenAddress, wallet)
+    const symbol = await result.symbol()
+    const name = await result.name()
+    const decimals = await result.decimals()
+    return { id: normalizeTokenId(tokenAddress), symbol, name, decimals }
   }
 
   return {
@@ -272,6 +283,8 @@ export async function createEth(): Promise<BridgeChain> {
 
     attestToken: attestToken,
     createWrapped: createWrapped,
+    getWrappedTokenId: getWrappedTokenId,
+    getLocalTokenInfo: getLocalTokenInfo,
 
     transferToken: transferToken,
     transferNative: transferNative,

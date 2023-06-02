@@ -10,12 +10,15 @@ import {
   binToHex,
   ContractState,
   encodeI256,
+  Fields,
   groupOfAddress,
   node,
   NodeProvider,
   Project,
-  Val,
-  web3
+  web3,
+  ContractFactory,
+  ContractInstance,
+  fetchContractState
 } from '@alephium/web3'
 import {
   attestFromAlph,
@@ -35,18 +38,23 @@ import {
   createLocalTokenPoolOnAlph,
   getLocalTokenInfo,
   waitAlphTxConfirmed,
-  TokenInfo
+  alephium_contracts
 } from 'alephium-wormhole-sdk'
+import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
+import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
-  getLocalTokenInfo(tokenId: string): Promise<TokenInfo>
+  getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
   attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
-  getContractState(address: string, contractName: string): Promise<ContractState>
-  getTokenBridgeContractState(): Promise<ContractState>
+  getContractState<I extends ContractInstance, F extends Fields>(
+    factory: ContractFactory<I, F>,
+    address: string
+  ): Promise<ContractState<F>>
+  getTokenBridgeContractState(): Promise<ContractState<alephium_contracts.TokenBridgeTypes.Fields>>
   deposit(remoteChainId: ChainId, amount: bigint): Promise<void>
 }
 
@@ -76,9 +84,9 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const oneAlph = 10n ** 18n
 
   const getCurrentMessageFee = async (): Promise<bigint> => {
-    const governance = Project.contract('Governance')
-    const contractState = await governance.fetchState(governanceAddress, groupIndex)
-    return contractState.fields['messageFee'] as bigint
+    const governance = alephium_contracts.Governance.at(governanceAddress)
+    const contractState = await governance.fetchState()
+    return contractState.fields.messageFee
   }
 
   const currentMessageFee = await getCurrentMessageFee()
@@ -220,6 +228,10 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     console.log(`create wrapped token on alph succeed, tx id: ${result.txId}`)
   }
 
+  const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
+    return getTokenPoolId(tokenBridgeContractId, tokenChain, tokenId, groupIndex)
+  }
+
   const transferToken = async (
     tokenId: string,
     amount: bigint,
@@ -320,9 +332,9 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   }
 
   const getCurrentGuardianSet = async (): Promise<string[]> => {
-    const governance = Project.contract('Governance')
-    const contractState = await governance.fetchState(governanceAddress, groupIndex)
-    const encoded = (contractState.fields['guardianSets'] as Val[])[1] as string
+    const governance = alephium_contracts.Governance.at(governanceAddress)
+    const contractState = await governance.fetchState()
+    const encoded = contractState.fields.guardianSets[1]
     const guardianSet = encoded.slice(2) // remove the first byte
     if (guardianSet.length === 0) {
       return []
@@ -338,13 +350,15 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return keys
   }
 
-  const getContractState = async (address: string, name: string): Promise<ContractState> => {
-    const contract = Project.contract(name)
-    return await contract.fetchState(address, groupIndex)
+  const getContractState = async <I extends ContractInstance, F extends Fields>(
+    factory: ContractFactory<I, F>,
+    address: string
+  ): Promise<ContractState<F>> => {
+    return await fetchContractState(factory, factory.at(address))
   }
 
-  const getTokenBridgeContractState = async (): Promise<ContractState> => {
-    return getContractState(tokenBridgeAddress, 'TokenBridge')
+  const getTokenBridgeContractState = async (): Promise<ContractState<alephium_contracts.TokenBridgeTypes.Fields>> => {
+    return getContractState(alephium_contracts.TokenBridge, tokenBridgeAddress)
   }
 
   const deposit = async (remoteChainId: ChainId, amount: bigint): Promise<void> => {
@@ -370,6 +384,12 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return genMultiSigAddress()
   }
 
+  const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
+    const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
+    const tokenPoolInstance = RemoteTokenPool.at(addressFromContractId(tokenPoolId))
+    return (await tokenPoolInstance.methods.getTotalSupply()).returns
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -393,6 +413,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     attestToken: attestToken,
     createWrapped: createWrapped,
+    getWrappedTokenId: getWrappedTokenId,
 
     transferToken: transferToken,
     transferNative: transferNative,
@@ -409,6 +430,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     groupIndex: groupIndex,
     tokenBridgeContractId: tokenBridgeContractId,
     getLocalTokenInfo: _getLocalTokenInfo,
+    getWrappedTokenTotalSupply: getWrappedTokenTotalSupply,
     attestWithTokenInfo: attestWithTokenInfo,
     getContractState: getContractState,
     getTokenBridgeContractState: getTokenBridgeContractState,

@@ -61,9 +61,9 @@ import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { getEmitterChainId, waitTxConfirmed } from "../utils/alephium";
-import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { TransactionDB } from "../utils/db";
+import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
 
 async function algo(
   dispatch: any,
@@ -240,19 +240,19 @@ async function terra(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  signer: AlephiumWalletSigner,
+  wallet: AlephiumWallet,
   signedVAA: Uint8Array
 ) {
   dispatch(setIsRedeeming(true));
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
-    const result = await redeemOnAlph(signer.signerProvider, tokenBridgeForChainId, signedVAA)
-    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
-    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
+    const confirmedTx = await waitTxConfirmed(wallet.nodeProvider, result.txId)
+    const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
-      signer.group,
+      wallet.group,
       signedVAA
     )
     dispatch(
@@ -286,7 +286,7 @@ export function useHandleRedeem() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const signedVAA = useTransferSignedVAA();
   const isRedeeming = useSelector(selectTransferIsRedeeming);
@@ -309,8 +309,8 @@ export function useHandleRedeem() {
       );
     } else if (targetChain === CHAIN_ID_TERRA && !!terraWallet && signedVAA) {
       terra(dispatch, enqueueSnackbar, terraWallet, signedVAA, terraFeeDenom);
-    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && signedVAA) {
-      alephium(dispatch, enqueueSnackbar, alphSigner, signedVAA)
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet && signedVAA) {
+      alephium(dispatch, enqueueSnackbar, alphWallet, signedVAA)
     } else if (
       targetChain === CHAIN_ID_ALGORAND &&
       algoAccounts[0] &&
@@ -331,7 +331,7 @@ export function useHandleRedeem() {
     solPK,
     terraWallet,
     terraFeeDenom,
-    alphSigner,
+    alphWallet,
     algoAccounts,
   ]);
 

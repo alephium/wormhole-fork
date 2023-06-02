@@ -36,12 +36,12 @@ import KeyAndBalance from "./KeyAndBalance";
 import { useLiveQuery } from "dexie-react-hooks"
 import { NodeProvider, ExplorerProvider, explorer } from "@alephium/web3"
 import { isAlphTxConfirmed, isAlphTxNotFound } from "../utils/alephium";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Alert } from "@material-ui/lab";
 import ButtonWithLoader from "./ButtonWithLoader";
+import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -286,7 +286,7 @@ export default function Transactions() {
   const { isReady: sourceChainReady } = useIsWalletReady(txSourceChain)
   const { isReady: targetChainReady } = useIsWalletReady(txTargetChain)
 
-  const { signer: alphSigner } = useAlephiumWallet()
+  const alphWallet = useAlephiumWallet()
   const { provider: ethProvider } = useEthereumProvider()
   const [isLoading, setIsLoading] = useState(true)
   const [loadingError, setLoadingError] = useState<any>(null)
@@ -310,12 +310,12 @@ export default function Transactions() {
 
   // load more transactions from explorer
   const loadMoreTxsCallback = useCallback(async () => {
-    if (alphSigner) {
+    if (alphWallet) {
       setPageNumber(pageNumber + 1)
       setIsLoading(true)
       syncFromExplorer(
-        alphSigner.nodeProvider,
-        alphSigner.address,
+        alphWallet.nodeProvider,
+        alphWallet.address,
         txTargetChain,
         isTransferCompleted,
         pageNumber + 1
@@ -331,7 +331,7 @@ export default function Transactions() {
     }
   }, [
     pageNumber,
-    alphSigner,
+    alphWallet,
     txTargetChain,
     isTransferCompleted
   ])
@@ -345,12 +345,12 @@ export default function Transactions() {
   }, [])
 
   useEffect(() => {
-    if (alphSigner && ethProvider) {
+    if (alphWallet && ethProvider) {
       const update = async () => {
         const dbExist = await TransactionDB.exists()
         if (dbExist && typeof syncInfo === 'undefined') {
           setIsLoading(true)
-          await updateTxStatus(alphSigner.nodeProvider, txTargetChain)
+          await updateTxStatus(alphWallet.nodeProvider, txTargetChain)
             .then(_ => {
               setIsLoading(false)
             })
@@ -362,17 +362,17 @@ export default function Transactions() {
       }
       update()
     }
-  }, [alphSigner, ethProvider, syncInfo, txTargetChain])
+  }, [alphWallet, ethProvider, syncInfo, txTargetChain])
 
   useEffect(() => {
-    if (alphSigner && ethProvider) {
+    if (alphWallet && ethProvider) {
       const update = async () => {
         const dbExist = await TransactionDB.exists()
         if (!dbExist || resync) {
           setIsLoading(true)
           await syncFromExplorer(
-            alphSigner.nodeProvider,
-            alphSigner.address,
+            alphWallet.nodeProvider,
+            alphWallet.address,
             txTargetChain,
             isTransferCompleted,
             pageNumber
@@ -390,7 +390,7 @@ export default function Transactions() {
       update()
     }
   }, [
-    alphSigner,
+    alphWallet,
     ethProvider,
     pageNumber,
     txTargetChain,

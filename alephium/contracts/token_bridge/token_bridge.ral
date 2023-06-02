@@ -11,7 +11,7 @@ Contract TokenBridge(
         return governance.getMessageFee()
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn attestToken(
         payer: Address,
         localTokenId: ByteVec,
@@ -54,7 +54,7 @@ Contract TokenBridge(
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(localChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
-        let encodedFields = encodeToByteVec!(
+        let (encodedImmutableFields, encodedMutableFields) = LocalTokenPool.encodeFields!(
             selfContractId!(),
             localChainId,
             localTokenId,
@@ -65,7 +65,8 @@ Contract TokenBridge(
         copyCreateSubContract!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getLocalTokenPoolTemplateId(),
-            encodedFields
+            encodedImmutableFields,
+            encodedMutableFields
         )
     }
 
@@ -82,7 +83,7 @@ Contract TokenBridge(
     ) -> () {
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
-        let encodedFields = encodeToByteVec!(
+        let (encodedImmutableFields, encodedMutableFields) = RemoteTokenPool.encodeFields!(
             selfContractId!(),
             tokenChainId,
             bridgeTokenId,
@@ -93,12 +94,12 @@ Contract TokenBridge(
             msgSequence
         )
         let path = Path.TokenPool ++ u256To2Byte!(tokenChainId) ++ bridgeTokenId
-        let tokenAmount = 1 << 255 // save some space from 0xff...ff
         copyCreateSubContractWithToken!{payer -> ALPH: createContractAlphAmount}(
             path,
             tokenBridgeFactory.getRemoteTokenPoolTemplateId(),
-            encodedFields,
-            tokenAmount
+            encodedImmutableFields,
+            encodedMutableFields,
+            u256Max!()
         )
     }
 
@@ -116,7 +117,7 @@ Contract TokenBridge(
         remoteTokenPool.updateDetails(symbol, name, msgSequence)
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn transferToken(
         fromAddress: Address,
         bridgeTokenId: ByteVec,

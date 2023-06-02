@@ -1,0 +1,37 @@
+{
+  "version": "v2.2.2",
+  "name": "RegisterChain",
+  "bytecodeTemplate": "0101030000000c{0}{3}0e2ca2{2}{0}{3}0f0c{1}0104",
+  "fieldsSig": {
+    "names": [
+      "payer",
+      "tokenBridge",
+      "vaa",
+      "alphAmount"
+    ],
+    "types": [
+      "Address",
+      "ByteVec",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

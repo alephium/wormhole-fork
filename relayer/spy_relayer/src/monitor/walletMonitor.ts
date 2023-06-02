@@ -1,5 +1,5 @@
 import {
-  Bridge__factory,
+  ethers_contracts,
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_TERRA,
@@ -227,7 +227,7 @@ async function calcLocalAddressesEVM(
   supportedTokens: SupportedToken[],
   chainConfigInfo: EthereumChainConfigInfo
 ): Promise<string[]> {
-  const tokenBridge = Bridge__factory.connect(
+  const tokenBridge = ethers_contracts.Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
     provider
   );
@@ -399,7 +399,6 @@ async function pullAllAlephiumBalances(
   chainConfig: AlephiumChainConfigInfo,
   metrics: PromHelper
 ) {
-  const groupIndex = chainConfig.groupIndex!
   const nodeProvider = new NodeProvider(chainConfig.nodeUrl)
   web3.setCurrentNodeProvider(nodeProvider)
   const walletBalances: WalletBalance[] = []
@@ -444,7 +443,7 @@ async function pullAllAlephiumBalances(
         const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenPoolId)
         const amount = tokenBalance?.amount ?? '0'
         const contractAddress = addressFromContractId(tokenPoolId)
-        const tokenInfo = await getRemoteTokenInfo(contractAddress, groupIndex)
+        const tokenInfo = await getRemoteTokenInfo(contractAddress)
         walletBalances.push({
           chainId: chainConfig.chainId,
           balanceAbs: amount,

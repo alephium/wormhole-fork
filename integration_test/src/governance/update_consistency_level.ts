@@ -1,6 +1,6 @@
 import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
-import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
+import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const newConsistencyLevel = 1
 
@@ -25,7 +25,7 @@ async function updateConsistencyLevel() {
   const currentConsistencyLevel = (await alph.getTokenBridgeContractState()).fields['minimalConsistencyLevel'] as bigint
   assert(Number(currentConsistencyLevel) !== newConsistencyLevel)
 
-  for (const guardianIndex of [0, 1]) {
+  for (const guardianIndex of guardianSetIndexes) {
     await injectVAA(updateConsistencyLevelVaa, guardianIndex, 'update-consistency-level.proto')
   }
 

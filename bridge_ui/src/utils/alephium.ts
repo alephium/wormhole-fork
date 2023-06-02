@@ -3,6 +3,8 @@ import {
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  ALEPHIUM_TOKEN_LIST,
+  CLUSTER,
   minimalAlphInContract
 } from "./consts";
 import {
@@ -17,10 +19,10 @@ import {
   getRemoteTokenInfoFromContractState,
   createLocalTokenPoolOnAlph,
   getAttestTokenHandlerId,
-  TokenInfo,
-  ALPHTokenInfo,
   getLocalTokenInfo
 } from 'alephium-wormhole-sdk';
+import { TokenInfo, ALPH } from "@alephium/token-list";
+import alephiumIcon from "../icons/alephium.svg";
 import {
   NodeProvider,
   node,
@@ -28,7 +30,10 @@ import {
   groupOfAddress,
   ALPH_TOKEN_ID,
   isHexString,
-  SignerProvider
+  SignerProvider,
+  isBase58,
+  binToHex,
+  contractIdFromAddress
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -122,6 +127,11 @@ function getContractGroupIndex(contractId: string): number {
   return parseInt(contractId.slice(-2), 16)
 }
 
+export const ALPHTokenInfo: TokenInfo = {
+  ...ALPH,
+  logoURI: alephiumIcon
+}
+
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
   if (tokenId === ALPH_TOKEN_ID) {
     return ALPHTokenInfo
@@ -136,11 +146,37 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     }
 
     const exist = await localTokenPoolExists(provider, tokenId)
-    return exist ? (await getLocalTokenInfo(provider, tokenId)) : undefined
+    if (!exist) {
+      return undefined
+    }
+    if (CLUSTER === 'devnet') {
+      return await getLocalTokenInfo(provider, tokenId)
+    }
+    return ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
   } catch (error) {
     console.log("failed to get alephium token info, error: " + error)
     return undefined
   }
+}
+
+export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+  const localTokenInfo = await getLocalTokenInfo(provider, tokenId)
+  if (CLUSTER === 'devnet') {
+    return localTokenInfo
+  }
+
+  const tokenInfo = ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
+  if (tokenInfo === undefined) {
+    throw new Error(`Token ${tokenId} does not exists in the token-list`)
+  }
+  if (
+    tokenInfo.name !== localTokenInfo.name ||
+    tokenInfo.symbol !== localTokenInfo.symbol ||
+    tokenInfo.decimals !== localTokenInfo.decimals
+  ) {
+    throw new Error(`Invalid token info, expected: ${localTokenInfo}, have: ${tokenInfo}`)
+  }
+  return localTokenInfo
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
@@ -159,7 +195,7 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     .then(state => {
       if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
         const tokenInfo = getRemoteTokenInfoFromContractState(state)
-        const originalAsset = Buffer.from(tokenInfo.tokenId, 'hex')
+        const originalAsset = Buffer.from(tokenInfo.id, 'hex')
         return {
           isWrapped: true,
           chainId: tokenInfo.tokenChainId,
@@ -173,6 +209,16 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
         }
       }
     })
+}
+
+export function tryGetContractId(idOrAddress: string): string {
+  if (idOrAddress.length === 64 && isHexString(idOrAddress)) {
+    return idOrAddress
+  }
+  if (isBase58(idOrAddress)) {
+    return binToHex(contractIdFromAddress(idOrAddress))
+  }
+  throw new Error(`Invalid contract id or contract address: ${idOrAddress}`)
 }
 
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
@@ -207,4 +253,21 @@ export async function createLocalTokenPool(
     minimalAlphInContract
   )
   return result.txId
+}
+
+export async function getAvailableBalances(provider: NodeProvider, address: string): Promise<Map<string, bigint>> {
+  const rawBalance = await provider.addresses.getAddressesAddressBalance(address)
+  const balances = new Map<string, bigint>()
+  if (rawBalance === undefined) {
+    return balances
+  }
+  const alphAmount = BigInt(rawBalance.balance) - BigInt(rawBalance.lockedBalance)
+  balances.set(ALPH_TOKEN_ID, alphAmount)
+  const tokens: node.Token[] = rawBalance.tokenBalances ?? []
+  for (const token of tokens) {
+    const locked = BigInt(rawBalance.lockedTokenBalances?.find((t) => t.id === token.id)?.amount ?? '0')
+    const tokenAmount = BigInt(token.amount) - locked
+    balances.set(token.id, tokenAmount)
+  }
+  return balances
 }

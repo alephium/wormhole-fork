@@ -1,4 +1,4 @@
-import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
 import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import {
   Connection,
@@ -21,10 +21,7 @@ import {
 } from "algosdk";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
-import {
-  transferLocalTokenScript,
-  transferRemoteTokenScript
-} from "../alephium/token_bridge";
+import { TransferLocal, TransferRemote } from "../alephium-contracts/ts/scripts";
 import {
   assetOptinCheck,
   getMessageFee,
@@ -63,10 +60,9 @@ export async function transferLocalTokenFromAlph(
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): Promise<BuildScriptTxResult> {
+): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const script = transferLocalTokenScript()
-  return script.execute(signerProvider, {
+  return TransferLocal.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
@@ -80,7 +76,9 @@ export async function transferLocalTokenFromAlph(
       consistencyLevel: BigInt(consistencyLevel)
     },
     attoAlphAmount: localTokenId === ALPH_TOKEN_ID ? messageFee + tokenAmount : messageFee,
-    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: tokenAmount }]
+    tokens: localTokenId === ALPH_TOKEN_ID
+      ? []
+      : [{ id: localTokenId, amount: tokenAmount }, { id: ALPH_TOKEN_ID, amount: DUST_AMOUNT * BigInt(2) }]
   })
 }
 
@@ -98,10 +96,9 @@ export async function transferRemoteTokenFromAlph(
   arbiterFee: bigint,
   consistencyLevel: number,
   nonce?: string
-): Promise<BuildScriptTxResult> {
+): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  const script = transferRemoteTokenScript()
-  return script.execute(signerProvider, {
+  return TransferRemote.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
@@ -116,10 +113,7 @@ export async function transferRemoteTokenFromAlph(
       consistencyLevel: BigInt(consistencyLevel)
     },
     attoAlphAmount: messageFee,
-    tokens: [{
-      id: tokenPoolId,
-      amount: tokenAmount
-    }]
+    tokens: [{ id: tokenPoolId, amount: tokenAmount }, { id: ALPH_TOKEN_ID, amount: DUST_AMOUNT * BigInt(2) }]
   })
 }
 

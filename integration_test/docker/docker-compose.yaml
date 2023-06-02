@@ -121,6 +121,41 @@ services:
       - /tmp/admin.sock
       - --logLevel=debug
 
+  guardian-2:
+    image: eu.gcr.io/alephium-org/guardiand:0.2.78
+    hostname: guardian-2
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:10999:8999/udp
+      - 127.0.0.1:9070:7070
+      - 127.0.0.1:9071:7071
+      - 127.0.0.1:8060:6060
+    volumes:
+      - guardian-node:/run/node/data
+    entrypoint:
+      - /guardiand
+      - node
+      - --ethRPC
+      - ws://eth-devnet:8545
+      - --alphRPC
+      - http://alph-full-node:22973
+      - --network
+      - "devnet"
+      - --alphFetchPeriod
+      - "1"
+      - --devnetGuardianIndex
+      - "2"
+      - --integrationTest
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --publicRPC
+      - "[::]:7070"
+      - --publicWeb
+      - "[::]:7071"
+      - --adminSocket
+      - /tmp/admin.sock
+      - --logLevel=debug
+
   spy:
     image: eu.gcr.io/alephium-org/guardiand:0.2.78
     restart: unless-stopped
@@ -136,3 +171,8 @@ services:
       - --bootstrap
       - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
       - --logLevel=debug
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379

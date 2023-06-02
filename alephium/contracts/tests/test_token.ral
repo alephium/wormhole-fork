@@ -1,11 +1,11 @@
-import "std/token_interface"
+import "std/fungible_token_interface"
 
 Contract TestToken(
   symbol: ByteVec,
   name: ByteVec,
   decimals: U256,
   totalSupply: U256
-) implements IToken {
+) implements IFungibleToken {
   pub fn getSymbol() -> ByteVec {
     return symbol
   }
@@ -22,7 +22,7 @@ Contract TestToken(
     return totalSupply
   }
 
-  @using(preapprovedAssets = true, assetsInContract = true)
+  @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
   pub fn buy(from: Address, amount: U256, factor: U256) -> () {
     let tokenAmount = amount * factor
     transferTokenToSelf!(from, ALPH, amount)

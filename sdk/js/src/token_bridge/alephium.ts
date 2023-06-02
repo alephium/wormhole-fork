@@ -2,37 +2,39 @@ import {
   addressFromContractId,
   ALPH_TOKEN_ID,
   binToHex,
-  BuildScriptTxResult,
-  ContractState,
-  fromApiVal,
+  ExecuteScriptResult,
   node,
   NodeProvider,
+  ONE_ALPH,
   SignerProvider,
   subContractId
 } from "@alephium/web3"
-import {
-  depositScript,
-  destroyUnexecutedSequencesScript,
-  remoteTokenPoolContract,
-  updateRefundAddressScript,
-  registerChainScript
-} from "../alephium/token_bridge"
 import { bytes32ToUtf8String, ChainId } from "../utils"
+import { 
+  RegisterChain,
+  Deposit,
+  DestroyUnexecutedSequenceContracts,
+  UpdateRefundAddress
+} from "../alephium-contracts/ts/scripts"
+import { RemoteTokenPool, RemoteTokenPoolTypes } from "../alephium-contracts/ts/RemoteTokenPool"
+import { ALPH as ALPHTokenInfo, TokenInfo } from "@alephium/token-list"
 
 export async function registerChain(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array,
   alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = registerChainScript()
-  const address = await signerProvider.getSelectedAddress()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  if (alphAmount < (BigInt(2) * ONE_ALPH)) {
+    throw new Error('Register chain will create two contracts, please approve at least 2 ALPH')
+  }
+  const account = await signerProvider.getSelectedAccount()
+  return RegisterChain.execute(signerProvider, {
     initialFields: {
-      payer: address,
+      payer: account.address,
       tokenBridge: tokenBridgeId,
-      vaa: Buffer.from(signedVAA).toString('hex'),
-      alphAmount: alphAmount
+      vaa: binToHex(signedVAA),
+      alphAmount: ONE_ALPH
     },
     attoAlphAmount: alphAmount
   })
@@ -42,13 +44,12 @@ export async function deposit(
   signerProvider: SignerProvider,
   tokenBridgeForChainId: string,
   amount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = depositScript()
-  const address = await signerProvider.getSelectedAddress()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  const account = await signerProvider.getSelectedAccount()
+  return Deposit.execute(signerProvider, {
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
-      payer: address,
+      payer: account.address,
       amount: amount
     },
     attoAlphAmount: amount
@@ -59,13 +60,11 @@ export async function destroyUnexecutedSequenceContracts(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = destroyUnexecutedSequencesScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return DestroyUnexecutedSequenceContracts.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
-      vaa: vaaHex
+      vaa: binToHex(signedVAA)
     }
   })
 }
@@ -74,13 +73,11 @@ export async function updateRefundAddress(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = updateRefundAddressScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return UpdateRefundAddress.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
-      vaa: vaaHex
+      vaa: binToHex(signedVAA)
     }
   })
 }
@@ -148,25 +145,18 @@ export async function contractExists(contractId: string, provider: NodeProvider)
       })
 }
 
-export interface TokenInfo {
-  tokenId: string
-  symbol: string
-  name: string
-  decimals: number
-}
-
 export interface RemoteTokenInfo extends TokenInfo {
   tokenChainId: ChainId
 }
 
-function _getRemoteTokenInfo(contractState: ContractState): RemoteTokenInfo {
-  const tokenId = contractState.fields['bridgeTokenId'] as string
-  const tokenChainId = Number(contractState.fields['tokenChainId'] as bigint) as ChainId
-  const symbolHex = contractState.fields['symbol_'] as string
-  const nameHex = contractState.fields['name_'] as string
+function _getRemoteTokenInfo(contractState: RemoteTokenPoolTypes.State): RemoteTokenInfo {
+  const tokenId = contractState.fields.bridgeTokenId as string
+  const tokenChainId = Number(contractState.fields.tokenChainId) as ChainId
+  const symbolHex = contractState.fields.symbol_ as string
+  const nameHex = contractState.fields.name_ as string
   const decimals = Number(contractState.fields['decimals_'] as bigint)
   return {
-    tokenId: tokenId,
+    id: tokenId,
     tokenChainId: tokenChainId,
     symbol: bytes32ToUtf8String(Buffer.from(symbolHex, 'hex')),
     name: bytes32ToUtf8String(Buffer.from(nameHex, 'hex')),
@@ -175,23 +165,13 @@ function _getRemoteTokenInfo(contractState: ContractState): RemoteTokenInfo {
 }
 
 export function getRemoteTokenInfoFromContractState(state: node.ContractState): RemoteTokenInfo {
-  const contract = remoteTokenPoolContract()
-  return _getRemoteTokenInfo(contract.fromApiContractState(state))
-}
-
-export async function getRemoteTokenInfo(address: string, groupIndex: number): Promise<RemoteTokenInfo> {
-  const contract = remoteTokenPoolContract()
-  const contractState = await contract.fetchState(address, groupIndex)
+  const contractState = RemoteTokenPool.contract.fromApiContractState(state) as RemoteTokenPoolTypes.State
   return _getRemoteTokenInfo(contractState)
 }
 
-export function stringToByte32Hex(str: string): string {
-  const encoder = new TextEncoder()
-  const bytes = encoder.encode(str)
-  if (bytes.length > 32) {
-    throw new Error('string exceed 32 bytes')
-  }
-  return binToHex(bytes).padStart(64, '0')
+export async function getRemoteTokenInfo(address: string): Promise<RemoteTokenInfo> {
+  const contractState = await RemoteTokenPool.at(address).fetchState()
+  return _getRemoteTokenInfo(contractState)
 }
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -211,45 +191,16 @@ export async function waitAlphTxConfirmed(
   return waitAlphTxConfirmed(provider, txId, confirmations)
 }
 
-export const ALPHTokenInfo: TokenInfo = {
-  tokenId: ALPH_TOKEN_ID,
-  symbol: 'ALPH',
-  name: 'ALPH',
-  decimals: 18
-}
-
-// TODO: move this to tokens-meta repo
 export async function getLocalTokenInfo(nodeProvider: NodeProvider, tokenId: string): Promise<TokenInfo> {
   if (tokenId === ALPH_TOKEN_ID) {
     return ALPHTokenInfo
   }
 
-  const groupIndex = parseInt(tokenId.slice(-2), 16)
-  const contractAddress = addressFromContractId(tokenId)
-  const callData: node.CallContract = {
-    group: groupIndex,
-    address: contractAddress,
-    methodIndex: 0
-  }
-  const getSymbolResult = await nodeProvider.contracts.postContractsCallContract(callData)
-  const getNameResult = await nodeProvider.contracts.postContractsCallContract({ ...callData, methodIndex: 1 })
-  const getDecimalsResult = await nodeProvider.contracts.postContractsCallContract({ ...callData, methodIndex: 2 })
-
-  if (
-    getSymbolResult.returns.length !== 1 ||
-    getNameResult.returns.length !== 1 ||
-    getDecimalsResult.returns.length !== 1
-  ) {
-    throw new Error(`Invalid token ${tokenId}`)
-  }
-
-  const symbolHex = fromApiVal(getSymbolResult.returns[0], 'ByteVec') as string
-  const nameHex = fromApiVal(getNameResult.returns[0], 'ByteVec') as string
-  const decimals = fromApiVal(getDecimalsResult.returns[0], 'U256') as bigint
+  const tokenMetaData = await nodeProvider.fetchStdTokenMetaData(tokenId)
   return {
-    tokenId: tokenId,
-    symbol: Buffer.from(symbolHex, 'hex').toString('utf8'),
-    name: Buffer.from(nameHex, 'hex').toString('utf8'),
-    decimals: Number(decimals)
+    id: tokenId,
+    symbol: Buffer.from(tokenMetaData.symbol, 'hex').toString('utf8'),
+    name: Buffer.from(tokenMetaData.name, 'hex').toString('utf8'),
+    decimals: tokenMetaData.decimals
   }
 }

@@ -189,6 +189,13 @@ function App() {
   );
   return (
     <div className={classes.bg}>
+      {CLUSTER === "mainnet" ? null : (
+        <AppBar position="static" className={classes.betaBanner} elevation={0}>
+          <Typography style={{ textAlign: "center" }}>
+            Caution! You are using the {CLUSTER} build of this app.
+          </Typography>
+        </AppBar>
+      )}
       <AppBar
         position="static"
         color="inherit"
@@ -249,13 +256,6 @@ function App() {
           </Hidden>
         </Toolbar>
       </AppBar>
-      {CLUSTER === "mainnet" ? null : (
-        <AppBar position="static" className={classes.betaBanner} elevation={0}>
-          <Typography style={{ textAlign: "center" }}>
-            Caution! You are using the {CLUSTER} build of this app.
-          </Typography>
-        </AppBar>
-      )}
       {isBeta ? (
         <AppBar position="static" className={classes.betaBanner} elevation={0}>
           <Typography style={{ textAlign: "center" }}>

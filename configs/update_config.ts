@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
-const ALPHTokenAddress = 'tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq'
+const ALPHTokenId = ''.padStart(64, '0')
 
 function updateConfig(
   baseDir: string,
@@ -44,17 +44,16 @@ function updateEthConfig(network: string) {
 
 function updateAlphConfig(network: string) {
   const func = (deployments: any, config: any): void => {
-    const deployContractResults = deployments[config.groupIndex].deployContractResults
     const contracts: any = {
-      governance: deployContractResults.Governance.contractId,
-      nativeGovernance: deployContractResults.Governance.contractAddress,
-      tokenBridge: deployContractResults.TokenBridge.contractId,
-      nativeTokenBridge: deployContractResults.TokenBridge.contractAddress
+      governance: deployments.contracts.Governance.contractInstance.contractId,
+      nativeGovernance: deployments.contracts.Governance.contractInstance.address,
+      tokenBridge: deployments.contracts.TokenBridge.contractInstance.contractId,
+      nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address
     }
-    const bridgeTokens = [ALPHTokenAddress]
-    if (deployContractResults.TestToken !== undefined) {
-      contracts.testToken = deployContractResults.TestToken.contractId
-      bridgeTokens.push(deployContractResults.TestToken.contractAddress)
+    const bridgeTokens = [ALPHTokenId]
+    if (deployments.contracts.TestToken !== undefined) {
+      contracts.testToken = deployments.contracts.TestToken.contractInstance.contractId
+      bridgeTokens.push(deployments.contracts.TestToken.contractInstance.contractId)
     }
     config.contracts = contracts
     config.coreEmitterAddress = contracts.governance
@@ -62,7 +61,7 @@ function updateAlphConfig(network: string) {
     config.bridgeTokens = bridgeTokens
   }
 
-  const alphDir = path.join(process.cwd(), '..', 'alephium')
+  const alphDir = path.join(process.cwd(), '..', 'alephium', 'artifacts')
   updateConfig(alphDir, network, 'alephium', func)
 }
 

@@ -13,7 +13,6 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
-  ALEPHIUM_HOST,
   getDefaultNativeCurrencySymbol,
   SOLANA_HOST,
   TERRA_HOST,
@@ -25,6 +24,7 @@ import { LCDClient } from "@terra-money/terra.js";
 import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -139,8 +139,7 @@ const getBalancesTerra = async (walletAddress: string) => {
     });
 };
 
-const getBalancesAlephium = async (walletAddress: string) => {
-  const provider = new NodeProvider(ALEPHIUM_HOST)
+const getBalancesAlephium = async (provider: NodeProvider, walletAddress: string) => {
   return provider
     .addresses
     .getAddressesAddressBalance(walletAddress)
@@ -174,6 +173,7 @@ export default function useTransactionFees(chainId: ChainId) {
   const [terraBalances, setTerraBalances] = useState<TerraBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const alphWallet = useAlephiumWallet()
 
   const loadStart = useCallback(() => {
     setBalance(undefined);
@@ -231,9 +231,9 @@ export default function useTransactionFees(chainId: ChainId) {
           setError("Cannot load wallet balance");
         }
       );
-    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress) {
+    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress && alphWallet) {
       loadStart();
-      getBalancesAlephium(walletAddress).then(
+      getBalancesAlephium(alphWallet.nodeProvider, walletAddress).then(
         (result) => {
           const adjustedresult =
               result === undefined || result === null ? BigInt(0) : result;
@@ -246,7 +246,7 @@ export default function useTransactionFees(chainId: ChainId) {
         }
       )
     }
-  }, [provider, walletAddress, isReady, chainId, loadStart]);
+  }, [provider, walletAddress, isReady, chainId, loadStart, alphWallet]);
 
   const results = useMemo(() => {
     return {

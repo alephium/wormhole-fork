@@ -1,25 +1,19 @@
 import {
   approveEth,
-  attestFromEth,
   CHAIN_ID_ETH,
-  createWrappedOnEth,
   getEmitterAddressEth,
   parseSequenceFromLogEth,
   transferFromEth,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_UNSET,
-  createRemoteTokenPoolOnAlph,
-  getAttestTokenHandlerId,
   getIsTransferCompletedAlph,
   getTokenBridgeForChainId,
-  attestFromAlph,
   parseSequenceFromLogAlph,
   getIsTransferCompletedEth,
   transferLocalTokenFromAlph,
   getSignedVAAWithRetry,
   uint8ArrayToHex,
-  createLocalTokenPoolOnAlph,
-  waitAlphTxConfirmed
+  waitAlphTxConfirmed,
+  ethers_contracts
 } from 'alephium-wormhole-sdk'
 import { parseUnits } from '@ethersproject/units'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
@@ -69,64 +63,7 @@ describe('Alephium to Ethereum', () => {
   const ethProvider = new ethers.providers.JsonRpcProvider(ETH_NODE_URL)
   const ethWallet = new ethers.Wallet(ETH_PRIVATE_KEY, ethProvider)
 
-  test('Attest Alephium test token to Ethereum', async () => {
-    try {
-      const attestResult = await attestFromAlph(
-        alphWallet,
-        ALPH_TOKEN_BRIDGE_ID,
-        ALPH_TOKEN_ID,
-        18,
-        'ALPH',
-        'ALPH',
-        alphWallet.account.address,
-        ONE_ALPH,
-        1
-      )
-      const nodeProvider = web3.getCurrentNodeProvider()
-      await waitAlphTxConfirmed(nodeProvider, attestResult.txId, 1)
-      console.log(`Attest transaction ${attestResult.txId} confirmed`)
-      // get the sequence from the logs (needed to fetch the vaa)
-      const events = await web3.getCurrentNodeProvider()
-        .events
-        .getEventsTxIdTxid(attestResult.txId)
-      const sequence = parseSequenceFromLogAlph(events.events[0])
-      console.log(`Attest sequence: ${sequence}`)
-      const emitterAddress = ALPH_TOKEN_BRIDGE_ID
-      // poll until the guardian(s) witness and sign the vaa
-      const { vaaBytes: signedVAA } = await getSignedVAAWithRetry(
-        WORMHOLE_RPC_HOSTS,
-        CHAIN_ID_ALEPHIUM,
-        emitterAddress,
-        CHAIN_ID_UNSET,
-        sequence,
-        {
-          transport: NodeHttpTransport(),
-        }
-      )
-      console.log(`Got signed vaa: ${binToHex(signedVAA)}`)
-      const createLocalTokenPoolResult = await createLocalTokenPoolOnAlph(
-        alphWallet,
-        getAttestTokenHandlerId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ALEPHIUM, ALPH_GROUP_INDEX),
-        ALPH_TOKEN_ID,
-        signedVAA,
-        alphWallet.account.address,
-        ONE_ALPH
-      )
-      console.log(`Create local token pool tx id: ${createLocalTokenPoolResult.txId}`)
-      await waitAlphTxConfirmed(nodeProvider, createLocalTokenPoolResult.txId, 1)
-      try {
-        await createWrappedOnEth(ETH_TOKEN_BRIDGE_ADDRESS, ethWallet, signedVAA)
-      } catch (e) {
-        // this could fail because the token is already attested (in an unclean env)
-      }
-      console.log(`Wrapped token created on Ethereum`)
-    } catch (e) {
-      console.error(`An error occurred while trying to attest from Alephium to Ethereum, error: ${e}`)
-      throw e
-    }
-  })
-
-  test('Send Alephium test token to Ethereum', async () => {
+  test('Send Alephium token to Ethereum', async () => {
     try {
       const recipientAddress = await ethWallet.getAddress()
       const amount = ONE_ALPH * 4n
@@ -199,48 +136,20 @@ describe('Ethereum to Alephium', () => {
   const ethProvider = new ethers.providers.JsonRpcProvider(ETH_NODE_URL);
   const ethWallet = new ethers.Wallet(ETH_PRIVATE_KEY, ethProvider);
 
-  test('Attest Ethereum ERC-20 to Alephium', async () => {
-    try {
-      // attest the test token
-      const receipt = await attestFromEth(
-        ETH_TOKEN_BRIDGE_ADDRESS,
-        ethWallet,
-        TEST_ERC20
-      )
-      // get the sequence from the logs (needed to fetch the vaa)
-      const sequence = parseSequenceFromLogEth(receipt, ETH_CORE_BRIDGE_ADDRESS)
-      console.log(`Attest token sequence: ${sequence}`)
-      const emitterAddress = getEmitterAddressEth(ETH_TOKEN_BRIDGE_ADDRESS)
-      // poll until the guardian(s) witness and sign the vaa
-      const { vaaBytes: signedVAA } = await getSignedVAAWithRetry(
-        WORMHOLE_RPC_HOSTS,
-        CHAIN_ID_ETH,
-        emitterAddress,
-        CHAIN_ID_UNSET,
-        sequence,
-        {
-          transport: NodeHttpTransport(),
-        }
-      )
-      console.log(`Got signed vaa: ${binToHex(signedVAA)}`)
-
-      const attestTokenHandlerId = getAttestTokenHandlerId(ALPH_TOKEN_BRIDGE_ID, CHAIN_ID_ETH, ALPH_GROUP_INDEX)
-      const createWrappedResult = await createRemoteTokenPoolOnAlph(
-        alphWallet,
-        attestTokenHandlerId,
-        signedVAA,
-        alphWallet.account.address,
-        ONE_ALPH
-      )
-      console.log(`Create wrapped token tx id: ${createWrappedResult.txId}`)
-    } catch (e) {
-      console.error(`An error occurred while trying to attest from Ethereum to Alephium, error: ${e}`)
-      throw e
-    }
-  })
+  const getCurrentMessageFee = async (): Promise<bigint> => {
+    const governance = ethers_contracts.Governance__factory.connect(ETH_CORE_BRIDGE_ADDRESS, ethWallet)
+    const messageFee = await governance.messageFee()
+    return messageFee.toBigInt()
+  }
 
   test('Send Ethereum ERC-20 to Alephium', async () => {
     try {
+      const currentMessageFee = await getCurrentMessageFee()
+      const ethTxOptions = {
+        gasLimit: 5000000,
+        gasPrice: 1000000,
+        value: currentMessageFee
+      }
       const amount = parseUnits("1", 18);
       // approve the bridge to spend tokens
       await approveEth(ETH_TOKEN_BRIDGE_ADDRESS, TEST_ERC20, ethWallet, amount)
@@ -252,7 +161,9 @@ describe('Ethereum to Alephium', () => {
         TEST_ERC20,
         amount,
         CHAIN_ID_ALEPHIUM,
-        recipientAddress
+        recipientAddress,
+        undefined,
+        ethTxOptions
       )
       // get the sequence from the logs (needed to fetch the vaa)
       sequence = parseSequenceFromLogEth(receipt, ETH_CORE_BRIDGE_ADDRESS)

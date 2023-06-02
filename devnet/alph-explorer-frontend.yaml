@@ -32,7 +32,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: alph-explorer-frontend
-          image: alephium/explorer:latest
+          image: alephium/explorer:1.5.7
           env:
             - name: REACT_APP_BACKEND_URL
               value: "http://alph-explorer-backend:9090"
