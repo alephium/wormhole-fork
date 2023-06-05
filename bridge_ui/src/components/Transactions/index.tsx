@@ -1,13 +1,13 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_BSC,
   coalesceChainName,
   getIsTransferCompletedAlph,
   getIsTransferCompletedEth,
   getEmitterAddressEth,
   getTokenBridgeForChainId,
-  isEVMChain
+  isEVMChain,
+  CHAIN_ID_ETH
 } from "alephium-wormhole-sdk";
 import { Card, Container, makeStyles } from "@material-ui/core";
 import { useCallback, useEffect, useState } from "react";
@@ -196,7 +196,7 @@ export default function Transactions() {
   const [txSourceChain, setTxSourceChain] =
     useState<ChainId>(transferSourceChain || CHAIN_ID_ALEPHIUM)
   const [txTargetChain, setTxTargetChain] =
-    useState<ChainId>(transferTargetChain || CHAIN_ID_BSC)
+    useState<ChainId>(transferTargetChain || CHAIN_ID_ETH)
 
   const { enqueueSnackbar } = useSnackbar()
   const alphWallet = useAlephiumWallet()
