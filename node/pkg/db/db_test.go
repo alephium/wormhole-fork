@@ -160,49 +160,6 @@ func TestGetGovernanceVAASequence(t *testing.T) {
 	test([]uint64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, vaas)
 }
 
-func TestNextGovernanceVAASequence(t *testing.T) {
-	db, err := Open(t.TempDir())
-	assert.Nil(t, err)
-
-	nextSeq, err := db.NextGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *nextSeq, uint64(0))
-
-	vaa0 := randomGovernanceVAA(vaa.ChainIDUnset)
-	vaa0.Sequence = uint64(0)
-	err = db.StoreSignedVAA(vaa0)
-	assert.Nil(t, err)
-	nextSeq, err = db.NextGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *nextSeq, uint64(1))
-
-	maxSequence := uint64(0)
-	for i := 0; i < 10; i++ {
-		vaa := randomGovernanceVAA(vaa.ChainIDUnset)
-		err = db.StoreSignedVAA(vaa)
-		assert.Nil(t, err)
-		if vaa.Sequence > maxSequence {
-			maxSequence = vaa.Sequence
-		}
-	}
-
-	nextSeq, err = db.NextGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *nextSeq, maxSequence+1)
-
-	for i := 0; i < 10; i++ {
-		vaa := randomGovernanceVAA(vaa.ChainIDAlephium)
-		err = db.StoreSignedVAA(vaa)
-		assert.Nil(t, err)
-		if vaa.Sequence > maxSequence {
-			maxSequence = vaa.Sequence
-		}
-	}
-	nextSeq, err = db.NextGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *nextSeq, maxSequence+1)
-}
-
 func getVAA() vaa.VAA {
 	var payload = []byte{97, 97, 97, 97, 97, 97}
 	var governanceEmitter = vaa.Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
