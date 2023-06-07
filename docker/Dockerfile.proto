@@ -48,7 +48,7 @@ ADD tools/package.json /app/tools/
 ADD tools/package-lock.json /app/tools/
 
 RUN --mount=type=cache,target=/root/.cache --mount=type=cache,target=/root/.npm \
- 	cd /app/tools && npm ci
+	cd /app/tools && npm ci
 
 RUN --mount=type=cache,target=/root/.cache \
 	cd /app && \

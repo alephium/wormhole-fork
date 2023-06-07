@@ -1,7 +1,5 @@
 FROM node:16-buster-slim@sha256:93c9fc3550f5f7d159f282027228e90e3a7f8bf38544758024f005e82607f546
 
-RUN apt update && apt install netcat -y && apt install default-jre -y
-
 RUN mkdir /alephium && mkdir /configs
 
 WORKDIR /alephium

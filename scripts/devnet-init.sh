@@ -24,7 +24,7 @@ bscNativeTokenBridge=$(jq --raw-output '.contracts.tokenBridge' $bscConfigJson)
 alphTokenBridge=$(jq --raw-output '.tokenBridgeEmitterAddress' $alephiumConfigJson)
 alphNativeTokenBridge=$(jq --raw-output '.contracts.nativeTokenBridge' $alephiumConfigJson)
 
-alphNodeUrl="http://alph-full-node:22973"
+alphNodeUrl="http://alephium:22973"
 ethNodeUrl="http://eth-devnet:8545"
 bscNodeUrl="http://bsc-devnet:8545"
 
