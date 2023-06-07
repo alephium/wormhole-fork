@@ -21,10 +21,10 @@ jobs:
       - name: build docker images
         run: ./build-docker-images.sh "devnet"
       - name: start docker images
-        working-directory: ./integration_test/docker
+        working-directory: ./docker
         run: docker-compose up -d
       - name: wait until contracts are deployed
-        working-directory: ./integration_test/docker
+        working-directory: ./docker
         run: ./wait-until-services-up.sh
       - name: build clients
         working-directory: ./clients/js
