@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # This script allows devnet initalization with more than one guardian.
-# First argument is the number of guardians for the initial guardian set.
 set -exuo pipefail
 
-numGuardians=$1
-echo "number of guardians to initialize: ${numGuardians}"
+echo "number of guardians to initialize: $NUM_OF_GUARDIANS"
 
 # assert jq exists before trying to use it
 if ! type -p jq; then
@@ -84,10 +82,10 @@ npm --prefix clients/js start --silent -- submit ${registerBscTokenBridgeVAA} -c
 npm --prefix clients/js start --silent -- submit ${registerAlphTokenBridgeVAA} -c bsc -n devnet --node-url $bscNodeUrl
 npm --prefix clients/js start --silent -- submit ${registerEthTokenBridgeVAA} -c bsc -n devnet --node-url $bscNodeUrl
 
-# create guardian set upgrade vaa if the numGuardians > 1
-if [[ "${numGuardians}" -gt "1" ]]; then
+# create guardian set upgrade vaa if the NUM_OF_GUARDIANS > 1
+if [[ "$NUM_OF_GUARDIANS" -gt "1" ]]; then
     echo "creating guardian set upgrade vaa"
-    newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.guardians[:$lastIndex] | [.[].public[2:]]' $guardianConfigJson)
+    newGuardiansPublicHex=$(jq -c --argjson lastIndex $NUM_OF_GUARDIANS '.guardians[:$lastIndex] | [.[].public[2:]]' $guardianConfigJson)
     newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
     guardianSetUpgradeVAA=$(npm --prefix clients/js start --silent -- generate guardian-set-upgrade -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
     npm --prefix clients/js start --silent -- submit ${guardianSetUpgradeVAA} -c alephium -n devnet --node-url $alphNodeUrl

@@ -134,10 +134,12 @@ services:
 
   devnet-init:
     image: eu.gcr.io/alephium-org/devnet-init:0.2.96
+    environment:
+      - NUM_OF_GUARDIANS=${NUM_OF_GUARDIANS:-1}
     command:
       - /bin/sh
       - -c
-      - "/scripts/devnet-init.sh 1"
+      - "/scripts/devnet-init.sh"
 
   guardian-0:
     image: eu.gcr.io/alephium-org/guardiand:0.2.96
