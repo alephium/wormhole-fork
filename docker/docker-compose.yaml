@@ -367,6 +367,8 @@ services:
     image: eu.gcr.io/alephium-org/wormhole-explorer:0.2.96
     restart: unless-stopped
     ports:
-      - 127.0.0.1:30002:3000
+      - 127.0.0.1:30002:8000
     command:
-      - npm run serve
+      - /bin/sh
+      - -c
+      - "npm run start"
