@@ -323,7 +323,7 @@ func (s *Repository) upsertToken(ctx context.Context, v *vaa.VAA, attestToken *A
 	} else {
 		tokenDoc.Symbol = attestToken.Symbol
 		tokenDoc.Name = attestToken.Name
-		tokenDoc.CoinGeckoCoinId = ""
+		tokenDoc.CoinGeckoCoinId = strings.ToLower(attestToken.Symbol)
 	}
 	update := bson.D{{Key: "$set", Value: tokenDoc}}
 	opts := options.Update().SetUpsert(true)
