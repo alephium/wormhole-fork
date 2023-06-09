@@ -11,6 +11,7 @@ import {
   isEVMChain,
   uint8ArrayToHex,
   WormholeWrappedInfo,
+  coalesceChainName
 } from "alephium-wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
@@ -46,6 +47,7 @@ import { NodeProvider } from '@alephium/web3'
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 import { useAlephiumWallet } from "./useAlephiumWallet";
+import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -108,32 +110,39 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     if (isRecovery) {
       return;
     }
-    // TODO: loading state, error state
     let cancelled = false;
     (async () => {
       if (isEVMChain(sourceChain) && provider && sourceAsset) {
-        const wrappedInfo = makeStateSafe(
-          await (nft
-            ? getOriginalAssetEthNFT(
-                getNFTBridgeAddressForChain(sourceChain),
-                provider,
-                sourceAsset,
-                tokenId,
-                sourceChain
-              )
-            : getOriginalAssetEth(
-                getTokenBridgeAddressForChain(sourceChain),
-                provider,
-                sourceAsset,
-                sourceChain
-              ))
-        );
-        if (!cancelled) {
-          dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
+        dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
+        try {
+          const wrappedInfo = makeStateSafe(
+            await (nft
+              ? getOriginalAssetEthNFT(
+                  getNFTBridgeAddressForChain(sourceChain),
+                  provider,
+                  sourceAsset,
+                  tokenId,
+                  sourceChain
+                )
+              : getOriginalAssetEth(
+                  getTokenBridgeAddressForChain(sourceChain),
+                  provider,
+                  sourceAsset,
+                  sourceChain
+                ))
+          );
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
+          }
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from ${coalesceChainName(sourceChain)}, error: ${e}`)));
+          }
         }
       }
       if (sourceChain === CHAIN_ID_SOLANA && sourceAsset) {
         try {
+          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
           const connection = new Connection(SOLANA_HOST, "confirmed");
           const wrappedInfo = makeStateSafe(
             await (nft
@@ -149,33 +158,46 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
                 ))
           );
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
+            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
           }
-        } catch (e) {}
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from solana, error: ${e}`)));
+          }
+        }
       }
       if (sourceChain === CHAIN_ID_TERRA && sourceAsset) {
         try {
+          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
           const lcd = new LCDClient(TERRA_HOST);
           const wrappedInfo = makeStateSafe(
             await getOriginalAssetTerra(lcd, sourceAsset)
           );
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
+            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
           }
-        } catch (e) {}
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from terra, error: ${e}`)));
+          }
+        }
       }
       if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphWallet) {
         try {
+          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
           const wrappedInfo = await getAlephiumTokenInfo(alphWallet.nodeProvider, sourceAsset)
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(wrappedInfo))
+            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)))
           }
         } catch (e) {
-          console.log("get alephium token info failed, error: " + JSON.stringify(e))
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from alephium, error: ${e}`)));
+          }
         }
       }
       if (sourceChain === CHAIN_ID_ALGORAND && sourceAsset) {
         try {
+          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
           const algodClient = new Algodv2(
             ALGORAND_HOST.algodToken,
             ALGORAND_HOST.algodServer,
@@ -189,9 +211,13 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
             )
           );
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
+            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
           }
-        } catch (e) {}
+        } catch (e) {
+          if (!cancelled) {
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from algorand, error: ${e}`)));
+          }
+        }
       }
     })();
     return () => {

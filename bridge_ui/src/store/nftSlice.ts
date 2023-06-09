@@ -34,10 +34,7 @@ export interface NFTParsedTokenAccount extends ParsedTokenAccount {
 export interface NFTState {
   activeStep: Steps;
   sourceChain: ChainId;
-  isSourceAssetWormholeWrapped: boolean | undefined;
-  originChain: ChainId | undefined;
-  originAsset: string | undefined;
-  originTokenId: string | undefined;
+  sourceAssetInfo: DataWrapper<StateSafeWormholeWrappedInfo>
   sourceWalletAddress: string | undefined;
   sourceParsedTokenAccount: NFTParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<NFTParsedTokenAccount[]>;
@@ -55,13 +52,10 @@ export interface NFTState {
 const initialState: NFTState = {
   activeStep: 0,
   sourceChain: CHAIN_ID_SOLANA,
-  isSourceAssetWormholeWrapped: false,
+  sourceAssetInfo: getEmptyDataWrapper(),
   sourceWalletAddress: undefined,
   sourceParsedTokenAccount: undefined,
   sourceParsedTokenAccounts: getEmptyDataWrapper(),
-  originChain: undefined,
-  originAsset: undefined,
-  originTokenId: undefined,
   targetChain: CHAIN_ID_ETH,
   targetAddressHex: undefined,
   targetAsset: getEmptyDataWrapper(),
@@ -94,22 +88,16 @@ export const nftSlice = createSlice({
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
       state.targetAsset = getEmptyDataWrapper();
       state.targetAddressHex = undefined;
-      state.isSourceAssetWormholeWrapped = undefined;
-      state.originChain = undefined;
-      state.originAsset = undefined;
-      state.originTokenId = undefined;
+      state.sourceAssetInfo = getEmptyDataWrapper()
       if (state.targetChain === action.payload) {
         state.targetChain = prevSourceChain;
       }
     },
     setSourceWormholeWrappedInfo: (
       state,
-      action: PayloadAction<StateSafeWormholeWrappedInfo>
+      action: PayloadAction<DataWrapper<StateSafeWormholeWrappedInfo>>
     ) => {
-      state.isSourceAssetWormholeWrapped = action.payload.isWrapped;
-      state.originChain = action.payload.chainId;
-      state.originAsset = action.payload.assetAddress;
-      state.originTokenId = action.payload.tokenId;
+      state.sourceAssetInfo = action.payload
     },
     setSourceWalletAddress: (
       state,
@@ -125,10 +113,7 @@ export const nftSlice = createSlice({
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
       state.targetAsset = getEmptyDataWrapper();
       state.targetAddressHex = undefined;
-      state.isSourceAssetWormholeWrapped = undefined;
-      state.originChain = undefined;
-      state.originAsset = undefined;
-      state.originTokenId = undefined;
+      state.sourceAssetInfo = getEmptyDataWrapper()
     },
     setSourceParsedTokenAccounts: (
       state,
@@ -165,10 +150,7 @@ export const nftSlice = createSlice({
         state.sourceChain = prevTargetChain;
         state.activeStep = 0;
         state.sourceParsedTokenAccount = undefined;
-        state.isSourceAssetWormholeWrapped = undefined;
-        state.originChain = undefined;
-        state.originAsset = undefined;
-        state.originTokenId = undefined;
+        state.sourceAssetInfo = getEmptyDataWrapper()
         state.sourceParsedTokenAccounts = getEmptyDataWrapper();
       }
     },
@@ -225,11 +207,13 @@ export const nftSlice = createSlice({
       state.sourceParsedTokenAccount = undefined;
       state.sourceParsedTokenAccounts = getEmptyDataWrapper();
       state.targetAsset = getEmptyDataWrapper();
-      state.isSourceAssetWormholeWrapped = undefined;
       state.targetAddressHex = action.payload.parsedPayload.targetAddress;
-      state.originChain = action.payload.parsedPayload.originChain;
-      state.originAsset = action.payload.parsedPayload.originAddress;
-      state.originTokenId = undefined;
+      state.sourceAssetInfo = receiveDataWrapper({
+        isWrapped: action.payload.parsedPayload.originChain !== state.sourceChain,
+        chainId: action.payload.parsedPayload.originChain,
+        assetAddress: action.payload.parsedPayload.originAddress,
+        tokenId: undefined
+      })
       state.activeStep = 3;
       state.isRecovery = true;
     },
