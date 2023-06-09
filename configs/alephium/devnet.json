@@ -10,6 +10,7 @@
     "nativeGovernance": "28rRbMKJ3LVcsMSkZucY2oWjkmdR6rTsfjpgxmdCML6vs",
     "tokenBridge": "13ed3e5741c0cf8d9b46b07e4fd63db423b8bdb9dcfe32026fd9a7419a845c00",
     "nativeTokenBridge": "v2jgJ983HXhRUUs3oW6xVQPK7HKYmhxdiXSUmF6C6pi3",
+    "bridgeRewardRouter": "4508ccd834125748e79e8bb33a2428b28c6a97bba021349e2ae8254125703200",
     "testToken": "deccf8b15682cc36f6dbf4d41adea34972c1290ca4faa74e46f6cff7d1e64d00"
   },
   "nodeUrl": "http://localhost:22973",

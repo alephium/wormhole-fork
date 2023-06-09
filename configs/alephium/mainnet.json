@@ -9,6 +9,7 @@
     "nativeGovernance": "",
     "tokenBridge": "",
     "nativeTokenBridge": "",
+    "bridgeRewardRouter": "",
     "testToken": ""
   },
   "nodeUrl": "",
