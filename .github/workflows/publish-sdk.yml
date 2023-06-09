@@ -1,0 +1,42 @@
+name: Publish Wormhole SDK
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set up Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18.6'
+
+      - name: Check if version changed
+        id: check-version
+        run: echo "::set-output name=version_changed::$(git diff HEAD^ HEAD -- sdk/js/package.json | grep '^\+[[:space:]]*"version":')"
+
+      - name: Publish package
+        if: steps.check-version.outputs.version_changed
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd tools && npm ci && ./build.sh && cd ..
+          tools/bin/buf generate --template buf.gen.web.yaml
+          cd ethereum && npm ci && cd ..
+          cd sdk/js && npm ci && npm run build
+          npm publish --access public
