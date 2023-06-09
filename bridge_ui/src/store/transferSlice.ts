@@ -40,9 +40,7 @@ export interface Transaction {
 export interface TransferState {
   activeStep: Steps;
   sourceChain: ChainId;
-  isSourceAssetWormholeWrapped: boolean | undefined;
-  originChain: ChainId | undefined;
-  originAsset: string | undefined;
+  sourceAssetInfo: DataWrapper<StateSafeWormholeWrappedInfo>
   sourceWalletAddress: string | undefined;
   sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
@@ -69,12 +67,10 @@ export interface TransferState {
 const initialState: TransferState = {
   activeStep: 0,
   sourceChain: CHAIN_ID_ALEPHIUM,
-  isSourceAssetWormholeWrapped: false,
+  sourceAssetInfo: getEmptyDataWrapper(),
   sourceWalletAddress: undefined,
   sourceParsedTokenAccount: undefined,
   sourceParsedTokenAccounts: getEmptyDataWrapper(),
-  originChain: undefined,
-  originAsset: undefined,
   amount: "",
   targetChain: CHAIN_ID_ETH,
   targetAddressHex: undefined,
@@ -117,20 +113,16 @@ export const transferSlice = createSlice({
       state.targetAsset = getEmptyDataWrapper();
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
-      state.isSourceAssetWormholeWrapped = undefined;
-      state.originChain = undefined;
-      state.originAsset = undefined;
+      state.sourceAssetInfo = getEmptyDataWrapper()
       if (state.targetChain === action.payload) {
         state.targetChain = prevSourceChain;
       }
     },
     setSourceWormholeWrappedInfo: (
       state,
-      action: PayloadAction<StateSafeWormholeWrappedInfo>
+      action: PayloadAction<DataWrapper<StateSafeWormholeWrappedInfo>>
     ) => {
-      state.isSourceAssetWormholeWrapped = action.payload.isWrapped;
-      state.originChain = action.payload.chainId;
-      state.originAsset = action.payload.assetAddress;
+      state.sourceAssetInfo = action.payload
     },
     setSourceWalletAddress: (
       state,
@@ -147,9 +139,7 @@ export const transferSlice = createSlice({
       state.targetAsset = getEmptyDataWrapper();
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
-      state.isSourceAssetWormholeWrapped = undefined;
-      state.originChain = undefined;
-      state.originAsset = undefined;
+      state.sourceAssetInfo = getEmptyDataWrapper()
     },
     setSourceParsedTokenAccounts: (
       state,
@@ -190,9 +180,7 @@ export const transferSlice = createSlice({
         state.sourceChain = prevTargetChain;
         state.activeStep = 0;
         state.sourceParsedTokenAccount = undefined;
-        state.isSourceAssetWormholeWrapped = undefined;
-        state.originChain = undefined;
-        state.originAsset = undefined;
+        state.sourceAssetInfo = getEmptyDataWrapper()
         state.sourceParsedTokenAccounts = getEmptyDataWrapper();
       }
     },
@@ -271,10 +259,12 @@ export const transferSlice = createSlice({
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
       state.targetAsset = getEmptyDataWrapper();
       state.targetParsedTokenAccount = undefined;
-      state.isSourceAssetWormholeWrapped = undefined;
       state.targetAddressHex = action.payload.parsedPayload.targetAddress;
-      state.originChain = action.payload.parsedPayload.originChain;
-      state.originAsset = action.payload.parsedPayload.originAddress;
+      state.sourceAssetInfo = receiveDataWrapper({
+        isWrapped: action.payload.parsedPayload.originChain !== action.payload.parsedPayload.sourceChain,
+        chainId: action.payload.parsedPayload.originChain,
+        assetAddress: action.payload.parsedPayload.originAddress
+      })
       state.amount = action.payload.parsedPayload.amount;
       state.activeStep = 3;
       state.isRecovery = true;
