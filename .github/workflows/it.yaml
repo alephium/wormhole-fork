@@ -22,7 +22,7 @@ jobs:
         run: ./build-docker-images.sh "devnet"
       - name: start docker images
         working-directory: ./docker
-        run: docker-compose up -d
+        run: MONGO_USER=root MONGO_PASSWORD=root docker-compose up -d
       - name: wait until contracts are deployed
         working-directory: ./docker
         run: ./wait-until-services-up.sh

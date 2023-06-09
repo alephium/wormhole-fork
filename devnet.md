@@ -19,13 +19,13 @@ Start the devnet:
 
 ```
 cd ./docker
-docker compose up
+MONGO_USER=user MONGO_PASSWORD=password docker compose up
 ```
 
 This command will run one guardian by default, you can also specify the number of guardians through the environment variable `NUM_OF_GUARDIANS`, note that currently devnet supports up to 3 guardians:
 
 ```sh
-NUM_OF_GUARDIANS=3 docker compose up
+MONGO_USER=user MONGO_PASSWORD=password NUM_OF_GUARDIANS=3 docker compose up
 ```
 
 And wait for all containers to start.
