@@ -1,6 +1,7 @@
 {
   "chainId": 255,
   "groupIndex": 0,
+  "initRewards": 0,
   "minimalConsistencyLevel": 105,
   "messageFee": "0",
   "contracts": {

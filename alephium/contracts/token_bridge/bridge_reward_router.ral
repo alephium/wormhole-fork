@@ -1,17 +1,20 @@
 Contract BridgeRewardRouter() {
-    @using(assetsInContract = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn completeTransfer(tokenBridgeForChain: TokenBridgeForChain, vaa: ByteVec, caller: Address) -> () {
-        tokenBridgeForChain.completeTransfer{selfAddress!() -> ALPH: dustAmount!()}(vaa, caller)
-        let targetAddress = parseTargetAddress(vaa)
-        transferTokenFromSelf!(targetAddress, ALPH, 1 alph)
+        tokenBridgeForChain.completeTransfer{caller -> ALPH: dustAmount!()}(vaa, caller)
+        if (tokenRemaining!(selfAddress!(), ALPH) >= 2 alph) { // 1 alph for `minimalAlphInContract`
+            let signatureSize = u256From1Byte!(byteVecSlice!(vaa, 5, 6))
+            let payloadOffset = 59 + signatureSize * 66 // 6 + signatureSize * 66 + 53
+            let targetAddressSizeOffset = payloadOffset + 67 // payloadOffset + 1 + 32 + 32 + 2
+            let targetAddressOffset = targetAddressSizeOffset + 2
+            let targetAddressSize = u256From2Byte!(byteVecSlice!(vaa, targetAddressSizeOffset, targetAddressOffset))
+            let targetAddress = byteVecToAddress!(byteVecSlice!(vaa, targetAddressOffset, targetAddressOffset + targetAddressSize))
+            transferTokenFromSelf!(targetAddress, ALPH, 1 alph)
+        }
     }
 
-    // We need to regularly top up the rewards, or we cancel the reward program at some point.
-    @using(preapprovedAssets = true, assetInContract = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn addRewards(caller: Address, amount: U256) -> () {
         transferTokenToSelf!(caller, ALPH, amount)
     }
-
-    // Maybe we could add a withdraw function to withdraw the remaining rewards if the incentive program is to be cancelled?
-    // Maybe not so we keep this contract as simple as possible.
 }

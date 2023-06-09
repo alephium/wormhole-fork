@@ -1,6 +1,7 @@
 {
   "chainId": 255,
   "groupIndex": 0,
+  "initRewards": 1024,
   "mnemonic": "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",

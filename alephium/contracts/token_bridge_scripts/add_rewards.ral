@@ -1,0 +1,3 @@
+TxScript AddRewards(bridgeRewardRouter: BridgeRewardRouter, amount: U256) {
+  bridgeRewardRouter.addRewards{callerAddress!() -> ALPH: amount}(callerAddress!(), amount)
+}

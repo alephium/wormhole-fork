@@ -1,7 +1,0 @@
-TxScript CompleteTransfer(
-    bridgeRouter: BridgeRouter,
-    tokenBridgeForChain: TokenBridgeForChain,
-    vaa: ByteVec
-) {
-    bridgeRouter.completeTransfer(tokenBridgeForChain, vaa, callerAddress!())
-}

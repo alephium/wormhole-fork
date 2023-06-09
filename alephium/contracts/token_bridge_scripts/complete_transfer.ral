@@ -1,7 +1,7 @@
 TxScript CompleteTransfer(
+    bridgeRewardRouter: BridgeRewardRouter,
     tokenBridgeForChain: TokenBridgeForChain,
     vaa: ByteVec
 ) {
-    let caller = callerAddress!()
-    tokenBridgeForChain.completeTransfer{caller -> ALPH: dustAmount!()}(vaa, caller)
+    bridgeRewardRouter.completeTransfer{callerAddress!() -> ALPH: dustAmount!()}(tokenBridgeForChain, vaa, callerAddress!())
 }

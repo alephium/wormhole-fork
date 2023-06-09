@@ -1,20 +1,17 @@
 {
   "version": "v2.3.3",
-  "name": "CompleteTransfer",
-  "bytecodeTemplate": "0101030000000ab413c3038d7ea4c68000a2{1}{2}b40f0c{0}0100",
+  "name": "AddRewards",
+  "bytecodeTemplate": "01010300000009b4{1}a2b4{1}0e0c{0}0101",
   "fieldsSig": {
     "names": [
       "bridgeRewardRouter",
-      "tokenBridgeForChain",
-      "vaa"
+      "amount"
     ],
     "types": [
       "ByteVec",
-      "ByteVec",
-      "ByteVec"
+      "U256"
     ],
     "isMutable": [
-      false,
       false,
       false
     ]
