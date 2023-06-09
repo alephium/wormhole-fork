@@ -301,8 +301,8 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD:-example}
       ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL:-mongodb://mongo:27017/?directConnection=true}
 
-  fly:
-    image: eu.gcr.io/alephium-org/fly:0.2.96
+  wormhole-explorer-backend:
+    image: eu.gcr.io/alephium-org/wormhole-explorer-backend:0.2.96
     restart: unless-stopped
     ports:
       - 127.0.0.1:8101:8101
@@ -310,7 +310,7 @@ services:
       mongo:
         condition: service_healthy
     entrypoint:
-      - /fly
+      - /backend
       - --bootstrap
       - /dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw
       - --guardianGrpcUrl
@@ -337,8 +337,8 @@ services:
       - --ethRpcUrl
       - ws://eth-devnet:8545
 
-  indexer-api:
-    image: eu.gcr.io/alephium-org/indexer-api:0.2.96
+  wormhole-explorer-api-server:
+    image: eu.gcr.io/alephium-org/wormhole-explorer-api-server:0.2.96
     restart: unless-stopped
     ports:
       - 127.0.0.1:8100:8100
