@@ -2,6 +2,8 @@ import { Sequence } from '../sequence'
 import { BridgeChain } from '../bridge_chain'
 import { assert, randomBigInt } from '../utils'
 import * as base58 from 'bs58'
+import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
+import { DUST_AMOUNT, ONE_ALPH } from '@alephium/web3'
 
 export class TransferTokenTest {
   fromChain: BridgeChain
@@ -114,7 +116,10 @@ export class TransferTokenTest {
     )
     const balanceAfterTransferOnTargetChain = await this.toChain.getNativeTokenBalance()
 
-    assert(amount + balanceBeforeTransferOnTargetChain - txFee === balanceAfterTransferOnTargetChain)
+    assert(
+      amount + balanceBeforeTransferOnTargetChain - txFee ===
+        balanceAfterTransferOnTargetChain - (this.toChain.chainId === CHAIN_ID_ALEPHIUM ? ONE_ALPH : 0n)
+    ) // minus ONE_ALPH reward
     assert(amount + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
   }
 
@@ -125,11 +130,13 @@ export class TransferTokenTest {
     for (let i = 0; i < num; i++) {
       const multiSigAddressBytes = this.toChain.genMultiSigAddress()
       const multiSigAddressBase58 = base58.encode(multiSigAddressBytes)
+      const alphBalanceBeforeTransfer = await this.toChain.getNativeTokenBalanceByAddress(multiSigAddressBase58)
       const balanceBeforeTransfer = await this.toChain.getWrappedTokenBalanceByAddress(
         tokenId,
         this.fromChain.chainId,
         multiSigAddressBase58
       )
+      assert(alphBalanceBeforeTransfer === 0n)
       assert(balanceBeforeTransfer === 0n)
 
       const amount = randomBigInt(maxAmount, this.fromChain.normalizeTransferAmount)
@@ -142,12 +149,14 @@ export class TransferTokenTest {
       )
       await this.toChain.redeemToken(transferResult.signedVaa)
 
-      const balanceAfterTransfer = await this.toChain.getWrappedTokenBalanceByAddress(
+      const tokenBalanceAfterTransfer = await this.toChain.getWrappedTokenBalanceByAddress(
         tokenId,
         this.fromChain.chainId,
         multiSigAddressBase58
       )
-      assert(balanceAfterTransfer === amount)
+      assert(tokenBalanceAfterTransfer === amount)
+      const alphBalanceAfterTransfer = await this.toChain.getNativeTokenBalanceByAddress(multiSigAddressBase58)
+      assert(alphBalanceAfterTransfer === alphBalanceBeforeTransfer + ONE_ALPH + DUST_AMOUNT)
     }
   }
 }
