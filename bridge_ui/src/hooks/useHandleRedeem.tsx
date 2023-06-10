@@ -43,6 +43,7 @@ import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
+  ALEPHIUM_BRIDGE_REWARD_ROUTER_ID,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -249,7 +250,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
     console.log('redeem on alephium')
-    const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
+    const result = await redeemOnAlph(wallet.signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
     console.log(`the redeem tx has been submitted, txId: ${result.txId}`)
     dispatch(setIsWalletApproved(true))
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)

@@ -12,6 +12,7 @@ export * from "./TestToken";
 export * from "./TokenBridgeV1";
 export * from "./UnexecutedSequenceTest";
 export * from "./AttestTokenHandler";
+export * from "./BridgeRewardRouter";
 export * from "./LocalTokenPool";
 export * from "./RemoteTokenPool";
 export * from "./TokenBridge";

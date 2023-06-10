@@ -43,7 +43,6 @@ import {
 import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
-import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
@@ -324,7 +323,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const redeemToken = async (signedVaa: Uint8Array): Promise<bigint> => {
     const vaa = deserializeTransferTokenVAA(signedVaa)
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId, groupIndex)
-    const result = await redeemOnAlph(nodeWallet, tokenBridgeForChainId, signedVaa)
+    const result = await redeemOnAlph(nodeWallet, alephiumDevnetConfig.contracts.bridgeRewardRouter, tokenBridgeForChainId, signedVaa)
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`redeem on alph succeed, tx id: ${result.txId}`)
     return await getTransactionFee(result.txId)
@@ -385,7 +384,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
   const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
     const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
-    const tokenPoolInstance = RemoteTokenPool.at(addressFromContractId(tokenPoolId))
+    const tokenPoolInstance = alephium_contracts.RemoteTokenPool.at(addressFromContractId(tokenPoolId))
     return (await tokenPoolInstance.methods.getTotalSupply()).returns
   }
 

@@ -27,11 +27,13 @@ import { deserializeTransferTokenVAA } from "../utils/vaa";
 
 export async function redeemOnAlph(
   signerProvider: SignerProvider,
+  bridgeRewardRouterId: string,
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
   return CompleteTransfer.execute(signerProvider, {
     initialFields: {
+      bridgeRewardRouter: bridgeRewardRouterId,
       tokenBridgeForChain: tokenBridgeForChainId,
       vaa: binToHex(signedVAA)
     },

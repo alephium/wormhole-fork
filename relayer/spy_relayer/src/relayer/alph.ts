@@ -46,7 +46,7 @@ export async function relayAlph(
   logger.info(`Will redeem using pubkey: ${(await signer.getSelectedAccount()).address}`)
 
   logger.debug('Redeeming...')
-  const redeemResult = await redeemOnAlph(signer, tokenBridgeForChainId, signedVaaArray)
+  const redeemResult = await redeemOnAlph(signer, chainConfigInfo.bridgeRewardRouter, tokenBridgeForChainId, signedVaaArray)
   const confirmed = await waitAlphTxConfirmed(signer.nodeProvider, redeemResult.txId, 1, 120)
   const executionOk = await getScriptExecutionResult(signer.nodeProvider, confirmed)
   logger.info(`Redeem transaction tx id: ${redeemResult.txId}, script execution result: ${executionOk}`)

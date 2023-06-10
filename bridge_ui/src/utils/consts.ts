@@ -687,6 +687,12 @@ export const ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID =
     : CLUSTER === "testnet"
     ? alephiumTestnetConfig.contracts.tokenBridge
     : alephiumDevnetConfig.contracts.tokenBridge
+export const ALEPHIUM_BRIDGE_REWARD_ROUTER_ID =
+  CLUSTER === "mainnet"
+    ? alephiumMainnetConfig.contracts.bridgeRewardRouter
+    : CLUSTER === "testnet"
+    ? alephiumTestnetConfig.contracts.bridgeRewardRouter
+    : alephiumDevnetConfig.contracts.bridgeRewardRouter
 export const ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH = alephium_contracts.RemoteTokenPool.contract.codeHash
 export const ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL =
   CLUSTER === "mainnet"

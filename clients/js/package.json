@@ -6,7 +6,7 @@
     "@alephium/web3-test": "^0.12.4",
     "@alephium/web3-wallet": "^0.12.4",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
-    "alephium-wormhole-sdk": "0.2.0-rc.19",
+    "alephium-wormhole-sdk": "0.2.0-rc.21",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "axios": "^0.24.0",
     "binary-parser": "^2.0.2",

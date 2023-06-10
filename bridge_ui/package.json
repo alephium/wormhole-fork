@@ -6,7 +6,7 @@
     "@alephium/web3-react": "^0.12.4",
     "@alephium/web3": "^0.12.4",
     "@alephium/token-list": "0.0.8",
-    "alephium-wormhole-sdk": "0.2.0-rc.19",
+    "alephium-wormhole-sdk": "0.2.0-rc.21",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
