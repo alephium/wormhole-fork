@@ -19,6 +19,7 @@ import { default as GetTokenScriptJson } from "../tests/GetToken.ral.json";
 import { default as AddRewardsScriptJson } from "../token_bridge_scripts/AddRewards.ral.json";
 import { default as AttestTokenScriptJson } from "../token_bridge_scripts/AttestToken.ral.json";
 import { default as CompleteTransferScriptJson } from "../token_bridge_scripts/CompleteTransfer.ral.json";
+import { default as CompleteTransferWithRewardScriptJson } from "../token_bridge_scripts/CompleteTransferWithReward.ral.json";
 import { default as CreateLocalAttestTokenHandlerScriptJson } from "../token_bridge_scripts/CreateLocalAttestTokenHandler.ral.json";
 import { default as CreateLocalTokenPoolScriptJson } from "../token_bridge_scripts/CreateLocalTokenPool.ral.json";
 import { default as CreateRemoteTokenPoolScriptJson } from "../token_bridge_scripts/CreateRemoteTokenPool.ral.json";
@@ -69,10 +70,14 @@ export const AttestToken = new ExecutableScript<{
   consistencyLevel: bigint;
 }>(Script.fromJson(AttestTokenScriptJson));
 export const CompleteTransfer = new ExecutableScript<{
-  bridgeRewardRouter: HexString;
   tokenBridgeForChain: HexString;
   vaa: HexString;
 }>(Script.fromJson(CompleteTransferScriptJson));
+export const CompleteTransferWithReward = new ExecutableScript<{
+  bridgeRewardRouter: HexString;
+  tokenBridgeForChain: HexString;
+  vaa: HexString;
+}>(Script.fromJson(CompleteTransferWithRewardScriptJson));
 export const CreateLocalAttestTokenHandler = new ExecutableScript<{
   tokenBridge: HexString;
   payer: Address;
