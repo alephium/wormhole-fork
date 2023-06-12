@@ -32,7 +32,6 @@ import {
   getTokenBridgeForChainId,
   getTokenPoolId,
   deserializeAttestTokenVAA,
-  redeemOnAlph,
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
   deposit as tokenBridgeForChainDeposit,
@@ -40,7 +39,8 @@ import {
   createLocalTokenPoolOnAlph,
   getLocalTokenInfo,
   waitAlphTxConfirmed,
-  alephium_contracts
+  alephium_contracts,
+  redeemOnAlphWithReward
 } from 'alephium-wormhole-sdk'
 import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
@@ -329,7 +329,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId, groupIndex)
     const alphBalanceBeforeRedeem = await getNativeTokenBalance()
     const bridgeRewardRouterAlphBalanceBeforeRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
-    const result = await redeemOnAlph(nodeWallet, bridgeRewardRouterId, tokenBridgeForChainId, signedVaa)
+    const result = await redeemOnAlphWithReward(nodeWallet, bridgeRewardRouterId, tokenBridgeForChainId, signedVaa)
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`redeem on alph succeed, tx id: ${result.txId}`)
     const alphBalanceAfterRedeem = await getNativeTokenBalance()

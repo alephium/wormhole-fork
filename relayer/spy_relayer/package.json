@@ -36,7 +36,7 @@
     "@alephium/web3": "^0.12.4",
     "@alephium/web3-wallet": "^0.12.4",
     "@alephium/token-list": "0.0.8",
-    "alephium-wormhole-sdk": "0.2.0-rc.21",
+    "alephium-wormhole-sdk": "0.2.0-rc.22",
     "@celo-tools/celo-ethers-wrapper": "^0.1.0",
     "@certusone/wormhole-spydk": "^0.0.1",
     "@solana/spl-token": "^0.1.8",

@@ -9,11 +9,11 @@ import {
   redeemOnAlgorand,
   redeemOnSolana,
   redeemOnTerra,
-  redeemOnAlph,
   CHAIN_ID_ALEPHIUM,
   uint8ArrayToHex,
   getTokenBridgeForChainId,
-  getIsTransferCompletedAlph
+  getIsTransferCompletedAlph,
+  redeemOnAlphWithReward
 } from "alephium-wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -250,7 +250,7 @@ async function alephium(
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
     console.log('redeem on alephium')
-    const result = await redeemOnAlph(wallet.signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
+    const result = await redeemOnAlphWithReward(wallet.signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
     console.log(`the redeem tx has been submitted, txId: ${result.txId}`)
     dispatch(setIsWalletApproved(true))
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
