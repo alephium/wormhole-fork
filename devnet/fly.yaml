@@ -54,6 +54,12 @@ spec:
             - --nodeKey
             - /tmp/node.key
             - --logLevel=debug
+            - --alphNodeUrl
+            - http://alph-full-node:22973
+            - --alphExplorerBackendUrl
+            - http://alph-explorer-backend:9090
+            - --bscRpcUrl
+            - ws://bsc-devnet:8545
           readinessProbe:
             httpGet:
               path: /api/ready

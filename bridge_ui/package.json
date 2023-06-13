@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@alephium/web3-react": "^0.12.4",
-    "@alephium/web3": "^0.12.4",
     "@alephium/token-list": "0.0.8",
+    "@alephium/web3": "^0.12.4",
+    "@alephium/web3-react": "^0.12.4",
     "alephium-wormhole-sdk": "0.2.0-rc.22",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",
@@ -22,8 +22,8 @@
     "@solana/wallet-adapter-wallets": "^0.16.1",
     "@solana/web3.js": "^1.35.1",
     "@terra-money/wallet-provider": "^3.8.0",
-    "@walletconnect/signer-connection": "2.0.0-rc.3",
     "@walletconnect/qrcode-modal": "1.8.0",
+    "@walletconnect/signer-connection": "2.0.0-rc.3",
     "@walletconnect/types": "2.0.0-rc.3",
     "@walletconnect/utils": "2.0.0-rc.3",
     "@walletconnect/web3-provider": "^1.7.8",
@@ -52,6 +52,7 @@
     "recharts": "^2.1.9",
     "redux": "^3.7.2",
     "styled-components": "^5.3.5",
+    "swr": "^2.1.5",
     "use-debounce": "^7.0.0"
   },
   "scripts": {

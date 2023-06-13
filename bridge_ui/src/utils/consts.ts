@@ -275,6 +275,20 @@ export const SOLANA_HOST = process.env.REACT_APP_SOLANA_API_URL
   ? clusterApiUrl("devnet")
   : "http://localhost:8899";
 
+export const ETH_RPC_HOST =
+  CLUSTER === 'mainnet'
+    ? ''
+    : CLUSTER === 'testnet'
+    ? 'https://ethereum-goerli.publicnode.com'
+    : 'http://localhost:8545'
+
+export const BSC_RPC_HOST =
+  CLUSTER === 'mainnet'
+    ? ''
+    : CLUSTER === 'testnet'
+    ? 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    : 'http://localhost:8546'
+
 export const TERRA_HOST =
   CLUSTER === "mainnet"
     ? {
@@ -718,6 +732,8 @@ export const ALEPHIUM_TOKEN_LIST: TokenInfo[] =
     : CLUSTER === 'testnet'
     ? testnetTokensMetadata.tokens
     : []
+export const ALEPHIUM_POLLING_INTERVAL: number =
+  CLUSTER === 'mainnet' ? 10000 : CLUSTER === 'testnet' ? 10000 : 1000
 
 export const getBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA

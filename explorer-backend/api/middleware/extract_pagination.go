@@ -2,49 +2,35 @@
 package middleware
 
 import (
-	"net/http"
+	"fmt"
 	"strconv"
 
 	"github.com/alephium/wormhole-fork/explorer-backend/api/internal/pagination"
 	"github.com/gofiber/fiber/v2"
 )
 
-// ExtractPagination middleware invoke pagination.ExtractPagination.
-func ExtractPagination(c *fiber.Ctx) error {
-	if c.Method() != http.MethodGet {
-		return c.Next()
-	}
-	extractPagination(c)
-	return c.Next()
-}
-
-// extractPagination get pagination query params and build a *Pagination.
-func extractPagination(ctx *fiber.Ctx) (*pagination.Pagination, error) {
-	pageNumberStr := ctx.Query("page", "0")
-	pageNumber, err := strconv.ParseInt(pageNumberStr, 10, 64)
+func ExtractPagination(ctx *fiber.Ctx) (*pagination.Pagination, error) {
+	pageNumberStr := ctx.Query("page", "1")
+	pageNumber, err := strconv.ParseUint(pageNumberStr, 10, 64)
 	if err != nil {
 		return nil, err
+	}
+	if pageNumber == 0 {
+		return nil, fmt.Errorf("page must be a positive integer")
 	}
 
 	pageSizeStr := ctx.Query("pageSize", "50")
-	pageSize, err := strconv.ParseInt(pageSizeStr, 10, 64)
+	pageSize, err := strconv.ParseUint(pageSizeStr, 10, 64)
 	if err != nil {
 		return nil, err
+	}
+	if pageSize == 0 {
+		return nil, fmt.Errorf("pageSize must be a positive integer")
 	}
 
 	sortOrder := ctx.Query("sortOrder", "DESC")
 	sortBy := ctx.Query("sortBy", "indexedAt")
 
-	p := pagination.BuildPagination(pageNumber, pageSize, sortOrder, sortBy)
-	ctx.Locals("pagination", p)
+	p := pagination.BuildPagination(int64(pageNumber), int64(pageSize), sortOrder, sortBy)
 	return p, nil
-}
-
-// GetPaginationFromContext get pagination from context.
-func GetPaginationFromContext(ctx *fiber.Ctx) *pagination.Pagination {
-	p := ctx.Locals("pagination")
-	if p == nil {
-		return nil
-	}
-	return p.(*pagination.Pagination)
 }

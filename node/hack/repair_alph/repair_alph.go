@@ -9,7 +9,6 @@ import (
 
 	"github.com/alephium/wormhole-fork/node/pkg/alephium"
 	"github.com/alephium/wormhole-fork/node/pkg/common"
-	"github.com/alephium/wormhole-fork/node/pkg/db"
 	gossipv1 "github.com/alephium/wormhole-fork/node/pkg/proto/gossip/v1"
 	nodev1 "github.com/alephium/wormhole-fork/node/pkg/proto/node/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -70,9 +69,9 @@ func main() {
 		log.Fatalf("failed to run find FindMissingMessages RPC: %v", err)
 	}
 
-	msgs := make([]*db.VAAID, len(resp.MissingMessages))
+	msgs := make([]*vaa.VAAID, len(resp.MissingMessages))
 	for i, id := range resp.MissingMessages {
-		vId, err := db.VaaIDFromString(id)
+		vId, err := vaa.VaaIDFromString(id)
 		if err != nil {
 			log.Fatalf("failed to parse VAAID: %v", err)
 		}

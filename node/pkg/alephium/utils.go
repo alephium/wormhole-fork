@@ -21,6 +21,7 @@ import (
 const HashLength = 32
 const WormholeMessageEventIndex = 0
 const WormholeMessageFieldSize = 6
+const TransferTokenPayloadId = 1
 const AttestTokenPayloadId = 2
 const AttestTokenPayloadLength = 100
 
@@ -130,8 +131,21 @@ func (w *WormholeMessage) toMessagePublication(header *sdk.BlockHeaderEntry) *co
 	}
 }
 
-func (w *WormholeMessage) isAttestTokenVAA() bool {
+func (w *WormholeMessage) IsAttestTokenVAA() bool {
 	return len(w.payload) > 0 && w.payload[0] == AttestTokenPayloadId
+}
+
+func (w *WormholeMessage) IsTransferTokenVAA() bool {
+	return len(w.payload) > 0 && w.payload[0] == TransferTokenPayloadId
+}
+
+func (w *WormholeMessage) GetID() *vaa.VAAID {
+	return &vaa.VAAID{
+		EmitterChain:   vaa.ChainIDAlephium,
+		TargetChain:    vaa.ChainID(w.targetChainId),
+		EmitterAddress: vaa.Address(w.senderId),
+		Sequence:       w.Sequence,
+	}
 }
 
 type TokenInfo struct {

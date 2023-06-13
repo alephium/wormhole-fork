@@ -4,9 +4,10 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import ToggleConnectedButton from "./ToggleConnectedButton";
 import EvmConnectWalletDialog from "./EvmConnectWalletDialog";
 import { ChainId } from "alephium-wormhole-sdk";
+import { getEvmChainId } from "../utils/consts";
 
 const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {
-  const { disconnect, signerAddress, providerError } = useEthereumProvider();
+  const { disconnect, signerAddress, providerError, chainId: evmChainId } = useEthereumProvider();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -23,7 +24,7 @@ const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {
       <ToggleConnectedButton
         connect={openDialog}
         disconnect={disconnect}
-        connected={!!signerAddress}
+        connected={!!signerAddress && getEvmChainId(chainId) === evmChainId}
         pk={signerAddress || ""}
       />
       <EvmConnectWalletDialog

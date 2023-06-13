@@ -84,7 +84,6 @@ import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { ExecuteScriptResult } from "@alephium/web3";
-import { Transaction, TransactionDB } from "../utils/db";
 import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
 import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/ethereum";
 
@@ -384,14 +383,6 @@ async function alephium(
     }
     dispatch(setIsWalletApproved(true))
     const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId)
-    await TransactionDB.getInstance().txs.put(new Transaction(
-      txInfo.txId,
-      wallet.address,
-      CHAIN_ID_ALEPHIUM,
-      targetChain,
-      txInfo.sequence,
-      "Pending"
-    ))
     dispatch(setTransferTx({ id: txInfo.txId, block: txInfo.blockHeight }));
     dispatch(setRecoverySourceTxId(txInfo.txId))
     enqueueSnackbar(null, {

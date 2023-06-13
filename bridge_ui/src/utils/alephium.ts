@@ -1,6 +1,7 @@
 import {
   ALEPHIUM_BRIDGE_ADDRESS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
+  ALEPHIUM_POLLING_INTERVAL,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALEPHIUM_TOKEN_LIST,
@@ -63,7 +64,7 @@ export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, 
   if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= confirmations) {
     return txStatus as node.Confirmed
   }
-  await sleep(10000)
+  await sleep(ALEPHIUM_POLLING_INTERVAL)
   return waitALPHTxConfirmed(provider, txId, confirmations)
 }
 

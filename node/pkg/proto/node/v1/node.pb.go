@@ -103,6 +103,7 @@ type GovernanceMessage struct {
 	// Target chain ID
 	TargetChainId uint32 `protobuf:"varint,4,opt,name=target_chain_id,json=targetChainId,proto3" json:"target_chain_id,omitempty"`
 	// Types that are assignable to Payload:
+	//
 	//	*GovernanceMessage_UpdateMessageFee
 	//	*GovernanceMessage_TransferFee
 	//	*GovernanceMessage_GuardianSet

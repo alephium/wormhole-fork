@@ -132,7 +132,6 @@ func (e *EthereumConnector) SubscribeForBlocks(ctx context.Context, sink chan<- 
 
 func (e *EthereumConnector) RawCallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error {
 	return e.rawClient.CallContext(ctx, result, method, args...)
-
 }
 
 func (e *EthereumConnector) Client() *ethClient.Client {

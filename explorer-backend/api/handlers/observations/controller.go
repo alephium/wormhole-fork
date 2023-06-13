@@ -25,7 +25,10 @@ func NewController(srv *Service, logger *zap.Logger) *Controller {
 
 // FindAll handler for the endpoint /observations/.
 func (c *Controller) FindAll(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	obs, err := c.srv.FindAll(ctx.Context(), p)
 	if err != nil {
 		return err
@@ -35,7 +38,10 @@ func (c *Controller) FindAll(ctx *fiber.Ctx) error {
 
 // FindAllByChain handler for the endpoint /observations/:emitterChain.
 func (c *Controller) FindAllByChain(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	chainID, err := middleware.ExtractEmitterChainID(ctx, c.logger)
 	if err != nil {
 		return err
@@ -49,7 +55,10 @@ func (c *Controller) FindAllByChain(ctx *fiber.Ctx) error {
 
 // FindAllByEmitter handler for the endpoint /observations/:emitterChain/:emitterAddress.
 func (c *Controller) FindAllByEmitter(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	chainID, addr, err := middleware.ExtractVAAChainIDEmitter(ctx, c.logger)
 	if err != nil {
 		return err
@@ -64,7 +73,10 @@ func (c *Controller) FindAllByEmitter(ctx *fiber.Ctx) error {
 
 // FindAllByEmitter handler for the endpoint /observations/:emitterChain/:emitterAddress/:targetChain.
 func (c *Controller) FindAllByEmitterAndTargetChain(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	emitterChain, emitterAddress, targetChain, err := middleware.ExtractVAAEmitterAndTargetChainId(ctx, c.logger)
 	if err != nil {
 		return err
@@ -79,7 +91,10 @@ func (c *Controller) FindAllByEmitterAndTargetChain(ctx *fiber.Ctx) error {
 
 // FindAllByVAA handler for the endpoint  /observations/:emitterChain/:emitterAddress/:sequence
 func (c *Controller) FindAllByVAA(ctx *fiber.Ctx) error {
-	p := middleware.GetPaginationFromContext(ctx)
+	p, err := middleware.ExtractPagination(ctx)
+	if err != nil {
+		return err
+	}
 	emitterChain, addr, targetChain, seq, err := middleware.ExtractVAAParams(ctx, c.logger)
 	if err != nil {
 		return err

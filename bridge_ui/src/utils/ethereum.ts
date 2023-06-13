@@ -1,12 +1,12 @@
 import { sleep } from "@alephium/web3";
-import { ChainId, ChainName, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, ChainName, CHAIN_ID_BSC, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {
   createNFTParsedTokenAccount,
   createParsedTokenAccount,
 } from "../hooks/useGetSourceParsedTokenAccounts";
-import { CLUSTER } from "./consts";
+import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST } from "./consts";
 
 export const DefaultEVMChainConfirmations = 15
 
@@ -118,6 +118,15 @@ async function _waitEVMTxConfirmed(provider: ethers.providers.Provider, receipt:
   }
   await sleep(3000)
   await _waitEVMTxConfirmed(provider, receipt, chainId)
+}
+
+export function getEvmJsonRpcProvider(chainId: ChainId): ethers.providers.Provider | undefined {
+  checkEVMChainId(chainId)
+  return chainId === CHAIN_ID_ETH
+    ? new ethers.providers.JsonRpcProvider(ETH_RPC_HOST)
+    : chainId === CHAIN_ID_BSC
+    ? new ethers.providers.JsonRpcProvider(BSC_RPC_HOST)
+    : undefined
 }
 
 // TODO: remove these functions to SDK

@@ -12,6 +12,7 @@ import (
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/infrastructure"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/observations"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/statistics"
+	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/transactions"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/handlers/vaa"
 	wormscanCache "github.com/alephium/wormhole-fork/explorer-backend/api/internal/cache"
 	"github.com/alephium/wormhole-fork/explorer-backend/api/internal/db"
@@ -118,6 +119,7 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		rootLogger.Fatal("failed to create statistic repository", zap.Error(err))
 	}
+	transactionsRepo := transactions.NewRepository(db, rootLogger)
 
 	// Setup services
 	vaaService := vaa.NewService(vaaRepo, cacheGetFunc, rootLogger)
@@ -126,6 +128,7 @@ func run(cmd *cobra.Command, args []string) {
 	heartbeatsService := heartbeats.NewService(heartbeatsRepo, rootLogger)
 	guardianService := guardian.NewService(guardianSetRepo, rootLogger)
 	statisticsService := statistics.NewService(statisticsRepo, rootLogger)
+	transactionsService := transactions.NewService(transactionsRepo, rootLogger)
 
 	// Setup controllers
 	vaaCtrl := vaa.NewController(vaaService, rootLogger)
@@ -134,6 +137,7 @@ func run(cmd *cobra.Command, args []string) {
 	guardianCtrl := guardian.NewController(guardianService, rootLogger)
 	heartbeatsCtrl := heartbeats.NewController(heartbeatsService, rootLogger)
 	statisticsCtrl := statistics.NewController(statisticsService, rootLogger)
+	transactionsCtrl := transactions.NewController(transactionsService, rootLogger)
 
 	// Setup app with custom error handling.
 	response.SetEnableStackTrace(*enableStackTrace)
@@ -151,7 +155,6 @@ func run(cmd *cobra.Command, args []string) {
 
 	api := app.Group("/api")
 	api.Use(cors.New()) // TODO CORS restrictions?
-	api.Use(middleware.ExtractPagination)
 
 	api.Get("/health", infrastructureCtrl.HealthCheck)
 	api.Get("/ready", infrastructureCtrl.ReadyCheck)
@@ -194,6 +197,10 @@ func run(cmd *cobra.Command, args []string) {
 	stats.Get("/totalnotionaltransferredto", statisticsCtrl.TotalNotionalTransferredTo)
 	stats.Get("/notionaltvl", statisticsCtrl.NotionalTVL)
 	stats.Get("/tokens", statisticsCtrl.GetAllTokens)
+
+	transactions := api.Group("/transactions")
+	transactions.Get("/:address/:emitterChain/:targetChain/count", transactionsCtrl.GetTransactionNumberBySender)
+	transactions.Get("/:address/:emitterChain/:targetChain", transactionsCtrl.GetTransactionsBySender)
 
 	app.Listen(":" + strconv.Itoa(int(*port)))
 }
