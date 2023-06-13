@@ -6,6 +6,7 @@ import { default as alephiumMainnetConfig } from '../configs/alephium/mainnet.js
 import { default as guardianDevnetConfig } from '../configs/guardian/devnet.json'
 import { default as guardianTestnetConfig } from '../configs/guardian/testnet.json'
 import { default as guardianMainnetConfig } from '../configs/guardian/mainnet.json'
+import { ONE_ALPH } from '@alephium/web3'
 
 export type Settings = {
   nodeUrl: string
@@ -16,6 +17,7 @@ export type Settings = {
   governanceEmitterAddress: string
   minimalConsistencyLevel: number
   messageFee: bigint
+  initRewards: bigint
 }
 
 function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
@@ -33,7 +35,8 @@ function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
     governanceChainId: guardianConfig.governanceChainId as number,
     governanceEmitterAddress: guardianConfig.governanceEmitterAddress as string,
     minimalConsistencyLevel: alephiumConfig.minimalConsistencyLevel as number,
-    messageFee: BigInt(alephiumConfig.messageFee)
+    messageFee: BigInt(alephiumConfig.messageFee),
+    initRewards: BigInt(alephiumConfig.initRewards) * ONE_ALPH
   }
 }
 

@@ -134,6 +134,7 @@ export interface TerraChainConfigInfo extends ChainConfigInfo {
 
 export interface AlephiumChainConfigInfo extends ChainConfigInfo {
   groupIndex: number
+  bridgeRewardRouter: string
 }
 
 let walletMonitorEnv: WalletMonitorEnvironment | undefined = undefined
@@ -231,6 +232,7 @@ interface ChainContracts {
   contracts: {
     governance: string
     tokenBridge: string
+    bridgeRewardRouter?: string
     wrappedNative?: string
   },
   bridgeTokens: string[]
@@ -450,10 +452,14 @@ function createAlephiumChainConfig(config: any, isRelayer: boolean): AlephiumCha
   }
   const groupIndex = alephiumConfig.groupIndex
   const tokenBridgeAddress = alephiumConfig.contracts.tokenBridge
+  if (alephiumConfig.contracts.bridgeRewardRouter === undefined) {
+    throw new Error('The BridgeRewardRouter contract does not exists')
+  }
   return {
     ...chainConfig,
     tokenBridgeAddress,
-    groupIndex
+    groupIndex,
+    bridgeRewardRouter: alephiumConfig.contracts.bridgeRewardRouter
   }
 }
 

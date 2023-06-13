@@ -16,8 +16,10 @@ import { default as TransferFeeScriptJson } from "../governance_scripts/Transfer
 import { default as UpdateGuardianSetScriptJson } from "../governance_scripts/UpdateGuardianSet.ral.json";
 import { default as UpdateGovernanceContractScriptJson } from "../governance_scripts/UpdateGovernanceContract.ral.json";
 import { default as GetTokenScriptJson } from "../tests/GetToken.ral.json";
+import { default as AddRewardsScriptJson } from "../token_bridge_scripts/AddRewards.ral.json";
 import { default as AttestTokenScriptJson } from "../token_bridge_scripts/AttestToken.ral.json";
 import { default as CompleteTransferScriptJson } from "../token_bridge_scripts/CompleteTransfer.ral.json";
+import { default as CompleteTransferWithRewardScriptJson } from "../token_bridge_scripts/CompleteTransferWithReward.ral.json";
 import { default as CreateLocalAttestTokenHandlerScriptJson } from "../token_bridge_scripts/CreateLocalAttestTokenHandler.ral.json";
 import { default as CreateLocalTokenPoolScriptJson } from "../token_bridge_scripts/CreateLocalTokenPool.ral.json";
 import { default as CreateRemoteTokenPoolScriptJson } from "../token_bridge_scripts/CreateRemoteTokenPool.ral.json";
@@ -53,6 +55,10 @@ export const GetToken = new ExecutableScript<{
   amount: bigint;
   factor: bigint;
 }>(Script.fromJson(GetTokenScriptJson));
+export const AddRewards = new ExecutableScript<{
+  bridgeRewardRouter: HexString;
+  amount: bigint;
+}>(Script.fromJson(AddRewardsScriptJson));
 export const AttestToken = new ExecutableScript<{
   payer: Address;
   tokenBridge: HexString;
@@ -67,6 +73,11 @@ export const CompleteTransfer = new ExecutableScript<{
   tokenBridgeForChain: HexString;
   vaa: HexString;
 }>(Script.fromJson(CompleteTransferScriptJson));
+export const CompleteTransferWithReward = new ExecutableScript<{
+  bridgeRewardRouter: HexString;
+  tokenBridgeForChain: HexString;
+  vaa: HexString;
+}>(Script.fromJson(CompleteTransferWithRewardScriptJson));
 export const CreateLocalAttestTokenHandler = new ExecutableScript<{
   tokenBridge: HexString;
   payer: Address;

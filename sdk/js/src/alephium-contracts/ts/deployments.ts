@@ -23,7 +23,10 @@ import {
   TokenBridgeInstance,
   TestToken,
   TestTokenInstance,
+  BridgeRewardRouter,
+  BridgeRewardRouterInstance,
 } from ".";
+import { default as testnetDeployments } from "../.deployments.testnet.json";
 import { default as devnetDeployments } from "../.deployments.devnet.json";
 
 export type Deployments = {
@@ -37,11 +40,12 @@ export type Deployments = {
     TokenBridgeFactory: DeployContractExecutionResult<TokenBridgeFactoryInstance>;
     Governance: DeployContractExecutionResult<GovernanceInstance>;
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
-    TestToken: DeployContractExecutionResult<TestTokenInstance>;
+    TestToken?: DeployContractExecutionResult<TestTokenInstance>;
+    BridgeRewardRouter?: DeployContractExecutionResult<BridgeRewardRouterInstance>;
   };
   scripts: {
     CreateLocalAttestTokenHandler: RunScriptResult;
-    GetToken: RunScriptResult;
+    GetToken?: RunScriptResult;
   };
 };
 
@@ -95,12 +99,24 @@ function toDeployments(json: any): Deployments {
         json.contracts.TokenBridge.contractInstance.address
       ),
     },
-    TestToken: {
-      ...json.contracts.TestToken,
-      contractInstance: TestToken.at(
-        json.contracts.TestToken.contractInstance.address
-      ),
-    },
+    TestToken:
+      json.contracts.TestToken === undefined
+        ? undefined
+        : {
+            ...json.contracts.TestToken,
+            contractInstance: TestToken.at(
+              json.contracts.TestToken.contractInstance.address
+            ),
+          },
+    BridgeRewardRouter:
+      json.contracts.BridgeRewardRouter === undefined
+        ? undefined
+        : {
+            ...json.contracts.BridgeRewardRouter,
+            contractInstance: BridgeRewardRouter.at(
+              json.contracts.BridgeRewardRouter.contractInstance.address
+            ),
+          },
   };
   return {
     ...json,
@@ -112,7 +128,12 @@ export function loadDeployments(
   networkId: NetworkId,
   deployerAddress?: string
 ): Deployments {
-  const deployments = networkId === "devnet" ? devnetDeployments : undefined;
+  const deployments =
+    networkId === "testnet"
+      ? testnetDeployments
+      : networkId === "devnet"
+      ? devnetDeployments
+      : undefined;
   if (deployments === undefined) {
     throw Error("The contract has not been deployed to the " + networkId);
   }
