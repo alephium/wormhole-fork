@@ -190,12 +190,12 @@ func getEVMTxSender(ctx context.Context, client *ethclient.Client, txId ethCommo
 		return nil, err
 	}
 	signer := types.LatestSignerForChainID(tx.ChainId())
-	msg, err := tx.AsMessage(signer, nil)
+	sender, err := types.Sender(signer, tx)
 	if err != nil {
 		return nil, err
 	}
-	sender := msg.From().String()
-	return &sender, nil
+	senderStr := sender.Hex()
+	return &senderStr, nil
 }
 
 func isTransferTokenPayload(payload []byte) bool {
