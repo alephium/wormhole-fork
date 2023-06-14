@@ -49,7 +49,6 @@ func init() {
 	AdminClientListNodes.Flags().AddFlagSet(pf)
 	DumpVAAByMessageID.Flags().AddFlagSet(pf)
 	SendObservationRequest.Flags().AddFlagSet(pf)
-	GetNextGovernanceVAASequenceCmd.Flags().AddFlagSet(pf)
 
 	AdminCmd.AddCommand(AdminClientInjectGovernanceVAACmd)
 	AdminCmd.AddCommand(AdminClientFindMissingMessagesCmd)
@@ -57,7 +56,6 @@ func init() {
 	AdminCmd.AddCommand(AdminClientListNodes)
 	AdminCmd.AddCommand(DumpVAAByMessageID)
 	AdminCmd.AddCommand(SendObservationRequest)
-	AdminCmd.AddCommand(GetNextGovernanceVAASequenceCmd)
 }
 
 var AdminCmd = &cobra.Command{
@@ -91,13 +89,6 @@ var SendObservationRequest = &cobra.Command{
 	Short: "Broadcast an observation request for the given chain ID and chain-specific tx_hash",
 	Run:   runSendObservationRequest,
 	Args:  cobra.ExactArgs(2),
-}
-
-var GetNextGovernanceVAASequenceCmd = &cobra.Command{
-	Use:   "get-next-governance-vaa-sequence",
-	Short: "Get the next governance vaa sequence",
-	Run:   runGetNextGovernanceVAASequence,
-	Args:  cobra.ExactArgs(0),
 }
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, error, nodev1.NodePrivilegedServiceClient) {
@@ -284,21 +275,4 @@ func runSendObservationRequest(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("failed to send observation request: %v", err)
 	}
-}
-
-func runGetNextGovernanceVAASequence(cmd *cobra.Command, args []string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, err, c := getAdminClient(ctx, *clientSocketPath)
-	defer conn.Close()
-	if err != nil {
-		log.Fatalf("failed to get admin client: %v", err)
-	}
-
-	response, err := c.GetNextGovernanceVAASequence(ctx, &nodev1.GetNextGovernanceVAASequenceRequest{})
-	if err != nil {
-		log.Fatalf("failed to get the next governance vaa sequence: %v", err)
-	}
-	fmt.Printf("the next governance vaa sequence is %v\n", response.Sequence)
 }

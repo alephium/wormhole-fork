@@ -28,8 +28,6 @@ service NodePrivilegedService {
   // using the node's guardian key. The network rate limits these requests to one per second.
   // Requests at higher rates will fail silently.
   rpc SendObservationRequest (SendObservationRequestRequest) returns (SendObservationRequestResponse);
-
-  rpc GetNextGovernanceVAASequence (GetNextGovernanceVAASequenceRequest) returns (GetNextGovernanceVAASequenceResponse);
 }
 
 message InjectGovernanceVAARequest {
@@ -183,9 +181,3 @@ message SendObservationRequestRequest {
 }
 
 message SendObservationRequestResponse {}
-
-message GetNextGovernanceVAASequenceRequest {}
-
-message GetNextGovernanceVAASequenceResponse {
-  uint64 sequence = 1;
-}

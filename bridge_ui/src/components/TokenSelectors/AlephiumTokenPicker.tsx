@@ -29,7 +29,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   const resetAccountWrapper = useCallback(() => {
     resetAccounts && resetAccounts();
   }, [resetAccounts]);
-  const isLoading = isFetching || false
+  const isLoading = isFetching
 
   const onChangeWrapper = useCallback(
     async (account: ParsedTokenAccount | null) => {

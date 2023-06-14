@@ -5,6 +5,7 @@ import {
   ExecuteScriptResult,
   node,
   NodeProvider,
+  ONE_ALPH,
   SignerProvider,
   subContractId
 } from "@alephium/web3"
@@ -24,15 +25,18 @@ export async function registerChain(
   signedVAA: Uint8Array,
   alphAmount: bigint
 ): Promise<ExecuteScriptResult> {
+  if (alphAmount < (BigInt(2) * ONE_ALPH)) {
+    throw new Error('Register chain will create two contracts, please approve at least 2 ALPH')
+  }
   const account = await signerProvider.getSelectedAccount()
   return RegisterChain.execute(signerProvider, {
     initialFields: {
       payer: account.address,
       tokenBridge: tokenBridgeId,
       vaa: binToHex(signedVAA),
-      alphAmount: alphAmount
+      alphAmount: ONE_ALPH
     },
-    attoAlphAmount: alphAmount * BigInt(2) // we will create two contracts
+    attoAlphAmount: alphAmount
   })
 }
 
@@ -145,8 +149,7 @@ export interface RemoteTokenInfo extends TokenInfo {
   tokenChainId: ChainId
 }
 
-export function getRemoteTokenInfoFromContractState(state: node.ContractState): RemoteTokenInfo {
-  const contractState = RemoteTokenPool.contract.fromApiContractState(state) as RemoteTokenPoolTypes.State
+function _getRemoteTokenInfo(contractState: RemoteTokenPoolTypes.State): RemoteTokenInfo {
   const tokenId = contractState.fields.bridgeTokenId as string
   const tokenChainId = Number(contractState.fields.tokenChainId) as ChainId
   const symbolHex = contractState.fields.symbol_ as string
@@ -161,15 +164,14 @@ export function getRemoteTokenInfoFromContractState(state: node.ContractState): 
   }
 }
 
+export function getRemoteTokenInfoFromContractState(state: node.ContractState): RemoteTokenInfo {
+  const contractState = RemoteTokenPool.contract.fromApiContractState(state) as RemoteTokenPoolTypes.State
+  return _getRemoteTokenInfo(contractState)
+}
+
 export async function getRemoteTokenInfo(address: string): Promise<RemoteTokenInfo> {
   const contractState = await RemoteTokenPool.at(address).fetchState()
-  return {
-    id: contractState.fields.bridgeTokenId,
-    tokenChainId: Number(contractState.fields.tokenChainId) as ChainId,
-    symbol: bytes32ToUtf8String(Buffer.from(contractState.fields.symbol_, 'hex')),
-    name: bytes32ToUtf8String(Buffer.from(contractState.fields.name_, 'hex')),
-    decimals: Number(contractState.fields.decimals_)
-  }
+  return _getRemoteTokenInfo(contractState)
 }
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {

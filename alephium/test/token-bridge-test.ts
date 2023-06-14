@@ -128,7 +128,7 @@ describe('test token bridge', () => {
     return Buffer.from(symbol, 'utf8').toString('hex').padEnd(64, '0')
   }
 
-  function bytes32HexToUtf8String(str: string): string {
+  function removeTrailingZeroHex(str: string): string {
     let result = str
     while (result.endsWith('00')) result = result.slice(0, -2)
     return result
@@ -704,8 +704,8 @@ describe('test token bridge', () => {
         remoteTokenPoolAddress
       )
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals))
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(symbol))
-      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(name))
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(removeTrailingZeroHex(symbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(removeTrailingZeroHex(name))
 
       const remoteTokenPoolOutput = result.txOutputs.find((o) => o.address === remoteTokenPoolAddress)!
       expect(remoteTokenPoolOutput.alphAmount).toEqual(minimalAlphInContract)
@@ -774,8 +774,8 @@ describe('test token bridge', () => {
         result.contracts,
         fixture.remoteTokenPool.contractId
       )
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(newSymbol))
-      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(newName))
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(removeTrailingZeroHex(newSymbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(removeTrailingZeroHex(newName))
       expect(remoteTokenPoolState.fields.sequence_).toEqual(2n)
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals)) // decimals never change
     }
