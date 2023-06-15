@@ -28,7 +28,7 @@ const fetchAlphMetadata = async (nodeProvider: NodeProvider, tokenIds: string[],
   tokenIds.forEach((address, index) => {
     output.set(address.toLowerCase(), resultsArray[index])
   })
-  if (walletAddress !== undefined) {
+  if (fetchBalance && walletAddress !== undefined) {
     const balances = await getAvailableBalances(nodeProvider, walletAddress)
     output.forEach((o) => o.balance = balances.get(o.id) ?? BigInt(0))
   }

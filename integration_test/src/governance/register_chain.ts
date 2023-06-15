@@ -36,7 +36,7 @@ async function registerChain() {
   assert(!(await contractExists(attestTokenHandlerId0, web3.getCurrentNodeProvider())))
   assert(!(await contractExists(tokenBridgeForChainId0, web3.getCurrentNodeProvider())))
 
-  const seq = await getNextGovernanceSequence()
+  const seq = getNextGovernanceSequence()
   const registerChainVaa = createRegisterChainVaa(seq)
 
   for (const guardianIndex of guardianSetIndexes) {

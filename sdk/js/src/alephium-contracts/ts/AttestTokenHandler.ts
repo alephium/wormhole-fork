@@ -133,13 +133,13 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "updateRemoteTokenPool", params);
     },
-    bytes32ToString: async (
+    removeTrailingZeros: async (
       params: TestContractParams<
         AttestTokenHandlerTypes.Fields,
         { bytes: HexString }
       >
     ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "bytes32ToString", params);
+      return testMethod(this, "removeTrailingZeros", params);
     },
   };
 }

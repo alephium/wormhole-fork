@@ -557,13 +557,3 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
 }
-
-func (s *nodePrivilegedService) GetNextGovernanceVAASequence(ctx context.Context, req *nodev1.GetNextGovernanceVAASequenceRequest) (*nodev1.GetNextGovernanceVAASequenceResponse, error) {
-	nextSequence, err := s.db.NextGovernanceVAASequence(s.governanceChainId, s.governanceEmitterAddress)
-	if err != nil {
-		return nil, err
-	}
-	return &nodev1.GetNextGovernanceVAASequenceResponse{
-		Sequence: *nextSequence,
-	}, nil
-}

@@ -1,22 +1,8 @@
-import { CONFIGS, Guardians, NetworkType } from './configs'
+import { CONFIGS, NetworkType } from './configs'
 import { impossible } from './utils'
-import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import {
-  registerChain,
-  GovernancePayload,
-  attestFromAlph,
-  waitAlphTxConfirmed,
-  getSignedVAAWithRetry,
-  parseSequenceFromLogAlph,
-  CHAIN_ID_UNSET,
-  createLocalTokenPoolOnAlph,
-  getAttestTokenHandlerId,
-  CHAIN_ID_ALEPHIUM,
-  alephium_contracts,
-  deserializeTransferFeeVAA,
-} from 'alephium-wormhole-sdk'
+import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from 'alephium-wormhole-sdk'
 import {
   DestroyUnexecutedSequenceContracts,
   SetMessageFee,
@@ -24,7 +10,9 @@ import {
   UpdateGuardianSet,
   UpdateMinimalConsistencyLevel,
   UpdateRefundAddress,
-  UpgradeTokenBridgeContract
+  UpgradeTokenBridgeContract,
+  Governance,
+  TokenBridge
 } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 function getSignerProvider(network: any, nodeUrl?: string) {
@@ -48,107 +36,6 @@ async function getMessageFee(governanceId: string): Promise<bigint> {
   const governance = alephium_contracts.Governance.at(governanceAddress)
   const contractState = await governance.fetchState()
   return contractState.fields.messageFee
-}
-
-export async function createLocalTokenPool(
-  localTokenId: string,
-  decimals: number,
-  symbol: string,
-  name: string,
-  networkType: NetworkType,
-  guardianUrl?: string,
-  nodeUrl?: string
-) {
-  const network = CONFIGS[networkType]['alephium']
-  const wallet = getSignerProvider(network, nodeUrl)
-
-  const attestTokenTxId = await attestToken(
-    wallet,
-    localTokenId,
-    decimals,
-    symbol,
-    name,
-    network.governanceAddress,
-    network.tokenBridgeAddress
-  )
-  await _createLocalTokenPool(
-    wallet,
-    attestTokenTxId,
-    localTokenId,
-    network.tokenBridgeAddress,
-    network.groupIndex,
-    networkType,
-    guardianUrl
-  )
-}
-
-async function attestToken(
-  wallet: PrivateKeyWallet,
-  localTokenId: string,
-  decimals: number,
-  symbol: string,
-  name: string,
-  governanceId: string,
-  tokenBridgeId: string
-) {
-  const messageFee = await getMessageFee(governanceId)
-  const attestTokenResult = await attestFromAlph(
-    wallet,
-    tokenBridgeId,
-    localTokenId,
-    decimals,
-    symbol,
-    name,
-    wallet.address,
-    messageFee,
-    1
-  )
-  console.log(`attest token tx id: ${attestTokenResult.txId}`)
-  await waitAlphTxConfirmed(web3.getCurrentNodeProvider(), attestTokenResult.txId, 1)
-  console.log('attest token tx confirmed')
-  return attestTokenResult.txId
-}
-
-async function _createLocalTokenPool(
-  wallet: PrivateKeyWallet,
-  attestTokenTxId: string,
-  localTokenId: string,
-  tokenBridgeId: string,
-  groupIndex: number,
-  networkType: NetworkType,
-  guardianUrl?: string
-) {
-  const events = await web3.getCurrentNodeProvider().events.getEventsTxIdTxid(attestTokenTxId, {group: groupIndex})
-  if (events.events.length < 1) {
-    throw new Error(`no attest token event for tx ${attestTokenTxId}`)
-  }
-  const sequence = parseSequenceFromLogAlph(events.events[0])
-  console.log(`trying to get signed vaa from guardinan, sequence: ${sequence}`)
-  const guardianConfig = Guardians[networkType]
-  const guardianUrls = guardianUrl === undefined ? guardianConfig.guardianUrls : [guardianUrl]
-  const signedVaa = await getSignedVAAWithRetry(
-    guardianUrls,
-    CHAIN_ID_ALEPHIUM,
-    tokenBridgeId,
-    CHAIN_ID_UNSET, // the target chain id is 0 for attest token vaa
-    sequence,
-    { transport: NodeHttpTransport() },
-    10000, // timeout
-    10     // retry times
-  )
-  console.log(`got signed vaa: ${binToHex(signedVaa.vaaBytes)}`)
-  const attestTokenHandlerId = getAttestTokenHandlerId(tokenBridgeId, CHAIN_ID_ALEPHIUM, groupIndex)
-  const createLocalTokenPoolResult = await createLocalTokenPoolOnAlph(
-    wallet,
-    attestTokenHandlerId,
-    localTokenId,
-    signedVaa.vaaBytes,
-    wallet.address,
-    10n ** 18n
-  )
-  console.log(`create local token tx id: ${createLocalTokenPoolResult.txId}`)
-  await waitAlphTxConfirmed(web3.getCurrentNodeProvider(), createLocalTokenPoolResult.txId, 1)
-  console.log(`create local token pool for token ${localTokenId} succeed`)
 }
 
 export async function executeGovernanceAlph(
@@ -248,4 +135,17 @@ export async function executeGovernanceAlph(
     default:
       impossible(payload)
   }
+}
+
+export async function getNextGovernanceSequence(networkType: NetworkType, nodeUrl?: string): Promise<bigint> {
+  const network = CONFIGS[networkType]['alephium']
+  web3.setCurrentNodeProvider(nodeUrl ?? network.rpc)
+  const governanceAddress = addressFromContractId(network.governanceAddress)
+  const governance = Governance.at(governanceAddress)
+  const sequence0 = (await governance.fetchState()).fields.receivedSequence
+
+  const tokenBridgeAddress = addressFromContractId(network.tokenBridgeAddress)
+  const tokenBridge = TokenBridge.at(tokenBridgeAddress)
+  const sequence1 = (await tokenBridge.fetchState()).fields.receivedSequence
+  return sequence0 > sequence1 ? sequence0 : sequence1
 }
