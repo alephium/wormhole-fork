@@ -1,5 +1,6 @@
 import {
   CHAIN_ID_ACALA,
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
   CHAIN_ID_BSC,
@@ -64,6 +65,8 @@ import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import AddToMetamask from "./AddToMetamask";
 import RedeemPreview from "./RedeemPreview";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
+import { useSnackbar, VariantType } from "notistack";
+import AddToAlephium from "./AddToAlephium";
 
 const useStyles = makeStyles((theme) => ({
   alert: {
@@ -77,6 +80,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Redeem() {
+  const { enqueueSnackbar } = useSnackbar()
   const {
     handleClick,
     handleNativeClick,
@@ -99,7 +103,7 @@ function Redeem() {
     targetChain === CHAIN_ID_ACALA || targetChain === CHAIN_ID_KARURA;
   const targetAsset = useSelector(selectTransferTargetAsset);
   const isRecovery = useSelector(selectTransferIsRecovery);
-  const { isTransferCompletedLoading, isTransferCompleted } =
+  const { isTransferCompletedLoading, isTransferCompleted, error: checkTransferCompletedError } =
     useGetIsTransferCompleted(
       useRelayer ? false : true,
       useRelayer ? 5000 : undefined
@@ -239,6 +243,13 @@ function Redeem() {
     </>
   );
 
+  const showAlert = (error: string, variant: VariantType) => {
+    enqueueSnackbar(error, {
+      variant: variant,
+      preventDuplicate: true
+    })
+  }
+
   const nonRelayContent = (
     <>
       <KeyAndBalance chainId={targetChain} />
@@ -271,7 +282,8 @@ function Redeem() {
           disabled={
             !isReady ||
             disabled ||
-            (isRecovery && (isTransferCompletedLoading || isTransferCompleted))
+            (isRecovery && (isTransferCompletedLoading || isTransferCompleted)) ||
+            checkTransferCompletedError !== undefined
           }
           onClick={
             isNativeEligible && useNativeRedeem
@@ -285,6 +297,8 @@ function Redeem() {
         </ButtonWithLoader>
         <WaitingForWalletMessage />
       </>
+
+      {checkTransferCompletedError !== undefined ? showAlert(checkTransferCompletedError, 'error')  : null}
 
       {useRelayer && !isTransferCompleted ? (
         <div className={classes.centered}>
@@ -323,6 +337,7 @@ function Redeem() {
               />
             </>
           ) : null}
+          {targetChain === CHAIN_ID_ALEPHIUM ? <AddToAlephium /> : null}
           {isEVMChain(targetChain) ? <AddToMetamask /> : null}
           <ButtonWithLoader onClick={handleResetClick}>
             Transfer More Tokens!

@@ -4,13 +4,14 @@
   "private": false,
   "scripts": {
     "develop": "gatsby develop",
-    "start": "gatsby develop",
+    "start": "gatsby develop --host=0.0.0.0",
     "build": "gatsby build",
     "serve": "gatsby serve --port=8001 --host=0.0.0.0",
     "clean": "gatsby clean"
   },
   "dependencies": {
-    "alephium-wormhole-sdk": "0.1.0-rc19",
+    "alephium-wormhole-sdk": "0.2.0-rc.10",
+    "@alephium/web3": "^0.11.2",
     "@cosmjs/encoding": "^0.27.0",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",

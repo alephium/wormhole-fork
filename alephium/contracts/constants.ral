@@ -1,6 +1,4 @@
 Abstract Contract Constants() {
-  const SequenceExecutedFlag = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
   enum ErrorCodes {
     InvalidEmitChainId                      = 0
     InvalidEmitAddress                      = 1
@@ -32,5 +30,8 @@ Abstract Contract Constants() {
     InvalidConsistencyLevel                 = 27
     InvalidUpdateRefundAddressMessage       = 28
     TransferAmountLessThanMessageFee        = 29
+    InvalidAttestTokenArg                   = 30
+    InvalidAttestTokenHandler               = 31
+    NotSupported                            = 32
   }
 }

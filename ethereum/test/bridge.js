@@ -24,7 +24,7 @@ contract("Bridge", function () {
     const testChainId = "2";
     const testGovernanceChainId = "1";
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
-    let WETH = EthereumDevnetConfig.contracts.weth;
+    let WETH = EthereumDevnetConfig.contracts.wrappedNative;
     const testForeignChainId = "1";
     const testForeignBridgeContract = "0x000000000000000000000000000000000000000000000000000000000000ffff";
     const testBridgedAssetChain = "0001";
@@ -786,7 +786,7 @@ contract("Bridge", function () {
         const fee = "10000000000000000";
 
         // mint and approve tokens
-        WETH = (await MockWETH9.new()).address;
+        WETH = (await MockWETH9.new('Wrapped Ether', 'WETH')).address;
         const token = new web3.eth.Contract(MockWETH9.abi, WETH);
 
         // set WETH contract

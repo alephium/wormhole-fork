@@ -5,6 +5,13 @@ import { default as alephiumMainnetConfig } from '../../configs/alephium/mainnet
 import { default as ethereumDevnetConfig } from '../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../configs/ethereum/mainnet.json'
+import { default as bscDevnetConfig } from '../../configs/bsc/devnet.json'
+import { default as bscTestnetConfig } from '../../configs/bsc/testnet.json'
+import { default as bscMainnetConfig } from '../../configs/bsc/mainnet.json'
+import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
+import { default as guardianTestnetConfig } from '../../configs/guardian/testnet.json'
+import { default as guardianMainnetConfig } from '../../configs/guardian/mainnet.json'
+import { testPrivateKey } from "@alephium/web3-test";
 
 require("dotenv").config({ path: `${process.env.HOME}/.wormhole/.env` });
 
@@ -39,12 +46,14 @@ const MAINNET = {
   ethereum: {
     rpc: `${ethereumMainnetConfig.nodeUrl}${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
-    tokenBridgeAddress: `${ethereumMainnetConfig.contracts.tokenBridge}`,
-    governanceAddress: `${ethereumMainnetConfig.contracts.governance}`
+    tokenBridgeAddress: ethereumMainnetConfig.contracts.tokenBridge,
+    governanceAddress: ethereumMainnetConfig.contracts.governance
   },
   bsc: {
     rpc: "https://bsc-dataseed.binance.org/",
-    key: get_env_var("ETH_KEY"),
+    key: get_env_var("BSC_KEY"),
+    tokenBridgeAddress: bscMainnetConfig.contracts.tokenBridge,
+    governanceAddress: bscMainnetConfig.contracts.governance
   },
   polygon: {
     rpc: "https://polygon-rpc.com",
@@ -106,7 +115,8 @@ const MAINNET = {
     rpc: alephiumMainnetConfig.nodeUrl,
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumMainnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumMainnetConfig.contracts.governance
+    governanceAddress: alephiumMainnetConfig.contracts.governance,
+    groupIndex: alephiumMainnetConfig.groupIndex,
   }
 };
 
@@ -127,12 +137,14 @@ const TESTNET = {
   ethereum: {
     rpc: `${ethereumTestnetConfig.nodeUrl}${get_env_var("INFURA_KEY")}`,
     key: get_env_var("ETH_KEY"),
-    tokenBridgeAddress: `${ethereumTestnetConfig.contracts.tokenBridge}`,
-    governanceAddress: `${ethereumTestnetConfig.contracts.governance}`
+    tokenBridgeAddress: ethereumTestnetConfig.contracts.tokenBridge,
+    governanceAddress: ethereumTestnetConfig.contracts.governance
   },
   bsc: {
     rpc: "https://data-seed-prebsc-1-s1.binance.org:8545",
-    key: get_env_var("ETH_KEY"),
+    key: get_env_var("BSC_KEY"),
+    tokenBridgeAddress: bscTestnetConfig.contracts.tokenBridge,
+    governanceAddress: bscTestnetConfig.contracts.governance
   },
   polygon: {
     rpc: `https://polygon-mumbai.infura.io/v3/${get_env_var("INFURA_KEY")}`,
@@ -194,7 +206,8 @@ const TESTNET = {
     rpc: alephiumTestnetConfig.nodeUrl,
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumTestnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumTestnetConfig.contracts.governance
+    governanceAddress: alephiumTestnetConfig.contracts.governance,
+    groupIndex: alephiumTestnetConfig.groupIndex
   }
 };
 
@@ -221,6 +234,8 @@ const DEVNET = {
   bsc: {
     rpc: "http://localhost:8546",
     key: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+    tokenBridgeAddress: bscDevnetConfig.contracts.tokenBridge,
+    governanceAddress: bscDevnetConfig.contracts.governance
   },
   polygon: {
     rpc: undefined,
@@ -280,11 +295,30 @@ const DEVNET = {
   },
   alephium: {
     rpc: alephiumDevnetConfig.nodeUrl,
-    key: alephiumDevnetConfig.mnemonic,
+    key: testPrivateKey,
     tokenBridgeAddress: alephiumDevnetConfig.contracts.tokenBridge,
-    governanceAddress: alephiumDevnetConfig.contracts.governance
+    governanceAddress: alephiumDevnetConfig.contracts.governance,
+    groupIndex: alephiumDevnetConfig.groupIndex
   }
 };
+
+export const Guardians = {
+  DEVNET: {
+    governanceEmitterAddress: guardianDevnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianDevnetConfig.governanceChainId,
+    guardianUrls: guardianDevnetConfig.guardianUrls
+  },
+  TESTNET: {
+    governanceEmitterAddress: guardianTestnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianTestnetConfig.governanceChainId,
+    guardianUrls: guardianTestnetConfig.guardianUrls
+  },
+  MAINNET: {
+    governanceEmitterAddress: guardianMainnetConfig.governanceEmitterAddress,
+    governanceChainId: guardianMainnetConfig.governanceChainId,
+    guardianUrls: guardianMainnetConfig.guardianUrls
+  }
+}
 
 /**
  *
@@ -315,3 +349,5 @@ const isMainnetConnections: ChainConnections = MAINNET;
 const isDevnetConnections: ChainConnections = DEVNET;
 
 export const CONFIGS = { MAINNET, TESTNET, DEVNET };
+
+export type NetworkType = 'MAINNET' | 'TESTNET' | 'DEVNET'

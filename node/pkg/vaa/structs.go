@@ -5,9 +5,11 @@ import (
 	"crypto/ecdsa"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -527,4 +529,64 @@ func StringToAddress(value string) (Address, error) {
 	copy(address[32-len(res):], res)
 
 	return address, nil
+}
+
+type VAAID struct {
+	EmitterChain   ChainID
+	EmitterAddress Address
+	TargetChain    ChainID
+	Sequence       uint64
+}
+
+// VaaIDFromString parses a <emitter_chain>/<address>/<target_chain>/<sequence> string into a VAAID.
+func VaaIDFromString(s string) (*VAAID, error) {
+	parts := strings.Split(s, "/")
+	if len(parts) != 4 {
+		return nil, errors.New("invalid message id")
+	}
+
+	emitterChain, err := strconv.ParseUint(parts[0], 10, 16)
+	if err != nil {
+		return nil, fmt.Errorf("invalid emitter chain: %s", err)
+	}
+
+	emitterAddress, err := StringToAddress(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("invalid emitter address: %s", err)
+	}
+
+	targetChain, err := strconv.ParseUint(parts[2], 10, 16)
+	if err != nil {
+		return nil, fmt.Errorf("invalid target chain: %s", err)
+	}
+
+	sequence, err := strconv.ParseUint(parts[3], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid sequence: %s", err)
+	}
+
+	msgId := &VAAID{
+		EmitterChain:   ChainID(emitterChain),
+		EmitterAddress: emitterAddress,
+		TargetChain:    ChainID(targetChain),
+		Sequence:       sequence,
+	}
+
+	return msgId, nil
+}
+
+func (i *VAAID) Bytes() []byte {
+	return []byte(fmt.Sprintf("signed/%d/%s/%d/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain, i.Sequence))
+}
+
+func (i *VAAID) GovernanceEmitterPrefixBytes() []byte {
+	return []byte(fmt.Sprintf("signed/%d/%s", i.EmitterChain, i.EmitterAddress))
+}
+
+func (i *VAAID) EmitterPrefixBytes() []byte {
+	return []byte(fmt.Sprintf("signed/%d/%s/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain))
+}
+
+func (i *VAAID) ToString() string {
+	return fmt.Sprintf("%d/%s/%d/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain, i.Sequence)
 }

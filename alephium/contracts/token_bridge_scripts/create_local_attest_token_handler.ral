@@ -1,0 +1,7 @@
+TxScript CreateLocalAttestTokenHandler(
+    tokenBridge: TokenBridge,
+    payer: Address,
+    alphAmount: U256
+) {
+    tokenBridge.createLocalAttestTokenHandler{payer -> ALPH: alphAmount}(payer, alphAmount)
+}

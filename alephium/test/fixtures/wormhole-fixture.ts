@@ -1,22 +1,16 @@
-import Web3 from 'web3'
 import { randomBytes } from 'crypto'
+import { ethers } from 'ethers'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { Contract, ContractState, Asset, contractIdFromAddress, binToHex, Project, encodeI256 } from '@alephium/web3'
-
-export const web3 = new Web3()
-export const ethAccounts = web3.eth.accounts
-export const web3Utils = web3.utils
+import { ContractState, contractIdFromAddress, binToHex, Project, encodeI256, Fields } from '@alephium/web3'
+import { MathTest } from '../../artifacts/ts'
 
 export const CHAIN_ID_ALEPHIUM = 255
 export const dustAmount = BigInt('1000000000000000')
 export const oneAlph = BigInt('1000000000000000000')
 export const minimalAlphInContract = oneAlph
-export const initAsset: Asset = {
-  alphAmount: minimalAlphInContract
-}
-export const u256Max = 1n << 255n
+export const tokenMax = (1n << 256n) - 1n
 export const gasPrice = BigInt('100000000000')
 export const maxGasPerTx = BigInt('625000')
 export const defaultGasFee = gasPrice * maxGasPerTx
@@ -27,35 +21,28 @@ export async function buildProject(): Promise<void> {
   }
 }
 
-export class ContractInfo {
-  contract: Contract
-  selfState: ContractState
+export class ContractFixture<T extends Fields> {
+  selfState: ContractState<T>
   dependencies: ContractState[]
   address: string
   contractId: string
-  bytecode: string
-  codeHash: string
 
   states(): ContractState[] {
-    return [this.selfState].concat(this.dependencies)
+    return this.dependencies.concat([this.selfState])
   }
 
-  constructor(contract: Contract, selfState: ContractState, dependencies: ContractState[], address: string) {
-    this.contract = contract
+  constructor(selfState: ContractState<T>, dependencies: ContractState[]) {
     this.selfState = selfState
     this.dependencies = dependencies
-    this.address = address
+    this.address = selfState.address
     this.contractId = selfState.contractId
-    this.bytecode = selfState.bytecode
-    this.codeHash = selfState.codeHash
   }
 }
 
-export function createMath(): ContractInfo {
-  const mathContract = Project.contract('MathTest')
+export function createMath() {
   const address = randomContractAddress()
-  const contractState = mathContract.toState({}, { alphAmount: minimalAlphInContract }, address)
-  return new ContractInfo(mathContract, contractState, [], address)
+  const contractState = MathTest.stateForTest({}, undefined, address)
+  return new ContractFixture(contractState, [])
 }
 
 export class GuardianSet {
@@ -70,10 +57,11 @@ export class GuardianSet {
   }
 
   static random(size: number, index: number): GuardianSet {
-    const pks = Array(size)
+    const accounts = Array(size)
       .fill(0)
-      .map((_) => ethAccounts.create().privateKey)
-    const addresses = pks.map((key) => ethAccounts.privateKeyToAccount(key).address.slice(2)) // drop the 0x prefix
+      .map(() => new ethers.Wallet(ethers.utils.randomBytes(32)))
+    const addresses = accounts.map((account) => account.address.slice(2)) // drop the 0x prefix
+    const pks = accounts.map((account) => account.privateKey)
     return new GuardianSet(pks, index, addresses)
   }
 
@@ -96,11 +84,11 @@ export class GuardianSet {
       .sort((a, b) => a[0] - b[0])
       .slice(0, size)
       .sort((a, b) => a[1] - b[1])
-    const hash = web3Utils.keccak256(web3Utils.keccak256('0x' + binToHex(body.encode())))
+    const hash = ethers.utils.keccak256(ethers.utils.keccak256('0x' + binToHex(body.encode())))
     const signatures = keys.map((element) => {
       const keyIndex = element[1]
       const ec = new elliptic.ec('secp256k1')
-      const key = ec.keyFromPrivate(this.privateKeys[keyIndex].slice(2))
+      const key = ec.keyFromPrivate(this.privateKeys[`${keyIndex}`].slice(2))
       const sig = key.sign(hash.slice(2), { canonical: true })
       const signature = [
         zeroPad(sig.r.toString(16), 32),
@@ -185,12 +173,14 @@ export class VAA {
 export class ContractUpgrade {
   contractCode: string
   prevStateHash?: string
-  state?: string
+  immutableState?: string
+  mutableState?: string
 
-  constructor(contractCode: string, prevStateHash?: string, state?: string) {
+  constructor(contractCode: string, prevStateHash?: string, immutableState?: string, mutableState?: string) {
     this.contractCode = contractCode
     this.prevStateHash = prevStateHash
-    this.state = state
+    this.immutableState = immutableState
+    this.mutableState = mutableState
   }
 
   encode(module: string, action: number) {
@@ -200,12 +190,16 @@ export class ContractUpgrade {
     buffer0.writeUint8(action, 32)
     buffer0.writeUint16BE(contractCodeLength, 33)
     buffer0.write(this.contractCode, 35, 'hex')
-    if (this.state !== undefined) {
-      const stateLength = this.state.length / 2
-      const buffer1 = Buffer.allocUnsafe(32 + 2 + stateLength)
+    if (this.immutableState !== undefined && this.mutableState !== undefined) {
+      const immutableStateLength = this.immutableState.length / 2
+      const mutableStateLength = this.mutableState.length / 2
+      const buffer1 = Buffer.allocUnsafe(32 + 2 + immutableStateLength + 2 + mutableStateLength)
       buffer1.write(this.prevStateHash as string, 0, 'hex')
-      buffer1.writeUint16BE(stateLength, 32)
-      buffer1.write(this.state, 34, 'hex')
+      buffer1.writeUint16BE(immutableStateLength, 32)
+      buffer1.write(this.immutableState, 34, 'hex')
+      const offset = 34 + immutableStateLength
+      buffer1.writeUint16BE(mutableStateLength, offset)
+      buffer1.write(this.mutableState, offset + 2, 'hex')
       return Buffer.concat([buffer0, buffer1])
     }
     return buffer0
@@ -223,7 +217,7 @@ export function hexToBase58(hex: string): string {
 export function randomAssetAddressHex(): string {
   const generator = [randomP2PKHAddressHex, () => randomP2MPKHAddressHex(3, 5), randomP2SHAddressHex]
   const index = Math.floor(Math.random() * 2)
-  return generator[index]()
+  return generator[`${index}`]()
 }
 
 export function randomAssetAddress(): string {
@@ -299,4 +293,8 @@ export async function expectError<T>(func: () => Promise<T>, error: string) {
 
 export function chainIdToBytes(chainId: number): Uint8Array {
   return Buffer.from(zeroPad(chainId.toString(16), 2), 'hex')
+}
+
+export function getContractState<T extends Fields>(contracts: ContractState[], idOrAddress: string): ContractState<T> {
+  return contracts.find((c) => c.contractId === idOrAddress || c.address === idOrAddress)! as ContractState<T>
 }

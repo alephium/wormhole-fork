@@ -25,7 +25,6 @@ import algosdk from "algosdk";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   errorDataWrapper,
@@ -59,6 +58,7 @@ import {
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 function useFetchTargetAsset(nft?: boolean) {
   const dispatch = useDispatch();
@@ -80,7 +80,7 @@ function useFetchTargetAsset(nft?: boolean) {
   );
   const setTargetAsset = nft ? setNFTTargetAsset : setTransferTargetAsset;
   const { provider, chainId: evmChainId } = useEthereumProvider();
-  const { signer: alphSigner} = useAlephiumWallet()
+  const alphWallet = useAlephiumWallet()
   const correctEvmNetwork = getEvmChainId(targetChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
   const [lastSuccessfulArgs, setLastSuccessfulArgs] = useState<{
@@ -259,7 +259,7 @@ function useFetchTargetAsset(nft?: boolean) {
         try {
           const remoteTokenPoolId = await getForeignAssetAlephium(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            alphSigner!.nodeProvider,
+            alphWallet!.nodeProvider,
             originChain,
             hexToUint8Array(originAsset),
             ALEPHIUM_BRIDGE_GROUP_INDEX
@@ -332,7 +332,7 @@ function useFetchTargetAsset(nft?: boolean) {
     originAsset,
     targetChain,
     provider,
-    alphSigner,
+    alphWallet,
     nft,
     setTargetAsset,
     tokenId,

@@ -1,0 +1,106 @@
+import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
+import { FileCopy, OpenInNew } from "@material-ui/icons";
+import { withStyles } from "@material-ui/styles";
+import useCopyToClipboard from "../../hooks/useCopyToClipboard";
+import { getExplorerName } from "../../utils/consts";
+import { getTransactionLink, shortenTxId } from "../../utils/transaction";
+import { BridgeTransaction } from ".";
+import { useHistory } from "react-router-dom";
+import { useCallback } from "react";
+
+const useStyles = makeStyles((theme) => ({
+  mainTypog: {
+    display: "inline-block",
+    marginRight: theme.spacing(1),
+    textDecoration: "underline",
+    textUnderlineOffset: "2px"
+  },
+  buttons: {
+    marginLeft: ".5rem",
+    marginRight: ".5rem"
+  }
+}))
+
+const tooltipStyles = {
+  tooltip: {
+    minWidth: "max-content",
+    textAlign: "center",
+    "& > *": {
+      margin: ".25rem"
+    }
+  }
+}
+
+// @ts-ignore
+const StyledTooltip = withStyles(tooltipStyles)(Tooltip)
+
+export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
+  const classes = useStyles()
+  const explorerAddress = getTransactionLink(tx.emitterChain, tx.txId)
+  const explorerName = getExplorerName(tx.emitterChain)
+
+  const copyToClipboard = useCopyToClipboard(tx.txId.toString())
+  const { push } = useHistory()
+  const redeemHandler = useCallback(() => {
+    push(`/redeem?sourceChain=${tx.emitterChain}&transactionId=${tx.txId}`)
+  }, [push, tx])
+
+  const explorerButton = !explorerAddress ? null : (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={<OpenInNew />}
+      className={classes.buttons}
+      href={explorerAddress}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {"View on " + explorerName}
+    </Button>
+  );
+  const copyButton = (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={<FileCopy />}
+      onClick={copyToClipboard}
+      className={classes.buttons}
+    >
+      Copy
+    </Button>
+  )
+  const redeemButton = tx.status !== 'Confirmed' ? null : (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={redeemHandler}
+      className={classes.buttons}
+    >
+      Redeem
+    </Button>
+  )
+
+  const tooltipContent = (
+    <div>
+      {explorerButton}
+      {redeemButton}
+      {copyButton}
+    </div>
+  )
+
+  return (
+    <StyledTooltip
+      title={tooltipContent}
+      interactive={true}
+      className={classes.mainTypog}
+    >
+      <Typography
+        variant={"body1"}
+        className={classes.mainTypog}
+        component="div"
+      >
+        {shortenTxId(tx.txId)}
+      </Typography>
+    </StyledTooltip>
+  )
+}

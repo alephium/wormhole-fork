@@ -21,6 +21,17 @@ import (
 const HashLength = 32
 const WormholeMessageEventIndex = 0
 const WormholeMessageFieldSize = 6
+const TransferTokenPayloadId = 1
+const AttestTokenPayloadId = 2
+const AttestTokenPayloadLength = 100
+
+var ALPHTokenId Byte32
+var ALPHTokenInfo TokenInfo = TokenInfo{
+	TokenId:  ALPHTokenId,
+	Decimals: 18,
+	Symbol:   "ALPH",
+	Name:     "Alephium",
+}
 
 func ToContractId(address string) (Byte32, error) {
 	var byte32 Byte32
@@ -118,6 +129,55 @@ func (w *WormholeMessage) toMessagePublication(header *sdk.BlockHeaderEntry) *co
 		EmitterAddress:   vaa.Address(w.senderId),
 		Payload:          w.payload,
 	}
+}
+
+func (w *WormholeMessage) IsAttestTokenVAA() bool {
+	return len(w.payload) > 0 && w.payload[0] == AttestTokenPayloadId
+}
+
+func (w *WormholeMessage) IsTransferTokenVAA() bool {
+	return len(w.payload) > 0 && w.payload[0] == TransferTokenPayloadId
+}
+
+func (w *WormholeMessage) GetID() *vaa.VAAID {
+	return &vaa.VAAID{
+		EmitterChain:   vaa.ChainIDAlephium,
+		TargetChain:    vaa.ChainID(w.targetChainId),
+		EmitterAddress: vaa.Address(w.senderId),
+		Sequence:       w.Sequence,
+	}
+}
+
+type TokenInfo struct {
+	TokenId  Byte32
+	Decimals uint8
+	Symbol   string
+	Name     string
+}
+
+func parseAttestToken(payload []byte) (*TokenInfo, error) {
+	if len(payload) != AttestTokenPayloadLength {
+		return nil, fmt.Errorf("invalid attest token payload length")
+	}
+	var tokenId Byte32
+	copy(tokenId[:], payload[1:33])
+	tokenChainId := binary.BigEndian.Uint16(payload[33:35])
+	if tokenChainId != uint16(vaa.ChainIDAlephium) {
+		return nil, fmt.Errorf("invalid token chain id")
+	}
+	decimals := payload[35]
+	symbolBytes := payload[36:68]
+	nameBytes := payload[68:100]
+	return &TokenInfo{
+		TokenId:  tokenId,
+		Decimals: decimals,
+		Symbol:   bytesToString(symbolBytes),
+		Name:     bytesToString(nameBytes),
+	}, nil
+}
+
+func bytesToString(bs []byte) string {
+	return string(bytes.Trim(bs, "\u0000"))
 }
 
 func toBool(field sdk.Val) (*bool, error) {

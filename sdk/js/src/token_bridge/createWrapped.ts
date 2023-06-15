@@ -1,17 +1,14 @@
-import { ALPH_TOKEN_ID, BuildScriptTxResult, SignerProvider } from "@alephium/web3";
+import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import {
-  createLocalTokenPoolScript,
-  createRemoteTokenPoolScript
-} from "../alephium/token_bridge";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
 import { importTokenWasm } from "../solana/wasm";
+import { CreateRemoteTokenPool, CreateLocalTokenPool } from "../alephium-contracts/ts/scripts";
 
 export async function createRemoteTokenPoolOnAlph(
   signerProvider: SignerProvider,
@@ -19,14 +16,12 @@ export async function createRemoteTokenPoolOnAlph(
   signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = createRemoteTokenPoolScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return CreateRemoteTokenPool.execute(signerProvider, {
     initialFields: {
       payer: payer,
       attestTokenHandler: attestTokenHandlerId,
-      vaa: vaaHex,
+      vaa: binToHex(signedVAA),
       alphAmount: alphAmount
     },
     attoAlphAmount: alphAmount
@@ -35,21 +30,22 @@ export async function createRemoteTokenPoolOnAlph(
 
 export async function createLocalTokenPoolOnAlph(
   signerProvider: SignerProvider,
-  tokenBridgeId: string,
+  attestTokenHandlerId: string,
   localTokenId: string,
+  signedVAA: Uint8Array,
   payer: string,
   alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = createLocalTokenPoolScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return CreateLocalTokenPool.execute(signerProvider, {
     initialFields: {
       payer: payer,
-      tokenBridge: tokenBridgeId,
-      tokenId: localTokenId,
+      attestTokenHandler: attestTokenHandlerId,
+      localTokenId: localTokenId,
+      vaa: binToHex(signedVAA),
       alphAmount: alphAmount
     },
-    attoAlphAmount: alphAmount,
-    tokens: localTokenId === ALPH_TOKEN_ID ? [] : [{ id: localTokenId, amount: BigInt(1) }]
+    attoAlphAmount: alphAmount + (localTokenId === ALPH_TOKEN_ID ? DUST_AMOUNT : DUST_AMOUNT * BigInt(2)),
+    tokens: [{ id: localTokenId, amount: BigInt(1) }]
   })
 }
 

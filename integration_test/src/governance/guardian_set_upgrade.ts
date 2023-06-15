@@ -1,10 +1,14 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
 import axios from 'axios'
 import { assert, getBridgeChains, sleep } from '../utils'
-import { getNextGovernanceSequence, guardianRpcPorts, injectVAA, submitGovernanceVAA } from './governance_utils'
-
-const newGuardianSet = ['0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe', '0x88D7D8B32a9105d228100E72dFFe2Fae0705D31c']
-const newGuardianSetIndex = 1
+import {
+  getNextGovernanceSequence,
+  guardianRpcPorts,
+  injectVAA,
+  newGuardianSet,
+  newGuardianSetIndex,
+  submitGovernanceVAA
+} from './governance_utils'
 
 function createGuardianSetUpgradeVaa(sequence: number): string {
   return `
@@ -21,6 +25,10 @@ function createGuardianSetUpgradeVaa(sequence: number): string {
           pubkey: "${newGuardianSet[1]}"
           name: "Guardian 1"
         }
+        guardians: {
+          pubkey: "${newGuardianSet[2]}"
+          name: "Guardian 2"
+        }
       }
     }
   `
@@ -28,10 +36,10 @@ function createGuardianSetUpgradeVaa(sequence: number): string {
 
 async function runGuardianSetUpgrade(): Promise<void> {
   // we only need to inject the vaa on guardian-0
-  const seq = await getNextGovernanceSequence()
+  const seq = getNextGovernanceSequence()
   const guardianSetUpgradeVaa = createGuardianSetUpgradeVaa(seq)
   await injectVAA(guardianSetUpgradeVaa, 0, 'guardian-set-upgrade.proto')
-  await submitGovernanceVAA('GuardianSetUpgrade', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH])
+  await submitGovernanceVAA('GuardianSetUpgrade', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_BSC])
 }
 
 async function checkGuardianSet(expected: string[]) {
@@ -44,10 +52,15 @@ async function checkGuardianSet(expected: string[]) {
   console.log(`Current guardian set on Ethereum: ${ethGuardianSet}`)
   assert(ethGuardianSet.length === expected.length)
 
+  const bscGuardianSet = await chains.bsc.getCurrentGuardianSet()
+  console.log(`Current guardian set on Bsc: ${bscGuardianSet}`)
+  assert(bscGuardianSet.length === expected.length)
+
   for (let i = 0; i < expected.length; i++) {
     const expectedKey = expected[i].slice(2).toLowerCase()
     assert(alphGuardianSet[i].toLowerCase() === expectedKey)
     assert(ethGuardianSet[i].slice(2).toLowerCase() === expectedKey)
+    assert(bscGuardianSet[i].slice(2).toLowerCase() === expectedKey)
   }
 }
 

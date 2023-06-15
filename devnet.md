@@ -2,44 +2,46 @@
 
 The following dependencies are required for local development:
 
-- [Go](https://golang.org/dl/) >= 1.17.5 (go 1.18.x has some issues)
-- [Tilt](http://tilt.dev/) >= 0.20.8
-- [minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
+- [Go](https://golang.org/dl/) >= 1.18.6
 - [Docker](https://docs.docker.com/engine/install/)
 
 # Setup local cluster
 
+Build the docker images:
+
 ```sh
 git clone git@github.com:alephium/wormhole-fork.git
-cd wormhole-fork
+cd wormhole-fork/
+./build-docker-images.sh devnet
 ```
+
+Start the devnet:
+
+```
+cd ./docker
+MONGO_USER=user MONGO_PASSWORD=password docker compose up
+```
+
+This command will run one guardian by default, you can also specify the number of guardians through the environment variable `NUM_OF_GUARDIANS`, note that currently devnet supports up to 3 guardians:
 
 ```sh
-minikube start --driver=docker --cpus=8 --memory=8G --disk-size=50g --namespace=wormhole
+MONGO_USER=user MONGO_PASSWORD=password NUM_OF_GUARDIANS=3 docker compose up
 ```
 
-Launch the devnet while specifying the number of guardians nodes to run:
-
-```sh
-tilt up -- --num=1 --webHost=0.0.0.0 --bridge_ui
-```
-
-And wait for all pods to start.
+And wait for all containers to start.
 
 # Devnet accounts and contracts
 
-Alephium account address: 1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH
-Alephium test token contract id: 6c9e363a430b14f135428ea6d7a5b1cf893485ab9495e325258e7b16925d62ab, address: 21zx4ryc9Qwe6CKoAahKKDfSLQtxGdVQJNCxTswmmVTbp
-Alephium wrapped alph contract id: 7eba0bd8a081d080d708fd226f6da27d59574e465b3703b563ed990260e56803, address: 23De2HETiehDAm4jGyzFoRCdVa4UxMP9a4F5DqnL5hW2N
-
+Alephium account mnemonic: vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava
 Ethereum account private-key: 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
-Ethereum test token address: 0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A
-Ethereum weth address: 0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E
+
+Please refer to `configs/alephium/devnet.json` and `configs/ethereum/devnet.json` for other contract IDs.
 
 # Cleanup the cluster
 
 ```sh
-tilt down
+docker compose down
+docker volume prune
 ```
 
 Note: remember to re-import the Ethereum wallet after cleaning the cluster.

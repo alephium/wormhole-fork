@@ -1,9 +1,9 @@
-import { NodeProvider, node } from '@alephium/web3'
 import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { BridgeChain } from './bridge_chain'
 import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'
+import { BridgeChain } from './bridge_chain'
+import { createBsc } from './bsc'
 
 export function assert(condition: boolean) {
   if (!condition) {
@@ -50,26 +50,9 @@ export function normalizeTokenId(tokenId: string): string {
   throw new Error(`invalid token id: ${tokenId}`)
 }
 
-function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
-  return txStatus.type === 'Confirmed'
-}
-
-// TODO: add this to SDK
-export async function waitAlphTxConfirmed(
-  provider: NodeProvider,
-  txId: string,
-  confirmations: number
-): Promise<node.Confirmed> {
-  const status = await provider.transactions.getTransactionsStatus({ txId: txId })
-  if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
-    return status
-  }
-  await new Promise((r) => setTimeout(r, 1000))
-  return waitAlphTxConfirmed(provider, txId, confirmations)
-}
-
 type BridgeChains = {
   eth: BridgeChain
+  bsc: BridgeChain
   alph: AlephiumBridgeChain
 }
 
@@ -79,9 +62,10 @@ export async function getBridgeChains(): Promise<BridgeChains> {
   if (bridgeChains !== undefined) {
     return bridgeChains
   }
-  const alph = await createAlephium()
   const eth = await createEth()
-  bridgeChains = { eth, alph }
+  const bsc = await createBsc()
+  const alph = await createAlephium()
+  bridgeChains = { eth, bsc, alph }
   return bridgeChains
 }
 

@@ -1,10 +1,12 @@
 import { Configuration } from '@alephium/cli'
+import { testPrivateKey } from '@alephium/web3-test'
 import { default as alephiumDevnetConfig } from '../configs/alephium/devnet.json'
 import { default as alephiumTestnetConfig } from '../configs/alephium/testnet.json'
 import { default as alephiumMainnetConfig } from '../configs/alephium/mainnet.json'
 import { default as guardianDevnetConfig } from '../configs/guardian/devnet.json'
 import { default as guardianTestnetConfig } from '../configs/guardian/testnet.json'
 import { default as guardianMainnetConfig } from '../configs/guardian/mainnet.json'
+import { ONE_ALPH } from '@alephium/web3'
 
 export type Settings = {
   nodeUrl: string
@@ -15,6 +17,7 @@ export type Settings = {
   governanceEmitterAddress: string
   minimalConsistencyLevel: number
   messageFee: bigint
+  initRewards: bigint
 }
 
 function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
@@ -32,7 +35,8 @@ function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
     governanceChainId: guardianConfig.governanceChainId as number,
     governanceEmitterAddress: guardianConfig.governanceEmitterAddress as string,
     minimalConsistencyLevel: alephiumConfig.minimalConsistencyLevel as number,
-    messageFee: BigInt(alephiumConfig.messageFee)
+    messageFee: BigInt(alephiumConfig.messageFee),
+    initRewards: BigInt(alephiumConfig.initRewards) * ONE_ALPH
   }
 }
 
@@ -41,21 +45,17 @@ const testnetSettings = loadSettings('testnet')
 const mainnetSettings = loadSettings('mainnet')
 
 const configuration: Configuration<Settings> = {
-  artifactDir: '../sdk/js/src/alephium/artifacts',
-
   deploymentScriptDir: 'scripts',
   compilerOptions: {
     errorOnWarnings: true,
     ignoreUnusedConstantsWarnings: true
   },
 
-  defaultNetwork: 'devnet',
   networks: {
     devnet: {
       networkId: devnetSettings.networkId,
-      nodeUrl: devnetSettings.nodeUrl,
-      mnemonic:
-        'vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava',
+      nodeUrl: process.env.NODE_URL ?? devnetSettings.nodeUrl,
+      privateKeys: [testPrivateKey],
       confirmations: 1,
       settings: devnetSettings
     },
@@ -63,7 +63,7 @@ const configuration: Configuration<Settings> = {
     testnet: {
       networkId: testnetSettings.networkId,
       nodeUrl: testnetSettings.nodeUrl,
-      mnemonic: process.env.MNEMONIC as string,
+      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       confirmations: 2,
       settings: testnetSettings
     },
@@ -71,7 +71,7 @@ const configuration: Configuration<Settings> = {
     mainnet: {
       networkId: mainnetSettings.networkId,
       nodeUrl: mainnetSettings.nodeUrl,
-      mnemonic: process.env.MNEMONIC as string,
+      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       confirmations: 2,
       settings: mainnetSettings
     }

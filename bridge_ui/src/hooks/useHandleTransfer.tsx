@@ -16,8 +16,6 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   transferFromAlgorand,
-  transferFromEth,
-  transferFromEthNative,
   transferFromSolana,
   transferFromTerra,
   transferNativeSol,
@@ -59,7 +57,8 @@ import {
   setIsSending,
   setSignedVAAHex,
   setTransferTx,
-  setRecoverySourceTxId
+  setRecoverySourceTxId,
+  setIsWalletApproved
 } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
@@ -83,10 +82,10 @@ import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
-import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { validateAlephiumRecipientAddress, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
-import { BuildScriptTxResult } from "@alephium/web3";
-import { Transaction, TransactionDB } from "../utils/db";
+import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { ExecuteScriptResult } from "@alephium/web3";
+import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
+import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -189,8 +188,8 @@ async function evm(
       chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = isNative
-      ? await transferFromEthNative(
+    const result = isNative
+      ? await transferFromEthNativeWithoutWait(
           getTokenBridgeAddressForChain(chainId),
           signer,
           transferAmountParsed,
@@ -199,7 +198,7 @@ async function evm(
           feeParsed,
           overrides
         )
-      : await transferFromEth(
+      : await transferFromEthWithoutWait(
           getTokenBridgeAddressForChain(chainId),
           signer,
           tokenAddress,
@@ -209,6 +208,8 @@ async function evm(
           feeParsed,
           overrides
         );
+    dispatch(setIsWalletApproved(true))
+    const receipt = await result.wait()
     dispatch(
       setTransferTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
@@ -222,6 +223,9 @@ async function evm(
     const emitterAddress = getEmitterAddressEth(
       getTokenBridgeAddressForChain(chainId)
     );
+    if (signer.provider) {
+      await waitEVMTxConfirmed(signer.provider, receipt, chainId)
+    }
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
@@ -335,7 +339,7 @@ async function solana(
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
-  signer: AlephiumWalletSigner,
+  wallet: AlephiumWallet,
   tokenId: string,
   originAsset: string,
   tokenChainId: ChainId,
@@ -347,54 +351,44 @@ async function alephium(
   dispatch(setIsSending(true))
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
-    const txInfo = await waitTxConfirmedAndGetTxInfo(
-      signer.nodeProvider, async () => {
-        let result: BuildScriptTxResult
-        if (tokenChainId === CHAIN_ID_ALEPHIUM) {
-          result = await transferLocalTokenFromAlph(
-            signer.signerProvider,
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.account.address,
-            tokenId,
-            targetChain,
-            uint8ArrayToHex(targetAddress),
-            amountParsed,
-            ALEPHIUM_MESSAGE_FEE,
-            alphArbiterFee,
-            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-          )
-        } else {
-          result = await transferRemoteTokenFromAlph(
-            signer.signerProvider,
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            signer.account.address,
-            tokenId,
-            originAsset,
-            tokenChainId,
-            targetChain,
-            uint8ArrayToHex(targetAddress),
-            amountParsed,
-            ALEPHIUM_MESSAGE_FEE,
-            alphArbiterFee,
-            ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-          )
-        }
-        return result.txId
-      }
-    )
-    await TransactionDB.getInstance().txs.put(new Transaction(
-      txInfo.txId,
-      signer.account.address,
-      CHAIN_ID_ALEPHIUM,
-      targetChain,
-      txInfo.sequence,
-      "Pending"
-    ))
+    let result: ExecuteScriptResult
+    if (tokenChainId === CHAIN_ID_ALEPHIUM) {
+      result = await transferLocalTokenFromAlph(
+        wallet.signer,
+        ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+        wallet.address,
+        tokenId,
+        targetChain,
+        uint8ArrayToHex(targetAddress),
+        amountParsed,
+        ALEPHIUM_MESSAGE_FEE,
+        alphArbiterFee,
+        ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+      )
+    } else {
+      result = await transferRemoteTokenFromAlph(
+        wallet.signer,
+        ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+        wallet.address,
+        tokenId,
+        originAsset,
+        tokenChainId,
+        targetChain,
+        uint8ArrayToHex(targetAddress),
+        amountParsed,
+        ALEPHIUM_MESSAGE_FEE,
+        alphArbiterFee,
+        ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+      )
+    }
+    dispatch(setIsWalletApproved(true))
+    const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId)
     dispatch(setTransferTx({ id: txInfo.txId, block: txInfo.blockHeight }));
     dispatch(setRecoverySourceTxId(txInfo.txId))
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
+    await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL)
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
@@ -502,7 +496,7 @@ export function useHandleTransfer() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const { accounts: algoAccounts } = useAlgorandContext();
   const sourceParsedTokenAccount = useSelector(
@@ -603,7 +597,7 @@ export function useHandleTransfer() {
       );
     } else if (
       sourceChain === CHAIN_ID_ALEPHIUM &&
-      !!alphSigner &&
+      !!alphWallet &&
       !!sourceAsset &&
       decimals !== undefined &&
       !!targetAddress &&
@@ -613,7 +607,7 @@ export function useHandleTransfer() {
       alephium(
         dispatch,
         enqueueSnackbar,
-        alphSigner,
+        alphWallet,
         sourceAsset,
         originAsset,
         originChain,
@@ -632,7 +626,7 @@ export function useHandleTransfer() {
     solanaWallet,
     solPK,
     terraWallet,
-    alphSigner,
+    alphWallet,
     sourceTokenPublicKey,
     sourceAsset,
     amount,

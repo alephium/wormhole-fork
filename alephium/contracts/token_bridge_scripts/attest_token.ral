@@ -2,11 +2,14 @@ TxScript AttestToken(
     payer: Address,
     tokenBridge: TokenBridge,
     localTokenId: ByteVec,
+    decimals: U256,
+    symbol: ByteVec,
+    name: ByteVec,
     nonce: ByteVec,
     consistencyLevel: U256
 ) {
     let messageFee = tokenBridge.getMessageFee()
     tokenBridge.attestToken{
         payer -> ALPH: messageFee, localTokenId: 1
-    }(payer, localTokenId, nonce, consistencyLevel)
+    }(payer, localTokenId, decimals, symbol, name, nonce, consistencyLevel)
 }

@@ -6,7 +6,6 @@ import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import BackgroundImage from "./components/BackgroundImage";
-import { AlephiumWalletProvider } from "./contexts/AlephiumWalletContext";
 import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
@@ -15,6 +14,8 @@ import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
+import { AlephiumConnectProvider } from "@alephium/web3-react"
+import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from "./utils/consts";
 
 ReactDOM.render(
   <ErrorBoundary>
@@ -27,14 +28,17 @@ ReactDOM.render(
               <SolanaWalletProvider>
                 <EthereumProviderProvider>
                   <TerraWalletProvider>
-                    <AlephiumWalletProvider>
+                    <AlephiumConnectProvider
+                      network={CLUSTER}
+                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                    >
                       <AlgorandContextProvider>
                         <HashRouter>
                           <BackgroundImage />
                           <App />
                         </HashRouter>
                       </AlgorandContextProvider>
-                    </AlephiumWalletProvider>
+                    </AlephiumConnectProvider>
                   </TerraWalletProvider>
                 </EthereumProviderProvider>
               </SolanaWalletProvider>

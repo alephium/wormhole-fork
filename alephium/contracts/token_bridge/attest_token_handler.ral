@@ -1,44 +1,70 @@
 Contract AttestTokenHandler(
   governance: Governance,
   localTokenBridge: TokenBridge,
-  remoteChainId: U256,
-  remoteTokenBridgeId: ByteVec,
-  mut receivedSequence: U256
+  targetChainId: U256,
+  targetTokenBridge: TokenBridge,
+  mut receivedSequence: U256,
+  isLocalHandler: Bool
 ) extends Constants(), TokenBridgeConstants() {
   @using(updateFields = true)
   fn parseAttestToken(vaa: ByteVec) -> (ByteVec, ByteVec, ByteVec, U256, U256) {
-    let (emitterChainId, targetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
-    assert!(emitterChainId == remoteChainId, ErrorCodes.InvalidEmitChainId)
-    assert!(emitterAddress == remoteTokenBridgeId, ErrorCodes.InvalidEmitAddress)
-    assert!(targetChainId == 0, ErrorCodes.InvalidTargetChainId)
+    let (emitterChainId, vaaTargetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
+    assert!(emitterChainId == targetChainId, ErrorCodes.InvalidEmitChainId)
+    assert!(emitterAddress == tokenId!(targetTokenBridge), ErrorCodes.InvalidEmitAddress)
+    assert!(vaaTargetChainId == 0, ErrorCodes.InvalidTargetChainId)
     assert!(msgSequence >= receivedSequence, ErrorCodes.InvalidSequence)
     receivedSequence = msgSequence + 1
 
     assert!(byteVecSlice!(payload, 0, 1) == PayloadId.AttestToken, ErrorCodes.InvalidPayloadId)
     let tokenId = byteVecSlice!(payload, 1, 33)
     let tokenChainId = u256From2Byte!(byteVecSlice!(payload, 33, 35))
-    assert!(tokenChainId == remoteChainId, ErrorCodes.InvalidAttestTokenMessage)
+    assert!(tokenChainId == targetChainId, ErrorCodes.InvalidAttestTokenMessage)
     let decimals = u256From1Byte!(byteVecSlice!(payload, 35, 36))
     let symbol = byteVecSlice!(payload, 36, 68)
     let name = byteVecSlice!(payload, 68, 100)
     assert!(size!(payload) == 100, ErrorCodes.InvalidMessageSize)
-    return tokenId, symbol, name, decimals, msgSequence
+    return tokenId, removeTrailingZeros(symbol), removeTrailingZeros(name), decimals, msgSequence
   }
 
-  @using(preapprovedAssets = true)
+  @using(preapprovedAssets = true, checkExternalCaller = false)
+  pub fn createLocalTokenPool(
+    vaa: ByteVec,
+    payer: Address,
+    createContractAlphAmount: U256,
+    tokenAmount: U256
+  ) -> () {
+    assert!(isLocalHandler, ErrorCodes.InvalidAttestTokenHandler)
+    let (tokenId, _, _, decimals, _) = parseAttestToken(vaa)
+    localTokenBridge.createLocalTokenPool{payer -> ALPH: createContractAlphAmount, tokenId: tokenAmount}(
+      tokenId, decimals, payer, createContractAlphAmount
+    )
+  }
+
+  @using(preapprovedAssets = true, checkExternalCaller = false)
   pub fn createRemoteTokenPool(
     vaa: ByteVec,
     payer: Address,
     createContractAlphAmount: U256
   ) -> () {
+    assert!(!isLocalHandler, ErrorCodes.InvalidAttestTokenHandler)
     let (tokenId, symbol, name, decimals, msgSequence) = parseAttestToken(vaa)
     localTokenBridge.createRemoteTokenPool{payer -> ALPH: createContractAlphAmount}(
-      tokenId, remoteChainId, decimals, symbol, name, msgSequence, payer, createContractAlphAmount
+      tokenId, targetChainId, decimals, symbol, name, msgSequence, payer, createContractAlphAmount
     )
   }
 
+  @using(checkExternalCaller = false)
   pub fn updateRemoteTokenPool(vaa: ByteVec) -> () {
+    assert!(!isLocalHandler, ErrorCodes.InvalidAttestTokenHandler)
     let (tokenId, symbol, name, _, msgSequence) = parseAttestToken(vaa)
-    localTokenBridge.updateRemoteTokenPool(tokenId, remoteChainId, symbol, name, msgSequence)
+    localTokenBridge.updateRemoteTokenPool(tokenId, targetChainId, symbol, name, msgSequence)
+  }
+
+  fn removeTrailingZeros(bytes: ByteVec) -> ByteVec {
+    let mut index = 0
+    while (index < 32 && byteVecSlice!(bytes, index, index + 1) != #00) {
+        index = index + 1
+    }
+    return byteVecSlice!(bytes, 0, index)
   }
 }

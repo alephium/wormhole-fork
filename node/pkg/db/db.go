@@ -14,52 +14,8 @@ type Database struct {
 	db *badger.DB
 }
 
-type VAAID struct {
-	EmitterChain   vaa.ChainID
-	EmitterAddress vaa.Address
-	TargetChain    vaa.ChainID
-	Sequence       uint64
-}
-
-// VaaIDFromString parses a <emitter_chain>/<address>/<target_chain>/<sequence> string into a VAAID.
-func VaaIDFromString(s string) (*VAAID, error) {
-	parts := strings.Split(s, "/")
-	if len(parts) != 4 {
-		return nil, errors.New("invalid message id")
-	}
-
-	emitterChain, err := strconv.ParseUint(parts[0], 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("invalid emitter chain: %s", err)
-	}
-
-	emitterAddress, err := vaa.StringToAddress(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid emitter address: %s", err)
-	}
-
-	targetChain, err := strconv.ParseUint(parts[2], 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("invalid target chain: %s", err)
-	}
-
-	sequence, err := strconv.ParseUint(parts[3], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid sequence: %s", err)
-	}
-
-	msgId := &VAAID{
-		EmitterChain:   vaa.ChainID(emitterChain),
-		EmitterAddress: emitterAddress,
-		TargetChain:    vaa.ChainID(targetChain),
-		Sequence:       sequence,
-	}
-
-	return msgId, nil
-}
-
-func VaaIDFromVAA(v *vaa.VAA) *VAAID {
-	return &VAAID{
+func VaaIDFromVAA(v *vaa.VAA) *vaa.VAAID {
+	return &vaa.VAAID{
 		EmitterChain:   v.EmitterChain,
 		EmitterAddress: v.EmitterAddress,
 		TargetChain:    v.TargetChain,
@@ -70,18 +26,6 @@ func VaaIDFromVAA(v *vaa.VAA) *VAAID {
 var (
 	ErrVAANotFound = errors.New("requested VAA not found in store")
 )
-
-func (i *VAAID) Bytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s/%d/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain, i.Sequence))
-}
-
-func (i *VAAID) GovernanceEmitterPrefixBytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s", i.EmitterChain, i.EmitterAddress))
-}
-
-func (i *VAAID) EmitterPrefixBytes() []byte {
-	return []byte(fmt.Sprintf("signed/%d/%s/%d", i.EmitterChain, i.EmitterAddress, i.TargetChain))
-}
 
 func Open(path string) (*Database, error) {
 	db, err := badger.Open(badger.DefaultOptions(path))
@@ -125,11 +69,25 @@ func (d *Database) StoreSignedVAA(v *vaa.VAA) error {
 	return nil
 }
 
-func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
-	maxSequence := uint64(0)
-	vaaId := &VAAID{
+type GovernanceVAA struct {
+	TargetChain vaa.ChainID
+	Sequence    uint64
+	VaaBytes    []byte
+}
+
+func (d *Database) GetGovernanceVAABatch(governanceChainId vaa.ChainID, governanceEmitter vaa.Address, sequences []uint64) ([]*GovernanceVAA, error) {
+	vaas := make([]*GovernanceVAA, 0)
+	vaaId := &vaa.VAAID{
 		EmitterChain:   governanceChainId,
 		EmitterAddress: governanceEmitter,
+	}
+	contains := func(seq uint64) bool {
+		for _, s := range sequences {
+			if seq == s {
+				return true
+			}
+		}
+		return false
 	}
 	prefixBytes := vaaId.GovernanceEmitterPrefixBytes()
 	if err := d.db.View(func(txn *badger.Txn) error {
@@ -141,26 +99,43 @@ func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, gover
 
 		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
 			keyStr := string(it.Item().Key())
-			index := strings.LastIndex(keyStr, "/")
-			if index == -1 {
+			seqIndex := strings.LastIndex(keyStr, "/")
+			if seqIndex == -1 {
 				return fmt.Errorf("invalid vaa key: %s", keyStr)
 			}
-			sequence, err := strconv.ParseUint(keyStr[index+1:], 10, 64)
+			sequence, err := strconv.ParseUint(keyStr[seqIndex+1:], 10, 64)
 			if err != nil {
 				return err
 			}
-			if sequence > maxSequence {
-				maxSequence = sequence
+			if !contains(sequence) {
+				continue
 			}
+			targetChainIndex := strings.LastIndex(keyStr[:seqIndex], "/")
+			if targetChainIndex == -1 {
+				return fmt.Errorf("invalid vaa key: %s", keyStr)
+			}
+			targetChain, err := strconv.ParseUint(keyStr[targetChainIndex+1:seqIndex], 10, 16)
+			if err != nil {
+				return err
+			}
+			vaaBytes, err := it.Item().ValueCopy(nil)
+			if err != nil {
+				return err
+			}
+			vaas = append(vaas, &GovernanceVAA{
+				TargetChain: vaa.ChainID(targetChain),
+				Sequence:    sequence,
+				VaaBytes:    vaaBytes,
+			})
 		}
 		return nil
 	}); err != nil {
 		return nil, err
 	}
-	return &maxSequence, nil
+	return vaas, nil
 }
 
-func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
+func (d *Database) GetSignedVAABytes(id vaa.VAAID) (b []byte, err error) {
 	if err := d.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id.Bytes())
 		if err != nil {
@@ -181,7 +156,7 @@ func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {
 	return
 }
 
-func (d *Database) FindEmitterSequenceGap(prefix VAAID) (resp []uint64, firstSeq uint64, lastSeq uint64, err error) {
+func (d *Database) FindEmitterSequenceGap(prefix vaa.VAAID) (resp []uint64, firstSeq uint64, lastSeq uint64, err error) {
 	resp = make([]uint64, 0)
 	if err = d.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)

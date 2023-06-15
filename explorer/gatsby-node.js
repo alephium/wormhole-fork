@@ -32,6 +32,26 @@ exports.onCreateWebpackConfig = function addPathMapping({
       },
     },
   });
+
+  // Work around for `Cannot convert a BigInt value to a number`
+  // https://github.com/gatsbyjs/gatsby/issues/25297
+  const webpackConfig = getConfig()
+
+  if (stage === "build-javascript") {
+    const dependencyRulesIndex = webpackConfig.module.rules.findIndex(
+      (rule) => {
+        return (
+          rule.test &&
+          rule.test.toString() === "/\\.(js|mjs)$/" &&
+          typeof rule.exclude === "function"
+        )
+      }
+    )
+
+    webpackConfig.module.rules.splice(dependencyRulesIndex, 1)
+  }
+
+  actions.replaceWebpackConfig(webpackConfig)
 };
 
 exports.createPages = ({ actions }) => {

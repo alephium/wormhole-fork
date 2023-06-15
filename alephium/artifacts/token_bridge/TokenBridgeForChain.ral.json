@@ -1,0 +1,519 @@
+{
+  "version": "v2.3.3",
+  "name": "TokenBridgeForChain",
+  "bytecode": "0a0b1b4063407c40de40f8412e41a74201423b4246426000000203010f0d16003b170216011602380c2f0f7b16011602390200020002004023a0010c0d36304c15b1a000130264a00113016417011700b213c40de0b6b3a7640000a2a0001341002d69ce0516001601c118a0001341002aa100a002a1010ca10200020102000c16001341002d69cb17011600b20e0c16010100000001040140341600a000314c041600000203021600a0001343002a344c03000104021600a0001342002a344c0100011600a0001342002a310f7b1600a0002b17011601134100314c051601a0010000a1014a0616011341002ba0020000a102030201000001010db3ce024113157ba0031700a0030d2aa10316000200000106021e1600040e11ce000102170517041703170217011601ce032f0c7b1603ce04410d7b1602ce012f130d7b160400031605020000010a05404116000c0d621401014113187b16000d132162711701160013211340416217021600134041134043626d17031600134043134045626d170413404516042a170516001340451605621706160513202a17071600160516076271170816004316072f0e7b160663170916011602160316091608020103020c004029160000051703170216024b01021603000617081707170617051704140102160667441605441709ce021609cc170a160a170b160113c3038d7ea4c68000a2ce0316041605160616071608160113070c160b010401020104004020b3ce024113157b16004317010c170216021601314c1216001602160213082a62cb1703b20d0c16030101160213082a17024a2a01010202000316001601a901020102000d0c0dce0201081701b416014513157b16011600a8",
+  "codeHash": "58443a1005d6791f07d0701f4ef91ec367777ab67be27990a6b8fcb7c84e7240",
+  "fieldsSig": {
+    "names": [
+      "governance",
+      "localChainId",
+      "localTokenBridgeId",
+      "remoteChainId",
+      "remoteTokenBridgeId",
+      "start",
+      "firstNext256",
+      "secondNext256",
+      "unexecutedSequenceTemplateId",
+      "sendSequence"
+    ],
+    "types": [
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "setExecuted",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "offset",
+        "current"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "compact",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": false,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    },
+    {
+      "name": "checkSequenceInSubContract",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": false,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "checkSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "seq"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "Bool"
+      ]
+    },
+    {
+      "name": "nextSendSequence",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "checkCompleteTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "vaa"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "Bool",
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "parseCompleteTransfer",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "payload"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "U256",
+        "ByteVec",
+        "U256",
+        "Address",
+        "U256"
+      ]
+    },
+    {
+      "name": "completeTransfer",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "vaa",
+        "caller"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "Address"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "destroyUnexecutedSequenceContracts",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "paths"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "deposit",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "from",
+        "alphAmount"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "withdraw",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "alphAmount"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    }
+  ],
+  "constants": [],
+  "enums": [
+    {
+      "name": "Path",
+      "fields": [
+        {
+          "name": "AttestTokenHandler",
+          "value": {
+            "type": "ByteVec",
+            "value": "00"
+          }
+        },
+        {
+          "name": "TokenBridgeForChain",
+          "value": {
+            "type": "ByteVec",
+            "value": "01"
+          }
+        },
+        {
+          "name": "TokenPool",
+          "value": {
+            "type": "ByteVec",
+            "value": "02"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ErrorCodes",
+      "fields": [
+        {
+          "name": "InvalidEmitChainId",
+          "value": {
+            "type": "U256",
+            "value": "0"
+          }
+        },
+        {
+          "name": "InvalidEmitAddress",
+          "value": {
+            "type": "U256",
+            "value": "1"
+          }
+        },
+        {
+          "name": "InvalidMessageSize",
+          "value": {
+            "type": "U256",
+            "value": "2"
+          }
+        },
+        {
+          "name": "InvalidSequence",
+          "value": {
+            "type": "U256",
+            "value": "3"
+          }
+        },
+        {
+          "name": "InvalidModule",
+          "value": {
+            "type": "U256",
+            "value": "4"
+          }
+        },
+        {
+          "name": "InvalidActionId",
+          "value": {
+            "type": "U256",
+            "value": "5"
+          }
+        },
+        {
+          "name": "InvalidVersion",
+          "value": {
+            "type": "U256",
+            "value": "6"
+          }
+        },
+        {
+          "name": "InvalidGuardianSetIndex",
+          "value": {
+            "type": "U256",
+            "value": "7"
+          }
+        },
+        {
+          "name": "InvalidGuardianSetSize",
+          "value": {
+            "type": "U256",
+            "value": "8"
+          }
+        },
+        {
+          "name": "InvalidSignatureSize",
+          "value": {
+            "type": "U256",
+            "value": "9"
+          }
+        },
+        {
+          "name": "InvalidSignatureGuardianIndex",
+          "value": {
+            "type": "U256",
+            "value": "10"
+          }
+        },
+        {
+          "name": "InvalidSignature",
+          "value": {
+            "type": "U256",
+            "value": "11"
+          }
+        },
+        {
+          "name": "GuardianSetExpired",
+          "value": {
+            "type": "U256",
+            "value": "12"
+          }
+        },
+        {
+          "name": "InvalidTargetChainId",
+          "value": {
+            "type": "U256",
+            "value": "13"
+          }
+        },
+        {
+          "name": "ContractStateMismatch",
+          "value": {
+            "type": "U256",
+            "value": "14"
+          }
+        },
+        {
+          "name": "InvalidRegisterChainMessage",
+          "value": {
+            "type": "U256",
+            "value": "15"
+          }
+        },
+        {
+          "name": "InvalidTokenId",
+          "value": {
+            "type": "U256",
+            "value": "16"
+          }
+        },
+        {
+          "name": "InvalidNonceSize",
+          "value": {
+            "type": "U256",
+            "value": "17"
+          }
+        },
+        {
+          "name": "TokenNotExist",
+          "value": {
+            "type": "U256",
+            "value": "18"
+          }
+        },
+        {
+          "name": "InvalidTransferTargetChain",
+          "value": {
+            "type": "U256",
+            "value": "19"
+          }
+        },
+        {
+          "name": "InvalidDestroyUnexecutedSequenceMessage",
+          "value": {
+            "type": "U256",
+            "value": "20"
+          }
+        },
+        {
+          "name": "InvalidCaller",
+          "value": {
+            "type": "U256",
+            "value": "21"
+          }
+        },
+        {
+          "name": "ArbiterFeeLessThanAmount",
+          "value": {
+            "type": "U256",
+            "value": "22"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenMessage",
+          "value": {
+            "type": "U256",
+            "value": "23"
+          }
+        },
+        {
+          "name": "InvalidPayloadId",
+          "value": {
+            "type": "U256",
+            "value": "24"
+          }
+        },
+        {
+          "name": "InvalidTransferMessage",
+          "value": {
+            "type": "U256",
+            "value": "25"
+          }
+        },
+        {
+          "name": "ExpectRemoteToken",
+          "value": {
+            "type": "U256",
+            "value": "26"
+          }
+        },
+        {
+          "name": "InvalidConsistencyLevel",
+          "value": {
+            "type": "U256",
+            "value": "27"
+          }
+        },
+        {
+          "name": "InvalidUpdateRefundAddressMessage",
+          "value": {
+            "type": "U256",
+            "value": "28"
+          }
+        },
+        {
+          "name": "TransferAmountLessThanMessageFee",
+          "value": {
+            "type": "U256",
+            "value": "29"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenArg",
+          "value": {
+            "type": "U256",
+            "value": "30"
+          }
+        },
+        {
+          "name": "InvalidAttestTokenHandler",
+          "value": {
+            "type": "U256",
+            "value": "31"
+          }
+        },
+        {
+          "name": "NotSupported",
+          "value": {
+            "type": "U256",
+            "value": "32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PayloadId",
+      "fields": [
+        {
+          "name": "Transfer",
+          "value": {
+            "type": "ByteVec",
+            "value": "01"
+          }
+        },
+        {
+          "name": "AttestToken",
+          "value": {
+            "type": "ByteVec",
+            "value": "02"
+          }
+        }
+      ]
+    }
+  ]
+}

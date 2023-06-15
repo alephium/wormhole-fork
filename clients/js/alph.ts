@@ -1,41 +1,55 @@
-import { CONFIGS } from './configs'
+import { CONFIGS, NetworkType } from './configs'
 import { impossible } from './utils'
-import { web3, Script, SubmissionResult, subContractId } from '@alephium/web3'
+import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from 'alephium-wormhole-sdk'
 import {
-  updateGuardianSetScript,
-  upgradeGovernanceContractScript,
-  createRemoteTokenPoolOnAlph,
-  upgradeTokenBridgeContractScript,
-  setMessageFeeScript,
-  transferFeeScript,
-  destroyUnexecutedSequencesScript,
-  updateMinimalConsistencyLevelScript,
-  updateRefundAddressScript,
-  registerChain,
-  GovernancePayload
-} from 'alephium-wormhole-sdk'
+  DestroyUnexecutedSequenceContracts,
+  SetMessageFee,
+  UpdateGovernanceContract,
+  UpdateGuardianSet,
+  UpdateMinimalConsistencyLevel,
+  UpdateRefundAddress,
+  UpgradeTokenBridgeContract,
+  Governance,
+  TokenBridge
+} from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
+
+function getSignerProvider(network: any, nodeUrl?: string) {
+  const rpc = nodeUrl ?? network.rpc
+  if (rpc === undefined) {
+    throw Error(`No rpc defined for alephium (see configs.ts)`)
+  }
+  if (!network.key) {
+    throw Error(`No key defined for alephium (see configs.ts)`)
+  }
+  web3.setCurrentNodeProvider(rpc)
+  const wallet = new PrivateKeyWallet({privateKey: network.key})
+  if (wallet.group !== network.groupIndex) {
+    throw Error(`Invalid key, expected group ${network.groupIndex}`)
+  }
+  return wallet
+}
+
+async function getMessageFee(governanceId: string): Promise<bigint> {
+  const governanceAddress = addressFromContractId(governanceId)
+  const governance = alephium_contracts.Governance.at(governanceAddress)
+  const contractState = await governance.fetchState()
+  return contractState.fields.messageFee
+}
 
 export async function executeGovernanceAlph(
   payload: GovernancePayload,
   vaa: Buffer,
-  networkType: 'MAINNET' | 'TESTNET' | 'DEVNET',
+  networkType: NetworkType,
   nodeUrl?: string
 ) {
   const network = CONFIGS[networkType]['alephium']
-  const rpc = nodeUrl ?? network.rpc
-  if (rpc === undefined) {
-    throw Error(`No ${networkType} rpc defined for alephium (see networks.ts)`)
-  }
-  if (!network.key) {
-    throw Error(`No ${networkType} key defined for alephium (see networks.ts)`)
-  }
+  const wallet = getSignerProvider(network, nodeUrl)
+  const vaaHex = binToHex(vaa)
 
-  web3.setCurrentNodeProvider(rpc)
-  const wallet = PrivateKeyWallet.FromMnemonicWithGroup(network.key, 0)
-
-  const executeGovernanceScript = async (script: Script): Promise<SubmissionResult> => {
-    return script.execute(wallet, {
+  const executeGovernanceScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
+    return executableScript.execute(wallet, {
       initialFields: {
         'governance': network.governanceAddress,
         'vaa': vaa.toString('hex')
@@ -43,8 +57,8 @@ export async function executeGovernanceAlph(
     })
   }
 
-  const executeTokenBridgeScript = async (script: Script): Promise<SubmissionResult> => {
-    return script.execute(wallet, {
+  const executeTokenBridgeScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
+    return executableScript.execute(wallet, {
       initialFields: {
         'tokenBridge': network.tokenBridgeAddress,
         'vaa': vaa.toString('hex')
@@ -60,19 +74,27 @@ export async function executeGovernanceAlph(
       switch (payload.type) {
         case 'GuardianSetUpgrade':
           console.log('Submitting new guardian set')
-          console.log(`TxId: ${(await executeGovernanceScript(updateGuardianSetScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(UpdateGuardianSet)).txId}`)
           break
         case 'UpdateMessageFee':
           console.log('Submitting update message fee')
-          console.log(`TxId: ${(await executeGovernanceScript(setMessageFeeScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(SetMessageFee)).txId}`)
           break
         case 'TransferFee':
           console.log('Submitting transfer fee')
-          console.log(`TxId: ${(await executeGovernanceScript(transferFeeScript())).txId}`)
+          const alphAmount = deserializeTransferFeeVAA(vaa).body.payload.amount
+          const result = await alephium_contracts.TransferFee.execute(wallet, {
+            initialFields: {
+              governance: network.governanceAddress,
+              vaa: vaaHex
+            },
+            attoAlphAmount: alphAmount
+          })
+          console.log(`TxId: ${result.txId}`)
           break
         case 'AlphContractUpgrade':
           console.log(`Upgrading core contract`)
-          console.log(`TxId: ${(await executeGovernanceScript(upgradeGovernanceContractScript())).txId}`)
+          console.log(`TxId: ${(await executeGovernanceScript(UpdateGovernanceContract)).txId}`)
           break
         default:
           throw new Error(`Invalid governance payload type: ${payload.type}`)
@@ -85,7 +107,7 @@ export async function executeGovernanceAlph(
       switch (payload.type) {
         case 'ContractUpgrade':
           console.log('Upgrading contract')
-          console.log(`TxId: ${(await executeTokenBridgeScript(upgradeTokenBridgeContractScript())).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpgradeTokenBridgeContract)).txId}`)
           break
         case 'RegisterChain':
           console.log('Registering chain')
@@ -94,15 +116,15 @@ export async function executeGovernanceAlph(
           break
         case 'DestroyUnexecutedSequences':
           console.log('Submitting destroy unexecuted sequences')
-          console.log(`TxId: ${(await executeTokenBridgeScript(destroyUnexecutedSequencesScript())).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(DestroyUnexecutedSequenceContracts)).txId}`)
           break
         case 'UpdateMinimalConsistencyLevel':
           console.log('Submitting update minimal consistency level')
-          console.log(`TxId: ${(await executeTokenBridgeScript(updateMinimalConsistencyLevelScript())).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateMinimalConsistencyLevel)).txId}`)
           break
         case 'UpdateRefundAddress':
           console.log('Submitting update refund address')
-          console.log(`TxId: ${(await executeTokenBridgeScript(updateRefundAddressScript())).txId}`)
+          console.log(`TxId: ${(await executeTokenBridgeScript(UpdateRefundAddress)).txId}`)
           break
         default:
           throw new Error(`Invalid governance payload type: ${payload.type}`)
@@ -113,4 +135,17 @@ export async function executeGovernanceAlph(
     default:
       impossible(payload)
   }
+}
+
+export async function getNextGovernanceSequence(networkType: NetworkType, nodeUrl?: string): Promise<bigint> {
+  const network = CONFIGS[networkType]['alephium']
+  web3.setCurrentNodeProvider(nodeUrl ?? network.rpc)
+  const governanceAddress = addressFromContractId(network.governanceAddress)
+  const governance = Governance.at(governanceAddress)
+  const sequence0 = (await governance.fetchState()).fields.receivedSequence
+
+  const tokenBridgeAddress = addressFromContractId(network.tokenBridgeAddress)
+  const tokenBridge = TokenBridge.at(tokenBridgeAddress)
+  const sequence1 = (await tokenBridge.fetchState()).fields.receivedSequence
+  return sequence0 > sequence1 ? sequence0 : sequence1
 }

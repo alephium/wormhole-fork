@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/alephium/wormhole-fork/node/cmd/debug"
 	"github.com/alephium/wormhole-fork/node/cmd/spy"
 	"github.com/alephium/wormhole-fork/node/pkg/version"
-	"os"
 
 	"github.com/spf13/cobra"
 

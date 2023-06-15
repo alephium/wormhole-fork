@@ -1,8 +1,31 @@
-Contract TestToken() {
-    @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn buy(from: Address, amount: U256) -> () {
-        let tokenAmount = amount
-        transferTokenToSelf!(from, ALPH, amount)
-        transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)
-    }
+import "std/fungible_token_interface"
+
+Contract TestToken(
+  symbol: ByteVec,
+  name: ByteVec,
+  decimals: U256,
+  totalSupply: U256
+) implements IFungibleToken {
+  pub fn getSymbol() -> ByteVec {
+    return symbol
+  }
+
+  pub fn getName() -> ByteVec {
+    return name
+  }
+
+  pub fn getDecimals() -> U256 {
+    return decimals
+  }
+
+  pub fn getTotalSupply() -> U256 {
+    return totalSupply
+  }
+
+  @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+  pub fn buy(from: Address, amount: U256, factor: U256) -> () {
+    let tokenAmount = amount * factor
+    transferTokenToSelf!(from, ALPH, amount)
+    transferTokenFromSelf!(from, selfTokenId!(), tokenAmount)
+  }
 }

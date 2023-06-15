@@ -5,6 +5,14 @@ import { getSignedVAA } from '../utils'
 import { execSync } from 'child_process'
 import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
 
+export const newGuardianSet = [
+  '0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe',
+  '0x88D7D8B32a9105d228100E72dFFe2Fae0705D31c',
+  '0x58076F561CC62A47087B567C86f986426dFCD000'
+]
+export const newGuardianSetIndex = 1
+export const guardianSetIndexes = Array.from(newGuardianSet.keys())
+
 export const docker = new Dockerode()
 export const governanceChainId = guardianDevnetConfig.governanceChainId as ChainId
 export const governanceEmitterAddress = guardianDevnetConfig.governanceEmitterAddress
@@ -38,15 +46,11 @@ export async function runCmdInContainer(container: Container, cmd: string[], wor
   })
 }
 
-export async function getNextGovernanceSequence() {
-  const container = await getGuardianByIndex(0)
-  const output = await runCmdInContainer(
-    container,
-    ['bash', '-c', `./guardiand admin get-next-governance-vaa-sequence --socket /tmp/admin.sock`],
-    '/'
-  )
-  const strs = output.toString('utf8').split(' ')
-  return parseInt(strs[strs.length - 1])
+export function getNextGovernanceSequence() {
+  const command = `npm --prefix ../clients/js start -- alph get-next-governance-sequence --network devnet`
+  const output = execSync(command)
+  const numberStr = output.toString('utf8').split(':')[1]
+  return parseInt(numberStr)
 }
 
 export async function injectVAA(vaa: string, guardianIndex: number, fileName: string) {

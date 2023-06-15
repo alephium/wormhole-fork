@@ -4,7 +4,7 @@ import { chainIDStrings } from "../../utils/consts";
 import { amountFormatter } from "../../utils/explorer";
 import {
   NotionalTransferred,
-  NotionalTransferredToCumulative,
+  NotionalTransferredTo,
   Totals,
 } from "./ExplorerStats";
 
@@ -12,14 +12,14 @@ interface ChainOverviewCardProps {
   dataKey: keyof typeof chainIDStrings;
   totals?: Totals;
   notionalTransferred?: NotionalTransferred;
-  notionalTransferredToCumulative?: NotionalTransferredToCumulative;
+  notionalTransferredTo?: NotionalTransferredTo;
 }
 
 const ChainOverviewCard: React.FC<ChainOverviewCardProps> = ({
   dataKey,
   totals,
   notionalTransferred,
-  notionalTransferredToCumulative,
+  notionalTransferredTo,
 }) => {
   const [totalCount, setTotalColunt] = useState<number>();
   const [animate, setAnimate] = useState<boolean>(false);
@@ -57,17 +57,17 @@ const ChainOverviewCard: React.FC<ChainOverviewCardProps> = ({
   };
   // prevent an exception if data is missing (ie. new chain)
   if (
-    !notionalTransferredToCumulative ||
-    !(dataKey in notionalTransferredToCumulative.AllTime) ||
-    !("*" in notionalTransferredToCumulative.AllTime[dataKey])
+    !notionalTransferredTo ||
+    !(dataKey in notionalTransferredTo.WithinPeriod) ||
+    !("*" in notionalTransferredTo.WithinPeriod[dataKey])
   ) {
     return <>coming soon</>
   }
   return (
     <>
       <div style={{ ...centerStyles, gap: 8 }}>
-        {notionalTransferredToCumulative &&
-          notionalTransferredToCumulative.AllTime && (
+        {notionalTransferredTo &&
+          notionalTransferredTo.WithinPeriod && (
             <div style={centerStyles}>
               <div>
                 <Typography
@@ -76,7 +76,7 @@ const ChainOverviewCard: React.FC<ChainOverviewCardProps> = ({
                 >
                   $
                   {amountFormatter(
-                    notionalTransferredToCumulative.AllTime[dataKey]["*"]
+                    notionalTransferredTo.WithinPeriod[dataKey]["*"]
                   )}
                 </Typography>
               </div>

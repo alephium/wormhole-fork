@@ -17,11 +17,9 @@ import { getSignedVAAHash } from "../bridge";
 import { Bridge__factory } from "../ethers-contracts";
 import { importCoreWasm } from "../solana/wasm";
 import { safeBigIntToNumber } from "../utils/bigint";
-import {
-  tokenBridgeForChainContract,
-  unexecutedSequenceContract
-} from '../alephium/token_bridge'
 import { zeroPad } from "./alephium";
+import { TokenBridgeForChain } from "../alephium-contracts/ts/TokenBridgeForChain";
+import { UnexecutedSequence } from "../alephium-contracts/ts/UnexecutedSequence";
 
 const bigInt512 = BigInt(512)
 const bigInt256 = BigInt(256)
@@ -36,12 +34,10 @@ async function isSequenceExecuted(
   const contractId = subContractId(tokenBridgeForChainId, path, groupIndex)
   const contractAddress = addressFromContractId(contractId)
   try {
-    const contract = unexecutedSequenceContract()
-    const contractState = await contract.fetchState(contractAddress, groupIndex)
-    const begin = contractState.fields['begin'] as bigint
-    const sequences = contractState.fields['sequences'] as bigint
-    const distance = sequence - begin
-    return ((sequences >> distance) & bigInt1) === bigInt1
+    const contract = UnexecutedSequence.at(contractAddress)
+    const contractState = await contract.fetchState()
+    const distance = sequence - contractState.fields.begin
+    return ((contractState.fields.sequences >> distance) & bigInt1) === bigInt1
   } catch (error: any) {
     if (error instanceof Error && error.message.includes('KeyNotFound')) {
       // the unexecuted contract has been destroyed
@@ -57,27 +53,24 @@ export async function getIsTransferCompletedAlph(
   signedVAA: Uint8Array
 ) {
   const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
-  const contract = tokenBridgeForChainContract()
-  const contractState = await contract.fetchState(tokenBridgeForChainAddress, groupIndex)
-  const start = contractState.fields['start'] as bigint
-  const firstNext256 = contractState.fields['firstNext256'] as bigint
-  const secondNext256 = contractState.fields['secondNext256'] as bigint
+  const contract = TokenBridgeForChain.at(tokenBridgeForChainAddress)
+  const contractState = await contract.fetchState()
   const sequence = extractSequenceFromVAA(signedVAA)
 
-  if (sequence < start) {
+  if (sequence < contractState.fields.start) {
     return isSequenceExecuted(tokenBridgeForChainId, sequence, groupIndex)
   }
 
-  let distance = sequence - start
+  let distance = sequence - contractState.fields.start
   if (distance >= bigInt512) {
     return false
   }
   if (distance < bigInt256) {
-    return ((firstNext256 >> distance) & bigInt1) === bigInt1
+    return ((contractState.fields.firstNext256 >> distance) & bigInt1) === bigInt1
   }
 
   distance = distance - bigInt256
-  return ((secondNext256 >> distance) & bigInt1) === bigInt1
+  return ((contractState.fields.secondNext256 >> distance) & bigInt1) === bigInt1
 }
 
 export async function getIsTransferCompletedEth(

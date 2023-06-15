@@ -20,7 +20,6 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  CHAIN_ID_ETH,
   CHAIN_ID_UNSET,
   TransferToken,
   TransferNFT,
@@ -37,7 +36,6 @@ import {
   Container,
   Divider,
   makeStyles,
-  MenuItem,
   TextField,
   Typography,
 } from "@material-ui/core";
@@ -50,7 +48,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useHistory, useLocation } from "react-router";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useAcalaRelayerInfo } from "../hooks/useAcalaRelayerInfo";
@@ -61,7 +59,7 @@ import { setRecoveryVaa as setRecoveryNFTVaa } from "../store/nftSlice";
 import { setRecoveryVaa } from "../store/transferSlice";
 import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
-  ALEPHIUM_HOST,
+  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_HOST,
   ALGORAND_TOKEN_BRIDGE_ID,
@@ -86,6 +84,9 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
+import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
+import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
+import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -159,6 +160,10 @@ async function evm(
 ) {
   try {
     const receipt = await provider.getTransactionReceipt(tx);
+    const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
+    if (!isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
+      throw new Error('the transaction is awaiting confirmation')
+    }
     const sequence = parseSequenceFromLogEth(
       receipt,
       getBridgeAddressForChain(chainId)
@@ -245,10 +250,12 @@ async function terra(tx: string, enqueueSnackbar: any) {
   }
 }
 
-async function alephium(txId: string, enqueueSnackbar: any) {
+async function alephium(provider: NodeProvider, txId: string, enqueueSnackbar: any) {
   try {
-    const provider = new NodeProvider(ALEPHIUM_HOST)
     const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
+      throw new Error('the transaction is awaiting confirmation')
+    }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
       ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
@@ -406,8 +413,9 @@ export default function Recovery() {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const { provider } = useEthereumProvider();
-  const [type, setType] = useState("Token");
-  const isNFT = type === "NFT";
+  const isNFT = false
+  const transferSourceChain = useSelector(selectTransferSourceChain)
+  const transferTx = useSelector(selectTransferTransferTx)
   const [recoverySourceChain, setRecoverySourceChain] =
     useState<ChainId>(CHAIN_ID_ALEPHIUM);
   const [recoverySourceTx, setRecoverySourceTx] = useState("")
@@ -434,9 +442,16 @@ export default function Recovery() {
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const pathSourceChain = query.get("sourceChain");
   const pathSourceTransaction = query.get("transactionId");
+  const alphWallet = useAlephiumWallet()
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
+    if (!pathSourceChain) {
+      setRecoverySourceChain(transferSourceChain)
+    }
+    if (!pathSourceTransaction && transferTx !== undefined) {
+      setRecoverySourceTx(transferTx.id)
+    }
     if (!pathSourceChain && !pathSourceTransaction) {
       return;
     }
@@ -454,7 +469,7 @@ export default function Recovery() {
       console.error(e);
       console.error("Invalid path params specified.");
     }
-  }, [pathSourceChain, pathSourceTransaction]);
+  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx]);
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
@@ -514,11 +529,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && alphWallet) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async () => {
-          const { vaa, error } = await alephium(recoverySourceTx, enqueueSnackbar);
+          const { vaa, error } = await alephium(alphWallet.nodeProvider, recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
@@ -556,16 +571,8 @@ export default function Recovery() {
     enqueueSnackbar,
     isNFT,
     isReady,
+    alphWallet
   ]);
-  const handleTypeChange = useCallback((event: any) => {
-    setRecoverySourceChain((prevChain) =>
-      event.target.value === "NFT" &&
-      !CHAINS_WITH_NFT_SUPPORT.find((chain) => chain.id === prevChain)
-        ? CHAIN_ID_ETH
-        : prevChain
-    );
-    setType(event.target.value);
-  }, []);
   const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx("");
     setRecoverySourceChain(event.target.value);
@@ -671,19 +678,6 @@ export default function Recovery() {
           If you have sent your tokens but have not redeemed them, you may paste
           in the Source Transaction ID (from Step 3) to resume your transfer.
         </Alert>
-        <TextField
-          select
-          variant="outlined"
-          label="Type"
-          disabled={!!recoverySignedVAA}
-          value={type}
-          onChange={handleTypeChange}
-          fullWidth
-          margin="normal"
-        >
-          <MenuItem value="Token">Token</MenuItem>
-          <MenuItem value="NFT">NFT</MenuItem>
-        </TextField>
         <ChainSelect
           select
           variant="outlined"

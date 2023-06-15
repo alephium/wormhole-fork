@@ -27,6 +27,7 @@ interface ExplorerMessageSearchValues {
 
 const chains = [
   { label: ChainID[2], value: chainIDs["ethereum"] },
+  { label: ChainID[4], value: chainIDs["bsc"] },
   { label: ChainID[255], value: chainIDs["alephium"] },
 ];
 
@@ -204,7 +205,7 @@ const ExplorerMessageSearchForm: React.FC<ExplorerMessageSearchProps> = ({
         </Button>
       </Box>
 
-      {emitterChain && emitterAddress && targetChain && sequence ? (
+      {(emitterChain !== undefined) && emitterAddress && (targetChain !== undefined) && sequence ? (
         <ExplorerQuery
           emitterChain={emitterChain}
           emitterAddress={emitterAddress}

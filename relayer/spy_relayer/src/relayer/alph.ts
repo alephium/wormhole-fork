@@ -3,7 +3,7 @@ import {
   getIsTransferCompletedAlph,
   getTokenBridgeForChainId,
   hexToUint8Array,
-  redeemOnAlph
+  redeemOnAlphWithReward
 } from "alephium-wormhole-sdk";
 import { PrivateKeyWallet } from "@alephium/web3-wallet"
 import { AlephiumChainConfigInfo } from "../configureEnv";
@@ -16,7 +16,7 @@ export async function relayAlph(
   chainConfigInfo: AlephiumChainConfigInfo,
   signedVAA: string,
   checkOnly: boolean,
-  mnemonic: string,
+  privateKey: string,
   relayLogger: ScopedLogger,
   metrics: PromHelper
 ) {
@@ -24,7 +24,7 @@ export async function relayAlph(
 
   // we have validated the `groupIndex` at initialization
   const groupIndex = chainConfigInfo.groupIndex!
-  const signer = PrivateKeyWallet.FromMnemonicWithGroup(mnemonic, groupIndex)
+  const signer = new PrivateKeyWallet({privateKey})
   const signedVaaArray = hexToUint8Array(signedVAA)
 
   logger.debug('Checking to see if vaa has already been redeemed.')
@@ -46,7 +46,7 @@ export async function relayAlph(
   logger.info(`Will redeem using pubkey: ${(await signer.getSelectedAccount()).address}`)
 
   logger.debug('Redeeming...')
-  const redeemResult = await redeemOnAlph(signer, tokenBridgeForChainId, signedVaaArray)
+  const redeemResult = await redeemOnAlphWithReward(signer, chainConfigInfo.bridgeRewardRouter, tokenBridgeForChainId, signedVaaArray)
   const confirmed = await waitAlphTxConfirmed(signer.nodeProvider, redeemResult.txId, 1, 120)
   const executionOk = await getScriptExecutionResult(signer.nodeProvider, confirmed)
   logger.info(`Redeem transaction tx id: ${redeemResult.txId}, script execution result: ${executionOk}`)

@@ -1,3 +1,4 @@
+import { TokenInfo } from '@alephium/token-list'
 import { ChainId } from 'alephium-wormhole-sdk'
 
 export type TransferResult = { signedVaa: Uint8Array; txFee: bigint }
@@ -22,9 +23,12 @@ export interface BridgeChain {
   getWrappedTokenBalanceByAddress(originTokenId: string, tokenChainId: ChainId, address: string): Promise<bigint>
   getLockedNativeBalance(): Promise<bigint>
   getLockedTokenBalance(tokenId: string): Promise<bigint>
+  getWrappedTokenTotalSupply(tokenChainId: ChainId, tokenId: string): Promise<bigint>
 
   attestToken(tokenId: string): Promise<Uint8Array>
   createWrapped(signedVaa: Uint8Array): Promise<void>
+  getWrappedTokenId(tokenChain: ChainId, tokenId: string): Promise<string>
+  getLocalTokenInfo(tokenId: string): Promise<TokenInfo>
 
   transferToken(
     tokenId: string,

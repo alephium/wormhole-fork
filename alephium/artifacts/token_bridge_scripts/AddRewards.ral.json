@@ -1,0 +1,31 @@
+{
+  "version": "v2.3.3",
+  "name": "AddRewards",
+  "bytecodeTemplate": "01010300000009b4{1}a2b4{1}0e0c{0}0101",
+  "fieldsSig": {
+    "names": [
+      "bridgeRewardRouter",
+      "amount"
+    ],
+    "types": [
+      "ByteVec",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

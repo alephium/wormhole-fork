@@ -10,11 +10,10 @@ import (
 	"flag"
 	"log"
 
-	"github.com/alephium/wormhole-fork/node/pkg/celo"
-	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/ethereum"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"go.uber.org/zap"
 )
 
 var (
@@ -34,27 +33,15 @@ func main() {
 
 	ctx := context.Background()
 
-	var ethIntf common.Ethish
-	if chainID == vaa.ChainIDCelo {
-		ethIntf = &celo.CeloImpl{NetworkName: "celo"}
-	} else {
-		ethIntf = &ethereum.EthImpl{NetworkName: "eth"}
-	}
-
-	err := ethIntf.DialContext(ctx, *flagEthRPC)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	contractAddr := ethCommon.HexToAddress(*flagContractAddr)
+	ethConnector, err := ethereum.NewEthereumConnector(ctx, "", *flagEthRPC, contractAddr, zap.L())
+	if err != nil {
+		log.Fatalf("dialing eth client failed: %v", err)
+	}
+
 	transactionHash := ethCommon.HexToHash(*flagTx)
 
-	err = ethIntf.NewAbiFilterer(contractAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	block, msgs, err := ethereum.MessageEventsForTransaction(ctx, ethIntf, contractAddr, chainID, transactionHash)
+	block, msgs, err := ethereum.MessageEventsForTransaction(ctx, ethConnector, contractAddr, chainID, transactionHash)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,6 +58,7 @@ func main() {
 			Timestamp:        k.Timestamp,
 			Nonce:            k.Nonce,
 			EmitterChain:     k.EmitterChain,
+			TargetChain:      k.TargetChain,
 			EmitterAddress:   k.EmitterAddress,
 			Payload:          k.Payload,
 			Sequence:         k.Sequence,

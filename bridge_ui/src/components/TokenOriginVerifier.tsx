@@ -1,7 +1,7 @@
 import {
   ChainId,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
+  CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_ETH,
   isEVMChain,
   nativeToHexString,
 } from "alephium-wormhole-sdk";
@@ -150,7 +150,7 @@ function SecondaryAssetInformation({
         originAsset={
           nativeToHexString(
             originAssetInfo?.originAddress || undefined,
-            originAssetInfo?.originChain || CHAIN_ID_SOLANA // this should exist
+            originAssetInfo?.originChain || CHAIN_ID_ALEPHIUM // this should exist
           ) || undefined
         }
         targetChain={chainId}
@@ -182,11 +182,11 @@ export default function TokenOriginVerifier() {
   const classes = useStyles();
   const isBeta = useBetaContext();
 
-  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_SOLANA);
+  const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_ALEPHIUM);
   const [primaryLookupAsset, setPrimaryLookupAsset] = useState("");
 
   const [secondaryLookupChain, setSecondaryLookupChain] =
-    useState<ChainId>(CHAIN_ID_TERRA);
+    useState<ChainId>(CHAIN_ID_ETH);
 
   const primaryLookupChainOptions = useMemo(
     () => (isBeta ? CHAINS.filter((x) => !BETA_CHAINS.includes(x.id)) : CHAINS),
@@ -207,7 +207,7 @@ export default function TokenOriginVerifier() {
       setPrimaryLookupChain(e.target.value);
       if (secondaryLookupChain === e.target.value) {
         setSecondaryLookupChain(
-          e.target.value === CHAIN_ID_SOLANA ? CHAIN_ID_TERRA : CHAIN_ID_SOLANA
+          e.target.value === CHAIN_ID_ALEPHIUM ? CHAIN_ID_ETH : CHAIN_ID_ALEPHIUM
         );
       }
       setPrimaryLookupAsset("");
@@ -295,6 +295,8 @@ export default function TokenOriginVerifier() {
       <div className={classes.centered}>
         {isEVMChain(primaryLookupChain) ? (
           <KeyAndBalance chainId={primaryLookupChain} />
+        ) : primaryLookupChain === CHAIN_ID_ALEPHIUM ? (
+          <KeyAndBalance chainId={primaryLookupChain} />
         ) : null}
         {primaryError ? (
           <Typography color="error">{primaryError}</Typography>
@@ -339,6 +341,8 @@ export default function TokenOriginVerifier() {
       </TextField>
       <div className={classes.centered}>
         {isEVMChain(secondaryLookupChain) ? (
+          <KeyAndBalance chainId={secondaryLookupChain} />
+        ) : secondaryLookupChain === CHAIN_ID_ALEPHIUM ? (
           <KeyAndBalance chainId={secondaryLookupChain} />
         ) : null}
         {secondaryError ? (

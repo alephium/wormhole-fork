@@ -61,10 +61,10 @@ var (
 	guardianKeyPath *string
 	// solanaContract  *string
 
-	ethRPC *string
+	ethRPC            *string
+	ethPollIntervalMs *uint
 
-	// bscRPC      *string
-	// bscContract *string
+	bscRPC *string
 
 	// polygonRPC      *string
 	// polygonContract *string
@@ -142,13 +142,6 @@ var (
 	discordToken   *string
 	discordChannel *string
 
-	bigTablePersistenceEnabled *bool
-	bigTableGCPProject         *string
-	bigTableInstanceName       *string
-	bigTableTableName          *string
-	bigTableTopicName          *string
-	bigTableKeyPath            *string
-
 	cloudKMSEnabled *bool
 	cloudKMSKeyName *string
 )
@@ -170,9 +163,9 @@ func init() {
 	// solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
+	ethPollIntervalMs = NodeCmd.Flags().Uint("ethPollIntervalMs", 1000, "The poll interval for ethereum watcher")
 
-	// bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
-	// bscContract = NodeCmd.Flags().String("bscContract", "", "Binance Smart Chain contract address")
+	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
 
 	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
 	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
@@ -253,12 +246,6 @@ func init() {
 
 	discordToken = NodeCmd.Flags().String("discordToken", "", "Discord bot token (optional)")
 	discordChannel = NodeCmd.Flags().String("discordChannel", "", "Discord channel name (optional)")
-
-	bigTablePersistenceEnabled = NodeCmd.Flags().Bool("bigTablePersistenceEnabled", false, "Turn on forwarding events to BigTable")
-	bigTableGCPProject = NodeCmd.Flags().String("bigTableGCPProject", "", "Google Cloud project ID for storing events")
-	bigTableInstanceName = NodeCmd.Flags().String("bigTableInstanceName", "", "BigTable instance name for storing events")
-	bigTableTableName = NodeCmd.Flags().String("bigTableTableName", "", "BigTable table name to store events in")
-	bigTableTopicName = NodeCmd.Flags().String("bigTableTopicName", "", "GCP topic name to publish to")
 
 	cloudKMSEnabled = NodeCmd.Flags().Bool("cloudKMSEnabled", false, "Turn on Cloud KMS support for Guardian Key")
 	cloudKMSKeyName = NodeCmd.Flags().String("cloudKMSKeyName", "", "Cloud KMS key name for Guardian Key")
@@ -351,6 +338,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	// Register components for readiness checks.
 	readiness.RegisterComponent(common.ReadinessEthSyncing)
+	readiness.RegisterComponent(common.ReadinessBSCSyncing)
 	readiness.RegisterComponent(common.ReadinessAlephiumSyncing)
 
 	if *statusAddr != "" {
@@ -385,8 +373,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	alphConfig := bridgeConfig.Alephium
 	ethConfig := bridgeConfig.Ethereum
+	bscConfig := bridgeConfig.Bsc
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
+	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
 	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
 	alphGroupIndex := alphConfig.GroupIndex
 
@@ -434,20 +424,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Please specify --nodeName")
 	}
 
-	if *bigTablePersistenceEnabled {
-		if *bigTableGCPProject == "" {
-			logger.Fatal("Please specify --bigTableGCPProject")
-		}
-		if *bigTableInstanceName == "" {
-			logger.Fatal("Please specify --bigTableInstanceName")
-		}
-		if *bigTableTableName == "" {
-			logger.Fatal("Please specify --bigTableTableName")
-		}
-		if *bigTableTopicName == "" {
-			logger.Fatal("Please specify --bigTableTopicName")
-		}
-	}
 	if *cloudKMSEnabled {
 		if *cloudKMSKeyName == "" {
 			logger.Fatal("Please specify --cloudKMSKeyName")
@@ -477,7 +453,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		logger.Fatal("Infura is known to send incorrect blocks - please use your own nodes")
 	}
 
-	// bscContractAddr := eth_common.HexToAddress(*bscContract)
 	// polygonContractAddr := eth_common.HexToAddress(*polygonContract)
 	// ethRopstenContractAddr := eth_common.HexToAddress(*ethRopstenContract)
 	// avalancheContractAddr := eth_common.HexToAddress(*avalancheContract)
@@ -602,7 +577,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	injectC := make(chan *vaa.VAA)
 
 	// Guardian set state managed by processor
-	gst := common.NewGuardianSetState()
+	gst := common.NewGuardianSetState(nil)
 
 	// Per-chain observation requests
 	chainObsvReqC := make(map[vaa.ChainID]chan *gossipv1.ObservationRequest)
@@ -675,7 +650,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	// provides methods for reporting progress toward message attestation, and channels for receiving attestation lifecyclye events.
 	attestationEvents := reporter.EventListener(logger)
 
-	publicrpcService, publicrpcServer, err := publicrpcServiceRunnable(logger, *publicRPC, db, gst)
+	publicrpcService, publicrpcServer, err := publicrpcServiceRunnable(logger, *publicRPC, db, gst, governanceChainId, governanceEmitterAddress)
 
 	if err != nil {
 		log.Fatal("failed to create publicrpc service socket", zap.Error(err))
@@ -701,7 +676,12 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if err := supervisor.Run(ctx, "ethwatch",
-			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, 1, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode).Run); err != nil {
+			ethereum.NewEthWatcher(*ethRPC, ethContract, "eth", common.ReadinessEthSyncing, vaa.ChainIDEthereum, lockC, setC, chainObsvReqC[vaa.ChainIDEthereum], unsafeDevMode, ethPollIntervalMs, false).Run); err != nil {
+			return err
+		}
+
+		if err := supervisor.Run(ctx, "bscwatch",
+			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, nil, true).Run); err != nil {
 			return err
 		}
 
@@ -752,18 +732,6 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 		if *publicWeb != "" {
 			if err := supervisor.Run(ctx, "publicweb", publicwebService); err != nil {
-				return err
-			}
-		}
-
-		if *bigTablePersistenceEnabled {
-			bigTableConnection := &reporter.BigTableConnectionConfig{
-				GcpProjectID:    *bigTableGCPProject,
-				GcpInstanceName: *bigTableInstanceName,
-				TableName:       *bigTableTableName,
-				TopicName:       *bigTableTopicName,
-			}
-			if err := supervisor.Run(ctx, "bigtable", reporter.BigTableWriter(attestationEvents, bigTableConnection)); err != nil {
 				return err
 			}
 		}

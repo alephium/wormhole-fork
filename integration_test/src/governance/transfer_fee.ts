@@ -2,7 +2,7 @@ import { binToHex } from '@alephium/web3'
 import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
 import { BridgeChain } from '../bridge_chain'
 import { assert, getBridgeChains } from '../utils'
-import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
+import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const alphRecipientAddress = '1HfMbRS8JxUohvWw4bwUTWNQaqeG7ni96JwYt79sNHNtg'
 const ethRecipientAddress = '0x46B591A30cEfa31E8bf8281C924766e6E424D26B'
@@ -33,11 +33,11 @@ async function transferFeeOnChain(chain: BridgeChain, recipient: string) {
   console.log(
     `Balances before transfer on ${chainName}, recipient: ${recipientBalanceBeforeTransfer}, governance contract: ${governanceBalanceBeforeTransfer}`
   )
-  const seq = await getNextGovernanceSequence()
+  const seq = getNextGovernanceSequence()
   const transferAmount = await chain.getCurrentMessageFee()
   console.log(`Transfer amount for ${chainName}: ${transferAmount}`)
   const transferFeeVaa = createTransferFeeVaa(chain.chainId, seq, chain.normalizeAddress(recipient), transferAmount)
-  for (const guardianIndex of [0, 1]) {
+  for (const guardianIndex of guardianSetIndexes) {
     await injectVAA(transferFeeVaa, guardianIndex, `transfer-fee-${chain.chainId}.proto`)
   }
   await submitGovernanceVAA('TransferFee', seq, chain.chainId)

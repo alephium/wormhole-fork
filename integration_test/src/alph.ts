@@ -1,6 +1,6 @@
 import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
-import { getSignedVAA, normalizeTokenId, waitAlphTxConfirmed } from './utils'
+import { getSignedVAA, normalizeTokenId, assert } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import path from 'path'
@@ -10,12 +10,17 @@ import {
   binToHex,
   ContractState,
   encodeI256,
+  Fields,
   groupOfAddress,
   node,
   NodeProvider,
   Project,
-  Val,
-  web3
+  web3,
+  ContractFactory,
+  ContractInstance,
+  fetchContractState,
+  ONE_ALPH,
+  DUST_AMOUNT
 } from '@alephium/web3'
 import {
   attestFromAlph,
@@ -27,20 +32,29 @@ import {
   getTokenBridgeForChainId,
   getTokenPoolId,
   deserializeAttestTokenVAA,
-  redeemOnAlph,
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
   deposit as tokenBridgeForChainDeposit,
-  deserializeTransferTokenVAA
+  deserializeTransferTokenVAA,
+  createLocalTokenPoolOnAlph,
+  getLocalTokenInfo,
+  waitAlphTxConfirmed,
+  alephium_contracts,
+  redeemOnAlphWithReward
 } from 'alephium-wormhole-sdk'
+import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
   tokenBridgeContractId: string
-  getContractState(address: string, contractName: string): Promise<ContractState>
-  getTokenBridgeContractState(): Promise<ContractState>
+  attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
+  getContractState<I extends ContractInstance, F extends Fields>(
+    factory: ContractFactory<I, F>,
+    address: string
+  ): Promise<ContractState<F>>
+  getTokenBridgeContractState(): Promise<ContractState<alephium_contracts.TokenBridgeTypes.Fields>>
   deposit(remoteChainId: ChainId, amount: bigint): Promise<void>
 }
 
@@ -50,6 +64,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const bridgeRootPath = path.join(process.cwd(), '..')
   await Project.build(
     { ignoreUnusedConstantsWarnings: true },
+    path.join(bridgeRootPath, 'alephium'),
     path.join(bridgeRootPath, 'alephium', 'contracts'),
     path.join(bridgeRootPath, 'alephium', 'artifacts')
   )
@@ -63,20 +78,25 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const tokenBridgeContractId = contracts.tokenBridge
   const testTokenContractId = contracts.testToken
   const governanceAddress = contracts.nativeGovernance
+  const bridgeRewardRouterId = contracts.bridgeRewardRouter
+  const bridgeRewardRouterAddress = addressFromContractId(bridgeRewardRouterId)
   const sequence = new Sequence()
   const defaultArbiterFee = 0n
   const defaultConfirmations = 1
   const oneAlph = 10n ** 18n
 
   const getCurrentMessageFee = async (): Promise<bigint> => {
-    const governance = Project.contract('Governance')
-    const contractState = await governance.fetchState(governanceAddress, groupIndex)
-    return contractState.fields['messageFee'] as bigint
+    const governance = alephium_contracts.Governance.at(governanceAddress)
+    const contractState = await governance.fetchState()
+    return contractState.fields.messageFee
   }
 
   const currentMessageFee = await getCurrentMessageFee()
 
-  const normalizeTransferAmount = (amount: bigint): bigint => amount
+  const normalizeTransferAmount = (amount: bigint): bigint => {
+    const unit = 10n ** 10n
+    return (amount / unit) * unit
+  }
 
   const normalizeAddress = (address: string): Uint8Array => {
     const decoded = base58.decode(address)
@@ -155,17 +175,45 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return getLocalLockedTokenBalance(tokenId)
   }
 
-  const attestToken = async (tokenId: string): Promise<Uint8Array> => {
-    const result = await attestFromAlph(
+  const attestWithTokenInfo = async (
+    tokenId: string,
+    decimals: number,
+    symbol: string,
+    name: string
+  ): Promise<Uint8Array> => {
+    const attestResult = await attestFromAlph(
       nodeWallet,
       tokenBridgeContractId,
       tokenId,
+      decimals,
+      symbol,
+      name,
       accountAddress,
       currentMessageFee,
       1
     )
-    console.log(`attest alph token, token id: ${tokenId}, tx id: ${result.txId}`)
-    return await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
+    console.log(`attest token from alephium, token id: ${tokenId}, tx id: ${attestResult.txId}`)
+    const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())
+    const attestTokenHandlerId = getAttestTokenHandlerId(tokenBridgeContractId, CHAIN_ID_ALEPHIUM, groupIndex)
+    const createLocalTokenPoolResult = await createLocalTokenPoolOnAlph(
+      nodeWallet,
+      attestTokenHandlerId,
+      tokenId,
+      signedVaa,
+      accountAddress,
+      oneAlph
+    )
+    await waitAlphTxConfirmed(nodeWallet.nodeProvider, createLocalTokenPoolResult.txId, 1)
+    console.log(`create local token pool succeed, token id: ${tokenId}, tx id: ${createLocalTokenPoolResult.txId}`)
+    return signedVaa
+  }
+
+  const _getLocalTokenInfo = async (tokenId: string): Promise<TokenInfo> => {
+    return getLocalTokenInfo(nodeProvider, tokenId)
+  }
+
+  const attestToken = async (tokenId: string): Promise<Uint8Array> => {
+    throw new Error('not support')
   }
 
   const createWrapped = async (signedVaa: Uint8Array): Promise<void> => {
@@ -180,6 +228,10 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     )
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`create wrapped token on alph succeed, tx id: ${result.txId}`)
+  }
+
+  const getWrappedTokenId = async (tokenChain: ChainId, tokenId: string): Promise<string> => {
+    return getTokenPoolId(tokenBridgeContractId, tokenChain, tokenId, groupIndex)
   }
 
   const transferToken = async (
@@ -275,16 +327,31 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const redeemToken = async (signedVaa: Uint8Array): Promise<bigint> => {
     const vaa = deserializeTransferTokenVAA(signedVaa)
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId, groupIndex)
-    const result = await redeemOnAlph(nodeWallet, tokenBridgeForChainId, signedVaa)
+    const alphBalanceBeforeRedeem = await getNativeTokenBalance()
+    const bridgeRewardRouterAlphBalanceBeforeRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
+    const result = await redeemOnAlphWithReward(nodeWallet, bridgeRewardRouterId, tokenBridgeForChainId, signedVaa)
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`redeem on alph succeed, tx id: ${result.txId}`)
-    return await getTransactionFee(result.txId)
+    const alphBalanceAfterRedeem = await getNativeTokenBalance()
+    const bridgeRewardRouterAlphBalanceAfterRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
+    const txFee = await getTransactionFee(result.txId)
+    const targetAddress = base58.encode(vaa.body.payload.targetAddress)
+    if (targetAddress === accountAddress) {
+      const transferAmount = vaa.body.payload.originChain === CHAIN_ID_ALEPHIUM && binToHex(vaa.body.payload.originAddress) === ALPH_TOKEN_ID
+        ? vaa.body.payload.amount * (10n ** 10n)
+        : 0n
+      assert(alphBalanceBeforeRedeem - txFee + transferAmount === alphBalanceAfterRedeem - ONE_ALPH)
+    } else {
+      assert(alphBalanceBeforeRedeem - txFee - DUST_AMOUNT === alphBalanceAfterRedeem)
+    }
+    assert(bridgeRewardRouterAlphBalanceBeforeRedeem === bridgeRewardRouterAlphBalanceAfterRedeem + ONE_ALPH)
+    return txFee
   }
 
   const getCurrentGuardianSet = async (): Promise<string[]> => {
-    const governance = Project.contract('Governance')
-    const contractState = await governance.fetchState(governanceAddress, groupIndex)
-    const encoded = (contractState.fields['guardianSets'] as Val[])[1] as string
+    const governance = alephium_contracts.Governance.at(governanceAddress)
+    const contractState = await governance.fetchState()
+    const encoded = contractState.fields.guardianSets[1]
     const guardianSet = encoded.slice(2) // remove the first byte
     if (guardianSet.length === 0) {
       return []
@@ -300,13 +367,15 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return keys
   }
 
-  const getContractState = async (address: string, name: string): Promise<ContractState> => {
-    const contract = Project.contract(name)
-    return await contract.fetchState(address, groupIndex)
+  const getContractState = async <I extends ContractInstance, F extends Fields>(
+    factory: ContractFactory<I, F>,
+    address: string
+  ): Promise<ContractState<F>> => {
+    return await fetchContractState(factory, factory.at(address))
   }
 
-  const getTokenBridgeContractState = async (): Promise<ContractState> => {
-    return getContractState(tokenBridgeAddress, 'TokenBridge')
+  const getTokenBridgeContractState = async (): Promise<ContractState<alephium_contracts.TokenBridgeTypes.Fields>> => {
+    return getContractState(alephium_contracts.TokenBridge, tokenBridgeAddress)
   }
 
   const deposit = async (remoteChainId: ChainId, amount: bigint): Promise<void> => {
@@ -332,6 +401,12 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     return genMultiSigAddress()
   }
 
+  const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
+    const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
+    const tokenPoolInstance = alephium_contracts.RemoteTokenPool.at(addressFromContractId(tokenPoolId))
+    return (await tokenPoolInstance.methods.getTotalSupply()).returns
+  }
+
   return {
     chainId: CHAIN_ID_ALEPHIUM,
     testTokenId: testTokenContractId,
@@ -355,6 +430,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     attestToken: attestToken,
     createWrapped: createWrapped,
+    getWrappedTokenId: getWrappedTokenId,
 
     transferToken: transferToken,
     transferNative: transferNative,
@@ -370,6 +446,9 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
     groupIndex: groupIndex,
     tokenBridgeContractId: tokenBridgeContractId,
+    getLocalTokenInfo: _getLocalTokenInfo,
+    getWrappedTokenTotalSupply: getWrappedTokenTotalSupply,
+    attestWithTokenInfo: attestWithTokenInfo,
     getContractState: getContractState,
     getTokenBridgeContractState: getTokenBridgeContractState,
     deposit: deposit

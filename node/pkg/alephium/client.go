@@ -2,11 +2,14 @@ package alephium
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
+	"github.com/alephium/wormhole-fork/node/pkg/p2p"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 )
 
 type Request[T any] interface {
@@ -17,6 +20,7 @@ func requestWithMetric[T any](req Request[T], timestamp *time.Time, label string
 	result, response, err := req.Execute()
 	queryLatency.WithLabelValues(label).Observe(time.Since(*timestamp).Seconds())
 	if err != nil {
+		p2p.DefaultRegistry.AddErrorCount(vaa.ChainIDAlephium, 1)
 		alphConnectionErrors.WithLabelValues(label).Inc()
 	}
 	return result, response, err
@@ -131,7 +135,7 @@ func (c *Client) GetContractEventsCount(ctx context.Context, contractAddress str
 
 	request := c.impl.EventsApi.GetEventsContractContractaddressCurrentCount(timeoutCtx, contractAddress)
 	response, r, err := requestWithMetric[int32](request, timestamp, "get_contract_events_count")
-	if r.StatusCode == 404 {
+	if err != nil && r != nil && r.StatusCode == 404 {
 		// subscribe event from 0 if contract count not found
 		count := int32(0)
 		return &count, nil
@@ -164,4 +168,100 @@ func (c *Client) GetNodeInfo(ctx context.Context) (*sdk.NodeInfo, error) {
 		return nil, err
 	}
 	return response, nil
+}
+
+func (c *Client) IsCliqueSynced(ctx context.Context) (*bool, error) {
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
+	defer cancel()
+
+	request := c.impl.InfosApi.GetInfosSelfClique(timeoutCtx)
+	response, _, err := requestWithMetric[*sdk.SelfClique](request, timestamp, "is_clique_synced")
+	if err != nil {
+		return nil, err
+	}
+	return &response.Synced, nil
+}
+
+func (c *Client) MultiCallContract(ctx context.Context, multiCall *sdk.MultipleCallContract) (*sdk.MultipleCallContractResult, error) {
+	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
+	defer cancel()
+
+	request := c.impl.ContractsApi.PostContractsMulticallContract(timeoutCtx).MultipleCallContract(*multiCall)
+	response, _, err := requestWithMetric[*sdk.MultipleCallContractResult](request, timestamp, "multicall_contract")
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (c *Client) GetTokenInfo(ctx context.Context, tokenId Byte32) (*TokenInfo, error) {
+	if tokenId == ALPHTokenId {
+		return &ALPHTokenInfo, nil
+	}
+
+	groupIndex := tokenId[31]
+	contractAddress, err := ToContractAddress(tokenId.ToHex())
+	if err != nil {
+		return nil, err
+	}
+	multiCallContract := &sdk.MultipleCallContract{
+		Calls: []sdk.CallContract{
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 0,
+			},
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 1,
+			},
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 2,
+			},
+		},
+	}
+
+	result, err := c.MultiCallContract(ctx, multiCallContract)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Results) != 3 {
+		return nil, fmt.Errorf("invalid response, expect 3 call results")
+	}
+
+	symbolResult := result.Results[0]
+	if len(symbolResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token symbol")
+	}
+	nameResult := result.Results[1]
+	if len(nameResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token name")
+	}
+	decimalsResult := result.Results[2]
+	if len(decimalsResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token decimals")
+	}
+
+	symbolBs, err := toByteVec(symbolResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	name, err := toByteVec(nameResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	decimals, err := toUint8(decimalsResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	return &TokenInfo{
+		TokenId:  tokenId,
+		Decimals: *decimals,
+		Symbol:   bytesToString(symbolBs),
+		Name:     bytesToString(name),
+	}, nil
 }

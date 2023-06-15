@@ -4,7 +4,7 @@ Contract TokenBridgeFactory(
   tokenBridgeForChainTemplateId: ByteVec,  // used to create contract by copyCreateContract
   attestTokenHandlerTemplateId: ByteVec,   // used to create contract by copyCreateContract
   unexecutedSequenceTemplateId: ByteVec    // used to create contract by copyCreateContract
-) {
+) extends Constants() {
   pub fn getLocalTokenPoolTemplateId() -> ByteVec {
     return localTokenPoolTemplateId
   }
@@ -23,5 +23,27 @@ Contract TokenBridgeFactory(
 
   pub fn getUnexecutedSequenceTemplateId() -> ByteVec {
     return unexecutedSequenceTemplateId
+  }
+
+  pub fn parseContractUpgrade(payload: ByteVec) -> (ByteVec, ByteVec, ByteVec, ByteVec) {
+    let contractCodeLength = u256From2Byte!(byteVecSlice!(payload, 33, 35))
+    let mut offset = 35 + contractCodeLength
+    let contractCode = byteVecSlice!(payload, 35, offset)
+    let payloadLength = size!(payload)
+    if (payloadLength == offset) {
+      return contractCode, #, #, #
+    }
+    let prevStateHash = byteVecSlice!(payload, offset, offset + 32)
+    offset = offset + 32
+    let encodedImmutableFieldsLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+    offset = offset + 2
+    let encodedImmutableFields = byteVecSlice!(payload, offset, offset + encodedImmutableFieldsLength)
+    offset = offset + encodedImmutableFieldsLength
+    let encodedMutableFieldsLength = u256From2Byte!(byteVecSlice!(payload, offset, offset + 2))
+    offset = offset + 2
+    let encodedMutableFields = byteVecSlice!(payload, offset, offset + encodedMutableFieldsLength)
+    offset = offset + encodedMutableFieldsLength
+    assert!(payloadLength == offset, ErrorCodes.InvalidMessageSize)
+    return contractCode, prevStateHash, encodedImmutableFields, encodedMutableFields
   }
 }

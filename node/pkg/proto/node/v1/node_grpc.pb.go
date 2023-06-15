@@ -23,7 +23,6 @@ type NodePrivilegedServiceClient interface {
 	//
 	// A consensus majority of nodes on the network will have to inject the VAA within the
 	// VAA timeout window for it to reach consensus.
-	//
 	InjectGovernanceVAA(ctx context.Context, in *InjectGovernanceVAARequest, opts ...grpc.CallOption) (*InjectGovernanceVAAResponse, error)
 	// FindMissingMessages will detect message sequence gaps in the local VAA store for a
 	// specific emitter chain and address. Start and end slots are the lowest and highest
@@ -35,7 +34,6 @@ type NodePrivilegedServiceClient interface {
 	// using the node's guardian key. The network rate limits these requests to one per second.
 	// Requests at higher rates will fail silently.
 	SendObservationRequest(ctx context.Context, in *SendObservationRequestRequest, opts ...grpc.CallOption) (*SendObservationRequestResponse, error)
-	GetNextGovernanceVAASequence(ctx context.Context, in *GetNextGovernanceVAASequenceRequest, opts ...grpc.CallOption) (*GetNextGovernanceVAASequenceResponse, error)
 }
 
 type nodePrivilegedServiceClient struct {
@@ -73,15 +71,6 @@ func (c *nodePrivilegedServiceClient) SendObservationRequest(ctx context.Context
 	return out, nil
 }
 
-func (c *nodePrivilegedServiceClient) GetNextGovernanceVAASequence(ctx context.Context, in *GetNextGovernanceVAASequenceRequest, opts ...grpc.CallOption) (*GetNextGovernanceVAASequenceResponse, error) {
-	out := new(GetNextGovernanceVAASequenceResponse)
-	err := c.cc.Invoke(ctx, "/node.v1.NodePrivilegedService/GetNextGovernanceVAASequence", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // NodePrivilegedServiceServer is the server API for NodePrivilegedService service.
 // All implementations must embed UnimplementedNodePrivilegedServiceServer
 // for forward compatibility
@@ -91,7 +80,6 @@ type NodePrivilegedServiceServer interface {
 	//
 	// A consensus majority of nodes on the network will have to inject the VAA within the
 	// VAA timeout window for it to reach consensus.
-	//
 	InjectGovernanceVAA(context.Context, *InjectGovernanceVAARequest) (*InjectGovernanceVAAResponse, error)
 	// FindMissingMessages will detect message sequence gaps in the local VAA store for a
 	// specific emitter chain and address. Start and end slots are the lowest and highest
@@ -103,7 +91,6 @@ type NodePrivilegedServiceServer interface {
 	// using the node's guardian key. The network rate limits these requests to one per second.
 	// Requests at higher rates will fail silently.
 	SendObservationRequest(context.Context, *SendObservationRequestRequest) (*SendObservationRequestResponse, error)
-	GetNextGovernanceVAASequence(context.Context, *GetNextGovernanceVAASequenceRequest) (*GetNextGovernanceVAASequenceResponse, error)
 	mustEmbedUnimplementedNodePrivilegedServiceServer()
 }
 
@@ -119,9 +106,6 @@ func (UnimplementedNodePrivilegedServiceServer) FindMissingMessages(context.Cont
 }
 func (UnimplementedNodePrivilegedServiceServer) SendObservationRequest(context.Context, *SendObservationRequestRequest) (*SendObservationRequestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendObservationRequest not implemented")
-}
-func (UnimplementedNodePrivilegedServiceServer) GetNextGovernanceVAASequence(context.Context, *GetNextGovernanceVAASequenceRequest) (*GetNextGovernanceVAASequenceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNextGovernanceVAASequence not implemented")
 }
 func (UnimplementedNodePrivilegedServiceServer) mustEmbedUnimplementedNodePrivilegedServiceServer() {}
 
@@ -190,24 +174,6 @@ func _NodePrivilegedService_SendObservationRequest_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodePrivilegedService_GetNextGovernanceVAASequence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetNextGovernanceVAASequenceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodePrivilegedServiceServer).GetNextGovernanceVAASequence(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/node.v1.NodePrivilegedService/GetNextGovernanceVAASequence",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodePrivilegedServiceServer).GetNextGovernanceVAASequence(ctx, req.(*GetNextGovernanceVAASequenceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // NodePrivilegedService_ServiceDesc is the grpc.ServiceDesc for NodePrivilegedService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -226,10 +192,6 @@ var NodePrivilegedService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendObservationRequest",
 			Handler:    _NodePrivilegedService_SendObservationRequest_Handler,
-		},
-		{
-			MethodName: "GetNextGovernanceVAASequence",
-			Handler:    _NodePrivilegedService_GetNextGovernanceVAASequence_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -6,7 +6,7 @@
     "0x0035219d9491e2A01EbA78BdafEe1c1C34d6F05B"
   ],
   "guardianUrls": [
-    "https://guardian-0.wormhole-testnet.softfork.se",
-    "https://guardian-1.wormhole-testnet.softfork.se"
+    "https://guardian-0.wormhole-testnet.alephium.org",
+    "https://guardian-1.wormhole-testnet.alephium.org"
   ]
 }

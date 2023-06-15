@@ -8,7 +8,7 @@ import {
   getTokenBridgeForChainId
 } from 'alephium-wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
-import { getNextGovernanceSequence, injectVAA, submitGovernanceVAA } from './governance_utils'
+import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 
 const testChainId = CHAIN_ID_ETHEREUM_ROPSTEN
 const testEmitterAddress = '0000000000000000000000000290fb167208af455bb137780163b7b7a9a10c16'
@@ -36,10 +36,10 @@ async function registerChain() {
   assert(!(await contractExists(attestTokenHandlerId0, web3.getCurrentNodeProvider())))
   assert(!(await contractExists(tokenBridgeForChainId0, web3.getCurrentNodeProvider())))
 
-  const seq = await getNextGovernanceSequence()
+  const seq = getNextGovernanceSequence()
   const registerChainVaa = createRegisterChainVaa(seq)
 
-  for (const guardianIndex of [0, 1]) {
+  for (const guardianIndex of guardianSetIndexes) {
     await injectVAA(registerChainVaa, guardianIndex, 'update-refund-address.proto')
   }
   await submitGovernanceVAA('RegisterChain', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM])

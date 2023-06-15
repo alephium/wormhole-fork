@@ -35,8 +35,8 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { useAlephiumWallet } from "../contexts/AlephiumWalletContext";
 import useTransferSignedVAA from "./useTransferSignedVAA";
+import { useAlephiumWallet } from "./useAlephiumWallet";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -47,9 +47,11 @@ export default function useGetIsTransferCompleted(
 ): {
   isTransferCompletedLoading: boolean;
   isTransferCompleted: boolean;
+  error: string | undefined;
 } {
   const [isLoading, setIsLoading] = useState(false);
   const [isTransferCompleted, setIsTransferCompleted] = useState(false);
+  const [error, setError] = useState<string>()
 
   const isRecovery = useSelector(selectTransferIsRecovery);
   const targetAddress = useSelector(selectTransferTargetAddressHex);
@@ -58,7 +60,7 @@ export default function useGetIsTransferCompleted(
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();
-  const { signer: alphSigner } = useAlephiumWallet()
+  const alphWallet = useAlephiumWallet()
   const signedVAA = useTransferSignedVAA();
 
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
@@ -103,7 +105,9 @@ export default function useGetIsTransferCompleted(
               signedVAA
             );
           } catch (error) {
-            console.error(error);
+            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            setError(errMsg)
+            console.error(errMsg);
           }
           if (!cancelled) {
             setIsTransferCompleted(transferCompleted);
@@ -147,7 +151,7 @@ export default function useGetIsTransferCompleted(
             setIsLoading(false);
           }
         })();
-      } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner) {
+      } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
         setIsLoading(true);
         (async () => {
           try {
@@ -158,11 +162,13 @@ export default function useGetIsTransferCompleted(
             const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
             transferCompleted = await getIsTransferCompletedAlph(
               tokenBridgeForChainId,
-              alphSigner.account.group,
+              alphWallet.group,
               signedVAA
             )
           } catch (error) {
-            console.log("failed to check alph transfer completed, err: " + error)
+            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            setError(errMsg)
+            console.error(errMsg)
           }
           if (!cancelled) {
             setIsTransferCompleted(transferCompleted)
@@ -205,9 +211,9 @@ export default function useGetIsTransferCompleted(
     signedVAA,
     isReady,
     provider,
-    alphSigner,
+    alphWallet,
     pollState,
   ]);
 
-  return { isTransferCompletedLoading: isLoading, isTransferCompleted };
+  return { isTransferCompletedLoading: isLoading, isTransferCompleted, error };
 }

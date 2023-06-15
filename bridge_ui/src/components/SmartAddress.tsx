@@ -16,6 +16,7 @@ import {
   CHAIN_ID_TERRA,
   isNativeDenom,
   CHAIN_ID_ACALA,
+  CHAIN_ID_ALEPHIUM,
 } from "alephium-wormhole-sdk";
 import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
 import { FileCopy, OpenInNew } from "@material-ui/icons";
@@ -27,6 +28,7 @@ import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 import { shortenAddress } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
+import { addressFromContractId } from "@alephium/web3";
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -103,7 +105,7 @@ export default function SmartAddress({
     : tokenName
     ? tokenName
     : "";
-  const explorerAddress = isNative
+  const explorerAddress = isNative || useableAddress === ''
     ? null
     : chainId === CHAIN_ID_ETH
     ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/${
@@ -181,6 +183,8 @@ export default function SmartAddress({
     ? `https://${CLUSTER === "testnet" ? "testnet." : ""}algoexplorer.io/${
         isAsset ? "asset" : "address"
       }/${useableAddress}`
+    : chainId === CHAIN_ID_ALEPHIUM
+    ? `https://explorer.${CLUSTER === "testnet" ? "testnet." : ""}alephium.org/addresses/${addressFromContractId(useableAddress)}`
     : undefined;
   const explorerName = getExplorerName(chainId);
 

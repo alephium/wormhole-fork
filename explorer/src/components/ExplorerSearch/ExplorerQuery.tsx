@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Typography } from '@mui/material'
 
-import { arrayify, isHexString, zeroPad, hexlify } from "ethers/lib/utils";
+import { arrayify, isHexString, zeroPad, hexlify, base64 } from "ethers/lib/utils";
 import { Bech32, toHex, fromHex } from "@cosmjs/encoding"
 import ExplorerSummary from './ExplorerSummary';
 
 import { useNetworkContext } from '../../contexts/NetworkContext';
-import { ChainId, getEmitterAddressSolana, isEVMChain } from "alephium-wormhole-sdk";
+import {
+    ChainId,
+    getEmitterAddressSolana,
+    isEVMChain,
+    deserializeVAA,
+    uint8ArrayToHex,
+    VAAPayload,
+    coalesceChainName,
+    coalesceChainId
+} from "alephium-wormhole-sdk";
 import { ChainIDs, chainIDs } from '../../utils/consts';
 import { PublicKey } from '@solana/web3.js';
 
@@ -21,7 +30,7 @@ export interface VAA {
     EmitterChain: number,
     EmitterAddress: string,
     TargetChain: number,
-    Payload: string // base64 encoded byte array
+    Payload: VAAPayload
 }
 export interface TokenTransferPayload {
     Amount: string
@@ -39,10 +48,10 @@ export interface TransferDetails {
     OriginName: string,
     OriginTokenAddress: string,
 }
-export interface BigTableMessage {
+export interface VAAMessage {
     InitiatingTxID?: string
     SignedVAABytes?: string  // base64 encoded byte array
-    SignedVAA?: VAA
+    SignedVAA: VAA
     QuorumTime?: string  // "2021-08-11 00:16:11.757 +0000 UTC"
     EmitterChain: keyof ChainIDs
     EmitterAddress: string
@@ -50,6 +59,52 @@ export interface BigTableMessage {
     Sequence: string
     TokenTransferPayload?: TokenTransferPayload
     TransferDetails?: TransferDetails
+}
+
+export interface Response {
+    data: any
+}
+
+export function getVAAFromJson(data: any): VAAMessage {
+    const txIdStr = data['txId']
+    const txId = txIdStr === undefined ? undefined : uint8ArrayToHex(base64.decode(txIdStr))
+    const vaaBase64 = data['vaa']
+    const vaaBytes = base64.decode(vaaBase64)
+    const parsedVaa = deserializeVAA(vaaBytes)
+    const vaa: VAA = {
+        Version: parsedVaa.version,
+        GuardianSetIndex: parsedVaa.guardianSetIndex,
+        Signatures: parsedVaa.signatures.map((sig) => {
+            return { Index: sig.index, Signature: uint8ArrayToHex(sig.sig) }
+        }),
+        Timestamp: new Date(parsedVaa.body.timestamp * 1000).toISOString(),
+        Nonce: parsedVaa.body.nonce,
+        Sequence: Number(parsedVaa.body.sequence),
+        ConsistencyLevel: parsedVaa.body.consistencyLevel,
+        EmitterChain: parsedVaa.body.emitterChainId,
+        EmitterAddress: uint8ArrayToHex(parsedVaa.body.emitterAddress),
+        TargetChain: parsedVaa.body.targetChainId,
+        Payload: parsedVaa.body.payload
+    }
+    return {
+        InitiatingTxID: txId,
+        SignedVAABytes: vaaBase64,
+        SignedVAA: vaa,
+        QuorumTime: data['updateAt'],
+        EmitterChain: coalesceChainName(parsedVaa.body.emitterChainId),
+        EmitterAddress: vaa.EmitterAddress,
+        TargetChain: coalesceChainName(parsedVaa.body.targetChainId),
+        Sequence: parsedVaa.body.sequence.toString(),
+        TokenTransferPayload: parsedVaa.body.payload.type === 'TransferToken'
+            ? {
+                Amount: parsedVaa.body.payload.amount.toString(),
+                OriginAddress: uint8ArrayToHex(parsedVaa.body.payload.originAddress),
+                OriginChain: coalesceChainName(parsedVaa.body.payload.originChain),
+                TargetAddress: uint8ArrayToHex(parsedVaa.body.payload.targetAddress),
+            }
+            : undefined,
+        TransferDetails: undefined // TODO: add transfer details
+    }
 }
 
 interface ExplorerQuery {
@@ -63,10 +118,8 @@ const ExplorerQuery = (props: ExplorerQuery) => {
     const { activeNetwork } = useNetworkContext()
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(true);
-    const [message, setMessage] = useState<BigTableMessage>();
-    const [polling, setPolling] = useState(false);
+    const [message, setMessage] = useState<VAAMessage>();
     const [lastFetched, setLastFetched] = useState<number>()
-    const [pollInterval, setPollInterval] = useState<NodeJS.Timeout>()
 
     const fetchMessage = async (
         emitterChain: ExplorerQuery["emitterChain"],
@@ -77,10 +130,10 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         let paddedAddress: string = ""
         let paddedSequence: string
 
-        let base = `${activeNetwork.endpoints.bigtableFunctionsBase}`
+        let base = `${activeNetwork.endpoints.backendUrl}`
         let url = ""
 
-        if (emitterChain && emitterAddress && targetChain && sequence) {
+        if ((emitterChain !== undefined) && emitterAddress && (targetChain !== undefined) && sequence) {
             if (emitterChain === chainIDs["solana"]) {
                 if (emitterAddress.length < 64) {
                     try {
@@ -122,32 +175,13 @@ const ExplorerQuery = (props: ExplorerQuery) => {
             } else {
                 paddedSequence = sequence
             }
-            url = `${base}readrow?emitterChain=${emitterChain}&emitterAddress=${paddedAddress}&targetChain=${targetChain}&sequence=${paddedSequence}`
+            url = `${base}api/vaas/${emitterChain}/${paddedAddress}/${targetChain}/${paddedSequence}`
         } else if (txId) {
-            let transformedTxId = txId
-            if (isHexString(txId)) {
-                // valid hexString, no transformation needed.
-            } else {
-                try {
-                    let pubKey = new PublicKey(txId).toBytes()
-                    let solHex = hexlify(pubKey)
-                    transformedTxId = solHex
-                } catch (_) {
-                    // not solana, try terra
-                    try {
-                        let arr = fromHex(txId)
-                        let terraHex = hexlify(arr)
-                        transformedTxId = terraHex
-                    } catch (_) {
-                        // do nothing
-                    }
-                }
-            }
-            url = `${base}transaction?id=${transformedTxId}`
+            url = `${base}api/vaas/transactions/${txId}`
         }
 
         fetch(url)
-            .then<BigTableMessage>(res => {
+            .then(res => {
                 if (res.ok) return res.json()
                 if (res.status === 404) {
                     // show a specific message to the user if the query returned 404.
@@ -158,17 +192,9 @@ const ExplorerQuery = (props: ExplorerQuery) => {
                 throw 'explorer.failedFetching'
             })
             .then(result => {
-
-                setMessage(result)
+                setMessage(getVAAFromJson(result.data))
                 setLoading(false)
                 setLastFetched(Date.now())
-
-                // turn polling on/off
-                if (!result.QuorumTime && !polling) {
-                    setPolling(true)
-                } else if (result.QuorumTime && polling) {
-                    setPolling(false)
-                }
             }, error => {
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
@@ -176,9 +202,6 @@ const ExplorerQuery = (props: ExplorerQuery) => {
                 setError(error)
                 setLoading(false)
                 setLastFetched(Date.now())
-                if (polling) {
-                    setPolling(false)
-                }
             })
     }
 
@@ -186,18 +209,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
     }
 
-    if (polling && !pollInterval) {
-        let interval = setInterval(() => {
-            fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
-        }, 3000)
-        setPollInterval(interval)
-    } else if (!polling && pollInterval) {
-        clearInterval(pollInterval)
-        setPollInterval(undefined)
-    }
-
     useEffect(() => {
-        setPolling(false)
         setError(undefined)
         setMessage(undefined)
         setLastFetched(undefined)
@@ -206,15 +218,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
             fetchMessage(props.emitterChain, props.emitterAddress, props.targetChain, props.sequence, props.txId)
         }
 
-    }, [props.emitterChain, props.emitterAddress, props.sequence, props.txId, activeNetwork.endpoints.bigtableFunctionsBase])
-
-    useEffect(() => {
-        return function cleanup() {
-            if (pollInterval) {
-                clearInterval(pollInterval)
-            }
-        };
-    }, [polling, activeNetwork.endpoints.bigtableFunctionsBase])
+    }, [props.emitterChain, props.emitterAddress, props.sequence, props.txId, activeNetwork.endpoints.backendUrl])
 
 
     return (
@@ -227,7 +231,6 @@ const ExplorerQuery = (props: ExplorerQuery) => {
                         <ExplorerSummary
                             {...props}
                             message={message}
-                            polling={polling}
                             lastFetched={lastFetched}
                             refetch={refreshCallback}
                         />

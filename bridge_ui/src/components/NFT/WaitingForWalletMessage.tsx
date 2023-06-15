@@ -9,7 +9,7 @@ import {
   selectNFTTargetChain,
   selectNFTTransferTx,
 } from "../../store/selectors";
-import { WAITING_FOR_WALLET_AND_CONF } from "../Transfer/WaitingForWalletMessage";
+import { WAITING_FOR_TX_CONFIRMATION } from "../Transfer/WaitingForWalletMessage";
 
 const useStyles = makeStyles((theme) => ({
   message: {
@@ -30,7 +30,7 @@ export default function WaitingForWalletMessage() {
   const showWarning = (isSending && !transferTx) || (isRedeeming && !redeemTx);
   return showWarning ? (
     <Typography className={classes.message} variant="body2">
-      {WAITING_FOR_WALLET_AND_CONF}{" "}
+      {WAITING_FOR_TX_CONFIRMATION}{" "}
       {targetChain === CHAIN_ID_SOLANA && isRedeeming
         ? "Note: there will be several transactions"
         : isEVMChain(sourceChain) && isSending

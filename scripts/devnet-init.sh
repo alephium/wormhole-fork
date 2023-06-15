@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # This script allows devnet initalization with more than one guardian.
-# First argument is the number of guardians for the initial guardian set.
 set -exuo pipefail
 
-numGuardians=$1
-echo "number of guardians to initialize: ${numGuardians}"
+echo "number of guardians to initialize: $NUM_OF_GUARDIANS"
 
 # assert jq exists before trying to use it
 if ! type -p jq; then
@@ -14,23 +12,27 @@ fi
 
 alephiumConfigJson="./configs/alephium/devnet.json"
 ethereumConfigJson="./configs/ethereum/devnet.json"
+bscConfigJson="./configs/bsc/devnet.json"
 guardianConfigJson="./configs/guardian/devnet.json"
 
 ethTokenBridge=$(jq --raw-output '.tokenBridgeEmitterAddress' $ethereumConfigJson)
 ethNativeTokenBridge=$(jq --raw-output '.contracts.tokenBridge' $ethereumConfigJson)
+bscTokenBridge=$(jq --raw-output '.tokenBridgeEmitterAddress' $bscConfigJson)
+bscNativeTokenBridge=$(jq --raw-output '.contracts.tokenBridge' $bscConfigJson)
 alphTokenBridge=$(jq --raw-output '.tokenBridgeEmitterAddress' $alephiumConfigJson)
 alphNativeTokenBridge=$(jq --raw-output '.contracts.nativeTokenBridge' $alephiumConfigJson)
 
-alphNodeUrl="http://alph-full-node:22973"
+alphNodeUrl="http://alephium:22973"
 ethNodeUrl="http://eth-devnet:8545"
+bscNodeUrl="http://bsc-devnet:8545"
 
 # wait contract deployments
 wait() {
   SECONDS=0
   until $(eval $1); do
-    if (( SECONDS > 120 ))
+    if (( SECONDS > 300 ))
     then
-       echo "Contracts are not deployed after 2 min..."
+       echo "Contracts are not deployed after 5 min..."
        exit 1
     fi
     echo "Waiting..."
@@ -38,9 +40,10 @@ wait() {
   done
 }
 
-ethContractExists() {
+evmContractExists() {
   address=$1
-  code=$(curl --silent -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"$address\"],\"id\":1}" $ethNodeUrl | jq --raw-output '."result"')
+  nodeUrl=$2
+  code=$(curl --silent -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"$address\"],\"id\":1}" $nodeUrl | jq --raw-output '."result"')
   size=${#code}
   if [ $size -gt 2 ]; then
     return 0
@@ -50,7 +53,8 @@ ethContractExists() {
 }
 
 wait "curl --output /dev/null --silent --fail $alphNodeUrl/addresses/$alphNativeTokenBridge/group"
-wait "ethContractExists $ethNativeTokenBridge"
+wait "evmContractExists $ethNativeTokenBridge $ethNodeUrl"
+wait "evmContractExists $bscNativeTokenBridge $bscNodeUrl"
 
 echo "generating guardian set addresses"
 # create an array of strings containing the ECDSA public keys of the devnet guardians in the guardianset:
@@ -70,15 +74,21 @@ guardiansPrivateCSV=$( echo ${guardiansPrivate} | jq --raw-output -c  '. | join(
 
 registerEthTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c ethereum -a ${ethTokenBridge} -g ${guardiansPrivateCSV} -s 0)
 registerAlphTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c alephium -a ${alphTokenBridge} -g ${guardiansPrivateCSV} -s 1)
+registerBscTokenBridgeVAA=$(npm --prefix clients/js start --silent -- generate registration -m TokenBridge -c bsc -a ${bscTokenBridge} -g ${guardiansPrivateCSV} -s 2)
 npm --prefix clients/js start --silent -- submit ${registerEthTokenBridgeVAA} -c alephium -n devnet --node-url $alphNodeUrl
+npm --prefix clients/js start --silent -- submit ${registerBscTokenBridgeVAA} -c alephium -n devnet --node-url $alphNodeUrl
 npm --prefix clients/js start --silent -- submit ${registerAlphTokenBridgeVAA} -c ethereum -n devnet --node-url $ethNodeUrl
+npm --prefix clients/js start --silent -- submit ${registerBscTokenBridgeVAA} -c ethereum -n devnet --node-url $ethNodeUrl
+npm --prefix clients/js start --silent -- submit ${registerAlphTokenBridgeVAA} -c bsc -n devnet --node-url $bscNodeUrl
+npm --prefix clients/js start --silent -- submit ${registerEthTokenBridgeVAA} -c bsc -n devnet --node-url $bscNodeUrl
 
-# create guardian set upgrade vaa if the numGuardians > 1
-if [[ "${numGuardians}" -gt "1" ]]; then
+# create guardian set upgrade vaa if the NUM_OF_GUARDIANS > 1
+if [[ "$NUM_OF_GUARDIANS" -gt "1" ]]; then
     echo "creating guardian set upgrade vaa"
-    newGuardiansPublicHex=$(jq -c --argjson lastIndex $numGuardians '.guardians[:$lastIndex] | [.[].public[2:]]' $guardianConfigJson)
+    newGuardiansPublicHex=$(jq -c --argjson lastIndex $NUM_OF_GUARDIANS '.guardians[:$lastIndex] | [.[].public[2:]]' $guardianConfigJson)
     newGuardiansPublicHexCSV=$(echo ${newGuardiansPublicHex} | jq --raw-output -c  '. | join(",")')
     guardianSetUpgradeVAA=$(npm --prefix clients/js start --silent -- generate guardian-set-upgrade -i 1 -k ${newGuardiansPublicHexCSV} -g ${guardiansPrivateCSV} -s 0)
     npm --prefix clients/js start --silent -- submit ${guardianSetUpgradeVAA} -c alephium -n devnet --node-url $alphNodeUrl
     npm --prefix clients/js start --silent -- submit ${guardianSetUpgradeVAA} -c ethereum -n devnet --node-url $ethNodeUrl
+    npm --prefix clients/js start --silent -- submit ${guardianSetUpgradeVAA} -c bsc -n devnet --node-url $bscNodeUrl
 fi

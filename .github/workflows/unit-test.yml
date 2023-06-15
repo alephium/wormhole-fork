@@ -34,8 +34,8 @@ jobs:
           node-version: '16'
       - run: cd clients/js && make install
       - run: curl -L https://foundry.paradigm.xyz | bash
-      - run: $HOME/.foundry/bin/foundryup
-      - run: cd ethereum && PATH=$PATH:$HOME/.foundry/bin/ make test-upgrade
+      - run: $XDG_CONFIG_HOME/.foundry/bin/foundryup
+      - run: cd ethereum && PATH=$PATH:$XDG_CONFIG_HOME/.foundry/bin/ make test-upgrade
 
   alephium:
     runs-on: ubuntu-20.04
@@ -53,11 +53,12 @@ jobs:
         run: |
           npm audit --production
           npm ci
-          npm run build
-          npm run lint
           npx @alephium/cli devnet start
+          npm run compile
+          npm run build
           npm test
           npx @alephium/cli devnet stop
+          npm run lint
 
   sdk:
     runs-on: ubuntu-20.04

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	sdk "github.com/alephium/go-sdk"
+	"github.com/alephium/wormhole-fork/node/pkg/vaa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -178,4 +179,45 @@ func TestHexToByte32(t *testing.T) {
 	res, err := HexToByte32(hex)
 	assert.Nil(t, err)
 	assert.True(t, res.equalWith(bytes))
+}
+
+func TestBytesToString(t *testing.T) {
+	padTo32Byte := func(bs []byte) []byte {
+		prefix := make([]byte, 32-len(bs))
+		return append(prefix, bs...)
+	}
+
+	strs := []string{"token0", "Token1", "Token 2", "112233", "/@!#$%^&*()=+"}
+	for _, str := range strs {
+		assert.Equal(t, bytesToString([]byte(str)), str)
+		bs := padTo32Byte([]byte(str))
+		assert.Equal(t, bytesToString(bs), str)
+	}
+}
+
+func TestParseAttestToken(t *testing.T) {
+	payload, err := hex.DecodeString("02eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a00ff12000000000000000000000000000000000000000000000054657374546f6b656e00000000000000000000000000000000000000000054657374546f6b656e2d30")
+	assert.Nil(t, err)
+	tokenInfo, err := parseAttestToken(payload)
+	assert.Nil(t, err)
+	tokenId, _ := HexToByte32("eb2b70a55aec8562b6ccc6ca3ca4ed41176c611757a37748d005abee6a9fae5a")
+	assert.Equal(t, *tokenInfo, TokenInfo{
+		TokenId:  tokenId,
+		Decimals: 18,
+		Symbol:   "TestToken",
+		Name:     "TestToken-0",
+	})
+
+	tokenInfo, err = parseAttestToken(payload[1:])
+	assert.Nil(t, tokenInfo)
+	assert.Equal(t, err.Error(), "invalid attest token payload length")
+
+	tokenInfo, err = parseAttestToken(append(payload, 0))
+	assert.Nil(t, tokenInfo)
+	assert.Equal(t, err.Error(), "invalid attest token payload length")
+
+	payload[34] = byte(vaa.ChainIDUnset)
+	tokenInfo, err = parseAttestToken(payload)
+	assert.Nil(t, tokenInfo)
+	assert.Equal(t, err.Error(), "invalid token chain id")
 }

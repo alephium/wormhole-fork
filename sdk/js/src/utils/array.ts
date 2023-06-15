@@ -19,7 +19,6 @@ import {
   coalesceChainId,
   isEVMChain,
 } from "./consts";
-import { addressFromContractId, tokenIdFromAddress } from "@alephium/web3";
 
 /**
  *
@@ -78,7 +77,7 @@ export const tryUint8ArrayToNative = (
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("uint8ArrayToNative: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {
-    return addressFromContractId(uint8ArrayToHex(a))
+    return uint8ArrayToHex(a)
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("uint8ArrayToNative: Chain id unset");
   } else {
@@ -188,7 +187,7 @@ export const tryNativeToHexString = (
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("hexToNativeString: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {
-    return uint8ArrayToHex(tokenIdFromAddress(address))
+    return address
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("hexToNativeString: Chain id unset");
   } else {

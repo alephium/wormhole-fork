@@ -1,0 +1,15 @@
+{
+  "chainId": 4,
+  "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  "contracts": {
+    "governance": "",
+    "tokenBridge": "",
+    "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+  },
+  "nodeUrl": "",
+  "coreEmitterAddress": "",
+  "tokenBridgeEmitterAddress": "",
+  "bridgeTokens": [
+    "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+  ]
+}

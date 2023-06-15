@@ -10,24 +10,13 @@ import { default as alephiumMainnetConfig } from '../../../configs/alephium/main
 import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
-import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
-import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
-import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
+import { default as bscDevnetConfig } from '../../../configs/bsc/devnet.json'
+import { default as bscTestnetConfig } from '../../../configs/bsc/testnet.json'
+import { default as bscMainnetConfig } from '../../../configs/bsc/mainnet.json'
 
 export const chainEnums = [
-  "",
-  "Solana",
   "Ethereum",
-  "Terra",
   "BSC",
-  "Polygon",
-  "Avalanche",
-  "Oasis",
-  "Algorand",
-  "Aurora",
-  "Fantom",
-  "Karura",
-  "Acala",
   "Alephium"
 ];
 
@@ -37,16 +26,19 @@ export interface ChainIDs {
 
 export const chainIDs: ChainIDs = {
   ethereum: 2,
+  bsc: 4,
   alephium: 255,
 };
 
 export const chainIDStrings: { [chainIDString: string]: string } = {
   "2": "ethereum",
+  "4": "bsc",
   "255": "alephium",
 };
 
 export enum ChainID {
   Ethereum = 2,
+  BSC = 4,
   Alephium = 255,
 }
 export type ChainName = keyof ChainIDs;
@@ -70,6 +62,12 @@ const envVarMap: { [name: string]: string | undefined } = {
     alephiumDevnetConfig.contracts.tokenBridge,
   GATSBY_DEVNET_ALEPHIUM_NFT_BRIDGE: undefined,
 
+  GATSBY_DEVNET_BSC_CORE_BRIDGE:
+    bscDevnetConfig.contracts.governance,
+  GATSBY_DEVNET_BSC_TOKEN_BRIDGE:
+    bscDevnetConfig.contracts.tokenBridge,
+  GATSBY_DEVNET_BSC_NFT_BRIDGE: undefined,
+
   // testnet
   GATSBY_TESTNET_ETHEREUM_CORE_BRIDGE:
     ethereumTestnetConfig.contracts.governance,
@@ -83,6 +81,12 @@ const envVarMap: { [name: string]: string | undefined } = {
     alephiumTestnetConfig.contracts.tokenBridge,
   GATSBY_TESTNET_ALEPHIUM_NFT_BRIDGE: undefined,
 
+  GATSBY_TESTNET_BSC_CORE_BRIDGE:
+    bscTestnetConfig.contracts.governance,
+  GATSBY_TESTNET_BSC_TOKEN_BRIDGE:
+    bscTestnetConfig.contracts.tokenBridge,
+  GATSBY_TESTNET_BSC_NFT_BRIDGE: undefined,
+
   // mainnet
   GATSBY_MAINNET_ETHEREUM_CORE_BRIDGE:
     ethereumMainnetConfig.contracts.governance,
@@ -94,7 +98,13 @@ const envVarMap: { [name: string]: string | undefined } = {
     alephiumMainnetConfig.contracts.governance,
   GATSBY_MAINNET_ALEPHIUM_TOKEN_BRIDGE:
     alephiumMainnetConfig.contracts.tokenBridge,
-  GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE: undefined
+  GATSBY_MAINNET_ALEPHIUM_NFT_BRIDGE: undefined,
+
+  GATSBY_MAINNET_BSC_CORE_BRIDGE:
+    bscMainnetConfig.contracts.governance,
+  GATSBY_MAINNET_BSC_TOKEN_BRIDGE:
+    bscMainnetConfig.contracts.tokenBridge,
+  GATSBY_MAINNET_BSC_NFT_BRIDGE: undefined,
 };
 
 export interface KnownContracts {
@@ -187,7 +197,7 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
             const emitterAddress = await getEmitterAddress[chainName](address);
             contractsOfChain[emitterAddress] = desc;
           } catch (_) {
-            console.log("failed getting emitterAddress for: ", address);
+            console.log(`failed getting emitterAddress for: ${address}, env: ${envVarName}, chainName: ${chainName}`);
           }
           if (chainName != "solana") {
             address = address.toLowerCase();
@@ -206,26 +216,22 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
 );
 
 export interface NetworkConfig {
-  bigtableFunctionsBase: string;
-  guardianRpcBase: string;
+  backendUrl: string;
 }
 export const endpoints: { [network: string]: NetworkConfig } = {
   devnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_DEVNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_DEVNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianDevnetConfig.guardianUrls as string[])[0],
   },
   testnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_TESTNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_TESTNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianTestnetConfig.guardianUrls as string[])[0],
   },
   mainnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_MAINNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_MAINNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianMainnetConfig.guardianUrls as string[])[0],
   },
 };

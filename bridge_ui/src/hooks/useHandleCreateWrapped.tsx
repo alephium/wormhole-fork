@@ -8,11 +8,9 @@ import {
   CHAIN_ID_TERRA,
   CHAIN_ID_ALEPHIUM,
   createWrappedOnAlgorand,
-  createWrappedOnEth,
   createWrappedOnSolana,
   createWrappedOnTerra,
   isEVMChain,
-  updateWrappedOnEth,
   updateWrappedOnSolana,
   createRemoteTokenPoolOnAlph,
   updateRemoteTokenPoolOnAlph,
@@ -34,7 +32,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
-import { setCreateTx, setIsCreating } from "../store/attestSlice";
+import { setCreateTx, setIsCreating, setIsWalletApproved } from "../store/attestSlice";
 import {
   selectAttestIsCreating,
   selectAttestSourceChain,
@@ -63,9 +61,10 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
-import { AlephiumWalletSigner, useAlephiumWallet } from "../contexts/AlephiumWalletContext";
-import { waitTxConfirmed } from "../utils/alephium";
+import { waitALPHTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
+import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
+import { createWrappedOnEthWithoutWait, updateWrappedOnEthWithoutWait } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -125,19 +124,21 @@ async function evm(
         : chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = shouldUpdate
-      ? await updateWrappedOnEth(
+    const result = shouldUpdate
+      ? await updateWrappedOnEthWithoutWait(
           getTokenBridgeAddressForChain(chainId),
           signer,
           signedVAA,
           overrides
         )
-      : await createWrappedOnEth(
+      : await createWrappedOnEthWithoutWait(
           getTokenBridgeAddressForChain(chainId),
           signer,
           signedVAA,
           overrides
         );
+    dispatch(setIsWalletApproved(true))
+    const receipt = await result.wait()
     dispatch(
       setCreateTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
@@ -248,7 +249,7 @@ async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
   sourceChain: ChainId,
-  signer: AlephiumWalletSigner,
+  wallet: AlephiumWallet,
   signedVAA: Uint8Array,
   shouldUpdate: boolean
 ) {
@@ -256,10 +257,11 @@ async function alephium(
   try {
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = shouldUpdate
-      ? await updateRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA)
-      : await createRemoteTokenPoolOnAlph(signer.signerProvider, attestTokenHandlerId, signedVAA, signer.account.address, minimalAlphInContract)
-    const confirmedTx = await waitTxConfirmed(signer.nodeProvider, result.txId)
-    const blockHeader = await signer.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+      ? await updateRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA)
+      : await createRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA, wallet.address, minimalAlphInContract)
+    dispatch(setIsWalletApproved(true))
+    const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
+    const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
       setCreateTx({ id: result.txId, block: blockHeader.height })
     );
@@ -286,7 +288,7 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const { signer: alphSigner } = useAlephiumWallet();
+  const alphWallet = useAlephiumWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const handleCreateClick = useCallback(() => {
     if (isEVMChain(targetChain) && !!signer && !!signedVAA) {
@@ -321,12 +323,12 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
         shouldUpdate,
         terraFeeDenom
       );
-    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphSigner && !!signedVAA) {
+    } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet && !!signedVAA) {
       alephium(
         dispatch,
         enqueueSnackbar,
         sourceChain,
-        alphSigner,
+        alphWallet,
         signedVAA,
         shouldUpdate
       )
@@ -352,7 +354,7 @@ export function useHandleCreateWrapped(shouldUpdate: boolean) {
     solanaWallet,
     solPK,
     terraWallet,
-    alphSigner,
+    alphWallet,
     signedVAA,
     signer,
     shouldUpdate,

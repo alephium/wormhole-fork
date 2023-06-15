@@ -1,11 +1,11 @@
 package db
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/rand"
 	mathRand "math/rand"
 	"os"
-	"sort"
 	"testing"
 	"time"
 
@@ -40,12 +40,12 @@ func randomSignature() *vaa.Signature {
 
 func TestFindEmitterSequenceGap(t *testing.T) {
 	emitterAddress := randomAddress()
-	toEthPrefix := VAAID{
+	toEthPrefix := vaa.VAAID{
 		EmitterChain:   vaa.ChainIDAlephium,
 		EmitterAddress: emitterAddress,
 		TargetChain:    vaa.ChainIDEthereum,
 	}
-	toBscPrefix := VAAID{
+	toBscPrefix := vaa.VAAID{
 		EmitterChain:   vaa.ChainIDAlephium,
 		EmitterAddress: emitterAddress,
 		TargetChain:    vaa.ChainIDBSC,
@@ -54,7 +54,7 @@ func TestFindEmitterSequenceGap(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 
-	addVAA := func(prefix VAAID, sequence uint64) {
+	addVAA := func(prefix vaa.VAAID, sequence uint64) {
 		err := db.StoreSignedVAA(&vaa.VAA{
 			Version:        1,
 			EmitterChain:   prefix.EmitterChain,
@@ -97,54 +97,67 @@ func randomGovernanceVAA(targetChainId vaa.ChainID) *vaa.VAA {
 	}
 }
 
-func maxU64(a, b uint64) uint64 {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func TestMaxGovernanceVAASequence(t *testing.T) {
+func TestGetGovernanceVAASequence(t *testing.T) {
 	db, err := Open(t.TempDir())
 	assert.Nil(t, err)
 
-	maxSeq, err := db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *maxSeq, uint64(0))
-
-	sequences0 := make([]uint64, 0)
-	for i := 0; i < 10; i++ {
-		vaa := randomGovernanceVAA(vaa.ChainIDUnset)
-		err = db.StoreSignedVAA(vaa)
+	vaas := make([]*GovernanceVAA, 0)
+	for i := 0; i < 5; i++ {
+		v := randomGovernanceVAA(vaa.ChainIDUnset)
+		v.Sequence = uint64(i)
+		err = db.StoreSignedVAA(v)
 		assert.Nil(t, err)
-		sequences0 = append(sequences0, vaa.Sequence)
-	}
-
-	sortSequences := func(seqs []uint64) {
-		sort.Slice(seqs, func(i, j int) bool {
-			return seqs[i] < seqs[j]
+		vaaBytes, err := v.Marshal()
+		assert.Nil(t, err)
+		vaas = append(vaas, &GovernanceVAA{
+			TargetChain: vaa.ChainIDUnset,
+			Sequence:    v.Sequence,
+			VaaBytes:    vaaBytes,
 		})
 	}
-	sortSequences(sequences0)
-	maxSequence0 := sequences0[len(sequences0)-1]
-	maxSeq, err = db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *maxSeq, maxSequence0)
 
-	sequences1 := make([]uint64, 0)
-	sortSequences(sequences1)
-
-	for i := 0; i < 10; i++ {
-		vaa := randomGovernanceVAA(vaa.ChainIDAlephium)
-		err = db.StoreSignedVAA(vaa)
-		assert.Nil(t, err)
-		sequences1 = append(sequences1, vaa.Sequence)
+	checkEqual := func(left, right []*GovernanceVAA) {
+		assert.Equal(t, len(left), len(right))
+		for i := 0; i < len(left); i++ {
+			l := left[i]
+			r := right[i]
+			assert.Equal(t, l.TargetChain, r.TargetChain)
+			assert.Equal(t, l.Sequence, r.Sequence)
+			assert.True(t, bytes.Equal(l.VaaBytes, r.VaaBytes))
+		}
 	}
-	sortSequences(sequences1)
-	maxSequence1 := sequences1[len(sequences1)-1]
-	maxSeq, err = db.MaxGovernanceVAASequence(GovernanceChain, GovernanceEmitter)
-	assert.Nil(t, err)
-	assert.Equal(t, *maxSeq, maxU64(maxSequence0, maxSequence1))
+
+	test := func(sequences []uint64, expected []*GovernanceVAA) {
+		res, err := db.GetGovernanceVAABatch(GovernanceChain, GovernanceEmitter, sequences)
+		assert.Nil(t, err)
+		checkEqual(res, expected)
+	}
+
+	sequences := make([]uint64, 0)
+	for i := 0; i < 5; i++ {
+		sequences = append(sequences, uint64(i))
+		test(sequences, vaas[0:(i+1)])
+	}
+
+	test([]uint64{2, 4}, []*GovernanceVAA{vaas[2], vaas[4]})
+	test([]uint64{0, 1, 2, 3, 4, 5, 6, 7}, vaas)
+
+	for i := 0; i < 5; i++ {
+		v := randomGovernanceVAA(vaa.ChainIDAlephium)
+		v.Sequence = uint64(i + 10)
+		err = db.StoreSignedVAA(v)
+		assert.Nil(t, err)
+		vaaBytes, err := v.Marshal()
+		assert.Nil(t, err)
+		vaas = append(vaas, &GovernanceVAA{
+			TargetChain: vaa.ChainIDAlephium,
+			Sequence:    v.Sequence,
+			VaaBytes:    vaaBytes,
+		})
+	}
+
+	test([]uint64{4, 5, 6, 7, 8, 9, 10}, vaas[4:6])
+	test([]uint64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, vaas)
 }
 
 func getVAA() vaa.VAA {
@@ -169,7 +182,7 @@ func getVAA() vaa.VAA {
 // Testing the expected default behavior of a CreateGovernanceVAA
 func TestVaaIDFromString(t *testing.T) {
 	vaaIdString := "1/0000000000000000000000000000000000000000000000000000000000000004/2/1"
-	vaaID, _ := VaaIDFromString(vaaIdString)
+	vaaID, _ := vaa.VaaIDFromString(vaaIdString)
 	expectAddr := vaa.Address{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
 
 	assert.Equal(t, vaa.ChainIDSolana, vaaID.EmitterChain)
@@ -191,7 +204,7 @@ func TestVaaIDFromVAA(t *testing.T) {
 
 func TestBytes(t *testing.T) {
 	vaaIdString := "1/0000000000000000000000000000000000000000000000000000000000000004/2/1"
-	vaaID, _ := VaaIDFromString(vaaIdString)
+	vaaID, _ := vaa.VaaIDFromString(vaaIdString)
 	expected := []byte{0x73, 0x69, 0x67, 0x6e, 0x65, 0x64, 0x2f, 0x31, 0x2f, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x2f, 0x32, 0x2f, 0x31}
 
 	assert.Equal(t, expected, vaaID.Bytes())
@@ -199,7 +212,7 @@ func TestBytes(t *testing.T) {
 
 func TestEmitterPrefixBytes(t *testing.T) {
 	vaaIdString := "1/0000000000000000000000000000000000000000000000000000000000000004/2/1"
-	vaaID, _ := VaaIDFromString(vaaIdString)
+	vaaID, _ := vaa.VaaIDFromString(vaaIdString)
 	expected := []byte{0x73, 0x69, 0x67, 0x6e, 0x65, 0x64, 0x2f, 0x31, 0x2f, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, 0x2f, 0x32}
 
 	assert.Equal(t, expected, vaaID.EmitterPrefixBytes())
@@ -207,7 +220,7 @@ func TestEmitterPrefixBytes(t *testing.T) {
 
 func TestGovernanceEmitterPrefixBytes(t *testing.T) {
 	vaaIdString := "1/0000000000000000000000000000000000000000000000000000000000000004/2/1"
-	vaaID, _ := VaaIDFromString(vaaIdString)
+	vaaID, _ := vaa.VaaIDFromString(vaaIdString)
 	expected := []byte{0x73, 0x69, 0x67, 0x6e, 0x65, 0x64, 0x2f, 0x31, 0x2f, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x34}
 
 	assert.Equal(t, expected, vaaID.GovernanceEmitterPrefixBytes())

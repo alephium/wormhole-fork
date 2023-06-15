@@ -21,10 +21,10 @@ jobs:
       - name: build devnet docker images
         run: ./build-docker-images.sh "devnet"
       - name: start docker images
-        working-directory: ./integration_test/docker
-        run: docker-compose up -d
+        working-directory: ./docker
+        run: MONGO_USER=root MONGO_PASSWORD=root docker-compose up -d
       - name: wait until contracts are deployed
-        working-directory: ./integration_test/docker
+        working-directory: ./docker
         run: ./wait-until-services-up.sh
       - name: build clients
         working-directory: ./clients/js
@@ -32,6 +32,15 @@ jobs:
       - name: run integration test
         working-directory: ./integration_test
         run: npm install && npm run it
+      - name: run relayer integration test
+        working-directory: ./relayer/spy_relayer
+        run: |
+          npm install && npm run build
+          npm run spy_relay:it &
+          sleep 5 && npm run test
+      - name: Collect Docker Logs
+        if: success() || failure()
+        uses: jwalton/gh-docker-logs@v2.2.1
       # Next publish docker images after integration tests pass
   publish:
     needs: test

@@ -144,6 +144,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 		logger.Error("failed to get node info", zap.Error(err))
 		return err
 	}
+
+	isSynced, err := w.client.IsCliqueSynced(ctx)
+	if err != nil {
+		logger.Error("failed to get self cliqued synced", zap.Error(err))
+		return err
+	}
+	if !*isSynced {
+		return fmt.Errorf("clique not synced")
+	}
+
 	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
 
 	readiness.SetReady(w.readiness)
@@ -162,6 +172,21 @@ func (w *Watcher) Run(ctx context.Context) error {
 	case err := <-errC:
 		return err
 	}
+}
+
+func (w *Watcher) validateAttestToken(ctx context.Context, msg *WormholeMessage) error {
+	tokenInfo, err := parseAttestToken(msg.payload)
+	if err != nil {
+		return err
+	}
+	tokenInfoFromChain, err := w.client.GetTokenInfo(ctx, tokenInfo.TokenId)
+	if err != nil {
+		return err
+	}
+	if *tokenInfo != *tokenInfoFromChain {
+		return fmt.Errorf("invalid token info")
+	}
+	return nil
 }
 
 func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC chan<- []*UnconfirmedEvent) {
@@ -211,6 +236,12 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						errC <- err
 						return
 					}
+					if unconfirmed.msg.IsAttestTokenVAA() {
+						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
+							logger.Error("ignore invalid attest token event", zap.Error(err))
+							continue
+						}
+					}
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}
 
@@ -250,6 +281,10 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 
 			previousHeight := atomic.LoadInt32(&w.currentHeight)
 			if *height != previousHeight {
+				p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
+					ContractAddress: w.governanceContractAddress,
+					Height:          int64(*height),
+				})
 				currentAlphHeight.Set(float64(*height))
 				atomic.StoreInt32(&w.currentHeight, *height)
 				heightC <- *height

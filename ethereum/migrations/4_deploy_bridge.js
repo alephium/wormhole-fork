@@ -26,7 +26,7 @@ module.exports = async function (deployer) {
         config.governanceChainId,
         config.governanceEmitterAddress,
         TokenImplementation.address,
-        configs.getWETHAddress(deployer.network)
+        configs.getWrappedNativeAddress(deployer.network)
     ).encodeABI();
 
     // deploy proxy

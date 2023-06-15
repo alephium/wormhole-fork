@@ -1,8 +1,12 @@
 import {
   ALEPHIUM_BRIDGE_ADDRESS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
+  ALEPHIUM_POLLING_INTERVAL,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  ALEPHIUM_TOKEN_LIST,
+  CLUSTER,
+  minimalAlphInContract
 } from "./consts";
 import {
   ChainId,
@@ -13,15 +17,25 @@ import {
   getTokenPoolId,
   contractExists,
   extractBodyFromVAA,
-  getRemoteTokenInfoFromContractState
+  getRemoteTokenInfoFromContractState,
+  createLocalTokenPoolOnAlph,
+  getAttestTokenHandlerId,
+  getLocalTokenInfo
 } from 'alephium-wormhole-sdk';
+import { TokenInfo, ALPH } from "@alephium/token-list";
+import alephiumIcon from "../icons/alephium.svg";
 import {
   NodeProvider,
   node,
   addressFromContractId,
   groupOfAddress,
   ALPH_TOKEN_ID,
-  isHexString
+  isHexString,
+  SignerProvider,
+  isBase58,
+  binToHex,
+  contractIdFromAddress,
+  sleep
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 
@@ -33,27 +47,29 @@ export class AlphTxInfo {
   txId: string
   sequence: string
   targetChain: ChainId
+  confirmations: number
 
-  constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId) {
+  constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId, confirmations: number) {
     this.blockHash = blockHash
     this.blockHeight = blockHeight
     this.txId = txId
     this.sequence = sequence
     this.targetChain = targetChain
+    this.confirmations = confirmations
   }
 }
 
-export async function waitTxConfirmed(provider: NodeProvider, txId: string): Promise<node.Confirmed> {
+export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, confirmations: number): Promise<node.Confirmed> {
   const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
-  if (isAlphTxConfirmed(txStatus)) {
+  if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= confirmations) {
     return txStatus as node.Confirmed
   }
-  await new Promise(r => setTimeout(r, 10000))
-  return waitTxConfirmed(provider, txId)
+  await sleep(ALEPHIUM_POLLING_INTERVAL)
+  return waitALPHTxConfirmed(provider, txId, confirmations)
 }
 
-async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string): Promise<AlphTxInfo> {
-  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(blockHash)
+async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.Confirmed): Promise<AlphTxInfo> {
+  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
   const events = await provider.events.getEventsTxIdTxid(txId, { group: blockHeader.chainFrom })
   const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
   if (typeof event === 'undefined') {
@@ -72,18 +88,17 @@ async function getTxInfo(provider: NodeProvider, txId: string, blockHash: string
   }
   const sequence = parseSequenceFromLogAlph(event)
   const targetChain = parseTargetChainFromLogAlph(event)
-  return new AlphTxInfo(blockHash, blockHeader.height, txId, sequence, targetChain)
+  return new AlphTxInfo(confirmed.blockHash, blockHeader.height, txId, sequence, targetChain, confirmed.chainConfirmations)
 }
 
-export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, func: () => Promise<string>): Promise<AlphTxInfo> {
-  const txId = await func()
-  const confirmed = await waitTxConfirmed(provider, txId)
-  return getTxInfo(provider, txId, confirmed.blockHash)
+export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
+  const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
+  return getTxInfo(provider, txId, confirmed)
 }
 
 export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
-  const confirmed = await waitTxConfirmed(provider, txId)
-  return getTxInfo(provider, txId, confirmed.blockHash)
+  const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
+  return getTxInfo(provider, txId, confirmed)
 }
 
 export function isAlphTxNotFound(txStatus: node.TxStatus): Boolean {
@@ -100,48 +115,69 @@ export function getEmitterChainId(signedVAA: Uint8Array): ChainId {
   return emitterChainId as ChainId
 }
 
-async function getLocalTokenPoolId(nodeProvider: NodeProvider, tokenId: string): Promise<string | null> {
+async function localTokenPoolExists(nodeProvider: NodeProvider, tokenId: string): Promise<boolean> {
   if (tokenId.length !== 64) {
     throw Error("invalid token id " + tokenId)
   }
   const localTokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, tokenId, ALEPHIUM_BRIDGE_GROUP_INDEX)
-  const tokenPoolCreated = await contractExists(localTokenPoolId, nodeProvider)
-  return tokenPoolCreated ? localTokenPoolId : null
+  return await contractExists(localTokenPoolId, nodeProvider)
 }
 
-export class TokenInfo {
-  decimals: number
-  symbol: string
-  name: string
-
-  constructor(decimals: number, symbol: string, name: string) {
-    this.decimals = decimals
-    this.symbol = symbol
-    this.name = name
-  }
+export const ALPHTokenInfo: TokenInfo = {
+  ...ALPH,
+  logoURI: alephiumIcon
 }
 
 export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
-  // TODO: get symbol and name from configs
   if (tokenId === ALPH_TOKEN_ID) {
-    return new TokenInfo(0, 'ALPH', 'ALPH')
+    return ALPHTokenInfo
   }
 
   const tokenAddress = addressFromContractId(tokenId)
   try {
-    const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
-    const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: group.group })
+    const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
-      const tokenInfo = getRemoteTokenInfoFromContractState(state)
-      return new TokenInfo(tokenInfo.decimals, tokenInfo.symbol, tokenInfo.name)
+      return getRemoteTokenInfoFromContractState(state)
     }
 
-    const localTokenPoolId = await getLocalTokenPoolId(provider, tokenId)
-    return localTokenPoolId ? new TokenInfo(0, 'token', 'token') : undefined
+    const exist = await localTokenPoolExists(provider, tokenId)
+    if (!exist) {
+      return undefined
+    }
+    if (CLUSTER === 'devnet') {
+      return await getLocalTokenInfo(provider, tokenId)
+    }
+    return ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
   } catch (error) {
     console.log("failed to get alephium token info, error: " + error)
     return undefined
   }
+}
+
+export function getLocalTokenLogoURI(tokenId: string): string | undefined {
+  return tokenId === ALPH_TOKEN_ID
+    ? alephiumIcon
+    : ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())?.logoURI
+}
+
+export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+  const localTokenInfo = await getLocalTokenInfo(provider, tokenId)
+  if (CLUSTER === 'devnet' || tokenId === ALPH_TOKEN_ID) {
+    return localTokenInfo
+  }
+
+  const tokenInfo = ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
+  if (tokenInfo === undefined) {
+    throw new Error(`Token ${tokenId} does not exists in the token-list`)
+  }
+  if (
+    tokenInfo.name !== localTokenInfo.name ||
+    tokenInfo.symbol !== localTokenInfo.symbol ||
+    tokenInfo.decimals !== localTokenInfo.decimals
+  ) {
+    throw new Error(`Invalid token info, expected: ${localTokenInfo}, have: ${tokenInfo}`)
+  }
+  return localTokenInfo
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
@@ -153,14 +189,13 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     }
   }
   const tokenAddress = addressFromContractId(tokenId)
-  const group = await provider.addresses.getAddressesAddressGroup(tokenAddress)
   return provider
     .contracts
-    .getContractsAddressState(tokenAddress, { group: group.group })
+    .getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
     .then(state => {
       if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
         const tokenInfo = getRemoteTokenInfoFromContractState(state)
-        const originalAsset = Buffer.from(tokenInfo.tokenId, 'hex')
+        const originalAsset = Buffer.from(tokenInfo.id, 'hex')
         return {
           isWrapped: true,
           chainId: tokenInfo.tokenChainId,
@@ -176,6 +211,16 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     })
 }
 
+export function tryGetContractId(idOrAddress: string): string {
+  if (idOrAddress.length === 64 && isHexString(idOrAddress)) {
+    return idOrAddress
+  }
+  if (isBase58(idOrAddress)) {
+    return binToHex(contractIdFromAddress(idOrAddress))
+  }
+  throw new Error(`Invalid contract id or contract address: ${idOrAddress}`)
+}
+
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
   const address = base58.encode(recipient)
   return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
@@ -183,4 +228,50 @@ export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean
 
 export function isValidAlephiumTokenId(tokenId: string): boolean {
   return tokenId.length === 64 && isHexString(tokenId)
+}
+
+const LocalAttestTokenhandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, ALEPHIUM_BRIDGE_GROUP_INDEX)
+export async function createLocalTokenPool(
+  signer: SignerProvider,
+  nodeProvider: NodeProvider,
+  payer: string,
+  localTokenId: string,
+  signedVaa: Uint8Array,
+): Promise<string | undefined> {
+  const tokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, CHAIN_ID_ALEPHIUM, localTokenId, ALEPHIUM_BRIDGE_GROUP_INDEX)
+  const exist = await contractExists(tokenPoolId, nodeProvider)
+  if (exist) {
+    return undefined
+  }
+
+  const result = await createLocalTokenPoolOnAlph(
+    signer,
+    LocalAttestTokenhandlerId,
+    localTokenId,
+    signedVaa,
+    payer,
+    minimalAlphInContract
+  )
+  return result.txId
+}
+
+export async function getAvailableBalances(provider: NodeProvider, address: string): Promise<Map<string, bigint>> {
+  const rawBalance = await provider.addresses.getAddressesAddressBalance(address)
+  const balances = new Map<string, bigint>()
+  if (rawBalance === undefined) {
+    return balances
+  }
+  const alphAmount = BigInt(rawBalance.balance) - BigInt(rawBalance.lockedBalance)
+  balances.set(ALPH_TOKEN_ID, alphAmount)
+  const tokens: node.Token[] = rawBalance.tokenBalances ?? []
+  for (const token of tokens) {
+    const locked = BigInt(rawBalance.lockedTokenBalances?.find((t) => t.id === token.id)?.amount ?? '0')
+    const tokenAmount = BigInt(token.amount) - locked
+    balances.set(token.id.toLowerCase(), tokenAmount)
+  }
+  return balances
+}
+
+export function hexToALPHAddress(hex: string): string {
+  return base58.encode(Buffer.from(hex, 'hex'))
 }

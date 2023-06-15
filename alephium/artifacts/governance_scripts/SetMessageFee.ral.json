@@ -1,0 +1,31 @@
+{
+  "version": "v2.3.3",
+  "name": "SetMessageFee",
+  "bytecodeTemplate": "01010300000005{1}0d0c{0}0109",
+  "fieldsSig": {
+    "names": [
+      "governance",
+      "vaa"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec"
+    ],
+    "isMutable": [
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

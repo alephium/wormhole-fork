@@ -1,5 +1,5 @@
 import {
-  Bridge__factory,
+  ethers_contracts,
   CHAIN_ID_CELO,
   CHAIN_ID_FANTOM,
   CHAIN_ID_KLAYTN,
@@ -8,7 +8,7 @@ import {
   hexToUint8Array
 } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
-import { EthereumChainConfigInfo } from "../configureEnv";
+import { EvmChainConfigInfo } from "../configureEnv";
 import { getScopedLogger, ScopedLogger } from "../helpers/logHelper";
 import { PromHelper } from "../helpers/promHelpers";
 import { CeloProvider, CeloWallet } from "@celo-tools/celo-ethers-wrapper";
@@ -29,7 +29,7 @@ export function newProvider(
 }
 
 export async function relayEVM(
-  chainConfigInfo: EthereumChainConfigInfo,
+  chainConfigInfo: EvmChainConfigInfo,
   signedVAA: string,
   unwrapNative: boolean,
   checkOnly: boolean,
@@ -88,7 +88,7 @@ export async function relayEVM(
     // Klaytn and Fantom require specifying gasPrice
     overrides = { gasPrice: (await signer.getGasPrice()).toString() };
   }
-  const bridge = Bridge__factory.connect(
+  const bridge = ethers_contracts.Bridge__factory.connect(
     chainConfigInfo.tokenBridgeAddress,
     signer
   );

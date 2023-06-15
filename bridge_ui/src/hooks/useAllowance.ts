@@ -1,5 +1,4 @@
 import {
-  approveEth,
   ChainId,
   CHAIN_ID_KLAYTN,
   getAllowanceEth,
@@ -10,8 +9,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { selectTransferIsApproving } from "../store/selectors";
-import { setIsApproving } from "../store/transferSlice";
+import { setIsApproving, setIsWalletApproved } from "../store/transferSlice";
 import { getTokenBridgeAddressForChain } from "../utils/consts";
+import { approveEthWithoutWait } from "../utils/ethereum";
 
 export default function useAllowance(
   chainId: ChainId,
@@ -72,16 +72,19 @@ export default function useAllowance(
               : Promise.resolve(undefined);
           return gasPricePromise.then(
             (gasPrice) =>
-              approveEth(
+              approveEthWithoutWait(
                 getTokenBridgeAddressForChain(chainId),
                 tokenAddress,
                 signer,
                 BigNumber.from(amount),
                 gasPrice === undefined ? {} : { gasPrice }
               ).then(
-                () => {
-                  dispatch(setIsApproving(false));
-                  return Promise.resolve();
+                (result) => {
+                  dispatch(setIsWalletApproved(true))
+                  return result.wait().then(() => {
+                    dispatch(setIsApproving(false));
+                    dispatch(setIsWalletApproved(false))
+                  })
                 },
                 () => {
                   dispatch(setIsApproving(false));

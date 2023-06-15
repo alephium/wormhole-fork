@@ -1,21 +1,11 @@
-import {
-  ChainId,
-  CHAIN_ID_ETH,
-  NFTImplementation,
-  TokenImplementation,
-} from "alephium-wormhole-sdk";
+import { ChainId, CHAIN_ID_ETH, ethers_contracts } from "alephium-wormhole-sdk";
 import { WormholeAbi__factory } from "alephium-wormhole-sdk/lib/esm/ethers-contracts/abi";
 import { getAddress as getEthAddress } from "@ethersproject/address";
 import React, { useCallback } from "react";
-import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { DataWrapper } from "../../store/helpers";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
-import {
-  selectNFTSourceParsedTokenAccount,
-  selectTransferSourceParsedTokenAccount,
-} from "../../store/selectors";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import {
   getMigrationAssetMap,
@@ -65,29 +55,6 @@ export default function EvmTokenPicker(
   } = props;
   const { provider, signerAddress } = useEthereumProvider();
   const { isReady } = useIsWalletReady(chainId);
-  const selectedTokenAccount: NFTParsedTokenAccount | undefined = useSelector(
-    nft
-      ? selectNFTSourceParsedTokenAccount
-      : selectTransferSourceParsedTokenAccount
-  );
-
-  const shouldDisplayBalance = useCallback(
-    (tokenAccount: NFTParsedTokenAccount) => {
-      const selectedMintMatch =
-        selectedTokenAccount &&
-        selectedTokenAccount.mintKey.toLowerCase() ===
-          tokenAccount.mintKey.toLowerCase();
-      //added just in case we start displaying NFT balances again.
-      const selectedTokenIdMatch =
-        selectedTokenAccount &&
-        selectedTokenAccount.tokenId === tokenAccount.tokenId;
-      return !!(
-        tokenAccount.isNativeAsset || //The native asset amount isn't taken from covalent, so can be trusted.
-        (selectedMintMatch && selectedTokenIdMatch)
-      );
-    },
-    [selectedTokenAccount]
-  );
 
   const isMigrationEligible = useCallback(
     (address: string) => {
@@ -114,13 +81,13 @@ export default function EvmTokenPicker(
             return Promise.reject("Token ID is required.");
           } else if (nft && tokenId) {
             return ethNFTToNFTParsedTokenAccount(
-              tokenAccount as NFTImplementation,
+              tokenAccount as ethers_contracts.NFTImplementation,
               tokenId,
               signerAddress
             );
           } else {
             return ethTokenToParsedTokenAccount(
-              tokenAccount as TokenImplementation,
+              tokenAccount as ethers_contracts.TokenImplementation,
               signerAddress
             );
           }
@@ -164,10 +131,10 @@ export default function EvmTokenPicker(
         account,
         isMigrationEligible,
         nft || false,
-        shouldDisplayBalance
+        (_: NFTParsedTokenAccount) => true
       );
     },
-    [nft, isMigrationEligible, shouldDisplayBalance]
+    [nft, isMigrationEligible]
   );
 
   return (

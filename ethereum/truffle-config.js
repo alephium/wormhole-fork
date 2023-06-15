@@ -7,8 +7,13 @@ module.exports = {
       port: 8545,
       network_id: "*",
     },
-    docker: {
+    ethDocker: {
       host: "eth-devnet",
+      port: 8545,
+      network_id: "*",
+    },
+    bscDocker: {
+      host: "bsc-devnet",
       port: 8545,
       network_id: "*",
     },
@@ -41,7 +46,13 @@ module.exports = {
       network_id: "5",
       gas: 4465030,
       gasPrice: 10000000000,
-    }
+    },
+    bscTestnet: {
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://data-seed-prebsc-1-s1.binance.org:8545'),
+      network_id: "97",
+      networkCheckTimeout: 50000,
+      confirmations: 10,
+    },
   },
 
   compilers: {

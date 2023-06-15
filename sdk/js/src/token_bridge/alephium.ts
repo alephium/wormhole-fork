@@ -1,35 +1,40 @@
 import {
   addressFromContractId,
-  BuildScriptTxResult,
-  ContractState,
+  ALPH_TOKEN_ID,
+  binToHex,
+  ExecuteScriptResult,
   node,
   NodeProvider,
+  ONE_ALPH,
   SignerProvider,
   subContractId
 } from "@alephium/web3"
-import {
-  depositScript,
-  destroyUnexecutedSequencesScript,
-  remoteTokenPoolContract,
-  updateRefundAddressScript,
-  registerChainScript
-} from "../alephium/token_bridge"
 import { bytes32ToUtf8String, ChainId } from "../utils"
+import { 
+  RegisterChain,
+  Deposit,
+  DestroyUnexecutedSequenceContracts,
+  UpdateRefundAddress
+} from "../alephium-contracts/ts/scripts"
+import { RemoteTokenPool, RemoteTokenPoolTypes } from "../alephium-contracts/ts/RemoteTokenPool"
+import { ALPH as ALPHTokenInfo, TokenInfo } from "@alephium/token-list"
 
 export async function registerChain(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array,
   alphAmount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = registerChainScript()
+): Promise<ExecuteScriptResult> {
+  if (alphAmount < (BigInt(2) * ONE_ALPH)) {
+    throw new Error('Register chain will create two contracts, please approve at least 2 ALPH')
+  }
   const account = await signerProvider.getSelectedAccount()
-  return script.execute(signerProvider, {
+  return RegisterChain.execute(signerProvider, {
     initialFields: {
       payer: account.address,
       tokenBridge: tokenBridgeId,
-      vaa: Buffer.from(signedVAA).toString('hex'),
-      alphAmount: alphAmount
+      vaa: binToHex(signedVAA),
+      alphAmount: ONE_ALPH
     },
     attoAlphAmount: alphAmount
   })
@@ -39,10 +44,9 @@ export async function deposit(
   signerProvider: SignerProvider,
   tokenBridgeForChainId: string,
   amount: bigint
-): Promise<BuildScriptTxResult> {
-  const script = depositScript()
+): Promise<ExecuteScriptResult> {
   const account = await signerProvider.getSelectedAccount()
-  return script.execute(signerProvider, {
+  return Deposit.execute(signerProvider, {
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
       payer: account.address,
@@ -56,13 +60,11 @@ export async function destroyUnexecutedSequenceContracts(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = destroyUnexecutedSequencesScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return DestroyUnexecutedSequenceContracts.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
-      vaa: vaaHex
+      vaa: binToHex(signedVAA)
     }
   })
 }
@@ -71,13 +73,11 @@ export async function updateRefundAddress(
   signerProvider: SignerProvider,
   tokenBridgeId: string,
   signedVAA: Uint8Array
-): Promise<BuildScriptTxResult> {
-  const vaaHex = Buffer.from(signedVAA).toString('hex')
-  const script = updateRefundAddressScript()
-  return script.execute(signerProvider, {
+): Promise<ExecuteScriptResult> {
+  return UpdateRefundAddress.execute(signerProvider, {
     initialFields: {
       tokenBridge: tokenBridgeId,
-      vaa: vaaHex
+      vaa: binToHex(signedVAA)
     }
   })
 }
@@ -145,22 +145,18 @@ export async function contractExists(contractId: string, provider: NodeProvider)
       })
 }
 
-export interface RemoteTokenInfo {
-  tokenId: string
+export interface RemoteTokenInfo extends TokenInfo {
   tokenChainId: ChainId
-  symbol: string
-  name: string
-  decimals: number
 }
 
-function _getRemoteTokenInfo(contractState: ContractState): RemoteTokenInfo {
-  const tokenId = contractState.fields['bridgeTokenId'] as string
-  const tokenChainId = Number(contractState.fields['tokenChainId'] as bigint) as ChainId
-  const symbolHex = contractState.fields['symbol_'] as string
-  const nameHex = contractState.fields['name_'] as string
+function _getRemoteTokenInfo(contractState: RemoteTokenPoolTypes.State): RemoteTokenInfo {
+  const tokenId = contractState.fields.bridgeTokenId as string
+  const tokenChainId = Number(contractState.fields.tokenChainId) as ChainId
+  const symbolHex = contractState.fields.symbol_ as string
+  const nameHex = contractState.fields.name_ as string
   const decimals = Number(contractState.fields['decimals_'] as bigint)
   return {
-    tokenId: tokenId,
+    id: tokenId,
     tokenChainId: tokenChainId,
     symbol: bytes32ToUtf8String(Buffer.from(symbolHex, 'hex')),
     name: bytes32ToUtf8String(Buffer.from(nameHex, 'hex')),
@@ -169,12 +165,42 @@ function _getRemoteTokenInfo(contractState: ContractState): RemoteTokenInfo {
 }
 
 export function getRemoteTokenInfoFromContractState(state: node.ContractState): RemoteTokenInfo {
-  const contract = remoteTokenPoolContract()
-  return _getRemoteTokenInfo(contract.fromApiContractState(state))
+  const contractState = RemoteTokenPool.contract.fromApiContractState(state) as RemoteTokenPoolTypes.State
+  return _getRemoteTokenInfo(contractState)
 }
 
-export async function getRemoteTokenInfo(address: string, groupIndex: number): Promise<RemoteTokenInfo> {
-  const contract = remoteTokenPoolContract()
-  const contractState = await contract.fetchState(address, groupIndex)
+export async function getRemoteTokenInfo(address: string): Promise<RemoteTokenInfo> {
+  const contractState = await RemoteTokenPool.at(address).fetchState()
   return _getRemoteTokenInfo(contractState)
+}
+
+function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
+  return txStatus.type === 'Confirmed'
+}
+
+export async function waitAlphTxConfirmed(
+  provider: NodeProvider,
+  txId: string,
+  confirmations: number
+): Promise<node.Confirmed> {
+  const status = await provider.transactions.getTransactionsStatus({ txId: txId })
+  if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
+    return status
+  }
+  await new Promise((r) => setTimeout(r, 1000))
+  return waitAlphTxConfirmed(provider, txId, confirmations)
+}
+
+export async function getLocalTokenInfo(nodeProvider: NodeProvider, tokenId: string): Promise<TokenInfo> {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return ALPHTokenInfo
+  }
+
+  const tokenMetaData = await nodeProvider.fetchStdTokenMetaData(tokenId)
+  return {
+    id: tokenId,
+    symbol: Buffer.from(tokenMetaData.symbol, 'hex').toString('utf8'),
+    name: Buffer.from(tokenMetaData.name, 'hex').toString('utf8'),
+    decimals: tokenMetaData.decimals
+  }
 }
