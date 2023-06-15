@@ -31,9 +31,9 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
-import { executeGovernanceAlph } from "./alph";
+import { executeGovernanceAlph, getNextGovernanceSequence } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
-import { CONFIGS } from "./configs";
+import { CONFIGS, NetworkType } from "./configs";
 
 setDefaultWasm("node");
 
@@ -495,6 +495,39 @@ yargs(hideBin(process.argv))
             );
           }
         );
+    },
+    (_) => {
+      yargs.showHelp();
+    }
+  )
+  .command(
+    "alph",
+    "Alephium utilities",
+    (yargs) => {
+      return yargs
+        .command(
+          "get-next-governance-sequence",
+          "Get the next governance sequence",
+          (yargs) => {
+            return yargs
+              .option("network", {
+                describe: "network",
+                type: "string",
+                choices: ["mainnet", "testnet", "devnet"],
+                required: true,
+              })
+              .option("node-url", {
+                describe: "Alephium full node url",
+                type: "string",
+                required: false,
+              });
+          },
+          async (argv) => {
+            const network = argv.network.toUpperCase() as NetworkType
+            const sequence = await getNextGovernanceSequence(network, argv['node-url'])
+            console.log(`The next governnace sequence is: ${sequence}`)
+          }
+        )
     },
     (_) => {
       yargs.showHelp();

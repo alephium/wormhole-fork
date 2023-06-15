@@ -1,5 +1,5 @@
 import ArrowForward from "@mui/icons-material/ArrowForward";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import {
   Link as RouterLink,
   PageProps,
@@ -25,14 +25,30 @@ import protocols from "../images/index/protocol3.png";
 import shape1 from "../images/index/shape1.svg";
 import shape from "../images/shape.png";
 import shape2 from "../images/shape2.png";
-import { Totals, NotionalTvl } from "../components/ExplorerStats/ExplorerStats";
+import { toTotals } from "../components/ExplorerStats/ExplorerStats";
 import { amountFormatter } from "../utils/explorer";
 import { paralaxGsap, fadeInGsap, animateSwirl } from "../utils/animations";
+import { useNetworkContext } from "../contexts/NetworkContext";
+import { chainEnums } from "../utils/consts";
 
 const featuredNumber = { fontSize: 42, fontFamily: "Suisse BP Intl", fontWeight: "bold" };
-const statsBaseUrl = "https://europe-west3-wormhole-315720.cloudfunctions.net/mainnet-"
+
+function toNotionalTVL(response: any): number | undefined {
+  let tvl: number = 0
+  try {
+    for (const key in response.notionalTVL) {
+      const amount = parseFloat(response.notionalTVL[key])
+      tvl += amount
+    }
+  } catch (error) {
+    console.log(`failed to get notional tvl, error: ${error}`)
+    return undefined
+  }
+  return tvl
+}
 
 const IndexPage = ({ location }: PageProps) => {
+  const { activeNetwork } = useNetworkContext()
   const { site } = useStaticQuery<IndexQueryType>(IndexStaticQuery)
   const [tvl, setTvl] = useState<number | undefined>(undefined)
   const [messageTotal, setMessageTotal] = useState<number | undefined>(undefined)
@@ -100,20 +116,21 @@ const IndexPage = ({ location }: PageProps) => {
 
 
   function fetchStats() {
-    const tvlUrl = `${statsBaseUrl}notionaltvl`
-    const messagesUrl = `${statsBaseUrl}totals`
+    const tvlUrl = `${activeNetwork.endpoints.backendUrl}api/stats/notionaltvl`
+    const messagesUrl = `${activeNetwork.endpoints.backendUrl}api/stats/totalmessages`
 
     fetch(tvlUrl, { signal }).then((res) => {
       if (res.ok) return res.json();
-    }).then((result: NotionalTvl) => {
-      setTvl(result.AllTime["*"]["*"].Notional);
+    }).then((result) => {
+      setTvl(toNotionalTVL(result));
     }, (error) => {
       if (error.name !== "AbortError") console.error("failed fetching notional TVL. error: ", error);
     });
     fetch(messagesUrl, { signal }).then((res) => {
       if (res.ok) return res.json();
-    }).then((result: Totals) => {
-      setMessageTotal(result.TotalCount["*"]);
+    }).then((result) => {
+      const totals = toTotals(result)
+      setMessageTotal(totals.TotalCount["*"]);
     }, (error) => {
       if (error.name !== "AbortError") console.error("failed fetching totals. error: ", error);
     });
@@ -235,7 +252,7 @@ const IndexPage = ({ location }: PageProps) => {
               justifyContent: "center",
             }}
           >
-            {tvl && <Box
+            {tvl !== undefined && <Box
               sx={{
                 mt: 2,
                 mx: 1,
@@ -262,7 +279,7 @@ const IndexPage = ({ location }: PageProps) => {
                 borderTop: "1px solid white",
               }}
             >
-              <Typography sx={featuredNumber}>9</Typography>
+              <Typography sx={featuredNumber}>{chainEnums.length}</Typography>
               <Typography variant="body2">chain integrations</Typography>
             </Box>
             {messageTotal && <Box

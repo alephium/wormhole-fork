@@ -10,7 +10,9 @@ import {
   UpdateGuardianSet,
   UpdateMinimalConsistencyLevel,
   UpdateRefundAddress,
-  UpgradeTokenBridgeContract
+  UpgradeTokenBridgeContract,
+  Governance,
+  TokenBridge
 } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 function getSignerProvider(network: any, nodeUrl?: string) {
@@ -133,4 +135,17 @@ export async function executeGovernanceAlph(
     default:
       impossible(payload)
   }
+}
+
+export async function getNextGovernanceSequence(networkType: NetworkType, nodeUrl?: string): Promise<bigint> {
+  const network = CONFIGS[networkType]['alephium']
+  web3.setCurrentNodeProvider(nodeUrl ?? network.rpc)
+  const governanceAddress = addressFromContractId(network.governanceAddress)
+  const governance = Governance.at(governanceAddress)
+  const sequence0 = (await governance.fetchState()).fields.receivedSequence
+
+  const tokenBridgeAddress = addressFromContractId(network.tokenBridgeAddress)
+  const tokenBridge = TokenBridge.at(tokenBridgeAddress)
+  const sequence1 = (await tokenBridge.fetchState()).fields.receivedSequence
+  return sequence0 > sequence1 ? sequence0 : sequence1
 }

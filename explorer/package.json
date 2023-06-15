@@ -4,7 +4,7 @@
   "private": false,
   "scripts": {
     "develop": "gatsby develop",
-    "start": "gatsby develop",
+    "start": "gatsby develop --host=0.0.0.0",
     "build": "gatsby build",
     "serve": "gatsby serve --port=8001 --host=0.0.0.0",
     "clean": "gatsby clean"

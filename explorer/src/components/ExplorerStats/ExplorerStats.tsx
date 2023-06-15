@@ -2,36 +2,66 @@ import { Box, Card, CircularProgress } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNetworkContext } from "../../contexts/NetworkContext";
 import { ChainID } from "../../utils/consts";
-import { contractNameFormatter } from "../../utils/explorer";
-import { BigTableMessage } from "../ExplorerSearch/ExplorerQuery";
+import { getVAAFromJson, Response, VAAMessage } from "../ExplorerSearch/ExplorerQuery";
 import RecentMessages from "./RecentMessages";
 import ChainOverviewCard from "./ChainOverviewCard";
 import PastWeekCard from "./PastWeekCard";
 
-import binanceChainIcon from "../../images/bsc.svg";
 import ethereumIcon from "../../images/eth.svg";
-import solanaIcon from "../../images//solana.svg";
-import terraIcon from "../../images/terra.svg";
-import polygonIcon from "../../images/polygon.svg";
-import avalancheIcon from "../../images/avalanche.svg";
-import oasisIcon from "../../images/oasis.svg";
-import fantomIcon from "../../images/fantom.svg"
 import alephiumIcon from "../../images/alephium.svg"
 import GridWithCards from "../GridWithCards";
 import { explorer } from "../../utils/urls";
 
 export interface Totals {
-  LastDayCount: { [groupByKey: string]: number };
   TotalCount: { [groupByKey: string]: number };
   DailyTotals: {
-    // "2021-08-22": { "*": 0 },
     [date: string]: { [groupByKey: string]: number };
   };
 }
-// type GroupByKey = "*" | "emitterChain" | "emitterChain:emitterAddress"
-export interface Recent {
-  [groupByKey: string]: Array<BigTableMessage>;
+
+function timestampToDate(timestamp: number): string {
+  let date = new Date(timestamp * 1000)
+  const offset = date.getTimezoneOffset()
+  date = new Date(date.getTime() - (offset * 60 * 1000))
+  return date.toISOString().split('T')[0]
 }
+
+export function toTotals(response: any): Totals {
+  const totalCount: { [groupByKey: string]: number } = {}
+  const dailyTotals: { [date: string]: { [groupByKey: string]: number } } = {}
+
+  for (const key in response.totalMessagesPerEmitter) {
+    const array = key.split(':')
+    const date = timestampToDate(parseInt(array[0]))
+    const emitterChain = array[1]
+    const emitterAddress = array[2]
+    const vaaCount = response.totalMessagesPerEmitter[key]
+    totalCount['*'] = (totalCount['*'] ?? 0) + vaaCount
+    totalCount[emitterChain] = (totalCount[emitterChain] ?? 0) + vaaCount
+    totalCount[`${emitterChain}:${emitterAddress}`] = (totalCount[`${emitterChain}:${emitterAddress}`] ?? 0) + vaaCount
+
+    if (!dailyTotals[date]) dailyTotals[date] = {}
+    dailyTotals[date]['*'] = (dailyTotals[date]['*'] ?? 0) + vaaCount
+    dailyTotals[date][emitterChain] = (dailyTotals[date][emitterChain] ?? 0) + vaaCount
+    dailyTotals[date][`${emitterChain}:${emitterAddress}`] = (dailyTotals[date][`${emitterChain}:${emitterAddress}`] ?? 0) + vaaCount
+  }
+
+  return { TotalCount: totalCount, DailyTotals: dailyTotals }
+}
+
+export interface Recent {
+  vaas: Array<VAAMessage>;
+}
+
+function toRecent(response: Response): Recent {
+  if (response.data) {
+    return {
+      vaas: response.data.map((vaa: any) => getVAAFromJson(vaa))
+    }
+  }
+  return { vaas: [] }
+}
+
 interface BidirectionalTransferData {
   [leavingChainId: string]: {
     [destinationChainId: string]: {
@@ -40,54 +70,67 @@ interface BidirectionalTransferData {
   };
 }
 export interface NotionalTransferred {
-  Last24Hours: BidirectionalTransferData;
   WithinPeriod: BidirectionalTransferData;
-  PeriodDurationDays: Number;
-  Daily: {
-    [date: string]: BidirectionalTransferData;
-  };
 }
+
+function toNotionalTransferred(response: any): NotionalTransferred {
+  const withinPeriod: BidirectionalTransferData = {}
+  for (const key in response.notionalTransferred) {
+    const [emitterChain, targetChain, symbol] = key.split(':')
+    const amount = parseFloat(response.notionalTransferred[key])
+    if (!withinPeriod[emitterChain]) {
+      withinPeriod[emitterChain] = {}
+      withinPeriod[emitterChain]['*'] = {}
+    }
+    if (!withinPeriod[emitterChain][targetChain]) {
+      withinPeriod[emitterChain][targetChain] = {}
+    }
+    withinPeriod[emitterChain]['*']['*'] = (withinPeriod[emitterChain]['*']['*'] ?? 0) + amount
+    withinPeriod[emitterChain][targetChain]['*'] = (withinPeriod[emitterChain][targetChain]['*'] ?? undefined) + amount
+    withinPeriod[emitterChain][targetChain][symbol] = (withinPeriod[emitterChain][targetChain][symbol] ?? undefined) + amount
+  }
+  return { WithinPeriod: withinPeriod }
+}
+
 interface DirectionalTransferData {
   [chainId: string]: {
     [tokenSymbol: string]: number;
   };
 }
 export interface NotionalTransferredTo {
-  Last24Hours: DirectionalTransferData;
   WithinPeriod: DirectionalTransferData;
-  PeriodDurationDays: Number;
   Daily: {
     [date: string]: DirectionalTransferData;
   };
-}
-export interface NotionalTransferredToCumulative {
-  AllTime: DirectionalTransferData;
-  AllTimeDurationDays: Number;
-  Daily: {
-    [date: string]: DirectionalTransferData;
-  };
-}
-interface LockedAsset {
-  Symbol: string
-  Name: string
-  Address: string
-  CoinGeckoId: string
-  Amount: number
-  Notional: number
-  TokenPrice: number
-}
-interface LockedAssets {
-  [tokenAddress: string]: LockedAsset
-}
-interface ChainsAssets {
-  [chainId: string]: LockedAssets
-}
-export interface NotionalTvl {
-  Last24HoursChange: ChainsAssets
-  AllTime: ChainsAssets
 }
 
-type GroupBy = undefined | "chain" | "address";
+function toNotionalTransferredTo(response: any): NotionalTransferredTo {
+  const withinPeriod: DirectionalTransferData = {}
+  const daily: NotionalTransferredTo['Daily'] = {}
+  for (const key in response.notionalTransferredTo) {
+    const array = key.split(':')
+    const date = timestampToDate(parseInt(array[0]))
+    const targetChain = array[1]
+    const symbol = array[2]
+    const amount = parseFloat(response.notionalTransferredTo[key])
+    if (!withinPeriod[targetChain]) withinPeriod[targetChain] = {}
+    withinPeriod[targetChain]['*'] = (withinPeriod[targetChain]['*'] ?? 0) + amount
+    withinPeriod[targetChain][symbol] = (withinPeriod[targetChain][symbol] ?? 0) + amount
+
+    if (!daily[date]) {
+      daily[date] = {}
+      daily[date]['*'] = {}
+    }
+    if (!daily[date][targetChain]) {
+      daily[date][targetChain] = {}
+    }
+    daily[date]['*']['*'] = (daily[date]['*']['*'] ?? 0) + amount
+    daily[date][targetChain]['*'] = (daily[date][targetChain]['*'] ?? 0) + amount
+    daily[date][targetChain][symbol] = (daily[date][targetChain][symbol] ?? 0) + amount
+  }
+  return { WithinPeriod: withinPeriod, Daily: daily }
+}
+
 type ForChain = undefined | StatsProps["emitterChain"];
 type ForAddress = undefined | StatsProps["emitterAddress"];
 
@@ -108,8 +151,6 @@ const ExplorerStats: React.FC<StatsProps> = ({
     useState<NotionalTransferred>();
   const [notionalTransferredTo, setNotionalTransferredTo] =
     useState<NotionalTransferredTo>();
-  const [notionalTransferredToCumulative, setNotionalTransferredToCumulative] =
-    useState<NotionalTransferredToCumulative>();
   const [address, setAddress] = useState<StatsProps["emitterAddress"]>();
   const [chain, setChain] = useState<StatsProps["emitterChain"]>();
   const [lastFetched, setLastFetched] = useState<number>();
@@ -118,41 +159,18 @@ const ExplorerStats: React.FC<StatsProps> = ({
     new AbortController()
   );
 
-  const launchDate = new Date("2021-09-13T00:00:00.000+00:00");
-  // calculate the time difference between now and the launch day
-  const differenceInTime = new Date().getTime() - launchDate.getTime();
-  // calculate the number of days, rounding up
-  const daysSinceDataStart = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+  const fetchTotals = (baseUrl: string, signal: AbortSignal) => {
+    const totalsUrl = `${baseUrl}api/stats/totalmessages`;
 
-  const fetchTotals = (
-    baseUrl: string,
-    groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
-    signal: AbortSignal
-  ) => {
-    const totalsUrl = `${baseUrl}totals`;
-    let url = `${totalsUrl}?&daily=true`
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
-    }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
-    }
-
-    return fetch(url, { signal })
-      .then<Totals>((res) => {
+    return fetch(totalsUrl, { signal })
+      .then((res) => {
         if (res.ok) return res.json();
         // throw an error with specific message, rather than letting the json decoding throw.
         throw "explorer.stats.failedFetchingTotals";
       })
       .then(
         (result) => {
-          setTotals(result);
-
+          setTotals(toTotals(result));
           setLastFetched(Date.now());
         },
         (error) => {
@@ -165,39 +183,35 @@ const ExplorerStats: React.FC<StatsProps> = ({
   };
   const fetchRecent = (
     baseUrl: string,
-    groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
+    emitterChain: number | undefined,
+    emitterAddress: string | undefined,
     signal: AbortSignal
   ) => {
-    const recentUrl = `${baseUrl}recent`;
+    const recentUrl = `${baseUrl}api/vaas/recent`;
     let numRows = 10
-    if (forChain) {
+    if (emitterChain) {
       numRows = 30
     }
-    if (forAddress) {
+    if (emitterAddress) {
       numRows = 80
     }
     let url = `${recentUrl}?numRows=${numRows}`;
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
+    if (emitterChain) {
+      url = `${url}&emitterChain=${emitterChain}`;
     }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
+    if (emitterAddress) {
+      url = `${url}&emitterAddr=${emitterAddress}`;
     }
 
     return fetch(url, { signal })
-      .then<Recent>((res) => {
+      .then((res) => {
         if (res.ok) return res.json();
         // throw an error with specific message, rather than letting the json decoding throw.
         throw "explorer.stats.failedFetchingRecent";
       })
       .then(
         (result) => {
-          setRecent(result);
+          setRecent(toRecent(result));
           setLastFetched(Date.now());
         },
         (error) => {
@@ -208,29 +222,10 @@ const ExplorerStats: React.FC<StatsProps> = ({
         }
       );
   };
-  const fetchTransferred = (
-    baseUrl: string,
-    groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
-    signal: AbortSignal
-  ) => {
-    const transferredUrl = `${baseUrl}notionaltransferred`;
-    let url = `${transferredUrl}?forPeriod=true&numDays=${daysSinceDataStart}`;
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
-    }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
-    }
-    if (groupBy === "address" || forChain || forAddress) {
-      return Promise.resolve();
-    }
+  const fetchTransferred = (baseUrl: string, signal: AbortSignal) => {
+    const transferredUrl = `${baseUrl}api/stats/totalnotionaltransferred`;
 
-    return fetch(url, { signal })
+    return fetch(transferredUrl, { signal })
       .then<NotionalTransferred>((res) => {
         if (res.ok) return res.json();
         // throw an error with specific message, rather than letting the json decoding throw.
@@ -238,7 +233,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
       })
       .then(
         (result) => {
-          setNotionalTransferred(result);
+          setNotionalTransferred(toNotionalTransferred(result));
           setLastFetched(Date.now());
         },
         (error) => {
@@ -249,82 +244,17 @@ const ExplorerStats: React.FC<StatsProps> = ({
         }
       );
   };
-  const fetchTransferredTo = (
-    baseUrl: string,
-    groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
-    signal: AbortSignal
-  ) => {
-    const transferredUrl = `${baseUrl}notionaltransferredto`;
-    let url = `${transferredUrl}?forPeriod=true&daily=true&numDays=${daysSinceDataStart}`;
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
-    }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
-    }
-    if (groupBy === "address" || forChain || forAddress) {
-      return Promise.resolve();
-    }
-
-    return fetch(url, { signal })
-      .then<NotionalTransferredTo>((res) => {
+  const fetchTransferredTo = (baseUrl: string, signal: AbortSignal) => {
+    const transferredUrl = `${baseUrl}api/stats/totalnotionaltransferredto`;
+    return fetch(transferredUrl, { signal })
+      .then((res) => {
         if (res.ok) return res.json();
         // throw an error with specific message, rather than letting the json decoding throw.
         throw "explorer.stats.failedFetchingTransferredTo";
       })
       .then(
         (result) => {
-          setNotionalTransferredTo(result);
-          setLastFetched(Date.now());
-        },
-        (error) => {
-          if (error.name !== "AbortError") {
-            //  handle errors here instead of a catch(), so that we don't swallow exceptions from components
-            console.error("failed fetching transferred to. error: ", error);
-          }
-        }
-      );
-  };
-  const fetchTransferredToCumulative = (
-    baseUrl: string,
-    groupBy: GroupBy,
-    forChain: ForChain,
-    forAddress: ForAddress,
-    signal: AbortSignal
-  ) => {
-    const transferredToUrl = `${baseUrl}notionaltransferredtocumulative`;
-    let url = `${transferredToUrl}?allTime=true`
-    if (groupBy) {
-      url = `${url}&groupBy=${groupBy}`;
-    }
-    if (forChain) {
-      url = `${url}&forChain=${forChain}`;
-    }
-    if (forAddress) {
-      url = `${url}&forAddress=${forAddress}`;
-    }
-    if (groupBy === "address" || forChain || forAddress) {
-      return Promise.resolve();
-    }
-
-    return fetch(url, { signal })
-      .then<NotionalTransferredToCumulative>((res) => {
-        if (res.ok) return res.json();
-        // throw an error with specific message, rather than letting the json decoding throw.
-        throw "explorer.stats.failedFetchingTransferredTo";
-      })
-      .then(
-        (result) => {
-          // let today = "2021-12-03"
-          // let { [today]: t, ...dailies } = result.Daily
-          // let r = { ...result, Daily: dailies }
-          // setNotionalTransferredTo(r)
-          setNotionalTransferredToCumulative(result);
+          setNotionalTransferredTo(toNotionalTransferredTo(result));
           setLastFetched(Date.now());
         },
         (error) => {
@@ -337,54 +267,36 @@ const ExplorerStats: React.FC<StatsProps> = ({
   };
 
   const getData = (props: StatsProps, baseUrl: string, signal: AbortSignal, func: (baseUrl: string,
-    recentGroupBy: GroupBy,
-    totalsGroupBy: GroupBy,
     forChain: ForChain,
     forAddress: string | undefined,
     signal: AbortSignal) => Promise<any>) => {
     let forChain: ForChain = undefined;
     let forAddress: ForAddress = undefined;
-    let recentGroupBy: GroupBy = undefined;
-    let totalsGroupBy: GroupBy = "chain";
     if (props.emitterChain) {
       forChain = props.emitterChain;
-      totalsGroupBy = "address";
-      recentGroupBy = "address";
     }
     if (props.emitterChain && props.emitterAddress) {
       forAddress = props.emitterAddress;
     }
-    return func(baseUrl, recentGroupBy, totalsGroupBy, forChain, forAddress, signal)
+    return func(baseUrl, forChain, forAddress, signal)
   };
   const getAllEndpoints = (
     baseUrl: string,
-    recentGroupBy: GroupBy,
-    totalsGroupBy: GroupBy,
     forChain: ForChain,
     forAddress: string | undefined,
     signal: AbortSignal) => {
     return Promise.all([
-      fetchTotals(baseUrl, totalsGroupBy, forChain, forAddress, signal),
-      fetchRecent(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferred(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferredTo(baseUrl, recentGroupBy, forChain, forAddress, signal),
-      fetchTransferredToCumulative(
-        baseUrl,
-        recentGroupBy,
-        forChain,
-        forAddress,
-        signal
-      ),
+      fetchRecent(baseUrl, forChain, forAddress, signal),
+      fetchTotals(baseUrl, signal),
+      fetchTransferred(baseUrl, signal),
+      fetchTransferredTo(baseUrl, signal),
     ]);
   };
   const getRecents = (
     baseUrl: string,
-    recentGroupBy: GroupBy,
-    totalsGroupBy: GroupBy,
     forChain: ForChain,
     forAddress: string | undefined,
-    signal: AbortSignal) => fetchRecent(baseUrl, recentGroupBy, forChain, forAddress, signal)
-
+    signal: AbortSignal) => fetchRecent(baseUrl, forChain, forAddress, signal)
 
   const pollingController = (
     emitterChain: StatsProps["emitterChain"],
@@ -421,7 +333,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
       setController(newController);
       getData(
         { emitterChain, emitterAddress },
-        activeNetwork.endpoints.bigtableFunctionsBase,
+        activeNetwork.endpoints.backendUrl,
         newController.signal,
         getAllEndpoints
       );
@@ -430,12 +342,11 @@ const ExplorerStats: React.FC<StatsProps> = ({
     setRecent(undefined);
     setNotionalTransferred(undefined);
     setNotionalTransferredTo(undefined);
-    setNotionalTransferredToCumulative(undefined);
 
     pollingController(
       emitterChain,
       emitterAddress,
-      activeNetwork.endpoints.bigtableFunctionsBase
+      activeNetwork.endpoints.backendUrl
     );
     // hold chain & address in state to detect changes
     setChain(emitterChain);
@@ -443,7 +354,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
   }, [
     emitterChain,
     emitterAddress,
-    activeNetwork.endpoints.bigtableFunctionsBase,
+    activeNetwork.endpoints.backendUrl,
   ]);
 
   useEffect(() => {
@@ -453,13 +364,100 @@ const ExplorerStats: React.FC<StatsProps> = ({
         clearInterval(pollInterval);
       }
     };
-  }, [pollInterval, activeNetwork.endpoints.bigtableFunctionsBase]);
+  }, [pollInterval, activeNetwork.endpoints.backendUrl]);
 
   let title = "Recent messages";
   let hideTableTitles = false;
   if (emitterChain) {
     title = `Recent ${ChainID[Number(emitterChain)]} messages`;
   }
+
+  // TODO: support stats
+  const stats =
+    <div>
+      {!emitterChain && !emitterAddress ? (
+        totals && notionalTransferredTo && notionalTransferred ? (
+          <GridWithCards
+            spacing={3}
+            sm={6}
+            md={3}
+            cardPaddingTop={3}
+            imgAlignMd="center"
+            imgOffsetRightMd="0px"
+            imgOffsetTopXs="0px"
+            imgOffsetTopMd="-36px"
+            imgOffsetTopMdHover="-52px"
+            imgPaddingBottomXs={3}
+            headerTextAlign="center"
+            data={[
+              {
+                header: ChainID[2],
+                src: ethereumIcon,
+                to: `${explorer}?emitterChain=2`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="2"
+                  />
+                ),
+                imgStyle: { height: 110 },
+              },
+              {
+                header: ChainID[255],
+                src: alephiumIcon,
+                to: `${explorer}?emitterChain=255`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="255"
+                  />
+                ),
+                imgStyle: { height: 110 },
+              }
+            ]}
+          />
+        ) : (
+          <Box
+            sx={{
+              padding: "24px",
+              textAlign: "center",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )
+      ) : null}
+
+      <div style={{ margin: "40px 0" }}>
+        {!emitterChain && !emitterAddress ? (
+          notionalTransferredTo && totals ? (
+            <PastWeekCard
+              title="Last 7 Days"
+              numDaysToShow={7}
+              messages={totals}
+              notionalTransferredTo={notionalTransferredTo}
+              notionalTransferred={notionalTransferred}
+            />
+          ) : (
+            <Card
+              sx={{
+                backgroundColor: "rgba(255,255,255,.07)",
+                backgroundImage: "none",
+                borderRadius: "28px",
+                padding: "24px",
+                textAlign: "center",
+              }}
+            >
+              <CircularProgress />
+            </Card>
+          )
+        ) : null}
+      </div>
+    </div>
 
   return (
     <>
@@ -488,113 +486,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
               />
             </div>
           )}
-
-          {!emitterChain && !emitterAddress ? (
-            totals && notionalTransferredToCumulative && notionalTransferred ? (
-              <GridWithCards
-                spacing={3}
-                sm={6}
-                md={3}
-                cardPaddingTop={3}
-                imgAlignMd="center"
-                imgOffsetRightMd="0px"
-                imgOffsetTopXs="0px"
-                imgOffsetTopMd="-36px"
-                imgOffsetTopMdHover="-52px"
-                imgPaddingBottomXs={3}
-                headerTextAlign="center"
-                data={[
-                  {
-                    header: ChainID[2],
-                    src: ethereumIcon,
-                    to: `${explorer}?emitterChain=2`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="2"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  },
-                  {
-                    header: ChainID[255],
-                    src: alephiumIcon,
-                    to: `${explorer}?emitterChain=255`,
-                    description: (
-                      <ChainOverviewCard
-                        totals={totals}
-                        notionalTransferredToCumulative={
-                          notionalTransferredToCumulative
-                        }
-                        notionalTransferred={notionalTransferred}
-                        dataKey="13"
-                      />
-                    ),
-                    imgStyle: { height: 110 },
-                  }
-                ].concat(
-                  // check the we have transfer data before adding the fantom card
-                  ("10" in notionalTransferredToCumulative.AllTime) &&
-                    ("*" in notionalTransferredToCumulative.AllTime["10"]) ?
-                    [{
-                      header: ChainID[10],
-                      src: fantomIcon,
-                      to: `${explorer}?emitterChain=10`,
-                      description: (
-                        <ChainOverviewCard
-                          totals={totals}
-                          notionalTransferredToCumulative={
-                            notionalTransferredToCumulative
-                          }
-                          notionalTransferred={notionalTransferred}
-                          dataKey="10"
-                        />
-                      ),
-                      imgStyle: { height: 110 },
-                    }] : []
-                )}
-              />
-            ) : (
-              <Box
-                sx={{
-                  padding: "24px",
-                  textAlign: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )
-          ) : null}
-
-          <div style={{ margin: "40px 0" }}>
-            {!emitterChain && !emitterAddress ? (
-              notionalTransferredTo && totals ? (
-                <PastWeekCard
-                  title="Last 7 Days"
-                  numDaysToShow={7}
-                  messages={totals}
-                  notionalTransferredTo={notionalTransferredTo}
-                  notionalTransferred={notionalTransferred}
-                />
-              ) : (
-                <Card
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,.07)",
-                    backgroundImage: "none",
-                    borderRadius: "28px",
-                    padding: "24px",
-                    textAlign: "center",
-                  }}
-                >
-                  <CircularProgress />
-                </Card>
-              )
-            ) : null}
-          </div>
+          {stats}
         </>
       )}
     </>

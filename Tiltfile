@@ -28,11 +28,6 @@ config.define_string("num", False, "Number of guardian nodes to run")
 #
 config.define_string("namespace", False, "Kubernetes namespace to use")
 
-# These arguments will enable writing Guardian events to a cloud BigTable instance.
-# Writing to a cloud BigTable is optional. These arguments are not required to run the devnet.
-config.define_string("gcpProject", False, "GCP project ID for BigTable persistence")
-config.define_string("bigTableKeyPath", False, "Path to BigTable json key file")
-
 # When running Tilt on a server, this can be used to set the public hostname Tilt runs on
 # for service links in the UI to work.
 config.define_string("webHost", False, "Public hostname for port forwards")
@@ -52,7 +47,6 @@ cfg = config.parse()
 num_guardians = int(cfg.get("num", "1"))
 namespace = cfg.get("namespace", "wormhole")
 gcpProject = cfg.get("gcpProject", "local-dev")
-bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
 algorand = cfg.get("algorand", False)
 solana = cfg.get("solana", False)
@@ -118,16 +112,6 @@ if solana:
         trigger_mode = trigger_mode,
     )
 
-# node
-
-if explorer:
-    k8s_yaml_with_ns(
-        secret_yaml_generic(
-            "node-bigtable-key",
-            from_file = "bigtable-key.json=" + bigTableKeyPath,
-        ),
-    )
-
 docker_build(
     ref = "guardiand-image",
     context = ".",
@@ -163,19 +147,6 @@ def build_node_yaml():
                 container["command"] = command_with_dlv(container["command"])
                 container["command"] += ["--logLevel=debug"]
                 print(container["command"])
-
-            if explorer:
-                container["command"] += [
-                    "--bigTablePersistenceEnabled",
-                    "--bigTableInstanceName",
-                    "wormhole",
-                    "--bigTableTableName",
-                    "v2Events",
-                    "--bigTableTopicName",
-                    "new-vaa-devnet",
-                    "--bigTableGCPProject",
-                    gcpProject,
-                ]
 
     return encode_yaml_stream(node_yaml)
 
@@ -528,45 +499,73 @@ if e2e:
         trigger_mode = trigger_mode,
     )
 
-# bigtable
+# explorer
 
 if explorer:
-    k8s_yaml_with_ns("devnet/bigtable.yaml")
+    # mongodb
+    k8s_yaml("devnet/mongo.yaml")
 
     k8s_resource(
-        "bigtable-emulator",
-        port_forwards = [port_forward(8086, name = "BigTable clients [:8086]")],
-        labels = ["explorer"],
-        trigger_mode = trigger_mode,
+        "mongo",
+        port_forwards = [
+            port_forward(27017, name = "Mongo [:27017]", host = webHost),
+        ]
     )
 
+    k8s_yaml("devnet/mongo-rs-config.yaml")
+
     k8s_resource(
-        "pubsub-emulator",
-        port_forwards = [port_forward(8085, name = "PubSub listeners [:8085]")],
-        labels = ["explorer"],
+        "mongo-rs-config",
+        resource_deps = ["mongo"]
+    )
+
+    # mongo express
+    k8s_yaml("devnet/mongo-express.yaml")
+
+    k8s_resource(
+        "mongo-express",
+        port_forwards = [
+            port_forward(8081, name = "Mongo Express [:8081]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config"]
+    )
+
+    # explorer backend
+    docker_build(
+        ref = "indexer-api",
+        context = ".",
+        dockerfile = "explorer-backend/api/Dockerfile",
+        only = ["./explorer-backend/api"]
+    )
+
+    k8s_yaml("devnet/indexer-api.yaml")
+
+    k8s_resource(
+        "indexer-api",
+        port_forwards = [
+            port_forward(8100, name = "Server [:8100]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config"]
     )
 
     docker_build(
-        ref = "cloud-functions",
+        ref = "fly",
         context = ".",
-        dockerfile = "./event_database/functions_server/Dockerfile",
+        dockerfile = "./explorer-backend/fly/Dockerfile",
         only = [
-            "./event_database/cloud_functions",
-            "./event_database/devnet_key.json",
-            "./event_database/functions_server",
-            "./event_database/initialize_db",
+            "./explorer-backend/fly",
             "./configs"
-        ],
-        live_update = [
-            sync("./event_database/cloud_functions", "/app/cloud_functions"),
-        ],
+        ]
     )
+
+    k8s_yaml("devnet/fly.yaml")
+
     k8s_resource(
-        "cloud-functions",
-        resource_deps = ["proto-gen", "bigtable-emulator", "pubsub-emulator"],
-        port_forwards = [port_forward(8090, name = "Cloud Functions [:8090]", host = webHost)],
-        labels = ["explorer"],
-        trigger_mode = trigger_mode,
+        "fly",
+        port_forwards = [
+            port_forward(8101, name = "Server [:8101]", host = webHost),
+        ],
+        resource_deps = ["mongo-rs-config", "guardian"]
     )
 
     # explorer web app

@@ -125,11 +125,25 @@ func (d *Database) StoreSignedVAA(v *vaa.VAA) error {
 	return nil
 }
 
-func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
-	maxSequence := uint64(0)
+type GovernanceVAA struct {
+	TargetChain vaa.ChainID
+	Sequence    uint64
+	VaaBytes    []byte
+}
+
+func (d *Database) GetGovernanceVAABatch(governanceChainId vaa.ChainID, governanceEmitter vaa.Address, sequences []uint64) ([]*GovernanceVAA, error) {
+	vaas := make([]*GovernanceVAA, 0)
 	vaaId := &VAAID{
 		EmitterChain:   governanceChainId,
 		EmitterAddress: governanceEmitter,
+	}
+	contains := func(seq uint64) bool {
+		for _, s := range sequences {
+			if seq == s {
+				return true
+			}
+		}
+		return false
 	}
 	prefixBytes := vaaId.GovernanceEmitterPrefixBytes()
 	if err := d.db.View(func(txn *badger.Txn) error {
@@ -141,23 +155,40 @@ func (d *Database) MaxGovernanceVAASequence(governanceChainId vaa.ChainID, gover
 
 		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
 			keyStr := string(it.Item().Key())
-			index := strings.LastIndex(keyStr, "/")
-			if index == -1 {
+			seqIndex := strings.LastIndex(keyStr, "/")
+			if seqIndex == -1 {
 				return fmt.Errorf("invalid vaa key: %s", keyStr)
 			}
-			sequence, err := strconv.ParseUint(keyStr[index+1:], 10, 64)
+			sequence, err := strconv.ParseUint(keyStr[seqIndex+1:], 10, 64)
 			if err != nil {
 				return err
 			}
-			if sequence > maxSequence {
-				maxSequence = sequence
+			if !contains(sequence) {
+				continue
 			}
+			targetChainIndex := strings.LastIndex(keyStr[:seqIndex], "/")
+			if targetChainIndex == -1 {
+				return fmt.Errorf("invalid vaa key: %s", keyStr)
+			}
+			targetChain, err := strconv.ParseUint(keyStr[targetChainIndex+1:seqIndex], 10, 16)
+			if err != nil {
+				return err
+			}
+			vaaBytes, err := it.Item().ValueCopy(nil)
+			if err != nil {
+				return err
+			}
+			vaas = append(vaas, &GovernanceVAA{
+				TargetChain: vaa.ChainID(targetChain),
+				Sequence:    sequence,
+				VaaBytes:    vaaBytes,
+			})
 		}
 		return nil
 	}); err != nil {
 		return nil, err
 	}
-	return &maxSequence, nil
+	return vaas, nil
 }
 
 func (d *Database) GetSignedVAABytes(id VAAID) (b []byte, err error) {

@@ -10,24 +10,9 @@ import { default as alephiumMainnetConfig } from '../../../configs/alephium/main
 import { default as ethereumDevnetConfig } from '../../../configs/ethereum/devnet.json'
 import { default as ethereumTestnetConfig } from '../../../configs/ethereum/testnet.json'
 import { default as ethereumMainnetConfig } from '../../../configs/ethereum/mainnet.json'
-import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
-import { default as guardianTestnetConfig } from '../../../configs/guardian/testnet.json'
-import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
 export const chainEnums = [
-  "",
-  "Solana",
   "Ethereum",
-  "Terra",
-  "BSC",
-  "Polygon",
-  "Avalanche",
-  "Oasis",
-  "Algorand",
-  "Aurora",
-  "Fantom",
-  "Karura",
-  "Acala",
   "Alephium"
 ];
 
@@ -187,7 +172,7 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
             const emitterAddress = await getEmitterAddress[chainName](address);
             contractsOfChain[emitterAddress] = desc;
           } catch (_) {
-            console.log("failed getting emitterAddress for: ", address);
+            console.log(`failed getting emitterAddress for: ${address}, env: ${envVarName}, chainName: ${chainName}`);
           }
           if (chainName != "solana") {
             address = address.toLowerCase();
@@ -206,26 +191,22 @@ export const knownContractsPromise = networks.reduce<Promise<NetworkChains>>(
 );
 
 export interface NetworkConfig {
-  bigtableFunctionsBase: string;
-  guardianRpcBase: string;
+  backendUrl: string;
 }
 export const endpoints: { [network: string]: NetworkConfig } = {
   devnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_DEVNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_DEVNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianDevnetConfig.guardianUrls as string[])[0],
   },
   testnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_TESTNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_TESTNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianTestnetConfig.guardianUrls as string[])[0],
   },
   mainnet: {
-    bigtableFunctionsBase: String(
-      process.env.GATSBY_BIGTABLE_FUNCTIONS_MAINNET_BASE_URL
+    backendUrl: String(
+      process.env.GATSBY_MAINNET_BACKEND_URL
     ),
-    guardianRpcBase: (guardianMainnetConfig.guardianUrls as string[])[0],
   },
 };

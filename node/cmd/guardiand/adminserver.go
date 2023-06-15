@@ -430,7 +430,7 @@ func (s *nodePrivilegedService) fetchMissing(
 
 			// Inject into the gossip signed VAA receive path.
 			// This has the same effect as if the VAA was received from the network
-			// (verifying signature, publishing to BigTable, storing in local DB...).
+			// (verifying signature, storing in local DB...).
 			s.signedInC <- &gossipv1.SignedVAAWithQuorum{
 				Vaa: vaaBytes,
 			}
@@ -541,7 +541,7 @@ func adminServiceRunnable(
 		governanceEmitterAddress: governanceEmitterAddress,
 	}
 
-	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst)
+	publicrpcService := publicrpc.NewPublicrpcServer(logger, db, gst, governanceChainId, governanceEmitterAddress)
 
 	grpcServer := common.NewInstrumentedGRPCServer(logger)
 	nodev1.RegisterNodePrivilegedServiceServer(grpcServer, nodeService)
@@ -556,15 +556,4 @@ func (s *nodePrivilegedService) SendObservationRequest(ctx context.Context, req 
 
 	s.logger.Info("sent observation request", zap.Any("request", req.ObservationRequest))
 	return &nodev1.SendObservationRequestResponse{}, nil
-}
-
-func (s *nodePrivilegedService) GetNextGovernanceVAASequence(ctx context.Context, req *nodev1.GetNextGovernanceVAASequenceRequest) (*nodev1.GetNextGovernanceVAASequenceResponse, error) {
-	maxSequence, err := s.db.MaxGovernanceVAASequence(s.governanceChainId, s.governanceEmitterAddress)
-	if err != nil {
-		return nil, err
-	}
-	nextSequence := *maxSequence + 1
-	return &nodev1.GetNextGovernanceVAASequenceResponse{
-		Sequence: nextSequence,
-	}, nil
 }

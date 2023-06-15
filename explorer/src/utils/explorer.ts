@@ -3,6 +3,7 @@ import {
   CHAIN_ID_TERRA,
   hexToNativeString,
   isEVMChain,
+  uint8ArrayToHex,
 } from "alephium-wormhole-sdk";
 import { fromHex } from "@cosmjs/encoding";
 import { PublicKey } from "@solana/web3.js";
@@ -48,7 +49,9 @@ const getNativeAddress = (
 ): string => {
   let nativeAddress = "";
 
-  if (isEVMChain(chainId as ChainId)) {
+  if (chainId === chainIDs["alephium"]) {
+    nativeAddress = emitterAddress
+  } else if (isEVMChain(chainId as ChainId)) {
     // remove zero-padding
     let unpadded = emitterAddress.slice(-40);
     nativeAddress = `0x${unpadded}`.toLowerCase();
@@ -135,6 +138,9 @@ const nativeExplorerContractUri = (
       base = "https://ftmscan.com/address/";
     } else if (chainId === chainIDs["aurora"]) {
       base = "https://aurorascan.dev/address/";
+    } else if (chainId === chainIDs["alephium"]) {
+      // FIXME
+      base = "https://explorer.testnet.alephium.org/address"
     }
     return `${base}${nativeAddress}`;
   }
@@ -173,25 +179,10 @@ const nativeExplorerTxUri = (
 
 // define colors to represent chains in charts/graphs
 const chainColors: { [chain: string]: string } = {
-  "*": "hsl(183, 100%, 61%)",
-  "1": "hsl(297, 100%, 61%)",
   "2": "hsl(235, 5%, 43%)",
-  "3": "hsl(235, 100%, 61%)",
-  "4": "hsl(54, 100%, 61%)",
-  "5": "hsl(271, 100%, 61%)",
-  "6": "hsl(360, 100%, 61%)",
-  "7": "hsl(204, 100%, 48%)",
-  "10": "hsl(220, 78%, 92%)",
   "255": "hsl(54, 100%, 61%)",
 };
-const chainIdColors = Object.entries(chainColors).reduce<Array<string>>(
-  // returns an array of hsl colors, indexed by chainId
-  (accum, [chain, color]) => {
-    accum[Number(chain) || 0] = color;
-    return accum;
-  },
-  []
-);
+const chainIdColors = Object.entries(chainColors).map(([, color]) => color)
 
 const amountFormatter = (num: number, decimals?: number): string => {
   let absNum = Math.abs(num);
@@ -211,6 +202,18 @@ const usdFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
+function stringifyJson(json: any, space = 2): string {
+  return JSON.stringify(json, (key, value) => {
+    if (value instanceof Uint8Array) {
+      return uint8ArrayToHex(value)
+    }
+    if (value?.type && value.type === 'Buffer') {
+      return uint8ArrayToHex(value.data)
+    }
+    return value
+  }, space)
+}
+
 export {
   amountFormatter,
   chainColors,
@@ -223,4 +226,5 @@ export {
   nativeExplorerTxUri,
   truncateAddress,
   usdFormatter,
+  stringifyJson
 };

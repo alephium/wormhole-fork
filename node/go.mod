@@ -3,7 +3,6 @@ module github.com/alephium/wormhole-fork/node
 go 1.18
 
 require (
-	cloud.google.com/go/bigtable v1.10.1
 	github.com/celo-org/celo-blockchain v1.5.5
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
