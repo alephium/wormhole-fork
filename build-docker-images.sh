@@ -23,13 +23,13 @@ else
     exit 1
 fi
 
-docker build -f Dockerfile.init . -t eu.gcr.io/alephium-org/devnet-init:$VERSION
+docker build -f ./docker/Dockerfile.init . -t eu.gcr.io/alephium-org/devnet-init:$VERSION
 
 # Build proto-gen, generate node/pkg/proto dir
-docker build --target go-export -f Dockerfile.proto -o type=local,dest=node .
+docker build --target go-export -f ./docker/Dockerfile.proto -o type=local,dest=node .
 
 # Build proto-gen-web
-docker build --target node-export -f Dockerfile.proto -o type=local,dest=. .
+docker build --target node-export -f ./docker/Dockerfile.proto -o type=local,dest=. .
 
 # Build guardian image (used for both guardian & spy)
 docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION --build-arg network=$network
@@ -42,15 +42,12 @@ docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contr
 ## Build Bridge UI
 docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui:$VERSION --build-arg network=$network
 
-## Build Wormhole Explorer
-# docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
-
 ## Build Explorer Images
-### indexer-api
-docker build -f ./explorer-backend/api/Dockerfile . -t eu.gcr.io/alephium-org/indexer-api:$VERSION
+### explorer-api-server
+docker build -f ./explorer-api-server/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-api-server:$VERSION
 
-### fly
-docker build -f ./explorer-backend/fly/Dockerfile . -t eu.gcr.io/alephium-org/fly:$VERSION
+### explorer-backend
+docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-backend:$VERSION
 
 ### explorer
 docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION

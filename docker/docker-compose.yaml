@@ -1,0 +1,374 @@
+version: "3.3"
+
+volumes:
+  eth-full-node: {}
+  bsc-full-node: {}
+  guardian-node: {}
+  mongodb: {}
+
+services:
+  alephium:
+    image: alephium/alephium:v2.3.3
+    restart: "no"
+    ports:
+      - 19973:19973/tcp
+      - 19973:19973/udp
+      - 127.0.0.1:20973:20973
+      - 127.0.0.1:21973:21973
+      - 127.0.0.1:22973:22973
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./devnet.conf:/alephium-home/.alephium/user.conf
+    environment:
+      ALEPHIUM_FILE_LOG_LEVEL: "DEBUG"
+    healthcheck:
+      test: ["CMD", "curl", "http://127.0.0.1:22973/infos/self-clique"]
+      timeout: 45s
+
+  alph-deploy-contracts:
+    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.96
+    environment:
+      NODE_URL: http://alephium:22973
+    depends_on:
+      alephium:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - "/alephium/deploy.sh"
+
+  postgres:
+    container_name: alephium_explorer_postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-explorer}
+      PGDATA: /data/postgres
+    ports:
+      - "127.0.0.1:19974:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres"]
+      timeout: 15s
+      interval: 10s
+      retries: 5
+      start_period: 10s
+
+  alephium-explorer-backend:
+    container_name: alephium_explorer_backend
+    image: alephium/explorer-backend:v1.13.4
+    depends_on:
+      postgres:
+        condition: service_healthy
+      alephium:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - EXPLORER_HOST=0.0.0.0
+      - EXPLORER_PORT=9090
+      - BLOCKFLOW_HOST=alephium
+      - BLOCKFLOW_PORT=22973
+      - BLOCKFLOW_NETWORK_ID=4
+      - DB_NAME=${POSTGRES_DB:-explorer}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - EXPLORER_READONLY=false
+
+  eth-devnet:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.96
+    restart: unless-stopped
+    user: root
+    ports:
+      - 127.0.0.1:8545:8545
+    volumes:
+      - eth-full-node:/eth-full-node/
+    command:
+      - npx
+      - ganache-cli
+      - -e 10000
+      - --deterministic
+      - --time $$(date -u +%Y-%m-%dT%H:%M:%S%:z)
+      - --host=0.0.0.0
+      - --db=/eth-full-node/
+      - --chainId=1338
+
+  eth-devnet-deploy-contracts:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.96
+    command:
+      - /bin/sh
+      - -c
+      - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=ethereum npm run migrate -- --network ethDocker && npx truffle exec mine.js --network ethDocker"
+
+  bsc-devnet:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.96
+    restart: unless-stopped
+    user: root
+    ports:
+      - 127.0.0.1:8546:8545
+    volumes:
+      - bsc-full-node:/bsc-full-node/
+    command:
+      - npx
+      - ganache-cli
+      - -e 10000
+      - --deterministic
+      - --time $$(date -u +%Y-%m-%dT%H:%M:%S%:z)
+      - --host=0.0.0.0
+      - --db=/bsc-full-node/
+      - --chainId=1397
+
+  bsc-devnet-deploy-contracts:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.96
+    command:
+      - /bin/sh
+      - -c
+      - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=bsc npm run migrate -- --network bscDocker && npx truffle exec mine.js --network bscDocker"
+
+  devnet-init:
+    image: eu.gcr.io/alephium-org/devnet-init:0.2.96
+    environment:
+      - NUM_OF_GUARDIANS=${NUM_OF_GUARDIANS:-1}
+    command:
+      - /bin/sh
+      - -c
+      - "/scripts/devnet-init.sh"
+
+  guardian-0:
+    image: eu.gcr.io/alephium-org/guardiand:0.2.96
+    hostname: guardian-0
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8999:8999/udp
+      - 127.0.0.1:7070:7070
+      - 127.0.0.1:7071:7071
+      - 127.0.0.1:6060:6060
+    volumes:
+      - guardian-node:/run/node/data
+    entrypoint:
+      - /guardiand
+      - node
+      - --ethRPC
+      - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
+      - --alphRPC
+      - http://alephium:22973
+      - --network
+      - "devnet"
+      - --alphFetchPeriod
+      - "1"
+      - --devnetGuardianIndex
+      - "0"
+      - --publicRPC
+      - "[::]:7070"
+      - --publicWeb
+      - "[::]:7071"
+      - --adminSocket
+      - /tmp/admin.sock
+      - --logLevel=debug
+
+  guardian-1:
+    image: eu.gcr.io/alephium-org/guardiand:0.2.96
+    hostname: guardian-1
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:9999:8999/udp
+      - 127.0.0.1:8070:7070
+      - 127.0.0.1:8071:7071
+      - 127.0.0.1:7060:6060
+    volumes:
+      - guardian-node:/run/node/data
+    entrypoint:
+      - /guardiand
+      - node
+      - --ethRPC
+      - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
+      - --alphRPC
+      - http://alephium:22973
+      - --network
+      - "devnet"
+      - --alphFetchPeriod
+      - "1"
+      - --devnetGuardianIndex
+      - "1"
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --publicRPC
+      - "[::]:7070"
+      - --publicWeb
+      - "[::]:7071"
+      - --adminSocket
+      - /tmp/admin.sock
+      - --logLevel=debug
+
+  guardian-2:
+    image: eu.gcr.io/alephium-org/guardiand:0.2.96
+    hostname: guardian-2
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:10999:8999/udp
+      - 127.0.0.1:9070:7070
+      - 127.0.0.1:9071:7071
+      - 127.0.0.1:8060:6060
+    volumes:
+      - guardian-node:/run/node/data
+    entrypoint:
+      - /guardiand
+      - node
+      - --ethRPC
+      - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
+      - --alphRPC
+      - http://alephium:22973
+      - --network
+      - "devnet"
+      - --alphFetchPeriod
+      - "1"
+      - --devnetGuardianIndex
+      - "2"
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --publicRPC
+      - "[::]:7070"
+      - --publicWeb
+      - "[::]:7071"
+      - --adminSocket
+      - /tmp/admin.sock
+      - --logLevel=debug
+
+  spy:
+    image: eu.gcr.io/alephium-org/guardiand:0.2.96
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:7072:7072
+    entrypoint:
+      - /guardiand
+      - spy
+      - --nodeKey
+      - /tmp/node.key
+      - --spyRPC
+      - "[::]:7072"
+      - --bootstrap
+      - "/dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
+      - --logLevel=debug
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
+
+  mongo:
+    image: mongo:6.0.6
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    command:
+      - /bin/sh
+      - -c
+      - "mongod --bind_ip_all --dbpath /mongodb/"
+    volumes:
+      - mongodb:/mongodb/
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  mongo-express:
+    image: mongo-express:latest
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - '8081:8081'
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL:-mongodb://mongo:27017/?directConnection=true}
+
+  wormhole-explorer-backend:
+    image: eu.gcr.io/alephium-org/wormhole-explorer-backend:0.2.96
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8101:8101
+    depends_on:
+      mongo:
+        condition: service_healthy
+    entrypoint:
+      - /backend
+      - --bootstrap
+      - /dns4/guardian-0/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw
+      - --guardianGrpcUrl
+      - guardian0:7070
+      - --mongodbUri
+      - mongodb://mongo:27017/?directConnection=true
+      - --mongodbName
+      - explorer-devnet
+      - --network
+      - devnet
+      - --p2pPort
+      - "10999"
+      - --apiPort
+      - "8101"
+      - --nodeKey
+      - /tmp/node.key
+      - --logLevel=debug
+      - --alphNodeUrl
+      - http://alephium:22973
+      - --alphExplorerBackendUrl
+      - http://alephium-explorer-backend:9090
+      - --bscRpcUrl
+      - ws://bsc-devnet:8545
+      - --ethRpcUrl
+      - ws://eth-devnet:8545
+
+  wormhole-explorer-api-server:
+    image: eu.gcr.io/alephium-org/wormhole-explorer-api-server:0.2.96
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8100:8100
+    depends_on:
+      mongo:
+        condition: service_healthy
+    entrypoint:
+      - /api
+      - --mongodbUri
+      - mongodb://mongo:27017/?directConnection=true
+      - --mongodbName
+      - explorer-devnet
+      - --port
+      - "8100"
+      - --logLevel=debug
+      - --enableCache=false
+      - --enableStackTrace=true
+
+  bridge-ui:
+    image: eu.gcr.io/alephium-org/bridge-ui:0.2.96
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:30001:3000
+
+  wormhole-exporer:
+    image: eu.gcr.io/alephium-org/wormhole-explorer:0.2.96
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:30002:8000
+    command:
+      - /bin/sh
+      - -c
+      - "npm run start"

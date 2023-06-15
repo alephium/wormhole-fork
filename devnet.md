@@ -3,28 +3,32 @@
 The following dependencies are required for local development:
 
 - [Go](https://golang.org/dl/) >= 1.18.6
-- [Tilt](http://tilt.dev/) >= 0.20.8
-- [minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
 - [Docker](https://docs.docker.com/engine/install/)
 
 # Setup local cluster
 
+Build the docker images:
+
 ```sh
 git clone git@github.com:alephium/wormhole-fork.git
-cd wormhole-fork
+cd wormhole-fork/
+./build-docker-images.sh devnet
 ```
+
+Start the devnet:
+
+```
+cd ./docker
+MONGO_USER=user MONGO_PASSWORD=password docker compose up
+```
+
+This command will run one guardian by default, you can also specify the number of guardians through the environment variable `NUM_OF_GUARDIANS`, note that currently devnet supports up to 3 guardians:
 
 ```sh
-minikube start --driver=docker --cpus=8 --memory=8G --disk-size=50g --namespace=wormhole
+MONGO_USER=user MONGO_PASSWORD=password NUM_OF_GUARDIANS=3 docker compose up
 ```
 
-Launch the devnet while specifying the number of guardians nodes to run:
-
-```sh
-tilt up -- --num=1 --webHost=0.0.0.0 --bridge_ui
-```
-
-And wait for all pods to start.
+And wait for all containers to start.
 
 # Devnet accounts and contracts
 
@@ -36,7 +40,8 @@ Please refer to `configs/alephium/devnet.json` and `configs/ethereum/devnet.json
 # Cleanup the cluster
 
 ```sh
-tilt down
+docker compose down
+docker volume prune
 ```
 
 Note: remember to re-import the Ethereum wallet after cleaning the cluster.

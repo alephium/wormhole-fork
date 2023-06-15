@@ -54,7 +54,7 @@ const configuration: Configuration<Settings> = {
   networks: {
     devnet: {
       networkId: devnetSettings.networkId,
-      nodeUrl: devnetSettings.nodeUrl,
+      nodeUrl: process.env.NODE_URL ?? devnetSettings.nodeUrl,
       privateKeys: [testPrivateKey],
       confirmations: 1,
       settings: devnetSettings
