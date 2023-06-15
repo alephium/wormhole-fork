@@ -10,7 +10,8 @@ import {
   web3,
   subContractId,
   ALPH_TOKEN_ID,
-  ContractDestroyedEvent
+  ContractDestroyedEvent,
+  ONE_ALPH
 } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import {
@@ -23,6 +24,7 @@ import {
   AttestToken,
   attestTokenHandlerAddress,
   createAttestTokenHandler,
+  createBridgeRewardRouter,
   createTestToken,
   createTokenBridge,
   createTokenBridgeForChain,
@@ -76,6 +78,7 @@ import * as base58 from 'bs58'
 import {
   AttestTokenHandler,
   AttestTokenHandlerTypes,
+  BridgeRewardRouter,
   Empty,
   GovernanceTypes,
   LocalTokenPoolTypes,
@@ -125,7 +128,7 @@ describe('test token bridge', () => {
     return Buffer.from(symbol, 'utf8').toString('hex').padEnd(64, '0')
   }
 
-  function bytes32HexToUtf8String(str: string): string {
+  function removeTrailingZeroHex(str: string): string {
     let result = str
     while (result.endsWith('00')) result = result.slice(0, -2)
     return result
@@ -701,8 +704,8 @@ describe('test token bridge', () => {
         remoteTokenPoolAddress
       )
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals))
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(symbol))
-      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(name))
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(removeTrailingZeroHex(symbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(removeTrailingZeroHex(name))
 
       const remoteTokenPoolOutput = result.txOutputs.find((o) => o.address === remoteTokenPoolAddress)!
       expect(remoteTokenPoolOutput.alphAmount).toEqual(minimalAlphInContract)
@@ -771,8 +774,8 @@ describe('test token bridge', () => {
         result.contracts,
         fixture.remoteTokenPool.contractId
       )
-      expect(remoteTokenPoolState.fields.symbol_).toEqual(bytes32HexToUtf8String(newSymbol))
-      expect(remoteTokenPoolState.fields.name_).toEqual(bytes32HexToUtf8String(newName))
+      expect(remoteTokenPoolState.fields.symbol_).toEqual(removeTrailingZeroHex(newSymbol))
+      expect(remoteTokenPoolState.fields.name_).toEqual(removeTrailingZeroHex(newName))
       expect(remoteTokenPoolState.fields.sequence_).toEqual(2n)
       expect(remoteTokenPoolState.fields.decimals_).toEqual(BigInt(decimals)) // decimals never change
     }
@@ -984,6 +987,102 @@ describe('test token bridge', () => {
         amount: fixture.totalBridged - transferAmount
       }
     ])
+  })
+
+  it('should complete transfer through bridge reward router', async () => {
+    await buildProject()
+    const remoteTokenId = randomByte32Hex()
+    const remoteTokenPoolFixture = newRemoteTokenPoolTestFixture(
+      remoteChainId,
+      remoteTokenBridgeId,
+      remoteTokenId,
+      symbol,
+      name,
+      decimals,
+      0
+    )
+    const toAddress = randomAssetAddressHex()
+    const transferAmount = oneAlph
+    const arbiterFee = defaultMessageFee
+    const transfer = new Transfer(transferAmount, remoteTokenId, remoteChainId, toAddress, arbiterFee)
+    const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
+    const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+
+    async function test(fixture: ContractFixture<any>) {
+      const testResult = await BridgeRewardRouter.tests.completeTransfer({
+        address: fixture.address,
+        initialAsset: fixture.selfState.asset,
+        testArgs: {
+          tokenBridgeForChain: remoteTokenPoolFixture.tokenBridgeForChain.contractId,
+          vaa: binToHex(vaa.encode()),
+          caller: payer
+        },
+        inputAssets: [defaultInputAsset],
+        existingContracts: remoteTokenPoolFixture.remoteTokenPool.states()
+      })
+
+      const callerOutputs = testResult.txOutputs.filter((c) => c.address === payer)
+      checkTxCallerBalance(callerOutputs, dustAmount, [
+        {
+          id: remoteTokenPoolFixture.remoteTokenPool.contractId,
+          amount: arbiterFee
+        }
+      ])
+
+      // check `totalBridged`
+      const remoteTokenPoolState = getContractState<RemoteTokenPoolTypes.Fields>(
+        testResult.contracts,
+        remoteTokenPoolFixture.remoteTokenPool.contractId
+      )
+      expect(remoteTokenPoolState.fields.totalBridged).toEqual(remoteTokenPoolFixture.totalBridged + transferAmount)
+
+      const tokenBridgeForChainState = getContractState<TokenBridgeForChainTypes.Fields>(
+        testResult.contracts,
+        remoteTokenPoolFixture.tokenBridgeForChain.contractId
+      )
+      expect(tokenBridgeForChainState.fields.firstNext256).toEqual(1n)
+
+      const remoteTokenPoolOutput = testResult.txOutputs.find(
+        (c) => c.address === remoteTokenPoolFixture.remoteTokenPool.address
+      )!
+      expect(remoteTokenPoolOutput.alphAmount).toEqual(
+        remoteTokenPoolFixture.remoteTokenPool.selfState.asset.alphAmount
+      )
+      expect(remoteTokenPoolOutput.tokens).toEqual([
+        {
+          id: remoteTokenPoolFixture.remoteTokenPool.contractId,
+          amount: remoteTokenPoolFixture.totalBridged - transferAmount
+        }
+      ])
+      return testResult
+    }
+
+    const fixture0 = createBridgeRewardRouter(ONE_ALPH * 3n)
+    const testResult0 = await test(fixture0)
+
+    const recipientOutputs0 = testResult0.txOutputs.filter((c) => c.address === hexToBase58(toAddress))
+    expect(recipientOutputs0.length).toEqual(2)
+    expect(recipientOutputs0[0].alphAmount).toEqual(dustAmount)
+    expect(recipientOutputs0[0].tokens).toEqual([
+      { id: remoteTokenPoolFixture.remoteTokenPool.contractId, amount: transferAmount - arbiterFee }
+    ])
+    expect(recipientOutputs0[1].alphAmount).toEqual(ONE_ALPH)
+
+    const bridgeRewardRouterState0 = testResult0.contracts.find((c) => c.address === fixture0.address)!
+    expect(bridgeRewardRouterState0.asset.alphAmount).toEqual(ONE_ALPH * 2n)
+
+    const fixture1 = createBridgeRewardRouter(ONE_ALPH)
+    const testResult1 = await test(fixture1)
+
+    const recipientOutputs1 = testResult1.txOutputs.filter((c) => c.address === hexToBase58(toAddress))
+    expect(recipientOutputs1.length).toEqual(1)
+    expect(recipientOutputs1[0].alphAmount).toEqual(dustAmount)
+    expect(recipientOutputs1[0].tokens).toEqual([
+      { id: remoteTokenPoolFixture.remoteTokenPool.contractId, amount: transferAmount - arbiterFee }
+    ])
+
+    const bridgeRewardRouterState1 = testResult1.contracts.find((c) => c.address === fixture1.address)!
+    expect(bridgeRewardRouterState1.asset.alphAmount).toEqual(ONE_ALPH)
   })
 
   it('should failed to complete transfer and create unexecuted sequence contracts', async () => {
@@ -1393,5 +1492,21 @@ describe('test token bridge', () => {
     expect(contractState1.asset).toEqual({ alphAmount: oneAlph, tokens: [] })
     const refundAddressOutput = testResult1.txOutputs.find((c) => c.address === refundAddress)!
     expect(refundAddressOutput.alphAmount).toEqual(alph(4) - defaultGasFee)
+  })
+
+  it('should test add rewards', async () => {
+    await buildProject()
+    const fixture = createBridgeRewardRouter(ONE_ALPH)
+    const testResult = await BridgeRewardRouter.tests.addRewards({
+      address: fixture.address,
+      initialAsset: fixture.selfState.asset,
+      testArgs: { caller: payer, amount: ONE_ALPH },
+      inputAssets: [defaultInputAsset]
+    })
+    const contractState = testResult.contracts.find((c) => c.address === fixture.address)!
+    expect(contractState.asset.alphAmount).toEqual(ONE_ALPH * 2n)
+
+    const callerOutputs = testResult.txOutputs.filter((c) => c.address === payer)
+    checkTxCallerBalance(callerOutputs, ONE_ALPH, [])
   })
 })

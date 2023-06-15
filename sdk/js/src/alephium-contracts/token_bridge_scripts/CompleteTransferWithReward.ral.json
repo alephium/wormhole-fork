@@ -1,0 +1,34 @@
+{
+  "version": "v2.3.3",
+  "name": "CompleteTransferWithReward",
+  "bytecodeTemplate": "0101030000000ab413c3038d7ea4c68000a2{1}{2}b40f0c{0}0100",
+  "fieldsSig": {
+    "names": [
+      "bridgeRewardRouter",
+      "tokenBridgeForChain",
+      "vaa"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "ByteVec"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

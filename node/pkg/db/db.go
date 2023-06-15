@@ -135,48 +135,6 @@ func (d *Database) GetGovernanceVAABatch(governanceChainId vaa.ChainID, governan
 	return vaas, nil
 }
 
-func (d *Database) NextGovernanceVAASequence(governanceChainId vaa.ChainID, governanceEmitter vaa.Address) (*uint64, error) {
-	hasGovernanceVAA := false
-	maxSequence := uint64(0)
-	vaaId := &vaa.VAAID{
-		EmitterChain:   governanceChainId,
-		EmitterAddress: governanceEmitter,
-	}
-	prefixBytes := vaaId.GovernanceEmitterPrefixBytes()
-	if err := d.db.View(func(txn *badger.Txn) error {
-		iteratorOpts := badger.DefaultIteratorOptions
-		iteratorOpts.PrefetchValues = false
-		iteratorOpts.Prefix = prefixBytes
-		it := txn.NewIterator(iteratorOpts)
-		defer it.Close()
-
-		for it.Seek(prefixBytes); it.ValidForPrefix(prefixBytes); it.Next() {
-			hasGovernanceVAA = true
-			keyStr := string(it.Item().Key())
-			index := strings.LastIndex(keyStr, "/")
-			if index == -1 {
-				return fmt.Errorf("invalid vaa key: %s", keyStr)
-			}
-			sequence, err := strconv.ParseUint(keyStr[index+1:], 10, 64)
-			if err != nil {
-				return err
-			}
-			if sequence > maxSequence {
-				maxSequence = sequence
-			}
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-	if !hasGovernanceVAA {
-		nextSequence := uint64(0)
-		return &nextSequence, nil
-	}
-	nextSequence := maxSequence + 1
-	return &nextSequence, nil
-}
-
 func (d *Database) GetSignedVAABytes(id vaa.VAAID) (b []byte, err error) {
 	if err := d.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id.Bytes())

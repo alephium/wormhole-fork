@@ -38,7 +38,8 @@ import {
   TokenBridgeFactory,
   TokenBridgeForChain,
   TokenBridgeForChainTypes,
-  UnexecutedSequenceTypes
+  UnexecutedSequenceTypes,
+  BridgeRewardRouter
 } from '../../artifacts/ts'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
@@ -520,4 +521,9 @@ export function expectAssetsEqual(expected: Asset[], have: Asset[]) {
   expected.forEach((a) =>
     expect(have.some((b) => a.alphAmount === b.alphAmount && sameTokens(a.tokens ?? [], b.tokens ?? [])))
   )
+}
+
+export function createBridgeRewardRouter(alphAmount: bigint): ContractFixture<any> {
+  const address = randomContractAddress()
+  return new ContractFixture(BridgeRewardRouter.stateForTest({}, { alphAmount }, address), [])
 }

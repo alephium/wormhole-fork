@@ -52,11 +52,13 @@ export const selectNFTSourceAsset = (state: RootState) => {
   return state.nft.sourceParsedTokenAccount?.mintKey || undefined;
 };
 export const selectNFTIsSourceAssetWormholeWrapped = (state: RootState) =>
-  state.nft.isSourceAssetWormholeWrapped;
-export const selectNFTOriginChain = (state: RootState) => state.nft.originChain;
-export const selectNFTOriginAsset = (state: RootState) => state.nft.originAsset;
+  state.nft.sourceAssetInfo.data?.isWrapped;
+export const selectNFTOriginChain = (state: RootState) => state.nft.sourceAssetInfo.data?.chainId;
+export const selectNFTOriginAsset = (state: RootState) => state.nft.sourceAssetInfo.data?.assetAddress;
 export const selectNFTOriginTokenId = (state: RootState) =>
-  state.nft.originTokenId;
+  state.nft.sourceAssetInfo.data?.tokenId;
+export const selectNFTSourceAssetInfoWrapper = (state: RootState) =>
+  state.nft.sourceAssetInfo;
 export const selectNFTSourceWalletAddress = (state: RootState) =>
   state.nft.sourceWalletAddress;
 export const selectNFTSourceParsedTokenAccount = (state: RootState) =>
@@ -173,11 +175,13 @@ export const selectTransferSourceAsset = (state: RootState) => {
   return state.transfer.sourceParsedTokenAccount?.mintKey || undefined;
 };
 export const selectTransferIsSourceAssetWormholeWrapped = (state: RootState) =>
-  state.transfer.isSourceAssetWormholeWrapped;
+  state.transfer.sourceAssetInfo.data?.isWrapped;
 export const selectTransferOriginChain = (state: RootState) =>
-  state.transfer.originChain;
+  state.transfer.sourceAssetInfo.data?.chainId;
 export const selectTransferOriginAsset = (state: RootState) =>
-  state.transfer.originAsset;
+  state.transfer.sourceAssetInfo.data?.assetAddress;
+export const selectTransferSourceAssetInfoWrapper = (state: RootState) =>
+  state.transfer.sourceAssetInfo;
 export const selectSourceWalletAddress = (state: RootState) =>
   state.transfer.sourceWalletAddress;
 export const selectTransferSourceParsedTokenAccount = (state: RootState) =>

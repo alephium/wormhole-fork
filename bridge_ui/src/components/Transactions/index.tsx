@@ -150,41 +150,65 @@ function ListTransactions({
   isLoading: boolean,
   isTransferCompleted: (signedVaa: Uint8Array) => Promise<boolean>
 }) {
-  const getTxStatus = useCallback(async (tx: BridgeTransaction) => {
+  const getIsTxConfirmed = useCallback((tx: BridgeTransaction) => {
     try {
-      let txStatus = tx.status
       if ((tx.status === 'Pending' || tx.status === 'Loading') && sourceChainBlockNumber !== undefined) {
-        txStatus = isTxConfirmed(sourceChainBlockNumber, tx.blockNumber, txSourceChain)
+        return isTxConfirmed(sourceChainBlockNumber, tx.blockNumber, txSourceChain)
           ? 'Confirmed'
           : 'Pending'
       }
-      if (txStatus === 'Confirmed' && targetChainBlockNumber !== undefined) {
-        const signedVaa = await getSignedVaa(tx)
-        const isCompleted = await isTransferCompleted(signedVaa)
-        txStatus = isCompleted ? 'Completed' : txStatus
-      }
-      return txStatus
+      return tx.status
     } catch (error) {
-      console.error(`failed to get tx status, tx: ${JSON.stringify(tx)}, error: ${error}`)
+      console.error(`failed to getIsTxConfirmed, tx: ${JSON.stringify(tx)}, error: ${error}`)
       return tx.status
     }
-  }, [sourceChainBlockNumber, targetChainBlockNumber,  txSourceChain, isTransferCompleted])
+  }, [sourceChainBlockNumber, txSourceChain])
+
+  const getIsTxCompleted = useCallback(async (tx: BridgeTransaction) => {
+    try {
+      if (tx.status === 'Confirmed' && targetChainBlockNumber !== undefined) {
+        const signedVaa = await getSignedVaa(tx)
+        const isCompleted = await isTransferCompleted(signedVaa)
+        return isCompleted ? 'Completed' : tx.status
+      }
+      return tx.status
+    } catch (error) {
+      console.error(`failed to getIsTxCompleted, tx: ${JSON.stringify(tx)}, error: ${error}`)
+      return tx.status
+    }
+  }, [targetChainBlockNumber, isTransferCompleted])
 
   useEffect(() => {
     const fetch = async () => {
       try {
         for (let i = 0; i < txs.length; i++) {
           const tx = txs[i]
-          const txStatus = await getTxStatus(tx)
+          const txStatus = getIsTxConfirmed(tx)
           tx.status = txStatus
         }
       } catch (error) {
-        console.error(`failed to get tx status, error: ${error}`)
+        console.error(`${error}`)
       }
     }
 
     fetch()
-  }, [txs, getTxStatus])
+  }, [txs, getIsTxConfirmed])
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        for (let i = 0; i < txs.length; i++) {
+          const tx = txs[i]
+          const txStatus = await getIsTxCompleted(tx)
+          tx.status = txStatus
+        }
+      } catch (error) {
+        console.error(`${error}`)
+      }
+    }
+
+    fetch()
+  }, [txs, getIsTxCompleted])
 
   return <TransactionTable txs={txs} isLoading={isLoading} />
 }

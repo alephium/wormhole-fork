@@ -20,7 +20,7 @@ function createUpdateConsistencyLevelVaa(sequence: number): string {
 
 async function updateConsistencyLevel() {
   const alph = (await getBridgeChains()).alph
-  const seq = await getNextGovernanceSequence()
+  const seq = getNextGovernanceSequence()
   const updateConsistencyLevelVaa = createUpdateConsistencyLevelVaa(seq)
   const currentConsistencyLevel = (await alph.getTokenBridgeContractState()).fields['minimalConsistencyLevel'] as bigint
   assert(Number(currentConsistencyLevel) !== newConsistencyLevel)

@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/alephium/wormhole-fork/explorer-api-server/response"
@@ -11,6 +12,17 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
+
+var supportedChains = []vaa.ChainID{vaa.ChainIDEthereum, vaa.ChainIDAlephium, vaa.ChainIDBSC}
+
+func isSupportedChain(chainId vaa.ChainID) bool {
+	for _, c := range supportedChains {
+		if c == chainId {
+			return true
+		}
+	}
+	return false
+}
 
 func extractChainID(c *fiber.Ctx, l *zap.Logger, str string) (vaa.ChainID, error) {
 	chain, err := c.ParamsInt(str)
@@ -21,7 +33,14 @@ func extractChainID(c *fiber.Ctx, l *zap.Logger, str string) (vaa.ChainID, error
 
 		return vaa.ChainIDUnset, response.NewInvalidParamError(c, "WRONG CHAIN ID", errors.WithStack(err))
 	}
-	return vaa.ChainID(chain), nil
+	if chain > math.MaxUint16 {
+		return vaa.ChainIDUnset, response.NewInvalidParamError(c, "WRONG CHAIN ID", fmt.Errorf("the chain id greater than MaxUint16"))
+	}
+	chainId := vaa.ChainID(chain)
+	if !isSupportedChain(chainId) {
+		return vaa.ChainIDUnset, response.NewInvalidParamError(c, "WRONG CHAIN ID", fmt.Errorf("the chain id is not supported"))
+	}
+	return chainId, nil
 }
 
 // ExtractEmitterChainID get chain parameter from route path.

@@ -231,12 +231,6 @@ func Run(db *mongo.Database) error {
 			},
 		},
 		{Keys: bson.D{{Key: "eventIndex", Value: 1}}},
-		{
-			Keys: bson.D{
-				{Key: "eventIndex", Value: 1},
-				{Key: "emitterChain", Value: 1},
-			},
-		},
 		{Keys: bson.D{{Key: "timestamp", Value: 1}}},
 	}
 	_, err = db.Collection("transactions").Indexes().CreateMany(context.TODO(), transactionsIndexes)

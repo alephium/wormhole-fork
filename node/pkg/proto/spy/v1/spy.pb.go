@@ -86,6 +86,7 @@ type FilterEntry struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Filter:
+	//
 	//	*FilterEntry_EmitterFilter
 	Filter isFilterEntry_Filter `protobuf_oneof:"filter"`
 }

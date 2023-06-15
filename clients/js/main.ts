@@ -31,7 +31,7 @@ import {
   isEVMChain,
   toChainId,
 } from "alephium-wormhole-sdk";
-import { createLocalTokenPool, executeGovernanceAlph } from "./alph";
+import { executeGovernanceAlph, getNextGovernanceSequence } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";
 
@@ -506,40 +506,15 @@ yargs(hideBin(process.argv))
     (yargs) => {
       return yargs
         .command(
-          "create-local-token-pool",
-          "Create token pool for alephium token",
+          "get-next-governance-sequence",
+          "Get the next governance sequence",
           (yargs) => {
             return yargs
-              .option("token-id", {
-                describe: "Token id",
-                type: "string",
-                required: true,
-              })
-              .option("decimals", {
-                describe: "Token decimals",
-                type: "number",
-                required: true,
-              })
-              .option("symbol", {
-                describe: "Token symbol",
-                type: "string",
-                required: true,
-              })
-              .option("name", {
-                decsribe: "Token name",
-                type: "string",
-                required: true,
-              })
               .option("network", {
                 describe: "network",
                 type: "string",
                 choices: ["mainnet", "testnet", "devnet"],
                 required: true,
-              })
-              .option("guardian-url", {
-                describe: "Guardian rpc url",
-                type: "string",
-                required: false,
               })
               .option("node-url", {
                 describe: "Alephium full node url",
@@ -548,16 +523,9 @@ yargs(hideBin(process.argv))
               });
           },
           async (argv) => {
-            const network = argv.network.toUpperCase();
-            await createLocalTokenPool(
-              argv['token-id'],
-              argv['decimals'],
-              argv['symbol'],
-              argv['name'],
-              network as NetworkType,
-              argv["guardian-url"],
-              argv["node-url"]
-            )
+            const network = argv.network.toUpperCase() as NetworkType
+            const sequence = await getNextGovernanceSequence(network, argv['node-url'])
+            console.log(`The next governnace sequence is: ${sequence}`)
           }
         )
     },

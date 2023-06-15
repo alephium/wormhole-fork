@@ -29,6 +29,9 @@ func (c *Controller) extractSender(ctx *fiber.Ctx) (*sender, error) {
 	if err != nil {
 		return nil, err
 	}
+	if emitterChain == targetChain {
+		return nil, fmt.Errorf("the emitter chain cannot be the same as the target chain")
+	}
 	addressParam := ctx.Params("address")
 	address, err := validateAddress(emitterChain, addressParam)
 	if err != nil {
@@ -76,6 +79,9 @@ func validateAddress(emitterChainId vaa.ChainID, address string) (*string, error
 		bs := base58.Decode(address)
 		if len(bs) == 0 {
 			return nil, fmt.Errorf("invalid alephium address")
+		}
+		if len(bs) <= 32 { // we don't know the length of the p2mpk address
+			return nil, fmt.Errorf("invalid length of alephium address")
 		}
 		return &address, nil
 	case vaa.ChainIDEthereum, vaa.ChainIDBSC:

@@ -29,7 +29,7 @@ func NewWatcher(logger *zap.Logger, configs *common.BridgeConfig, db *mongo.Data
 
 func (w *Watcher) getLatestEventIndex(ctx context.Context, emitterChain vaa.ChainID) (*uint32, error) {
 	filter := bson.D{{Key: "emitterChain", Value: emitterChain}}
-	opts := options.FindOne().SetSort(bson.D{{Key: "eventIndex", Value: -1}, {Key: "emitterChain", Value: -1}})
+	opts := options.FindOne().SetSort(bson.D{{Key: "eventIndex", Value: -1}})
 	var result TransactionUpdate
 	err := w.transactions.FindOne(ctx, filter, opts).Decode(&result)
 	if err == mongo.ErrNoDocuments {
@@ -182,7 +182,7 @@ func getEthereumDefaultEventIndex(networkId common.NetworkId) uint32 {
 	case common.TESTNET:
 		return 8934485 // the block height of the contract deployment tx
 	case common.MAINNET:
-		return 0 // TODO: the block height of the contract deployment tx
+		panic("eth event index not specified") // TODO: the block height of the contract deployment tx
 	default:
 		panic("invalid network id")
 	}
@@ -195,7 +195,7 @@ func getBSCDefaultEventIndex(networkId common.NetworkId) uint32 {
 	case common.TESTNET:
 		return 30048254 // the block height of the contract deployment tx
 	case common.MAINNET:
-		return 0 // TODO: the block height of the contract deployment tx
+		panic("bsc event index not specified") // TODO: the block height of the contract deployment tx
 	default:
 		panic("invalid network id")
 	}

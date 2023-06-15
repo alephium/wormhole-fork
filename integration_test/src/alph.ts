@@ -1,6 +1,6 @@
 import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
-import { getSignedVAA, normalizeTokenId } from './utils'
+import { getSignedVAA, normalizeTokenId, assert } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import path from 'path'
@@ -18,7 +18,9 @@ import {
   web3,
   ContractFactory,
   ContractInstance,
-  fetchContractState
+  fetchContractState,
+  ONE_ALPH,
+  DUST_AMOUNT
 } from '@alephium/web3'
 import {
   attestFromAlph,
@@ -30,7 +32,6 @@ import {
   getTokenBridgeForChainId,
   getTokenPoolId,
   deserializeAttestTokenVAA,
-  redeemOnAlph,
   transferLocalTokenFromAlph,
   transferRemoteTokenFromAlph,
   deposit as tokenBridgeForChainDeposit,
@@ -38,12 +39,12 @@ import {
   createLocalTokenPoolOnAlph,
   getLocalTokenInfo,
   waitAlphTxConfirmed,
-  alephium_contracts
+  alephium_contracts,
+  redeemOnAlphWithReward
 } from 'alephium-wormhole-sdk'
 import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
-import { RemoteTokenPool } from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
@@ -77,6 +78,8 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const tokenBridgeContractId = contracts.tokenBridge
   const testTokenContractId = contracts.testToken
   const governanceAddress = contracts.nativeGovernance
+  const bridgeRewardRouterId = contracts.bridgeRewardRouter
+  const bridgeRewardRouterAddress = addressFromContractId(bridgeRewardRouterId)
   const sequence = new Sequence()
   const defaultArbiterFee = 0n
   const defaultConfirmations = 1
@@ -324,10 +327,25 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const redeemToken = async (signedVaa: Uint8Array): Promise<bigint> => {
     const vaa = deserializeTransferTokenVAA(signedVaa)
     const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeContractId, vaa.body.emitterChainId, groupIndex)
-    const result = await redeemOnAlph(nodeWallet, tokenBridgeForChainId, signedVaa)
+    const alphBalanceBeforeRedeem = await getNativeTokenBalance()
+    const bridgeRewardRouterAlphBalanceBeforeRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
+    const result = await redeemOnAlphWithReward(nodeWallet, bridgeRewardRouterId, tokenBridgeForChainId, signedVaa)
     await waitAlphTxConfirmed(nodeWallet.nodeProvider, result.txId, 1)
     console.log(`redeem on alph succeed, tx id: ${result.txId}`)
-    return await getTransactionFee(result.txId)
+    const alphBalanceAfterRedeem = await getNativeTokenBalance()
+    const bridgeRewardRouterAlphBalanceAfterRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
+    const txFee = await getTransactionFee(result.txId)
+    const targetAddress = base58.encode(vaa.body.payload.targetAddress)
+    if (targetAddress === accountAddress) {
+      const transferAmount = vaa.body.payload.originChain === CHAIN_ID_ALEPHIUM && binToHex(vaa.body.payload.originAddress) === ALPH_TOKEN_ID
+        ? vaa.body.payload.amount * (10n ** 10n)
+        : 0n
+      assert(alphBalanceBeforeRedeem - txFee + transferAmount === alphBalanceAfterRedeem - ONE_ALPH)
+    } else {
+      assert(alphBalanceBeforeRedeem - txFee - DUST_AMOUNT === alphBalanceAfterRedeem)
+    }
+    assert(bridgeRewardRouterAlphBalanceBeforeRedeem === bridgeRewardRouterAlphBalanceAfterRedeem + ONE_ALPH)
+    return txFee
   }
 
   const getCurrentGuardianSet = async (): Promise<string[]> => {
@@ -385,7 +403,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
 
   const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
     const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
-    const tokenPoolInstance = RemoteTokenPool.at(addressFromContractId(tokenPoolId))
+    const tokenPoolInstance = alephium_contracts.RemoteTokenPool.at(addressFromContractId(tokenPoolId))
     return (await tokenPoolInstance.methods.getTotalSupply()).returns
   }
 
