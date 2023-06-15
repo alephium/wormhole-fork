@@ -117,7 +117,7 @@
       "returnTypes": []
     },
     {
-      "name": "bytes32ToString",
+      "name": "removeTrailingZeros",
       "usePreapprovedAssets": false,
       "useAssetsInContract": false,
       "isPublic": false,

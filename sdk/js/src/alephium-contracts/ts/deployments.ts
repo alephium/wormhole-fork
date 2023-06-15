@@ -21,10 +21,10 @@ import {
   GovernanceInstance,
   TokenBridge,
   TokenBridgeInstance,
-  TestToken,
-  TestTokenInstance,
   BridgeRewardRouter,
   BridgeRewardRouterInstance,
+  TestToken,
+  TestTokenInstance,
 } from ".";
 import { default as testnetDeployments } from "../.deployments.testnet.json";
 import { default as devnetDeployments } from "../.deployments.devnet.json";
@@ -40,8 +40,8 @@ export type Deployments = {
     TokenBridgeFactory: DeployContractExecutionResult<TokenBridgeFactoryInstance>;
     Governance: DeployContractExecutionResult<GovernanceInstance>;
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
+    BridgeRewardRouter: DeployContractExecutionResult<BridgeRewardRouterInstance>;
     TestToken?: DeployContractExecutionResult<TestTokenInstance>;
-    BridgeRewardRouter?: DeployContractExecutionResult<BridgeRewardRouterInstance>;
   };
   scripts: {
     CreateLocalAttestTokenHandler: RunScriptResult;
@@ -99,6 +99,12 @@ function toDeployments(json: any): Deployments {
         json.contracts.TokenBridge.contractInstance.address
       ),
     },
+    BridgeRewardRouter: {
+      ...json.contracts.BridgeRewardRouter,
+      contractInstance: BridgeRewardRouter.at(
+        json.contracts.BridgeRewardRouter.contractInstance.address
+      ),
+    },
     TestToken:
       json.contracts.TestToken === undefined
         ? undefined
@@ -106,15 +112,6 @@ function toDeployments(json: any): Deployments {
             ...json.contracts.TestToken,
             contractInstance: TestToken.at(
               json.contracts.TestToken.contractInstance.address
-            ),
-          },
-    BridgeRewardRouter:
-      json.contracts.BridgeRewardRouter === undefined
-        ? undefined
-        : {
-            ...json.contracts.BridgeRewardRouter,
-            contractInstance: BridgeRewardRouter.at(
-              json.contracts.BridgeRewardRouter.contractInstance.address
             ),
           },
   };
