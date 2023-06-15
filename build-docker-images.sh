@@ -35,7 +35,7 @@ docker build --target go-export -f ./docker/Dockerfile.proto -o type=local,dest=
 docker build --target node-export -f ./docker/Dockerfile.proto -o type=local,dest=. .
 
 # Build guardian image (used for both guardian & spy)
-docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION
+docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION --build-arg network=$network
 
 ## Build eth-node image
 docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$VERSION
