@@ -2,6 +2,7 @@ package alephium
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -181,12 +182,12 @@ func (c *Client) IsCliqueSynced(ctx context.Context) (*bool, error) {
 	return &response.Synced, nil
 }
 
-func (c *Client) CallContract(ctx context.Context, callContract *sdk.CallContract) (*sdk.CallContractResult, error) {
+func (c *Client) MultiCallContract(ctx context.Context, multiCall *sdk.MultipleCallContract) (*sdk.MultipleCallContractResult, error) {
 	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	request := c.impl.ContractsApi.PostContractsCallContract(timeoutCtx).CallContract(*callContract)
-	response, _, err := requestWithMetric[*sdk.CallContractResult](request, timestamp, "call_contract")
+	request := c.impl.ContractsApi.PostContractsMulticallContract(timeoutCtx).MultipleCallContract(*multiCall)
+	response, _, err := requestWithMetric[*sdk.MultipleCallContractResult](request, timestamp, "multicall_contract")
 	if err != nil {
 		return nil, err
 	}
@@ -203,38 +204,57 @@ func (c *Client) GetTokenInfo(ctx context.Context, tokenId Byte32) (*TokenInfo, 
 	if err != nil {
 		return nil, err
 	}
-	callContract := sdk.CallContract{
-		Group:   int32(groupIndex),
-		Address: *contractAddress,
+	multiCallContract := &sdk.MultipleCallContract{
+		Calls: []sdk.CallContract{
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 0,
+			},
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 1,
+			},
+			{
+				Group:       int32(groupIndex),
+				Address:     *contractAddress,
+				MethodIndex: 2,
+			},
+		},
 	}
 
-	callContract.MethodIndex = 0
-	getSymbolResult, err := c.CallContract(ctx, &callContract)
-	if err != nil || len(getSymbolResult.Returns) != 1 {
-		return nil, err
-	}
-
-	callContract.MethodIndex = 1
-	getNameResult, err := c.CallContract(ctx, &callContract)
-	if err != nil || len(getNameResult.Returns) != 1 {
-		return nil, err
-	}
-
-	callContract.MethodIndex = 2
-	getDecimalsResult, err := c.CallContract(ctx, &callContract)
-	if err != nil || len(getDecimalsResult.Returns) != 1 {
-		return nil, err
-	}
-
-	symbolBs, err := toByteVec(getSymbolResult.Returns[0])
+	result, err := c.MultiCallContract(ctx, multiCallContract)
 	if err != nil {
 		return nil, err
 	}
-	name, err := toByteVec(getNameResult.Returns[0])
+
+	if len(result.Results) != 3 {
+		return nil, fmt.Errorf("invalid response, expect 3 call results")
+	}
+
+	symbolResult := result.Results[0]
+	if len(symbolResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token symbol")
+	}
+	nameResult := result.Results[1]
+	if len(nameResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token name")
+	}
+	decimalsResult := result.Results[2]
+	if len(decimalsResult.Returns) != 1 {
+		return nil, fmt.Errorf("invalid token decimals")
+	}
+
+	symbolBs, err := toByteVec(symbolResult.Returns[0])
 	if err != nil {
 		return nil, err
 	}
-	decimals, err := toUint8(getDecimalsResult.Returns[0])
+	name, err := toByteVec(nameResult.Returns[0])
+	if err != nil {
+		return nil, err
+	}
+	decimals, err := toUint8(decimalsResult.Returns[0])
 	if err != nil {
 		return nil, err
 	}

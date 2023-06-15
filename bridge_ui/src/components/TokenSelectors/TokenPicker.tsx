@@ -405,7 +405,7 @@ export default function TokenPicker({
     (address: string, tokenIdHolderString: string) => {
       return options.find(
         (x) =>
-          x.mintKey === address &&
+          x.mintKey.toLowerCase() === address.toLowerCase() &&
           (!tokenIdHolderString || x.tokenId === tokenIdHolderString)
       );
     },

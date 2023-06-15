@@ -16,7 +16,7 @@ func FirstPage() *Pagination {
 // BuildPagination create a new *Pagination.
 func BuildPagination(page, pageSize int64, sortOrder, sortBy string) *Pagination {
 	p := Pagination{}
-	p.SetPage(page).SetPageSize(pageSize).SetSortOrder(sortOrder).SetSortBy(sortBy)
+	p.SetOffset((page - 1) * pageSize).SetPageSize(pageSize).SetSortOrder(sortOrder).SetSortBy(sortBy)
 	return &p
 }
 
@@ -29,12 +29,6 @@ func (p *Pagination) SetPageSize(limit int64) *Pagination {
 // SetOffset set the Offset field of the Pagination struct.
 func (p *Pagination) SetOffset(offset int64) *Pagination {
 	p.Offset = offset
-	return p
-}
-
-// SetPage set the Page field of the Pagination struct.
-func (p *Pagination) SetPage(page int64) *Pagination {
-	p.Offset = page * p.PageSize
 	return p
 }
 

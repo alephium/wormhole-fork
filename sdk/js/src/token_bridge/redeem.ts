@@ -11,7 +11,7 @@ import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
-import { CompleteTransfer } from "../alephium-contracts/ts/scripts";
+import { CompleteTransfer, CompleteTransferWithReward } from "../alephium-contracts/ts/scripts";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { ixFromRust } from "../solana";
@@ -24,6 +24,22 @@ import {
 } from "../utils";
 import { hexToNativeString, uint8ArrayToHex } from "../utils/array";
 import { deserializeTransferTokenVAA } from "../utils/vaa";
+
+export async function redeemOnAlphWithReward(
+  signerProvider: SignerProvider,
+  bridgeRewardRouterId: string,
+  tokenBridgeForChainId: string,
+  signedVAA: Uint8Array
+): Promise<ExecuteScriptResult> {
+  return CompleteTransferWithReward.execute(signerProvider, {
+    initialFields: {
+      bridgeRewardRouter: bridgeRewardRouterId,
+      tokenBridgeForChain: tokenBridgeForChainId,
+      vaa: binToHex(signedVAA)
+    },
+    attoAlphAmount: DUST_AMOUNT * BigInt(2)
+  })
+}
 
 export async function redeemOnAlph(
   signerProvider: SignerProvider,

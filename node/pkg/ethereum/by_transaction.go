@@ -15,20 +15,20 @@ var (
 	// since the node will only hand us pre-filtered events. In this case, we need to manually verify it
 	// since ParseLogMessagePublished will only verify whether it parses.
 	// keccak256("LogMessagePublished(address,uint16,uint64,uint32,bytes,uint8)")
-	logMessagePublishedTopic = eth_common.HexToHash("0xcd7b525350dfac7e06deb9b3a8f19ceb75cf6cd2914cd0b2d7bf9d9a3d9babff")
+	LogMessagePublishedTopic = eth_common.HexToHash("0xcd7b525350dfac7e06deb9b3a8f19ceb75cf6cd2914cd0b2d7bf9d9a3d9babff")
 )
 
 // MessageEventsForTransaction returns the lockup events for a given transaction.
 // Returns the block number and a list of MessagePublication events.
 func MessageEventsForTransaction(
 	ctx context.Context,
-	ethIntf common.Ethish,
+	ethConn Connector,
 	contract eth_common.Address,
 	chainId vaa.ChainID,
 	tx eth_common.Hash) (uint64, []*common.MessagePublication, error) {
 
 	// Get transactions logs from transaction
-	receipt, err := ethIntf.TransactionReceipt(ctx, tx)
+	receipt, err := ethConn.TransactionReceipt(ctx, tx)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to get transaction receipt: %w", err)
 	}
@@ -46,7 +46,7 @@ func MessageEventsForTransaction(
 	}
 
 	// Get block
-	blockTime, err := ethIntf.TimeOfBlockByHash(ctx, receipt.BlockHash)
+	blockTime, err := ethConn.TimeOfBlockByHash(ctx, receipt.BlockHash)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to get block time: %w", err)
 	}
@@ -64,11 +64,11 @@ func MessageEventsForTransaction(
 			continue
 		}
 
-		if l.Topics[0] != logMessagePublishedTopic {
+		if l.Topics[0] != LogMessagePublishedTopic {
 			continue
 		}
 
-		ev, err := ethIntf.ParseLogMessagePublished(*l)
+		ev, err := ethConn.ParseLogMessagePublished(*l)
 		if err != nil {
 			return 0, nil, fmt.Errorf("failed to parse log: %w", err)
 		}

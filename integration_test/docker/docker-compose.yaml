@@ -2,11 +2,12 @@ version: "3.3"
 
 volumes:
   eth-full-node: {}
+  bsc-full-node: {}
   guardian-node: {}
 
 services:
   alph-full-node:
-    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.78
+    image: eu.gcr.io/alephium-org/alephium-contracts:0.2.121
     restart: unless-stopped
     ports:
       - 19973:19973/tcp
@@ -23,7 +24,7 @@ services:
       - "npx @alephium/cli devnet start && sh /alephium/deploy.sh"
 
   eth-devnet:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.78
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     restart: unless-stopped
     user: root
     ports:
@@ -40,21 +41,45 @@ services:
       - --db=/eth-full-node/
 
   eth-devnet-deploy-contracts:
-    image: eu.gcr.io/alephium-org/eth-node:0.2.78
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
     command:
       - /bin/sh
       - -c
-      - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && npm run migrate -- --network docker && npx truffle exec mine.js --network docker"
+      - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=ethereum npm run migrate -- --network ethDocker && npx truffle exec mine.js --network ethDocker"
+
+  bsc-devnet:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
+    restart: unless-stopped
+    user: root
+    ports:
+      - 127.0.0.1:8546:8545
+    volumes:
+      - bsc-full-node:/bsc-full-node/
+    command:
+      - npx
+      - ganache-cli
+      - -e 10000
+      - --deterministic
+      - --time="1970-01-01T00:00:00+00:00"
+      - --host=0.0.0.0
+      - --db=/bsc-full-node/
+
+  bsc-devnet-deploy-contracts:
+    image: eu.gcr.io/alephium-org/eth-node:0.2.121
+    command:
+      - /bin/sh
+      - -c
+      - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=bsc npm run migrate -- --network bscDocker && npx truffle exec mine.js --network bscDocker"
 
   devnet-init:
-    image: eu.gcr.io/alephium-org/devnet-init:0.2.78
+    image: eu.gcr.io/alephium-org/devnet-init:0.2.121
     command:
       - /bin/sh
       - -c
       - "/scripts/devnet-init.sh 1"
 
   guardian-0:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-0
     restart: unless-stopped
     ports:
@@ -69,6 +94,8 @@ services:
       - node
       - --ethRPC
       - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
       - --alphRPC
       - http://alph-full-node:22973
       - --network
@@ -87,7 +114,7 @@ services:
       - --logLevel=debug
 
   guardian-1:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-1
     restart: unless-stopped
     ports:
@@ -102,6 +129,8 @@ services:
       - node
       - --ethRPC
       - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
       - --alphRPC
       - http://alph-full-node:22973
       - --network
@@ -122,7 +151,7 @@ services:
       - --logLevel=debug
 
   guardian-2:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     hostname: guardian-2
     restart: unless-stopped
     ports:
@@ -137,6 +166,8 @@ services:
       - node
       - --ethRPC
       - ws://eth-devnet:8545
+      - --bscRPC
+      - ws://bsc-devnet:8545
       - --alphRPC
       - http://alph-full-node:22973
       - --network
@@ -157,7 +188,7 @@ services:
       - --logLevel=debug
 
   spy:
-    image: eu.gcr.io/alephium-org/guardiand:0.2.78
+    image: eu.gcr.io/alephium-org/guardiand:0.2.121
     restart: unless-stopped
     ports:
       - 127.0.0.1:7072:7072

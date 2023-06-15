@@ -21,13 +21,13 @@ type StatisticDoc struct {
 }
 
 type TokenDoc struct {
-	ID              string      `bson:"_id"`
-	TokenAddress    string      `bson:"tokenAddress"`
-	TokenChain      vaa.ChainID `bson:"tokenChain"`
-	Decimals        uint8       `bson:"decimals"`
-	Symbol          string      `bson:"symbol"`
-	Name            string      `bson:"name"`
-	NativeAddress   string      `bson:"nativeAddress"`
-	CoinGeckoCoinId string      `bson:"coinGeckoCoinId"`
-	UpdatedAt       *time.Time  `bson:"updatedAt"`
+	ID              string      `bson:"_id" json:"id"`
+	TokenAddress    string      `bson:"tokenAddress" json:"tokenAddress"`
+	TokenChain      vaa.ChainID `bson:"tokenChain" json:"tokenChain"`
+	Decimals        uint8       `bson:"decimals" json:"decimals"`
+	Symbol          string      `bson:"symbol" json:"symbol"`
+	Name            string      `bson:"name" json:"name"`
+	NativeAddress   string      `bson:"nativeAddress" json:"nativeAddress"`
+	CoinGeckoCoinId string      `bson:"coinGeckoCoinId" json:"coinGeckoCoinId"`
+	UpdatedAt       *time.Time  `bson:"updatedAt" json:"updatedAt"`
 }

@@ -102,7 +102,7 @@ yargs(hideBin(process.argv))
                   alias: "c",
                   describe: "Chain to register",
                   type: "string",
-                  // choices: Object.keys(CHAINS), TODO: remove the comment once we release our sdk
+                  choices: Object.keys(CHAINS),
                   required: true,
                 })
                 .option("contract-address", {

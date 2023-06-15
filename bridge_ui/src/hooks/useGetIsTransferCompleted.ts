@@ -47,9 +47,11 @@ export default function useGetIsTransferCompleted(
 ): {
   isTransferCompletedLoading: boolean;
   isTransferCompleted: boolean;
+  error: string | undefined;
 } {
   const [isLoading, setIsLoading] = useState(false);
   const [isTransferCompleted, setIsTransferCompleted] = useState(false);
+  const [error, setError] = useState<string>()
 
   const isRecovery = useSelector(selectTransferIsRecovery);
   const targetAddress = useSelector(selectTransferTargetAddressHex);
@@ -103,7 +105,9 @@ export default function useGetIsTransferCompleted(
               signedVAA
             );
           } catch (error) {
-            console.error(error);
+            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            setError(errMsg)
+            console.error(errMsg);
           }
           if (!cancelled) {
             setIsTransferCompleted(transferCompleted);
@@ -162,7 +166,9 @@ export default function useGetIsTransferCompleted(
               signedVAA
             )
           } catch (error) {
-            console.log("failed to check alph transfer completed, err: " + error)
+            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            setError(errMsg)
+            console.error(errMsg)
           }
           if (!cancelled) {
             setIsTransferCompleted(transferCompleted)
@@ -209,5 +215,5 @@ export default function useGetIsTransferCompleted(
     pollState,
   ]);
 
-  return { isTransferCompletedLoading: isLoading, isTransferCompleted };
+  return { isTransferCompletedLoading: isLoading, isTransferCompleted, error };
 }

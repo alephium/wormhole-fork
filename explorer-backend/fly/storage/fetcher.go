@@ -7,7 +7,6 @@ import (
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	publicrpcv1 "github.com/alephium/wormhole-fork/node/pkg/proto/publicrpc/v1"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -20,6 +19,7 @@ func loadEmitterIds(config *common.BridgeConfig) ([]*emitterId, error) {
 	}{
 		{vaa.ChainIDAlephium, config.Alephium},
 		{vaa.ChainIDEthereum, config.Ethereum},
+		{vaa.ChainIDBSC, config.Bsc},
 	}
 	emitterIds := make([]*emitterId, 0)
 	for i := 0; i < len(chains); i++ {
@@ -110,7 +110,7 @@ func (f *Fetcher) start(ctx context.Context) {
 		select {
 		case <-tick.C:
 			for _, emitterId := range f.emitterIds {
-				if err := f.tryFetchMissingVaas(ctx, client, emitterId); err != nil {
+				if err := f.fetchMissingVaas(ctx, client, emitterId); err != nil {
 					f.logger.Error(
 						"failed to fetch missing vaas",
 						zap.Error(err),
@@ -125,25 +125,6 @@ func (f *Fetcher) start(ctx context.Context) {
 	}
 }
 
-func (f *Fetcher) tryFetchMissingVaas(
-	ctx context.Context,
-	client publicrpcv1.PublicRPCServiceClient,
-	emitterId *emitterId,
-) error {
-	err := f.fetchMissingVaas(ctx, client, emitterId)
-	if err != nil {
-		return err
-	}
-	count, err := f.repository.collections.missingVaas.CountDocuments(ctx, bson.D{})
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return f.tryFetchMissingVaas(ctx, client, emitterId)
-	}
-	return nil
-}
-
 func (f *Fetcher) fetchMissingVaas(
 	ctx context.Context,
 	client publicrpcv1.PublicRPCServiceClient,
@@ -152,6 +133,10 @@ func (f *Fetcher) fetchMissingVaas(
 	seqs, err := f.repository.FindOldestMissingIds(ctx, emitterId, int64(f.batchSize))
 	if err != nil {
 		return err
+	}
+	if len(seqs) == 0 {
+		f.logger.Info("there is no missing vaas", zap.String("emitter", emitterId.toString()))
+		return nil
 	}
 	f.logger.Info("fetch missing vaas", zap.String("emitter", emitterId.toString()), zap.Uint64s("seqs", seqs))
 	filteredSeqs, removedSeqs := f.filterSeqs(ctx, emitterId, seqs)

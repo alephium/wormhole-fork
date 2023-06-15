@@ -152,7 +152,7 @@ def build_node_yaml():
 
 k8s_yaml_with_ns(build_node_yaml())
 
-guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node", "devnet-init"]
+guardian_resource_deps = ["proto-gen", "eth-devnet", "alph-full-node", "devnet-init", "bsc-devnet"]
 if solana:
     guardian_resource_deps = guardian_resource_deps + ["solana-devnet"]
 
@@ -400,19 +400,21 @@ k8s_yaml_with_ns(build_devnet_init_yaml())
 
 k8s_resource(
     "devnet-init",
-    resource_deps = ["eth-devnet", "alph-full-node"],
+    resource_deps = ["eth-devnet", "alph-full-node", "bsc-devnet"],
     labels = ["devnet-init"],
     trigger_mode = trigger_mode,
 )
 
-# k8s_resource(
-#     "eth-devnet2",
-#     port_forwards = [
-#         port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
-#     ],
-#     labels = ["evm"],
-#     trigger_mode = trigger_mode,
-# )
+k8s_yaml_with_ns("devnet/bsc-devnet.yaml")
+
+k8s_resource(
+    "bsc-devnet",
+    port_forwards = [
+        port_forward(8546, name = "Ganache RPC [:8546]", host = webHost),
+    ],
+    labels = ["evm"],
+    trigger_mode = trigger_mode,
+)
 
 if bridge_ui:
     entrypoint = "npm run build && /app/node_modules/.bin/serve -s build -n"
@@ -474,7 +476,7 @@ if ci_tests:
 
     k8s_resource(
         "ci-tests",
-        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "solana-devnet", "spy", "guardian"],
+        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "bsc-devnet", "terra-terrad", "terra-fcd", "solana-devnet", "spy", "guardian"],
         labels = ["ci"],
         trigger_mode = trigger_mode,
     )

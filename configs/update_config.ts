@@ -4,14 +4,14 @@ import fs from 'fs'
 const ALPHTokenId = ''.padStart(64, '0')
 
 function updateConfig(
-  baseDir: string,
+  deploymentsPath: string,
   network: string,
   chain: string,
   func: (deployments: any, config: any) => void
 ) {
-  const deploymentsPath = path.join(baseDir, `.deployments.${network}.json`)
   if (!fs.existsSync(deploymentsPath)) {
-    throw new Error(`Deployments ${deploymentsPath} does not exist`)
+    console.log(`ERROR: deployments ${deploymentsPath} does not exist`)
+    return
   }
   const deployments = JSON.parse(fs.readFileSync(deploymentsPath).toString())
   const configPath = path.join(process.cwd(), chain, `${network}.json`)
@@ -20,26 +20,29 @@ function updateConfig(
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
 }
 
-function updateEthConfig(network: string) {
-  const ethDir = path.join(process.cwd(), '..', 'ethereum')
-  const truffleConfigPath = path.join(ethDir, 'truffle-config.js')
-  const truffleConfig = require(truffleConfigPath)
-  const networkConfig = truffleConfig.networks[`${network}`]
-  const nodeUrl = `${networkConfig.host}:${networkConfig.port}`
-
+function updateEvmConfig(network: string, chainName: string) {
   const func = (deployments: any, config: any): void => {
-    config.nodeUrl = nodeUrl
     config.contracts = deployments
     config.coreEmitterAddress = (deployments.governance as string).slice(2).padStart(64, '0')
     config.tokenBridgeEmitterAddress = (deployments.tokenBridge as string).slice(2).padStart(64, '0')
-    const bridgeTokens = [deployments.weth]
+    const bridgeTokens = [deployments.wrappedNative]
     if (deployments.testToken) {
       bridgeTokens.push(deployments.testToken)
     }
     config.bridgeTokens = bridgeTokens
   }
 
-  updateConfig(ethDir, network, 'ethereum', func)
+  const contractDir = path.join(process.cwd(), '..', 'ethereum')
+  const deploymentsPath = path.join(contractDir, `.deployments.${chainName}.${network}.json`)
+  updateConfig(deploymentsPath, network, chainName, func)
+}
+
+function updateEthConfig(network: string) {
+  updateEvmConfig(network, 'ethereum')
+}
+
+function updateBscConfig(network: string) {
+  updateEvmConfig(network, 'bsc')
 }
 
 function updateAlphConfig(network: string) {
@@ -48,7 +51,8 @@ function updateAlphConfig(network: string) {
       governance: deployments.contracts.Governance.contractInstance.contractId,
       nativeGovernance: deployments.contracts.Governance.contractInstance.address,
       tokenBridge: deployments.contracts.TokenBridge.contractInstance.contractId,
-      nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address
+      nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address,
+      bridgeRewardRouter: deployments.contracts.BridgeRewardRouter.contractInstance.contractId
     }
     const bridgeTokens = [ALPHTokenId]
     if (deployments.contracts.TestToken !== undefined) {
@@ -62,7 +66,8 @@ function updateAlphConfig(network: string) {
   }
 
   const alphDir = path.join(process.cwd(), '..', 'alephium', 'artifacts')
-  updateConfig(alphDir, network, 'alephium', func)
+  const deploymentsPath = path.join(alphDir, `.deployments.${network}.json`)
+  updateConfig(deploymentsPath, network, 'alephium', func)
 }
 
 const network = process.argv[2]
@@ -73,3 +78,4 @@ if (network !== 'devnet' && network !== 'testnet' && network !== 'mainnet') {
 
 updateEthConfig(network)
 updateAlphConfig(network)
+updateBscConfig(network)

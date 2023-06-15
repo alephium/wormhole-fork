@@ -9,7 +9,8 @@ import {
   getEmitterAddressTerra,
   uint8ArrayToHex,
   VAA,
-  TransferToken
+  TransferToken,
+  CHAIN_ID_BSC
 } from "alephium-wormhole-sdk";
 import {
   createSpyRPCServiceClient,
@@ -144,7 +145,7 @@ async function encodeEmitterAddress(
     return emitterAddress
   }
 
-  if (emitterChainId === CHAIN_ID_ETH) {
+  if (emitterChainId === CHAIN_ID_ETH || emitterChainId === CHAIN_ID_BSC) {
     return getEmitterAddressEth(emitterAddress)
   }
 

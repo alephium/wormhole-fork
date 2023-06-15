@@ -7,15 +7,13 @@ import {
   isEVMChain,
   redeemAndUnwrapOnSolana,
   redeemOnAlgorand,
-  redeemOnEth,
-  redeemOnEthNative,
   redeemOnSolana,
   redeemOnTerra,
-  redeemOnAlph,
   CHAIN_ID_ALEPHIUM,
   uint8ArrayToHex,
   getTokenBridgeForChainId,
-  getIsTransferCompletedAlph
+  getIsTransferCompletedAlph,
+  redeemOnAlphWithReward
 } from "alephium-wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -40,11 +38,12 @@ import {
   selectTransferSourceChain,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { setIsRedeeming, setRedeemTx } from "../store/transferSlice";
+import { setIsRedeeming, setIsWalletApproved, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
+  ALEPHIUM_BRIDGE_REWARD_ROUTER_ID,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -60,10 +59,10 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
-import { getEmitterChainId, waitTxConfirmed } from "../utils/alephium";
+import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { TransactionDB } from "../utils/db";
 import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
+import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
 
 async function algo(
   dispatch: any,
@@ -121,25 +120,24 @@ async function evm(
       targetChainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = isNative
-      ? await redeemOnEthNative(
+    const result = isNative
+      ? await redeemOnEthNativeWithoutWait(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         )
-      : await redeemOnEth(
+      : await redeemOnEthWithoutWait(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         );
+    dispatch(setIsWalletApproved(true))
+    const receipt = await result.wait()
     dispatch(
       setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
     );
-    if (sourceTxId && sourceChainId === CHAIN_ID_ALEPHIUM) {
-      await TransactionDB.getInstance().txs.update(sourceTxId, {status: "Completed"})
-    }
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -247,17 +245,21 @@ async function alephium(
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
-    const result = await redeemOnAlph(wallet.signer, tokenBridgeForChainId, signedVAA)
-    const confirmedTx = await waitTxConfirmed(wallet.nodeProvider, result.txId)
+    console.log('redeem on alephium')
+    const result = await redeemOnAlphWithReward(wallet.signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
+    console.log(`the redeem tx has been submitted, txId: ${result.txId}`)
+    dispatch(setIsWalletApproved(true))
+    const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
+    dispatch(
+      setRedeemTx({ id: result.txId, block: blockHeader.height })
+    );
+    console.log(`the redeem tx has been confirmed, txId: ${result.txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
       wallet.group,
       signedVAA
     )
-    dispatch(
-      setRedeemTx({ id: result.txId, block: blockHeader.height })
-    );
     if (isTransferCompleted) {
       enqueueSnackbar(null, {
         content: <Alert severity="success">Transaction confirmed</Alert>,

@@ -14,6 +14,10 @@ export class AlephiumWallet {
     this.group = groupOfAddress(address)
     this.nodeProvider = nodeProvider
   }
+
+  isExtensionWallet(): boolean {
+    return typeof (this.signer as any)['request'] === 'function'
+  }
 }
 
 export function useAlephiumWallet() {

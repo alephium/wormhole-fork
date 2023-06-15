@@ -1,4 +1,5 @@
 import {
+  CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
   hexToNativeString,
   isEVMChain,
@@ -13,6 +14,7 @@ import {
   selectTransferAmount,
   selectTransferIsTargetComplete,
   selectTransferShouldLockFields,
+  selectTransferSourceAssetInfoWrapper,
   selectTransferSourceChain,
   selectTransferTargetAddressHex,
   selectTransferTargetAsset,
@@ -36,6 +38,7 @@ import SolanaCreateAssociatedAddress, {
 import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import RegisterNowButton from "./RegisterNowButton";
+import { hexToALPHAddress } from "../../utils/alephium";
 
 const useStyles = makeStyles((theme) => ({
   transferField: {
@@ -92,13 +95,14 @@ function Target() {
     logo,
     readableTargetAddress,
   } = useTargetInfo();
+  const { isFetching: isFetchingSourceAssetInfo, error: fetchSourceAssetInfoError } = useSelector(selectTransferSourceAssetInfoWrapper);
   const uiAmountString = useSelector(selectTransferTargetBalanceString);
   const transferAmount = useSelector(selectTransferAmount);
   const error = useSelector(selectTransferTargetError);
   const isTargetComplete = useSelector(selectTransferIsTargetComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
   const { statusMessage, isReady } = useIsWalletReady(targetChain);
-  const isLoading = !statusMessage && !targetAssetError && !data;
+  const isLoading = (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) || isFetchingSourceAssetInfo;
   const { associatedAccountExists, setAssociatedAccountExists } =
     useAssociatedAccountExistsState(
       targetChain,
@@ -152,7 +156,7 @@ function Target() {
             <Typography component="div">
               <SmartAddress
                 chainId={targetChain}
-                address={readableTargetAddress}
+                address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress}
                 variant="h6"
               />
               {`(Current balance: ${uiAmountString || "0"})`}
@@ -178,7 +182,7 @@ function Target() {
         onClick={handleNextClick}
         showLoader={isLoading}
         error={
-          statusMessage || (isLoading ? undefined : error || targetAssetError)
+          statusMessage || fetchSourceAssetInfoError || (isLoading ? undefined : error || targetAssetError)
         }
       >
         Next

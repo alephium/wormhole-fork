@@ -42,7 +42,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 
-			events, err := w.getGovernanceEventsByTxId(ctx, client, w.governanceContractAddress, blockHash, txId)
+			events, err := w.getGovernanceEventsByTxId(ctx, logger, client, w.governanceContractAddress, blockHash, txId)
 			if err != nil {
 				logger.Error("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))
 				continue
@@ -113,6 +113,7 @@ func (w *Watcher) handleGovernanceMessages(logger *zap.Logger, confirmed []*reob
 
 func (w *Watcher) getGovernanceEventsByTxId(
 	ctx context.Context,
+	logger *zap.Logger,
 	client *Client,
 	address string,
 	blockHash string,
@@ -137,6 +138,13 @@ func (w *Watcher) getGovernanceEventsByTxId(
 		msg, err := ToWormholeMessage(event.Fields, txId)
 		if err != nil {
 			return nil, err
+		}
+
+		if msg.IsAttestTokenVAA() {
+			if err = w.validateAttestToken(ctx, msg); err != nil {
+				logger.Error("re-observe: ignore invalid attest token event", zap.Error(err))
+				continue
+			}
 		}
 
 		reobservedEvents = append(reobservedEvents, &reobservedEvent{

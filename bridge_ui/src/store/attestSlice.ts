@@ -1,7 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ETH,
+  CHAIN_ID_ETH
 } from "alephium-wormhole-sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Transaction } from "./transferSlice";
@@ -18,6 +18,7 @@ export interface AttestState {
   attestTx: Transaction | undefined;
   signedVAAHex: string | undefined;
   isSending: boolean;
+  isWalletApproved: boolean
   isCreating: boolean;
   createTx: Transaction | undefined;
 }
@@ -30,6 +31,7 @@ const initialState: AttestState = {
   attestTx: undefined,
   signedVAAHex: undefined,
   isSending: false,
+  isWalletApproved: false,
   isCreating: false,
   createTx: undefined,
 };
@@ -73,10 +75,14 @@ export const attestSlice = createSlice({
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
       state.signedVAAHex = action.payload;
       state.isSending = false;
+      state.isWalletApproved = false;
       state.activeStep = 3;
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
       state.isSending = action.payload;
+    },
+    setIsWalletApproved: (state, action: PayloadAction<boolean>) => {
+      state.isWalletApproved = action.payload
     },
     setIsCreating: (state, action: PayloadAction<boolean>) => {
       state.isCreating = action.payload;
@@ -84,6 +90,7 @@ export const attestSlice = createSlice({
     setCreateTx: (state, action: PayloadAction<Transaction>) => {
       state.createTx = action.payload;
       state.isCreating = false;
+      state.isWalletApproved = false;
     },
     reset: (state) => ({
       ...initialState,
@@ -103,6 +110,7 @@ export const {
   setAttestTx,
   setSignedVAAHex,
   setIsSending,
+  setIsWalletApproved,
   setIsCreating,
   setCreateTx,
   reset,

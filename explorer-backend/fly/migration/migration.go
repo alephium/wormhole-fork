@@ -41,6 +41,11 @@ func Run(db *mongo.Database) error {
 		return err
 	}
 
+	// Created transactions collection
+	if err := createCollection(db, "transactions"); err != nil {
+		return err
+	}
+
 	// Created statistics collection
 	if err := createCollection(db, "statistics"); err != nil {
 		return err
@@ -205,6 +210,30 @@ func Run(db *mongo.Database) error {
 		},
 	}
 	_, err = db.Collection("statistics").Indexes().CreateMany(context.TODO(), statsIndexes)
+	if checkError(err) != nil {
+		return err
+	}
+
+	transactionsIndexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "txId", Value: 1}}},
+		{Keys: bson.D{{Key: "address", Value: 1}}},
+		{
+			Keys: bson.D{
+				{Key: "address", Value: 1},
+				{Key: "emitterChain", Value: 1},
+			},
+		},
+		{
+			Keys: bson.D{
+				{Key: "address", Value: 1},
+				{Key: "emitterChain", Value: 1},
+				{Key: "targetChain", Value: 1},
+			},
+		},
+		{Keys: bson.D{{Key: "eventIndex", Value: 1}}},
+		{Keys: bson.D{{Key: "timestamp", Value: 1}}},
+	}
+	_, err = db.Collection("transactions").Indexes().CreateMany(context.TODO(), transactionsIndexes)
 	if checkError(err) != nil {
 		return err
 	}

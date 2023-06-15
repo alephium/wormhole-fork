@@ -15,7 +15,7 @@ import { relayTerra } from "./terra";
 import {
   getChainConfigInfo,
   AlephiumChainConfigInfo,
-  EthereumChainConfigInfo,
+  EvmChainConfigInfo,
   TerraChainConfigInfo
 } from "../configureEnv";
 import { RelayResult, Status } from "../helpers/redisHelper";
@@ -54,7 +54,7 @@ export async function relay(
   logger.debug(`Relay transfer payload: ${JSON.stringify(transferPayload)}`)
 
   if (isEVMChain(targetChainId)) {
-    const evmConfigInfo = chainConfigInfo as EthereumChainConfigInfo
+    const evmConfigInfo = chainConfigInfo as EvmChainConfigInfo
     const unwrapNative =
       transferPayload.originChain === targetChainId &&
       hexToNativeString(

@@ -1,10 +1,3 @@
-const ethDevnetConfig = require('../../configs/ethereum/devnet.json')
-const ethTestnetConfig = require('../../configs/ethereum/testnet.json')
-const ethMainnetConfig = require('../../configs/ethereum/mainnet.json')
-const guardianDevnetConfig = require('../../configs/guardian/devnet.json')
-const guardianTestnetConfig = require('../../configs/guardian/testnet.json')
-const guardianMainnetConfig = require('../../configs/guardian/mainnet.json')
-
 var config = undefined
 
 function addPrefix(value) {
@@ -24,7 +17,7 @@ function isDevnet(network) {
 }
 
 function isTestnet(network) {
-  return network === 'goerli' || network === 'goerli-fork'
+  return network === 'goerli' || network === 'goerli-fork' || network === 'bscTestnet'
 }
 
 function isMainnet(network) {
@@ -32,27 +25,55 @@ function isMainnet(network) {
 }
 
 function getDeploymentsFileName(network) {
+  const chainName = getChainName()
   return isDevnet(network)
-    ? '.deployments.devnet.json'
+    ? `.deployments.${chainName}.devnet.json`
     : isTestnet(network)
-    ? '.deployments.testnet.json'
+    ? `.deployments.${chainName}.testnet.json`
     : isMainnet(network)
-    ? '.deployments.mainnet.json'
+    ? `.deployments.${chainName}.mainnet.json`
     : invalidNetwork(network)
 }
 
-function getWETHAddress(network) {
+function getWrappedNativeAddress(network) {
+  const chainConfig = getChainConfig(network)
   return isDevnet(network)
     ? artifacts.require("MockWETH9").address
-    : isTestnet(network)
-    ? ethTestnetConfig.contracts.weth // weth address on goerli testnet
-    : isMainnet(network)
-    ? ethMainnetConfig.contracts.weth // weth address on ethereum mainnet
-    : invalidNetwork(network)
+    : chainConfig.contracts.wrappedNative
 }
 
 function invalidNetwork(network) {
   throw new Error(`Invalid network: ${network}`)
+}
+
+const evmChainNames = ['ethereum', 'bsc']
+
+function getChainName() {
+  if (process.env.CHAIN_NAME && evmChainNames.includes(process.env.CHAIN_NAME)) {
+    return process.env.CHAIN_NAME
+  }
+  throw new Error(`No chain name specified, please specify CHAIN_NAME env`)
+}
+
+function getChainConfig(network) {
+  const chainName = getChainName()
+  return isDevnet(network)
+    ? require(`../../configs/${chainName}/devnet.json`)
+    : isTestnet(network)
+    ? require(`../../configs/${chainName}/testnet.json`)
+    : isMainnet(network)
+    ? require(`../../configs/${chainName}/mainnet.json`)
+    : invalidNetwork(network)
+}
+
+function getGuardianConfig(network) {
+  return isDevnet(network)
+    ? require('../../configs/guardian/devnet.json')
+    : isTestnet(network)
+    ? require('../../configs/guardian/testnet.json')
+    : isMainnet(network)
+    ? require('../../configs/guardian/mainnet.json')
+    : invalidNetwork(network)
 }
 
 function loadConfigs(network) {
@@ -60,19 +81,14 @@ function loadConfigs(network) {
     return config
   }
 
-  const [ethConfig, guardianConfig] = isDevnet(network)
-    ? [ethDevnetConfig, guardianDevnetConfig]
-    : isTestnet(network)
-    ? [ethTestnetConfig, guardianTestnetConfig]
-    : isMainnet(network)
-    ? [ethMainnetConfig, guardianMainnetConfig]
-    : invalidNetwork(network)
+  const chainConfig = getChainConfig(network)
+  const guardianConfig = getGuardianConfig(network)
   return {
-    chainId: numberToHex(ethConfig.chainId),
+    chainId: numberToHex(chainConfig.chainId),
     governanceChainId: numberToHex(guardianConfig.governanceChainId),
     governanceEmitterAddress: addPrefix(guardianConfig.governanceEmitterAddress),
     initSigners: guardianConfig.initSigners.map(signer => addPrefix(signer)),
   }
 }
 
-module.exports = { loadConfigs, getDeploymentsFileName, getWETHAddress, isDevnet }
+module.exports = { loadConfigs, getDeploymentsFileName, getWrappedNativeAddress, isDevnet, getChainName }

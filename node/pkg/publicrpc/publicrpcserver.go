@@ -91,7 +91,7 @@ func (s *PublicrpcServer) GetSignedVAA(ctx context.Context, req *publicrpcv1.Get
 		return nil, err
 	}
 
-	b, err := s.db.GetSignedVAABytes(db.VAAID{
+	b, err := s.db.GetSignedVAABytes(vaa.VAAID{
 		EmitterChain:   vaa.ChainID(req.MessageId.EmitterChain.Number()),
 		EmitterAddress: *emitterAddress,
 		TargetChain:    vaa.ChainID(req.MessageId.TargetChain.Number()),
@@ -130,7 +130,7 @@ func (s *PublicrpcServer) GetNonGovernanceVAABatch(ctx context.Context, req *pub
 
 	entries := make([]*publicrpcv1.GetNonGovernanceVAABatchResponse_Entry, 0)
 	for _, sequence := range req.Sequences {
-		b, err := s.db.GetSignedVAABytes(db.VAAID{
+		b, err := s.db.GetSignedVAABytes(vaa.VAAID{
 			EmitterChain:   vaa.ChainID(req.EmitterChain.Number()),
 			EmitterAddress: *emitterAddress,
 			TargetChain:    vaa.ChainID(req.TargetChain.Number()),

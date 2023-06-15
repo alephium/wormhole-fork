@@ -14,6 +14,7 @@ import (
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/processor"
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/server"
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/storage"
+	"github.com/alephium/wormhole-fork/explorer-backend/fly/transactions"
 	"github.com/alephium/wormhole-fork/explorer-backend/fly/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cobra"
@@ -87,6 +88,11 @@ var (
 	redisUri                 *string
 	mongodbUri               *string
 	mongodbName              *string
+	alphPollInterval         *uint
+	alphNodeUrl              *string
+	alphApiKey               *string
+	alphExplorerBackendUrl   *string
+	bscRpcUrl                *string
 )
 
 func init() {
@@ -102,11 +108,16 @@ func init() {
 	fetchMissingVaasInterval = rootCmd.Flags().Uint("fetchMissingVaasInterval", 300, "Fetch missing vaas interval")
 	fetchVaaBatchSize = rootCmd.Flags().Uint("fetchVaaBatchSize", 20, "Fetch vaa batch size")
 	fetchGuardianSetInterval = rootCmd.Flags().Uint("fetchGuardianSetInterval", 900, "Fetch guardian set interval")
-	statInterval = rootCmd.Flags().Uint("statInterval", 300, "Update statistic interval")
+	statInterval = rootCmd.Flags().Uint("statInterval", 5, "Update statistic interval")
 	enableCache = rootCmd.Flags().Bool("enableCache", false, "Enable last sequence cache")
 	redisUri = rootCmd.Flags().String("redisUri", "", "Redis URI(you need to specify this if enableCache is true)")
 	mongodbUri = rootCmd.Flags().String("mongodbUri", "", "Mongodb URI")
 	mongodbName = rootCmd.Flags().String("mongodbName", "", "Mongodb Name")
+	alphPollInterval = rootCmd.Flags().Uint("alphPollInterval", 10, "Alephium poll interval")
+	alphNodeUrl = rootCmd.Flags().String("alphNodeUrl", "http://127.0.0.1:22973", "Alephium full node url")
+	alphApiKey = rootCmd.Flags().String("alphApiKey", "", "Alephium api key")
+	alphExplorerBackendUrl = rootCmd.Flags().String("alphExplorerBackendUrl", "http://127.0.0.1:9090", "Alephium explorer-backend url")
+	bscRpcUrl = rootCmd.Flags().String("bscRpcUrl", "http://127.0.0.1:8546", "BSC rpc url")
 }
 
 func checkConfigs(logger *zap.Logger) {
@@ -301,6 +312,8 @@ func run(cmd *cobra.Command, args []string) {
 		}
 	}()
 
+	watcher := transactions.NewWatcher(logger, bridgeConfig, db)
+
 	// Load p2p private key
 	var priv crypto.PrivKey
 	priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
@@ -311,6 +324,10 @@ func run(cmd *cobra.Command, args []string) {
 	// Run supervisor.
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx, "p2p", p2p.Run(obsvC, obsvReqC, nil, sendC, signedInC, priv, nil, gst, *p2pPort, *p2pNetworkId, *p2pBootstrap, "", false, rootCtxCancel)); err != nil {
+			return err
+		}
+
+		if err := supervisor.Run(ctx, "watcher", watcher.Run(*alphNodeUrl, *alphApiKey, *alphExplorerBackendUrl, *alphPollInterval, *ethRpcUrl, *bscRpcUrl)); err != nil {
 			return err
 		}
 
