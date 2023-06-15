@@ -23,3 +23,4 @@ COPY --from=build "/app/backend" "/backend"
 COPY --from=build "/configs" "/configs"
 # Run the binary.
 ENTRYPOINT ["/backend"]
+

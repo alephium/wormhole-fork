@@ -14,7 +14,8 @@
     "codegen": "npx @alephium/cli compile && cp -r artifacts/. ../sdk/js/src/alephium-contracts",
     "test": "npx @alephium/cli test -i -v",
     "deploy:devnet": "npx @alephium/cli deploy -n devnet",
-    "auto-mine": "npx ts-node scripts/auto_mine.ts"
+    "auto-mine": "npx ts-node scripts/auto_mine.ts",
+    "create_local_token_pool": "npx ts-node scripts/create_local_token_pool.ts"
   },
   "prettier": {
     "printWidth": 120,

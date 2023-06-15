@@ -613,6 +613,7 @@ export const NEON_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? "0x0000000000000000000000000000000000000000"
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
 );
+
 export const SOL_BRIDGE_ADDRESS =
   CLUSTER === "mainnet"
     ? "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth"
@@ -766,9 +767,7 @@ export const getBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_BRIDGE_ADDRESS
-    : "";
+    : ""
 export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_NFT_BRIDGE_ADDRESS
@@ -796,9 +795,7 @@ export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_NFT_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_NFT_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_NFT_BRIDGE_ADDRESS
-    : "";
+    : ""
 export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
   chainId === CHAIN_ID_SOLANA
     ? SOL_TOKEN_BRIDGE_ADDRESS
@@ -830,8 +827,6 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
     ? KLAYTN_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
     ? CELO_TOKEN_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_NEON
-    ? NEON_TOKEN_BRIDGE_ADDRESS
     : "";
 
 export const COVALENT_API_KEY = process.env.REACT_APP_COVALENT_API_KEY

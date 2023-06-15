@@ -4,6 +4,8 @@ NETWORKS=('mainnet' 'testnet' 'devnet')
 
 network=$1
 
+pushImage=${2:-false}
+
 if [ -z "${network// }" ]
 then
     echo "Please specify the network type"
@@ -13,6 +15,7 @@ fi
 set -euo pipefail xtrace
 
 VERSION=0.2.121
+
 export DOCKER_BUILDKIT=1
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
@@ -32,7 +35,7 @@ docker build --target go-export -f ./docker/Dockerfile.proto -o type=local,dest=
 docker build --target node-export -f ./docker/Dockerfile.proto -o type=local,dest=. .
 
 # Build guardian image (used for both guardian & spy)
-docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION --build-arg network=$network
+docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION
 
 ## Build eth-node image
 docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$VERSION
@@ -40,7 +43,7 @@ docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$VERS
 docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contracts:$VERSION
 
 ## Build Bridge UI
-docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui:$VERSION --build-arg network=$network
+docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION --build-arg network=$network
 
 ## Build Explorer Images
 ### explorer-api-server
@@ -51,3 +54,10 @@ docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormho
 
 ### explorer
 docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+
+if [ "${pushImage}" = true ]
+then
+    docker push eu.gcr.io/alephium-org/guardiand:$VERSION
+    docker push eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION
+    docker push eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+fi
