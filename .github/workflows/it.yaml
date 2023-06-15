@@ -33,10 +33,10 @@ jobs:
         working-directory: ./integration_test
         run: npm install && npm run it
       - name: run relayer integration test
-        working-directory: ./relayer/spy_relayer
+        working-directory: ./relayer
         run: |
           npm install && npm run build
-          npm run spy_relay:it &
+          npm run start:devnet &
           sleep 5 && npm run test
       - name: Collect Docker Logs
         if: success() || failure()
