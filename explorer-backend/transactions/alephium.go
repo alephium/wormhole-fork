@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdk "github.com/alephium/go-sdk"
+	"github.com/alephium/wormhole-fork/explorer-backend/utils"
 	"github.com/alephium/wormhole-fork/node/pkg/alephium"
 	"github.com/alephium/wormhole-fork/node/pkg/common"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -50,30 +51,37 @@ func NewAlephiumWatcher(
 	}
 }
 
-func (w *AlephiumWatcher) Run(ctx context.Context, errC chan error) {
-	nodeInfo, err := w.client.GetNodeInfo(ctx)
-	if err != nil {
-		w.logger.Error("failed to get node info", zap.Error(err))
-		errC <- err
-		return
-	}
+func (w *AlephiumWatcher) Run() func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		nodeInfo, err := w.client.GetNodeInfo(ctx)
+		if err != nil {
+			w.logger.Error("failed to get node info", zap.Error(err))
+			return err
+		}
 
-	isSynced, err := w.client.IsCliqueSynced(ctx)
-	if err != nil {
-		w.logger.Error("failed to get self cliqued synced", zap.Error(err))
-		errC <- err
-		return
-	}
-	if !*isSynced {
-		errC <- fmt.Errorf("clique not synced")
-		return
-	}
+		isSynced, err := w.client.IsCliqueSynced(ctx)
+		if err != nil {
+			w.logger.Error("failed to get self cliqued synced", zap.Error(err))
+			return err
+		}
+		if !*isSynced {
+			return err
+		}
 
-	w.logger.Info("alephium watcher started", zap.String("version", nodeInfo.BuildInfo.ReleaseVersion), zap.Uint32("fromEventIndex", w.fromEventIndex))
+		w.logger.Info("alephium watcher started", zap.String("version", nodeInfo.BuildInfo.ReleaseVersion), zap.Uint32("fromEventIndex", w.fromEventIndex))
 
-	eventsC := make(chan []*EventsPerIndex)
-	go w.fetchEvents(ctx, w.fromEventIndex, errC, eventsC)
-	go w.handleEvents(ctx, errC, eventsC)
+		eventsC := make(chan []*EventsPerIndex)
+		errC := make(chan error)
+		go w.fetchEvents(ctx, w.fromEventIndex, errC, eventsC)
+		go w.handleEvents(ctx, errC, eventsC)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-errC:
+			return err
+		}
+	}
 }
 
 func (w *AlephiumWatcher) fetchEvents(ctx context.Context, fromEventIndex uint32, errC chan<- error, eventsC chan<- []*EventsPerIndex) {
@@ -108,7 +116,6 @@ func (w *AlephiumWatcher) fetchEvents(ctx context.Context, fromEventIndex uint32
 				continue
 			}
 
-			allEvents := make([]*EventsPerIndex, 0)
 			for {
 				events, err := w.client.GetContractEvents(ctx, *contractAddress, int32(fromIndex), chainIndex.FromGroup)
 				if err != nil {
@@ -117,15 +124,14 @@ func (w *AlephiumWatcher) fetchEvents(ctx context.Context, fromEventIndex uint32
 					return
 				}
 
-				allEvents = append(allEvents, fromContractEvents(events, fromIndex)...)
+				allEvents := fromContractEvents(events, fromIndex)
+				if len(allEvents) > 0 {
+					eventsC <- allEvents
+				}
 				fromIndex = uint32(events.NextStart)
 				if events.NextStart == *count {
 					break
 				}
-			}
-
-			if len(allEvents) > 0 {
-				eventsC <- allEvents
 			}
 		}
 	}
@@ -233,7 +239,7 @@ func getAlphTxSender(ctx context.Context, url string, txId string) (*string, err
 	if err != nil {
 		return nil, err
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := utils.DefaultRateLimitClient.Do(ctx, req)
 	if err != nil {
 		return nil, err
 	}

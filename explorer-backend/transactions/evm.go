@@ -52,8 +52,18 @@ func NewEVMWatcher(
 	}, nil
 }
 
-func (w *EVMWatcher) Run(ctx context.Context, errC chan error) {
-	go w.fetchEvents(ctx, errC)
+func (w *EVMWatcher) Run() func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		errC := make(chan error)
+		go w.fetchEvents(ctx, errC)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-errC:
+			return err
+		}
+	}
 }
 
 func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
@@ -111,7 +121,6 @@ func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight u
 		w.logger.Error("failed to get logs by block range", zap.Uint32("fromHeight", fromHeight), zap.Uint32("toHeight", toHeight), zap.Error(err))
 		return err
 	}
-	txsByBlockHash := make(map[ethCommon.Hash][]*BridgeTransaction)
 	for _, log := range logs {
 		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
 		if err != nil {
@@ -120,29 +129,21 @@ func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight u
 		if bridgeTx == nil { // the transaction is not transfer token tx
 			continue
 		}
-		if _, ok := txsByBlockHash[log.BlockHash]; !ok {
-			txsByBlockHash[log.BlockHash] = make([]*BridgeTransaction, 0)
-		}
-		txsByBlockHash[log.BlockHash] = append(txsByBlockHash[log.BlockHash], bridgeTx)
-	}
-	blockTxs := make([]*BlockTransactions, 0)
-	for hash, txs := range txsByBlockHash {
-		header, err := client.HeaderByHash(ctx, hash)
+		// TODO: group events by block hash
+		header, err := client.HeaderByHash(ctx, log.BlockHash)
 		if err != nil {
-			w.logger.Error("failed to get header by block hash", zap.String("blockHash", hash.Hex()), zap.Error(err))
+			w.logger.Error("failed to get header by block hash", zap.String("blockHash", log.BlockHash.Hex()), zap.Error(err))
 			return err
 		}
 		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
-		blockTxs = append(blockTxs, &BlockTransactions{
+		blockTxs := &BlockTransactions{
 			blockNumber:    uint32(header.Number.Uint64()),
-			blockHash:      hash.Hex(),
+			blockHash:      log.BlockHash.Hex(),
 			blockTimestamp: &blockTimestamp,
-			txs:            txs,
+			txs:            []*BridgeTransaction{bridgeTx},
 			chainId:        w.chainId,
-		})
-	}
-	if len(blockTxs) > 0 {
-		w.blockTxsC <- blockTxs
+		}
+		w.blockTxsC <- []*BlockTransactions{blockTxs}
 	}
 	return nil
 }
