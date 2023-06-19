@@ -33,7 +33,7 @@ jobs:
         working-directory: ./integration_test
         run: npm install && npm run it
       - name: run relayer integration test
-        working-directory: ./relayer
+        working-directory: ./relayer-engine
         run: |
           npm install && npm run build
           npm run start:devnet &
