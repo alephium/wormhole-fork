@@ -1,5 +1,5 @@
 {
-  "version": "v2.3.3",
+  "version": "v2.3.5",
   "name": "AddRewards",
   "bytecodeTemplate": "01010300000009b4{1}a2b4{1}0e0c{0}0101",
   "fieldsSig": {
