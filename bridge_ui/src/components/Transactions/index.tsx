@@ -2,9 +2,6 @@ import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
   coalesceChainName,
-  getIsTransferCompletedAlph,
-  getIsTransferCompletedEth,
-  getEmitterAddressEth,
   getTokenBridgeForChainId,
   isEVMChain,
   CHAIN_ID_ETH
@@ -16,7 +13,6 @@ import {
   EXPLORER_API_SERVER_HOST,
   CHAINS,
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
-  getTokenBridgeAddressForChain,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALEPHIUM_POLLING_INTERVAL
 } from "../../utils/consts";
@@ -29,13 +25,12 @@ import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";
 import { PageSwitch, DefaultPageSize } from "./PageSwitch";
-import { getSignedVAAWithRetry } from "../../utils/getSignedVAAWithRetry";
-import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, isEVMTxConfirmed } from "../../utils/ethereum";
+import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, getIsTxsCompletedEvm, isEVMTxConfirmed } from "../../utils/ethereum";
 import { TransactionTable } from "./TransactionTable";
-import { binToHex } from "@alephium/web3";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { useSelector } from "react-redux";
 import { selectTransferSourceChain, selectTransferTargetChain } from "../../store/selectors";
+import { getIsTxsCompletedAlph } from "../../utils/alephium";
 
 const useStyles = makeStyles(() => ({
   mainCard: {
@@ -71,18 +66,6 @@ async function getTxsByPageNumber(address: string, emitterChain: ChainId, target
   const response = await fetch(url)
   const json = await response.json()
   return (json as BridgeTransaction[]).map((tx) => ({ ...tx, status: 'Loading'}))
-}
-
-async function getSignedVaa(tx: BridgeTransaction) {
-  if (tx.vaa) return Buffer.from(tx.vaa, 'hex')
-
-  const tokenBridgeAddress = getTokenBridgeAddressForChain(tx.emitterChain)
-  const emitterAddress = isEVMChain(tx.emitterChain) ? getEmitterAddressEth(tokenBridgeAddress) : tokenBridgeAddress
-  const signedVaa = tx.vaa
-      ? Buffer.from(tx.vaa, 'hex')
-      : (await getSignedVAAWithRetry(tx.emitterChain, emitterAddress, tx.targetChain, tx.sequence.toString())).vaaBytes
-  tx.vaa = binToHex(signedVaa)
-  return signedVaa
 }
 
 type BlockNumberFetcher = () => Promise<number | undefined>
@@ -137,80 +120,67 @@ function isTxConfirmed(currentBlockNumber: number, txBlockNumber: number, chainI
 
 function ListTransactions({
   txSourceChain,
+  txTargetChain,
   sourceChainBlockNumber,
   targetChainBlockNumber,
   txs,
   isLoading,
-  isTransferCompleted
+  getIsTxsCompleted,
 }: {
   txSourceChain: ChainId,
+  txTargetChain: ChainId,
   sourceChainBlockNumber: number | undefined,
   targetChainBlockNumber: number | undefined,
   txs: BridgeTransaction[],
   isLoading: boolean,
-  isTransferCompleted: (signedVaa: Uint8Array) => Promise<boolean>
+  getIsTxsCompleted: (txs: BridgeTransaction[]) => Promise<boolean[]>
 }) {
-  const getIsTxConfirmed = useCallback((tx: BridgeTransaction) => {
-    try {
-      if ((tx.status === 'Pending' || tx.status === 'Loading') && sourceChainBlockNumber !== undefined) {
-        return isTxConfirmed(sourceChainBlockNumber, tx.blockNumber, txSourceChain)
-          ? 'Confirmed'
-          : 'Pending'
-      }
-      return tx.status
-    } catch (error) {
-      console.error(`failed to getIsTxConfirmed, tx: ${JSON.stringify(tx)}, error: ${error}`)
-      return tx.status
-    }
-  }, [sourceChainBlockNumber, txSourceChain])
-
-  const getIsTxCompleted = useCallback(async (tx: BridgeTransaction) => {
-    try {
-      if (tx.status === 'Confirmed' && targetChainBlockNumber !== undefined) {
-        const signedVaa = await getSignedVaa(tx)
-        const isCompleted = await isTransferCompleted(signedVaa)
-        return isCompleted ? 'Completed' : tx.status
-      }
-      return tx.status
-    } catch (error) {
-      console.error(`failed to getIsTxCompleted, tx: ${JSON.stringify(tx)}, error: ${error}`)
-      return tx.status
-    }
-  }, [targetChainBlockNumber, isTransferCompleted])
+  const [txsStatus, setTxsStatus] = useState<TxStatus[]>(txs.map((tx) => tx.status))
+  const [hasNewConfirmedTx, setHasNewConfirmedTx] = useState<boolean>(false)
 
   useEffect(() => {
+    if (sourceChainBlockNumber === undefined) {
+      return
+    }
+
+    const pendingAndLoadingTxs = txs.filter((tx) => tx.status === 'Pending' || tx.status === 'Loading')
+    const confirmedTxsSize0 = txs.filter((tx) => tx.status === 'Confirmed').length
+    pendingAndLoadingTxs.forEach((tx) => {
+      tx.status = isTxConfirmed(sourceChainBlockNumber, tx.blockNumber, txSourceChain) ? 'Confirmed' : 'Pending'
+    })
+    const confirmedTxsSize1 = txs.filter((tx) => tx.status === 'Confirmed').length
+    setHasNewConfirmedTx(confirmedTxsSize1 > confirmedTxsSize0)
+    setTxsStatus(txs.map((tx) => tx.status))
+
+  }, [txs, txSourceChain, sourceChainBlockNumber])
+
+  useEffect(() => {
+    let cancelled = false
     const fetch = async () => {
+      if (targetChainBlockNumber === undefined && !hasNewConfirmedTx) {
+        return
+      }
+
+      const confirmedTxs = txs.filter((tx) => tx.vaa && tx.status === 'Confirmed')
+      if (confirmedTxs.length === 0) {
+        return
+      }
       try {
-        for (let i = 0; i < txs.length; i++) {
-          const tx = txs[i]
-          const txStatus = getIsTxConfirmed(tx)
-          tx.status = txStatus
-        }
+        const results = await getIsTxsCompleted(confirmedTxs)
+        confirmedTxs.forEach(((tx, index) => {
+          if (results[index]) tx.status = 'Completed'
+        }))
       } catch (error) {
         console.error(`${error}`)
       }
     }
 
-    fetch()
-  }, [txs, getIsTxConfirmed])
+    fetch().then(() => {
+      if (!cancelled) setTxsStatus(txs.map((tx) => tx.status))
+    })
+  }, [txs, txSourceChain, txTargetChain, targetChainBlockNumber, getIsTxsCompleted, hasNewConfirmedTx])
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        for (let i = 0; i < txs.length; i++) {
-          const tx = txs[i]
-          const txStatus = await getIsTxCompleted(tx)
-          tx.status = txStatus
-        }
-      } catch (error) {
-        console.error(`${error}`)
-      }
-    }
-
-    fetch()
-  }, [txs, getIsTxCompleted])
-
-  return <TransactionTable txs={txs} isLoading={isLoading} />
+  return <TransactionTable txs={txs} txsStatus={txsStatus} isLoading={isLoading}/>
 }
 
 export default function Transactions() {
@@ -261,21 +231,20 @@ export default function Transactions() {
   const sourceChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txSourceChain)
   const targetChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txTargetChain)
 
-  const isTransferCompleted = useCallback(async (signedVaa: Uint8Array) => {
+  const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
     if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
       const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.group)
-      return await getIsTransferCompletedAlph(tokenBridgeForChainId, alphWallet.group, signedVaa)
+      return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
     }
     const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
     if (isEVMChain(txTargetChain) && provider) {
-      const tokenBridgeAddress = getTokenBridgeAddressForChain(txTargetChain)
-      return await getIsTransferCompletedEth(tokenBridgeAddress, provider, signedVaa)
+      return await getIsTxsCompletedEvm(txTargetChain, provider, txs.map((t) => t.vaa))
     }
     enqueueSnackbar(null, {
       content: <Alert severity="error">{`Wallet is not connected`}</Alert>,
       preventDuplicate: true
     })
-    return false
+    return txs.map((_) => false)
   }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain])
 
   const reset = () => {
@@ -374,11 +343,12 @@ export default function Transactions() {
               ? <div>
                   <ListTransactions
                     txSourceChain={txSourceChain}
+                    txTargetChain={txTargetChain}
                     sourceChainBlockNumber={sourceChainBlockNumber}
                     targetChainBlockNumber={targetChainBlockNumber}
                     txs={currentTransactions}
                     isLoading={isLoading}
-                    isTransferCompleted={isTransferCompleted}
+                    getIsTxsCompleted={getIsTxsCompleted}
                   />
                   <PageSwitch
                     pageNumber={pageNumber}
