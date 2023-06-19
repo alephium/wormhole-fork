@@ -26,7 +26,8 @@ export function useAlephiumWallet() {
 
   useEffect(() => {
     if (context.account !== undefined && context.signerProvider?.nodeProvider !== undefined) {
-      const wallet = new AlephiumWallet(context.signerProvider, context.signerProvider.nodeProvider, context.account.address)
+      const nodeProvider = new NodeProvider(context.signerProvider?.nodeProvider)
+      const wallet = new AlephiumWallet(context.signerProvider, nodeProvider, context.account.address)
       web3.setCurrentNodeProvider(wallet.nodeProvider)
       setWallet(wallet)
       return
