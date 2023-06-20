@@ -25,7 +25,7 @@ const bigInt512 = BigInt(512)
 const bigInt256 = BigInt(256)
 const bigInt1 = BigInt(1)
 
-async function isSequenceExecuted(
+export async function isSequenceExecuted(
   tokenBridgeForChainId: string,
   sequence: bigint,
   groupIndex: number
@@ -79,7 +79,7 @@ export async function getIsTransferCompletedEth(
   signedVAA: Uint8Array
 ): Promise<boolean> {
   const tokenBridge = Bridge__factory.connect(tokenBridgeAddress, provider);
-  const signedVAAHash = await getSignedVAAHash(signedVAA);
+  const signedVAAHash = getSignedVAAHash(signedVAA);
   return await tokenBridge.isTransferCompleted(signedVAAHash);
 }
 

@@ -1,12 +1,13 @@
 import { sleep } from "@alephium/web3";
-import { ChainId, ChainName, CHAIN_ID_BSC, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, ChainName, CHAIN_ID_BSC, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, getSignedVAAHash, isEVMChain } from "alephium-wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {
   createNFTParsedTokenAccount,
   createParsedTokenAccount,
 } from "../hooks/useGetSourceParsedTokenAccounts";
-import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST } from "./consts";
+import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
+import { Multicall, ContractCallContext } from 'ethereum-multicall';
 
 export const DefaultEVMChainConfirmations = 15
 
@@ -127,6 +128,26 @@ export function getEvmJsonRpcProvider(chainId: ChainId): ethers.providers.Provid
     : chainId === CHAIN_ID_BSC
     ? new ethers.providers.JsonRpcProvider(BSC_RPC_HOST)
     : undefined
+}
+
+export async function getIsTxsCompletedEvm(chainId: ChainId, provider: ethers.providers.Provider, signedVaas: string[]): Promise<boolean[]> {
+  const tokenBridgeAddress = getTokenBridgeAddressForChain(chainId)
+  const multicall = new Multicall({ ethersProvider: provider, tryAggregate: true });
+  const abi = [{ name: 'isTransferCompleted', type: 'function', stateMutability: 'view', inputs: [{ name: 'hash', type: 'bytes32' }], outputs: [{ type: 'bool' }] }]
+  const contractCallContext: ContractCallContext[] = signedVaas.map((signedVaa, index) => ({
+    reference: `call-${index}`,
+    contractAddress: tokenBridgeAddress,
+    abi,
+    calls: [{ reference: 'getIsTransferCompleted', methodName: 'isTransferCompleted', methodParameters: [getSignedVAAHash(Buffer.from(signedVaa, 'hex'))] }]
+  }))
+  const result = await multicall.call(contractCallContext)
+
+  const results = signedVaas.map((_, index) => {
+    const callResult = result.results[`call-${index}`].callsReturnContext
+    if (callResult.length === 0 || !callResult[0].success) return false
+    return callResult[0].returnValues[0] as boolean
+  })
+  return results
 }
 
 // TODO: remove these functions to SDK

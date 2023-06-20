@@ -196,7 +196,7 @@ export async function getLocalTokenInfo(nodeProvider: NodeProvider, tokenId: str
     return ALPHTokenInfo
   }
 
-  const tokenMetaData = await nodeProvider.fetchStdTokenMetaData(tokenId)
+  const tokenMetaData = await nodeProvider.fetchFungibleTokenMetaData(tokenId)
   return {
     id: tokenId,
     symbol: Buffer.from(tokenMetaData.symbol, 'hex').toString('utf8'),

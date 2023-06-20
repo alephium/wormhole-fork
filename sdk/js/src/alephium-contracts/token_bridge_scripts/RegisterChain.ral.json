@@ -1,5 +1,5 @@
 {
-  "version": "v2.3.3",
+  "version": "v2.3.5",
   "name": "RegisterChain",
   "bytecodeTemplate": "0101030000000c{0}{3}0e2ca2{2}{0}{3}0f0c{1}0104",
   "fieldsSig": {

@@ -9,7 +9,7 @@ import {
   TableRow,
   Typography
 } from "@material-ui/core";
-import { BridgeTransaction } from ".";
+import { BridgeTransaction, TxStatus } from ".";
 import SmartTx from "./SmartTx";
 
 const useStyles = makeStyles(() => ({
@@ -60,7 +60,7 @@ const columns: Column[] = [
   }
 ];
 
-export function TransactionTable(params: { txs: BridgeTransaction[], isLoading: boolean }) {
+export function TransactionTable(params: { txs: BridgeTransaction[], txsStatus: TxStatus[], isLoading: boolean }) {
   const classes = useStyles()
 
   return (
@@ -86,13 +86,14 @@ export function TransactionTable(params: { txs: BridgeTransaction[], isLoading: 
               </TableRow>
             </TableHead>
             <TableBody>
-              {params.txs.map((tx) => {
+              {params.txs.map((tx, index) => {
                 return (
                   <TableRow hover role="checkbox" tabIndex={-1} key={tx.txId}>
                     {columns.map((column) => {
+                      const txWithStatus = { ...tx, status: params.txsStatus[index] }
                       return (
                         <TableCell key={column.id} align={column.align}>
-                          {column.format ? column.format(tx) : tx[column.id]}
+                          {column.format ? column.format(txWithStatus) : txWithStatus[column.id]}
                         </TableCell>
                       );
                     })}

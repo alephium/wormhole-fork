@@ -20,7 +20,9 @@ import {
   getRemoteTokenInfoFromContractState,
   createLocalTokenPoolOnAlph,
   getAttestTokenHandlerId,
-  getLocalTokenInfo
+  getLocalTokenInfo,
+  alephium_contracts,
+  isSequenceExecuted
 } from 'alephium-wormhole-sdk';
 import { TokenInfo, ALPH } from "@alephium/token-list";
 import alephiumIcon from "../icons/alephium.svg";
@@ -274,4 +276,24 @@ export async function getAvailableBalances(provider: NodeProvider, address: stri
 
 export function hexToALPHAddress(hex: string): string {
   return base58.encode(Buffer.from(hex, 'hex'))
+}
+
+export async function getIsTxsCompletedAlph(tokenBridgeForChainId: string, sequences: bigint[]): Promise<boolean[]> {
+  const contractState = await alephium_contracts.TokenBridgeForChain.at(addressFromContractId(tokenBridgeForChainId)).fetchState()
+  const results: boolean[] = []
+  for (const seq of sequences) {
+    if (contractState.fields.start > seq) {
+      results.push(await isSequenceExecuted(tokenBridgeForChainId, seq, ALEPHIUM_BRIDGE_GROUP_INDEX))
+      continue
+    }
+    const distance = seq - contractState.fields.start
+    if (distance >= BigInt(512)) {
+      results.push(false)
+    } else if (distance < BigInt(256)) {
+      results.push(((contractState.fields.firstNext256 >> distance) & BigInt(1)) === BigInt(1))
+    } else {
+      results.push(((contractState.fields.secondNext256 >> (distance - BigInt(256))) & BigInt(1)) === BigInt(1))
+    }
+  }
+  return results
 }
