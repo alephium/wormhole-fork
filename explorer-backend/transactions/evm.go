@@ -87,6 +87,7 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 			errC <- err
 			return
 		case block := <-blockC:
+			w.logger.Info("received new block", zap.Uint64("height", block.Number.Uint64()), zap.String("hash", block.Hash.Hex()))
 			if isFirstBlock {
 				isFirstBlock = false
 				if err := w.fetchEventsFromBlockRange(ctx, w.fromHeight, uint32(block.Number.Uint64())); err != nil {

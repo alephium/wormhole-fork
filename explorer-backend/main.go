@@ -327,7 +327,7 @@ func run(cmd *cobra.Command, args []string) {
 
 		blockTxsC := make(chan []*transactions.BlockTransactions, 16)
 		watcher := transactions.NewWatcher(logger, bridgeConfig, db, blockTxsC)
-		alphEventIndex, err := watcher.GetLatestEventIndex(ctx, vaa.ChainIDAlephium)
+		alphEventIndex, err := watcher.GetLatestEventIndexAlephium(ctx)
 		if err != nil {
 			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDAlephium)), zap.Error(err))
 			return err
@@ -346,7 +346,7 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		ethEventIndex, err := watcher.GetLatestEventIndex(ctx, vaa.ChainIDEthereum)
+		ethEventIndex, err := watcher.GetLatestEventIndexEth(ctx)
 		if err != nil {
 			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDEthereum)), zap.Error(err))
 			return err
@@ -360,11 +360,15 @@ func run(cmd *cobra.Command, args []string) {
 			*ethEventIndex,
 			blockTxsC,
 		)
+		if err != nil {
+			logger.Error("failed to create eth watcher", zap.Error(err))
+			return err
+		}
 		if err := supervisor.Run(ctx, "eth-watcher", ethWatcher.Run()); err != nil {
 			return err
 		}
 
-		bscEventIndex, err := watcher.GetLatestEventIndex(ctx, vaa.ChainIDBSC)
+		bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
 		if err != nil {
 			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
 			return err

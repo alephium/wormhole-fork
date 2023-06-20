@@ -27,6 +27,32 @@ func NewWatcher(logger *zap.Logger, configs *common.BridgeConfig, db *mongo.Data
 	}
 }
 
+func (w *Watcher) GetLatestEventIndexAlephium(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndex(ctx, vaa.ChainIDAlephium)
+}
+
+func (w *Watcher) GetLatestEventIndexEth(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndexEvm(ctx, vaa.ChainIDEthereum, 64)
+}
+
+func (w *Watcher) GetLatestEventIndexBsc(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndexEvm(ctx, vaa.ChainIDBSC, 15)
+}
+
+func (w *Watcher) GetLatestEventIndexEvm(ctx context.Context, chainId vaa.ChainID, confirmations uint32) (*uint32, error) {
+	eventIndex, err := w.GetLatestEventIndex(ctx, chainId)
+	if err != nil {
+		return nil, err
+	}
+	var fromIndex uint32
+	if *eventIndex <= confirmations {
+		fromIndex = 1
+	} else {
+		fromIndex = *eventIndex - confirmations
+	}
+	return &fromIndex, nil
+}
+
 func (w *Watcher) GetLatestEventIndex(ctx context.Context, emitterChain vaa.ChainID) (*uint32, error) {
 	filter := bson.D{{Key: "emitterChain", Value: emitterChain}}
 	opts := options.FindOne().SetSort(bson.D{{Key: "eventIndex", Value: -1}})
