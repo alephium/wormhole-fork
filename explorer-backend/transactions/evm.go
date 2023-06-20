@@ -52,8 +52,18 @@ func NewEVMWatcher(
 	}, nil
 }
 
-func (w *EVMWatcher) Run(ctx context.Context, errC chan error) {
-	go w.fetchEvents(ctx, errC)
+func (w *EVMWatcher) Run() func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		errC := make(chan error)
+		go w.fetchEvents(ctx, errC)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-errC:
+			return err
+		}
+	}
 }
 
 func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
@@ -77,6 +87,7 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 			errC <- err
 			return
 		case block := <-blockC:
+			w.logger.Info("received new block", zap.Uint64("height", block.Number.Uint64()), zap.String("hash", block.Hash.Hex()))
 			if isFirstBlock {
 				isFirstBlock = false
 				if err := w.fetchEventsFromBlockRange(ctx, w.fromHeight, uint32(block.Number.Uint64())); err != nil {
@@ -99,10 +110,41 @@ func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight u
 		return nil
 	}
 
-	for height := fromHeight; height < toHeight; height++ {
-		if err := w.fetchEventsByBlockNumber(ctx, height); err != nil {
+	client := w.connector.Client()
+	query := eth.FilterQuery{
+		FromBlock: big.NewInt(int64(fromHeight)),
+		ToBlock:   big.NewInt(int64(toHeight)),
+		Addresses: []ethCommon.Address{*w.contractAddress},
+		Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
+	}
+	logs, err := client.FilterLogs(ctx, query)
+	if err != nil {
+		w.logger.Error("failed to get logs by block range", zap.Uint32("fromHeight", fromHeight), zap.Uint32("toHeight", toHeight), zap.Error(err))
+		return err
+	}
+	for _, log := range logs {
+		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
+		if err != nil {
 			return err
 		}
+		if bridgeTx == nil { // the transaction is not transfer token tx
+			continue
+		}
+		// TODO: group events by block hash
+		header, err := client.HeaderByHash(ctx, log.BlockHash)
+		if err != nil {
+			w.logger.Error("failed to get header by block hash", zap.String("blockHash", log.BlockHash.Hex()), zap.Error(err))
+			return err
+		}
+		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
+		blockTxs := &BlockTransactions{
+			blockNumber:    uint32(header.Number.Uint64()),
+			blockHash:      log.BlockHash.Hex(),
+			blockTimestamp: &blockTimestamp,
+			txs:            []*BridgeTransaction{bridgeTx},
+			chainId:        w.chainId,
+		}
+		w.blockTxsC <- []*BlockTransactions{blockTxs}
 	}
 	return nil
 }
@@ -117,14 +159,34 @@ func (w *EVMWatcher) fetchEventsByBlockHash(ctx context.Context, blockHash ethCo
 	return w.fetchEventsByHeader(ctx, header)
 }
 
-func (w *EVMWatcher) fetchEventsByBlockNumber(ctx context.Context, blockNumber uint32) error {
-	client := w.connector.Client()
-	header, err := client.HeaderByNumber(ctx, big.NewInt(int64(blockNumber)))
+func (w *EVMWatcher) bridgeTxFromLog(ctx context.Context, client *ethclient.Client, log *types.Log) (*BridgeTransaction, error) {
+	message, err := w.connector.ParseLogMessagePublished(*log)
 	if err != nil {
-		w.logger.Error("failed to get header by number", zap.Uint32("blockNumber", blockNumber), zap.Error(err))
-		return err
+		w.logger.Error("failed to parse message", zap.String("txId", log.TxHash.Hex()), zap.Error(err))
+		return nil, err
 	}
-	return w.fetchEventsByHeader(ctx, header)
+	if !isTransferTokenPayload(message.Payload) {
+		w.logger.Debug("ignore non-transfer token message", zap.String("txId", log.TxHash.Hex()))
+		return nil, nil
+	}
+	vaaId := &vaa.VAAID{
+		EmitterChain:   w.chainId,
+		EmitterAddress: ethereum.PadAddress(message.Sender),
+		TargetChain:    vaa.ChainID(message.TargetChainId),
+		Sequence:       message.Sequence,
+	}
+	sender, err := getEVMTxSender(ctx, client, log.TxHash)
+	if err != nil {
+		w.logger.Error("failed to get tx sender", zap.String("txId", log.TxHash.Hex()), zap.Error(err))
+		return nil, err
+	}
+	w.logger.Info("new bridge transaction", zap.String("sender", *sender), zap.String("txId", log.TxHash.Hex()))
+	return &BridgeTransaction{
+		vaaId:      vaaId,
+		txId:       log.TxHash.Hex(),
+		address:    *sender,
+		eventIndex: uint32(log.BlockNumber),
+	}, nil
 }
 
 func (w *EVMWatcher) fetchEventsByHeader(ctx context.Context, header *types.Header) error {
@@ -142,33 +204,14 @@ func (w *EVMWatcher) fetchEventsByHeader(ctx context.Context, header *types.Head
 	}
 	txs := make([]*BridgeTransaction, 0)
 	for _, log := range logs {
-		message, err := w.connector.ParseLogMessagePublished(log)
+		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
 		if err != nil {
-			w.logger.Error("failed to parse message", zap.String("txId", log.TxHash.Hex()), zap.Error(err))
 			return err
 		}
-		if !isTransferTokenPayload(message.Payload) {
-			w.logger.Debug("ignore non-transfer token message", zap.String("txId", log.TxHash.Hex()))
+		if bridgeTx == nil { // the transaction is not transfer token tx
 			continue
 		}
-		vaaId := &vaa.VAAID{
-			EmitterChain:   w.chainId,
-			EmitterAddress: ethereum.PadAddress(message.Sender),
-			TargetChain:    vaa.ChainID(message.TargetChainId),
-			Sequence:       message.Sequence,
-		}
-		sender, err := getEVMTxSender(ctx, client, log.TxHash)
-		if err != nil {
-			w.logger.Error("failed to get tx sender", zap.String("txId", log.TxHash.Hex()), zap.Error(err))
-			return err
-		}
-		w.logger.Info("new bridge transaction", zap.String("sender", *sender), zap.String("txId", log.TxHash.Hex()))
-		txs = append(txs, &BridgeTransaction{
-			vaaId:      vaaId,
-			txId:       log.TxHash.Hex(),
-			address:    *sender,
-			eventIndex: uint32(log.BlockNumber),
-		})
+		txs = append(txs, bridgeTx)
 	}
 	if len(txs) > 0 {
 		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()

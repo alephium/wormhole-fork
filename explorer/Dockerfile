@@ -15,4 +15,4 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 ADD ./explorer .
 
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
-  npm run clean && npm run build
+  npm run build

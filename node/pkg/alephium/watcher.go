@@ -237,11 +237,13 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						return
 					}
 					if unconfirmed.msg.IsAttestTokenVAA() {
+						logger.Info("received an attest token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
 							logger.Error("ignore invalid attest token event", zap.Error(err))
 							continue
 						}
 					}
+					logger.Info("received an transfer token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}
 
@@ -281,6 +283,7 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 
 			previousHeight := atomic.LoadInt32(&w.currentHeight)
 			if *height != previousHeight {
+				logger.Info("height changed", zap.Int32("prevHeight", previousHeight), zap.Int32("newHeight", *height))
 				p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
 					ContractAddress: w.governanceContractAddress,
 					Height:          int64(*height),
@@ -364,6 +367,7 @@ func (w *Watcher) handleEvents_(
 			if !*isCanonical {
 				alphMessagesOrphaned.Add(float64(len(blockEvents.events)))
 				// it's safe to update map in range loop
+				logger.Warn("remove the events from orphan block", zap.String("blockHash", blockHash), zap.Int("size", len(blockEvents.events)))
 				delete(pendingEvents, blockHash)
 				continue
 			}
@@ -378,6 +382,7 @@ func (w *Watcher) handleEvents_(
 			}
 
 			remain := make([]*UnconfirmedEvent, 0)
+			logger.Info("processing events from block", zap.String("blockHash", blockEvents.header.Hash), zap.Int("size", len(blockEvents.events)))
 			for _, event := range blockEvents.events {
 				eventConfirmations := maxUint8(event.msg.consistencyLevel, w.minConfirmations)
 				if blockEvents.header.Height+int32(eventConfirmations) > height {

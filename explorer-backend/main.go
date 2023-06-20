@@ -312,8 +312,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	watcher := transactions.NewWatcher(logger, bridgeConfig, db)
-
 	// Load p2p private key
 	var priv crypto.PrivKey
 	priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
@@ -327,7 +325,72 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if err := supervisor.Run(ctx, "watcher", watcher.Run(*alphNodeUrl, *alphApiKey, *alphExplorerBackendUrl, *alphPollInterval, *ethRpcUrl, *bscRpcUrl)); err != nil {
+		blockTxsC := make(chan []*transactions.BlockTransactions, 16)
+		watcher := transactions.NewWatcher(logger, bridgeConfig, db, blockTxsC)
+		alphEventIndex, err := watcher.GetLatestEventIndexAlephium(ctx)
+		if err != nil {
+			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDAlephium)), zap.Error(err))
+			return err
+		}
+		alphWatcher := transactions.NewAlephiumWatcher(
+			bridgeConfig.Alephium,
+			*alphNodeUrl,
+			*alphApiKey,
+			logger,
+			blockTxsC,
+			*alphExplorerBackendUrl,
+			*alphEventIndex,
+			*alphPollInterval,
+		)
+		if err := supervisor.Run(ctx, "alph-watcher", alphWatcher.Run()); err != nil {
+			return err
+		}
+
+		ethEventIndex, err := watcher.GetLatestEventIndexEth(ctx)
+		if err != nil {
+			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDEthereum)), zap.Error(err))
+			return err
+		}
+		ethWatcher, err := transactions.NewEVMWatcher(
+			logger,
+			ctx,
+			*ethRpcUrl,
+			vaa.ChainIDEthereum,
+			bridgeConfig.Ethereum,
+			*ethEventIndex,
+			blockTxsC,
+		)
+		if err != nil {
+			logger.Error("failed to create eth watcher", zap.Error(err))
+			return err
+		}
+		if err := supervisor.Run(ctx, "eth-watcher", ethWatcher.Run()); err != nil {
+			return err
+		}
+
+		bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
+		if err != nil {
+			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
+			return err
+		}
+		bscWatcher, err := transactions.NewEVMWatcher(
+			logger,
+			ctx,
+			*bscRpcUrl,
+			vaa.ChainIDBSC,
+			bridgeConfig.Bsc,
+			*bscEventIndex,
+			blockTxsC,
+		)
+		if err != nil {
+			logger.Error("failed to create bsc watcher", zap.Error(err))
+			return err
+		}
+		if err := supervisor.Run(ctx, "bsc-watcher", bscWatcher.Run()); err != nil {
+			return err
+		}
+
+		if err := supervisor.Run(ctx, "watcher", watcher.Run()); err != nil {
 			return err
 		}
 

@@ -18,16 +18,42 @@ type Watcher struct {
 	logger       *zap.Logger
 }
 
-func NewWatcher(logger *zap.Logger, configs *common.BridgeConfig, db *mongo.Database) *Watcher {
+func NewWatcher(logger *zap.Logger, configs *common.BridgeConfig, db *mongo.Database, blockTxsC chan []*BlockTransactions) *Watcher {
 	return &Watcher{
 		logger:       logger,
 		configs:      configs,
-		blockTxsC:    make(chan []*BlockTransactions, 6),
+		blockTxsC:    blockTxsC,
 		transactions: db.Collection("transactions"),
 	}
 }
 
-func (w *Watcher) getLatestEventIndex(ctx context.Context, emitterChain vaa.ChainID) (*uint32, error) {
+func (w *Watcher) GetLatestEventIndexAlephium(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndex(ctx, vaa.ChainIDAlephium)
+}
+
+func (w *Watcher) GetLatestEventIndexEth(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndexEvm(ctx, vaa.ChainIDEthereum, 64)
+}
+
+func (w *Watcher) GetLatestEventIndexBsc(ctx context.Context) (*uint32, error) {
+	return w.GetLatestEventIndexEvm(ctx, vaa.ChainIDBSC, 15)
+}
+
+func (w *Watcher) GetLatestEventIndexEvm(ctx context.Context, chainId vaa.ChainID, confirmations uint32) (*uint32, error) {
+	eventIndex, err := w.GetLatestEventIndex(ctx, chainId)
+	if err != nil {
+		return nil, err
+	}
+	var fromIndex uint32
+	if *eventIndex <= confirmations {
+		fromIndex = 1
+	} else {
+		fromIndex = *eventIndex - confirmations
+	}
+	return &fromIndex, nil
+}
+
+func (w *Watcher) GetLatestEventIndex(ctx context.Context, emitterChain vaa.ChainID) (*uint32, error) {
 	filter := bson.D{{Key: "emitterChain", Value: emitterChain}}
 	opts := options.FindOne().SetSort(bson.D{{Key: "eventIndex", Value: -1}})
 	var result TransactionUpdate
@@ -43,77 +69,9 @@ func (w *Watcher) getLatestEventIndex(ctx context.Context, emitterChain vaa.Chai
 	return &result.EventIndex, nil
 }
 
-func (w *Watcher) Run(
-	alphNodeUrl string,
-	alphApiKey string,
-	alphExplorerBackendUrl string,
-	alphPollInterval uint,
-	ethRpcUrl string,
-	bscRpcUrl string,
-) func(context.Context) error {
+func (w *Watcher) Run() func(context.Context) error {
 	return func(ctx context.Context) error {
-		alphEventIndex, err := w.getLatestEventIndex(ctx, vaa.ChainIDAlephium)
-		if err != nil {
-			w.logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDAlephium)), zap.Error(err))
-			return err
-		}
-
-		ethEventIndex, err := w.getLatestEventIndex(ctx, vaa.ChainIDEthereum)
-		if err != nil {
-			w.logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDEthereum)), zap.Error(err))
-			return err
-		}
-
-		bscEventIndex, err := w.getLatestEventIndex(ctx, vaa.ChainIDBSC)
-		if err != nil {
-			w.logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
-			return err
-		}
-
-		alphWatcher := NewAlephiumWatcher(
-			w.configs.Alephium,
-			alphNodeUrl,
-			alphApiKey,
-			w.logger,
-			w.blockTxsC,
-			alphExplorerBackendUrl,
-			*alphEventIndex,
-			alphPollInterval,
-		)
-
-		ethWatcher, err := NewEVMWatcher(
-			w.logger,
-			ctx,
-			ethRpcUrl,
-			vaa.ChainIDEthereum,
-			w.configs.Ethereum,
-			*ethEventIndex,
-			w.blockTxsC,
-		)
-		if err != nil {
-			w.logger.Error("failed to create eth watcher", zap.Error(err))
-			return err
-		}
-
-		bscWatcher, err := NewEVMWatcher(
-			w.logger,
-			ctx,
-			bscRpcUrl,
-			vaa.ChainIDBSC,
-			w.configs.Bsc,
-			*bscEventIndex,
-			w.blockTxsC,
-		)
-		if err != nil {
-			w.logger.Error("failed to create bsc watcher", zap.Error(err))
-			return err
-		}
-
 		errC := make(chan error)
-
-		alphWatcher.Run(ctx, errC)
-		ethWatcher.Run(ctx, errC)
-		bscWatcher.Run(ctx, errC)
 		go w.handleTxs(ctx, errC)
 
 		select {
