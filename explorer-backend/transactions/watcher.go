@@ -44,8 +44,10 @@ func (w *Watcher) GetLatestEventIndexEvm(ctx context.Context, chainId vaa.ChainI
 	if err != nil {
 		return nil, err
 	}
-	fromIndex := uint32(0)
-	if *eventIndex > confirmations {
+	var fromIndex uint32
+	if *eventIndex <= confirmations {
+		fromIndex = 1
+	} else {
 		fromIndex = *eventIndex - confirmations
 	}
 	return &fromIndex, nil
