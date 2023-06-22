@@ -1,0 +1,34 @@
+name: Publish Wormhole SDK
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.19.2'
+
+      - name: Build
+        run: |
+          cd tools && npm ci && ./build.sh && cd ..
+          tools/bin/buf generate --template buf.gen.web.yaml
+          cd ethereum && npm ci && cd ..
+          cd sdk/js && npm ci && npm run build
+
+      - name: Publish
+        uses: JS-DevTools/npm-publish@v2
+        with:
+          package: ./sdk/js
+          token: ${{ secrets.NPM_TOKEN }}
