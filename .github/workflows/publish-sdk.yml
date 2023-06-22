@@ -1,0 +1,61 @@
+name: Publish Wormhole SDK
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.19.2'
+
+      - name: Get package version from package.json
+        id: getPackageVersion
+        run: echo "::set-output name=version::$(node -p 'require("./sdk/js/package.json").version')"
+
+      - name: Check if version is published
+        id: checkVersion
+        run: |
+          VERSION=${{ steps.getPackageVersion.outputs.version }}
+          set +e
+          RESPONSE=$(npm view @alephium/wormhole-sdk@$VERSION)
+          if [[ -z $RESPONSE ]]; then
+             echo "Version $VERSION has not been published to npm."
+             echo ::set-output name=publish::true
+          else
+             echo "Version $VERSION has already been published to npm."
+             echo ::set-output name=publish::false
+          fi
+
+      - name: Get the tag name
+        id: getTagName
+        if: steps.checkVersion.outputs.publish == 'true'
+        run: |
+          VERSION=${{ steps.getPackageVersion.outputs.version }}
+          echo "Publishing version $VERSION to npm with tag $VERSION..."
+          dist_tag=$([[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo latest || echo "")
+          dist_tag=$([[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]] && echo rc || echo $dist_tag)
+          [ -z "$dist_tag" ] && echo "Distribution tag is not set to latest nor to rc" && exit 1
+          echo ::set-output name=dist_tag::$dist_tag
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: steps.checkVersion.outputs.publish == 'true'
+        run: |
+          cd tools && npm ci && ./build.sh && cd ..
+          tools/bin/buf generate --template buf.gen.web.yaml
+          cd ethereum && npm ci && cd ..
+          cd sdk/js && npm ci && npm run build
+          npm publish --tag ${{ steps.getTagName.outputs.dist_tag }}
