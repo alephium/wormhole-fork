@@ -58,4 +58,4 @@ jobs:
           tools/bin/buf generate --template buf.gen.web.yaml
           cd ethereum && npm ci && cd ..
           cd sdk/js && npm ci && npm run build
-          npm publish --tag ${{ steps.getTagName.outputs.dist_tag }}
+          npm publish --access public --tag ${{ steps.getTagName.outputs.dist_tag }}
