@@ -26,7 +26,7 @@ import { defaultLogger } from "./logging";
 import { VaaBundleFetcher, VaaId } from "./bundle-fetcher.helper";
 import { RelayJob, Storage } from "./storage/storage";
 import { LRUCache } from "lru-cache";
-import { VAA, VAAPayload, ChainId, ChainName, coalesceChainId, getSignedVAAWithRetry, uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { VAA, VAAPayload, ChainId, ChainName, coalesceChainId, getSignedVAAWithRetry, uint8ArrayToHex } from "@alephium/wormhole-sdk";
 import { default as devnetGuardianConfig } from "../../configs/guardian/devnet.json"
 import { default as testnetGuardianConfig } from "../../configs/guardian/testnet.json"
 import { default as mainnetGuardianConfig } from "../../configs/guardian/mainnet.json"

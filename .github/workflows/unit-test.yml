@@ -51,7 +51,6 @@ jobs:
       - name: Run tests
         working-directory: ./alephium
         run: |
-          npm audit --production
           npm ci
           npx @alephium/cli devnet start
           npm run compile
@@ -81,5 +80,4 @@ jobs:
           make generate-proto-sdk
           cd ethereum && npm ci && npm run build
           cd ../sdk/js
-          npm audit --production
           npm ci && npm run build && npm run test

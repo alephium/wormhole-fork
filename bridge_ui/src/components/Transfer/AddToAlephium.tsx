@@ -1,4 +1,4 @@
-import { getLocalTokenInfo } from "alephium-wormhole-sdk";
+import { getLocalTokenInfo } from "@alephium/wormhole-sdk";
 import { Button, makeStyles } from "@material-ui/core";
 import { useCallback } from "react";
 import { useSelector } from "react-redux";

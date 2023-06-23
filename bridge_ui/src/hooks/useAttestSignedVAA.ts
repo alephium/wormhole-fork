@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectAttestSignedVAAHex } from "../store/selectors";
-import { hexToUint8Array } from "alephium-wormhole-sdk";
+import { hexToUint8Array } from "@alephium/wormhole-sdk";
 
 export default function useAttestSignedVAA() {
   const signedVAAHex = useSelector(selectAttestSignedVAAHex);

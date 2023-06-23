@@ -5,7 +5,7 @@ import {
   hexToNativeAssetString,
   hexToNativeString,
   hexToUint8Array,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { Button, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import {

@@ -8,11 +8,11 @@ import {
   uint8ArrayToHex,
   alephium_contracts,
   CHAIN_ID_ALEPHIUM,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { ethers, Signer } from "ethers";
 import { ProviderContext } from "./providers.middleware";
 import { UnrecoverableError } from "bullmq";
-import { TokenBridge, TokenBridge__factory } from "alephium-wormhole-sdk/lib/cjs/ethers-contracts";
+import { TokenBridge, TokenBridge__factory } from "@alephium/wormhole-sdk/lib/cjs/ethers-contracts";
 import { encodeEmitterAddress, getTokenBridgeAddress } from "../utils";
 import { addressFromContractId, NetworkId } from "@alephium/web3";
 

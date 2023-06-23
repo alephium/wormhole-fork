@@ -21,7 +21,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_OASIS,
   CHAIN_ID_FANTOM,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import SmartAddress from "../SmartAddress";
 import avaxIcon from "../../icons/avax.svg";
 import bscIcon from "../../icons/bsc.svg";

@@ -22,7 +22,7 @@ import {
   MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL,
   DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { clusterApiUrl } from "@solana/web3.js";
 import { getAddress } from "ethers/lib/utils";
 import { CHAIN_CONFIG_MAP } from "../config";

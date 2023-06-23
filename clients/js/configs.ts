@@ -1,4 +1,4 @@
-import { ChainName } from "alephium-wormhole-sdk";
+import { ChainName } from "@alephium/wormhole-sdk";
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'
 import { default as alephiumTestnetConfig } from '../../configs/alephium/testnet.json'
 import { default as alephiumMainnetConfig } from '../../configs/alephium/mainnet.json'

@@ -2,7 +2,7 @@ import {
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
   CHAIN_ID_SOLANA,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
 import { Button, makeStyles, Typography } from "@material-ui/core";
 import { VerifiedUser } from "@material-ui/icons";

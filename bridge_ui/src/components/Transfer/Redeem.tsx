@@ -16,7 +16,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
   WSOL_ADDRESS,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   Button,
   Checkbox,

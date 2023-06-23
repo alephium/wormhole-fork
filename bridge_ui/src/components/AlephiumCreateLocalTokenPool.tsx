@@ -1,4 +1,4 @@
-import { extractPayloadFromVAA, waitAlphTxConfirmed } from "alephium-wormhole-sdk";
+import { extractPayloadFromVAA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
 import {
   Button,
   Dialog,

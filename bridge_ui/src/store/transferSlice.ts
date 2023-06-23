@@ -2,7 +2,7 @@ import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ETH
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { StateSafeWormholeWrappedInfo } from "../hooks/useCheckIfWormholeWrapped";
 import { ForeignAssetInfo } from "../hooks/useFetchForeignAsset";

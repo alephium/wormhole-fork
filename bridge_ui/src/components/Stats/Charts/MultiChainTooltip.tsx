@@ -1,4 +1,4 @@
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { makeStyles, Grid, Typography } from "@material-ui/core";
 import {
   getChainShortName,

@@ -4,7 +4,7 @@ import {
   hexToNativeString,
   isEVMChain,
   uint8ArrayToHex,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { fromHex } from "@cosmjs/encoding";
 import { PublicKey } from "@solana/web3.js";
 import { ActiveNetwork, useNetworkContext } from "../contexts/NetworkContext";

@@ -1,4 +1,4 @@
-import { CHAIN_ID_BSC } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_BSC } from '@alephium/wormhole-sdk'
 import { BridgeChain } from './bridge_chain'
 import { createEvmChain, EvmChainConfig } from './evm'
 import { default as bscDevnetConfig } from '../../configs/bsc/devnet.json'

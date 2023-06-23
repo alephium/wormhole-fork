@@ -1,5 +1,5 @@
 import { binToHex } from '@alephium/web3'
-import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
+import { ChainId, coalesceChainName } from '@alephium/wormhole-sdk'
 import Dockerode, { Container } from 'dockerode'
 import { getSignedVAA } from '../utils'
 import { execSync } from 'child_process'

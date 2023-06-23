@@ -1,5 +1,5 @@
 import { web3 } from "@alephium/web3";
-import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from "@alephium/wormhole-sdk";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback } from "react";
 import { useAlephiumWallet } from "../../hooks/useAlephiumWallet";

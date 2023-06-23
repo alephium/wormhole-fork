@@ -9,11 +9,11 @@ import {
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   uint8ArrayToHex,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   transferFromEth,
   transferFromSolana,
-} from "alephium-wormhole-sdk/lib/esm/nft_bridge";
+} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";

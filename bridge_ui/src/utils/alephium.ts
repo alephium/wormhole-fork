@@ -23,7 +23,7 @@ import {
   getLocalTokenInfo,
   alephium_contracts,
   isSequenceExecuted
-} from 'alephium-wormhole-sdk';
+} from '@alephium/wormhole-sdk';
 import { TokenInfo, ALPH } from "@alephium/token-list";
 import alephiumIcon from "../icons/alephium.svg";
 import {

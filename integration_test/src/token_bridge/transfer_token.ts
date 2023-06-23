@@ -2,7 +2,7 @@ import { Sequence } from '../sequence'
 import { BridgeChain } from '../bridge_chain'
 import { assert, randomBigInt } from '../utils'
 import * as base58 from 'bs58'
-import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { DUST_AMOUNT, ONE_ALPH } from '@alephium/web3'
 
 export class TransferTokenTest {

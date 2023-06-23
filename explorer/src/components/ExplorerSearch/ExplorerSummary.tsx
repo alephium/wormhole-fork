@@ -16,7 +16,7 @@ import {
 } from "../../utils/explorer";
 import { OutboundLink } from "gatsby-plugin-google-gtag";
 import { ChainID, chainIDs } from "../../utils/consts";
-import { hexToNativeString, uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { hexToNativeString, uint8ArrayToHex } from "@alephium/wormhole-sdk";
 import { explorer } from "../../utils/urls";
 
 interface SummaryProps {

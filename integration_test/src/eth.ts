@@ -1,4 +1,4 @@
-import { CHAIN_ID_ETH } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
 import { BridgeChain } from './bridge_chain'
 import { createEvmChain, EvmChainConfig } from './evm'
 import { default as ethDevnetConfig } from '../../configs/ethereum/devnet.json'

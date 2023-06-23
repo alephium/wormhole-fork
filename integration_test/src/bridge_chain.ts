@@ -1,5 +1,5 @@
 import { TokenInfo } from '@alephium/token-list'
-import { ChainId } from 'alephium-wormhole-sdk'
+import { ChainId } from '@alephium/wormhole-sdk'
 
 export type TransferResult = { signedVaa: Uint8Array; txFee: bigint }
 

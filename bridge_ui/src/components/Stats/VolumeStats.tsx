@@ -1,4 +1,4 @@
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import {
   Checkbox,
   CircularProgress,

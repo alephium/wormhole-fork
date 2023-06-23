@@ -1,5 +1,5 @@
-import { chunks, importCoreWasm, ixFromRust } from "alephium-wormhole-sdk";
-import { sendAndConfirmTransactionsWithRetry } from "alephium-wormhole-sdk/lib/esm/utils/solana";
+import { chunks, importCoreWasm, ixFromRust } from "@alephium/wormhole-sdk";
+import { sendAndConfirmTransactionsWithRetry } from "@alephium/wormhole-sdk/lib/esm/utils/solana";
 import {
   Connection,
   Keypair,

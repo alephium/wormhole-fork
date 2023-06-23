@@ -1,5 +1,5 @@
 import { makeStyles, Typography } from "@material-ui/core";
-import { CHAIN_ID_ALEPHIUM, isEVMChain } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, isEVMChain } from "@alephium/wormhole-sdk";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {

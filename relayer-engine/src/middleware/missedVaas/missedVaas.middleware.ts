@@ -2,7 +2,7 @@ import * as grpcWebNodeHttpTransport from "@improbable-eng/grpc-web-node-http-tr
 import { Middleware } from "../../compose.middleware";
 import { Context } from "../../context";
 import Redis, { Cluster, RedisOptions } from "ioredis";
-import { ChainId, getSignedVAAWithRetry } from "alephium-wormhole-sdk";
+import { ChainId, getSignedVAAWithRetry } from "@alephium/wormhole-sdk";
 import {
   defaultWormholeRpcs,
   ParsedVaaWithBytes,
@@ -13,7 +13,7 @@ import { Logger } from "winston";
 import { createPool, Pool } from "generic-pool";
 import { mapConcurrent, minute, sleep, SUPPORTED_CHAINS } from "../../utils";
 import { RedisConnectionOpts } from "../../storage/redis-storage";
-import { GetSignedVAAResponse } from "alephium-wormhole-sdk/lib/cjs/proto/publicrpc/v1/publicrpc";
+import { GetSignedVAAResponse } from "@alephium/wormhole-sdk/lib/cjs/proto/publicrpc/v1/publicrpc";
 
 const IN_PROGRESS_TIMEOUT = 5 * minute;
 

@@ -4,7 +4,7 @@ import {
   CHAIN_ID_ETH,
   isEVMChain,
   nativeToHexString,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   Card,
   CircularProgress,

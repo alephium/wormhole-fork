@@ -15,7 +15,7 @@ import {
     VAAPayload,
     coalesceChainName,
     coalesceChainId
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { ChainIDs, chainIDs } from '../../utils/consts';
 import { PublicKey } from '@solana/web3.js';
 

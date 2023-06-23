@@ -1,7 +1,7 @@
 import { FetchVaaFn } from "./context";
 import { EngineError, parseVaaWithBytes, sleep } from "./utils";
 import { ParsedVaaWithBytes } from "./application";
-import { ChainId, uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { ChainId, uint8ArrayToHex } from "@alephium/wormhole-sdk";
 
 export type VaaId = {
   emitterChain: ChainId;

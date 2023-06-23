@@ -2,7 +2,7 @@ import {
   ChainId,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { Button, makeStyles, Typography } from "@material-ui/core";
 import { Transaction } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";

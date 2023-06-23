@@ -1,7 +1,7 @@
-import { CHAIN_ID_SOLANA } from "alephium-wormhole-sdk";
-import migrateTokensTx from "alephium-wormhole-sdk/lib/esm/migration/migrateTokens";
-import getPoolAddress from "alephium-wormhole-sdk/lib/esm/migration/poolAddress";
-import getToCustodyAddress from "alephium-wormhole-sdk/lib/esm/migration/toCustodyAddress";
+import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
+import migrateTokensTx from "@alephium/wormhole-sdk/lib/esm/migration/migrateTokens";
+import getPoolAddress from "@alephium/wormhole-sdk/lib/esm/migration/poolAddress";
+import getToCustodyAddress from "@alephium/wormhole-sdk/lib/esm/migration/toCustodyAddress";
 import { makeStyles, Typography } from "@material-ui/core";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,

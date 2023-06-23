@@ -3,7 +3,7 @@ import {
   CHAIN_ID_KLAYTN,
   getAllowanceEth,
   isEVMChain,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { BigNumber } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

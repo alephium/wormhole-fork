@@ -1,5 +1,5 @@
 import { NetworkId, networkIds } from "@alephium/web3"
-import { ChainId, coalesceChainName } from "alephium-wormhole-sdk"
+import { ChainId, coalesceChainName } from "@alephium/wormhole-sdk"
 import { SUPPORTED_CHAINS } from "./utils"
 
 export type Config = {

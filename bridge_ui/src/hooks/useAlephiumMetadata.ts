@@ -1,6 +1,6 @@
 import { TokenInfo } from '@alephium/token-list'
 import { NodeProvider, web3 } from '@alephium/web3'
-import { getLocalTokenInfo } from 'alephium-wormhole-sdk'
+import { getLocalTokenInfo } from '@alephium/wormhole-sdk'
 import { useEffect, useMemo, useState } from 'react'
 import { DataWrapper } from '../store/helpers'
 import { getAvailableBalances } from '../utils/alephium'

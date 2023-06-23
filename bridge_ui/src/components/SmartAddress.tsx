@@ -17,7 +17,7 @@ import {
   isNativeDenom,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALEPHIUM,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
 import { FileCopy, OpenInNew } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";

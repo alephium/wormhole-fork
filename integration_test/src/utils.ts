@@ -1,4 +1,4 @@
-import { ChainId, getSignedVAAWithRetry, zeroPad } from 'alephium-wormhole-sdk'
+import { ChainId, getSignedVAAWithRetry, zeroPad } from '@alephium/wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'

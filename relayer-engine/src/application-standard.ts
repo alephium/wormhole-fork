@@ -14,7 +14,7 @@ import {
 import { Logger } from "winston";
 import { StorageContext } from "./storage/storage";
 import { RedisStorage } from "./storage/redis-storage";
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { ClusterNode, ClusterOptions, RedisOptions } from "ioredis";
 import { mergeDeep } from "./utils";
 import { sourceTx, SourceTxContext } from "./middleware/source-tx.middleware";

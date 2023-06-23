@@ -13,7 +13,7 @@ import {
   coalesceChainName,
   EVMChainId,
   isEVMChain
-} from "alephium-wormhole-sdk"
+} from "@alephium/wormhole-sdk"
 import { vaaIdToString } from "./application"
 import { Next } from "./compose.middleware"
 import { WalletContext } from "./middleware"

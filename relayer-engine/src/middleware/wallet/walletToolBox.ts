@@ -1,9 +1,9 @@
-import * as wh from "alephium-wormhole-sdk";
+import * as wh from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { Providers } from "../providers.middleware";
 import { EVMWallet, Wallet, AlephiumWallet } from "./wallet.middleware";
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { CHAIN_ID_ALEPHIUM, coalesceChainName } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, coalesceChainName } from "@alephium/wormhole-sdk";
 
 export interface WalletToolBox<T extends Wallet> extends Providers {
   wallet: T;

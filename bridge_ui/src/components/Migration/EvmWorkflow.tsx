@@ -1,4 +1,4 @@
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { CircularProgress, makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { parseUnits } from "ethers/lib/utils";
