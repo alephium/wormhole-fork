@@ -6,7 +6,7 @@ import {
   contractExists,
   getAttestTokenHandlerId,
   getTokenBridgeForChainId
-} from 'alephium-wormhole-sdk'
+} from '@alephium/wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 

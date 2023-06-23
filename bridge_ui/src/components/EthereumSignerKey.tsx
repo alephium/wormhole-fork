@@ -3,7 +3,7 @@ import { Typography } from "@material-ui/core";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import ToggleConnectedButton from "./ToggleConnectedButton";
 import EvmConnectWalletDialog from "./EvmConnectWalletDialog";
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { getEvmChainId } from "../utils/consts";
 
 const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {

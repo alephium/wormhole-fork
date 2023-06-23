@@ -41,7 +41,7 @@ import {
   waitAlphTxConfirmed,
   alephium_contracts,
   redeemOnAlphWithReward
-} from 'alephium-wormhole-sdk'
+} from '@alephium/wormhole-sdk'
 import { TokenInfo } from '@alephium/token-list'
 import { randomBytes } from 'ethers/lib/utils'
 import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.json'

@@ -2,7 +2,7 @@ import { CONFIGS, NetworkType } from './configs'
 import { impossible } from './utils'
 import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from 'alephium-wormhole-sdk'
+import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from '@alephium/wormhole-sdk'
 import {
   DestroyUnexecutedSequenceContracts,
   SetMessageFee,
@@ -13,7 +13,7 @@ import {
   UpgradeTokenBridgeContract,
   Governance,
   TokenBridge
-} from 'alephium-wormhole-sdk/lib/cjs/alephium-contracts/ts'
+} from '@alephium/wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 function getSignerProvider(network: any, nodeUrl?: string) {
   const rpc = nodeUrl ?? network.rpc

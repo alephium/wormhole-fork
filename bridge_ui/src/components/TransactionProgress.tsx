@@ -12,7 +12,7 @@ import {
   CHAIN_ID_SOLANA,
   isEVMChain,
   CHAIN_ID_ETH,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { LinearProgress, makeStyles, Typography } from "@material-ui/core";
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";

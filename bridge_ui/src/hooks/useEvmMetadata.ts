@@ -1,4 +1,4 @@
-import { ChainId, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, isEVMChain } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import {

@@ -3,7 +3,7 @@ import { AlephiumBridgeChain } from '../alph'
 import { assert, getBridgeChains, normalizeTokenId, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 import { BridgeChain } from '../bridge_chain'
-import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alph.testTokenId)

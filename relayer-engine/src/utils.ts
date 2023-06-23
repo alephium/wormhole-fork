@@ -1,4 +1,4 @@
-import * as wormholeSdk from "alephium-wormhole-sdk";
+import * as wormholeSdk from "@alephium/wormhole-sdk";
 import { ParsedVaaWithBytes } from "./application";
 import { ethers } from "ethers";
 import { map } from "bluebird";
@@ -13,7 +13,7 @@ import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_BSC,
   coalesceChainName
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { default as devnetAlephiumConfig } from "../../configs/alephium/devnet.json"
 import { default as testnetAlephiumConfig } from "../../configs/alephium/testnet.json"
 import { default as mainnetAlephiumConfig } from "../../configs/alephium/mainnet.json"

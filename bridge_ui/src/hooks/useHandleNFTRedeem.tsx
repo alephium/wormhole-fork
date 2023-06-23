@@ -6,14 +6,14 @@ import {
   CHAIN_ID_SOLANA,
   getClaimAddressSolana,
   isEVMChain
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   createMetaOnSolana,
   getForeignAssetSol,
   isNFTVAASolanaNative,
   redeemOnEth,
   redeemOnSolana,
-} from "alephium-wormhole-sdk/lib/esm/nft_bridge";
+} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import { arrayify } from "@ethersproject/bytes";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -41,7 +41,7 @@ import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import useNFTSignedVAA from "./useNFTSignedVAA";
-import { deserializeTransferNFTVAA } from "alephium-wormhole-sdk/lib/esm";
+import { deserializeTransferNFTVAA } from "@alephium/wormhole-sdk/lib/esm";
 
 async function evm(
   dispatch: any,

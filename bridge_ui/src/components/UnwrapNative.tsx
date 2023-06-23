@@ -8,7 +8,7 @@ import {
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
   ethers_contracts
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   Container,
   ListItemIcon,

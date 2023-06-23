@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA } from "alephium-wormhole-sdk";
+import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
 import { TokenInfo } from "@solana/spl-token-registry";
 import React, { useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";

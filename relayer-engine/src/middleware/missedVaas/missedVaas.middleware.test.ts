@@ -15,10 +15,10 @@ import {
   missedVaaJob,
   tryFetchAndProcess,
 } from "./missedVaas.middleware";
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC } from "@alephium/wormhole-sdk";
 import { Redis, Cluster } from "ioredis";
 import { createLogger, format, transports, Logger } from "winston";
-import { GetSignedVAAResponse } from "alephium-wormhole-sdk/lib/cjs/proto/publicrpc/v1/publicrpc";
+import { GetSignedVAAResponse } from "@alephium/wormhole-sdk/lib/cjs/proto/publicrpc/v1/publicrpc";
 
 const logger = createLogger({
   level: "debug",

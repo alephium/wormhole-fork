@@ -1,5 +1,5 @@
 import { binToHex } from '@alephium/web3'
-import { ChainId, coalesceChainName } from 'alephium-wormhole-sdk'
+import { ChainId, coalesceChainName } from '@alephium/wormhole-sdk'
 import { BridgeChain } from '../bridge_chain'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'

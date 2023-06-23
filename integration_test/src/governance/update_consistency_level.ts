@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 

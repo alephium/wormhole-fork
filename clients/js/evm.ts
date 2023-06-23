@@ -2,11 +2,11 @@ import {
   CHAINS,
   GovernancePayload,
   ethers_contracts
-} from "alephium-wormhole-sdk"
+} from "@alephium/wormhole-sdk"
 import { ethers } from "ethers"
 import { CONFIGS } from "./configs"
 import { impossible } from "./utils"
-import { EVMChainName } from "alephium-wormhole-sdk"
+import { EVMChainName } from "@alephium/wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 import { solidityKeccak256 } from "ethers/lib/utils"

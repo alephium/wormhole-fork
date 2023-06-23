@@ -14,7 +14,7 @@ import {
   selectTransferOriginChain,
   selectTransferTargetChain,
 } from "../../store/selectors";
-import { ChainId, hexToNativeAssetString } from "alephium-wormhole-sdk";
+import { ChainId, hexToNativeAssetString } from "@alephium/wormhole-sdk";
 
 export function RegisterNowButtonCore({
   originChain,

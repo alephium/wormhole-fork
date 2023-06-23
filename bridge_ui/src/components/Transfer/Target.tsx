@@ -3,7 +3,7 @@ import {
   CHAIN_ID_SOLANA,
   hexToNativeString,
   isEVMChain,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";

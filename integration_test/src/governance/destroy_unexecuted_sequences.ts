@@ -11,7 +11,7 @@ import {
   signVAABody,
   VAABody,
   alephium_contracts
-} from 'alephium-wormhole-sdk'
+} from '@alephium/wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 import { default as ethDevnetConfig } from '../../../configs/ethereum/devnet.json'

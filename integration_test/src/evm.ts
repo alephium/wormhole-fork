@@ -10,7 +10,7 @@ import {
   redeemOnEthNative,
   transferFromEth,
   transferFromEthNative
-} from 'alephium-wormhole-sdk'
+} from '@alephium/wormhole-sdk'
 import { Wallet as ETHWallet, providers } from 'ethers'
 import { Sequence } from './sequence'
 import { BridgeChain, TransferResult } from './bridge_chain'
@@ -19,7 +19,7 @@ import {
   Bridge__factory,
   ERC20__factory,
   TokenImplementation__factory
-} from 'alephium-wormhole-sdk/lib/cjs/ethers-contracts'
+} from '@alephium/wormhole-sdk/lib/cjs/ethers-contracts'
 import { TokenInfo } from '@alephium/token-list'
 
 export interface EvmChainConfig {

@@ -20,8 +20,8 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth
-} from "alephium-wormhole-sdk";
-import { CHAIN_ID_UNSET } from "alephium-wormhole-sdk/lib/esm";
+} from "@alephium/wormhole-sdk";
+import { CHAIN_ID_UNSET } from "@alephium/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";

@@ -1,4 +1,4 @@
-import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from "alephium-wormhole-sdk";
+import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 import { CLUSTER } from "./consts";
 
 export function getTransactionLink(chainId: ChainId, txId: string): string | undefined {

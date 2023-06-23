@@ -14,7 +14,7 @@ import { onJobHandler, RelayJob, Storage } from "./storage";
 import { KoaAdapter } from "@bull-board/koa";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { deserializeVAA, uint8ArrayToHex } from "alephium-wormhole-sdk";
+import { deserializeVAA, uint8ArrayToHex } from "@alephium/wormhole-sdk";
 import { ParsedVaaWithBytes } from "../application";
 
 export interface RedisConnectionOpts {

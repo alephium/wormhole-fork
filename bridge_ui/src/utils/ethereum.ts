@@ -1,5 +1,5 @@
 import { sleep } from "@alephium/web3";
-import { ChainId, ChainName, CHAIN_ID_BSC, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, getSignedVAAHash, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, ChainName, CHAIN_ID_BSC, CHAIN_ID_ETH, coalesceChainId, createNonce, ethers_contracts, getSignedVAAHash, isEVMChain } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { arrayify, formatUnits } from "ethers/lib/utils";
 import {

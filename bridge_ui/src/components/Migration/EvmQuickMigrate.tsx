@@ -1,4 +1,4 @@
-import { ChainId, ethers_contracts } from "alephium-wormhole-sdk";
+import { ChainId, ethers_contracts } from "@alephium/wormhole-sdk";
 import { Signer } from "@ethersproject/abstract-signer";
 import { getAddress } from "@ethersproject/address";
 import { BigNumber } from "@ethersproject/bignumber";

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectNFTSignedVAAHex } from "../store/selectors";
-import { hexToUint8Array } from "alephium-wormhole-sdk";
+import { hexToUint8Array } from "@alephium/wormhole-sdk";
 
 export default function useNFTSignedVAA() {
   const signedVAAHex = useSelector(selectNFTSignedVAAHex);

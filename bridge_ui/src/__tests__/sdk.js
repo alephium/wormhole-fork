@@ -7,7 +7,7 @@ describe("SDK installation", () => {
     const packageObj = JSON.parse(packageFile.toString());
 
     const sdkInstallation =
-      packageObj?.dependencies?.["alephium-wormhole-sdk"];
+      packageObj?.dependencies?.["@alephium/wormhole-sdk"];
     expect(sdkInstallation && !sdkInstallation.includes("file")).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_UNSET } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_UNSET } from '@alephium/wormhole-sdk'
 import axios from 'axios'
 import { assert, getBridgeChains, sleep } from '../utils'
 import {

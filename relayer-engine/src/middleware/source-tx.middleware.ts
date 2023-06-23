@@ -2,7 +2,7 @@
 import { Middleware } from "../compose.middleware";
 import { Context } from "../context";
 import { sleep } from "../utils";
-import { ChainId, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, isEVMChain } from "@alephium/wormhole-sdk";
 import { Logger } from "winston";
 import { NetworkId } from "@alephium/web3";
 

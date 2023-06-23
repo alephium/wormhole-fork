@@ -23,7 +23,7 @@ import {
   CHAIN_ID_AURORA,
   CHAIN_ID_KARURA,
   CHAIN_ID_ALEPHIUM,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { ChainID } from "../utils/consts";
 import { Box } from "@mui/material";
 

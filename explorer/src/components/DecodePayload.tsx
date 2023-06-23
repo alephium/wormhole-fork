@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography } from '@mui/material'
-import { VAAPayload } from 'alephium-wormhole-sdk'
+import { VAAPayload } from '@alephium/wormhole-sdk'
 
 import { ChainID, ChainIDs } from "../utils/consts";
 import { stringifyJson, usdFormatter } from "../utils/explorer";

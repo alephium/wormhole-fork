@@ -1,4 +1,4 @@
-import { ethers_contracts } from "alephium-wormhole-sdk";
+import { ethers_contracts } from "@alephium/wormhole-sdk";
 import { Signer } from "@ethersproject/abstract-signer";
 import { formatUnits } from "@ethersproject/units";
 import { useEffect, useMemo, useState } from "react";

@@ -11,12 +11,12 @@ import {
   hexToNativeAssetString,
   isEVMChain,
   uint8ArrayToHex,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   getOriginalAssetEth,
   getOriginalAssetSol,
   WormholeWrappedNFTInfo,
-} from "alephium-wormhole-sdk/lib/esm/nft_bridge";
+} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import {
   Button,
   Card,

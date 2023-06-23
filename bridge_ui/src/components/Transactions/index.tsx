@@ -5,7 +5,7 @@ import {
   getTokenBridgeForChainId,
   isEVMChain,
   CHAIN_ID_ETH
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { Card, Container, makeStyles } from "@material-ui/core";
 import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../muiTheme";

@@ -1,7 +1,7 @@
 import bscIcon from "../icons/bsc.svg";
 import ethIcon from "../icons/eth.svg";
 import alephiumIcon from "../icons/alephium.svg";
-import { ChainId } from "alephium-wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { EXPLORER_API_SERVER_HOST } from "./consts";
 
 export type RegisteredTokenInfo = {

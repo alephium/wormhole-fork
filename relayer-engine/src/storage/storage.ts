@@ -1,5 +1,5 @@
 import { Context } from "../context";
-import { VAA, VAAPayload } from "alephium-wormhole-sdk";
+import { VAA, VAAPayload } from "@alephium/wormhole-sdk";
 
 export interface StorageContext extends Context {
   storage: {

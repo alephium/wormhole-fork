@@ -1,5 +1,5 @@
 import { binToHex } from '@alephium/web3'
-import { CHAIN_ID_ALEPHIUM } from 'alephium-wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import base58 from 'bs58'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'

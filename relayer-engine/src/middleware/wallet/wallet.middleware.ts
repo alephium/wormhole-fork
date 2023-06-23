@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { CHAIN_ID_TO_NAME, ChainId, EVMChainId, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { CHAIN_ID_TO_NAME, ChainId, EVMChainId, CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk";
 import { WalletToolBox } from "./walletToolBox";
 import { Middleware } from "../../compose.middleware";
 import { spawnWalletWorker } from "./wallet.worker";

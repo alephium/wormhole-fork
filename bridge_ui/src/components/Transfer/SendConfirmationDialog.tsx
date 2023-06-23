@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA, isEVMChain } from "alephium-wormhole-sdk";
+import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
 import {
   Button,
   Dialog,

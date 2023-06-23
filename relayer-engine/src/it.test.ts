@@ -15,7 +15,7 @@ import {
   CHAIN_ID_BSC,
   ChainId,
   coalesceChainName
-} from 'alephium-wormhole-sdk'
+} from '@alephium/wormhole-sdk'
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { describe, expect, jest, test } from '@jest/globals'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'

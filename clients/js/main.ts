@@ -18,7 +18,7 @@ import {
   uint8ArrayToHex,
   signVAABody,
   assertEVMChain
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
 import { executeGovernanceEvm } from "./evm";
@@ -30,7 +30,7 @@ import {
   toChainName,
   isEVMChain,
   toChainId,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import { executeGovernanceAlph, getNextGovernanceSequence } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";

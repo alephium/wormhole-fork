@@ -1,5 +1,5 @@
 import { NetworkId } from "@alephium/web3"
-import { ChainId } from "alephium-wormhole-sdk"
+import { ChainId } from "@alephium/wormhole-sdk"
 import { Registry } from 'prom-client';
 
 export type WalletConfig = {

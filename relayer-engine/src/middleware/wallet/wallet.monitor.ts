@@ -1,6 +1,6 @@
 import { EventEmitter } from 'stream';
 import { Logger } from "winston";
-import { ChainId, isEVMChain, CHAIN_ID_ALEPHIUM, coalesceChainName, CHAIN_ID_ETH, CHAIN_ID_BSC, ethers_contracts } from "alephium-wormhole-sdk";
+import { ChainId, isEVMChain, CHAIN_ID_ALEPHIUM, coalesceChainName, CHAIN_ID_ETH, CHAIN_ID_BSC, ethers_contracts } from "@alephium/wormhole-sdk";
 import {
   ChainWalletMonitorConfig,
   TokenBalance,
@@ -287,7 +287,7 @@ class AlephiumWalletMonitor extends ChainWalletMonitor {
         if (tokenId === ALPH_TOKEN_ID) {
           continue
         }
-        const metadata = await this.provider.fetchStdTokenMetaData(tokenId)
+        const metadata = await this.provider.fetchFungibleTokenMetaData(tokenId)
         const tokenBalance = balances.tokenBalances?.find(t => t.id === tokenId)
         const amount = tokenBalance?.amount ?? '0'
         tokenBalances.push({

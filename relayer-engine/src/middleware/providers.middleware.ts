@@ -1,6 +1,6 @@
 import { Middleware } from "../compose.middleware";
 import { Context } from "../context";
-import { CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId, EVMChainId, isEVMChain, CHAIN_ID_ALEPHIUM } from "alephium-wormhole-sdk";
+import { CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId, EVMChainId, isEVMChain, CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { NetworkId, NodeProvider } from '@alephium/web3'
 import { getNodeUrl, newEVMProvider } from "../utils";

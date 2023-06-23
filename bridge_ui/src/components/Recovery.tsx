@@ -25,7 +25,7 @@ import {
   TransferNFT,
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA,
-} from "alephium-wormhole-sdk";
+} from "@alephium/wormhole-sdk";
 import {
   Accordion,
   AccordionDetails,

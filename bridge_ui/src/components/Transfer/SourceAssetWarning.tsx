@@ -1,4 +1,4 @@
-import { ChainId, CHAIN_ID_POLYGON, isEVMChain } from "alephium-wormhole-sdk";
+import { ChainId, CHAIN_ID_POLYGON, isEVMChain } from "@alephium/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { POLYGON_TERRA_WRAPPED_TOKENS } from "../../utils/consts";

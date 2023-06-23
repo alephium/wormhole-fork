@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_TERRA } from "alephium-wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
