@@ -93,7 +93,7 @@ function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher
   const pollingInterval = chainId === CHAIN_ID_ALEPHIUM ? ALEPHIUM_POLLING_INTERVAL : 3000
   const fetcher = fetcherGetter(chainId)
   const { data: blockNumber, error } = useSWR(
-    `${chainName}-block-number`,
+    fetcher === undefined ? null : `${chainName}-block-number`,
     () => fetcher === undefined ? undefined : fetcher(),
     { refreshInterval: pollingInterval }
   )
@@ -212,7 +212,7 @@ export default function Transactions() {
 
   const blockNumberFetcherGetter = useCallback((chainId: ChainId) => {
     if (chainId === CHAIN_ID_ALEPHIUM) {
-      return () => alphBlockNumberFetcher(alphWallet)
+      return alphWallet === undefined ? undefined : () => alphBlockNumberFetcher(alphWallet)
     }
     if (bothAreEvmChain) {
       if (chainId === txSourceChain && sourceChainReady) {
