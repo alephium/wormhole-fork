@@ -2,7 +2,6 @@ package alephium
 
 import (
 	"context"
-	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -13,31 +12,27 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestSubscribeEvents(t *testing.T) {
-	randomEvent := func(confirmations uint8) *UnconfirmedEvent {
-		return &UnconfirmedEvent{
-			ContractEvent: &sdk.ContractEvent{
-				BlockHash:  randomByte32().ToHex(),
-				TxId:       randomByte32().ToHex(),
-				EventIndex: 0,
-			},
-			msg: &WormholeMessage{
-				consistencyLevel: confirmations,
-			},
-		}
+func randomEvent(confirmations uint8) *UnconfirmedEvent {
+	return &UnconfirmedEvent{
+		ContractEvent: &sdk.ContractEvent{
+			BlockHash:  randomByte32().ToHex(),
+			TxId:       randomByte32().ToHex(),
+			EventIndex: 0,
+		},
+		msg: &WormholeMessage{
+			consistencyLevel: confirmations,
+		},
 	}
+}
 
+func TestSubscribeEvents(t *testing.T) {
 	event0 := randomEvent(0)
 	event1 := randomEvent(2)
-	event2 := randomEvent(0) // event2 from orphan block
+	event2 := randomEvent(2)
+	event3 := randomEvent(2)
+	eventsFromForkChain := []*UnconfirmedEvent{event2, event3}
 
-	watcher := &Watcher{
-		chainIndex: &ChainIndex{
-			FromGroup: 0,
-			ToGroup:   0,
-		},
-		currentHeight: 0,
-	}
+	watcher := &Watcher{chainIndex: &ChainIndex{0, 0}, currentHeight: 0}
 
 	confirmedEvents := make([]*ConfirmedEvent, 0)
 	handler := func(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
@@ -55,11 +50,14 @@ func TestSubscribeEvents(t *testing.T) {
 	heightC := make(chan int32)
 
 	isBlockInMainChain := func(hash string) (*bool, error) {
-		b := true
-		if hash == event2.BlockHash {
-			b = false
+		var result bool = true
+		for _, e := range eventsFromForkChain {
+			if e.BlockHash == hash {
+				result = false
+				break
+			}
 		}
-		return &b, nil
+		return &result, nil
 	}
 
 	getBlockHeader := func(hash string) (*sdk.BlockHeaderEntry, error) {
@@ -70,37 +68,50 @@ func TestSubscribeEvents(t *testing.T) {
 
 	go watcher.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, handler, errC, eventsC, heightC)
 
+	sendEventsAtHeight := func(height int32, unconfirmedEvents []*UnconfirmedEvent) {
+		atomic.StoreInt32(&watcher.currentHeight, height)
+		eventsC <- unconfirmedEvents
+		heightC <- height
+		time.Sleep(500 * time.Millisecond)
+	}
+
 	heightC <- 0
 	assert.True(t, len(confirmedEvents) == 0)
 
 	// event0 confirmed
-	atomic.StoreInt32(&watcher.currentHeight, 1)
-	eventsC <- []*UnconfirmedEvent{event0, event1}
-	heightC <- 1
-	time.Sleep(500 * time.Millisecond)
-	fmt.Println(len(confirmedEvents))
+	sendEventsAtHeight(1, []*UnconfirmedEvent{event0, event1})
 	assert.True(t, len(confirmedEvents) == 1)
 	diff := deep.Equal(confirmedEvents[0].event.ContractEvent, event0.ContractEvent)
 	assert.Nil(t, diff)
 
 	// event1 not confirmed
-	atomic.StoreInt32(&watcher.currentHeight, 2)
-	heightC <- 2
-	time.Sleep(500 * time.Millisecond)
+	sendEventsAtHeight(2, []*UnconfirmedEvent{})
 	assert.True(t, len(confirmedEvents) == 1)
 
 	// event1 confirmed
-	atomic.StoreInt32(&watcher.currentHeight, 4)
-	heightC <- 4
-	time.Sleep(500 * time.Millisecond)
+	sendEventsAtHeight(4, []*UnconfirmedEvent{})
 	assert.True(t, len(confirmedEvents) == 2)
 	diff = deep.Equal(confirmedEvents[1].event.ContractEvent, event1.ContractEvent)
 	assert.Nil(t, diff)
 
-	// event2
-	atomic.StoreInt32(&watcher.currentHeight, 8)
-	eventsC <- []*UnconfirmedEvent{event2}
-	heightC <- 8
-	time.Sleep(500 * time.Millisecond)
+	// event2 and event3 are not confirmed
+	sendEventsAtHeight(5, eventsFromForkChain)
 	assert.True(t, len(confirmedEvents) == 2)
+
+	// event2 and event3 are not confirmed
+	sendEventsAtHeight(6, []*UnconfirmedEvent{})
+	assert.True(t, len(confirmedEvents) == 2)
+
+	// event2 and event3 are confirmed
+	// the block of event3 becomes the main chain, but the block of event2 is still in the forked chain
+	event3.BlockHash = randomByte32().ToHex()
+	sendEventsAtHeight(7, []*UnconfirmedEvent{})
+	assert.True(t, len(confirmedEvents) == 3)
+	diff = deep.Equal(confirmedEvents[2].event.ContractEvent, event3.ContractEvent)
+	assert.Nil(t, diff)
+
+	// the block of event2 becomes the main chain, but we have removed it
+	event2.BlockHash = randomByte32().ToHex()
+	sendEventsAtHeight(8, []*UnconfirmedEvent{})
+	assert.True(t, len(confirmedEvents) == 3)
 }

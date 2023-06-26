@@ -364,13 +364,6 @@ func (w *Watcher) handleEvents_(
 				logger.Error("failed to check mainchain block", zap.Error(err))
 				return err
 			}
-			if !*isCanonical {
-				alphMessagesOrphaned.Add(float64(len(blockEvents.events)))
-				// it's safe to update map in range loop
-				logger.Warn("remove the events from orphan block", zap.String("blockHash", blockHash), zap.Int("size", len(blockEvents.events)))
-				delete(pendingEvents, blockHash)
-				continue
-			}
 
 			if blockEvents.header == nil {
 				blockHeader, err := getBlockHeader(blockHash)
@@ -396,6 +389,10 @@ func (w *Watcher) handleEvents_(
 					continue
 				}
 
+				if !*isCanonical {
+					logger.Warn("ignore the event from fork chain", zap.String("blockHash", blockHash), zap.String("txId", event.TxId))
+					continue
+				}
 				logger.Debug("event confirmed", zap.String("txId", event.TxId), zap.String("blockHash", event.BlockHash))
 				confirmedEvents = append(confirmedEvents, &ConfirmedEvent{
 					event:  event,
