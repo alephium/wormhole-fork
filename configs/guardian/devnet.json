@@ -1,5 +1,5 @@
 {
-  "governanceChainId": 1,
+  "governanceChainId": 255,
   "governanceEmitterAddress": "0000000000000000000000000000000000000000000000000000000000000004",
   "initSigners": [
     "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
