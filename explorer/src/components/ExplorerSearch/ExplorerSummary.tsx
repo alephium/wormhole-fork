@@ -51,7 +51,7 @@ const ExplorerSummary = (props: SummaryProps) => {
     if (
       emitterChainId === chainIDs["ethereum"] ||
       emitterChainId === chainIDs["bsc"] ||
-      emitterChainId === chainIDs["polygon"]
+      emitterChainId === chainIDs["alephium"]
     ) {
       transactionId = InitiatingTxID;
     } else {
@@ -175,7 +175,7 @@ const ExplorerSummary = (props: SummaryProps) => {
           nativeExplorerContractUri(emitterChainId, EmitterAddress) ? (
             <li>
               <span style={textStyles}>
-                This message was emitted by the {ChainID[emitterChainId]}{" "}
+                This message was emitted by the {ChainID[emitterChainId] ?? 'Governance Chain'}{" "}
               </span>
               <Link
                 component={OutboundLink}

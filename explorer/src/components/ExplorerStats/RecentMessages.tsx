@@ -11,12 +11,11 @@ import {
   TableCell,
   TableContainer,
   TableFooter,
-  TableHead,
   TableRow,
   Typography,
 } from "@mui/material";
 import { contractNameFormatter } from "../../utils/explorer";
-import { ChainID, chainIDs } from "../../utils/consts";
+import { chainIDs } from "../../utils/consts";
 import { formatQuorumDate } from "../../utils/time";
 import { explorer } from "../../utils/urls";
 import ChainIcon from "../ChainIcon";
@@ -105,13 +104,9 @@ const RecentMessages = (props: RecentMessagesProps) => {
   //     },
   //   ];
 
-  const toTargetChain = (chain: string | number): number => {
-    if (typeof chain === 'number') {
-      return chain
-    }
-    if (chain === 'unset') {
-      return 0
-    }
+  const toChainId = (chain: string | number): number => {
+    if (typeof chain === 'number') return chain
+    if (chain === 'unset') return 0
     return chainIDs[chain]
   }
 
@@ -171,7 +166,7 @@ const RecentMessages = (props: RecentMessagesProps) => {
                 <TableCell>
                   <Link
                     component={RouterLink}
-                    to={`${explorer}?emitterChain=${chainIDs[item.EmitterChain]}&emitterAddress=${item.EmitterAddress}&targetChain=${toTargetChain(item.TargetChain)}&sequence=${item.Sequence}`}
+                    to={`${explorer}?emitterChain=${toChainId(item.EmitterChain)}&emitterAddress=${item.EmitterAddress}&targetChain=${toChainId(item.TargetChain)}&sequence=${item.Sequence}`}
                     color="inherit"
                   >
                     View

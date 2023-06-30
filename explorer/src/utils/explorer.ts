@@ -30,15 +30,18 @@ const makeGroupName = (
   let group = groupKey === "*" ? ALL : groupKey;
   if (group.includes(":")) {
     // subKey is chainID:addresss
-    let parts = groupKey.split(":");
-    group = `${ChainID[Number(parts[0])]} ${contractNameFormatter(
-      parts[1],
-      Number(parts[0]),
-      activeNetwork
-    )}`;
+    const parts = groupKey.split(":");
+    const chainName = ChainID[Number(parts[0])]
+    group = chainName === undefined
+      ? 'Governance'
+      : `${chainName} ${contractNameFormatter(
+        parts[1],
+        Number(parts[0]),
+        activeNetwork
+      )}`;
   } else if (group != ALL) {
     // subKey is a chainID
-    group = ChainID[Number(groupKey)];
+    group = ChainID[Number(groupKey)] ?? 'Governance';
   }
   return group;
 };
@@ -95,7 +98,10 @@ const contractNameFormatter = (
     activeNetwork = useNetworkContext().activeNetwork;
   }
 
-  const chainName = ChainID[chainId].toLowerCase();
+  const chainName = ChainID[chainId]?.toLowerCase();
+  if (chainName === undefined) {
+    return 'Governance'
+  }
   let nativeAddress = getNativeAddress(chainId, address, activeNetwork);
 
   let truncated = truncateAddress(nativeAddress || address);
@@ -161,27 +167,28 @@ const nativeExplorerContractUri = (
 };
 const nativeExplorerTxUri = (
   chainId: number,
-  transactionId: string
+  transactionId: string,
+  activeNetwork?: ActiveNetwork
 ): string => {
+  if (!activeNetwork) {
+    activeNetwork = useNetworkContext().activeNetwork;
+  }
+
   let base = "";
-  if (chainId === chainIDs["solana"]) {
-    base = "https://explorer.solana.com/address/";
-  } else if (chainId === chainIDs["ethereum"]) {
-    base = "https://etherscan.io/tx/";
-  } else if (chainId === chainIDs["terra"]) {
-    base = "https://finder.terra.money/columbus-5/tx/";
+  if (chainId === chainIDs["ethereum"]) {
+    const prefix = transactionId.startsWith('0x') ? '' : '0x'
+    base = activeNetwork.name === 'testnet'
+      ? `https://goerli.etherscan.io/tx/${prefix}`
+      : `https://etherscan.io/tx/${prefix}`
   } else if (chainId === chainIDs["bsc"]) {
-    base = "https://bscscan.com/tx/";
-  } else if (chainId === chainIDs["polygon"]) {
-    base = "https://polygonscan.com/tx/";
-  } else if (chainId === chainIDs["avalanche"]) {
-    base = "https://snowtrace.io/tx/";
-  } else if (chainId === chainIDs["oasis"]) {
-    base = "https://explorer.emerald.oasis.dev/tx/";
-  } else if (chainId === chainIDs["fantom"]) {
-    base = "https://ftmscan.com/tx/";
-  } else if (chainId === chainIDs["aurora"]) {
-    base = "https://aurorascan.dev/tx/";
+    const prefix = transactionId.startsWith('0x') ? '' : '0x'
+    base = activeNetwork.name === 'testnet'
+      ? `https://testnet.bscscan.com/tx/${prefix}`
+      : `https://bscscan.com/tx/${prefix}`
+  } else if (chainId === chainIDs["alephium"]) {
+    base = activeNetwork.name === 'testnet'
+      ? 'https://explorer.testnet.alephium.org/transactions/'
+      : 'https://explorer.alephium.org/transactions/'
   }
 
   if (base) {
