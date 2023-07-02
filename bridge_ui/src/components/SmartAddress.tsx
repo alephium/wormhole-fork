@@ -28,7 +28,7 @@ import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 import { shortenAddress } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
-import { addressFromContractId } from "@alephium/web3";
+import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from "@alephium/web3";
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -90,12 +90,13 @@ export default function SmartAddress({
 }) {
   const classes = useStyles();
   const isNativeTerra = chainId === CHAIN_ID_TERRA && isNativeDenom(address);
+  const isNativeALPH = chainId === CHAIN_ID_ALEPHIUM && address === ALPH_TOKEN_ID
   const useableAddress = parsedTokenAccount?.mintKey || address || "";
   const useableSymbol = isNativeTerra
     ? formatNativeDenom(address)
     : parsedTokenAccount?.symbol || symbol || "";
   // const useableLogo = logo || isNativeTerra ? getNativeTerraIcon(useableSymbol) : null
-  const isNative = parsedTokenAccount?.isNativeAsset || isNativeTerra || false;
+  const isNative = parsedTokenAccount?.isNativeAsset || isNativeTerra || isNativeALPH || false;
   const addressShort = shortenAddress(useableAddress) || "";
 
   const useableName = isNative
@@ -184,7 +185,7 @@ export default function SmartAddress({
         isAsset ? "asset" : "address"
       }/${useableAddress}`
     : chainId === CHAIN_ID_ALEPHIUM
-    ? `https://explorer.${CLUSTER === "testnet" ? "testnet." : ""}alephium.org/addresses/${addressFromContractId(useableAddress)}`
+    ? `https://explorer.${CLUSTER === "testnet" ? "testnet." : ""}alephium.org/addresses/${toALPHAddress(useableAddress)}`
     : undefined;
   const explorerName = getExplorerName(chainId);
 
@@ -250,4 +251,8 @@ export default function SmartAddress({
       </Typography>
     </StyledTooltip>
   );
+}
+
+function toALPHAddress(idOrAddress: string): string {
+  return isBase58(idOrAddress) ? idOrAddress : addressFromContractId(idOrAddress)
 }
