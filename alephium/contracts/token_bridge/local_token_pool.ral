@@ -1,11 +1,11 @@
 @std(enabled = false)
 Contract LocalTokenPool(
-    tokenBridgeId: ByteVec,
+    tokenBridge: TokenBridge,
     tokenChainId: U256, // local chain id
     bridgeTokenId: ByteVec, // local token id
     mut totalBridged: U256,
     decimals_: U256
-) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
+) extends BridgeTokenPool(tokenBridge, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     pub fn getSymbol() -> ByteVec {
         panic!(ErrorCodes.NotSupported)
     }

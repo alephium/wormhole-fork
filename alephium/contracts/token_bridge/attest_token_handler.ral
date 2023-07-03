@@ -2,7 +2,7 @@ Contract AttestTokenHandler(
   governance: Governance,
   localTokenBridge: TokenBridge,
   targetChainId: U256,
-  targetTokenBridge: TokenBridge,
+  targetTokenBridgeId: ByteVec,
   mut receivedSequence: U256,
   isLocalHandler: Bool
 ) extends Constants(), TokenBridgeConstants() {
@@ -10,7 +10,7 @@ Contract AttestTokenHandler(
   fn parseAttestToken(vaa: ByteVec) -> (ByteVec, ByteVec, ByteVec, U256, U256) {
     let (emitterChainId, vaaTargetChainId, emitterAddress, msgSequence, payload) = governance.parseAndVerifyVAA(vaa, false)
     assert!(emitterChainId == targetChainId, ErrorCodes.InvalidEmitChainId)
-    assert!(emitterAddress == tokenId!(targetTokenBridge), ErrorCodes.InvalidEmitAddress)
+    assert!(emitterAddress == targetTokenBridgeId, ErrorCodes.InvalidEmitAddress)
     assert!(vaaTargetChainId == 0, ErrorCodes.InvalidTargetChainId)
     assert!(msgSequence >= receivedSequence, ErrorCodes.InvalidSequence)
     receivedSequence = msgSequence + 1

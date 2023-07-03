@@ -1,7 +1,7 @@
 Contract TokenBridgeForChain(
     governance: Governance,
     localChainId: U256,
-    localTokenBridgeId: ByteVec, // local chain token bridge contract id
+    localTokenBridge: TokenBridge, // local chain token bridge contract
     remoteChainId: U256,
     remoteTokenBridgeId: ByteVec, // remote chain token bridge contract id
     mut start: U256,
@@ -12,7 +12,7 @@ Contract TokenBridgeForChain(
 ) extends Sequence(start, firstNext256, secondNext256, unexecutedSequenceTemplateId), Constants(), TokenBridgeConstants() {
     @using(updateFields = true)
     pub fn nextSendSequence() -> U256 {
-        checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == contractId!(localTokenBridge), ErrorCodes.InvalidCaller)
         let msgSequence = sendSequence
         sendSequence = sendSequence + 1
         return msgSequence
@@ -50,7 +50,7 @@ Contract TokenBridgeForChain(
 
         let (amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee) = parseCompleteTransfer(payload)
         let path = Path.TokenPool ++ u256To2Byte!(vaaTokenChainId) ++ vaaTokenId
-        let tokenPoolId = subContractIdOf!(TokenBridge(localTokenBridgeId), path)
+        let tokenPoolId = subContractIdOf!(localTokenBridge, path)
         let tokenPool = TokenPool(tokenPoolId)
         tokenPool.completeTransfer{caller -> ALPH: dustAmount!()}(
             remoteChainId, amount, vaaTokenId, vaaTokenChainId, recipient, normalizedArbiterFee, caller
@@ -59,7 +59,7 @@ Contract TokenBridgeForChain(
 
     @using(assetsInContract = true)
     pub fn destroyUnexecutedSequenceContracts(paths: ByteVec) -> () {
-        checkCaller!(callerContractId!() == localTokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == contractId!(localTokenBridge), ErrorCodes.InvalidCaller)
         let length = size!(paths)
         for (let mut index = 0; index < length; index = index + 8) {
             let unexecutedSequenceId = subContractId!(byteVecSlice!(paths, index, index + 8))
@@ -74,7 +74,7 @@ Contract TokenBridgeForChain(
 
     @using(assetsInContract = true, checkExternalCaller = false)
     pub fn withdraw(alphAmount: U256) -> () {
-        let refundAddress = TokenBridge(localTokenBridgeId).getRefundAddress()
+        let refundAddress = localTokenBridge.getRefundAddress()
         assert!(callerAddress!() == refundAddress, ErrorCodes.InvalidCaller)
         transferTokenFromSelf!(refundAddress, ALPH, alphAmount)
     }

@@ -32,7 +32,7 @@ export namespace TokenBridgeForChainTypes {
   export type Fields = {
     governance: HexString;
     localChainId: bigint;
-    localTokenBridgeId: HexString;
+    localTokenBridge: HexString;
     remoteChainId: bigint;
     remoteTokenBridgeId: HexString;
     start: bigint;

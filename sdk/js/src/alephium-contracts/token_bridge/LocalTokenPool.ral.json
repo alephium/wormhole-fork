@@ -5,7 +5,7 @@
   "codeHash": "6330d3736eef41d3bc9c5026d0608def44267cc00ed8d8be0620d01f4627f035",
   "fieldsSig": {
     "names": [
-      "tokenBridgeId",
+      "tokenBridge",
       "tokenChainId",
       "bridgeTokenId",
       "totalBridged",

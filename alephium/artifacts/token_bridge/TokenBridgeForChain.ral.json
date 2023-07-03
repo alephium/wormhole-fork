@@ -7,7 +7,7 @@
     "names": [
       "governance",
       "localChainId",
-      "localTokenBridgeId",
+      "localTokenBridge",
       "remoteChainId",
       "remoteTokenBridgeId",
       "start",

@@ -266,7 +266,7 @@ function createContract<T extends Fields>(
 
 function createLocalTokenPoolTemplate() {
   return createContract(LocalTokenPool, {
-    tokenBridgeId: '',
+    tokenBridge: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
     totalBridged: 0n,
@@ -276,7 +276,7 @@ function createLocalTokenPoolTemplate() {
 
 function createRemoteTokenPoolTemplate() {
   return createContract(RemoteTokenPool, {
-    tokenBridgeId: '',
+    tokenBridge: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
     totalBridged: 0n,
@@ -292,7 +292,7 @@ function createAttestTokenHandlerTemplate() {
     governance: '',
     localTokenBridge: '',
     targetChainId: 0n,
-    targetTokenBridge: '',
+    targetTokenBridgeId: '',
     receivedSequence: 0n,
     isLocalHandler: false
   })
@@ -302,7 +302,7 @@ function createTokenBridgeForChainTemplate() {
   return createContract(TokenBridgeForChain, {
     governance: '',
     localChainId: 0n,
-    localTokenBridgeId: '',
+    localTokenBridge: '',
     remoteChainId: 0n,
     remoteTokenBridgeId: '',
     start: 0n,
@@ -380,7 +380,7 @@ export function createAttestTokenHandler(
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
     localTokenBridge: tokenBridge.contractId,
     targetChainId: BigInt(remoteChainId),
-    targetTokenBridge: remoteTokenBridgeId,
+    targetTokenBridgeId: remoteTokenBridgeId,
     receivedSequence: 0n,
     isLocalHandler: remoteChainId === CHAIN_ID_ALEPHIUM
   }
@@ -398,7 +398,7 @@ export function createTokenBridgeForChain(
   const initFields = {
     governance: tokenBridge.governance.contractId,
     localChainId: BigInt(CHAIN_ID_ALEPHIUM),
-    localTokenBridgeId: tokenBridge.contractId,
+    localTokenBridge: tokenBridge.contractId,
     remoteChainId: BigInt(remoteChainId),
     remoteTokenBridgeId: remoteTokenBridgeId,
     start: 0n,
@@ -458,7 +458,7 @@ export function newLocalTokenPoolTestFixture(
   const localTokenPool = createContract(
     LocalTokenPool,
     {
-      tokenBridgeId: tokenBridge.contractId,
+      tokenBridge: tokenBridge.contractId,
       tokenChainId: BigInt(CHAIN_ID_ALEPHIUM),
       bridgeTokenId: localTokenId,
       totalBridged: totalBridged,
@@ -496,7 +496,7 @@ export function newRemoteTokenPoolTestFixture(
   const remoteTokenPool = createContract(
     RemoteTokenPool,
     {
-      tokenBridgeId: fixture.tokenBridge.contractId,
+      tokenBridge: fixture.tokenBridge.contractId,
       tokenChainId: BigInt(remoteChainId),
       bridgeTokenId: remoteTokenId,
       totalBridged: totalBridged,

@@ -1,5 +1,5 @@
 Contract RemoteTokenPool(
-    tokenBridgeId: ByteVec,
+    tokenBridge: TokenBridge,
     tokenChainId: U256, // remote token chain id
     bridgeTokenId: ByteVec, // remote token id
     mut totalBridged: U256,
@@ -7,7 +7,7 @@ Contract RemoteTokenPool(
     mut name_: ByteVec,
     decimals_: U256,
     mut sequence_: U256
-) extends BridgeTokenPool(tokenBridgeId, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
+) extends BridgeTokenPool(tokenBridge, tokenChainId, bridgeTokenId, totalBridged, decimals_) {
     const WormholePostfix = #2028576f726d686f6c6529 // ' (Wormhole)'
 
     pub fn getSymbol() -> ByteVec {
@@ -28,7 +28,7 @@ Contract RemoteTokenPool(
 
     @using(updateFields = true)
     pub fn updateDetails(symbol: ByteVec, name: ByteVec, sequence: U256) -> () {
-        checkCaller!(callerContractId!() == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId!() == contractId!(tokenBridge), ErrorCodes.InvalidCaller)
         assert!(sequence_ < sequence, ErrorCodes.InvalidSequence)
         symbol_ = symbol
         name_ = name

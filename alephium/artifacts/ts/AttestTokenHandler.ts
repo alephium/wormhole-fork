@@ -33,7 +33,7 @@ export namespace AttestTokenHandlerTypes {
     governance: HexString;
     localTokenBridge: HexString;
     targetChainId: bigint;
-    targetTokenBridge: HexString;
+    targetTokenBridgeId: HexString;
     receivedSequence: bigint;
     isLocalHandler: boolean;
   };

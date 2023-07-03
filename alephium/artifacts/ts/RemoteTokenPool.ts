@@ -30,7 +30,7 @@ import { getContractByCodeHash } from "./contracts";
 // Custom types for the contract
 export namespace RemoteTokenPoolTypes {
   export type Fields = {
-    tokenBridgeId: HexString;
+    tokenBridge: HexString;
     tokenChainId: bigint;
     bridgeTokenId: HexString;
     totalBridged: bigint;
