@@ -377,8 +377,6 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
 	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
-	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
-	alphGroupIndex := alphConfig.GroupIndex
 
 	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
 	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
@@ -691,7 +689,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		// }
 
 		alphWatcher, err := alephium.NewAlephiumWatcher(
-			*alphRPC, *alphApiKey, alphGroupIndex, alphGroupIndex, alphContracts, common.ReadinessAlephiumSyncing,
+			*alphRPC, *alphApiKey, alphConfig, common.ReadinessAlephiumSyncing,
 			lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
 		)
 		if err != nil {

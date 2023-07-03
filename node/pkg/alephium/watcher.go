@@ -89,27 +89,23 @@ type ConfirmedEvent struct {
 func NewAlephiumWatcher(
 	url string,
 	apiKey string,
-	fromGroup uint8,
-	toGroup uint8,
-	contracts []string,
+	chainConfig *common.ChainConfig,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
 	minConfirmations uint8,
 	fetchPeriod uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
-	if len(contracts) != 2 {
-		return nil, fmt.Errorf("invalid contract ids")
-	}
-	governanceContractAddress, err := ToContractAddress(contracts[0])
+	governanceContractAddress, err := ToContractAddress(chainConfig.Contracts.Governance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid governance contract id")
 	}
-	tokenBridgeContractId, err := HexToByte32(contracts[1])
+	tokenBridgeContractId, err := HexToByte32(chainConfig.Contracts.TokenBridge)
 	if err != nil {
 		return nil, fmt.Errorf("invalid token bridge contract id")
 	}
 
+	groupIndex := int32(chainConfig.GroupIndex)
 	watcher := &Watcher{
 		url:                       url,
 		apiKey:                    apiKey,
@@ -117,8 +113,8 @@ func NewAlephiumWatcher(
 		tokenBridgeContractId:     tokenBridgeContractId,
 
 		chainIndex: &ChainIndex{
-			FromGroup: int32(fromGroup),
-			ToGroup:   int32(toGroup),
+			FromGroup: groupIndex,
+			ToGroup:   groupIndex,
 		},
 
 		readiness: readiness,
@@ -236,14 +232,13 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						errC <- err
 						return
 					}
+					logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 					if unconfirmed.msg.IsAttestTokenVAA() {
-						logger.Info("received an attest token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
 							logger.Error("ignore invalid attest token event", zap.Error(err))
 							continue
 						}
 					}
-					logger.Info("received an transfer token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}
 
