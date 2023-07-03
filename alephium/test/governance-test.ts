@@ -34,10 +34,12 @@ import {
   defaultMessageFee,
   SetMessageFee,
   SubmitTransferFee,
-  GuardianSetUpgrade
+  GuardianSetUpgrade,
+  createGovernanceWithGuardianSets
 } from './fixtures/governance-fixture'
 import * as blake from 'blakejs'
 import { Governance, GovernanceTypes } from '../artifacts/ts'
+import { expectAssertionError } from '@alephium/web3-test'
 
 describe('test governance', () => {
   const testGuardianSet = GuardianSet.random(18, 1)
@@ -64,6 +66,109 @@ describe('test governance', () => {
       inputAssets: inputAssets
     }
   }
+
+  it('should fail if uses unknown guardian set', async () => {
+    const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
+    const vaaBody = new VAABody(
+      setMessageFee.encode(),
+      governanceChainId,
+      CHAIN_ID_ALEPHIUM,
+      governanceEmitterAddress,
+      0
+    )
+
+    const gs0 = GuardianSet.random(3, 0) // invalid guardian set
+    const gs1 = GuardianSet.random(3, 1)
+    const gs2 = GuardianSet.random(5, 2)
+    const governanceAddress = randomContractAddress()
+    const initialFields = createGovernanceWithGuardianSets(gs1, gs2)
+
+    async function test(gs: GuardianSet) {
+      const vaa = gs.sign(gs.quorumSize(), vaaBody)
+      return Governance.tests.parseAndVerifyVAA({
+        initialFields,
+        address: governanceAddress,
+        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: false },
+        blockTimeStamp: Number(initialFields.previousGuardianSetExpirationTimeMS)
+      })
+    }
+
+    await expectAssertionError(
+      test(gs0),
+      governanceAddress,
+      Number(Governance.consts.ErrorCodes.InvalidGuardianSetIndex)
+    )
+    await test(gs1)
+    await test(gs2)
+  })
+
+  it('should fail if uses the previous guardian set for governance vaa', async () => {
+    const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
+    const vaaBody = new VAABody(
+      setMessageFee.encode(),
+      governanceChainId,
+      CHAIN_ID_ALEPHIUM,
+      governanceEmitterAddress,
+      0
+    )
+
+    const gs0 = GuardianSet.random(3, 0)
+    const gs1 = GuardianSet.random(5, 1)
+    const governanceAddress = randomContractAddress()
+
+    async function test(gs: GuardianSet) {
+      const vaa = gs.sign(gs.quorumSize(), vaaBody)
+      return Governance.tests.parseAndVerifyVAA({
+        initialFields: createGovernanceWithGuardianSets(gs0, gs1),
+        address: governanceAddress,
+        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: true }
+      })
+    }
+
+    await expectAssertionError(
+      test(gs0),
+      governanceAddress,
+      Number(Governance.consts.ErrorCodes.InvalidGuardianSetIndex)
+    )
+    await test(gs1)
+  })
+
+  it('should fail if uses the previous guardian set after expiration', async () => {
+    const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
+    const vaaBody = new VAABody(
+      setMessageFee.encode(),
+      governanceChainId,
+      CHAIN_ID_ALEPHIUM,
+      governanceEmitterAddress,
+      0
+    )
+
+    const gs0 = GuardianSet.random(3, 0)
+    const gs1 = GuardianSet.random(5, 1)
+    const governanceAddress = randomContractAddress()
+    const initialFields = createGovernanceWithGuardianSets(gs0, gs1)
+
+    async function test(gs: GuardianSet, blockTimeStamp: number) {
+      const vaa = gs.sign(gs.quorumSize(), vaaBody)
+      return Governance.tests.parseAndVerifyVAA({
+        initialFields: initialFields,
+        address: governanceAddress,
+        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: false },
+        blockTimeStamp
+      })
+    }
+
+    await expectAssertionError(
+      test(gs0, Number(initialFields.previousGuardianSetExpirationTimeMS) + 1),
+      governanceAddress,
+      Number(Governance.consts.ErrorCodes.GuardianSetExpired)
+    )
+    await test(gs0, Number(initialFields.previousGuardianSetExpirationTimeMS))
+    await test(gs0, Number(initialFields.previousGuardianSetExpirationTimeMS) - 1)
+    await test(gs1, Number(initialFields.previousGuardianSetExpirationTimeMS) + 1)
+    await test(gs1, Number(initialFields.previousGuardianSetExpirationTimeMS))
+    await test(gs1, Number(initialFields.previousGuardianSetExpirationTimeMS) - 1)
+  })
 
   it('should update guardian set succeed if target chain id is valid', async () => {
     const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
@@ -128,7 +233,7 @@ describe('test governance', () => {
     })
   })
 
-  it('should failed if signature is not enough', async () => {
+  it('should fail if signature is not enough', async () => {
     const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
       guardianSetUpgrade.encode(),
@@ -143,7 +248,7 @@ describe('test governance', () => {
     })
   })
 
-  it('should failed if signature is duplicated', async () => {
+  it('should fail if signature is duplicated', async () => {
     const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
       guardianSetUpgrade.encode(),
@@ -160,7 +265,7 @@ describe('test governance', () => {
     })
   })
 
-  it('should failed if signature is invalid', async () => {
+  it('should fail if signature is invalid', async () => {
     const guardianSetUpgrade = new GuardianSetUpgrade(testGuardianSet)
     const vaaBody = new VAABody(
       guardianSetUpgrade.encode(),

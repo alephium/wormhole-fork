@@ -85,6 +85,20 @@ export class GovernanceFixture extends ContractFixture<GovernanceTypes.Fields> {
   }
 }
 
+export function createGovernanceWithGuardianSets(gs0: GuardianSet, gs1: GuardianSet): GovernanceTypes.Fields {
+  return {
+    chainId: BigInt(CHAIN_ID_ALEPHIUM),
+    governanceChainId: BigInt(governanceChainId),
+    governanceEmitterAddress: governanceEmitterAddress,
+    tokenBridgeFactory: '',
+    receivedSequence: 0n,
+    messageFee: defaultMessageFee,
+    guardianSets: [gs0.encodeAddresses(), gs1.encodeAddresses()],
+    guardianSetIndexes: [BigInt(gs0.index), BigInt(gs1.index)],
+    previousGuardianSetExpirationTimeMS: BigInt(Date.now())
+  }
+}
+
 export function createGovernance(receivedSequence?: bigint, messageFee?: bigint, contractAddress?: string) {
   const templateContracts = createTemplateContracts()
   const tokenBridgeFactory = createTokenBridgeFactory(templateContracts)
