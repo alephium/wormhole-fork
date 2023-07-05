@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	network     = flag.String("network", "", "Network type (devnet, testnet, mainnet)")
-	alphRPC     = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
-	apiKey      = flag.String("apiKey", "", "Alephium RPC api key")
-	adminRPC    = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
-	groupIndex  = flag.Uint("group", 0, "Contract group index")
-	targetChain = flag.Uint("targetChain", 0, "VAA target chain id")
+	network       = flag.String("network", "", "Network type (devnet, testnet, mainnet)")
+	alphRPC       = flag.String("alphRPC", "http://localhost:12973", "Alephium RPC address")
+	apiKey        = flag.String("apiKey", "", "Alephium RPC api key")
+	adminRPC      = flag.String("adminRPC", "/run/guardiand/admin.socket", "Admin RPC address")
+	groupIndex    = flag.Uint("group", 0, "Contract group index")
+	targetChainId = flag.Uint("targetChainId", 0, "VAA target chain id")
+	backfill      = flag.Bool("backfill", false, "Backfill missing messages from a list of remote nodes")
 )
 
 func getAdminClient(ctx context.Context, addr string) (*grpc.ClientConn, nodev1.NodePrivilegedServiceClient, error) {
@@ -40,11 +41,11 @@ func main() {
 
 	bridgeConfig, err := common.ReadConfigsByNetwork(*network)
 	if err != nil {
-		log.Fatalf("failed to read configs, network: %s", *network)
+		log.Fatalf("failed to read configs, network: %s, error: %v", *network, err)
 	}
 
-	if *targetChain > math.MaxUint16 {
-		log.Fatalf("invalid target chain id: %d", *targetChain)
+	if *targetChainId > math.MaxUint16 {
+		log.Fatalf("invalid target chain id: %d", *targetChainId)
 	}
 
 	ctx := context.Background()
@@ -55,13 +56,13 @@ func main() {
 	defer conn.Close()
 
 	alphTokenBridgeAddress := bridgeConfig.Alephium.TokenBridgeEmitterAddress
-	log.Printf("Requesting missing messages for %s", alphTokenBridgeAddress)
+	log.Printf("requesting missing messages for %s", alphTokenBridgeAddress)
 
 	msg := nodev1.FindMissingMessagesRequest{
 		EmitterChain:   uint32(vaa.ChainIDAlephium),
-		TargetChain:    uint32(*targetChain),
+		TargetChain:    uint32(*targetChainId),
 		EmitterAddress: alphTokenBridgeAddress,
-		RpcBackfill:    true,
+		RpcBackfill:    *backfill,
 		BackfillNodes:  bridgeConfig.Guardian.GuardianUrls,
 	}
 	resp, err := admin.FindMissingMessages(ctx, &msg)
@@ -79,7 +80,7 @@ func main() {
 	}
 
 	if len(msgs) == 0 {
-		log.Printf("No missing messages found for %s", alphTokenBridgeAddress)
+		log.Printf("no missing messages found for %s", alphTokenBridgeAddress)
 		return
 	}
 
@@ -87,14 +88,14 @@ func main() {
 	lowest := msgs[0].Sequence
 	highest := msgs[missingMessageSize-1].Sequence
 
-	log.Printf("Found %d missing messages for %s: %d - %d", len(msgs), alphTokenBridgeAddress, lowest, highest)
+	log.Printf("found %d missing messages for %s: %d - %d", len(msgs), alphTokenBridgeAddress, lowest, highest)
 
 	missingMessages := make(map[uint64]bool)
 	for _, msg := range msgs {
 		missingMessages[msg.Sequence] = true
 	}
 
-	log.Printf("Starting search for missing sequence numbers...")
+	log.Printf("starting search for missing sequence numbers...")
 	alphGovernanceAddress, err := alephium.ToContractAddress(bridgeConfig.Alephium.Contracts.Governance)
 	if err != nil {
 		log.Fatalf("invalid governance contract id, err: %v", err)
@@ -106,12 +107,13 @@ func main() {
 	client := alephium.NewClient(*alphRPC, *apiKey, 10)
 	eventCount, err := client.GetContractEventsCount(ctx, *alphGovernanceAddress)
 	if err != nil {
-		log.Fatalf("Failed to get event count, err: %v", err)
+		log.Fatalf("failed to get event count, err: %v", err)
 	}
 	if *eventCount == 0 {
-		log.Fatalf("Event count is 0")
+		log.Fatalf("event count is 0")
 	}
 
+	log.Printf("current event count: %v", *eventCount)
 	// request events in reverse order
 	toIndex := *eventCount
 	for {
@@ -125,9 +127,10 @@ func main() {
 		}
 		events, err := client.GetContractEventsByRange(ctx, *alphGovernanceAddress, fromIndex, batchSize, int32(*groupIndex))
 		if err != nil {
-			log.Fatalf("Failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
+			log.Fatalf("failed to fetch events, err: %v, fromIndex: %v, toIndex: %v", err, fromIndex, toIndex)
 		}
 
+		log.Printf("from index %v, batch size %v, event size: %v", fromIndex, batchSize, len(events.Events))
 		for _, event := range events.Events {
 			if event.EventIndex != alephium.WormholeMessageEventIndex {
 				continue
@@ -135,18 +138,23 @@ func main() {
 
 			wormholeMsg, err := alephium.ToWormholeMessage(event.Fields, event.TxId)
 			if err != nil {
-				log.Fatalf("Failed to get wormhole message, err: %v, txId: %s", err, event.TxId)
+				log.Fatalf("failed to get wormhole message, err: %v, txId: %s", err, event.TxId)
 			}
 
 			if _, keyExist := missingMessages[wormholeMsg.Sequence]; !keyExist {
 				continue
 			}
+			vaaId := wormholeMsg.GetID()
+			log.Printf("found missing message %d for %s in tx %s", vaaId.Sequence, vaaId.EmitterAddress.String(), event.TxId)
+
 			missingMessages[wormholeMsg.Sequence] = false
 			remain -= 1
 
+			log.Printf("requesting re-observation for %s", event.TxId)
+
 			txIdBytes, err := alephium.HexToFixedSizeBytes(event.TxId, 32)
 			if err != nil {
-				log.Fatalf("Invalid tx id %s, err: %v", event.TxId, err)
+				log.Fatalf("invalid tx id %s, err: %v", event.TxId, err)
 			}
 			_, err = admin.SendObservationRequest(
 				ctx,
@@ -158,7 +166,7 @@ func main() {
 				},
 			)
 			if err != nil {
-				log.Fatalf("Failed to request re-observe, err: %v", err)
+				log.Fatalf("failed to request re-observe, err: %v", err)
 			}
 		}
 
@@ -169,7 +177,7 @@ func main() {
 	}
 
 	if remain == 0 {
-		log.Println("Find missing messages completed")
+		log.Println("find missing messages completed")
 		return
 	}
 
@@ -180,6 +188,6 @@ func main() {
 		}
 	}
 	if len(missingSeqs) != 0 {
-		log.Printf("Can't find missing messages for sequences: %v\n", missingSeqs)
+		log.Printf("can't find missing messages for sequences: %v\n", missingSeqs)
 	}
 }

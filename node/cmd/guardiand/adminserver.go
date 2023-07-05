@@ -355,8 +355,9 @@ func (s *nodePrivilegedService) fetchMissing(
 	ctx context.Context,
 	nodes []string,
 	c *http.Client,
-	chain vaa.ChainID,
+	emitterChain vaa.ChainID,
 	addr string,
+	targetChain vaa.ChainID,
 	seq uint64) (bool, error) {
 
 	// shuffle the list of public RPC endpoints
@@ -369,7 +370,7 @@ func (s *nodePrivilegedService) fetchMissing(
 
 	for _, node := range nodes {
 		req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(
-			"%s/v1/signed_vaa/%d/%s/%d", node, chain, addr, seq), nil)
+			"%s/v1/signed_vaa/%d/%s/%d/%d", node, emitterChain, addr, targetChain, seq), nil)
 		if err != nil {
 			return false, fmt.Errorf("failed to create request: %w", err)
 		}
@@ -378,8 +379,9 @@ func (s *nodePrivilegedService) fetchMissing(
 		if err != nil {
 			s.logger.Warn("failed to fetch missing VAA",
 				zap.String("node", node),
-				zap.String("chain", chain.String()),
+				zap.String("emitterChain", emitterChain.String()),
 				zap.String("address", addr),
+				zap.String("targetChain", targetChain.String()),
 				zap.Uint64("sequence", seq),
 				zap.Error(err),
 			)
@@ -399,8 +401,9 @@ func (s *nodePrivilegedService) fetchMissing(
 				resp.Body.Close()
 				s.logger.Warn("failed to decode VAA response",
 					zap.String("node", node),
-					zap.String("chain", chain.String()),
+					zap.String("emitterChain", emitterChain.String()),
 					zap.String("address", addr),
+					zap.String("targetChain", targetChain.String()),
 					zap.Uint64("sequence", seq),
 					zap.Error(err),
 				)
@@ -413,7 +416,7 @@ func (s *nodePrivilegedService) fetchMissing(
 				resp.Body.Close()
 				s.logger.Warn("failed to decode VAA body",
 					zap.String("node", node),
-					zap.String("chain", chain.String()),
+					zap.String("chain", emitterChain.String()),
 					zap.String("address", addr),
 					zap.Uint64("sequence", seq),
 					zap.Error(err),
@@ -422,7 +425,7 @@ func (s *nodePrivilegedService) fetchMissing(
 			}
 
 			s.logger.Info("backfilled VAA",
-				zap.Uint16("chain", uint16(chain)),
+				zap.Uint16("chain", uint16(emitterChain)),
 				zap.String("address", addr),
 				zap.Uint64("sequence", seq),
 				zap.Int("numBytes", len(vaaBytes)),
@@ -454,10 +457,12 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 	emitterAddress := vaa.Address{}
 	copy(emitterAddress[:], b)
 
+	emitterChain := vaa.ChainID(req.EmitterChain)
+	targetChain := vaa.ChainID(req.TargetChain)
 	ids, first, last, err := s.db.FindEmitterSequenceGap(vaa.VAAID{
-		EmitterChain:   vaa.ChainID(req.EmitterChain),
+		EmitterChain:   emitterChain,
 		EmitterAddress: emitterAddress,
-		TargetChain:    vaa.ChainID(req.TargetChain),
+		TargetChain:    targetChain,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "database operation failed: %v", err)
@@ -467,7 +472,7 @@ func (s *nodePrivilegedService) FindMissingMessages(ctx context.Context, req *no
 		c := &http.Client{}
 		unfilled := make([]uint64, 0, len(ids))
 		for _, id := range ids {
-			if ok, err := s.fetchMissing(ctx, req.BackfillNodes, c, vaa.ChainID(req.EmitterChain), emitterAddress.String(), id); err != nil {
+			if ok, err := s.fetchMissing(ctx, req.BackfillNodes, c, emitterChain, emitterAddress.String(), targetChain, id); err != nil {
 				return nil, status.Errorf(codes.Internal, "failed to backfill VAA: %v", err)
 			} else if ok {
 				continue
