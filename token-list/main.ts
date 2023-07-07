@@ -96,4 +96,22 @@ program
     }
   })
 
+program
+  .command('list-token')
+  .description('list bridge tokens')
+  .requiredOption<'testnet' | 'mainnet'>('--network <network-id>', 'network id', checkNetworkId)
+  .option<ChainId>('--tokenChainId <token-chain-id>', 'token chain id', checkChainId)
+  .option<ChainId>('--targetChainId <target-chain-id>', 'target chain id', checkChainId)
+  .action((options) => {
+    const tokenList = options.network === 'testnet' ? testnetBridgeTokens : mainnetBridgeTokens
+    const filtered = options.tokenChainId && options.targetChainId
+      ? tokenList.filter((t) => t.tokenChainId === options.tokenChainId && t.targetChainId === options.targetChainId)
+      : options.tokenChainId
+      ? tokenList.filter((t) => t.tokenChainId === options.tokenChainId)
+      : options.targetChainId
+      ? tokenList.filter((t) => t.targetChainId === options.targetChainId)
+      : tokenList
+    console.log(JSON.stringify(filtered, null, 2))
+  })
+
 program.parseAsync(process.argv)
