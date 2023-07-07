@@ -1,6 +1,6 @@
 import { default as alephiumTestnetContracts } from '../configs/alephium/testnet.json'
 import { default as alephiumMainnetContracts } from '../configs/alephium/mainnet.json'
-import { ALPH_TOKEN_ID, binToHex, hexToBinUnsafe, isHexString, web3 } from '@alephium/web3'
+import { ALPH_TOKEN_ID, hexToBinUnsafe, isHexString, web3 } from '@alephium/web3'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, ethers_contracts, EVMChainId, getForeignAssetAlephium, isEVMChain } from '@alephium/wormhole-sdk'
 import { default as ethTestnetContracts } from '../configs/ethereum/testnet.json'
 import { default as ethMainnetContracts } from '../configs/ethereum/mainnet.json'
@@ -108,4 +108,29 @@ export function createEVM(network: 'testnet' | 'mainnet', chainId: ChainId): Bri
   }
 
   return { chainId, validateAndNormalizeTokenId, getForeignAsset, getTokenMetadata }
+}
+
+export function getBridgeChain(network: 'testnet' | 'mainnet', chainId: ChainId): BridgeChain {
+  switch (chainId) {
+    case CHAIN_ID_ALEPHIUM:
+      return createAlephium(network)
+    case CHAIN_ID_ETH:
+    case CHAIN_ID_BSC:
+      return createEVM(network, chainId)
+  }
+  throw new Error(`Invalid chain id: ${chainId}`)
+}
+
+export function validateTokenMetadata(sourceMetadata: TokenMetaData, targetMetadata: TokenMetaData) {
+  const targetNamePostfix = ' (Wormhole)'
+  const expectedName = sourceMetadata.name + targetNamePostfix
+  if (expectedName !== targetMetadata.name) {
+    throw new Error(`Invalid bridge token name, expect ${expectedName}, have ${targetMetadata.name}`)
+  }
+  if (sourceMetadata.symbol !== targetMetadata.symbol) {
+    throw new Error(`Invalid bridge token symbol, expect ${sourceMetadata.symbol}, have ${targetMetadata.symbol}`)
+  }
+  if (sourceMetadata.decimals !== targetMetadata.decimals) {
+    throw new Error(`Invalid bridge token decimals, expect ${sourceMetadata.decimals}, have ${targetMetadata.decimals}`)
+  }
 }

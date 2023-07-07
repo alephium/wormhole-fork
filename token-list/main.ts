@@ -1,6 +1,6 @@
 import { program } from 'commander'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
-import { BridgeChain, createAlephium, createEVM, TokenMetaData } from './utils'
+import { BridgeChain, createAlephium, createEVM, getBridgeChain, TokenMetaData, validateTokenMetadata } from './utils'
 import { BridgeToken, mainnetBridgeTokens, testnetBridgeTokens } from './src'
 import path from 'path'
 import fs from 'fs'
@@ -22,17 +22,6 @@ function checkNetworkId(network: string): 'testnet' | 'mainnet' {
   return network as 'testnet' | 'mainnet'
 }
 
-function getBridgeChain(network: 'testnet' | 'mainnet', chainId: ChainId): BridgeChain {
-  switch (chainId) {
-    case CHAIN_ID_ALEPHIUM:
-      return createAlephium(network)
-    case CHAIN_ID_ETH:
-    case CHAIN_ID_BSC:
-      return createEVM(network, chainId)
-  }
-  throw new Error(`Invalid chain id: ${chainId}`)
-}
-
 function saveToTokenList(network: 'testnet' | 'mainnet', bridgeToken: BridgeToken) {
   const tokenList = network === 'testnet' ? testnetBridgeTokens : mainnetBridgeTokens
   const exists = tokenList.find((t) => t.tokenChainId === bridgeToken.tokenChainId &&
@@ -44,20 +33,6 @@ function saveToTokenList(network: 'testnet' | 'mainnet', bridgeToken: BridgeToke
     const filePath = path.join(process.cwd(), 'tokens', `${network}.json`)
     const content = JSON.stringify(newTokenList, null, 2)
     fs.writeFileSync(filePath, content)
-  }
-}
-
-function validateMetadata(sourceMetadata: TokenMetaData, targetMetadata: TokenMetaData) {
-  const targetNamePostfix = ' (Wormhole)'
-  const expectedName = sourceMetadata.name + targetNamePostfix
-  if (expectedName !== targetMetadata.name) {
-    throw new Error(`Invalid bridge token name, expect ${expectedName}, have ${targetMetadata.name}`)
-  }
-  if (sourceMetadata.symbol !== targetMetadata.symbol) {
-    throw new Error(`Invalid bridge token symbol, expect ${sourceMetadata.symbol}, have ${targetMetadata.symbol}`)
-  }
-  if (sourceMetadata.decimals !== targetMetadata.decimals) {
-    throw new Error(`Invalid bridge token decimals, expect ${sourceMetadata.decimals}, have ${targetMetadata.decimals}`)
   }
 }
 
@@ -82,7 +57,7 @@ program
       }
       const sourceTokenMetadata = await tokenChain.getTokenMetadata(options.tokenId)
       const targetTokenMetadata = await targetChain.getTokenMetadata(bridgeTokenId)
-      validateMetadata(sourceTokenMetadata, targetTokenMetadata)
+      validateTokenMetadata(sourceTokenMetadata, targetTokenMetadata)
       const bridgeToken: BridgeToken = {
         tokenChainId: tokenChain.chainId,
         originTokenId: options.tokenId,
