@@ -163,7 +163,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "0"
@@ -198,7 +198,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "1"
@@ -235,7 +235,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "2"

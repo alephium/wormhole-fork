@@ -65,7 +65,7 @@ type Watcher struct {
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	minConfirmations uint8
-	fetchPeriod      uint8
+	pollInterval     uint8
 	currentHeight    int32
 
 	client *Client
@@ -93,7 +93,7 @@ func NewAlephiumWatcher(
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
 	minConfirmations uint8,
-	fetchPeriod uint8,
+	pollInterval uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
 	governanceContractAddress, err := ToContractAddress(chainConfig.Contracts.Governance)
@@ -122,7 +122,7 @@ func NewAlephiumWatcher(
 		obsvReqC:  obsvReqC,
 
 		minConfirmations: minConfirmations,
-		fetchPeriod:      fetchPeriod,
+		pollInterval:     pollInterval,
 
 		client: NewClient(url, apiKey, 10),
 	}
@@ -195,7 +195,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 	}
 
 	fromIndex := *currentEventCount
-	eventTick := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
+	eventTick := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
 	defer eventTick.Stop()
 
 	for {
@@ -255,7 +255,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 }
 
 func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
-	t := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
+	t := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
 	defer t.Stop()
 
 	for {
