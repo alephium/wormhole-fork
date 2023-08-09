@@ -13,8 +13,8 @@
     "bridgeRewardRouter": "a50e6d48b6c98a1433c048eb15e8eae5e6a841ea3e3ea316ad1f86847202a000",
     "testToken": "4a235397a99940afc3befb11e11751bf4eb034f943e3db6e9bddca6153c94000"
   },
-  "nodeUrl": "http://localhost:22973",
-  "explorerUrl": "http://localhost:9090",
+  "nodeUrl": "http://127.0.0.1:22973",
+  "explorerUrl": "http://127.0.0.1:9090",
   "networkId": 4,
   "coreEmitterAddress": "b27a522735a27ab690eae1f2494b4b13dd035090f1e388a36e4edbae3a768600",
   "tokenBridgeEmitterAddress": "2b8601fced2e5e803714f5efe96d3fbb6de0a912c01a95cb0a808f4f461f0300",
