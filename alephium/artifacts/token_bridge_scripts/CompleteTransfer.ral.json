@@ -1,5 +1,5 @@
 {
-  "version": "v2.3.5",
+  "version": "v2.5.0",
   "name": "CompleteTransfer",
   "bytecodeTemplate": "01010300000009b413c3038d7ea4c68000a2{1}b40e0c{0}0107",
   "fieldsSig": {
