@@ -8,7 +8,7 @@ import { default as bscTestnetContracts } from '../configs/bsc/testnet.json'
 import { default as bscMainnetContracts } from '../configs/bsc/mainnet.json'
 import { ethers } from 'ethers'
 import { getForeignAssetEth } from '@alephium/wormhole-sdk/lib/cjs/nft_bridge'
-import { ALPH } from '@alephium/token-list'
+import { ALPH, mainnetTokensMetadata, testnetTokensMetadata } from '@alephium/token-list'
 
 export interface BridgeChain {
   chainId: ChainId
@@ -26,6 +26,8 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const textDecoder = new TextDecoder()
   web3.setCurrentNodeProvider(nodeUrl)
 
+  const tokenList = network === 'testnet' ? testnetTokensMetadata : mainnetTokensMetadata
+
   const getForeignAsset = async (tokenChainId: ChainId, tokenId: Uint8Array): Promise<string | null> => {
     return await getForeignAssetAlephium(
       deployments.contracts.tokenBridge,
@@ -39,6 +41,10 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const getTokenMetadata = async (tokenId: string): Promise<TokenMetaData> => {
     if (tokenId === ALPH_TOKEN_ID) {
       return { name: ALPH.name, symbol: ALPH.symbol, decimals: ALPH.decimals }
+    }
+    const tokenInTokenList = tokenList.tokens.find((t) => t.id === tokenId)
+    if (tokenInTokenList === undefined) {
+      throw new Error(`Token ${tokenId} does not exists in the token-list`)
     }
     const nodeProvider = web3.getCurrentNodeProvider()
     const result = await nodeProvider.fetchFungibleTokenMetaData(tokenId)
