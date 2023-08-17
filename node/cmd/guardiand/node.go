@@ -219,7 +219,7 @@ func init() {
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
-	alphPollInterval = NodeCmd.Flags().Uint8("alphPollInterval", 10, "The fetch events period for alwphium watcher")
+	alphPollInterval = NodeCmd.Flags().Uint8("alphPollInterval", 4, "The poll interval of alephium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
