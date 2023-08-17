@@ -232,12 +232,14 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						errC <- err
 						return
 					}
-					logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 					if unconfirmed.msg.IsAttestTokenVAA() {
+						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "attest"))
 						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
 							logger.Error("ignore invalid attest token event", zap.Error(err))
 							continue
 						}
+					} else {
+						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "transfer"))
 					}
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}

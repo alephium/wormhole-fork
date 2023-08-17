@@ -102,38 +102,7 @@ describe('test governance', () => {
     await test(gs2)
   })
 
-  it('should fail if uses the previous guardian set for governance vaa', async () => {
-    const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
-    const vaaBody = new VAABody(
-      setMessageFee.encode(),
-      governanceChainId,
-      CHAIN_ID_ALEPHIUM,
-      governanceEmitterAddress,
-      0
-    )
-
-    const gs0 = GuardianSet.random(3, 0)
-    const gs1 = GuardianSet.random(5, 1)
-    const governanceAddress = randomContractAddress()
-
-    async function test(gs: GuardianSet) {
-      const vaa = gs.sign(gs.quorumSize(), vaaBody)
-      return Governance.tests.parseAndVerifyVAA({
-        initialFields: createGovernanceWithGuardianSets(gs0, gs1),
-        address: governanceAddress,
-        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: true }
-      })
-    }
-
-    await expectAssertionError(
-      test(gs0),
-      governanceAddress,
-      Number(Governance.consts.ErrorCodes.InvalidGuardianSetIndex)
-    )
-    await test(gs1)
-  })
-
-  it('should fail if uses the previous guardian set after expiration', async () => {
+  it('should fail if uses invalid guardian set to validate vaa', async () => {
     const setMessageFee = new SetMessageFee(defaultMessageFee * 2n)
     const vaaBody = new VAABody(
       setMessageFee.encode(),
@@ -148,15 +117,22 @@ describe('test governance', () => {
     const governanceAddress = randomContractAddress()
     const initialFields = createGovernanceWithGuardianSets(gs0, gs1)
 
-    async function test(gs: GuardianSet, blockTimeStamp: number) {
+    async function test(gs: GuardianSet, blockTimeStamp?: number, isGovernanceVAA = false) {
       const vaa = gs.sign(gs.quorumSize(), vaaBody)
       return Governance.tests.parseAndVerifyVAA({
         initialFields: initialFields,
         address: governanceAddress,
-        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: false },
+        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA },
         blockTimeStamp
       })
     }
+
+    await expectAssertionError(
+      test(gs0, Number(initialFields.previousGuardianSetExpirationTimeMS), true),
+      governanceAddress,
+      Number(Governance.consts.ErrorCodes.InvalidGuardianSetIndex)
+    )
+    await test(gs1, undefined, true)
 
     await expectAssertionError(
       test(gs0, Number(initialFields.previousGuardianSetExpirationTimeMS) + 1),
