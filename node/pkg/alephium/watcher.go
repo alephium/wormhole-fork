@@ -65,7 +65,7 @@ type Watcher struct {
 	obsvReqC chan *gossipv1.ObservationRequest
 
 	minConfirmations uint8
-	fetchPeriod      uint8
+	pollInterval     uint8
 	currentHeight    int32
 
 	client *Client
@@ -89,27 +89,23 @@ type ConfirmedEvent struct {
 func NewAlephiumWatcher(
 	url string,
 	apiKey string,
-	fromGroup uint8,
-	toGroup uint8,
-	contracts []string,
+	chainConfig *common.ChainConfig,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
 	minConfirmations uint8,
-	fetchPeriod uint8,
+	pollInterval uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
-	if len(contracts) != 2 {
-		return nil, fmt.Errorf("invalid contract ids")
-	}
-	governanceContractAddress, err := ToContractAddress(contracts[0])
+	governanceContractAddress, err := ToContractAddress(chainConfig.Contracts.Governance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid governance contract id")
 	}
-	tokenBridgeContractId, err := HexToByte32(contracts[1])
+	tokenBridgeContractId, err := HexToByte32(chainConfig.Contracts.TokenBridge)
 	if err != nil {
 		return nil, fmt.Errorf("invalid token bridge contract id")
 	}
 
+	groupIndex := int32(chainConfig.GroupIndex)
 	watcher := &Watcher{
 		url:                       url,
 		apiKey:                    apiKey,
@@ -117,8 +113,8 @@ func NewAlephiumWatcher(
 		tokenBridgeContractId:     tokenBridgeContractId,
 
 		chainIndex: &ChainIndex{
-			FromGroup: int32(fromGroup),
-			ToGroup:   int32(toGroup),
+			FromGroup: groupIndex,
+			ToGroup:   groupIndex,
 		},
 
 		readiness: readiness,
@@ -126,7 +122,7 @@ func NewAlephiumWatcher(
 		obsvReqC:  obsvReqC,
 
 		minConfirmations: minConfirmations,
-		fetchPeriod:      fetchPeriod,
+		pollInterval:     pollInterval,
 
 		client: NewClient(url, apiKey, 10),
 	}
@@ -199,7 +195,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 	}
 
 	fromIndex := *currentEventCount
-	eventTick := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
+	eventTick := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
 	defer eventTick.Stop()
 
 	for {
@@ -237,13 +233,14 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 						return
 					}
 					if unconfirmed.msg.IsAttestTokenVAA() {
-						logger.Info("received an attest token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
+						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "attest"))
 						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
 							logger.Error("ignore invalid attest token event", zap.Error(err))
 							continue
 						}
+					} else {
+						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "transfer"))
 					}
-					logger.Info("received an transfer token message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash))
 					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 				}
 
@@ -260,7 +257,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 }
 
 func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
-	t := time.NewTicker(time.Duration(w.fetchPeriod) * time.Second)
+	t := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
 	defer t.Stop()
 
 	for {
@@ -364,13 +361,6 @@ func (w *Watcher) handleEvents_(
 				logger.Error("failed to check mainchain block", zap.Error(err))
 				return err
 			}
-			if !*isCanonical {
-				alphMessagesOrphaned.Add(float64(len(blockEvents.events)))
-				// it's safe to update map in range loop
-				logger.Warn("remove the events from orphan block", zap.String("blockHash", blockHash), zap.Int("size", len(blockEvents.events)))
-				delete(pendingEvents, blockHash)
-				continue
-			}
 
 			if blockEvents.header == nil {
 				blockHeader, err := getBlockHeader(blockHash)
@@ -396,6 +386,10 @@ func (w *Watcher) handleEvents_(
 					continue
 				}
 
+				if !*isCanonical {
+					logger.Warn("ignore the event from fork chain", zap.String("blockHash", blockHash), zap.String("txId", event.TxId))
+					continue
+				}
 				logger.Debug("event confirmed", zap.String("txId", event.TxId), zap.String("blockHash", event.BlockHash))
 				confirmedEvents = append(confirmedEvents, &ConfirmedEvent{
 					event:  event,

@@ -25,23 +25,18 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 			txId := hex.EncodeToString(req.TxHash[0:32])
+			logger.Debug("handling re-observe request", zap.String("txId", txId))
 			txStatus, err := client.GetTransactionStatus(ctx, txId)
 			if err != nil {
 				logger.Error("failed to get transaction status", zap.String("txId", txId), zap.Error(err))
 				continue
 			}
 
-			logger.Debug("handling re-observe request", zap.String("txId", txId))
 			if txStatus.Confirmed == nil {
 				logger.Error("tx is not confirmed", zap.Error(err), zap.String("txId", txId))
 				continue
 			}
 			blockHash := txStatus.Confirmed.BlockHash
-			if err != nil {
-				logger.Error("failed to check tx status", zap.Error(err), zap.String("txId", txId))
-				continue
-			}
-
 			events, err := w.getGovernanceEventsByTxId(ctx, logger, client, w.governanceContractAddress, blockHash, txId)
 			if err != nil {
 				logger.Error("failed to get events from block", zap.String("blockHash", blockHash), zap.Error(err))

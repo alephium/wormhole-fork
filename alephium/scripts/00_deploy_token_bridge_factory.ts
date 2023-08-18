@@ -20,14 +20,14 @@ async function deployTemplateContract<F extends Fields>(
 
 const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const localTokenPoolId = await deployTemplateContract(deployer, LocalTokenPool, {
-    tokenBridgeId: '',
+    tokenBridge: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
     totalBridged: 0n,
     decimals_: 0n
   })
   const remoteTokenPoolId = await deployTemplateContract(deployer, RemoteTokenPool, {
-    tokenBridgeId: '',
+    tokenBridge: '',
     tokenChainId: 0n,
     bridgeTokenId: '',
     totalBridged: 0n,
@@ -39,7 +39,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
   const tokenBridgeForChainId = await deployTemplateContract(deployer, TokenBridgeForChain, {
     governance: '',
     localChainId: 0n,
-    localTokenBridgeId: '',
+    localTokenBridge: '',
     remoteChainId: 0n,
     remoteTokenBridgeId: '',
     start: 0n,
@@ -52,7 +52,7 @@ const deployTokenBridgeFactory: DeployFunction = async (deployer: Deployer): Pro
     governance: '',
     localTokenBridge: '',
     targetChainId: 0n,
-    targetTokenBridge: '',
+    targetTokenBridgeId: '',
     receivedSequence: 0n,
     isLocalHandler: false
   })

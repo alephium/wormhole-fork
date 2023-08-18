@@ -118,7 +118,7 @@ var (
 	alphRPC              *string
 	alphApiKey           *string
 	alphMinConfirmations *uint8
-	alphFetchPeriod      *uint8
+	alphPollInterval     *uint8
 
 	logLevel *string
 
@@ -219,7 +219,7 @@ func init() {
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
 	alphMinConfirmations = NodeCmd.Flags().Uint8("alphMinConfirmations", 1, "The min confirmations for alephium tx")
-	alphFetchPeriod = NodeCmd.Flags().Uint8("alphFetchPeriod", 10, "The fetch events period for alwphium watcher")
+	alphPollInterval = NodeCmd.Flags().Uint8("alphPollInterval", 4, "The poll interval of alephium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -377,8 +377,6 @@ func runNode(cmd *cobra.Command, args []string) {
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
 	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
-	alphContracts := []string{alphConfig.Contracts.Governance, alphConfig.Contracts.TokenBridge}
-	alphGroupIndex := alphConfig.GroupIndex
 
 	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
 	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
@@ -691,8 +689,8 @@ func runNode(cmd *cobra.Command, args []string) {
 		// }
 
 		alphWatcher, err := alephium.NewAlephiumWatcher(
-			*alphRPC, *alphApiKey, alphGroupIndex, alphGroupIndex, alphContracts, common.ReadinessAlephiumSyncing,
-			lockC, *alphMinConfirmations, *alphFetchPeriod, chainObsvReqC[vaa.ChainIDAlephium],
+			*alphRPC, *alphApiKey, alphConfig, common.ReadinessAlephiumSyncing,
+			lockC, *alphMinConfirmations, *alphPollInterval, chainObsvReqC[vaa.ChainIDAlephium],
 		)
 		if err != nil {
 			logger.Error("failed to create alephium watcher", zap.Error(err))

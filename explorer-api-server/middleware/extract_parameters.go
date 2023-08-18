@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var supportedChains = []vaa.ChainID{vaa.ChainIDEthereum, vaa.ChainIDAlephium, vaa.ChainIDBSC}
+var supportedChains = []vaa.ChainID{vaa.ChainIDUnset, vaa.ChainIDEthereum, vaa.ChainIDAlephium, vaa.ChainIDBSC}
 
 func isSupportedChain(chainId vaa.ChainID) bool {
 	for _, c := range supportedChains {

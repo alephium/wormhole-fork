@@ -8,7 +8,7 @@ volumes:
 
 services:
   alephium:
-    image: alephium/alephium:v2.3.3
+    image: alephium/alephium:v2.3.5
     restart: "no"
     ports:
       - 19973:19973/tcp
@@ -163,7 +163,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "0"
@@ -198,7 +198,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "1"
@@ -235,7 +235,7 @@ services:
       - http://alephium:22973
       - --network
       - "devnet"
-      - --alphFetchPeriod
+      - --alphPollInterval
       - "1"
       - --devnetGuardianIndex
       - "2"

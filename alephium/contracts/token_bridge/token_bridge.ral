@@ -55,7 +55,7 @@ Contract TokenBridge(
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         assert!(tokenRemaining!(payer, localTokenId) > 0, ErrorCodes.TokenNotExist) // make sure that the token exists
         let (encodedImmutableFields, encodedMutableFields) = LocalTokenPool.encodeFields!(
-            selfContractId!(),
+            selfContract!(),
             localChainId,
             localTokenId,
             0,
@@ -84,7 +84,7 @@ Contract TokenBridge(
         let expectedCaller = subContractId!(Path.AttestTokenHandler ++ u256To2Byte!(tokenChainId))
         checkCaller!(callerContractId!() == expectedCaller, ErrorCodes.InvalidCaller)
         let (encodedImmutableFields, encodedMutableFields) = RemoteTokenPool.encodeFields!(
-            selfContractId!(),
+            selfContract!(),
             tokenChainId,
             bridgeTokenId,
             0,

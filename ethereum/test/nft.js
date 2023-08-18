@@ -1,6 +1,7 @@
 const jsonfile = require('jsonfile');
 const elliptic = require('elliptic');
 const BigNumber = require('bignumber.js');
+const devnetConfig = require('../../configs/guardian/devnet.json');
 
 const Wormhole = artifacts.require("Wormhole");
 const NFTBridge = artifacts.require("NFTBridgeEntrypoint");
@@ -19,7 +20,7 @@ contract("NFT", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
     const testSigner2 = web3.eth.accounts.privateKeyToAccount(testSigner2PK);
     const testChainId = "2";
-    const testGovernanceChainId = "1";
+    const testGovernanceChainId = devnetConfig.governanceChainId.toString();
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
     let WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
     const testForeignChainId = "1";

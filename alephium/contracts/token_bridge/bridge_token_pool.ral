@@ -1,5 +1,5 @@
 Abstract Contract BridgeTokenPool(
-    tokenBridgeId: ByteVec,
+    tokenBridge: TokenBridge,
     tokenChainId: U256,
     bridgeTokenId: ByteVec,
     mut totalBridged: U256,
@@ -12,7 +12,7 @@ Abstract Contract BridgeTokenPool(
         arbiterFee: U256,
         nonce: ByteVec
     ) -> (ByteVec, U256) {
-        checkCaller!(callerContractId == tokenBridgeId, ErrorCodes.InvalidCaller)
+        checkCaller!(callerContractId == contractId!(tokenBridge), ErrorCodes.InvalidCaller)
         assert!(size!(nonce) == 4, ErrorCodes.InvalidNonceSize)
 
         let normalizedAmount = normalizeAmount(amount, decimals_)
@@ -39,7 +39,7 @@ Abstract Contract BridgeTokenPool(
         vaaTokenChainId: U256,
         normalizedArbiterFee: U256
     ) -> (U256, U256) {
-        let expectedCallerContractId = subContractIdOf!(TokenBridge(tokenBridgeId), Path.TokenBridgeForChain ++ u256To2Byte!(emitterChainId))
+        let expectedCallerContractId = subContractIdOf!(tokenBridge, Path.TokenBridgeForChain ++ u256To2Byte!(emitterChainId))
         checkCaller!(expectedCallerContractId == callerContractId, ErrorCodes.InvalidCaller)
         assert!(vaaTokenId == bridgeTokenId, ErrorCodes.InvalidTransferMessage)
         assert!(vaaTokenChainId == tokenChainId, ErrorCodes.InvalidTransferMessage)

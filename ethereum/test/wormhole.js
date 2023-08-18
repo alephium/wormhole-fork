@@ -1,6 +1,7 @@
 const jsonfile = require('jsonfile');
 const elliptic = require('elliptic');
 const path = require('path');
+const devnetConfig = require('../../configs/guardian/devnet.json');
 
 const Wormhole = artifacts.require("Wormhole");
 const MockImplementation = artifacts.require("MockImplementation");
@@ -67,7 +68,7 @@ contract("Wormhole", function () {
     const testSigner2 = web3.eth.accounts.privateKeyToAccount(testSigner2PK);
     const testSigner3 = web3.eth.accounts.privateKeyToAccount(testSigner3PK);
     const testChainId = "2";
-    const testGovernanceChainId = "1";
+    const testGovernanceChainId = devnetConfig.governanceChainId.toString();
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
 
     it("should be initialized with the correct signers and values", async function () {
