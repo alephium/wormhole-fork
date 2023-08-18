@@ -1,0 +1,38 @@
+[
+  {
+    "tokenChainId": 255,
+    "originTokenId": "0000000000000000000000000000000000000000000000000000000000000000",
+    "targetChainId": 2,
+    "bridgeTokenId": "0x1C5252a1996F82495579F16e5932D71d35dB5a03"
+  },
+  {
+    "tokenChainId": 255,
+    "originTokenId": "0000000000000000000000000000000000000000000000000000000000000000",
+    "targetChainId": 4,
+    "bridgeTokenId": "0x18D495a87E176C8d5Dc923c0Bf27ed8Bd03C64d4"
+  },
+  {
+    "tokenChainId": 2,
+    "originTokenId": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
+    "targetChainId": 4,
+    "bridgeTokenId": "0x46039248DB37D087F0A3Da6502c31869A7C79394"
+  },
+  {
+    "tokenChainId": 2,
+    "originTokenId": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
+    "targetChainId": 255,
+    "bridgeTokenId": "9a8cda8bc3423347b7fe2932ef7981ed67e8825dba3a5ee36011f578d1d70f00"
+  },
+  {
+    "tokenChainId": 4,
+    "originTokenId": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
+    "targetChainId": 2,
+    "bridgeTokenId": "0xCd7Bbb0ae8aEd1cE5371657E776e45b01a68e5ED"
+  },
+  {
+    "tokenChainId": 4,
+    "originTokenId": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
+    "targetChainId": 255,
+    "bridgeTokenId": "4db93c3e58ca4c3392b9d47be17b62fcbabccba61a7d7c1fa1c3baa40181f700"
+  }
+]

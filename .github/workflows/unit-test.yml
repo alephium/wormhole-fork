@@ -81,3 +81,15 @@ jobs:
           cd ethereum && npm ci && npm run build
           cd ../sdk/js
           npm ci && npm run build && npm run test
+
+  token-list:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+      - name: Run tests
+        working-directory: .
+        run: cd token-list && npm ci && npm run test

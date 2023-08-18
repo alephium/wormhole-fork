@@ -1,0 +1,48 @@
+{
+  "name": "token-list",
+  "version": "0.0.0",
+  "license": "GPL",
+  "type": "commonjs",
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && npx tsc --build .",
+    "lint": "eslint . --ext ts",
+    "lint:fix": "eslint . --fix --ext ts",
+    "jest": "jest --useStderr --silent=false --verbose=true --config jestconfig.json",
+    "test": "npm run jest"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "dependencies": {
+    "@alephium/token-list": "0.0.11",
+    "@alephium/web3": "^0.13.0",
+    "@alephium/wormhole-sdk": "0.1.0",
+    "commander": "^9.5.0",
+    "ethers": "^5.6.8"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1",
+    "@types/elliptic": "^6.4.14",
+    "@types/jest": "^27.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.37.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-security": "^1.5.0",
+    "jest": "^28.1.0",
+    "ts-jest": "^28.0.2",
+    "typescript": "^4.6.3"
+  }
+}
