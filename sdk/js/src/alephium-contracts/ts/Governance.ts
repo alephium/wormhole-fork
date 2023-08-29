@@ -9,7 +9,7 @@ import {
   TestContractResult,
   HexString,
   ContractFactory,
-  SubscribeOptions,
+  EventSubscribeOptions,
   EventSubscription,
   CallContractParams,
   CallContractResult,
@@ -91,6 +91,7 @@ class Factory extends ContractFactory<
   GovernanceInstance,
   GovernanceTypes.Fields
 > {
+  eventIndex = { WormholeMessage: 0 };
   consts = {
     Version: "01",
     GuardianSetExpireDuration: BigInt(86400000),
@@ -260,7 +261,7 @@ export class GovernanceInstance extends ContractInstance {
   }
 
   subscribeWormholeMessageEvent(
-    options: SubscribeOptions<GovernanceTypes.WormholeMessageEvent>,
+    options: EventSubscribeOptions<GovernanceTypes.WormholeMessageEvent>,
     fromCount?: number
   ): EventSubscription {
     return subscribeContractEvent(

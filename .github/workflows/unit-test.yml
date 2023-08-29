@@ -51,12 +51,28 @@ jobs:
       - name: Run tests
         working-directory: ./alephium
         run: |
+          pushd docker
+          docker-compose up -d
+          popd
+          SECONDS=0
+          sleep 5
+          until curl http://localhost:22973/infos/node
+          do
+            if (( SECONDS > 60 ))
+            then
+               echo "Alephium full node not working after 1 min..."
+               exit 1
+            fi
+            echo "Waiting..."
+            sleep 5
+          done
+          echo ""
+          echo "Alephium full node is up"
+          sleep 5
           npm ci
-          npx @alephium/cli devnet start
           npm run compile
           npm run build
           npm test
-          npx @alephium/cli devnet stop
           npm run lint
 
   sdk:

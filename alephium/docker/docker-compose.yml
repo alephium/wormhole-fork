@@ -1,0 +1,23 @@
+version: "3.3"
+
+services:
+  alephium:
+    image: alephium/alephium:v2.5.0
+    restart: "no"
+    ports:
+      - 19973:19973/tcp
+      - 19973:19973/udp
+      - 127.0.0.1:20973:20973
+      - 127.0.0.1:21973:21973
+      - 127.0.0.1:22973:22973
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./devnet.conf:/alephium-home/.alephium/user.conf
+      # - ~/.alephium:/alephium-home/.alephium
+    environment:
+      ALEPHIUM_FILE_LOG_LEVEL: "DEBUG"
+    healthcheck:
+      test: ["CMD", "curl", "http://127.0.0.1:22973/infos/self-clique"]
+      timeout: 45s
+

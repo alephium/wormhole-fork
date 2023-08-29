@@ -20,6 +20,8 @@ jobs:
           node-version: '16'
       - name: build devnet docker images
         run: ./build-docker-images.sh "devnet"
+      - name: docker system prune
+        run: docker system prune -f
       - name: start docker images
         working-directory: ./docker
         run: MONGO_USER=root MONGO_PASSWORD=root docker-compose up -d

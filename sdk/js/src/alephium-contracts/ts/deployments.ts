@@ -52,72 +52,77 @@ export type Deployments = {
 function toDeployments(json: any): Deployments {
   const contracts = {
     LocalTokenPool: {
-      ...json.contracts.LocalTokenPool,
+      ...json.contracts["LocalTokenPool"],
       contractInstance: LocalTokenPool.at(
-        json.contracts.LocalTokenPool.contractInstance.address
+        json.contracts["LocalTokenPool"].contractInstance.address
       ),
     },
     RemoteTokenPool: {
-      ...json.contracts.RemoteTokenPool,
+      ...json.contracts["RemoteTokenPool"],
       contractInstance: RemoteTokenPool.at(
-        json.contracts.RemoteTokenPool.contractInstance.address
+        json.contracts["RemoteTokenPool"].contractInstance.address
       ),
     },
     TokenBridgeForChain: {
-      ...json.contracts.TokenBridgeForChain,
+      ...json.contracts["TokenBridgeForChain"],
       contractInstance: TokenBridgeForChain.at(
-        json.contracts.TokenBridgeForChain.contractInstance.address
+        json.contracts["TokenBridgeForChain"].contractInstance.address
       ),
     },
     AttestTokenHandler: {
-      ...json.contracts.AttestTokenHandler,
+      ...json.contracts["AttestTokenHandler"],
       contractInstance: AttestTokenHandler.at(
-        json.contracts.AttestTokenHandler.contractInstance.address
+        json.contracts["AttestTokenHandler"].contractInstance.address
       ),
     },
     UnexecutedSequence: {
-      ...json.contracts.UnexecutedSequence,
+      ...json.contracts["UnexecutedSequence"],
       contractInstance: UnexecutedSequence.at(
-        json.contracts.UnexecutedSequence.contractInstance.address
+        json.contracts["UnexecutedSequence"].contractInstance.address
       ),
     },
     TokenBridgeFactory: {
-      ...json.contracts.TokenBridgeFactory,
+      ...json.contracts["TokenBridgeFactory"],
       contractInstance: TokenBridgeFactory.at(
-        json.contracts.TokenBridgeFactory.contractInstance.address
+        json.contracts["TokenBridgeFactory"].contractInstance.address
       ),
     },
     Governance: {
-      ...json.contracts.Governance,
+      ...json.contracts["Governance"],
       contractInstance: Governance.at(
-        json.contracts.Governance.contractInstance.address
+        json.contracts["Governance"].contractInstance.address
       ),
     },
     TokenBridge: {
-      ...json.contracts.TokenBridge,
+      ...json.contracts["TokenBridge"],
       contractInstance: TokenBridge.at(
-        json.contracts.TokenBridge.contractInstance.address
+        json.contracts["TokenBridge"].contractInstance.address
       ),
     },
     BridgeRewardRouter: {
-      ...json.contracts.BridgeRewardRouter,
+      ...json.contracts["BridgeRewardRouter"],
       contractInstance: BridgeRewardRouter.at(
-        json.contracts.BridgeRewardRouter.contractInstance.address
+        json.contracts["BridgeRewardRouter"].contractInstance.address
       ),
     },
     TestToken:
-      json.contracts.TestToken === undefined
+      json.contracts["TestToken"] === undefined
         ? undefined
         : {
-            ...json.contracts.TestToken,
+            ...json.contracts["TestToken"],
             contractInstance: TestToken.at(
-              json.contracts.TestToken.contractInstance.address
+              json.contracts["TestToken"].contractInstance.address
             ),
           },
   };
   return {
     ...json,
     contracts: contracts as Deployments["contracts"],
+    scripts: {
+      CreateLocalAttestTokenHandler:
+        json.scripts["CreateLocalAttestTokenHandler"],
+      GetToken: json.scripts["GetToken"],
+    },
   };
 }
 
