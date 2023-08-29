@@ -54,7 +54,7 @@ import {
 import { getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
+  ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   ALEPHIUM_MESSAGE_FEE,
   ALGORAND_BRIDGE_ID,
@@ -319,7 +319,7 @@ async function alephium(
       tokenInfo.name,
       wallet.account.address,
       ALEPHIUM_MESSAGE_FEE,
-      ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+      ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL
     )
     dispatch(setIsWalletApproved(true))
     const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId);

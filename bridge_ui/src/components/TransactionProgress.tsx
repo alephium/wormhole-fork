@@ -37,10 +37,12 @@ export default function TransactionProgress({
   chainId,
   tx,
   isSendComplete,
+  consistencyLevel
 }: {
   chainId: ChainId;
   tx: Transaction | undefined;
   isSendComplete: boolean;
+  consistencyLevel?: number
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
@@ -128,7 +130,8 @@ export default function TransactionProgress({
   } else {
     const blockDiff =
       tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
-    const expectedBlocks = // minimum confirmations enforced by guardians or specified by the contract
+    // minimum confirmations enforced by guardians or specified by the contract
+    const expectedBlocks = consistencyLevel ?? (
       chainId === CHAIN_ID_POLYGON
         ? CLUSTER === "testnet"
           ? 64
@@ -147,7 +150,7 @@ export default function TransactionProgress({
         ? DefaultEVMChainConfirmations
         : chainId === CHAIN_ID_ALEPHIUM
         ? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-        : 1;
+        : 1);
     if (
       !isSendComplete &&
       (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId) || chainId === CHAIN_ID_ALEPHIUM) &&
