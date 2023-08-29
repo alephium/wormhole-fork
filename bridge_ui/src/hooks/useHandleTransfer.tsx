@@ -84,8 +84,8 @@ import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { ExecuteScriptResult } from "@alephium/web3";
-import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
 import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/ethereum";
+import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 
 async function algo(
   dispatch: any,
@@ -348,6 +348,9 @@ async function alephium(
   targetChain: ChainId,
   targetAddress: Uint8Array,
 ) {
+  if (wallet.nodeProvider === undefined) {
+    return
+  }
   dispatch(setIsSending(true))
   try {
     const amountParsed = parseUnits(amount, decimals).toBigInt()
@@ -356,7 +359,7 @@ async function alephium(
       result = await transferLocalTokenFromAlph(
         wallet.signer,
         ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-        wallet.address,
+        wallet.account.address,
         tokenId,
         targetChain,
         uint8ArrayToHex(targetAddress),
@@ -369,7 +372,7 @@ async function alephium(
       result = await transferRemoteTokenFromAlph(
         wallet.signer,
         ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-        wallet.address,
+        wallet.account.address,
         tokenId,
         originAsset,
         tokenChainId,
@@ -496,7 +499,7 @@ export function useHandleTransfer() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
   const { accounts: algoAccounts } = useAlgorandContext();
   const sourceParsedTokenAccount = useSelector(

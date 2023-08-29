@@ -61,8 +61,8 @@ import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { AlephiumWallet, useAlephiumWallet } from "./useAlephiumWallet";
 import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
+import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 
 async function algo(
   dispatch: any,
@@ -241,6 +241,9 @@ async function alephium(
   wallet: AlephiumWallet,
   signedVAA: Uint8Array
 ) {
+  if (wallet.nodeProvider === undefined) {
+    return
+  }
   dispatch(setIsRedeeming(true));
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
@@ -257,7 +260,7 @@ async function alephium(
     console.log(`the redeem tx has been confirmed, txId: ${result.txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
-      wallet.group,
+      wallet.account.group,
       signedVAA
     )
     if (isTransferCompleted) {
@@ -288,7 +291,7 @@ export function useHandleRedeem() {
   const { signer } = useEthereumProvider();
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const signedVAA = useTransferSignedVAA();
   const isRedeeming = useSelector(selectTransferIsRedeeming);

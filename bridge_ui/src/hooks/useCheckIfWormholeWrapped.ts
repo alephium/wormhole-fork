@@ -46,8 +46,8 @@ import {
 import { NodeProvider } from '@alephium/web3'
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
-import { useAlephiumWallet } from "./useAlephiumWallet";
 import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
+import { useWallet } from "@alephium/web3-react";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -105,7 +105,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
   const isRecovery = useSelector(
     nft ? selectNFTIsRecovery : selectTransferIsRecovery
   );
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   useEffect(() => {
     if (isRecovery) {
       return;
@@ -182,7 +182,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         }
       }
-      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && !!alphWallet) {
+      if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && alphWallet?.nodeProvider !== undefined) {
         try {
           dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
           const wrappedInfo = await getAlephiumTokenInfo(alphWallet.nodeProvider, sourceAsset)

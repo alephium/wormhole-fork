@@ -1,12 +1,11 @@
+import { ALEPHIUM_BRIDGE_GROUP_INDEX, CLUSTER } from "../utils/consts";
 import ToggleConnectedButton from "./ToggleConnectedButton";
-import { AlephiumConnectButton, useConnect, useAlephiumConnectContext } from "@alephium/web3-react"
+import { AlephiumConnectButton, useConnect } from "@alephium/web3-react"
 
 const AlephiumWalletKey = () => {
-  const context = useAlephiumConnectContext()
   const { disconnect } = useConnect({
-    addressGroup: context.addressGroup,
-    keyType: context.keyType,
-    networkId: context.network
+    addressGroup: ALEPHIUM_BRIDGE_GROUP_INDEX,
+    networkId: CLUSTER
   })
 
   return (

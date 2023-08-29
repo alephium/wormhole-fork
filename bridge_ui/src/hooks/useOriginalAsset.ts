@@ -43,7 +43,7 @@ import {
 import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenWrappedInfo, tryGetContractId } from "../utils/alephium";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 export type OriginalAssetInfo = {
   originChain: ChainId | null;
@@ -204,7 +204,7 @@ function useOriginalAsset(
     () => setPreviousArgs({ foreignChain, foreignAddress, nft, tokenId }),
     [foreignChain, foreignAddress, nft, tokenId]
   );
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
 
   const argumentError = useMemo(
     () =>

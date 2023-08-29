@@ -43,6 +43,9 @@ import WithdrawTokensTerra from "./components/WithdrawTokensTerra";
 import { useBetaContext } from "./contexts/BetaContext";
 import Portal from "./icons/portal_logo_w.svg";
 import { CLUSTER } from "./utils/consts";
+import { useWallet } from "@alephium/web3-react";
+import { useEffect } from "react";
+import { web3 } from "@alephium/web3";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -181,12 +184,20 @@ function App() {
   const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
+  const wallet = useWallet()
   const handleTabChange = useCallback(
     (event, value) => {
       push(value);
     },
     [push]
   );
+
+  useEffect(() => {
+    if (wallet?.nodeProvider !== undefined) {
+      web3.setCurrentNodeProvider(wallet.nodeProvider)
+    }
+  }, [wallet?.nodeProvider])
+
   return (
     <div className={classes.bg}>
       {CLUSTER === "mainnet" ? null : (

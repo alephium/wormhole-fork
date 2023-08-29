@@ -19,9 +19,9 @@ import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
-import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import SmartBlock from "./SmartBlock";
 import { DefaultEVMChainConfirmations, getEVMCurrentBlockNumber } from "../utils/ethereum";
+import { useWallet } from "@alephium/web3-react";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -44,7 +44,7 @@ export default function TransactionProgress({
 }) {
   const classes = useStyles();
   const { provider } = useEthereumProvider();
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
   useEffect(() => {
     if (isSendComplete || !tx) return;
@@ -80,16 +80,16 @@ export default function TransactionProgress({
         connection.removeSlotChangeListener(sub);
       };
     }
-    if (chainId === CHAIN_ID_ALEPHIUM && !!alphWallet) {
+    if (chainId === CHAIN_ID_ALEPHIUM && alphWallet?.nodeProvider !== undefined) {
       let cancelled = false;
-      (async () => {
+      (async (nodeProvider) => {
         while (!cancelled) {
           const timeout = CLUSTER === "devnet" ? 1000 : 10000
           await new Promise((resolve) => setTimeout(resolve, timeout));
           try {
-            const chainInfo = await alphWallet.nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: alphWallet.group,
-              toGroup: alphWallet.group
+            const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
+              fromGroup: alphWallet.account.group,
+              toGroup: alphWallet.account.group
             });
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight);
@@ -98,7 +98,7 @@ export default function TransactionProgress({
             console.error(e)
           }
         }
-      })();
+      })(alphWallet.nodeProvider);
       return () => {
         cancelled = true;
       };

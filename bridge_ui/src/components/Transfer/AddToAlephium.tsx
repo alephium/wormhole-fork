@@ -4,11 +4,12 @@ import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectTransferTargetAsset } from "../../store/selectors";
 import { CLUSTER } from "../../utils/consts";
-import { useAlephiumWallet } from "../../hooks/useAlephiumWallet";
 import { getLocalTokenLogoURI } from "../../utils/alephium";
 import { AlephiumWindowObject } from '@alephium/get-extension-wallet'
 import { useSnackbar } from "notistack";
 import { Alert } from "@material-ui/lab";
+import { useWallet } from "@alephium/web3-react";
+import { SignerProvider } from "@alephium/web3";
 
 const useStyles = makeStyles((theme) => ({
   addButton: {
@@ -17,16 +18,20 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+function isExtensionWallet(signer: SignerProvider) {
+  return typeof (signer as any)['request'] === 'function'
+}
+
 export default function AddToAlephium() {
   const classes = useStyles();
   const targetAsset = useSelector(selectTransferTargetAsset);
   const { enqueueSnackbar } = useSnackbar()
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const handleClick = useCallback(() => {
-    if (alphWallet !== undefined && targetAsset) {
-      (async () => {
+    if (alphWallet?.nodeProvider !== undefined && targetAsset) {
+      (async (nodeProvider) => {
         try {
-          const tokenInfo = await getLocalTokenInfo(alphWallet.nodeProvider, targetAsset)
+          const tokenInfo = await getLocalTokenInfo(nodeProvider, targetAsset)
           const logoURI = getLocalTokenLogoURI(tokenInfo.id)
           const windowObject = alphWallet.signer as AlephiumWindowObject
           console.log(`add new token, tokenName: ${tokenInfo.name}, tokenSymbol: ${tokenInfo.symbol}, tokenId: ${tokenInfo.id}`)
@@ -49,10 +54,10 @@ export default function AddToAlephium() {
         } catch (error) {
           console.error(`failed to add new token, error: ${error}`)
         }
-      })()
+      })(alphWallet.nodeProvider)
     }
   }, [alphWallet, targetAsset, enqueueSnackbar])
-  return alphWallet !== undefined && alphWallet.isExtensionWallet() ? (
+  return alphWallet !== undefined && isExtensionWallet(alphWallet.signer) ? (
     <Button
       onClick={handleClick}
       size="small"

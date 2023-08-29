@@ -2,12 +2,12 @@ import { web3 } from "@alephium/web3";
 import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from "@alephium/wormhole-sdk";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback } from "react";
-import { useAlephiumWallet } from "../../hooks/useAlephiumWallet";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import { tryGetContractId } from "../../utils/alephium";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
+import { useWallet } from "@alephium/web3-react";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -23,7 +23,7 @@ const returnsFalse = () => false;
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   const { value, balances, onChange, disabled, tokens, isFetching, resetAccounts } = props
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM);
 
   const resetAccountWrapper = useCallback(() => {
@@ -52,7 +52,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
           const amount = balances.get(contractId.toLowerCase()) ?? BigInt(0)
           const uiAmount = formatUnits(amount, tokenInfo.decimals)
           return createParsedTokenAccount(
-            alphWallet.address,
+            alphWallet.account.address,
             contractId,
             amount.toString(),
             tokenInfo.decimals,

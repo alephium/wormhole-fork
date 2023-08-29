@@ -71,8 +71,8 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { useAlephiumWallet, AlephiumWallet } from "./useAlephiumWallet";
 import { attestFromEthWithoutWait } from "../utils/ethereum";
+import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 
 async function algo(
   dispatch: any,
@@ -301,6 +301,9 @@ async function alephium(
   wallet: AlephiumWallet,
   localTokenId: string
 ) {
+  if (wallet.nodeProvider === undefined) {
+    return
+  }
   dispatch(setIsSending(true));
   try {
     if (!isValidAlephiumTokenId(localTokenId)) {
@@ -314,7 +317,7 @@ async function alephium(
       tokenInfo.decimals,
       tokenInfo.symbol,
       tokenInfo.name,
-      wallet.address,
+      wallet.account.address,
       ALEPHIUM_MESSAGE_FEE,
       ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
     )
@@ -359,7 +362,7 @@ export function useHandleAttest() {
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
   const terraFeeDenom = useSelector(selectTerraFeeDenom);
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const disabled = !isTargetComplete || isSending || isSendComplete;
   const handleAttestClick = useCallback(() => {
