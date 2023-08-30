@@ -14,7 +14,7 @@ import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
-import { AlephiumConnectProvider } from "@alephium/web3-react"
+import { AlephiumWalletProvider } from "@alephium/web3-react"
 import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from "./utils/consts";
 
 ReactDOM.render(
@@ -28,7 +28,7 @@ ReactDOM.render(
               <SolanaWalletProvider>
                 <EthereumProviderProvider>
                   <TerraWalletProvider>
-                    <AlephiumConnectProvider
+                    <AlephiumWalletProvider
                       network={CLUSTER}
                       addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
                     >
@@ -38,7 +38,7 @@ ReactDOM.render(
                           <App />
                         </HashRouter>
                       </AlgorandContextProvider>
-                    </AlephiumConnectProvider>
+                    </AlephiumWalletProvider>
                   </TerraWalletProvider>
                 </EthereumProviderProvider>
               </SolanaWalletProvider>

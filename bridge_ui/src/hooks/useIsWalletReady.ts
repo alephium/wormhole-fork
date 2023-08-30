@@ -20,7 +20,7 @@ import {
   EVM_RPC_MAP,
   METAMASK_CHAIN_PARAMETERS,
 } from "../utils/metaMaskChainParameters";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 const createWalletStatus = (
   isReady: boolean,
@@ -47,7 +47,7 @@ function useIsWalletReady(
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const hasTerraWallet = !!terraWallet;
   const {
     provider,
@@ -101,12 +101,12 @@ function useIsWalletReady(
   }, [provider, correctEvmNetwork, chainId, connectType, disconnect]);
 
   return useMemo(() => {
-    if (chainId === CHAIN_ID_ALEPHIUM && alphWallet) {
+    if (chainId === CHAIN_ID_ALEPHIUM && alphWallet && alphWallet.nodeProvider) {
       return createWalletStatus(
         true,
         undefined,
         forceNetworkSwitch,
-        alphWallet.address
+        alphWallet.account.address
       );
     }
     if (

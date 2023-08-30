@@ -24,7 +24,7 @@ import { LCDClient } from "@terra-money/terra.js";
 import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -173,7 +173,7 @@ export default function useTransactionFees(chainId: ChainId) {
   const [terraBalances, setTerraBalances] = useState<TerraBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
 
   const loadStart = useCallback(() => {
     setBalance(undefined);
@@ -231,7 +231,7 @@ export default function useTransactionFees(chainId: ChainId) {
           setError("Cannot load wallet balance");
         }
       );
-    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress && alphWallet) {
+    } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress && alphWallet?.nodeProvider !== undefined) {
       loadStart();
       getBalancesAlephium(alphWallet.nodeProvider, walletAddress).then(
         (result) => {

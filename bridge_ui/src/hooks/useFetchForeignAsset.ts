@@ -33,7 +33,7 @@ import {
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
 import { Algodv2 } from "algosdk";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 export type ForeignAssetInfo = {
   doesExist: boolean;
@@ -49,7 +49,7 @@ function useFetchForeignAsset(
   const { isReady } = useIsWalletReady(foreignChain, false);
   const correctEvmNetwork = getEvmChainId(foreignChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
 
   const [assetAddress, setAssetAddress] = useState<string | null>(null);
   const [doesExist, setDoesExist] = useState<boolean | null>(null);
@@ -125,7 +125,7 @@ function useFetchForeignAsset(
         ? () => {
           return getForeignAssetAlephium(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            alphWallet!.nodeProvider,
+            alphWallet?.nodeProvider!, // we have checked the wallet in `useIsWalletReady`
             originChain,
             hexToUint8Array(originAssetHex),
             ALEPHIUM_BRIDGE_GROUP_INDEX

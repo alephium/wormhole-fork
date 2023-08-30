@@ -36,7 +36,7 @@ import {
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -60,7 +60,7 @@ export default function useGetIsTransferCompleted(
 
   const { isReady } = useIsWalletReady(targetChain, false);
   const { provider, chainId: evmChainId } = useEthereumProvider();
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const signedVAA = useTransferSignedVAA();
 
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
@@ -162,7 +162,7 @@ export default function useGetIsTransferCompleted(
             const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
             transferCompleted = await getIsTransferCompletedAlph(
               tokenBridgeForChainId,
-              alphWallet.group,
+              alphWallet.account.group,
               signedVAA
             )
           } catch (error) {

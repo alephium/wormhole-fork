@@ -12,11 +12,11 @@ import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { CHAINS_BY_ID } from "../utils/consts";
 import { selectAttestTargetChain } from "../store/selectors"
-import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import { Alert } from "@material-ui/lab";
 import { createLocalTokenPool } from "../utils/alephium";
 import { binToHex } from "@alephium/web3";
 import { useSnackbar } from "notistack";
+import { useWallet } from "@alephium/web3-react";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -40,21 +40,21 @@ function CreateLocalTokenPool({
   onClose: () => void;
   onClick: () => void;
 }) {
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const { enqueueSnackbar } = useSnackbar()
   const targetChain = useSelector(selectAttestTargetChain)
   const chainName = CHAINS_BY_ID[targetChain].name
   const classes = useStyles()
   const onConfirmed = useCallback(async () => {
     onClick()
-    if (alphWallet !== undefined && signedVAAHex !== undefined) {
+    if (alphWallet !== undefined && signedVAAHex !== undefined && alphWallet.nodeProvider !== undefined) {
       const signedVAA = Buffer.from(signedVAAHex, 'hex')
       const payload = extractPayloadFromVAA(signedVAA)
       const tokenId = binToHex(payload.slice(1, 33))
       const createLocalTokenPoolTxId = await createLocalTokenPool(
         alphWallet.signer,
         alphWallet.nodeProvider,
-        alphWallet.address,
+        alphWallet.account.address,
         tokenId,
         Buffer.from(signedVAAHex, 'hex')
       )

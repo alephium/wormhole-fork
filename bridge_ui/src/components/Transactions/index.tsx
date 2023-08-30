@@ -20,7 +20,6 @@ import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import { Alert } from "@material-ui/lab";
-import { AlephiumWallet, useAlephiumWallet } from "../../hooks/useAlephiumWallet";
 import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";
@@ -31,6 +30,8 @@ import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { useSelector } from "react-redux";
 import { selectTransferSourceChain, selectTransferTargetChain } from "../../store/selectors";
 import { getIsTxsCompletedAlph } from "../../utils/alephium";
+import { useWallet } from "@alephium/web3-react";
+import { NodeProvider } from "@alephium/web3";
 
 const useStyles = makeStyles(() => ({
   mainCard: {
@@ -70,14 +71,11 @@ async function getTxsByPageNumber(address: string, emitterChain: ChainId, target
 
 type BlockNumberFetcher = () => Promise<number | undefined>
 
-const alphBlockNumberFetcher = (alphWallet?: AlephiumWallet) => {
-  return alphWallet === undefined
+const alphBlockNumberFetcher = (nodeProvider: NodeProvider | undefined, group: number) => {
+  return nodeProvider === undefined
     ? Promise.resolve(undefined)
-    : alphWallet.nodeProvider.blockflow
-      .getBlockflowChainInfo({
-        fromGroup: alphWallet.group,
-        toGroup: alphWallet.group
-      })
+    : nodeProvider.blockflow
+      .getBlockflowChainInfo({ fromGroup: group, toGroup: group })
       .then((chainInfo) => chainInfo.currentHeight)
 }
 
@@ -193,7 +191,7 @@ export default function Transactions() {
     useState<ChainId>(transferTargetChain || CHAIN_ID_ETH)
 
   const { enqueueSnackbar } = useSnackbar()
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const { provider: evmProvider, signerAddress: ethSignerAddress } = useEthereumProvider()
   const { isReady: sourceChainReady } = useIsWalletReady(txSourceChain, false)
   const { isReady: targetChainReady } = useIsWalletReady(txTargetChain, false)
@@ -201,7 +199,7 @@ export default function Transactions() {
   const walletAddress = isEVMChain(txSourceChain)
     ? ethSignerAddress
     : txSourceChain === CHAIN_ID_ALEPHIUM
-    ? alphWallet?.address
+    ? alphWallet?.account?.address
     : undefined
 
   const [currentTransactions, setCurrentTransactions] = useState<BridgeTransaction[]>([])
@@ -212,7 +210,7 @@ export default function Transactions() {
 
   const blockNumberFetcherGetter = useCallback((chainId: ChainId) => {
     if (chainId === CHAIN_ID_ALEPHIUM) {
-      return alphWallet === undefined ? undefined : () => alphBlockNumberFetcher(alphWallet)
+      return alphWallet === undefined ? undefined : () => alphBlockNumberFetcher(alphWallet.nodeProvider, alphWallet.account.group)
     }
     if (bothAreEvmChain) {
       if (chainId === txSourceChain && sourceChainReady) {
@@ -233,7 +231,7 @@ export default function Transactions() {
 
   const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
     if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
-      const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.group)
+      const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.account.group)
       return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
     }
     const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined

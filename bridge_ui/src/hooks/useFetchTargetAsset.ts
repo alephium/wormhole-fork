@@ -58,7 +58,7 @@ import {
   TERRA_HOST,
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 function useFetchTargetAsset(nft?: boolean) {
   const dispatch = useDispatch();
@@ -80,7 +80,7 @@ function useFetchTargetAsset(nft?: boolean) {
   );
   const setTargetAsset = nft ? setNFTTargetAsset : setTransferTargetAsset;
   const { provider, chainId: evmChainId } = useEthereumProvider();
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
   const correctEvmNetwork = getEvmChainId(targetChain);
   const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
   const [lastSuccessfulArgs, setLastSuccessfulArgs] = useState<{
@@ -254,12 +254,12 @@ function useFetchTargetAsset(nft?: boolean) {
           }
         }
       }
-      if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset) {
+      if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset && alphWallet?.nodeProvider !== undefined) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
           const remoteTokenPoolId = await getForeignAssetAlephium(
             ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-            alphWallet!.nodeProvider,
+            alphWallet.nodeProvider,
             originChain,
             hexToUint8Array(originAsset),
             ALEPHIUM_BRIDGE_GROUP_INDEX

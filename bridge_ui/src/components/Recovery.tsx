@@ -84,9 +84,9 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
-import { useAlephiumWallet } from "../hooks/useAlephiumWallet";
 import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
 import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
+import { useWallet } from "@alephium/web3-react";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -442,7 +442,7 @@ export default function Recovery() {
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const pathSourceChain = query.get("sourceChain");
   const pathSourceTransaction = query.get("transactionId");
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
@@ -529,11 +529,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && alphWallet) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && alphWallet?.nodeProvider !== undefined) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
-        (async () => {
-          const { vaa, error } = await alephium(alphWallet.nodeProvider, recoverySourceTx, enqueueSnackbar);
+        (async (nodeProvider) => {
+          const { vaa, error } = await alephium(nodeProvider, recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
@@ -543,7 +543,7 @@ export default function Recovery() {
               setRecoverySourceTxError(error);
             }
           }
-        })();
+        })(alphWallet.nodeProvider);
       } else if (recoverySourceChain === CHAIN_ID_ALGORAND) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);

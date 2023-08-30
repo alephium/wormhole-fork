@@ -126,10 +126,10 @@ import {
   getMultipleAccountsRPC,
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
-import { useAlephiumWallet } from "./useAlephiumWallet";
 import { addressFromContractId, ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
 import { ALPHTokenInfo, getAvailableBalances } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
+import { useWallet } from "@alephium/web3-react";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -837,7 +837,7 @@ function useGetAvailableTokens(nft: boolean = false) {
   const solPK = solanaWallet?.publicKey;
   const { provider, signerAddress, signer } = useEthereumProvider();
   const { accounts: algoAccounts } = useAlgorandContext();
-  const alphWallet = useAlephiumWallet()
+  const alphWallet = useWallet()
 
   const [covalent, setCovalent] = useState<CovalentData[] | undefined>()
   const [covalentLoading, setCovalentLoading] = useState(false);
@@ -875,7 +875,7 @@ function useGetAvailableTokens(nft: boolean = false) {
     : lookupChain === CHAIN_ID_ALGORAND
     ? algoAccounts[0]?.address
     : lookupChain === CHAIN_ID_ALEPHIUM
-    ? alphWallet?.address
+    ? alphWallet?.account?.address
     : undefined;
 
   const resetSourceAccounts = useCallback(() => {

@@ -30,7 +30,7 @@ import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
 import { Algodv2 } from "algosdk";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
@@ -43,7 +43,7 @@ function useGetTargetParsedTokenAccounts() {
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const terraWallet = useConnectedWallet();
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const {
     provider,
     signerAddress,
@@ -52,7 +52,7 @@ function useGetTargetParsedTokenAccounts() {
   const walletAddress = isEVMChain(targetChain)
     ? signerAddress
     : targetChain === CHAIN_ID_ALEPHIUM
-    ? alphWallet?.address
+    ? alphWallet?.account?.address
     : undefined;
   const hasCorrectEvmNetwork = evmChainId === getEvmChainId(targetChain);
   const { accounts: algoAccounts } = useAlgorandContext();
@@ -83,7 +83,7 @@ function useGetTargetParsedTokenAccounts() {
           dispatch(
             setTargetParsedTokenAccount(
               createParsedTokenAccount(
-                alphWallet.address,
+                alphWallet.account.address,
                 targetAsset,
                 balanceStr,
                 decimals,

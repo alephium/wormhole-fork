@@ -1,4 +1,4 @@
-import { CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { Link, makeStyles } from "@material-ui/core";
 import { useMemo } from "react";
@@ -16,7 +16,7 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
 import TransactionProgress from "../TransactionProgress";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
-import { SOLANA_TOKEN_METADATA_PROGRAM_URL } from "../../utils/consts";
+import { ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL, SOLANA_TOKEN_METADATA_PROGRAM_URL } from "../../utils/consts";
 import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 
 const useStyles = makeStyles((theme) => ({
@@ -80,6 +80,7 @@ function Send() {
         chainId={sourceChain}
         tx={attestTx}
         isSendComplete={isSendComplete}
+        consistencyLevel={sourceChain === CHAIN_ID_ALEPHIUM ? ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL : undefined}
       />
     </>
   );

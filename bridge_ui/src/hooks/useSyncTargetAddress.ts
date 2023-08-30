@@ -31,7 +31,7 @@ import {
 import { setTargetAddressHex as setTransferTargetAddressHex } from "../store/transferSlice";
 import * as base58 from 'bs58';
 import { decodeAddress } from "algosdk";
-import { useAlephiumWallet } from "./useAlephiumWallet";
+import { useWallet } from "@alephium/web3-react";
 
 function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   const dispatch = useDispatch();
@@ -49,7 +49,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
   );
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
   const terraWallet = useConnectedWallet();
-  const alphWallet = useAlephiumWallet();
+  const alphWallet = useWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const setTargetAddressHex = nft
     ? setNFTTargetAddressHex
@@ -115,7 +115,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
           )
         );
       } else if(targetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
-        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphWallet.address))))
+        dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphWallet.account.address))))
       } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
         dispatch(
           setTargetAddressHex(
