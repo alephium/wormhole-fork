@@ -144,7 +144,7 @@ func (w *Watcher) getGovernanceEventsByTxId(
 
 		reobservedEvents = append(reobservedEvents, &reobservedEvent{
 			&event,
-			maxUint8(msg.consistencyLevel, w.minConfirmations),
+			msg.consistencyLevel,
 			header,
 			txId,
 		})

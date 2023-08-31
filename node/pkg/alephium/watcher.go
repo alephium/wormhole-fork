@@ -64,9 +64,8 @@ type Watcher struct {
 	msgChan  chan *common.MessagePublication
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	minConfirmations uint8
-	pollInterval     uint8
-	currentHeight    int32
+	pollInterval  uint8
+	currentHeight int32
 
 	client *Client
 }
@@ -92,7 +91,6 @@ func NewAlephiumWatcher(
 	chainConfig *common.ChainConfig,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
-	minConfirmations uint8,
 	pollInterval uint8,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
@@ -121,8 +119,7 @@ func NewAlephiumWatcher(
 		msgChan:   messageEvents,
 		obsvReqC:  obsvReqC,
 
-		minConfirmations: minConfirmations,
-		pollInterval:     pollInterval,
+		pollInterval: pollInterval,
 
 		client: NewClient(url, apiKey, 10),
 	}
@@ -374,7 +371,7 @@ func (w *Watcher) handleEvents_(
 			remain := make([]*UnconfirmedEvent, 0)
 			logger.Info("processing events from block", zap.String("blockHash", blockEvents.header.Hash), zap.Int("size", len(blockEvents.events)))
 			for _, event := range blockEvents.events {
-				eventConfirmations := maxUint8(event.msg.consistencyLevel, w.minConfirmations)
+				eventConfirmations := event.msg.consistencyLevel
 				if blockEvents.header.Height+int32(eventConfirmations) > height {
 					logger.Debug(
 						"event not confirmed",
