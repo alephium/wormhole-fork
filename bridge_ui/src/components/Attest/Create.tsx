@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
+import { CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
@@ -7,15 +7,12 @@ import useIsWalletReady from "../../hooks/useIsWalletReady";
 import {
   selectAttestSourceAsset,
   selectAttestSourceChain,
-  selectAttestSignedVAAHex,
   selectAttestTargetChain,
 } from "../../store/selectors";
 import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
 import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
-import { useCallback, useEffect, useState } from "react";
-import AlephiumCreateLocalTokenPool from "../AlephiumCreateLocalTokenPool";
 
 const useStyles = makeStyles((theme) => ({
   alignCenter: {
@@ -44,17 +41,6 @@ function Create() {
   const { handleClick, disabled, showLoader } = useHandleCreateWrapped(
     shouldUpdate || false
   );
-  const signedVAAHex = useSelector(selectAttestSignedVAAHex)
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  useEffect(() => {
-    setIsConfirmOpen(signedVAAHex !== undefined)
-  }, [signedVAAHex])
-  const handleConfirmClick = useCallback(() => {
-    setIsConfirmOpen(false);
-  }, []);
-  const handleConfirmClose = useCallback(() => {
-    setIsConfirmOpen(false);
-  }, []);
 
   return (
     <>
@@ -69,14 +55,6 @@ function Create() {
         </>
       ) : (
         <>
-          {originChain === CHAIN_ID_ALEPHIUM && !shouldUpdate && (
-            <AlephiumCreateLocalTokenPool
-              open={isConfirmOpen}
-              signedVAAHex={signedVAAHex}
-              onClick={handleConfirmClick}
-              onClose={handleConfirmClose}
-            />
-          )}
           <ButtonWithLoader
             disabled={!isReady || disabled}
             onClick={handleClick}

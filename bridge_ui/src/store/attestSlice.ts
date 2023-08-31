@@ -76,7 +76,9 @@ export const attestSlice = createSlice({
       state.signedVAAHex = action.payload;
       state.isSending = false;
       state.isWalletApproved = false;
-      state.activeStep = 3;
+      if (state.sourceChain !== CHAIN_ID_ALEPHIUM) {
+        state.activeStep = 3;
+      }
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
       state.isSending = action.payload;
