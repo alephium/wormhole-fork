@@ -3,7 +3,6 @@ package alephium
 import (
 	"context"
 	"encoding/hex"
-	"sync/atomic"
 
 	sdk "github.com/alephium/go-sdk"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -55,15 +54,20 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 				continue
 			}
 
-			currentHeight := atomic.LoadInt32(&w.currentHeight)
+			currentHeight, err := w.client.GetCurrentHeight(ctx, w.chainIndex)
+			if err != nil {
+				logger.Info("failed to get current block height", zap.Error(err))
+				continue
+			}
+
 			confirmed := make([]*reobservedEvent, 0)
 			for _, event := range events {
-				if event.header.Height+int32(event.confirmations) <= currentHeight {
+				if event.header.Height+int32(event.confirmations) <= *currentHeight {
 					logger.Info("re-observed event",
 						zap.String("txId", txId),
 						zap.String("blockHash", blockHash),
 						zap.Int32("blockHeight", event.header.Height),
-						zap.Int32("currentHeight", currentHeight),
+						zap.Int32("currentHeight", *currentHeight),
 						zap.Uint8("confirmations", event.confirmations),
 					)
 					alphMessagesConfirmed.Add(float64(len(events)))
@@ -73,7 +77,7 @@ func (w *Watcher) handleObsvRequest(ctx context.Context, logger *zap.Logger, cli
 						zap.String("txId", txId),
 						zap.String("blockHash", blockHash),
 						zap.Int32("blockHeight", event.header.Height),
-						zap.Int32("currentHeight", currentHeight),
+						zap.Int32("currentHeight", *currentHeight),
 						zap.Uint8("confirmations", event.confirmations),
 					)
 				}

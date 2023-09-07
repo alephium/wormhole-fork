@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/alephium/wormhole-fork/node/pkg/ethereum/abi"
@@ -106,7 +105,7 @@ type (
 		maxWaitConfirmations uint64
 
 		// Interface to the chain specific ethereum library.
-		ethConn       Connector
+		ethConn       *BlockPollConnector
 		unsafeDevMode bool
 
 		pollIntervalMs *uint
@@ -223,10 +222,6 @@ func (w *Watcher) Run(ctx context.Context) error {
 		}
 	}()
 
-	// Track the current block numbers so we can compare it to the block number of
-	// the message publication for observation requests.
-	var currentBlockNumber uint64
-
 	go func() {
 		for {
 			select {
@@ -251,7 +246,12 @@ func (w *Watcher) Run(ctx context.Context) error {
 				// In the primary watcher flow, this is of no concern since we assume the node
 				// always sends the head before it sends the logs (implicit synchronization
 				// by relying on the same websocket connection).
-				blockNumberU := atomic.LoadUint64(&currentBlockNumber)
+				blockNumberU, err := w.getBlockNumber(logger, ctx)
+				if err != nil {
+					logger.Error("failed to get block number",
+						zap.Error(err), zap.String("eth_network", w.networkName))
+					continue
+				}
 
 				timeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 				blockNumber, msgs, err := MessageEventsForTransaction(timeout, w.ethConn, w.contract, w.chainID, tx)
@@ -372,6 +372,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 					message: message,
 					height:  ev.Raw.BlockNumber,
 				}
+				w.ethConn.EnablePoller()
 				w.pendingMu.Unlock()
 			}
 		}
@@ -424,9 +425,6 @@ func (w *Watcher) Run(ctx context.Context) error {
 				w.pendingMu.Lock()
 
 				blockNumberU := ev.Number.Uint64()
-				if !ev.Safe {
-					atomic.StoreUint64(&currentBlockNumber, blockNumberU)
-				}
 
 				for key, pLock := range w.pending {
 					var expectedConfirmations uint64
@@ -550,6 +548,10 @@ func (w *Watcher) Run(ctx context.Context) error {
 					}
 				}
 
+				if len(w.pending) == 0 {
+					w.ethConn.DisablePoller()
+				}
+
 				w.pendingMu.Unlock()
 				logger.Info("processed new header",
 					zap.Stringer("current_block", ev.Number),
@@ -571,6 +573,16 @@ func (w *Watcher) Run(ctx context.Context) error {
 	case err := <-errC:
 		return err
 	}
+}
+func (w *Watcher) getBlockNumber(logger *zap.Logger, ctx context.Context) (uint64, error) {
+	timeout, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	block, err := w.ethConn.getBlock(timeout, logger, nil, false)
+	if err != nil {
+		return 0, err
+	}
+	return block.Number.Uint64(), nil
 }
 
 func (w *Watcher) fetchAndUpdateGuardianSet(

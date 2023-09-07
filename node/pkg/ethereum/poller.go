@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"sync/atomic"
 	"time"
 
 	"github.com/alephium/wormhole-fork/node/pkg/supervisor"
@@ -20,6 +21,7 @@ type BlockPollConnector struct {
 	Connector
 	Delay        time.Duration
 	useFinalized bool
+	enabled      *atomic.Bool
 	blockFeed    ethEvent.Feed
 	errFeed      ethEvent.Feed
 }
@@ -28,6 +30,7 @@ func NewBlockPollConnector(ctx context.Context, baseConnector Connector, delay t
 	connector := &BlockPollConnector{
 		Connector:    baseConnector,
 		Delay:        delay,
+		enabled:      &atomic.Bool{},
 		useFinalized: useFinalized,
 	}
 	err := supervisor.Run(ctx, "blockPoller", connector.run)
@@ -35,6 +38,14 @@ func NewBlockPollConnector(ctx context.Context, baseConnector Connector, delay t
 		return nil, err
 	}
 	return connector, nil
+}
+
+func (b *BlockPollConnector) DisablePoller() {
+	b.enabled.Store(false)
+}
+
+func (b *BlockPollConnector) EnablePoller() {
+	b.enabled.Store(true)
 }
 
 func (b *BlockPollConnector) run(ctx context.Context) error {
@@ -55,6 +66,11 @@ func (b *BlockPollConnector) run(ctx context.Context) error {
 			timer.Stop()
 			return ctx.Err()
 		case <-timer.C:
+			enabled := b.enabled.Load()
+			if !enabled {
+				timer.Reset(b.Delay)
+				continue
+			}
 			for count := 0; count < 3; count++ {
 				lastBlock, err = b.pollBlocks(ctx, logger, lastBlock, false)
 				if err == nil {

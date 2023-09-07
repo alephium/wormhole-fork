@@ -116,9 +116,9 @@ var (
 	// solanaWsRPC *string
 	// solanaRPC   *string
 
-	alphRPC          *string
-	alphApiKey       *string
-	alphPollInterval *uint8
+	alphRPC            *string
+	alphApiKey         *string
+	alphPollIntervalMs *uint
 
 	logLevel *string
 
@@ -219,7 +219,7 @@ func init() {
 
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
-	alphPollInterval = NodeCmd.Flags().Uint8("alphPollInterval", 4, "The poll interval of alephium watcher")
+	alphPollIntervalMs = NodeCmd.Flags().Uint("alphPollIntervalMs", 4000, "The poll interval of alephium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -690,7 +690,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		alphWatcher, err := alephium.NewAlephiumWatcher(
 			*alphRPC, *alphApiKey, alphConfig, common.ReadinessAlephiumSyncing,
-			lockC, *alphPollInterval, chainObsvReqC[vaa.ChainIDAlephium],
+			lockC, *alphPollIntervalMs, chainObsvReqC[vaa.ChainIDAlephium],
 		)
 		if err != nil {
 			logger.Error("failed to create alephium watcher", zap.Error(err))
