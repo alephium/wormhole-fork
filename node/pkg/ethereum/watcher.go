@@ -157,9 +157,11 @@ func NewEthWatcher(
 }
 
 func (w *Watcher) Run(ctx context.Context) error {
-	logger := supervisor.Logger(ctx)
+	if w.pollIntervalMs == nil {
+		return fmt.Errorf("invalid poll interval setting")
+	}
 
-	useFinalizedBlocks := (w.chainID == vaa.ChainIDEthereum && (!w.unsafeDevMode))
+	logger := supervisor.Logger(ctx)
 
 	// Initialize gossip metrics (we want to broadcast the address even if we're not yet syncing)
 	p2p.DefaultRegistry.SetNetworkStats(w.chainID, &gossipv1.Heartbeat_Network{
@@ -169,32 +171,21 @@ func (w *Watcher) Run(ctx context.Context) error {
 	timeout, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	var err error
-	if useFinalizedBlocks && w.chainID == vaa.ChainIDEthereum {
-		logger.Info("using finalized blocks")
+	useFinalizedBlocks := (w.chainID == vaa.ChainIDEthereum && (!w.unsafeDevMode))
+	logger.Info("starting evm watcher", zap.String("chainName", w.chainID.String()), zap.Bool("useFinalizedBlocks", useFinalizedBlocks))
 
-		baseConnector, err := NewEthereumConnector(timeout, w.networkName, w.url, w.contract, logger)
-		if err != nil {
-			ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
-			p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
-			return fmt.Errorf("dialing eth client failed: %w", err)
-		}
-		if w.pollIntervalMs == nil {
-			return fmt.Errorf("invalid poll interval setting")
-		}
-		w.ethConn, err = NewBlockPollConnector(ctx, baseConnector, time.Duration(*w.pollIntervalMs)*time.Millisecond, true)
-		if err != nil {
-			ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
-			p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
-			return fmt.Errorf("creating block poll connector failed: %w", err)
-		}
-	} else {
-		w.ethConn, err = NewEthereumConnector(timeout, w.networkName, w.url, w.contract, logger)
-		if err != nil {
-			ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
-			p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
-			return fmt.Errorf("dialing eth client failed: %w", err)
-		}
+	baseConnector, err := NewEthereumConnector(timeout, w.networkName, w.url, w.contract, logger)
+	if err != nil {
+		ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
+		p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
+		return fmt.Errorf("dialing eth client failed: %w", err)
+	}
+
+	w.ethConn, err = NewBlockPollConnector(ctx, baseConnector, time.Duration(*w.pollIntervalMs)*time.Millisecond, useFinalizedBlocks)
+	if err != nil {
+		ethConnectionErrors.WithLabelValues(w.networkName, "dial_error").Inc()
+		p2p.DefaultRegistry.AddErrorCount(w.chainID, 1)
+		return fmt.Errorf("creating block poll connector failed: %w", err)
 	}
 
 	// Subscribe to new message publications. We don't use a timeout here because the LogPollConnector

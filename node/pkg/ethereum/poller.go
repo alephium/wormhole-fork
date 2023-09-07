@@ -75,15 +75,13 @@ func (b *BlockPollConnector) run(ctx context.Context) error {
 	}
 }
 
-func (b *BlockPollConnector) pollBlocks(ctx context.Context, logger *zap.Logger, lastBlock *NewBlock, safe bool) (lastPublishedBlock *NewBlock, retErr error) {
+func (b *BlockPollConnector) pollBlocks(ctx context.Context, logger *zap.Logger, lastBlock *NewBlock, safe bool) (*NewBlock, error) {
 	// Some of the testnet providers (like the one we are using for Arbitrum) limit how many transactions we can do. When that happens, the call hangs.
 	// Use a timeout so that the call will fail and the runable will get restarted. This should not happen in mainnet, but if it does, we will need to
 	// investigate why the runable is dying and fix the underlying problem.
 
 	timeout, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-
-	lastPublishedBlock = lastBlock
 
 	// Fetch the latest block on the chain
 	// We could do this on every iteration such that if a new block is created while this function is being executed,
@@ -92,28 +90,15 @@ func (b *BlockPollConnector) pollBlocks(ctx context.Context, logger *zap.Logger,
 	if err != nil {
 		logger.Error("failed to look up latest block",
 			zap.Uint64("lastSeenBlock", lastBlock.Number.Uint64()), zap.Error(err))
-		return lastPublishedBlock, fmt.Errorf("failed to look up latest block: %w", err)
+		return lastBlock, fmt.Errorf("failed to look up latest block: %w", err)
 	}
-	for {
-		if lastPublishedBlock.Number.Cmp(latestBlock.Number) >= 0 {
-			// We have to wait for a new block to become available
-			return
-		}
-
-		// Try to fetch the next block between lastBlock and latestBlock
-		nextBlockNumber := new(big.Int).Add(lastPublishedBlock.Number, big.NewInt(1))
-		block, err := b.getBlock(timeout, logger, nextBlockNumber, safe)
-		if err != nil {
-			logger.Error("failed to fetch next block",
-				zap.Uint64("block", nextBlockNumber.Uint64()), zap.Error(err))
-			return lastPublishedBlock, fmt.Errorf("failed to fetch next block (%d): %w", nextBlockNumber.Uint64(), err)
-		}
-
-		b.blockFeed.Send(block)
-		lastPublishedBlock = block
+	if lastBlock.Number.Cmp(latestBlock.Number) >= 0 {
+		// We have to wait for a new block to become available
+		return lastBlock, nil
 	}
-
-	return
+	logger.Debug("latest block height", zap.String("height", latestBlock.Number.String()))
+	b.blockFeed.Send(latestBlock)
+	return latestBlock, nil
 }
 
 func (b *BlockPollConnector) SubscribeForBlocks(ctx context.Context, sink chan<- *NewBlock) (ethereum.Subscription, error) {
