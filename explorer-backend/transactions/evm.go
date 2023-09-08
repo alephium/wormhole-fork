@@ -151,12 +151,45 @@ func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight u
 
 func (w *EVMWatcher) fetchEventsByBlockHash(ctx context.Context, blockHash ethCommon.Hash) error {
 	client := w.connector.Client()
-	header, err := client.HeaderByHash(ctx, blockHash)
+	query := eth.FilterQuery{
+		BlockHash: &blockHash,
+		Addresses: []ethCommon.Address{*w.contractAddress},
+		Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
+	}
+	logs, err := client.FilterLogs(ctx, query)
 	if err != nil {
-		w.logger.Error("failed to get header by block hash", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
+		w.logger.Error("failed to get logs", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
 		return err
 	}
-	return w.fetchEventsByHeader(ctx, header)
+	txs := make([]*BridgeTransaction, 0)
+	for _, log := range logs {
+		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
+		if err != nil {
+			return err
+		}
+		if bridgeTx == nil { // the transaction is not transfer token tx
+			continue
+		}
+		txs = append(txs, bridgeTx)
+	}
+	if len(txs) > 0 {
+		header, err := client.HeaderByHash(ctx, blockHash)
+		if err != nil {
+			w.logger.Error("failed to get header by block hash", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
+			return err
+		}
+
+		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
+		blockTxs := &BlockTransactions{
+			blockNumber:    uint32(header.Number.Uint64()),
+			blockHash:      blockHash.Hex(),
+			blockTimestamp: &blockTimestamp,
+			txs:            txs,
+			chainId:        w.chainId,
+		}
+		w.blockTxsC <- []*BlockTransactions{blockTxs}
+	}
+	return nil
 }
 
 func (w *EVMWatcher) bridgeTxFromLog(ctx context.Context, client *ethclient.Client, log *types.Log) (*BridgeTransaction, error) {
@@ -187,44 +220,6 @@ func (w *EVMWatcher) bridgeTxFromLog(ctx context.Context, client *ethclient.Clie
 		address:    *sender,
 		eventIndex: uint32(log.BlockNumber),
 	}, nil
-}
-
-func (w *EVMWatcher) fetchEventsByHeader(ctx context.Context, header *types.Header) error {
-	client := w.connector.Client()
-	blockHash := header.Hash()
-	query := eth.FilterQuery{
-		BlockHash: &blockHash,
-		Addresses: []ethCommon.Address{*w.contractAddress},
-		Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
-	}
-	logs, err := client.FilterLogs(ctx, query)
-	if err != nil {
-		w.logger.Error("failed to get logs", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
-		return err
-	}
-	txs := make([]*BridgeTransaction, 0)
-	for _, log := range logs {
-		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
-		if err != nil {
-			return err
-		}
-		if bridgeTx == nil { // the transaction is not transfer token tx
-			continue
-		}
-		txs = append(txs, bridgeTx)
-	}
-	if len(txs) > 0 {
-		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
-		blockTxs := &BlockTransactions{
-			blockNumber:    uint32(header.Number.Uint64()),
-			blockHash:      blockHash.Hex(),
-			blockTimestamp: &blockTimestamp,
-			txs:            txs,
-			chainId:        w.chainId,
-		}
-		w.blockTxsC <- []*BlockTransactions{blockTxs}
-	}
-	return nil
 }
 
 func getEVMTxSender(ctx context.Context, client *ethclient.Client, txId ethCommon.Hash) (*string, error) {
