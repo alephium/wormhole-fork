@@ -280,7 +280,7 @@ export async function expectAssertionFailed<T>(func: () => Promise<T>) {
 }
 
 export async function expectNotEnoughBalance<T>(func: () => Promise<T>) {
-  await expectFailed(func, ['NotEnoughBalance'])
+  await expectFailed(func, ['NotEnoughApprovedBalance'])
 }
 
 export async function expectOneOfError<T>(func: () => Promise<T>, errors: string[]) {

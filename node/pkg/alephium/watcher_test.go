@@ -32,7 +32,11 @@ func TestSubscribeEvents(t *testing.T) {
 	event3 := randomEvent(2)
 	eventsFromForkChain := []*UnconfirmedEvent{event2, event3}
 
-	watcher := &Watcher{chainIndex: &ChainIndex{0, 0}, currentHeight: 0}
+	watcher := &Watcher{
+		chainIndex:         &ChainIndex{0, 0},
+		currentHeight:      0,
+		blockPollerEnabled: &atomic.Bool{},
+	}
 
 	confirmedEvents := make([]*ConfirmedEvent, 0)
 	handler := func(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
@@ -114,4 +118,52 @@ func TestSubscribeEvents(t *testing.T) {
 	event2.BlockHash = randomByte32().ToHex()
 	sendEventsAtHeight(8, []*UnconfirmedEvent{})
 	assert.True(t, len(confirmedEvents) == 3)
+}
+
+func TestDisableBlockPoller(t *testing.T) {
+	watcher := &Watcher{
+		chainIndex:         &ChainIndex{0, 0},
+		currentHeight:      0,
+		blockPollerEnabled: &atomic.Bool{},
+		pollIntervalMs:     100,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	logger, err := zap.NewDevelopment()
+	assert.Nil(t, err)
+
+	errC := make(chan error)
+	heightC := make(chan int32, 32)
+	_currentHeight := int32(0)
+
+	getCurrentHeight := func() (*int32, error) {
+		_currentHeight += 1
+		return &_currentHeight, nil
+	}
+
+	assertCurrentHeightEqual := func(expectedHeight int32) {
+		currentHeight := atomic.LoadInt32(&watcher.currentHeight)
+		assert.Equal(t, currentHeight, expectedHeight)
+	}
+
+	assertCurrentHeightNotLessThan := func(height int32) int32 {
+		currentHeight := atomic.LoadInt32(&watcher.currentHeight)
+		assert.True(t, currentHeight >= height)
+		return currentHeight
+	}
+
+	go watcher._fetchHeight(ctx, logger, getCurrentHeight, errC, heightC)
+
+	assertCurrentHeightEqual(0)
+	time.Sleep(1 * time.Second)
+	assertCurrentHeightEqual(0)
+
+	watcher.EnableBlockPoller()
+	time.Sleep(1 * time.Second)
+	watcher.DisableBlockPoller()
+	currentHeight := assertCurrentHeightNotLessThan(9)
+
+	time.Sleep(1 * time.Second)
+	assertCurrentHeightEqual(currentHeight)
 }

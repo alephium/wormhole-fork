@@ -64,8 +64,9 @@ type Watcher struct {
 	msgChan  chan *common.MessagePublication
 	obsvReqC chan *gossipv1.ObservationRequest
 
-	pollInterval  uint8
-	currentHeight int32
+	blockPollerEnabled *atomic.Bool
+	pollIntervalMs     uint
+	currentHeight      int32
 
 	client *Client
 }
@@ -91,7 +92,7 @@ func NewAlephiumWatcher(
 	chainConfig *common.ChainConfig,
 	readiness readiness.Component,
 	messageEvents chan *common.MessagePublication,
-	pollInterval uint8,
+	pollIntervalMs uint,
 	obsvReqC chan *gossipv1.ObservationRequest,
 ) (*Watcher, error) {
 	governanceContractAddress, err := ToContractAddress(chainConfig.Contracts.Governance)
@@ -119,11 +120,20 @@ func NewAlephiumWatcher(
 		msgChan:   messageEvents,
 		obsvReqC:  obsvReqC,
 
-		pollInterval: pollInterval,
+		blockPollerEnabled: &atomic.Bool{},
+		pollIntervalMs:     pollIntervalMs,
 
 		client: NewClient(url, apiKey, 10),
 	}
 	return watcher, nil
+}
+
+func (w *Watcher) DisableBlockPoller() {
+	w.blockPollerEnabled.Store(false)
+}
+
+func (w *Watcher) EnableBlockPoller() {
+	w.blockPollerEnabled.Store(true)
 }
 
 func (w *Watcher) Run(ctx context.Context) error {
@@ -192,7 +202,7 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 	}
 
 	fromIndex := *currentEventCount
-	eventTick := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
+	eventTick := time.NewTicker(time.Duration(w.pollIntervalMs) * time.Millisecond)
 	defer eventTick.Stop()
 
 	for {
@@ -254,7 +264,14 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 }
 
 func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
-	t := time.NewTicker(time.Duration(w.pollInterval) * time.Second)
+	getCurrentHeight := func() (*int32, error) {
+		return client.GetCurrentHeight(ctx, w.chainIndex)
+	}
+	w._fetchHeight(ctx, logger, getCurrentHeight, errC, heightC)
+}
+
+func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurrentHeight func() (*int32, error), errC chan<- error, heightC chan<- int32) {
+	t := time.NewTicker(time.Duration(w.pollIntervalMs) * time.Millisecond)
 	defer t.Stop()
 
 	for {
@@ -262,29 +279,28 @@ func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *C
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			height, err := client.GetCurrentHeight(ctx, w.chainIndex)
+			enabled := w.blockPollerEnabled.Load()
+			if !enabled {
+				continue
+			}
+
+			latestHeight, err := getCurrentHeight()
 			if err != nil {
 				logger.Error("failed to get current height", zap.Error(err))
 				errC <- err
 				return
 			}
-			logger.Info(
-				"alephium block height",
-				zap.Int32("height", *height),
-				zap.Int32("fromGroup", w.chainIndex.FromGroup),
-				zap.Int32("toGroup", w.chainIndex.ToGroup),
-			)
 
-			previousHeight := atomic.LoadInt32(&w.currentHeight)
-			if *height != previousHeight {
-				logger.Info("height changed", zap.Int32("prevHeight", previousHeight), zap.Int32("newHeight", *height))
+			previousHeight := w.currentHeight
+			if *latestHeight != previousHeight {
+				logger.Info("block height changed", zap.Int32("prevHeight", previousHeight), zap.Int32("latestHeight", *latestHeight))
 				p2p.DefaultRegistry.SetNetworkStats(vaa.ChainIDAlephium, &gossipv1.Heartbeat_Network{
 					ContractAddress: w.governanceContractAddress,
-					Height:          int64(*height),
+					Height:          int64(*latestHeight),
 				})
-				currentAlphHeight.Set(float64(*height))
-				atomic.StoreInt32(&w.currentHeight, *height)
-				heightC <- *height
+				currentAlphHeight.Set(float64(*latestHeight))
+				w.currentHeight = *latestHeight
+				heightC <- *latestHeight
 			}
 		}
 	}
@@ -400,6 +416,9 @@ func (w *Watcher) handleEvents_(
 				blockEvents.events = remain
 			}
 		}
+		if len(pendingEvents) == 0 {
+			w.DisableBlockPoller()
+		}
 		if len(confirmedEvents) == 0 {
 			return nil
 		}
@@ -416,6 +435,9 @@ func (w *Watcher) handleEvents_(
 			return
 
 		case events := <-eventsC:
+			if len(events) != 0 {
+				w.EnableBlockPoller()
+			}
 			for _, event := range events {
 				blockHash := event.BlockHash
 				if lst, ok := pendingEvents[blockHash]; ok {

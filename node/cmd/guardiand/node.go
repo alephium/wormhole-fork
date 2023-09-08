@@ -64,7 +64,8 @@ var (
 	ethRPC            *string
 	ethPollIntervalMs *uint
 
-	bscRPC *string
+	bscRPC            *string
+	bscPollIntervalMs *uint
 
 	// polygonRPC      *string
 	// polygonContract *string
@@ -115,9 +116,9 @@ var (
 	// solanaWsRPC *string
 	// solanaRPC   *string
 
-	alphRPC          *string
-	alphApiKey       *string
-	alphPollInterval *uint8
+	alphRPC            *string
+	alphApiKey         *string
+	alphPollIntervalMs *uint
 
 	logLevel *string
 
@@ -162,9 +163,10 @@ func init() {
 	// solanaContract = NodeCmd.Flags().String("solanaContract", "", "Address of the Solana program (required)")
 
 	ethRPC = NodeCmd.Flags().String("ethRPC", "", "Ethereum RPC URL")
-	ethPollIntervalMs = NodeCmd.Flags().Uint("ethPollIntervalMs", 1000, "The poll interval for ethereum watcher")
+	ethPollIntervalMs = NodeCmd.Flags().Uint("ethPollIntervalMs", 3000, "The poll interval for ethereum watcher")
 
 	bscRPC = NodeCmd.Flags().String("bscRPC", "", "Binance Smart Chain RPC URL")
+	bscPollIntervalMs = NodeCmd.Flags().Uint("bscPollIntervalMs", 3000, "The poll interval for bsc watcher")
 
 	// polygonRPC = NodeCmd.Flags().String("polygonRPC", "", "Polygon RPC URL")
 	// polygonContract = NodeCmd.Flags().String("polygonContract", "", "Polygon contract address")
@@ -217,7 +219,7 @@ func init() {
 
 	alphRPC = NodeCmd.Flags().String("alphRPC", "", "Alephium RPC URL (required)")
 	alphApiKey = NodeCmd.Flags().String("alphApiKey", "", "Alphium RPC api key")
-	alphPollInterval = NodeCmd.Flags().Uint8("alphPollInterval", 4, "The poll interval of alephium watcher")
+	alphPollIntervalMs = NodeCmd.Flags().Uint("alphPollIntervalMs", 4000, "The poll interval of alephium watcher")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -677,7 +679,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		}
 
 		if err := supervisor.Run(ctx, "bscwatch",
-			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, nil, true).Run); err != nil {
+			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
 			return err
 		}
 
@@ -688,7 +690,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		alphWatcher, err := alephium.NewAlephiumWatcher(
 			*alphRPC, *alphApiKey, alphConfig, common.ReadinessAlephiumSyncing,
-			lockC, *alphPollInterval, chainObsvReqC[vaa.ChainIDAlephium],
+			lockC, *alphPollIntervalMs, chainObsvReqC[vaa.ChainIDAlephium],
 		)
 		if err != nil {
 			logger.Error("failed to create alephium watcher", zap.Error(err))
