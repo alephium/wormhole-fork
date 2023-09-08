@@ -32,7 +32,11 @@ func TestSubscribeEvents(t *testing.T) {
 	event3 := randomEvent(2)
 	eventsFromForkChain := []*UnconfirmedEvent{event2, event3}
 
-	watcher := &Watcher{chainIndex: &ChainIndex{0, 0}, currentHeight: 0}
+	watcher := &Watcher{
+		chainIndex:         &ChainIndex{0, 0},
+		currentHeight:      0,
+		blockPollerEnabled: &atomic.Bool{},
+	}
 
 	confirmedEvents := make([]*ConfirmedEvent, 0)
 	handler := func(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
