@@ -16,9 +16,35 @@ require (
 )
 
 require (
+	cloud.google.com/go/logging v1.4.2 // indirect
+	github.com/blendle/zapdriver v1.3.1 // indirect
+	github.com/btcsuite/btcd v0.22.0-beta // indirect
+	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
+	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/improbable-eng/grpc-web v0.14.1 // indirect
 	github.com/libp2p/go-libp2p-core v0.20.0 // indirect
+	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/miguelmota/go-ethereum-hdwallet v0.1.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
+	github.com/rs/cors v1.7.0 // indirect
+	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.8.1 // indirect
+	github.com/status-im/keycard-go v0.2.0 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/tendermint/tendermint v0.34.14 // indirect
+	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/ini.v1 v1.63.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 )
 
 require (
@@ -27,7 +53,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/alephium/go-sdk v0.0.0-20230918114914-5feda0147395
-	github.com/alephium/wormhole-fork/node v0.0.0-20230527022850-42486ede48db
+	github.com/alephium/wormhole-fork/node v0.0.0-20230918120223-dce63cd68586
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
