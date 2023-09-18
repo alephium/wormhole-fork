@@ -158,12 +158,12 @@ func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*sdk.Tx
 	return response, nil
 }
 
-func (c *Client) GetNodeInfo(ctx context.Context) (*sdk.NodeInfo, error) {
+func (c *Client) GetNodeVersion(ctx context.Context) (*sdk.NodeVersion, error) {
 	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	request := c.impl.InfosApi.GetInfosNode(timeoutCtx)
-	response, _, err := requestWithMetric[*sdk.NodeInfo](request, timestamp, "get_node_info")
+	request := c.impl.InfosApi.GetInfosVersion(timeoutCtx)
+	response, _, err := requestWithMetric[*sdk.NodeVersion](request, timestamp, "get_node_version")
 	if err != nil {
 		return nil, err
 	}
@@ -234,27 +234,27 @@ func (c *Client) GetTokenInfo(ctx context.Context, tokenId Byte32) (*TokenInfo, 
 	}
 
 	symbolResult := result.Results[0]
-	if len(symbolResult.Returns) != 1 {
+	if symbolResult.CallContractSucceeded == nil || len(symbolResult.CallContractSucceeded.Returns) != 1 {
 		return nil, fmt.Errorf("invalid token symbol")
 	}
 	nameResult := result.Results[1]
-	if len(nameResult.Returns) != 1 {
+	if symbolResult.CallContractSucceeded == nil || len(nameResult.CallContractSucceeded.Returns) != 1 {
 		return nil, fmt.Errorf("invalid token name")
 	}
 	decimalsResult := result.Results[2]
-	if len(decimalsResult.Returns) != 1 {
+	if symbolResult.CallContractSucceeded == nil || len(decimalsResult.CallContractSucceeded.Returns) != 1 {
 		return nil, fmt.Errorf("invalid token decimals")
 	}
 
-	symbolBs, err := toByteVec(symbolResult.Returns[0])
+	symbolBs, err := toByteVec(symbolResult.CallContractSucceeded.Returns[0])
 	if err != nil {
 		return nil, err
 	}
-	name, err := toByteVec(nameResult.Returns[0])
+	name, err := toByteVec(nameResult.CallContractSucceeded.Returns[0])
 	if err != nil {
 		return nil, err
 	}
-	decimals, err := toUint8(decimalsResult.Returns[0])
+	decimals, err := toUint8(decimalsResult.CallContractSucceeded.Returns[0])
 	if err != nil {
 		return nil, err
 	}

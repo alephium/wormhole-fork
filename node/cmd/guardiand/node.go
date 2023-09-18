@@ -678,9 +678,11 @@ func runNode(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if err := supervisor.Run(ctx, "bscwatch",
-			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
-			return err
+		if *bscRPC != "" {
+			if err := supervisor.Run(ctx, "bscwatch",
+				ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
+				return err
+			}
 		}
 
 		// if err := supervisor.Run(ctx, "algorandwatch",

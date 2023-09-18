@@ -53,9 +53,9 @@ func NewAlephiumWatcher(
 
 func (w *AlephiumWatcher) Run() func(ctx context.Context) error {
 	return func(ctx context.Context) error {
-		nodeInfo, err := w.client.GetNodeInfo(ctx)
+		nodeVersion, err := w.client.GetNodeVersion(ctx)
 		if err != nil {
-			w.logger.Error("failed to get node info", zap.Error(err))
+			w.logger.Error("failed to get node version", zap.Error(err))
 			return err
 		}
 
@@ -68,7 +68,7 @@ func (w *AlephiumWatcher) Run() func(ctx context.Context) error {
 			return err
 		}
 
-		w.logger.Info("alephium watcher started", zap.String("version", nodeInfo.BuildInfo.ReleaseVersion), zap.Uint32("fromEventIndex", w.fromEventIndex))
+		w.logger.Info("alephium watcher started", zap.String("version", nodeVersion.Version), zap.Uint32("fromEventIndex", w.fromEventIndex))
 
 		eventsC := make(chan []*EventsPerIndex)
 		errC := make(chan error)
