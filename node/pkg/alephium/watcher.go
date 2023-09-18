@@ -142,9 +142,9 @@ func (w *Watcher) Run(ctx context.Context) error {
 	})
 
 	logger := supervisor.Logger(ctx)
-	nodeInfo, err := w.client.GetNodeInfo(ctx)
+	nodeVersion, err := w.client.GetNodeVersion(ctx)
 	if err != nil {
-		logger.Error("failed to get node info", zap.Error(err))
+		logger.Error("failed to get node version", zap.Error(err))
 		return err
 	}
 
@@ -157,7 +157,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 		return fmt.Errorf("clique not synced")
 	}
 
-	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeInfo.BuildInfo.ReleaseVersion))
+	logger.Info("alephium watcher started", zap.String("url", w.url), zap.String("version", nodeVersion.Version))
 
 	readiness.SetReady(w.readiness)
 	errC := make(chan error)

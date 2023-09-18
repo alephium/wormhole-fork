@@ -158,12 +158,12 @@ func (c *Client) GetTransactionStatus(ctx context.Context, txId string) (*sdk.Tx
 	return response, nil
 }
 
-func (c *Client) GetNodeInfo(ctx context.Context) (*sdk.NodeInfo, error) {
+func (c *Client) GetNodeVersion(ctx context.Context) (*sdk.NodeVersion, error) {
 	timestamp, timeoutCtx, cancel := c.timeoutContext(ctx)
 	defer cancel()
 
-	request := c.impl.InfosApi.GetInfosNode(timeoutCtx)
-	response, _, err := requestWithMetric[*sdk.NodeInfo](request, timestamp, "get_node_info")
+	request := c.impl.InfosApi.GetInfosVersion(timeoutCtx)
+	response, _, err := requestWithMetric[*sdk.NodeVersion](request, timestamp, "get_node_version")
 	if err != nil {
 		return nil, err
 	}
