@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/kms v1.0.0 // indirect
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
-	github.com/alephium/go-sdk v0.0.0-20230414022534-1a34a488e6d6
+	github.com/alephium/go-sdk v0.0.0-20230918114914-5feda0147395
 	github.com/alephium/wormhole-fork/node v0.0.0-20230527022850-42486ede48db
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
