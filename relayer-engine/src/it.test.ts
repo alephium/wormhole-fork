@@ -54,7 +54,7 @@ async function transferFromAlphToEvmChain(chainId: ChainId, amount: bigint = ONE
       amount,
       ONE_ALPH,
       0n,
-      1
+      0
     )
     await waitAlphTxConfirmed(web3.getCurrentNodeProvider(), transferResult.txId, 1)
     console.log(`Transfer token tx ${transferResult.txId} confirmed`)
