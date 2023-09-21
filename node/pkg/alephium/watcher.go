@@ -51,6 +51,8 @@ var (
 		}, []string{"operation"})
 )
 
+const BlockTimeMs = 64000
+
 type Watcher struct {
 	url    string
 	apiKey string
@@ -366,7 +368,8 @@ func (w *Watcher) handleEvents_(
 	pendingEvents := map[string]*UnconfirmedEventsPerBlock{}
 
 	process := func(height int32) error {
-		logger.Debug("processing events", zap.Int32("height", height))
+		now := time.Now().UnixMilli()
+		logger.Debug("processing events", zap.Int32("height", height), zap.Int64("now", now))
 		confirmedEvents := make([]*ConfirmedEvent, 0)
 		for blockHash, blockEvents := range pendingEvents {
 			isCanonical, err := isBlockInMainChain(blockHash)
@@ -385,16 +388,17 @@ func (w *Watcher) handleEvents_(
 			}
 
 			remain := make([]*UnconfirmedEvent, 0)
-			logger.Info("processing events from block", zap.String("blockHash", blockEvents.header.Hash), zap.Int("size", len(blockEvents.events)))
+			logger.Info(
+				"processing events from block",
+				zap.String("blockHash", blockEvents.header.Hash),
+				zap.Int32("blockHeight", blockEvents.header.Height),
+				zap.Int64("blockTimestamp", blockEvents.header.Timestamp),
+				zap.Int("size", len(blockEvents.events)),
+			)
 			for _, event := range blockEvents.events {
-				eventConfirmations := event.msg.consistencyLevel
-				if blockEvents.header.Height+int32(eventConfirmations) > height {
-					logger.Debug(
-						"event not confirmed",
-						zap.String("txId", event.TxId),
-						zap.Int32("blockHeight", blockEvents.header.Height),
-						zap.Uint8("confirmations", eventConfirmations),
-					)
+				consistencyLevel := event.msg.consistencyLevel
+				if !isEventConfirmed(consistencyLevel, blockEvents.header, now, height) {
+					logger.Debug("event not confirmed", zap.String("txId", event.TxId), zap.Uint8("consistencyLevel", consistencyLevel))
 					remain = append(remain, event)
 					continue
 				}
@@ -456,4 +460,18 @@ func (w *Watcher) handleEvents_(
 			}
 		}
 	}
+}
+
+func isEventConfirmed(
+	eventConsistencyLevel uint8,
+	eventBlockHeader *sdk.BlockHeaderEntry,
+	currentTs int64,
+	currentHeight int32,
+) bool {
+	if eventBlockHeader.Height+int32(eventConsistencyLevel) > currentHeight {
+		return false
+	}
+
+	duration := int64(eventConsistencyLevel) * BlockTimeMs
+	return eventBlockHeader.Timestamp+duration <= currentTs
 }
