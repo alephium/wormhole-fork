@@ -302,8 +302,10 @@ func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurre
 				})
 				currentAlphHeight.Set(float64(*latestHeight))
 				w.currentHeight = *latestHeight
-				heightC <- *latestHeight
 			}
+
+			// Always send the block height to avoid having enough block confirmations but not enough confirmation time
+			heightC <- *latestHeight
 		}
 	}
 }
