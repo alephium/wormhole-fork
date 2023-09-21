@@ -22,6 +22,7 @@ import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST 
 import SmartBlock from "./SmartBlock";
 import { DefaultEVMChainConfirmations, getEVMCurrentBlockNumber } from "../utils/ethereum";
 import { useWallet } from "@alephium/web3-react";
+import { AlephiumBlockTime } from "../utils/alephium";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,6 +49,18 @@ export default function TransactionProgress({
   const { provider } = useEthereumProvider();
   const alphWallet = useWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
+  const [alphTxConfirmedTs, setAlphTxConfirmedTs] = useState<number | undefined>()
+  const [alphTxConfirmed, setAlphTxConfirmed] = useState<boolean>(false)
+  useEffect(() => {
+    if (chainId !== CHAIN_ID_ALEPHIUM) return
+
+    const confirmations = consistencyLevel ?? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    const now = Date.now()
+    const confirmedTimestamp = (tx?.blockTimestamp ?? now) + (confirmations * AlephiumBlockTime)
+    setAlphTxConfirmedTs(confirmedTimestamp)
+    setTimeout(() => setAlphTxConfirmed(true), confirmedTimestamp > now ? confirmedTimestamp - now : 0)
+  }, [setAlphTxConfirmedTs, setAlphTxConfirmed, tx?.blockTimestamp, chainId, consistencyLevel])
+
   useEffect(() => {
     if (isSendComplete || !tx) return;
     if (isEVMChain(chainId) && provider) {
@@ -106,9 +119,33 @@ export default function TransactionProgress({
       };
     }
   }, [isSendComplete, chainId, provider, alphWallet, tx]);
-  if (chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet') {
-    if (!isSendComplete && tx && tx.block && currentBlock) {
-      const isFinalized = currentBlock >= tx.block;
+  if (chainId === CHAIN_ID_ALEPHIUM) {
+    const blockDiff =
+      tx && tx.blockHeight && currentBlock ? currentBlock - tx.blockHeight : undefined;
+    const remainMinutes = alphTxConfirmedTs === undefined ? undefined : getRemainMinutes(alphTxConfirmedTs)
+    const expectedBlocks = consistencyLevel ?? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    if (!isSendComplete && blockDiff !== undefined) {
+      return (
+        <div className={classes.root}>
+          <LinearProgress
+            value={
+              blockDiff < expectedBlocks ? (blockDiff / expectedBlocks) * 75 : 75
+            }
+            variant="determinate"
+          />
+          <Typography variant="body2" className={classes.message}>
+            {blockDiff < expectedBlocks
+              ? `Waiting for ${blockDiff} / ${expectedBlocks} confirmations on ${CHAINS_BY_ID[chainId].name}...`
+              : !alphTxConfirmed && !!remainMinutes
+              ? `Waiting for confirmations on ${CHAINS_BY_ID[chainId].name}, ${remainMinutes.toFixed(2)} minutes remaining...`
+              : `Waiting for Wormhole Network consensus...`}
+          </Typography>
+        </div>
+      );
+    }
+  } else if (chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet') {
+    if (!isSendComplete && tx && tx.blockHeight && currentBlock) {
+      const isFinalized = currentBlock >= tx.blockHeight;
       return (
         <div className={classes.root}>
           <Typography variant="body2" className={classes.message}>
@@ -121,7 +158,7 @@ export default function TransactionProgress({
               <span>Last finalized block number</span>
               <SmartBlock chainId={chainId} blockNumber={currentBlock} />
               <span>This transaction's block number</span>
-              <SmartBlock chainId={chainId} blockNumber={tx.block} />
+              <SmartBlock chainId={chainId} blockNumber={tx.blockHeight} />
             </>
           ) : null}
         </div>
@@ -129,7 +166,7 @@ export default function TransactionProgress({
     }
   } else {
     const blockDiff =
-      tx && tx.block && currentBlock ? currentBlock - tx.block : undefined;
+      tx && tx.blockHeight && currentBlock ? currentBlock - tx.blockHeight : undefined;
     // minimum confirmations enforced by guardians or specified by the contract
     const expectedBlocks = consistencyLevel ?? (
       chainId === CHAIN_ID_POLYGON
@@ -148,12 +185,10 @@ export default function TransactionProgress({
         ? 32
         : isEVMChain(chainId)
         ? DefaultEVMChainConfirmations
-        : chainId === CHAIN_ID_ALEPHIUM
-        ? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
         : 1);
     if (
       !isSendComplete &&
-      (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId) || chainId === CHAIN_ID_ALEPHIUM) &&
+      (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
       blockDiff !== undefined
     ) {
       return (
@@ -174,4 +209,9 @@ export default function TransactionProgress({
     }
   }
   return null;
+}
+
+function getRemainMinutes(confirmedTimestamp: number): number {
+  const now = Date.now()
+  return now < confirmedTimestamp ? ((confirmedTimestamp - now) / 60000) : 0
 }

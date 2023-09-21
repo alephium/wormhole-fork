@@ -42,18 +42,21 @@ import {
 import * as base58 from 'bs58'
 
 const WormholeMessageEventIndex = 0
+export const AlephiumBlockTime = 64000 // 64 seconds in ms
 
 export class AlphTxInfo {
   blockHash: string
   blockHeight: number
+  blockTimestamp: number
   txId: string
   sequence: string
   targetChain: ChainId
   confirmations: number
 
-  constructor(blockHash: string, blockHeight: number, txId: string, sequence: string, targetChain: ChainId, confirmations: number) {
-    this.blockHash = blockHash
-    this.blockHeight = blockHeight
+  constructor(blockHeader: node.BlockHeaderEntry, txId: string, sequence: string, targetChain: ChainId, confirmations: number) {
+    this.blockHash = blockHeader.hash
+    this.blockHeight = blockHeader.height
+    this.blockTimestamp = blockHeader.timestamp
     this.txId = txId
     this.sequence = sequence
     this.targetChain = targetChain
@@ -90,7 +93,7 @@ async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.C
   }
   const sequence = parseSequenceFromLogAlph(event)
   const targetChain = parseTargetChainFromLogAlph(event)
-  return new AlphTxInfo(confirmed.blockHash, blockHeader.height, txId, sequence, targetChain, confirmed.chainConfirmations)
+  return new AlphTxInfo(blockHeader, txId, sequence, targetChain, confirmed.chainConfirmations)
 }
 
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {

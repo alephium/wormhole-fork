@@ -148,7 +148,7 @@ function SolanaMigrationLineItem({
           </Typography>
           <ShowTx
             chainId={CHAIN_ID_SOLANA}
-            tx={{ id: transaction, block: 1 }}
+            tx={{ id: transaction, blockHeight: 1 }}
           />
         </div>
       </div>

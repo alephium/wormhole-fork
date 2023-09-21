@@ -80,7 +80,7 @@ async function evm(
       overrides
     );
     dispatch(
-      setTransferTx({ id: receipt.transactionHash, block: receipt.blockNumber })
+      setTransferTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -154,7 +154,7 @@ async function solana(
     if (!info) {
       throw new Error("An error occurred while fetching the transaction info");
     }
-    dispatch(setTransferTx({ id: txid, block: info.slot }));
+    dispatch(setTransferTx({ id: txid, blockHeight: info.slot }));
     const sequence = parseSequenceFromLogSolana(info);
     const emitterAddress = await getEmitterAddressSolana(
       SOL_NFT_BRIDGE_ADDRESS

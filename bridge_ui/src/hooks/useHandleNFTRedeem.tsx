@@ -69,7 +69,7 @@ async function evm(
       overrides
     );
     dispatch(
-      setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
+      setRedeemTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -143,7 +143,7 @@ async function solana(
         txid = await signSendAndConfirm(wallet, connection, transaction);
       }
     }
-    dispatch(setRedeemTx({ id: txid || "", block: 1 }));
+    dispatch(setRedeemTx({ id: txid || "", blockHeight: 1 }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
