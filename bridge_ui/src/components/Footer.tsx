@@ -56,10 +56,7 @@ export default function Footer() {
         <div className={classes.flex}>
           <div className={classes.spacer} />
           <Typography variant="body2">
-            This Interface is an open source software gateway to Alephium's
-            Bridge, a cross chain messaging protocol. It's a fork based on the
-            open source code of Wormhole Bridge, and it's not associated with Wormhole
-            Foundation. THIS INTERFACE AND THE BRIDGE PROTOCOL ARE
+            This Interface is open-source software providing access to Alephium's Bridge, a cross-chain messaging protocol. It is a fork based on the open-source code of the Wormhole Bridge and is not affiliated with or endorsed by the Wormhole Foundation. THIS INTERFACE AND THE BRIDGE PROTOCOL ARE
             PROVIDED "AS IS", AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY
             KIND. By using or accessing this Interface or Bridge, you agree that
             no developer or entity involved in creating, deploying, maintaining,
