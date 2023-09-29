@@ -125,7 +125,7 @@ const useStyles = makeStyles((theme) => ({
     width: "1757px",
     height: "1506px",
     background:
-      "radial-gradient(closest-side at 50% 50%, #FFCE00 0%, #FFCE0000 100%)",
+      "radial-gradient(closest-side at 50% 50%, #8ECE00 0%, #FFCE0000 100%)",
     opacity: "0.2",
     transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0)",
     zIndex: "-1",
@@ -141,7 +141,7 @@ const useStyles = makeStyles((theme) => ({
     height: "1378px",
     position: "absolute",
     background:
-      "radial-gradient(closest-side at 50% 50%, #F44B1B 0%, #F44B1B00 100%)",
+      "radial-gradient(closest-side at 50% 50%, #844B1B 0%, #F44B1B00 100%)",
     opacity: "0.2",
     zIndex: "-1",
     pointerEvent: "none",
@@ -153,7 +153,7 @@ const useStyles = makeStyles((theme) => ({
     height: "1378px",
     position: "absolute",
     background:
-      "radial-gradient(closest-side at 50% 50%, #F44B1B 0%, #F44B1B00 100%)",
+      "radial-gradient(closest-side at 50% 50%, #844B1B 0%, #F44B1B00 100%)",
     opacity: "0.2",
     zIndex: "-1",
     pointerEvent: "none",
@@ -168,7 +168,7 @@ const useStyles = makeStyles((theme) => ({
     width: "1757px",
     height: "1506px",
     background:
-      "radial-gradient(closest-side at 50% 50%, #FFCE00 0%, #FFCE0000 100%)",
+      "radial-gradient(closest-side at 50% 50%, #8FCE00 0%, #FFCE0000 100%)",
     opacity: "0.24",
     transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0);",
     zIndex: "-1",
