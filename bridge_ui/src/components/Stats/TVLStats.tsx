@@ -162,7 +162,7 @@ const TVLStats = () => {
     (selectedChainDetail ? ` on ${selectedChainDetail?.name}` : "");
   const tooltipText = selectedChainDetail
     ? `Total Value Locked on ${selectedChainDetail?.name}`
-    : "USD equivalent value of all assets locked in Portal";
+    : "USD equivalent value of all assets locked in the Bridge";
 
   return (
     <>
