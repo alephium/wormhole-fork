@@ -41,7 +41,7 @@ import Transfer from "./components/Transfer";
 import UnwrapNative from "./components/UnwrapNative";
 import WithdrawTokensTerra from "./components/WithdrawTokensTerra";
 import { useBetaContext } from "./contexts/BetaContext";
-import Portal from "./icons/portal_logo_w.svg";
+import Alephium from "./icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { useEffect } from "react";
@@ -184,7 +184,7 @@ function App() {
   const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
-  const wallet = useWallet()
+  const wallet = useWallet();
   const handleTabChange = useCallback(
     (event, value) => {
       push(value);
@@ -194,9 +194,9 @@ function App() {
 
   useEffect(() => {
     if (wallet?.nodeProvider !== undefined) {
-      web3.setCurrentNodeProvider(wallet.nodeProvider)
+      web3.setCurrentNodeProvider(wallet.nodeProvider);
     }
-  }, [wallet?.nodeProvider])
+  }, [wallet?.nodeProvider]);
 
   return (
     <div className={classes.bg}>
@@ -219,7 +219,11 @@ function App() {
             to="/transfer"
             className={classes.brandLink}
           >
-            <img src={Portal} alt="Portal" className={classes.wormholeIcon} />
+            <img
+              src={Alephium}
+              alt="Alephium"
+              className={classes.wormholeIcon}
+            />
           </Link>
           <div className={classes.spacer} />
           <Hidden implementation="css" xsDown>
@@ -233,22 +237,13 @@ function App() {
                 Bridge
               </Link>
               <Link
-                href="https://docs.wormholenetwork.com/wormhole/faqs"
+                href="https://alephium.org"
                 target="_blank"
                 rel="noopener noreferrer"
                 color="inherit"
                 className={classes.link}
               >
-                FAQ
-              </Link>
-              <Link
-                href="https://wormholenetwork.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                Wormhole
+                Alephium
               </Link>
             </div>
           </Hidden>
@@ -282,12 +277,8 @@ function App() {
             subtitle={
               <>
                 <Typography>
-                  Portal is a bridge that offers unlimited transfers across
-                  chains for tokens wrapped by Wormhole.
-                </Typography>
-                <Typography>
-                  Unlike many other bridges, you avoid double wrapping and never
-                  have to retrace your steps.
+                  A bridge that offers unlimited transfers across chains for
+                  tokens.
                 </Typography>
               </>
             }
@@ -301,9 +292,13 @@ function App() {
             indicatorColor="primary"
           >
             <Tab label="Tokens" value="/transfer" />
-            { /* <Tab label="NFTs" value="/nft" /> */ }
+            {/* <Tab label="NFTs" value="/nft" /> */}
             <Tab label="Redeem" value="/redeem" to="/redeem" />
-            <Tab label="Transactions" value="/transactions" to="/transactions" />
+            <Tab
+              label="Transactions"
+              value="/transactions"
+              to="/transactions"
+            />
           </Tabs>
         </Container>
       ) : null}
@@ -311,14 +306,14 @@ function App() {
         <Route exact path="/transfer">
           <Transfer />
         </Route>
-        { /* <Route exact path="/nft"> <NFT /> </Route> */ }
+        {/* <Route exact path="/nft"> <NFT /> </Route> */}
         <Route exact path="/redeem">
           <Recovery />
         </Route>
         <Route exact path="/transactions">
           <Transactions />
         </Route>
-        { /* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */ }
+        {/* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */}
         <Route exact path="/token-origin-verifier">
           <TokenOriginVerifier />
         </Route>

@@ -33,7 +33,7 @@ function WormholeWrappedWarning() {
       <Typography component="div" className={classes.line}>
         The tokens you will receive are{" "}
         <Box fontWeight={900} display="inline">
-          Portal Wrapped Tokens
+          Bridge Wrapped Tokens
         </Box>{" "}
         and will need to be exchanged for native assets.
       </Typography>
@@ -97,7 +97,7 @@ function LiquidityWarning() {
       <Typography component="div" className={classes.line}>
         The tokens you will receive are{" "}
         <Box fontWeight={900} display="inline">
-          Portal Wrapped Tokens
+          Bridge Wrapped Tokens
         </Box>{" "}
         which currently have no liquid markets!
       </Typography>
