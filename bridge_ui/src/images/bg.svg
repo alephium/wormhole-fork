@@ -16,13 +16,5 @@
         <ellipse id="Ellipse_68" data-name="Ellipse 68" cx="285.397" cy="285.397" rx="285.397" ry="285.397" transform="matrix(-1, -0.008, 0.008, -1, 989.058, 923.378)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="0.5"/>
       </g>
     </g>
-    <g id="Group_2679" data-name="Group 2679" transform="translate(-220.424 104.575)" opacity="0.25">
-      <g id="Group_2632-2" data-name="Group 2632" clip-path="url(#clip-path-2)">
-        <circle id="Ellipse_63-2" data-name="Ellipse 63" cx="516.468" cy="516.468" r="516.468" transform="translate(87.744 119.744)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="0.5"/>
-        <circle id="Ellipse_65-2" data-name="Ellipse 65" cx="412.376" cy="412.376" r="412.376" transform="translate(153.644 145.734)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="0.5"/>
-        <circle id="Ellipse_67-2" data-name="Ellipse 67" cx="308.284" cy="308.284" r="308.284" transform="translate(214.545 216.724)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="0.5"/>
-        <circle id="Ellipse_68-2" data-name="Ellipse 68" cx="220.739" cy="220.739" r="220.739" transform="matrix(1, -0.008, 0.008, 1, 266.011, 272.717)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="0.5"/>
-      </g>
-    </g>
   </g>
 </svg>
