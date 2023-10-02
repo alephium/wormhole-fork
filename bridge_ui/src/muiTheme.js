@@ -1,6 +1,5 @@
 import { createTheme, responsiveFontSizes } from "@material-ui/core";
-import bg from "../src/images/bg.svg";
-import SuisseBPIntlBold from "./fonts/SuisseBPIntlBold.woff2";
+import Switzer from "./fonts/Switzer-Variable.ttf";
 
 export const COLORS = {
   blue: "#1975e6",
@@ -10,7 +9,7 @@ export const COLORS = {
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#83b9fc",
-  nearBlack: "#17153f",
+  nearBlack: "#242426",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   red: "#aa0818",
   darkRed: "#810612",
@@ -18,12 +17,12 @@ export const COLORS = {
   whiteWithTransparency: "rgba(255,255,255,.07)",
 };
 
-const suisse = {
-  fontFamily: "Suisse BP Intl",
+const switzer = {
+  fontFamily: "Switzer",
   fontStyle: "normal",
   fontDisplay: "swap",
   fontWeight: 400,
-  src: `url(${SuisseBPIntlBold}) format('woff2')`,
+  src: `url(${Switzer}) format('ttf')`,
 };
 
 export const theme = responsiveFontSizes(
@@ -52,30 +51,30 @@ export const theme = responsiveFontSizes(
     },
 
     typography: {
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Switzer', sans-serif",
       fontSize: 13,
       h1: {
-        fontFamily: "Suisse BP Intl, sans-serif",
+        fontFamily: "Switzer, sans-serif",
         lineHeight: 0.9,
         letterSpacing: -2,
-        fontWeight: "bold",
+        fontWeight: 600,
+        fontSize: "62px",
       },
       h2: {
         fontWeight: "200",
       },
       h4: {
         fontWeight: "600",
-        fontFamily: "Suisse BP Intl, sans-serif",
+        fontFamily: "Switzer, sans-serif",
         letterSpacing: -1.02,
       },
     },
     overrides: {
       MuiCssBaseline: {
         "@global": {
-          "@font-face": [suisse],
+          "@font-face": [switzer],
           body: {
             overscrollBehaviorY: "none",
-            backgroundImage: `url(${bg})`,
             backgroundPosition: "top center",
             backgroundRepeat: "repeat-y",
             backgroundSize: "120%",
@@ -108,12 +107,12 @@ export const theme = responsiveFontSizes(
         },
         rounded: {
           "&:first-child": {
-            borderTopLeftRadius: "28px",
-            borderTopRightRadius: "28px",
+            borderTopLeftRadius: "16px",
+            borderTopRightRadius: "16px",
           },
           "&:last-child": {
-            borderBottomLeftRadius: "28px",
-            borderBottomRightRadius: "28px",
+            borderBottomLeftRadius: "16px",
+            borderBottomRightRadius: "16px",
           },
         },
       },
@@ -125,7 +124,7 @@ export const theme = responsiveFontSizes(
       },
       MuiButton: {
         root: {
-          borderRadius: "22px",
+          borderRadius: "9px",
           letterSpacing: ".1em",
         },
         outlinedSizeSmall: {
@@ -140,7 +139,7 @@ export const theme = responsiveFontSizes(
       },
       MuiPaper: {
         rounded: {
-          borderRadius: "28px",
+          borderRadius: "16px",
           backdropFilter: "blur(4px)",
         },
       },
@@ -154,7 +153,7 @@ export const theme = responsiveFontSizes(
         root: {
           backgroundColor: COLORS.whiteWithTransparency,
           backdropFilter: "blur(4px)",
-          borderRadius: "28px",
+          borderRadius: "16px",
           padding: "32px 32px 16px",
         },
       },
@@ -191,7 +190,7 @@ export const theme = responsiveFontSizes(
       MuiTab: {
         root: {
           color: COLORS.white,
-          fontFamily: "Suisse BP Intl, sans-serif",
+          fontFamily: "Switzer, sans-serif",
           fontWeight: "bold",
           fontSize: 18,
           padding: 12,
