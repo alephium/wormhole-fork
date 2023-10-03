@@ -46,6 +46,7 @@ import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { useEffect } from "react";
 import { web3 } from "@alephium/web3";
+import backgroundGradient from "./images/top-gradient.png";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -104,11 +105,11 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   betaBanner: {
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(255,255,255,0.15)",
     padding: theme.spacing(1, 0),
   },
-  wormholeIcon: {
-    height: 68,
+  alephiumLogo: {
+    height: 50,
     "&:hover": {
       filter: "contrast(1)",
     },
@@ -116,64 +117,14 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(1),
     display: "inline-block",
   },
-  gradientRight: {
+  topGradient: {
     position: "absolute",
-    top: "72px",
-    right: "-1000px",
-    width: "1757px",
-    height: "1506px",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #8ECE00 0%, #FFCE0000 100%)",
-    opacity: "0.2",
-    transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0)",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
-  },
-  gradientLeft: {
-    top: "-530px",
-    left: "-350px",
-    width: "1379px",
-    height: "1378px",
-    position: "absolute",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #844B1B 0%, #F44B1B00 100%)",
-    opacity: "0.2",
-    zIndex: "-1",
-    pointerEvent: "none",
-  },
-  gradientLeft2: {
-    bottom: "-330px",
-    left: "-350px",
-    width: "1379px",
-    height: "1378px",
-    position: "absolute",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #844B1B 0%, #F44B1B00 100%)",
-    opacity: "0.2",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
-  },
-  gradientRight2: {
-    position: "absolute",
-    bottom: "-900px",
-    right: "-1000px",
-    width: "1757px",
-    height: "1506px",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #8FCE00 0%, #FFCE0000 100%)",
-    opacity: "0.24",
-    transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0);",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
+    height: 300,
+    width: "100%",
+    backgroundImage: `url(${backgroundGradient})`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "top center",
+    backgroundSize: "contain",
   },
 }));
 
@@ -205,6 +156,7 @@ function App() {
           </Typography>
         </AppBar>
       )}
+      <div className={classes.topGradient} />
       <AppBar
         position="static"
         color="inherit"
@@ -220,7 +172,7 @@ function App() {
             <img
               src={Alephium}
               alt="Alephium"
-              className={classes.wormholeIcon}
+              className={classes.alephiumLogo}
             />
           </Link>
           <div className={classes.spacer} />
@@ -281,7 +233,7 @@ function App() {
               </>
             }
           >
-            Token Bridge
+            Token Bridge 🌉
           </HeaderText>
           <Tabs
             value={pathname}
@@ -289,13 +241,14 @@ function App() {
             onChange={handleTabChange}
             indicatorColor="primary"
           >
-            <Tab label="Tokens" value="/transfer" />
+            <Tab label="Tokens" value="/transfer" disableRipple />
             {/* <Tab label="NFTs" value="/nft" /> */}
-            <Tab label="Redeem" value="/redeem" to="/redeem" />
+            <Tab label="Redeem" value="/redeem" to="/redeem" disableRipple />
             <Tab
               label="Transactions"
               value="/transactions"
               to="/transactions"
+              disableRipple
             />
           </Tabs>
         </Container>

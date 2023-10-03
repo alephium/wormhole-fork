@@ -1,6 +1,6 @@
-/* @font-face {
+@font-face {
   font-family: "Suisse BP Intl";
-  src: url('../fonts/SuisseBPIntlLight.woff2') format('woff2');
+  src: url("../fonts/SuisseBPIntlLight.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -8,30 +8,24 @@
 
 @font-face {
   font-family: "Suisse BP Intl Antique";
-  src: url('../fonts/SuisseBPIntlAntique.woff2') format('woff2');
+  src: url("../fonts/SuisseBPIntlAntique.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
-  
-  @font-face {
-    font-family: "Suisse BP Intl";
-    src: url('../fonts/SuisseBPIntlBold.woff2') format('woff2');
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
-  }
-  
-} */
-/* @font-face {
+}
+
+@font-face {
   font-family: "Suisse BP Intl";
-  src: url('../fonts/SuisseBPIntlRegular.woff2') format('woff2');
+  src: url("../fonts/SuisseBPIntlBold.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Suisse BP Intl";
+  src: url("../fonts/SuisseBPIntlRegular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-} */
-
-@font-face {
-  font-family: "Switzer";
-  src: url("../fonts/Switzer-Variable.ttf"), format("truetype");
-  font-weight: 100 1000;
 }

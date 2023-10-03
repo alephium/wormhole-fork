@@ -3,9 +3,11 @@ import { makeStyles, Typography } from "@material-ui/core";
 const useStyles = makeStyles((theme) => ({
   footer: {
     position: "relative",
+    color: "rgba(255, 255, 255, 0.3)",
+    textAlign: "center",
   },
   container: {
-    maxWidth: 1100,
+    maxWidth: 960,
     margin: "0px auto",
     paddingTop: theme.spacing(11),
     paddingBottom: theme.spacing(6.5),
@@ -19,7 +21,6 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     marginLeft: theme.spacing(3.5),
     marginRight: theme.spacing(3.5),
-    borderTop: "1px solid #585587",
     paddingTop: theme.spacing(7),
     [theme.breakpoints.up("md")]: {
       flexWrap: "wrap",
