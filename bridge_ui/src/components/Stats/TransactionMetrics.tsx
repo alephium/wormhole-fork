@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
   },
   totalValue: {
     fontWeight: 600,
-    fontFamily: "Suisse BP Intl, sans-serif",
+    fontFamily: "Switzer, sans-serif",
   },
   typog: {
     marginTop: theme.spacing(3),
