@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '16'
       - name: build devnet docker images
-        run: ./build-docker-images.sh "devnet"
+        run: ./build-docker-images.sh "devnet" "latest"
       - name: docker system prune
         run: docker system prune -f
       - name: start docker images
@@ -44,22 +44,3 @@ jobs:
         if: success() || failure()
         uses: jwalton/gh-docker-logs@v2.2.1
       # Next publish docker images after integration tests pass
-  publish:
-    needs: test
-    runs-on: ubuntu-20.04  
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v0'
-      with:
-        workload_identity_provider: projects/1004240933630/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-        service_account: wormhole-fork-repo@alephium-org.iam.gserviceaccount.com
-    - name: auth docker
-      run: gcloud auth configure-docker
-    - name: build and push testnet docker images
-      run: ./build-docker-images.sh "testnet" true
