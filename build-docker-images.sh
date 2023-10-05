@@ -14,6 +14,15 @@ fi
 
 set -euo pipefail xtrace
 
+echo pushImage: $pushImage
+
+if [ "${pushImage}" = true ]
+then
+    echo "pushing... true"
+else
+    echo "pushing... false"
+fi
+
 export DOCKER_BUILDKIT=1
 
 if [[ ${NETWORKS[*]}] =~ $network ]]
