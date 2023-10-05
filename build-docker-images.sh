@@ -3,8 +3,8 @@
 NETWORKS=('mainnet' 'testnet' 'devnet')
 
 network=$1
-
-pushImage=${2:-false}
+version=$2
+pushImage=${3:-false}
 
 if [ -z "${network// }" ]
 then
@@ -13,8 +13,6 @@ then
 fi
 
 set -euo pipefail xtrace
-
-VERSION=0.2.121
 
 export DOCKER_BUILDKIT=1
 
@@ -26,7 +24,7 @@ else
     exit 1
 fi
 
-docker build -f ./docker/Dockerfile.init . -t eu.gcr.io/alephium-org/devnet-init:$VERSION
+docker build -f ./docker/Dockerfile.init . -t eu.gcr.io/alephium-org/devnet-init:$version
 
 # Build proto-gen, generate node/pkg/proto dir
 docker build --target go-export -f ./docker/Dockerfile.proto -o type=local,dest=node .
@@ -35,29 +33,29 @@ docker build --target go-export -f ./docker/Dockerfile.proto -o type=local,dest=
 docker build --target node-export -f ./docker/Dockerfile.proto -o type=local,dest=. .
 
 # Build guardian image (used for both guardian & spy)
-docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$VERSION --build-arg network=$network
+docker build -f ./node/Dockerfile . -t eu.gcr.io/alephium-org/guardiand:$version --build-arg network=$network
 
 ## Build eth-node image
-docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$VERSION
+docker build -f ./ethereum/Dockerfile . -t eu.gcr.io/alephium-org/eth-node:$version
 
-docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contracts:$VERSION
+docker build -f ./alephium/Dockerfile . -t eu.gcr.io/alephium-org/alephium-contracts:$version
 
 ## Build Bridge UI
-docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION --build-arg network=$network
+docker build -f ./bridge_ui/Dockerfile . -t eu.gcr.io/alephium-org/bridge-ui-$network:$version --build-arg network=$network
 
 ## Build Explorer Images
 ### explorer-api-server
-docker build -f ./explorer-api-server/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-api-server:$VERSION
+docker build -f ./explorer-api-server/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-api-server:$version
 
 ### explorer-backend
-docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-backend:$VERSION
+docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-backend:$version
 
 ### explorer
-docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$version
 
 if [ "${pushImage}" = true ]
 then
-    docker push eu.gcr.io/alephium-org/guardiand:$VERSION
-    docker push eu.gcr.io/alephium-org/bridge-ui-$network:$VERSION
-    docker push eu.gcr.io/alephium-org/wormhole-explorer:$VERSION
+    docker push eu.gcr.io/alephium-org/guardiand:$version
+    docker push eu.gcr.io/alephium-org/bridge-ui-$network:$version
+    docker push eu.gcr.io/alephium-org/wormhole-explorer:$version
 fi
