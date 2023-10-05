@@ -17,10 +17,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
       - name: Get the tag name
         id: get_tag
         run: |
@@ -31,7 +27,8 @@ jobs:
           echo ::set-output name=DIST_TAG::$dist_tag
         shell: bash
   publish:
-    runs-on: ubuntu-20.04  
+    runs-on: ubuntu-20.04
+    needs: get_dist_tag
     permissions:
       id-token: write
       contents: read
@@ -47,4 +44,4 @@ jobs:
     - name: auth docker
       run: gcloud auth configure-docker
     - name: build and push testnet docker images
-      run: ./build-docker-images.sh "testnet" ${{ jobs.get_dist_tag.outputs.DIST_TAG }} true
+      run: ./build-docker-images.sh "testnet" ${{ needs.get_dist_tag.outputs.DIST_TAG }} true
