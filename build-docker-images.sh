@@ -53,8 +53,11 @@ docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormho
 ### explorer
 docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$version
 
+echo "finish building..."
+
 if [ "${pushImage}" = true ]
 then
+    echo "pushing..."
     docker push eu.gcr.io/alephium-org/guardiand:$version
     docker push eu.gcr.io/alephium-org/bridge-ui-$network:$version
     docker push eu.gcr.io/alephium-org/wormhole-explorer:$version
