@@ -12,7 +12,7 @@ Build the docker images:
 ```sh
 git clone git@github.com:alephium/wormhole-fork.git
 cd wormhole-fork/
-./build-docker-images.sh devnet
+./build-docker-images.sh devnet latest
 ```
 
 Start the devnet:
