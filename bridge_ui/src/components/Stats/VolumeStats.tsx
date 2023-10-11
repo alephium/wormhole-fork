@@ -186,7 +186,7 @@ const VolumeStats = () => {
             title={
               displayBy === "Transactions"
                 ? "Total number of transactions the Token Bridge has processed"
-                : "Amount of assets bridged through Portal in the outbound direction"
+                : "Amount of assets bridged in the outbound direction"
             }
             className={classes.tooltip}
           >

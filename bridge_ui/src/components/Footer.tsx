@@ -3,9 +3,11 @@ import { makeStyles, Typography } from "@material-ui/core";
 const useStyles = makeStyles((theme) => ({
   footer: {
     position: "relative",
+    color: "rgba(255, 255, 255, 0.3)",
+    textAlign: "center",
   },
   container: {
-    maxWidth: 1100,
+    maxWidth: 960,
     margin: "0px auto",
     paddingTop: theme.spacing(11),
     paddingBottom: theme.spacing(6.5),
@@ -19,7 +21,6 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     marginLeft: theme.spacing(3.5),
     marginRight: theme.spacing(3.5),
-    borderTop: "1px solid #585587",
     paddingTop: theme.spacing(7),
     [theme.breakpoints.up("md")]: {
       flexWrap: "wrap",
@@ -56,16 +57,18 @@ export default function Footer() {
         <div className={classes.flex}>
           <div className={classes.spacer} />
           <Typography variant="body2">
-            This Interface is an open source software portal to Wormhole, a
-            cross chain messaging protocol. THIS INTERFACE AND THE WORMHOLE
-            PROTOCOL ARE PROVIDED "AS IS", AT YOUR OWN RISK, AND WITHOUT
-            WARRANTIES OF ANY KIND. By using or accessing this Interface or
-            Wormhole, you agree that no developer or entity involved in
-            creating, deploying, maintaining, operating this Interface or
-            Wormhole, or causing or supporting any of the foregoing, will be
+            This Interface is open-source software providing access to
+            Alephium's Bridge, a cross-chain messaging protocol. It is a fork
+            based on the open-source code of the Wormhole Bridge and is not
+            affiliated with or endorsed by the Wormhole Foundation. THIS
+            INTERFACE AND THE BRIDGE PROTOCOL ARE PROVIDED "AS IS", AT YOUR OWN
+            RISK, AND WITHOUT WARRANTIES OF ANY KIND. By using or accessing this
+            Interface or Bridge, you agree that no developer or entity involved
+            in creating, deploying, maintaining, operating this Interface or
+            Bridge, or causing or supporting any of the foregoing, will be
             liable in any manner for any claims or damages whatsoever associated
             with your use, inability to use, or your interaction with other
-            users of, this Interface or Wormhole, or this Interface or Wormhole
+            users of, this Interface or Bridge, or this Interface or Bridge
             themselves, including any direct, indirect, incidental, special,
             exemplary, punitive or consequential damages, or loss of profits,
             cryptocurrencies, tokens, or anything else of value. By using or

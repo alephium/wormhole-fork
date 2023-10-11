@@ -41,11 +41,12 @@ import Transfer from "./components/Transfer";
 import UnwrapNative from "./components/UnwrapNative";
 import WithdrawTokensTerra from "./components/WithdrawTokensTerra";
 import { useBetaContext } from "./contexts/BetaContext";
-import Portal from "./icons/portal_logo_w.svg";
+import Alephium from "./icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { useEffect } from "react";
 import { web3 } from "@alephium/web3";
+import backgroundGradient from "./images/top-gradient.png";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -53,8 +54,8 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
     "& > .MuiToolbar-root": {
       margin: "auto",
-      width: "100%",
-      maxWidth: 1440,
+      marginBottom: theme.spacing(10),
+      maxWidth: 960,
     },
   },
   spacer: {
@@ -64,7 +65,7 @@ const useStyles = makeStyles((theme) => ({
   link: {
     ...theme.typography.body2,
     fontWeight: 600,
-    fontFamily: "Suisse BP Intl, sans-serif",
+    fontFamily: "Switzer, sans-serif",
     color: "white",
     marginLeft: theme.spacing(4),
     textUnderlineOffset: "6px",
@@ -79,8 +80,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   bg: {
-    // background:
-    //   "linear-gradient(160deg, rgba(69,74,117,.1) 0%, rgba(138,146,178,.1) 33%, rgba(69,74,117,.1) 66%, rgba(98,104,143,.1) 100%), linear-gradient(45deg, rgba(153,69,255,.1) 0%, rgba(121,98,231,.1) 20%, rgba(0,209,140,.1) 100%)",
     display: "flex",
     flexDirection: "column",
     minHeight: "100vh",
@@ -106,11 +105,11 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   betaBanner: {
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(255,255,255,0.15)",
     padding: theme.spacing(1, 0),
   },
-  wormholeIcon: {
-    height: 68,
+  alephiumLogo: {
+    height: 50,
     "&:hover": {
       filter: "contrast(1)",
     },
@@ -118,64 +117,14 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(1),
     display: "inline-block",
   },
-  gradientRight: {
+  topGradient: {
     position: "absolute",
-    top: "72px",
-    right: "-1000px",
-    width: "1757px",
-    height: "1506px",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #FFCE00 0%, #FFCE0000 100%)",
-    opacity: "0.2",
-    transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0)",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
-  },
-  gradientLeft: {
-    top: "-530px",
-    left: "-350px",
-    width: "1379px",
-    height: "1378px",
-    position: "absolute",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #F44B1B 0%, #F44B1B00 100%)",
-    opacity: "0.2",
-    zIndex: "-1",
-    pointerEvent: "none",
-  },
-  gradientLeft2: {
-    bottom: "-330px",
-    left: "-350px",
-    width: "1379px",
-    height: "1378px",
-    position: "absolute",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #F44B1B 0%, #F44B1B00 100%)",
-    opacity: "0.2",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
-  },
-  gradientRight2: {
-    position: "absolute",
-    bottom: "-900px",
-    right: "-1000px",
-    width: "1757px",
-    height: "1506px",
-    background:
-      "radial-gradient(closest-side at 50% 50%, #FFCE00 0%, #FFCE0000 100%)",
-    opacity: "0.24",
-    transform: "matrix(0.87, 0.48, -0.48, 0.87, 0, 0);",
-    zIndex: "-1",
-    pointerEvent: "none",
-    [theme.breakpoints.down("sm")]: {
-      display: "none",
-    },
+    height: 300,
+    width: "100%",
+    backgroundImage: `url(${backgroundGradient})`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "top center",
+    backgroundSize: "contain",
   },
 }));
 
@@ -184,7 +133,7 @@ function App() {
   const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
-  const wallet = useWallet()
+  const wallet = useWallet();
   const handleTabChange = useCallback(
     (event, value) => {
       push(value);
@@ -194,9 +143,9 @@ function App() {
 
   useEffect(() => {
     if (wallet?.nodeProvider !== undefined) {
-      web3.setCurrentNodeProvider(wallet.nodeProvider)
+      web3.setCurrentNodeProvider(wallet.nodeProvider);
     }
-  }, [wallet?.nodeProvider])
+  }, [wallet?.nodeProvider]);
 
   return (
     <div className={classes.bg}>
@@ -207,6 +156,7 @@ function App() {
           </Typography>
         </AppBar>
       )}
+      <div className={classes.topGradient} />
       <AppBar
         position="static"
         color="inherit"
@@ -219,7 +169,11 @@ function App() {
             to="/transfer"
             className={classes.brandLink}
           >
-            <img src={Portal} alt="Portal" className={classes.wormholeIcon} />
+            <img
+              src={Alephium}
+              alt="Alephium"
+              className={classes.alephiumLogo}
+            />
           </Link>
           <div className={classes.spacer} />
           <Hidden implementation="css" xsDown>
@@ -233,22 +187,13 @@ function App() {
                 Bridge
               </Link>
               <Link
-                href="https://docs.wormholenetwork.com/wormhole/faqs"
+                href="https://alephium.org"
                 target="_blank"
                 rel="noopener noreferrer"
                 color="inherit"
                 className={classes.link}
               >
-                FAQ
-              </Link>
-              <Link
-                href="https://wormholenetwork.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                Wormhole
+                Alephium
               </Link>
             </div>
           </Hidden>
@@ -281,18 +226,14 @@ function App() {
             white
             subtitle={
               <>
-                <Typography>
-                  Portal is a bridge that offers unlimited transfers across
-                  chains for tokens wrapped by Wormhole.
-                </Typography>
-                <Typography>
-                  Unlike many other bridges, you avoid double wrapping and never
-                  have to retrace your steps.
+                <Typography variant="h5">
+                  A bridge that offers unlimited transfers across chains for
+                  tokens.
                 </Typography>
               </>
             }
           >
-            Token Bridge
+            Token Bridge 🌉
           </HeaderText>
           <Tabs
             value={pathname}
@@ -300,10 +241,15 @@ function App() {
             onChange={handleTabChange}
             indicatorColor="primary"
           >
-            <Tab label="Tokens" value="/transfer" />
-            { /* <Tab label="NFTs" value="/nft" /> */ }
-            <Tab label="Redeem" value="/redeem" to="/redeem" />
-            <Tab label="Transactions" value="/transactions" to="/transactions" />
+            <Tab label="Tokens" value="/transfer" disableRipple />
+            {/* <Tab label="NFTs" value="/nft" /> */}
+            <Tab label="Redeem" value="/redeem" to="/redeem" disableRipple />
+            <Tab
+              label="Transactions"
+              value="/transactions"
+              to="/transactions"
+              disableRipple
+            />
           </Tabs>
         </Container>
       ) : null}
@@ -311,14 +257,14 @@ function App() {
         <Route exact path="/transfer">
           <Transfer />
         </Route>
-        { /* <Route exact path="/nft"> <NFT /> </Route> */ }
+        {/* <Route exact path="/nft"> <NFT /> </Route> */}
         <Route exact path="/redeem">
           <Recovery />
         </Route>
         <Route exact path="/transactions">
           <Transactions />
         </Route>
-        { /* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */ }
+        {/* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */}
         <Route exact path="/token-origin-verifier">
           <TokenOriginVerifier />
         </Route>
@@ -360,10 +306,6 @@ function App() {
         </Route>
       </Switch>
       <div className={classes.spacer} />
-      <div className={classes.gradientRight}></div>
-      <div className={classes.gradientRight2}></div>
-      <div className={classes.gradientLeft}></div>
-      <div className={classes.gradientLeft2}></div>
       <Footer />
     </div>
   );

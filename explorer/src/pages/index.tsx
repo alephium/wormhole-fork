@@ -1,11 +1,6 @@
 import ArrowForward from "@mui/icons-material/ArrowForward";
 import { Box, Button, Typography } from "@mui/material";
-import {
-  Link as RouterLink,
-  PageProps,
-  graphql,
-  useStaticQuery
-} from "gatsby";
+import { Link as RouterLink, PageProps, graphql, useStaticQuery } from "gatsby";
 import React, { useEffect, useState } from "react";
 import GridWithCards from "../components/GridWithCards";
 import HeroText from "../components/HeroText";
@@ -31,38 +26,43 @@ import { paralaxGsap, fadeInGsap, animateSwirl } from "../utils/animations";
 import { useNetworkContext } from "../contexts/NetworkContext";
 import { chainEnums } from "../utils/consts";
 
-const featuredNumber = { fontSize: 42, fontFamily: "Suisse BP Intl", fontWeight: "bold" };
+const featuredNumber = {
+  fontSize: 42,
+  fontFamily: "Switzer",
+  fontWeight: "bold",
+};
 
 function toNotionalTVL(response: any): number | undefined {
-  let tvl: number = 0
+  let tvl: number = 0;
   try {
     for (const key in response.notionalTVL) {
-      const amount = parseFloat(response.notionalTVL[key])
-      tvl += amount
+      const amount = parseFloat(response.notionalTVL[key]);
+      tvl += amount;
     }
   } catch (error) {
-    console.log(`failed to get notional tvl, error: ${error}`)
-    return undefined
+    console.log(`failed to get notional tvl, error: ${error}`);
+    return undefined;
   }
-  return tvl
+  return tvl;
 }
 
 const IndexPage = ({ location }: PageProps) => {
-  const { activeNetwork } = useNetworkContext()
-  const { site } = useStaticQuery<IndexQueryType>(IndexStaticQuery)
-  const [tvl, setTvl] = useState<number | undefined>(undefined)
-  const [messageTotal, setMessageTotal] = useState<number | undefined>(undefined)
+  const { activeNetwork } = useNetworkContext();
+  const { site } = useStaticQuery<IndexQueryType>(IndexStaticQuery);
+  const [tvl, setTvl] = useState<number | undefined>(undefined);
+  const [messageTotal, setMessageTotal] = useState<number | undefined>(
+    undefined
+  );
 
-  const controller = new AbortController()
-  const { signal } = controller
-
+  const controller = new AbortController();
+  const { signal } = controller;
 
   const logo = {
     "@type": "ImageObject",
-    "url": `${site.siteMetadata.siteUrl}/logo-and-name-stacked.png`,
-    "height": "146",
-    "width": "146"
-  }
+    url: `${site.siteMetadata.siteUrl}/logo-and-name-stacked.png`,
+    height: "146",
+    width: "146",
+  };
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -95,12 +95,12 @@ const IndexPage = ({ location }: PageProps) => {
       "oasis wormhole",
       "ROSE wormhole",
       "avalanche wormhole",
-      "AVAX wormhole"
+      "AVAX wormhole",
     ],
     description: "A cross-chain messaging protocol.",
     image: logo,
-    logo: logo
-  }
+    logo: logo,
+  };
 
   const headerImage = React.useRef<HTMLCanvasElement>(null);
   const gradient1 = React.useRef<HTMLCanvasElement>(null);
@@ -114,46 +114,57 @@ const IndexPage = ({ location }: PageProps) => {
   const row4 = React.useRef<HTMLCanvasElement>(null);
   const row5 = React.useRef<HTMLCanvasElement>(null);
 
-
   function fetchStats() {
-    const tvlUrl = `${activeNetwork.endpoints.backendUrl}api/stats/notionaltvl`
-    const messagesUrl = `${activeNetwork.endpoints.backendUrl}api/stats/totalmessages`
+    const tvlUrl = `${activeNetwork.endpoints.backendUrl}api/stats/notionaltvl`;
+    const messagesUrl = `${activeNetwork.endpoints.backendUrl}api/stats/totalmessages`;
 
-    fetch(tvlUrl, { signal }).then((res) => {
-      if (res.ok) return res.json();
-    }).then((result) => {
-      setTvl(toNotionalTVL(result));
-    }, (error) => {
-      if (error.name !== "AbortError") console.error("failed fetching notional TVL. error: ", error);
-    });
-    fetch(messagesUrl, { signal }).then((res) => {
-      if (res.ok) return res.json();
-    }).then((result) => {
-      const totals = toTotals(result)
-      setMessageTotal(totals.TotalCount["*"]);
-    }, (error) => {
-      if (error.name !== "AbortError") console.error("failed fetching totals. error: ", error);
-    });
+    fetch(tvlUrl, { signal })
+      .then((res) => {
+        if (res.ok) return res.json();
+      })
+      .then(
+        (result) => {
+          setTvl(toNotionalTVL(result));
+        },
+        (error) => {
+          if (error.name !== "AbortError")
+            console.error("failed fetching notional TVL. error: ", error);
+        }
+      );
+    fetch(messagesUrl, { signal })
+      .then((res) => {
+        if (res.ok) return res.json();
+      })
+      .then(
+        (result) => {
+          const totals = toTotals(result);
+          setMessageTotal(totals.TotalCount["*"]);
+        },
+        (error) => {
+          if (error.name !== "AbortError")
+            console.error("failed fetching totals. error: ", error);
+        }
+      );
   }
 
   useEffect(() => {
-    fetchStats()  // fetchStats on first load
+    fetchStats(); // fetchStats on first load
 
     gsap.registerPlugin(ScrollTrigger);
 
     // let icons = row5.current?.children[0];
 
-    
-
-
-    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
     if (viewportWidth > 992) {
+      gsap.utils.toArray(row5.current).forEach((section: any, i) => {
+        const img1 =
+          section.children[0].children[0].children[0].children[0].children[0];
+        const img2 =
+          section.children[0].children[1].children[0].children[0].children[0];
+        const img3 =
+          section.children[0].children[2].children[0].children[0].children[0];
 
-      gsap.utils.toArray(row5.current).forEach((section:any, i) => {
-        const img1 = section.children[0].children[0].children[0].children[0].children[0];
-        const img2 = section.children[0].children[1].children[0].children[0].children[0];
-        const img3 = section.children[0].children[2].children[0].children[0].children[0];
-  
         gsap.from(img1, {
           rotation: 30,
           duration: 2,
@@ -162,7 +173,7 @@ const IndexPage = ({ location }: PageProps) => {
             trigger: img1,
           },
         });
-  
+
         gsap.from(img2, {
           rotation: 30,
           duration: 3,
@@ -171,7 +182,7 @@ const IndexPage = ({ location }: PageProps) => {
             trigger: img2,
           },
         });
-  
+
         gsap.from(img3, {
           rotation: -20,
           duration: 3,
@@ -180,9 +191,7 @@ const IndexPage = ({ location }: PageProps) => {
             trigger: img3,
           },
         });
-      
-      })
-
+      });
 
       animateSwirl(headerImage);
       paralaxGsap(gradient1, 1000, "-50% 100%");
@@ -197,12 +206,11 @@ const IndexPage = ({ location }: PageProps) => {
       fadeInGsap(row5);
     }
 
-
     return function cleanup() {
       // abort any in-flight requests
       controller.abort();
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <Layout>
@@ -252,21 +260,25 @@ const IndexPage = ({ location }: PageProps) => {
               justifyContent: "center",
             }}
           >
-            {tvl !== undefined && <Box
-              sx={{
-                mt: 2,
-                mx: 1,
-                pt: { xs: 1, sm: 0 },
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-evenly",
-                flexBasis: { xs: "100%", sm: "calc(33.33333% - 16px)" },
-                borderTop: "1px solid white",
-              }}
-            >
-              <Typography sx={featuredNumber}>${amountFormatter(tvl, 2)}</Typography>
-              <Typography variant="body2">in TVL</Typography>
-            </Box>}
+            {tvl !== undefined && (
+              <Box
+                sx={{
+                  mt: 2,
+                  mx: 1,
+                  pt: { xs: 1, sm: 0 },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-evenly",
+                  flexBasis: { xs: "100%", sm: "calc(33.33333% - 16px)" },
+                  borderTop: "1px solid white",
+                }}
+              >
+                <Typography sx={featuredNumber}>
+                  ${amountFormatter(tvl, 2)}
+                </Typography>
+                <Typography variant="body2">in TVL</Typography>
+              </Box>
+            )}
             <Box
               sx={{
                 mt: 2,
@@ -282,41 +294,43 @@ const IndexPage = ({ location }: PageProps) => {
               <Typography sx={featuredNumber}>{chainEnums.length}</Typography>
               <Typography variant="body2">chain integrations</Typography>
             </Box>
-            {messageTotal && <Box
-              sx={{
-                mt: 2,
-                mx: 1,
-                pt: { xs: 1, sm: 0 },
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-evenly",
-                flexBasis: { xs: "100%", sm: "calc(33.33333% - 16px)" },
-                borderTop: "1px solid white",
-              }}
-            >
-              <Typography sx={featuredNumber}>
-                {amountFormatter(messageTotal, 0)}
-              </Typography>
-              <Typography variant="body2">txs</Typography>
-            </Box>}
+            {messageTotal && (
+              <Box
+                sx={{
+                  mt: 2,
+                  mx: 1,
+                  pt: { xs: 1, sm: 0 },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-evenly",
+                  flexBasis: { xs: "100%", sm: "calc(33.33333% - 16px)" },
+                  borderTop: "1px solid white",
+                }}
+              >
+                <Typography sx={featuredNumber}>
+                  {amountFormatter(messageTotal, 0)}
+                </Typography>
+                <Typography variant="body2">txs</Typography>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
 
-
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: "relative" }}>
         <Box
           ref={gradient1}
           sx={{
             position: "absolute",
             zIndex: -1,
-            top: '50%',
-            background: 'radial-gradient(closest-side at 50% 50%, #E72850 0%, #E7285000 100%)',
-            transform: 'matrix(0.96, 0.29, -0.29, 0.96, 0, 0)',
-            left: '60%',
+            top: "50%",
+            background:
+              "radial-gradient(closest-side at 50% 50%, #E72850 0%, #E7285000 100%)",
+            transform: "matrix(0.96, 0.29, -0.29, 0.96, 0, 0)",
+            left: "60%",
             width: 1645,
             height: 903,
-            pointerEvents: 'none',
+            pointerEvents: "none",
             opacity: 0.7,
           }}
         />
@@ -325,13 +339,14 @@ const IndexPage = ({ location }: PageProps) => {
           sx={{
             position: "absolute",
             zIndex: -1,
-            top: '65%',
-            background: 'radial-gradient(closest-side at 50% 50%, #5189C8 0%, #5189C800 100%) ',
-            transform: 'matrix(0.67, 0.74, -0.74, 0.67, 0, 0)',
-            left: '5%',
+            top: "65%",
+            background:
+              "radial-gradient(closest-side at 50% 50%, #5189C8 0%, #5189C800 100%) ",
+            transform: "matrix(0.67, 0.74, -0.74, 0.67, 0, 0)",
+            left: "5%",
             width: 1136,
             height: 1489,
-            pointerEvents: 'none',
+            pointerEvents: "none",
             opacity: 0.64,
           }}
         />
@@ -341,13 +356,13 @@ const IndexPage = ({ location }: PageProps) => {
             position: "absolute",
             zIndex: -1,
             background: `url(${shape})`,
-            backgroundSize: 'contain',
+            backgroundSize: "contain",
             top: -100,
-            right: '70vw',
+            right: "70vw",
             width: 1363,
             height: 1130,
-            pointerEvents: 'none',
-            display: { xs: 'none', md: 'block' },
+            pointerEvents: "none",
+            display: { xs: "none", md: "block" },
           }}
         />
         <Box
@@ -363,7 +378,6 @@ const IndexPage = ({ location }: PageProps) => {
             justifyContent: "center",
           }}
         >
-
           <Box
             sx={{
               flexBasis: { xs: "100%", md: "40%" },
@@ -413,7 +427,6 @@ const IndexPage = ({ location }: PageProps) => {
           </Box>
         </Box>
       </Box>
-
 
       <Box
         ref={row2}
@@ -466,25 +479,25 @@ const IndexPage = ({ location }: PageProps) => {
         </Box>
       </Box>
 
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: "relative" }}>
         <Box
           ref={shapeRight}
           sx={{
             position: "absolute",
             zIndex: -1,
             background: `url(${shape2})`,
-            backgroundSize: 'contain',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            left: '75vw',
+            backgroundSize: "contain",
+            top: "50%",
+            transform: "translateY(-50%)",
+            left: "75vw",
             width: 1612,
             height: 1316,
-            pointerEvents: 'none',
-            display: { xs: 'none', md: 'block' },
+            pointerEvents: "none",
+            display: { xs: "none", md: "block" },
           }}
         />
         <Box
-         ref={row3}
+          ref={row3}
           sx={{
             display: "flex",
             flexWrap: "wrap",
@@ -536,15 +549,24 @@ const IndexPage = ({ location }: PageProps) => {
               flexGrow: 1,
             }}
           >
-            <Button variant="text" href={portalUrl} sx={{
-              '&:hover': {
-                background: 'transparent'
-              },
-              'span': {
-                display: 'none'
-              }
-            }}>
-              <Box component="img" src={portal} alt="" sx={{ maxWidth: "100%" }} />
+            <Button
+              variant="text"
+              href={portalUrl}
+              sx={{
+                "&:hover": {
+                  background: "transparent",
+                },
+                span: {
+                  display: "none",
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src={portal}
+                alt=""
+                sx={{ maxWidth: "100%" }}
+              />
             </Button>
           </Box>
         </Box>
@@ -589,7 +611,6 @@ const IndexPage = ({ location }: PageProps) => {
           ]}
         />
       </Box>
-
     </Layout>
   );
 };
@@ -597,10 +618,10 @@ const IndexPage = ({ location }: PageProps) => {
 type IndexQueryType = {
   site: {
     siteMetadata: {
-      siteUrl: string
-    }
-  }
-}
+      siteUrl: string;
+    };
+  };
+};
 const IndexStaticQuery = graphql`
   query Index {
     site {
@@ -609,6 +630,6 @@ const IndexStaticQuery = graphql`
       }
     }
   }
-`
+`;
 
 export default IndexPage;

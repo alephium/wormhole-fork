@@ -4,9 +4,8 @@ import { ReactChild } from "react";
 import { COLORS } from "../muiTheme";
 
 const useStyles = makeStyles((theme) => ({
-  centeredContainer: {
-    marginBottom: theme.spacing(16),
-    textAlign: "center",
+  container: {
+    marginBottom: theme.spacing(10),
     width: "100%",
   },
   linearGradient: {
@@ -35,7 +34,7 @@ export default function HeaderText({
 }) {
   const classes = useStyles();
   return (
-    <div className={classes.centeredContainer}>
+    <div className={classes.container}>
       <Typography
         variant={small ? "h2" : "h1"}
         component="h1"
