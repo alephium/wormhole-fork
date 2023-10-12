@@ -1,5 +1,5 @@
 {
-  "name": "wormhole",
+  "name": "Alephium Bridge Explorer",
   "version": "1.0.0",
   "private": false,
   "scripts": {
@@ -10,8 +10,8 @@
     "clean": "gatsby clean"
   },
   "dependencies": {
-    "@alephium/wormhole-sdk": "0.1.1",
     "@alephium/web3": "^0.18.2",
+    "@alephium/wormhole-sdk": "0.1.1",
     "@cosmjs/encoding": "^0.27.0",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",

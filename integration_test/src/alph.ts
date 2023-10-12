@@ -82,7 +82,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const bridgeRewardRouterAddress = addressFromContractId(bridgeRewardRouterId)
   const sequence = new Sequence()
   const defaultArbiterFee = 0n
-  const defaultConfirmations = 1
+  const defaultConfirmations = 0
   const oneAlph = 10n ** 18n
 
   const getCurrentMessageFee = async (): Promise<bigint> => {
@@ -190,7 +190,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
       name,
       accountAddress,
       currentMessageFee,
-      1
+      defaultConfirmations
     )
     console.log(`attest token from alephium, token id: ${tokenId}, tx id: ${attestResult.txId}`)
     const signedVaa = await getSignedVAA(CHAIN_ID_ALEPHIUM, tokenBridgeContractId, 0, sequence.next())

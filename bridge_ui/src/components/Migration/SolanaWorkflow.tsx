@@ -497,7 +497,7 @@ export default function Workflow({
             transaction confirms.
           </Typography>
           <ShowTx
-            tx={{ id: transaction, block: 1 }}
+            tx={{ id: transaction, blockHeight: 1 }}
             chainId={CHAIN_ID_SOLANA}
           />
         </>
