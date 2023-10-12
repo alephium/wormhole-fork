@@ -296,9 +296,6 @@ const socialIcon = {
             textAlign: { xs: "center", md: "left" },
           }}
         >
-          <Typography variant="body2">
-            2022 &copy; Wormhole. All Rights Reserved.
-          </Typography>
         </Box>
       </Box>
     </Box>

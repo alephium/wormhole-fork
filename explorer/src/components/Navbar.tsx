@@ -1,10 +1,5 @@
 import { AppBar, Hidden, Button, Box, Link, Toolbar } from "@mui/material";
-import ArrowForward from "@mui/icons-material/ArrowForward";
-import { Link as RouterLink } from "gatsby";
 import React from "react";
-import { OutboundLink } from "gatsby-plugin-google-gtag";
-import hamburger from "../images/hamburger.svg";
-import { apps, blog, buidl, portal } from "../utils/urls";
 import LogoLink from "./LogoLink";
 
 const linkStyle = { ml: 3, textUnderlineOffset: 6 };
@@ -21,30 +16,20 @@ const NavBar = () => (
       <Box sx={{ flexGrow: 1 }} />
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         <Link
-          component={RouterLink}
-          to={apps}
+          href={"https://testnet.bridge.alephium.org"}
           color="inherit"
           underline="hover"
           sx={linkStyle}
-          activeStyle={linkActiveStyle}
         >
-          Apps
-        </Link>
-        <Link href={portal} color="inherit" underline="hover" sx={linkStyle}>
-          Portal
+          Bridge
         </Link>
         <Link
-          component={RouterLink}
-          to={buidl}
+          href={"https://alephium.org/"}
           color="inherit"
           underline="hover"
           sx={linkStyle}
-          activeStyle={linkActiveStyle}
         >
-          Buidl
-        </Link>
-        <Link href={blog} color="inherit" underline="hover" sx={linkStyle}>
-          Blog
+          Alephium
         </Link>
       </Box>
       {/* <Box sx={{ display: "flex", ml: 8 }}>

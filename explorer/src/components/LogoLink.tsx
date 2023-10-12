@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
 import { Link as RouterLink } from "gatsby";
 import React from "react";
-import logo from "../images/logo-and-name.svg";
+import logo from "../images/alephium.svg";
 import { home } from "../utils/urls";
 
 const LogoLink = ({ negMt = false }: { negMt?: boolean }) => (
@@ -17,7 +17,7 @@ const LogoLink = ({ negMt = false }: { negMt?: boolean }) => (
       mt: negMt ? -1 : 0,
     }}
   >
-    <img src={logo} alt="Wormhole" />
+    <img src={logo} alt="Alephium" height={50} />
   </Button>
 );
 
