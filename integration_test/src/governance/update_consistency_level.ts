@@ -2,7 +2,7 @@ import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { assert, getBridgeChains } from '../utils'
 import { getNextGovernanceSequence, guardianSetIndexes, injectVAA, submitGovernanceVAA } from './governance_utils'
 
-const newConsistencyLevel = 1
+const newConsistencyLevel = 0
 
 function createUpdateConsistencyLevelVaa(sequence: number): string {
   return `

@@ -89,7 +89,7 @@ async function algo(
     dispatch(
       setRedeemTx({
         id: txs[txs.length - 1].tx.txID(),
-        block: result["confirmed-round"],
+        blockHeight: result["confirmed-round"],
       })
     );
     enqueueSnackbar(null, {
@@ -136,7 +136,7 @@ async function evm(
     dispatch(setIsWalletApproved(true))
     const receipt = await result.wait()
     dispatch(
-      setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber })
+      setRedeemTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -189,7 +189,7 @@ async function solana(
         );
     const txid = await signSendAndConfirm(wallet, connection, transaction);
     // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
-    dispatch(setRedeemTx({ id: txid, block: 1 }));
+    dispatch(setRedeemTx({ id: txid, blockHeight: 1 }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -222,7 +222,7 @@ async function terra(
       [feeDenom]
     );
     dispatch(
-      setRedeemTx({ id: result.result.txhash, block: result.result.height })
+      setRedeemTx({ id: result.result.txhash, blockHeight: result.result.height })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -255,7 +255,7 @@ async function alephium(
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
-      setRedeemTx({ id: result.txId, block: blockHeader.height })
+      setRedeemTx({ id: result.txId, blockHeight: blockHeader.height })
     );
     console.log(`the redeem tx has been confirmed, txId: ${result.txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
@@ -396,7 +396,7 @@ export function useHandleRedeem() {
       dispatch(
         setRedeemTx({
           id: res.data.transactionHash,
-          block: res.data.blockNumber,
+          blockHeight: res.data.blockNumber,
         })
       );
       enqueueSnackbar(null, {

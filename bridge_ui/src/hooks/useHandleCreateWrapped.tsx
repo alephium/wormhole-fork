@@ -90,7 +90,7 @@ async function algo(
     dispatch(
       setCreateTx({
         id: txs[txs.length - 1].tx.txID(),
-        block: result["confirmed-round"],
+        blockHeight: result["confirmed-round"],
       })
     );
     enqueueSnackbar(null, {
@@ -140,7 +140,7 @@ async function evm(
     dispatch(setIsWalletApproved(true))
     const receipt = await result.wait()
     dispatch(
-      setCreateTx({ id: receipt.transactionHash, block: receipt.blockNumber })
+      setCreateTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -192,7 +192,7 @@ async function solana(
         );
     const txid = await signSendAndConfirm(wallet, connection, transaction);
     // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
-    dispatch(setCreateTx({ id: txid, block: 1 }));
+    dispatch(setCreateTx({ id: txid, blockHeight: 1 }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
@@ -232,7 +232,7 @@ async function terra(
       [feeDenom]
     );
     dispatch(
-      setCreateTx({ id: result.result.txhash, block: result.result.height })
+      setCreateTx({ id: result.result.txhash, blockHeight: result.result.height })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -266,7 +266,7 @@ async function alephium(
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
-      setCreateTx({ id: result.txId, block: blockHeader.height })
+      setCreateTx({ id: result.txId, blockHeight: blockHeader.height })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,

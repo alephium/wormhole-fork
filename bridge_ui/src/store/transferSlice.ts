@@ -34,7 +34,8 @@ export interface ParsedTokenAccount {
 
 export interface Transaction {
   id: string;
-  block: number;
+  blockHeight: number;
+  blockTimestamp?: number;
 }
 
 export interface TransferState {

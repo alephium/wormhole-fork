@@ -125,7 +125,7 @@ async function algo(
     dispatch(
       setTransferTx({
         id: txs[txs.length - 1].tx.txID(),
-        block: result["confirmed-round"],
+        blockHeight: result["confirmed-round"],
       })
     );
     enqueueSnackbar(null, {
@@ -211,7 +211,7 @@ async function evm(
     dispatch(setIsWalletApproved(true))
     const receipt = await result.wait()
     dispatch(
-      setTransferTx({ id: receipt.transactionHash, block: receipt.blockNumber })
+      setTransferTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -308,7 +308,7 @@ async function solana(
     if (!info) {
       throw new Error("An error occurred while fetching the transaction info");
     }
-    dispatch(setTransferTx({ id: txid, block: info.slot }));
+    dispatch(setTransferTx({ id: txid, blockHeight: info.slot }));
     const sequence = parseSequenceFromLogSolana(info);
     const emitterAddress = await getEmitterAddressSolana(
       SOL_TOKEN_BRIDGE_ADDRESS
@@ -386,7 +386,7 @@ async function alephium(
     }
     dispatch(setIsWalletApproved(true))
     const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId)
-    dispatch(setTransferTx({ id: txInfo.txId, block: txInfo.blockHeight }));
+    dispatch(setTransferTx({ id: txInfo.txId, blockHeight: txInfo.blockHeight, blockTimestamp: txInfo.blockTimestamp }));
     dispatch(setRecoverySourceTxId(txInfo.txId))
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
@@ -449,7 +449,7 @@ async function terra(
     );
 
     const info = await waitForTerraExecution(result);
-    dispatch(setTransferTx({ id: info.txhash, block: info.height }));
+    dispatch(setTransferTx({ id: info.txhash, blockHeight: info.height }));
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });

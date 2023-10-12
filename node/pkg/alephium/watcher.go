@@ -51,6 +51,8 @@ var (
 		}, []string{"operation"})
 )
 
+const BlockTimeMs = 64000
+
 type Watcher struct {
 	url    string
 	apiKey string
@@ -300,8 +302,10 @@ func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurre
 				})
 				currentAlphHeight.Set(float64(*latestHeight))
 				w.currentHeight = *latestHeight
-				heightC <- *latestHeight
 			}
+
+			// Always send the block height to avoid having enough block confirmations but not enough confirmation time
+			heightC <- *latestHeight
 		}
 	}
 }
@@ -366,6 +370,7 @@ func (w *Watcher) handleEvents_(
 	pendingEvents := map[string]*UnconfirmedEventsPerBlock{}
 
 	process := func(height int32) error {
+		now := time.Now().UnixMilli()
 		logger.Debug("processing events", zap.Int32("height", height))
 		confirmedEvents := make([]*ConfirmedEvent, 0)
 		for blockHash, blockEvents := range pendingEvents {
@@ -385,16 +390,15 @@ func (w *Watcher) handleEvents_(
 			}
 
 			remain := make([]*UnconfirmedEvent, 0)
-			logger.Info("processing events from block", zap.String("blockHash", blockEvents.header.Hash), zap.Int("size", len(blockEvents.events)))
+			logger.Info(
+				"processing events from block",
+				zap.String("blockHash", blockEvents.header.Hash),
+				zap.Int32("blockHeight", blockEvents.header.Height),
+				zap.Int64("blockTimestamp", blockEvents.header.Timestamp),
+				zap.Int("size", len(blockEvents.events)),
+			)
 			for _, event := range blockEvents.events {
-				eventConfirmations := event.msg.consistencyLevel
-				if blockEvents.header.Height+int32(eventConfirmations) > height {
-					logger.Debug(
-						"event not confirmed",
-						zap.String("txId", event.TxId),
-						zap.Int32("blockHeight", blockEvents.header.Height),
-						zap.Uint8("confirmations", eventConfirmations),
-					)
+				if !isEventConfirmed(logger, event, blockEvents.header, now, height) {
 					remain = append(remain, event)
 					continue
 				}
@@ -456,4 +460,25 @@ func (w *Watcher) handleEvents_(
 			}
 		}
 	}
+}
+
+func isEventConfirmed(
+	logger *zap.Logger,
+	event *UnconfirmedEvent,
+	eventBlockHeader *sdk.BlockHeaderEntry,
+	currentTs int64,
+	currentHeight int32,
+) bool {
+	consistencyLevel := event.msg.consistencyLevel
+	if eventBlockHeader.Height+int32(consistencyLevel) > currentHeight {
+		logger.Debug("not enough block confirmations", zap.String("txId", event.TxId), zap.Uint8("consistencyLevel", consistencyLevel))
+		return false
+	}
+
+	duration := int64(consistencyLevel) * BlockTimeMs
+	if eventBlockHeader.Timestamp+duration > currentTs {
+		logger.Debug("not enough confirmation time", zap.String("txId", event.TxId), zap.Uint8("consistencyLevel", consistencyLevel))
+		return false
+	}
+	return true
 }
