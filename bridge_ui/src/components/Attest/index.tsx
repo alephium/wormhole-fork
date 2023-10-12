@@ -28,11 +28,11 @@ import Target from "./Target";
 import TargetPreview from "./TargetPreview";
 
 const useStyles = makeStyles((theme) => ({
-  spacer: { height: theme.spacing(2) }
-}))
+  spacer: { height: theme.spacing(2) },
+}));
 
 function Attest() {
-  const classes = useStyles()
+  const classes = useStyles();
   const dispatch = useDispatch();
   const activeStep = useSelector(selectAttestActiveStep);
   const isSending = useSelector(selectAttestIsSending);

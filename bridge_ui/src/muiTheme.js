@@ -1,29 +1,28 @@
 import { createTheme, responsiveFontSizes } from "@material-ui/core";
-import bg from "../src/images/bg.svg";
-import SuisseBPIntlBold from "./fonts/SuisseBPIntlBold.woff2";
+import Switzer from "./fonts/Switzer-Variable.ttf";
 
 export const COLORS = {
-  blue: "#1975e6",
+  blue: "#2f8cef",
   blueWithTransparency: "rgba(25, 117, 230, 0.8)",
   gray: "#4e4e54",
   green: "#0ac2af",
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
-  lightBlue: "#83b9fc",
-  nearBlack: "#17153f",
+  lightBlue: "#909ed3",
+  nearBlack: "#0e0e10",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   red: "#aa0818",
   darkRed: "#810612",
   white: "#FFFFFF",
-  whiteWithTransparency: "rgba(255,255,255,.07)",
+  whiteWithTransparency: "rgba(255,255,255,.06)",
 };
 
-const suisse = {
-  fontFamily: "Suisse BP Intl",
+const switzer = {
+  fontFamily: "Switzer",
   fontStyle: "normal",
   fontDisplay: "swap",
-  fontWeight: 400,
-  src: `url(${SuisseBPIntlBold}) format('woff2')`,
+  fontWeight: "100 1000",
+  src: `url(${Switzer}) format('truetype')`,
 };
 
 export const theme = responsiveFontSizes(
@@ -39,7 +38,7 @@ export const theme = responsiveFontSizes(
         primary: COLORS.white,
       },
       primary: {
-        main: COLORS.blueWithTransparency, // #0074FF
+        main: COLORS.blue, // #0074FF
         light: COLORS.lightBlue,
       },
       secondary: {
@@ -52,30 +51,29 @@ export const theme = responsiveFontSizes(
     },
 
     typography: {
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Switzer', sans-serif",
       fontSize: 13,
       h1: {
-        fontFamily: "Suisse BP Intl, sans-serif",
+        fontFamily: "Switzer, sans-serif",
         lineHeight: 0.9,
-        letterSpacing: -2,
-        fontWeight: "bold",
+        fontWeight: 600,
+        fontSize: "62px",
       },
       h2: {
         fontWeight: "200",
       },
       h4: {
         fontWeight: "600",
-        fontFamily: "Suisse BP Intl, sans-serif",
+        fontFamily: "Switzer, sans-serif",
         letterSpacing: -1.02,
       },
     },
     overrides: {
       MuiCssBaseline: {
         "@global": {
-          "@font-face": [suisse],
+          "@font-face": [switzer],
           body: {
             overscrollBehaviorY: "none",
-            backgroundImage: `url(${bg})`,
             backgroundPosition: "top center",
             backgroundRepeat: "repeat-y",
             backgroundSize: "120%",
@@ -108,12 +106,12 @@ export const theme = responsiveFontSizes(
         },
         rounded: {
           "&:first-child": {
-            borderTopLeftRadius: "28px",
-            borderTopRightRadius: "28px",
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
           },
           "&:last-child": {
-            borderBottomLeftRadius: "28px",
-            borderBottomRightRadius: "28px",
+            borderBottomLeftRadius: "12px",
+            borderBottomRightRadius: "12px",
           },
         },
       },
@@ -125,7 +123,7 @@ export const theme = responsiveFontSizes(
       },
       MuiButton: {
         root: {
-          borderRadius: "22px",
+          borderRadius: "9px",
           letterSpacing: ".1em",
         },
         outlinedSizeSmall: {
@@ -140,7 +138,7 @@ export const theme = responsiveFontSizes(
       },
       MuiPaper: {
         rounded: {
-          borderRadius: "28px",
+          borderRadius: "12px",
           backdropFilter: "blur(4px)",
         },
       },
@@ -154,8 +152,9 @@ export const theme = responsiveFontSizes(
         root: {
           backgroundColor: COLORS.whiteWithTransparency,
           backdropFilter: "blur(4px)",
-          borderRadius: "28px",
-          padding: "32px 32px 16px",
+          borderRadius: "12px",
+          padding: "20px",
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
         },
       },
       MuiStepConnector: {
@@ -173,30 +172,38 @@ export const theme = responsiveFontSizes(
       MuiStepLabel: {
         label: {
           color: COLORS.white,
-          textTransform: "uppercase",
+          fontSize: "18px",
+          fontWeight: 600,
           "&.MuiStepLabel-active": {},
           "&.MuiStepLabel-completed": {},
         },
       },
       MuiTabs: {
         root: {
-          borderBottom: `1px solid ${COLORS.white}`,
+          backgroundColor: COLORS.whiteWithTransparency,
+          borderRadius: "14px",
+          padding: "5px 0",
         },
         indicator: {
           height: "100%",
-          background: "linear-gradient(20deg, #f44b1b 0%, #eeb430 100%);",
+          borderRadius: "12px",
           zIndex: -1,
         },
       },
       MuiTab: {
         root: {
           color: COLORS.white,
-          fontFamily: "Suisse BP Intl, sans-serif",
-          fontWeight: "bold",
+          fontFamily: "Switzer, sans-serif",
+          fontWeight: 500,
           fontSize: 18,
           padding: 12,
           letterSpacing: "-0.69px",
           textTransform: "none",
+          borderRadius: "12px",
+          margin: "0 5px",
+          "&:hover": {
+            backgroundColor: COLORS.whiteWithTransparency,
+          },
         },
         textColorInherit: {
           opacity: 1,
