@@ -184,6 +184,8 @@ func TestDisableBlockPoller(t *testing.T) {
 }
 
 func TestIsEventConfirmed(t *testing.T) {
+	logger, err := zap.NewDevelopment()
+	assert.Nil(t, err)
 	now := time.Now().UnixMilli()
 
 	tests := []struct {
@@ -245,6 +247,14 @@ func TestIsEventConfirmed(t *testing.T) {
 	}
 
 	for _, c := range tests {
-		assert.Equal(t, isEventConfirmed(c.eventConsistencyLevel, c.eventBlockHeader, c.currentTs, c.currentHeight), c.isConfirmed)
+		event := &UnconfirmedEvent{
+			ContractEvent: &sdk.ContractEvent{
+				TxId: randomByte32().ToHex(),
+			},
+			msg: &WormholeMessage{
+				consistencyLevel: c.eventConsistencyLevel,
+			},
+		}
+		assert.Equal(t, isEventConfirmed(logger, event, c.eventBlockHeader, c.currentTs, c.currentHeight), c.isConfirmed)
 	}
 }
