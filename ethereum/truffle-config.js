@@ -38,14 +38,17 @@ module.exports = {
     },
     goerli: {
       provider: () => {
-        return new HDWalletProvider(
-          process.env.MNEMONIC,
-          "wss://goerli.infura.io/ws/v3/" + process.env.INFURA_KEY
-        );
+        return new HDWalletProvider({
+          mnemonic: {
+            phrase: process.env.MNEMONIC,
+          },
+          providerOrUrl: 'https://goerli.infura.io/v3/' + process.env.INFURA_KEY,
+          pollingInterval: 8000,
+        });
       },
       network_id: "5",
-      gas: 4465030,
-      gasPrice: 10000000000,
+      gasPrice: 1000000000,
+      deploymentPollingInterval: 8000
     },
     bscTestnet: {
       provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://data-seed-prebsc-1-s1.binance.org:8545'),
