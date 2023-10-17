@@ -17,7 +17,6 @@ import {
 import { contractNameFormatter } from "../../utils/explorer";
 import { chainIDs } from "../../utils/consts";
 import { formatQuorumDate } from "../../utils/time";
-import { explorer } from "../../utils/urls";
 import ChainIcon from "../ChainIcon";
 import { DecodePayload } from "../DecodePayload";
 
@@ -166,7 +165,7 @@ const RecentMessages = (props: RecentMessagesProps) => {
                 <TableCell>
                   <Link
                     component={RouterLink}
-                    to={`${explorer}?emitterChain=${toChainId(item.EmitterChain)}&emitterAddress=${item.EmitterAddress}&targetChain=${toChainId(item.TargetChain)}&sequence=${item.Sequence}`}
+                    to={`?emitterChain=${toChainId(item.EmitterChain)}&emitterAddress=${item.EmitterAddress}&targetChain=${toChainId(item.TargetChain)}&sequence=${item.Sequence}`}
                     color="inherit"
                   >
                     View

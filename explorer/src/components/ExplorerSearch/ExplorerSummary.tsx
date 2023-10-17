@@ -17,7 +17,7 @@ import {
 import { OutboundLink } from "gatsby-plugin-google-gtag";
 import { ChainID, chainIDs } from "../../utils/consts";
 import { hexToNativeString, uint8ArrayToHex } from "@alephium/wormhole-sdk";
-import { explorer } from "../../utils/urls";
+import { home } from "../../utils/urls";
 
 interface SummaryProps {
   emitterChain?: number;
@@ -78,7 +78,7 @@ const ExplorerSummary = (props: SummaryProps) => {
         <Typography variant="h4">Message Summary</Typography>
           <div>
             <Button onClick={props.refetch}>Refresh</Button>
-            <Button component={RouterLink} to={explorer} sx={{ ml: 1 }}>
+            <Button component={RouterLink} to={home} sx={{ ml: 1 }}>
               Clear
             </Button>
           </div>

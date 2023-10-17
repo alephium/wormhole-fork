@@ -11,7 +11,6 @@ import ethereumIcon from "../../images/eth.svg";
 import binanceChainIcon from "../../images/bsc.svg";
 import alephiumIcon from "../../images/alephium.svg"
 import GridWithCards from "../GridWithCards";
-import { explorer } from "../../utils/urls";
 
 export interface Totals {
   TotalCount: { [groupByKey: string]: number };
@@ -394,7 +393,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
               {
                 header: ChainID[2],
                 src: ethereumIcon,
-                to: `${explorer}?emitterChain=2`,
+                to: `?emitterChain=2`,
                 description: (
                   <ChainOverviewCard
                     totals={totals}
@@ -406,23 +405,9 @@ const ExplorerStats: React.FC<StatsProps> = ({
                 imgStyle: { height: 110 },
               },
               {
-                header: ChainID[4],
-                src: binanceChainIcon,
-                to: `${explorer}?emitterChain=4`,
-                description: (
-                  <ChainOverviewCard
-                    totals={totals}
-                    notionalTransferredTo={notionalTransferredTo}
-                    notionalTransferred={notionalTransferred}
-                    dataKey="4"
-                  />
-                ),
-                imgStyle: { height: 110 },
-              },
-              {
                 header: ChainID[255],
                 src: alephiumIcon,
-                to: `${explorer}?emitterChain=255`,
+                to: `?emitterChain=255`,
                 description: (
                   <ChainOverviewCard
                     totals={totals}

@@ -16,7 +16,7 @@ import { default as bscMainnetConfig } from '../../../configs/bsc/mainnet.json'
 
 export const chainEnums = [
   "Ethereum",
-  "BSC",
+  // "BSC",
   "Alephium"
 ];
 
@@ -26,19 +26,19 @@ export interface ChainIDs {
 
 export const chainIDs: ChainIDs = {
   ethereum: 2,
-  bsc: 4,
+  // bsc: 4,
   alephium: 255,
 };
 
 export const chainIDStrings: { [chainIDString: string]: string } = {
   "2": "ethereum",
-  "4": "bsc",
+  // "4": "bsc",
   "255": "alephium",
 };
 
 export enum ChainID {
   Ethereum = 2,
-  BSC = 4,
+  // BSC = 4,
   Alephium = 255,
 }
 export type ChainName = keyof ChainIDs;
