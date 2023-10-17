@@ -125,6 +125,24 @@ func (c *Controller) FindById(ctx *fiber.Ctx) error {
 	return ctx.JSON(vaa)
 }
 
+func (c *Controller) GetNextGovernanceSequence(ctx *fiber.Ctx) error {
+	emitterChain, addr, err := middleware.ExtractVAAChainIDEmitter(ctx, c.logger)
+	if err != nil {
+		return err
+	}
+
+	sequence, err := c.srv.GetNextGovernanceSequence(ctx.Context(), emitterChain, addr)
+	if err != nil {
+		return err
+	}
+	response := struct {
+		Sequence uint64 `json:"sequence"`
+	}{
+		Sequence: *sequence,
+	}
+	return ctx.JSON(response)
+}
+
 // FindByTxId handler for the endpoint /vaas/transactions/:txId
 func (c *Controller) FindByTxId(ctx *fiber.Ctx) error {
 	txId, err := middleware.ExtractTransactionId(ctx, c.logger)

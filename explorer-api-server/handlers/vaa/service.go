@@ -98,6 +98,30 @@ func (s *Service) FindById(ctx context.Context, emitterChain vaa.ChainID, emitte
 	return &res, err
 }
 
+func (s *Service) GetNextGovernanceSequence(ctx context.Context, governanceChain vaa.ChainID, governanceEmitter *vaa.Address) (*uint64, error) {
+	filter := bson.M{
+		"emitterChain": governanceChain,
+		"emitterAddr":  governanceEmitter.String(),
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "sequence", Value: -1}}).SetLimit(1)
+	cur, err := s.repo.collections.vaas.Find(context.Background(), filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	if cur.Next(ctx) {
+		var result VaaDoc
+		if err := cur.Decode(&result); err != nil {
+			return nil, err
+		}
+		sequence := result.Sequence + 1
+		return &sequence, nil
+	}
+	sequence := uint64(0)
+	return &sequence, nil
+}
+
 func (s *Service) FindByTxId(ctx context.Context, txId []byte) (*response.Response[*VaaDoc], error) {
 	query := Query().SetTxId(txId)
 	vaa, err := s.repo.FindOne(ctx, query)

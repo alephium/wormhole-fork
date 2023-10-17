@@ -165,6 +165,7 @@ func run(cmd *cobra.Command, args []string) {
 	vaas.Get("/vaa-counts", vaaCtrl.GetVaaCount)
 	vaas.Get("/recent", vaaCtrl.FindRecent)
 	vaas.Get("/transactions/:txId", vaaCtrl.FindByTxId)
+	vaas.Get("/next-governance-sequence/:emitterChain/:emitterAddress", vaaCtrl.GetNextGovernanceSequence)
 	vaas.Get("/:emitterChain", vaaCtrl.FindByChain)
 	vaas.Get("/:emitterChain/:emitterAddress", vaaCtrl.FindByEmitter)
 	vaas.Get("/:emitterChain/:emitterAddress/:targetChain", vaaCtrl.FindByEmitterAndTargetChain)
