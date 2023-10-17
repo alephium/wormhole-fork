@@ -501,37 +501,29 @@ yargs(hideBin(process.argv))
     }
   )
   .command(
-    "alph",
-    "Alephium utilities",
+    "get-next-governance-sequence",
+    "Get the next governance sequence",
     (yargs) => {
       return yargs
-        .command(
-          "get-next-governance-sequence",
-          "Get the next governance sequence",
-          (yargs) => {
-            return yargs
-              .option("network", {
-                describe: "network",
-                type: "string",
-                choices: ["mainnet", "testnet", "devnet"],
-                required: true,
-              })
-              .option("node-url", {
-                describe: "Alephium full node url",
-                type: "string",
-                required: false,
-              });
-          },
-          async (argv) => {
-            const network = argv.network.toUpperCase() as NetworkType
-            const sequence = await getNextGovernanceSequence(network, argv['node-url'])
-            console.log(`The next governnace sequence is: ${sequence}`)
-          }
-        )
+        .option("network", {
+          alias: 'n',
+          describe: "network",
+          type: "string",
+          choices: ["mainnet", "testnet", "devnet"],
+          required: true,
+        })
+        .option("explorer-api-server-url", {
+          alias: 'u',
+          describe: "Explorer api server url",
+          type: "string",
+          required: true,
+        });
     },
-    (_) => {
-      yargs.showHelp();
-    }
+    async (argv) => {
+      const network = argv.network.toUpperCase() as NetworkType
+      const sequence = await getNextGovernanceSequence(network, argv['explorer-api-server-url'])
+      console.log(`The next governnace sequence is: ${sequence}`)
+    },
   )
   ////////////////////////////////////////////////////////////////////////////////
   // Submit

@@ -1,4 +1,4 @@
-import { CONFIGS, NetworkType } from './configs'
+import { CONFIGS, Guardians, NetworkType } from './configs'
 import { impossible } from './utils'
 import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
@@ -137,15 +137,10 @@ export async function executeGovernanceAlph(
   }
 }
 
-export async function getNextGovernanceSequence(networkType: NetworkType, nodeUrl?: string): Promise<bigint> {
-  const network = CONFIGS[networkType]['alephium']
-  web3.setCurrentNodeProvider(nodeUrl ?? network.rpc)
-  const governanceAddress = addressFromContractId(network.governanceAddress)
-  const governance = Governance.at(governanceAddress)
-  const sequence0 = (await governance.fetchState()).fields.receivedSequence
-
-  const tokenBridgeAddress = addressFromContractId(network.tokenBridgeAddress)
-  const tokenBridge = TokenBridge.at(tokenBridgeAddress)
-  const sequence1 = (await tokenBridge.fetchState()).fields.receivedSequence
-  return sequence0 > sequence1 ? sequence0 : sequence1
+export async function getNextGovernanceSequence(networkType: NetworkType, explorerApiUrl: string): Promise<number> {
+  const guardianConfig = Guardians[networkType]
+  const url = `${explorerApiUrl}/api/vaas/next-governance-sequence/${guardianConfig.governanceChainId}/${guardianConfig.governanceEmitterAddress}`
+  const response = await fetch(url)
+  const json = await response.json()
+  return json['sequence'] as number
 }
