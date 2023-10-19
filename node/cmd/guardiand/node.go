@@ -373,10 +373,8 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	alphConfig := bridgeConfig.Alephium
 	ethConfig := bridgeConfig.Ethereum
-	bscConfig := bridgeConfig.Bsc
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
-	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
 
 	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
 	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
@@ -678,7 +676,9 @@ func runNode(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if *bscRPC != "" {
+		if *bscRPC != "" && *network == "devnet" {
+			bscConfig := bridgeConfig.Bsc
+			bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
 			if err := supervisor.Run(ctx, "bscwatch",
 				ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
 				return err

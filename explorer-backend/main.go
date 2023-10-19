@@ -368,26 +368,28 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
-		if err != nil {
-			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
-			return err
-		}
-		bscWatcher, err := transactions.NewEVMWatcher(
-			logger,
-			ctx,
-			*bscRpcUrl,
-			vaa.ChainIDBSC,
-			bridgeConfig.Bsc,
-			*bscEventIndex,
-			blockTxsC,
-		)
-		if err != nil {
-			logger.Error("failed to create bsc watcher", zap.Error(err))
-			return err
-		}
-		if err := supervisor.Run(ctx, "bsc-watcher", bscWatcher.Run()); err != nil {
-			return err
+		if *bscRpcUrl != "" && *network == "devnet" {
+			bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
+			if err != nil {
+				logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
+				return err
+			}
+			bscWatcher, err := transactions.NewEVMWatcher(
+				logger,
+				ctx,
+				*bscRpcUrl,
+				vaa.ChainIDBSC,
+				bridgeConfig.Bsc,
+				*bscEventIndex,
+				blockTxsC,
+			)
+			if err != nil {
+				logger.Error("failed to create bsc watcher", zap.Error(err))
+				return err
+			}
+			if err := supervisor.Run(ctx, "bsc-watcher", bscWatcher.Run()); err != nil {
+				return err
+			}
 		}
 
 		if err := supervisor.Run(ctx, "watcher", watcher.Run()); err != nil {

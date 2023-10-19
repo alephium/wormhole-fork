@@ -66,11 +66,11 @@ const alephiumChainInfo: ChainInfo = {
 export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
     ? [
-        {
-          id: CHAIN_ID_BSC,
-          name: "Binance Smart Chain",
-          logo: bscIcon,
-        },
+        // {
+        //   id: CHAIN_ID_BSC,
+        //   name: "Binance Smart Chain",
+        //   logo: bscIcon,
+        // },
         {
           id: CHAIN_ID_ETH,
           name: "Ethereum",
@@ -80,11 +80,11 @@ export const CHAINS: ChainInfo[] =
       ]
     : CLUSTER === "testnet"
     ? [
-        {
-          id: CHAIN_ID_BSC,
-          name: "Binance Smart Chain",
-          logo: bscIcon,
-        },
+        // {
+        //   id: CHAIN_ID_BSC,
+        //   name: "Binance Smart Chain",
+        //   logo: bscIcon,
+        // },
         {
           id: CHAIN_ID_ETH,
           name: "Ethereum (Goerli)",

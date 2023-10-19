@@ -12,14 +12,18 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type BridgeChain struct {
+	chainId vaa.ChainID
+	*common.ChainConfig
+}
+
 func loadEmitterIds(config *common.BridgeConfig) ([]*emitterId, error) {
-	chains := []struct {
-		chainId vaa.ChainID
-		*common.ChainConfig
-	}{
+	chains := []BridgeChain{
 		{vaa.ChainIDAlephium, config.Alephium},
 		{vaa.ChainIDEthereum, config.Ethereum},
-		{vaa.ChainIDBSC, config.Bsc},
+	}
+	if config.Bsc != nil {
+		chains = append(chains, BridgeChain{vaa.ChainIDBSC, config.Bsc})
 	}
 	emitterIds := make([]*emitterId, 0)
 	for i := 0; i < len(chains); i++ {
