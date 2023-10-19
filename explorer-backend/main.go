@@ -368,7 +368,7 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if *bscRpcUrl != "" {
+		if *bscRpcUrl != "" && *network == "devnet" {
 			bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
 			if err != nil {
 				logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
