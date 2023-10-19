@@ -6,20 +6,20 @@
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
   "contracts": {
-    "governance": "b27a522735a27ab690eae1f2494b4b13dd035090f1e388a36e4edbae3a768600",
-    "nativeGovernance": "26hes5CG4AhkNDKhm942MxsnZeiL2XGJBxcKgih1vXfUB",
-    "tokenBridge": "2b8601fced2e5e803714f5efe96d3fbb6de0a912c01a95cb0a808f4f461f0300",
-    "nativeTokenBridge": "wcrAHM63K5BQ8aEf2DtbwaUaviEo5es9RmxwedF1MUNK",
-    "bridgeRewardRouter": "a50e6d48b6c98a1433c048eb15e8eae5e6a841ea3e3ea316ad1f86847202a000",
-    "testToken": "4a235397a99940afc3befb11e11751bf4eb034f943e3db6e9bddca6153c94000"
+    "governance": "eea15170582868fe792654ab0c646eb3d808b95d83f89d936da22e653b519100",
+    "nativeGovernance": "2AkTpF1wY7BpbvgAKYAT93pZzW9v4fiHHfg7bePd6WzjZ",
+    "tokenBridge": "344f1a752804d9db8d141d832d7dba2d340c0d2329a942b61bba0d10ae5ba500",
+    "nativeTokenBridge": "xD9GkZCU5FaVizrpVgJHCk8Yn22nCqwYJWqDj9GXaKmR",
+    "bridgeRewardRouter": "954f45d05e4fb42200e381ef51491b8e05b9fc54a7c25bea96a311fa3af12200",
+    "testToken": "6d0928470ff154924dfc4db785d47f2a38f658d02ecdfe8171ca30d70f78e500"
   },
   "nodeUrl": "http://127.0.0.1:22973",
   "explorerUrl": "http://127.0.0.1:9090",
   "networkId": 4,
-  "coreEmitterAddress": "b27a522735a27ab690eae1f2494b4b13dd035090f1e388a36e4edbae3a768600",
-  "tokenBridgeEmitterAddress": "2b8601fced2e5e803714f5efe96d3fbb6de0a912c01a95cb0a808f4f461f0300",
+  "coreEmitterAddress": "eea15170582868fe792654ab0c646eb3d808b95d83f89d936da22e653b519100",
+  "tokenBridgeEmitterAddress": "344f1a752804d9db8d141d832d7dba2d340c0d2329a942b61bba0d10ae5ba500",
   "bridgeTokens": [
     "0000000000000000000000000000000000000000000000000000000000000000",
-    "4a235397a99940afc3befb11e11751bf4eb034f943e3db6e9bddca6153c94000"
+    "6d0928470ff154924dfc4db785d47f2a38f658d02ecdfe8171ca30d70f78e500"
   ]
 }
