@@ -34,7 +34,7 @@ async function checkWrappedToken(sourceChain: BridgeChain, targetChain: BridgeCh
   const wrappedTokenId = await targetChain.getWrappedTokenId(sourceChain.chainId, normalizeTokenId(tokenId))
   const wrappedTokenInfo = await targetChain.getLocalTokenInfo(wrappedTokenId)
   assert(wrappedTokenInfo.symbol === sourceTokenInfo.symbol)
-  assert(wrappedTokenInfo.name === `${sourceTokenInfo.name} (Wormhole)`)
+  assert(wrappedTokenInfo.name === `${sourceTokenInfo.name} (AlphBridge)`)
   assert(wrappedTokenInfo.decimals === sourceTokenInfo.decimals)
 }
 

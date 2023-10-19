@@ -36,7 +36,7 @@ contract FeeToken is TokenState, Context {
     }
 
     function name() public view returns (string memory) {
-        return string(abi.encodePacked(_state.name, " (Wormhole)"));
+        return string(abi.encodePacked(_state.name, " (AlphBridge)"));
     }
 
     function symbol() public view returns (string memory) {

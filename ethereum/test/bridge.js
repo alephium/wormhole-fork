@@ -246,8 +246,8 @@ contract("Bridge", function () {
         // symbol (TT)
         assert.equal(log.payload.substr(74, 64), "5454000000000000000000000000000000000000000000000000000000000000")
 
-        // name (TestToken (Wormhole))
-        assert.equal(log.payload.substr(138, 64), "54657374546f6b656e2028576f726d686f6c6529000000000000000000000000")
+        // name (TestToken (AlphBridge))
+        assert.equal(log.payload.substr(138, 64), "54657374546f6b656e2028416c70684272696467652900000000000000000000")
     })
 
     it("should correctly deploy a wrapped asset for a token attestation", async function () {
@@ -297,7 +297,7 @@ contract("Bridge", function () {
         assert.equal(symbol, "TT");
 
         const name = await initializedWrappedAsset.methods.name().call();
-        assert.equal(name, "TestToken (Wormhole)");
+        assert.equal(name, "TestToken (AlphBridge)");
 
         const decimals = await initializedWrappedAsset.methods.decimals().call();
         assert.equal(decimals, 18);
@@ -431,7 +431,7 @@ contract("Bridge", function () {
         assert.equal(symbol, "UU");
 
         const name = await initializedWrappedAsset.methods.name().call();
-        assert.equal(name, "Tree (Wormhole)");
+        assert.equal(name, "Tree (AlphBridge)");
 
         const decimals = await initializedWrappedAsset.methods.decimals().call();
         assert.equal(decimals, 18);
