@@ -97,7 +97,7 @@ class Factory extends ContractFactory<
   RemoteTokenPoolTypes.Fields
 > {
   consts = {
-    WormholePostfix: "2028576f726d686f6c6529",
+    AlphBridgePostfix: "2028416c706842726964676529",
     Path: {
       AttestTokenHandler: "00",
       TokenBridgeForChain: "01",
@@ -269,7 +269,7 @@ export const RemoteTokenPool = new Factory(
   Contract.fromJson(
     RemoteTokenPoolContractJson,
     "",
-    "9f9a0a641df62cf6d831fbd7e8cdbcc7511682dd9ebf9d988ce42ae7280c6ee9"
+    "1887a5c2bc109b742c33e7c8aaa448d600e258cec66dbd7ff188b17fca3da2fd"
   )
 );
 
