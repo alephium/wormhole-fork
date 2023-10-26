@@ -1,15 +1,21 @@
-Contract BridgeRewardRouter() {
+Contract BridgeRewardRouter(alphChainId: U256) {
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn completeTransfer(tokenBridgeForChain: TokenBridgeForChain, vaa: ByteVec, caller: Address) -> () {
         tokenBridgeForChain.completeTransfer{caller -> ALPH: dustAmount!()}(vaa, caller)
         if (tokenRemaining!(selfAddress!(), ALPH) >= 2 alph) { // 1 alph for `minimalAlphInContract`
             let signatureSize = u256From1Byte!(byteVecSlice!(vaa, 5, 6))
             let payloadOffset = 59 + signatureSize * 66 // 6 + signatureSize * 66 + 53
-            let targetAddressSizeOffset = payloadOffset + 67 // payloadOffset + 1 + 32 + 32 + 2
-            let targetAddressOffset = targetAddressSizeOffset + 2
-            let targetAddressSize = u256From2Byte!(byteVecSlice!(vaa, targetAddressSizeOffset, targetAddressOffset))
-            let targetAddress = byteVecToAddress!(byteVecSlice!(vaa, targetAddressOffset, targetAddressOffset + targetAddressSize))
-            transferTokenFromSelf!(targetAddress, ALPH, 1 alph)
+            let tokenChainIdOffset = payloadOffset + 65 // payloadOffset + 1 + 32 + 32
+            let tokenChainId = u256From2Byte!(byteVecSlice!(vaa, tokenChainIdOffset, tokenChainIdOffset + 2))
+
+            // only reward tokens from other chains
+            if (tokenChainId != alphChainId) {
+                let targetAddressSizeOffset = payloadOffset + 67 // payloadOffset + 1 + 32 + 32 + 2
+                let targetAddressOffset = targetAddressSizeOffset + 2
+                let targetAddressSize = u256From2Byte!(byteVecSlice!(vaa, targetAddressSizeOffset, targetAddressOffset))
+                let targetAddress = byteVecToAddress!(byteVecSlice!(vaa, targetAddressOffset, targetAddressOffset + targetAddressSize))
+                transferTokenFromSelf!(targetAddress, ALPH, 1 alph)
+            }
         }
     }
 

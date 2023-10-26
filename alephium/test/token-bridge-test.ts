@@ -1010,6 +1010,7 @@ describe('test token bridge', () => {
 
     async function test(fixture: ContractFixture<any>) {
       const testResult = await BridgeRewardRouter.tests.completeTransfer({
+        initialFields: fixture.selfState.fields,
         address: fixture.address,
         initialAsset: fixture.selfState.asset,
         testArgs: {
@@ -1083,6 +1084,40 @@ describe('test token bridge', () => {
 
     const bridgeRewardRouterState1 = testResult1.contracts.find((c) => c.address === fixture1.address)!
     expect(bridgeRewardRouterState1.asset.alphAmount).toEqual(ONE_ALPH)
+  })
+
+  it('should not reward if the token is from alephium', async () => {
+    await buildProject()
+    const testToken = createTestToken()
+    const localTokenPoolFixture = newLocalTokenPoolTestFixture(remoteChainId, remoteTokenBridgeId, testToken.contractId)
+    const toAddressHex = randomAssetAddressHex()
+    const toAddress = hexToBase58(toAddressHex)
+    const transferAmount = oneAlph
+    const arbiterFee = defaultMessageFee
+    const transfer = new Transfer(transferAmount, testToken.contractId, CHAIN_ID_ALEPHIUM, toAddressHex, arbiterFee)
+    const vaaBody = new VAABody(transfer.encode(), remoteChainId, CHAIN_ID_ALEPHIUM, remoteTokenBridgeId, 0)
+    const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
+
+    const fixture = createBridgeRewardRouter(alph(3))
+    const testResult = await BridgeRewardRouter.tests.completeTransfer({
+      address: fixture.address,
+      initialFields: fixture.selfState.fields,
+      testArgs: {
+        tokenBridgeForChain: localTokenPoolFixture.tokenBridgeForChain.contractId,
+        vaa: binToHex(vaa.encode()),
+        caller: payer
+      },
+      initialAsset: fixture.selfState.asset,
+      inputAssets: [defaultInputAsset],
+      existingContracts: localTokenPoolFixture.localTokenPool.states().concat(testToken.states())
+    })
+
+    const recipientOutputs = testResult.txOutputs.filter((o) => o.address === toAddress)
+    expect(recipientOutputs.length).toEqual(1)
+    expect(recipientOutputs[0].alphAmount).toEqual(dustAmount)
+
+    const rewardRouterState = getContractState(testResult.contracts, fixture.address)
+    expect(rewardRouterState.asset.alphAmount).toEqual(alph(3))
   })
 
   it('should failed to complete transfer and create unexecuted sequence contracts', async () => {
@@ -1498,6 +1533,7 @@ describe('test token bridge', () => {
     await buildProject()
     const fixture = createBridgeRewardRouter(ONE_ALPH)
     const testResult = await BridgeRewardRouter.tests.addRewards({
+      initialFields: fixture.selfState.fields,
       address: fixture.address,
       initialAsset: fixture.selfState.asset,
       testArgs: { caller: payer, amount: ONE_ALPH },

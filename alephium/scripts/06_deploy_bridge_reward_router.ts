@@ -8,7 +8,7 @@ const deployBridgeRewardRouter: DeployFunction<Settings> = async (
   network: Network<Settings>
 ): Promise<void> => {
   const result = await deployer.deployContract(BridgeRewardRouter, {
-    initialFields: {},
+    initialFields: { alphChainId: BigInt(network.settings.chainId) },
     initialAttoAlphAmount: ONE_ALPH + network.settings.initRewards
   })
   console.log(
