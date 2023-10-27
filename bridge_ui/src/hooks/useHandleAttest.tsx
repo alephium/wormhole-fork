@@ -19,7 +19,8 @@ import {
   parseSequenceFromLogSolana,
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
-  parseTargetChainFromLogEth
+  parseTargetChainFromLogEth,
+  CHAIN_ID_ETH
 } from "@alephium/wormhole-sdk";
 import { CHAIN_ID_UNSET } from "@alephium/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
@@ -71,7 +72,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { attestFromEthWithoutWait } from "../utils/ethereum";
+import { attestFromEthWithoutWait, checkETHToken } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 
 async function algo(
@@ -139,6 +140,10 @@ async function evm(
 ) {
   dispatch(setIsSending(true));
   try {
+    if (chainId === CHAIN_ID_ETH) {
+      await checkETHToken(sourceAsset)
+    }
+
     // Klaytn requires specifying gasPrice
     const overrides =
       chainId === CHAIN_ID_KLAYTN
