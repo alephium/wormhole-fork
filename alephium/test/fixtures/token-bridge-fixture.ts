@@ -525,5 +525,8 @@ export function expectAssetsEqual(expected: Asset[], have: Asset[]) {
 
 export function createBridgeRewardRouter(alphAmount: bigint): ContractFixture<any> {
   const address = randomContractAddress()
-  return new ContractFixture(BridgeRewardRouter.stateForTest({ alphChainId: BigInt(CHAIN_ID_ALEPHIUM) }, { alphAmount }, address), [])
+  return new ContractFixture(
+    BridgeRewardRouter.stateForTest({ alphChainId: BigInt(CHAIN_ID_ALEPHIUM) }, { alphAmount }, address),
+    []
+  )
 }
