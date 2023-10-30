@@ -151,7 +151,7 @@ export default function useGetIsTransferCompleted(
             setIsLoading(false);
           }
         })();
-      } else if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
+      } else if (targetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         setIsLoading(true);
         (async () => {
           try {

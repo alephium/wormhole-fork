@@ -49,7 +49,7 @@ export async function runCmdInContainer(container: Container, cmd: string[], wor
 export function getNextGovernanceSequence() {
   const command = `npm --prefix ../clients/js start -- get-next-governance-sequence -n devnet -u http://127.0.0.1:8100`
   const output = execSync(command)
-  const numberStr = output.toString('utf8').slice(output.lastIndexOf(":") + 2)
+  const numberStr = output.toString('utf8').slice(output.lastIndexOf(':') + 2)
   return parseInt(numberStr)
 }
 

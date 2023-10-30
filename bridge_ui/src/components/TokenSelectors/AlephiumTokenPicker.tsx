@@ -45,7 +45,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
 
   const getAddress: (address: string, tokenId?: string) => Promise<ParsedTokenAccount> = useCallback(
     async (address: string, tokenId?: string) => {
-      if (isReady && alphWallet) {
+      if (isReady && alphWallet.connectionStatus === 'connected') {
         try {
           const contractId = tryGetContractId(address)
           const tokenInfo = await getLocalTokenInfo(web3.getCurrentNodeProvider(), contractId)

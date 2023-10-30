@@ -57,7 +57,7 @@ export default function AddToAlephium() {
       })(alphWallet.nodeProvider)
     }
   }, [alphWallet, targetAsset, enqueueSnackbar])
-  return alphWallet !== undefined && isExtensionWallet(alphWallet.signer) ? (
+  return alphWallet.connectionStatus === 'connected' && isExtensionWallet(alphWallet.signer) ? (
     <Button
       onClick={handleClick}
       size="small"
