@@ -34,7 +34,7 @@ export async function checkETHToken(tokenAddress: string) {
 
   const tokenWhitelist = await loadETHTokenWhitelist()
   if (tokenWhitelist.find((token) => token.address === tokenAddress) === undefined) {
-    throw new Error(`Token ${tokenAddress} does not exists in the token list`)
+    throw new Error(`Token ${tokenAddress} does not exist in the token list: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
   }
 }
 
