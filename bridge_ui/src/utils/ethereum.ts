@@ -8,8 +8,35 @@ import {
 } from "../hooks/useGetSourceParsedTokenAccounts";
 import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
+import axios from "axios"
 
 export const DefaultEVMChainConfirmations = 15
+
+interface TokenInfo {
+  address: string
+  name: string
+  symbol: string
+  decimals: number
+  logoURI: string
+}
+
+let _whitelist: TokenInfo[] | undefined = undefined
+
+async function loadETHTokenWhitelist(): Promise<TokenInfo[]> {
+  if (_whitelist !== undefined) return _whitelist
+  const { data: { tokens } } = await axios.get('https://tokens.1inch.eth.link/')
+  _whitelist = tokens
+  return tokens
+}
+
+export async function checkETHToken(tokenAddress: string) {
+  if (CLUSTER !== 'mainnet') return
+
+  const tokenWhitelist = await loadETHTokenWhitelist()
+  if (tokenWhitelist.find((token) => token.address === tokenAddress) === undefined) {
+    throw new Error(`Token ${tokenAddress} does not exist in the token list: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
+  }
+}
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
 export async function getEthereumToken(

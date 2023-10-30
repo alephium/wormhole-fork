@@ -114,7 +114,7 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
             )
           )
         );
-      } else if(targetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
+      } else if(targetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphWallet.account.address))))
       } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {
         dispatch(

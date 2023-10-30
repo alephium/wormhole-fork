@@ -29,30 +29,34 @@ import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
 export namespace BridgeRewardRouterTypes {
-  export type State = Omit<ContractState<any>, "fields">;
+  export type Fields = {
+    alphChainId: bigint;
+  };
+
+  export type State = ContractState<Fields>;
 }
 
-class Factory extends ContractFactory<BridgeRewardRouterInstance, {}> {
+class Factory extends ContractFactory<
+  BridgeRewardRouterInstance,
+  BridgeRewardRouterTypes.Fields
+> {
   at(address: string): BridgeRewardRouterInstance {
     return new BridgeRewardRouterInstance(address);
   }
 
   tests = {
     completeTransfer: async (
-      params: Omit<
-        TestContractParams<
-          never,
-          { tokenBridgeForChain: HexString; vaa: HexString; caller: Address }
-        >,
-        "initialFields"
+      params: TestContractParams<
+        BridgeRewardRouterTypes.Fields,
+        { tokenBridgeForChain: HexString; vaa: HexString; caller: Address }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "completeTransfer", params);
     },
     addRewards: async (
-      params: Omit<
-        TestContractParams<never, { caller: Address; amount: bigint }>,
-        "initialFields"
+      params: TestContractParams<
+        BridgeRewardRouterTypes.Fields,
+        { caller: Address; amount: bigint }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "addRewards", params);
@@ -65,7 +69,7 @@ export const BridgeRewardRouter = new Factory(
   Contract.fromJson(
     BridgeRewardRouterContractJson,
     "",
-    "e9ef2833d1b214a533490f2ca81b7d6d09022bcc0d30a874230d5aca6dfbc57a"
+    "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b"
   )
 );
 
