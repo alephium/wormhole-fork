@@ -2,7 +2,6 @@ import { Sequence } from '../sequence'
 import { BridgeChain } from '../bridge_chain'
 import { assert, randomBigInt } from '../utils'
 import * as base58 from 'bs58'
-import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { DUST_AMOUNT, ONE_ALPH } from '@alephium/web3'
 
 export class TransferTokenTest {
@@ -32,7 +31,6 @@ export class TransferTokenTest {
       this.sequence.next()
     )
     await this.toChain.redeemToken(transferResult.signedVaa)
-
     const balanceAfterTransferOnEmitterChain = await this.fromChain.getTokenBalance(tokenId)
     const lockedBalanceAfterTransfer = await this.fromChain.getLockedTokenBalance(tokenId)
     const balanceAfterTransferOnTargetChain = await this.toChain.getWrappedTokenBalance(tokenId, this.fromChain.chainId)
@@ -86,6 +84,7 @@ export class TransferTokenTest {
       this.sequence.next()
     )
     await this.toChain.redeemToken(transferResult.signedVaa)
+
     const balanceAfterTransferOnEmitterChain = await this.fromChain.getWrappedTokenBalance(
       this.toChain.testTokenId,
       this.toChain.chainId
@@ -116,10 +115,7 @@ export class TransferTokenTest {
     )
     const balanceAfterTransferOnTargetChain = await this.toChain.getNativeTokenBalance()
 
-    assert(
-      amount + balanceBeforeTransferOnTargetChain - txFee ===
-        balanceAfterTransferOnTargetChain - (this.toChain.chainId === CHAIN_ID_ALEPHIUM ? ONE_ALPH : 0n)
-    ) // minus ONE_ALPH reward
+    assert(amount + balanceBeforeTransferOnTargetChain - txFee === balanceAfterTransferOnTargetChain)
     assert(amount + balanceAfterTransferOnEmitterChain === balanceBeforeTransferOnEmitterChain)
   }
 

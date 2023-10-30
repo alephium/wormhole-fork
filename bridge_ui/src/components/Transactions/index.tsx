@@ -210,7 +210,9 @@ export default function Transactions() {
 
   const blockNumberFetcherGetter = useCallback((chainId: ChainId) => {
     if (chainId === CHAIN_ID_ALEPHIUM) {
-      return alphWallet === undefined ? undefined : () => alphBlockNumberFetcher(alphWallet.nodeProvider, alphWallet.account.group)
+      return alphWallet.connectionStatus !== 'connected'
+        ? undefined
+        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, alphWallet.account.group)
     }
     if (bothAreEvmChain) {
       if (chainId === txSourceChain && sourceChainReady) {
@@ -230,7 +232,7 @@ export default function Transactions() {
   const targetChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txTargetChain)
 
   const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
-    if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet) {
+    if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
       const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.account.group)
       return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
     }

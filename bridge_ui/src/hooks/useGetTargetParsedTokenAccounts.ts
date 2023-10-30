@@ -76,7 +76,7 @@ function useGetTargetParsedTokenAccounts() {
     }
     let cancelled = false;
 
-    if (targetChain === CHAIN_ID_ALEPHIUM && !!alphWallet) {
+    if (targetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         if (!cancelled && decimals !== undefined) {
           const balanceStr = balance?.toString() || '0'
           const uiAmount = formatUnits(balanceStr, decimals)

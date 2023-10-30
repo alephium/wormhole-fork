@@ -52,7 +52,7 @@ import {
   selectAttestSourceChain,
   selectTerraFeeDenom,
 } from "../store/selectors";
-import { getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL,
@@ -72,7 +72,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { attestFromEthWithoutWait, checkETHToken } from "../utils/ethereum";
+import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 
 async function algo(
@@ -174,6 +174,9 @@ async function evm(
     const emitterAddress = getEmitterAddressEth(
       getTokenBridgeAddressForChain(chainId)
     );
+    if (signer.provider) {
+      await waitEVMTxConfirmed(signer.provider, receipt, chainId)
+    }
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
@@ -332,6 +335,7 @@ async function alephium(
     enqueueSnackbar(null, {
       content: <Alert severity="success">Transaction confirmed</Alert>,
     });
+    await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL)
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,
     });
