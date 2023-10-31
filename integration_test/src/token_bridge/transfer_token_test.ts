@@ -3,7 +3,9 @@ import { AlephiumBridgeChain } from '../alph'
 import { assert, getBridgeChains, normalizeTokenId, randomBigInt } from '../utils'
 import { TransferTokenTest } from './transfer_token'
 import { BridgeChain } from '../bridge_chain'
-import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, waitAlphTxConfirmed } from '@alephium/wormhole-sdk'
+import { BridgeRewardRouter } from '@alephium/wormhole-sdk/lib/cjs/alephium-contracts/ts'
+import { ONE_ALPH, addressFromContractId } from '@alephium/web3'
 
 async function attestInvalidToken(alph: AlephiumBridgeChain) {
   const testTokenInfo = await alph.getLocalTokenInfo(alph.testTokenId)
@@ -150,6 +152,18 @@ class ChainPair {
   }
 }
 
+async function testTopupRewards(alph: AlephiumBridgeChain) {
+  const contractAddress = addressFromContractId(alph.bridgeRewardRouter)
+  const balance0 = (await alph.getContractState(BridgeRewardRouter, contractAddress)).asset.alphAmount
+  const alphAmount = 100
+  const command = `npm --prefix ../clients/js start -- topup -a ${alphAmount} -n devnet`
+  const output = execSync(command)
+  const txId = output.toString('utf8').slice(output.lastIndexOf(':') + 2)
+  await waitAlphTxConfirmed(alph.nodeProvider, txId, 1)
+  const balance1 = (await alph.getContractState(BridgeRewardRouter, contractAddress)).asset.alphAmount
+  assert(BigInt(balance0) + BigInt(alphAmount) * ONE_ALPH === BigInt(balance1))
+}
+
 async function test() {
   const chains = await getBridgeChains()
   const alph = chains.alph
@@ -173,6 +187,8 @@ async function test() {
   console.log('================== transfer between ETH and BSC ==================')
   const pair2 = new ChainPair(eth, bsc)
   await pair2.test(50)
+
+  await testTopupRewards(alph)
 }
 
 test()

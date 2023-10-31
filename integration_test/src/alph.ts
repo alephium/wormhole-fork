@@ -48,6 +48,8 @@ import { default as alephiumDevnetConfig } from '../../configs/alephium/devnet.j
 
 export type AlephiumBridgeChain = BridgeChain & {
   groupIndex: number
+  nodeProvider: NodeProvider
+  bridgeRewardRouter: string
   tokenBridgeContractId: string
   attestWithTokenInfo(tokenId: string, decimals: number, symbol: string, name: string): Promise<Uint8Array>
   getContractState<I extends ContractInstance, F extends Fields>(
@@ -447,6 +449,8 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     genMultiSigAddress: genMultiSigAddress,
 
     groupIndex: groupIndex,
+    nodeProvider: nodeProvider,
+    bridgeRewardRouter: contracts.bridgeRewardRouter,
     tokenBridgeContractId: tokenBridgeContractId,
     getLocalTokenInfo: _getLocalTokenInfo,
     getWrappedTokenTotalSupply: getWrappedTokenTotalSupply,
