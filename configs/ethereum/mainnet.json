@@ -2,14 +2,14 @@
   "chainId": 2,
   "wrappedNative": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
   "contracts": {
-    "governance": "0xD583089D29311C6E8d075c699404aB0eC539b0B7",
-    "tokenBridge": "0x3a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
+    "governance": "0x01e82b67367dE9f805E55de730D5007a752912A8",
+    "tokenBridge": "0x579a3bDE631c3d8068CbFE3dc45B0F14EC18dD43",
     "wrappedNative": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
   },
   "nodeUrl": "https://mainnet.infura.io/v3/",
-  "coreEmitterAddress": "000000000000000000000000D583089D29311C6E8d075c699404aB0eC539b0B7",
-  "tokenBridgeEmitterAddress": "0000000000000000000000003a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
+  "coreEmitterAddress": "00000000000000000000000001e82b67367dE9f805E55de730D5007a752912A8",
+  "tokenBridgeEmitterAddress": "000000000000000000000000579a3bDE631c3d8068CbFE3dc45B0F14EC18dD43",
   "bridgeTokens": [
-    "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
   ]
 }
