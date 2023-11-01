@@ -1,21 +1,21 @@
 {
   "chainId": 255,
   "groupIndex": 0,
-  "initRewards": 0,
+  "initRewards": 10,
   "minimalConsistencyLevel": 105,
   "messageFee": "0",
   "contracts": {
-    "governance": "a5b0aafe9d183b8a5811af6f82ae9a51721e159493cde4cec8da0f6cd64b7300",
-    "nativeGovernance": "25qjdRj5hg18b5uWj1krgRAAnm6i6eqHoXmKG9GvemqrP",
-    "tokenBridge": "ef024cb46f2c7fe1940818744bb64cb577df044b59e31690404be639eafe1800",
-    "nativeTokenBridge": "2AmwaxT1jGZ28wYB28m9zzD1dCT7cgm19tubLsUT7Lkxf",
-    "bridgeRewardRouter": "a823248865e8fb2df52d6955abc5e6edf8a1e5f236f230d72423ec2eb51eaf00"
+    "governance": "125397fbf4311a8b1da4c2eb01ca091b06f07d8a86b52b1836e0688c83b5b200",
+    "nativeGovernance": "uvVP76UfwQ1fmPTZWojUGYY2tKyuKe7Br76KDecfMbjM",
+    "tokenBridge": "7f42f8e21128e70c7a30098a32c5c388de7eb4ffc6ef7dd86f72e8e11acc4800",
+    "nativeTokenBridge": "23Fj7xr1pxWfYLixz3aBC3u5dUJVpAjXArbpiYWxeGjQT",
+    "bridgeRewardRouter": "232b5b4ffdc25185a26630f7916855b8ade56ce7a589e5d9c66de07f72c59500"
   },
   "nodeUrl": "https://node-v20.mainnet.alephium.org",
   "explorerUrl": "https://backend-v113.mainnet.alephium.org",
   "networkId": 0,
-  "coreEmitterAddress": "a5b0aafe9d183b8a5811af6f82ae9a51721e159493cde4cec8da0f6cd64b7300",
-  "tokenBridgeEmitterAddress": "ef024cb46f2c7fe1940818744bb64cb577df044b59e31690404be639eafe1800",
+  "coreEmitterAddress": "125397fbf4311a8b1da4c2eb01ca091b06f07d8a86b52b1836e0688c83b5b200",
+  "tokenBridgeEmitterAddress": "7f42f8e21128e70c7a30098a32c5c388de7eb4ffc6ef7dd86f72e8e11acc4800",
   "bridgeTokens": [
     "0000000000000000000000000000000000000000000000000000000000000000"
   ]

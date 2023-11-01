@@ -30,8 +30,7 @@ module.exports = {
           `https://mainnet.infura.io/v3/` + process.env.INFURA_KEY
         ),
       network_id: 1,
-      gas: 10000000,
-      gasPrice: 191000000000,
+      gasPrice: 20000000000,
       confirmations: 1,
       timeoutBlocks: 200,
       skipDryRun: false,

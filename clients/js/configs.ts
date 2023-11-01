@@ -116,6 +116,7 @@ const MAINNET = {
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumMainnetConfig.contracts.tokenBridge,
     governanceAddress: alephiumMainnetConfig.contracts.governance,
+    bridgeRewardRouter: alephiumMainnetConfig.contracts.bridgeRewardRouter,
     groupIndex: alephiumMainnetConfig.groupIndex,
   }
 };
@@ -207,6 +208,7 @@ const TESTNET = {
     key: get_env_var('ALPH_KEY'),
     tokenBridgeAddress: alephiumTestnetConfig.contracts.tokenBridge,
     governanceAddress: alephiumTestnetConfig.contracts.governance,
+    bridgeRewardRouter: alephiumTestnetConfig.contracts.bridgeRewardRouter,
     groupIndex: alephiumTestnetConfig.groupIndex
   }
 };
@@ -298,6 +300,7 @@ const DEVNET = {
     key: testPrivateKey,
     tokenBridgeAddress: alephiumDevnetConfig.contracts.tokenBridge,
     governanceAddress: alephiumDevnetConfig.contracts.governance,
+    bridgeRewardRouter: alephiumDevnetConfig.contracts.bridgeRewardRouter,
     groupIndex: alephiumDevnetConfig.groupIndex
   }
 };

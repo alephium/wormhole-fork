@@ -1,6 +1,6 @@
 import { CONFIGS, Guardians, NetworkType } from './configs'
 import { impossible } from './utils'
-import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript } from '@alephium/web3'
+import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript, ONE_ALPH, DUST_AMOUNT } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from '@alephium/wormhole-sdk'
 import {
@@ -12,8 +12,27 @@ import {
   UpdateRefundAddress,
   UpgradeTokenBridgeContract,
   Governance,
-  TokenBridge
+  TokenBridge,
+  AddRewards
 } from '@alephium/wormhole-sdk/lib/cjs/alephium-contracts/ts'
+
+export async function topupRewards(
+  alphAmount: bigint,
+  networkType: NetworkType,
+  nodeUrl?: string
+) {
+  const network = CONFIGS[networkType]['alephium']
+  const signer = getSignerProvider(network, nodeUrl)
+  const amount = alphAmount * ONE_ALPH
+  const result = await AddRewards.execute(signer, {
+    initialFields: {
+      bridgeRewardRouter: network.bridgeRewardRouter,
+      amount: amount
+    },
+    attoAlphAmount: amount + DUST_AMOUNT
+  })
+  console.log(`TxId: ${result.txId}`)
+}
 
 function getSignerProvider(network: any, nodeUrl?: string) {
   const rpc = nodeUrl ?? network.rpc

@@ -2,12 +2,12 @@
   "governanceChainId": 0,
   "governanceEmitterAddress": "0000000000000000000000000000000000000000000000000000000000000004",
   "initSigners": [
-    "0x2F10c48859bf00F743971aCb287b8876bC9ef7F3",
-    "0x8A3Bc2996485A9e49B104601F40d7b75b79ce3a9",
-    "0xEa7d9D838ea90D2316Ab0c80c8D92719AD5885e8",
-    "0x99068B602684ac2227F21463bf90c29bcBA651Ef"
+    "0x214f15D574A4D7895EEd709F80F7B49E5fE5Ad29",
+    "0x78C7B8dD49CEdd6311f03357bBD7299B4d747852",
+    "0x4B2CbEa0E19473D90e41581d4F39FA44b5fb88fB",
+    "0x9eFb0cd728D59bA13EAbe2f17ceBF9f3AB6989A1"
   ],
   "guardianUrls": [
-    "https://guardian-0.mainnet.bridge.alephium.org"
+    "https://guardian-0.bridge.alephium.org"
   ]
 }

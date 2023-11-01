@@ -31,7 +31,7 @@ import {
   isEVMChain,
   toChainId,
 } from "@alephium/wormhole-sdk";
-import { executeGovernanceAlph, getNextGovernanceSequence } from "./alph";
+import { executeGovernanceAlph, getNextGovernanceSequence, topupRewards } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";
 
@@ -422,14 +422,7 @@ yargs(hideBin(process.argv))
           async (argv) => {
             assertChain(argv["chain"]);
             assertEVMChain(argv["chain"]);
-            const network = argv.network.toUpperCase();
-            if (
-              network !== "MAINNET" &&
-              network !== "TESTNET" &&
-              network !== "DEVNET"
-            ) {
-              throw Error(`Unknown network: ${network}`);
-            }
+            const network = getNetworkType(argv.network)
             let module = argv["module"] as "Core" | "NFTBridge" | "TokenBridge";
             let rpc = argv["rpc"] ?? CONFIGS[network][argv["chain"]].rpc;
             if (argv["implementation-only"]) {
@@ -520,7 +513,7 @@ yargs(hideBin(process.argv))
         });
     },
     async (argv) => {
-      const network = argv.network.toUpperCase() as NetworkType
+      const network = getNetworkType(argv.network)
       const sequence = await getNextGovernanceSequence(network, argv['explorer-api-server-url'])
       console.log(`The next governnace sequence is: ${sequence}`)
     },
@@ -567,14 +560,7 @@ yargs(hideBin(process.argv))
 
       console.log(parsedVaa.body.payload);
 
-      const network = argv.network.toUpperCase();
-      if (
-        network !== "MAINNET" &&
-        network !== "TESTNET" &&
-        network !== "DEVNET"
-      ) {
-        throw Error(`Unknown network: ${network}`);
-      }
+      const network = getNetworkType(argv.network)
 
       // We figure out the target chain to submit the VAA to.
       // The VAA might specify this itself (for example a contract upgrade VAA
@@ -633,7 +619,51 @@ yargs(hideBin(process.argv))
         impossible(chain);
       }
     }
-  ).argv
+  )
+  .command(
+    "topup",
+    "Topup ALPH rewards",
+    (yargs) => {
+      return yargs
+        .option("amount", {
+          alias: "a",
+          describe: "ALPH amount",
+          type: "number",
+          required: true,
+        })
+        .option("network", {
+          alias: "n",
+          describe: "network",
+          type: "string",
+          choices: ["mainnet", "testnet", "devnet"],
+          required: true,
+        })
+        .option('node-url', {
+          describe: "full node url",
+          type: "string",
+          required: false,
+        });
+    },
+    async (argv) => {
+      const network = getNetworkType(argv.network)
+      const alphAmount = BigInt(argv.amount)
+      const nodeUrl = argv['node-url']
+      await topupRewards(alphAmount, network, nodeUrl)
+    }
+  )
+  .argv
+
+function getNetworkType(network: string): NetworkType {
+  const networkType = network.toUpperCase();
+  if (
+    networkType !== "MAINNET" &&
+    networkType !== "TESTNET" &&
+    networkType !== "DEVNET"
+  ) {
+    throw Error(`Unknown network: ${network}`);
+  }
+  return networkType as NetworkType
+}
 
 function exitOnError(msg: string) {
   console.log(msg)
