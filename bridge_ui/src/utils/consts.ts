@@ -382,13 +382,13 @@ export const ETH_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? ethereumTestnetConfig.contracts.tokenBridge
     : ethereumDevnetConfig.contracts.tokenBridge
 );
-export const BSC_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? bscMainnetConfig.contracts.governance
-    : CLUSTER === "testnet"
-    ? bscTestnetConfig.contracts.governance
-    : bscDevnetConfig.contracts.governance
-);
+export const BSC_BRIDGE_ADDRESS =
+  CLUSTER === "mainnet" ? ""
+    : getAddress(
+      CLUSTER === "testnet"
+        ? bscTestnetConfig.contracts.governance
+        : bscDevnetConfig.contracts.governance
+    );
 export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE"
@@ -396,13 +396,13 @@ export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
     ? "0xcD16E5613EF35599dc82B24Cb45B5A93D779f1EE"
     : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
 );
-export const BSC_TOKEN_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? bscMainnetConfig.contracts.tokenBridge
-    : CLUSTER === "testnet"
-    ? bscTestnetConfig.contracts.tokenBridge
-    : bscDevnetConfig.contracts.tokenBridge
-);
+export const BSC_TOKEN_BRIDGE_ADDRESS =
+  CLUSTER === "mainnet" ? ""
+    : getAddress(
+      CLUSTER === "testnet"
+        ? bscTestnetConfig.contracts.tokenBridge
+        : bscDevnetConfig.contracts.tokenBridge
+    );
 export const POLYGON_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7"
