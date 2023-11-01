@@ -12,35 +12,13 @@ import {
   knownContractsPromise,
   Network,
   NetworkChains,
-  NetworkConfig,
-  networks,
+  NetworkConfig
 } from "../utils/consts";
 
 // Check if window is defined (so if in the browser or in node.js).
 const isBrowser = typeof window !== "undefined";
 
-let network: Network;
-
-const envDefaultNetwork = String(process.env.GATSBY_DEFAULT_NETWORK) as Network
-
-// check local storage to get the user's last selected network
-let storedNetwork: Network = "" as Network
-if (isBrowser) {
-  // isBrowser check for Gatsby develop's SSR
-  storedNetwork = String(window.localStorage.getItem("networkName")) as Network
-}
-
-// validate localstorage data, fallback to .env default, fallback to mainnet.
-if (storedNetwork && networks.includes(storedNetwork)) {
-  // data from local storage is valid
-  network = storedNetwork
-} else if (networks.includes(envDefaultNetwork)) {
-  // default network from .env is valid
-  network = envDefaultNetwork
-} else {
-  // use mainnet
-  network = networks[2];
-}
+const network = String(process.env.GATSBY_DEFAULT_NETWORK) as Network
 
 export interface ActiveNetwork {
   name: string;
