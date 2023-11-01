@@ -529,27 +529,6 @@ export const KARURA_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? "0xd11De1f930eA1F7Dd0290Fe3a2e35b9C91AEFb37"
     : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
 );
-export const ACALA_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? ""
-    : CLUSTER === "testnet"
-    ? "0x4377B49d559c0a9466477195C6AdC3D433e265c0"
-    : "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
-);
-export const ACALA_NFT_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? ""
-    : CLUSTER === "testnet"
-    ? "0x96f1335e0AcAB3cfd9899B30b2374e25a2148a6E"
-    : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
-);
-export const ACALA_TOKEN_BRIDGE_ADDRESS = getAddress(
-  CLUSTER === "mainnet"
-    ? ""
-    : CLUSTER === "testnet"
-    ? "0xebA00cbe08992EdD08ed7793E07ad6063c807004"
-    : "0x0290FB167208Af455bB137780163b7B7a9a10C16"
-);
 export const KLAYTN_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x0C21603c4f3a6387e241c0091A7EA39E43E90bb7"
@@ -762,8 +741,6 @@ export const getBridgeAddressForChain = (chainId: ChainId) =>
     ? ALEPHIUM_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KARURA
     ? KARURA_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_ACALA
-    ? ACALA_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KLAYTN
     ? KLAYTN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
@@ -790,8 +767,6 @@ export const getNFTBridgeAddressForChain = (chainId: ChainId) =>
     ? FANTOM_NFT_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KARURA
     ? KARURA_NFT_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_ACALA
-    ? ACALA_NFT_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KLAYTN
     ? KLAYTN_NFT_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
@@ -822,8 +797,6 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
     ? ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
     : chainId === CHAIN_ID_KARURA
     ? KARURA_TOKEN_BRIDGE_ADDRESS
-    : chainId === CHAIN_ID_ACALA
-    ? ACALA_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_KLAYTN
     ? KLAYTN_TOKEN_BRIDGE_ADDRESS
     : chainId === CHAIN_ID_CELO
