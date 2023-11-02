@@ -53,7 +53,7 @@ docker build -f ./explorer-api-server/Dockerfile . -t eu.gcr.io/alephium-org/wor
 docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer-backend:$version
 
 ### explorer
-docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$version
+docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$version --build-arg network=$network
 
 if [ "${pushImage}" = true ]
 then
