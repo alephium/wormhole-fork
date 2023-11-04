@@ -16,6 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const BlockRangeLimit = 1000
+
 type EVMWatcher struct {
 	chainId         vaa.ChainID
 	chainConfig     *common.ChainConfig
@@ -106,47 +108,55 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 }
 
 func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight uint32, toHeight uint32) error {
-	if fromHeight >= toHeight {
-		return nil
-	}
-
+	fromBlock := fromHeight
 	client := w.connector.Client()
-	query := eth.FilterQuery{
-		FromBlock: big.NewInt(int64(fromHeight)),
-		ToBlock:   big.NewInt(int64(toHeight)),
-		Addresses: []ethCommon.Address{*w.contractAddress},
-		Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
-	}
-	logs, err := client.FilterLogs(ctx, query)
-	if err != nil {
-		w.logger.Error("failed to get logs by block range", zap.Uint32("fromHeight", fromHeight), zap.Uint32("toHeight", toHeight), zap.Error(err))
-		return err
-	}
-	for _, log := range logs {
-		bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
+
+	for {
+		toBlock := uint32Min(toHeight, fromBlock+BlockRangeLimit)
+
+		if fromBlock >= toBlock {
+			return nil
+		}
+
+		w.logger.Debug("fetching events from block range", zap.Uint32("fromBlock", fromBlock), zap.Uint32("toBlock", toBlock))
+		query := eth.FilterQuery{
+			FromBlock: big.NewInt(int64(fromBlock)),
+			ToBlock:   big.NewInt(int64(toBlock)),
+			Addresses: []ethCommon.Address{*w.contractAddress},
+			Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
+		}
+		logs, err := client.FilterLogs(ctx, query)
 		if err != nil {
+			w.logger.Error("failed to get logs by block range", zap.Uint32("fromBlock", fromBlock), zap.Uint32("toBlock", toBlock), zap.Error(err))
 			return err
 		}
-		if bridgeTx == nil { // the transaction is not transfer token tx
-			continue
+		for _, log := range logs {
+			bridgeTx, err := w.bridgeTxFromLog(ctx, client, &log)
+			if err != nil {
+				return err
+			}
+			if bridgeTx == nil { // the transaction is not transfer token tx
+				continue
+			}
+			// TODO: group events by block hash
+			header, err := client.HeaderByHash(ctx, log.BlockHash)
+			if err != nil {
+				w.logger.Error("failed to get header by block hash", zap.String("blockHash", log.BlockHash.Hex()), zap.Error(err))
+				return err
+			}
+			blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
+			blockTxs := &BlockTransactions{
+				blockNumber:    uint32(header.Number.Uint64()),
+				blockHash:      log.BlockHash.Hex(),
+				blockTimestamp: &blockTimestamp,
+				txs:            []*BridgeTransaction{bridgeTx},
+				chainId:        w.chainId,
+			}
+			w.blockTxsC <- []*BlockTransactions{blockTxs}
 		}
-		// TODO: group events by block hash
-		header, err := client.HeaderByHash(ctx, log.BlockHash)
-		if err != nil {
-			w.logger.Error("failed to get header by block hash", zap.String("blockHash", log.BlockHash.Hex()), zap.Error(err))
-			return err
-		}
-		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
-		blockTxs := &BlockTransactions{
-			blockNumber:    uint32(header.Number.Uint64()),
-			blockHash:      log.BlockHash.Hex(),
-			blockTimestamp: &blockTimestamp,
-			txs:            []*BridgeTransaction{bridgeTx},
-			chainId:        w.chainId,
-		}
-		w.blockTxsC <- []*BlockTransactions{blockTxs}
+
+		fromBlock = toBlock + 1
 	}
-	return nil
 }
 
 func (w *EVMWatcher) fetchEventsByBlockHash(ctx context.Context, blockHash ethCommon.Hash) error {
@@ -238,4 +248,11 @@ func getEVMTxSender(ctx context.Context, client *ethclient.Client, txId ethCommo
 
 func isTransferTokenPayload(payload []byte) bool {
 	return len(payload) > 0 && payload[0] == alephium.TransferTokenPayloadId
+}
+
+func uint32Min(a, b uint32) uint32 {
+	if a < b {
+		return a
+	}
+	return b
 }
