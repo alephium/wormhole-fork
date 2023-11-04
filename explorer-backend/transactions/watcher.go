@@ -140,7 +140,7 @@ func getEthereumDefaultEventIndex(networkId common.NetworkId) uint32 {
 	case common.TESTNET:
 		return 9876190 // the block height of the contract deployment tx
 	case common.MAINNET:
-		panic("eth event index not specified") // TODO: the block height of the contract deployment tx
+		return 18469092 // the block height of the contract deployment tx
 	default:
 		panic("invalid network id")
 	}
