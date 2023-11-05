@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const BlockRangeLimit = 1000
+const BlockRangeLimit = 5000
 
 type EVMWatcher struct {
 	chainId         vaa.ChainID
