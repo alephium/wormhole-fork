@@ -159,7 +159,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
   }
 }
 
-export function getLocalTokenLogoURI(tokenId: string): string | undefined {
+export function getAlephiumTokenLogoURI(tokenId: string): string | undefined {
   return tokenId === ALPH_TOKEN_ID
     ? alephiumIcon
     : ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())?.logoURI

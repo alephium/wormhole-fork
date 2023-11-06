@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { ParsedTokenAccount } from "../../store/transferSlice";
-import { tryGetContractId } from "../../utils/alephium";
+import { getAlephiumTokenLogoURI, tryGetContractId } from "../../utils/alephium";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 import { useWallet } from "@alephium/web3-react";
 
@@ -60,7 +60,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
             uiAmount,
             tokenInfo.symbol,
             tokenInfo.name,
-            undefined,
+            getAlephiumTokenLogoURI(contractId),
             false
           )
         } catch (e) {

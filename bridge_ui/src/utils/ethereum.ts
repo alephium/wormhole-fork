@@ -33,9 +33,14 @@ export async function checkETHToken(tokenAddress: string) {
   if (CLUSTER !== 'mainnet') return
 
   const tokenWhitelist = await loadETHTokenWhitelist()
-  if (tokenWhitelist.find((token) => token.address === tokenAddress) === undefined) {
+  if (tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase()) === undefined) {
     throw new Error(`Token ${tokenAddress} does not exist in the token list: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
   }
+}
+
+export async function getETHTokenLogoURI(tokenAddress: string): Promise<string | undefined> {
+  const tokenWhitelist = await loadETHTokenWhitelist()
+  return tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase())?.logoURI
 }
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
@@ -55,6 +60,7 @@ export async function ethTokenToParsedTokenAccount(
   const balance = await token.balanceOf(signerAddress);
   const symbol = await token.symbol();
   const name = await token.name();
+  const logoURI = await getETHTokenLogoURI(token.address)
   return createParsedTokenAccount(
     signerAddress,
     token.address,
@@ -63,7 +69,8 @@ export async function ethTokenToParsedTokenAccount(
     Number(formatUnits(balance, decimals)),
     formatUnits(balance, decimals),
     symbol,
-    name
+    name,
+    logoURI
   );
 }
 

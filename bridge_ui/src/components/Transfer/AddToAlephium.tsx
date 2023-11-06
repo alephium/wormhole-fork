@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectTransferTargetAsset } from "../../store/selectors";
 import { CLUSTER } from "../../utils/consts";
-import { getLocalTokenLogoURI } from "../../utils/alephium";
+import { getAlephiumTokenLogoURI } from "../../utils/alephium";
 import { AlephiumWindowObject } from '@alephium/get-extension-wallet'
 import { useSnackbar } from "notistack";
 import { Alert } from "@material-ui/lab";
@@ -32,7 +32,7 @@ export default function AddToAlephium() {
       (async (nodeProvider) => {
         try {
           const tokenInfo = await getLocalTokenInfo(nodeProvider, targetAsset)
-          const logoURI = getLocalTokenLogoURI(tokenInfo.id)
+          const logoURI = getAlephiumTokenLogoURI(tokenInfo.id)
           const windowObject = alphWallet.signer as AlephiumWindowObject
           console.log(`add new token, tokenName: ${tokenInfo.name}, tokenSymbol: ${tokenInfo.symbol}, tokenId: ${tokenInfo.id}`)
           const result = await windowObject.request({
