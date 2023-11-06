@@ -175,7 +175,7 @@ async function evm(
       getTokenBridgeAddressForChain(chainId)
     );
     if (signer.provider) {
-      await waitEVMTxConfirmed(signer.provider, receipt, chainId)
+      await waitEVMTxConfirmed(signer.provider, receipt.blockNumber, chainId)
     }
     enqueueSnackbar(null, {
       content: <Alert severity="info">Fetching VAA</Alert>,

@@ -277,7 +277,7 @@ export const SOLANA_HOST = process.env.REACT_APP_SOLANA_API_URL
 
 export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
-    ? ''
+    ? 'https://ethereum.publicnode.com'
     : CLUSTER === 'testnet'
     ? 'https://ethereum-goerli.publicnode.com'
     : 'http://localhost:8545'
