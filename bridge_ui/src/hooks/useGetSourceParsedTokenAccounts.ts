@@ -117,8 +117,7 @@ import {
   WROSE_DECIMALS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   getTokenBridgeAddressForChain,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_TOKEN_LIST
+  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -127,9 +126,10 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { addressFromContractId, ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { ALPHTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { ALPHTokenInfo, getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
+import { getETHTokenLogoURI } from "../utils/ethereum";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -616,12 +616,13 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
       if (result === undefined || result.balance === BigInt(0)) {
         continue
       }
+      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
       tokenAccounts.push({
         contract_decimals: token.decimals,
         contract_ticker_symbol: token.symbol,
         contract_name: token.name,
         contract_address: result.tokenId,
-        logo_url: token.logo,
+        logo_url: token.logo ?? tokenLogoURI,
         balance: result.balance.toString(),
         quote: undefined,
         quote_rate: undefined
@@ -760,13 +761,14 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
     const balances = await getAvailableBalances(provider, address)
     const registeredTokens = await getRegisteredTokens()
     const promises = registeredTokens.map(async (token) => {
+      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
       if (token.tokenChain !== CHAIN_ID_ALEPHIUM) {
         const tokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
         return getRemoteTokenInfo(addressFromContractId(tokenPoolId))
           .then((tokenInfo) => ({
             ...tokenInfo,
             id: tokenPoolId,
-            logoURI: tokenInfo.logoURI ?? token.logo
+            logoURI: token.logo ?? tokenLogoURI
           }))
           .catch((error) => {
             console.log(`Failed to get remote token info, token id: ${tokenPoolId}, error: ${error}`)
@@ -779,7 +781,7 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
       return getLocalTokenInfo(provider, token.nativeAddress)
         .then((tokenInfo) => ({
           ...tokenInfo,
-          logoURI: tokenInfo.logoURI ?? token.logo ?? ALEPHIUM_TOKEN_LIST.find((t) => t.symbol === tokenInfo.symbol)?.logoURI
+          logoURI: token.logo ?? tokenLogoURI
         }))
         .catch((error) => {
           console.log(`Failed to get local token info, token id: ${token.nativeAddress}, error: ${error}`)
@@ -814,6 +816,16 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
     const errMsg = `Failed to load alephium token metadata: ${error}`
     console.error(errMsg)
     throw new Error(errMsg)
+  }
+}
+
+async function getTokenLogoURI(tokenChainId: ChainId, tokenId: string): Promise<string | undefined> {
+  if (tokenChainId === CHAIN_ID_ETH) {
+    return getETHTokenLogoURI(tokenId)
+  } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
+    return getAlephiumTokenLogoURI(tokenId)
+  } else {
+    return undefined
   }
 }
 
