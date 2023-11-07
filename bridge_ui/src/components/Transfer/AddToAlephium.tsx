@@ -42,7 +42,7 @@ export default function AddToAlephium() {
               networkId: CLUSTER,
               symbol: tokenInfo.symbol,
               decimals: tokenInfo.decimals,
-              name: tokenInfo.name,
+              name: `${tokenInfo.name} (AlphBridge)`,
               logoURI: logoURI
             }
           })
