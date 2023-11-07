@@ -35,16 +35,7 @@ function WormholeWrappedWarning() {
         <Box fontWeight={900} display="inline">
           Bridge Wrapped Tokens
         </Box>{" "}
-        and will need to be exchanged for native assets.
-      </Typography>
-      <Typography component="div">
-        <Link
-          href={AVAILABLE_MARKETS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Click here to see available markets for wrapped tokens.
-        </Link>
+        and will need to be exchanged for the underlying tokens.
       </Typography>
     </Alert>
   );
@@ -67,15 +58,6 @@ function MultichainWarning({
       <Typography
         className={classes.line}
       >{`To receive native ${symbol}, you will have to perform a swap with the wrapped tokens once you are done bridging.`}</Typography>
-      <Typography>
-        <Link
-          href={AVAILABLE_MARKETS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Click here to see available markets for wrapped tokens.
-        </Link>
-      </Typography>
     </Alert>
   );
 }
