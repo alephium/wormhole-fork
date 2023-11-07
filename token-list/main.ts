@@ -59,6 +59,10 @@ program
       const targetTokenMetadata = await targetChain.getTokenMetadata(bridgeTokenId)
       validateTokenMetadata(sourceTokenMetadata, targetTokenMetadata)
       const bridgeToken: BridgeToken = {
+        name: sourceTokenMetadata.name,
+        symbol: sourceTokenMetadata.symbol,
+        decimals: sourceTokenMetadata.decimals,
+
         tokenChainId: tokenChain.chainId,
         originTokenId: options.tokenId,
         targetChainId: targetChain.chainId,
