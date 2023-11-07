@@ -11,6 +11,7 @@ import { Multicall, ContractCallContext } from 'ethereum-multicall';
 import axios from "axios"
 
 export const DefaultEVMChainConfirmations = 15
+export const EpochDuration = 480000
 
 interface TokenInfo {
   address: string
@@ -141,18 +142,30 @@ export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock
     : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
 }
 
-export async function waitEVMTxConfirmed(provider: ethers.providers.Provider, receipt: ethers.providers.TransactionReceipt, chainId: ChainId) {
+export async function waitEVMTxConfirmed(provider: ethers.providers.Provider, txBlockNumber: number, chainId: ChainId) {
   checkEVMChainId(chainId)
-  await _waitEVMTxConfirmed(provider, receipt, chainId)
+  await _waitEVMTxConfirmed(provider, txBlockNumber, chainId)
 }
 
-async function _waitEVMTxConfirmed(provider: ethers.providers.Provider, receipt: ethers.providers.TransactionReceipt, chainId: ChainId) {
+async function _waitEVMTxConfirmed(
+  provider: ethers.providers.Provider,
+  txBlockNumber: number,
+  chainId: ChainId,
+  lastBlockNumber: number | undefined = undefined,
+  lastBlockUpdatedTs: number = Date.now(),
+) {
   const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
-  if (isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
+  if (isEVMTxConfirmed(chainId, txBlockNumber, currentBlockNumber)) {
     return
   }
   await sleep(3000)
-  await _waitEVMTxConfirmed(provider, receipt, chainId)
+  const now = Date.now()
+  const [evmProvider, timestamp] = currentBlockNumber === lastBlockNumber && (now - lastBlockUpdatedTs > EpochDuration)
+    ? [getEvmJsonRpcProvider(chainId) ?? provider, now]
+    : currentBlockNumber !== lastBlockNumber
+    ? [provider, now]
+    : [provider, lastBlockUpdatedTs]
+  await _waitEVMTxConfirmed(evmProvider, txBlockNumber, chainId, currentBlockNumber, timestamp)
 }
 
 export function getEvmJsonRpcProvider(chainId: ChainId): ethers.providers.Provider | undefined {

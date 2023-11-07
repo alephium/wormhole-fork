@@ -20,9 +20,10 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 import SmartBlock from "./SmartBlock";
-import { DefaultEVMChainConfirmations, getEVMCurrentBlockNumber } from "../utils/ethereum";
+import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from "../utils/ethereum";
 import { useWallet } from "@alephium/web3-react";
 import { AlephiumBlockTime } from "../utils/alephium";
+import { ethers } from "ethers";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,6 +50,8 @@ export default function TransactionProgress({
   const { provider } = useEthereumProvider();
   const alphWallet = useWallet()
   const [currentBlock, setCurrentBlock] = useState(0);
+  const [evmProvider, setEvmProvider] = useState<ethers.providers.Provider | undefined>(provider)
+  const [lastBlockUpdatedTs, setLastBlockUpdatedTs] = useState(Date.now())
   const [alphTxConfirmedTs, setAlphTxConfirmedTs] = useState<number | undefined>()
   const [alphTxConfirmed, setAlphTxConfirmed] = useState<boolean>(false)
   useEffect(() => {
@@ -63,15 +66,23 @@ export default function TransactionProgress({
 
   useEffect(() => {
     if (isSendComplete || !tx) return;
-    if (isEVMChain(chainId) && provider) {
+    if (isEVMChain(chainId) && evmProvider) {
       let cancelled = false;
       (async () => {
         while (!cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 3000));
           try {
-            const newBlock = await getEVMCurrentBlockNumber(provider, chainId)
+            const newBlock = await getEVMCurrentBlockNumber(evmProvider, chainId)
             if (!cancelled) {
-              setCurrentBlock(newBlock);
+              setCurrentBlock((prev) => {
+                const now = Date.now()
+                if (prev === newBlock && (now - lastBlockUpdatedTs > EpochDuration) && evmProvider === provider) {
+                  setEvmProvider(getEvmJsonRpcProvider(chainId))
+                } else if (prev !== newBlock) {
+                  setLastBlockUpdatedTs(now)
+                }
+                return newBlock
+              });
             }
           } catch (e) {
             console.error(e);
@@ -118,7 +129,7 @@ export default function TransactionProgress({
         cancelled = true;
       };
     }
-  }, [isSendComplete, chainId, provider, alphWallet, tx]);
+  }, [isSendComplete, chainId, provider, alphWallet, tx, lastBlockUpdatedTs, evmProvider]);
   if (chainId === CHAIN_ID_ALEPHIUM) {
     const blockDiff =
       tx && tx.blockHeight && currentBlock ? currentBlock - tx.blockHeight : undefined;
