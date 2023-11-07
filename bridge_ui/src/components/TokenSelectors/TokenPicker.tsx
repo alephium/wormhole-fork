@@ -504,17 +504,6 @@ export default function TokenPicker({
         </div>
       </DialogTitle>
       <DialogContent className={classes.dialogContent}>
-        <Alert severity="info">
-          You should always check for markets and liquidity before sending
-          tokens.{" "}
-          <Link
-            href={AVAILABLE_MARKETS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Click here to see available markets for wrapped tokens.
-          </Link>
-        </Alert>
         <TextField
           variant="outlined"
           label="Search name or paste address"

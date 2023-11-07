@@ -146,7 +146,7 @@ function Send() {
   return (
     <>
       <StepDescription>
-        Transfer the tokens to the Wormhole Token Bridge.
+        Transfer the tokens to the Alephium Bridge.
       </StepDescription>
       <KeyAndBalance chainId={sourceChain} />
       {sourceChain === CHAIN_ID_TERRA && (
