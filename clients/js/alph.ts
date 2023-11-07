@@ -1,8 +1,8 @@
 import { CONFIGS, Guardians, NetworkType } from './configs'
 import { impossible } from './utils'
-import { web3, binToHex, addressFromContractId, ExecuteScriptResult, SignerProvider, ExecuteScriptParams, HexString, ExecutableScript, ONE_ALPH, DUST_AMOUNT } from '@alephium/web3'
+import { web3, binToHex, addressFromContractId, ExecuteScriptResult, ExecutableScript, ONE_ALPH, DUST_AMOUNT } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA } from '@alephium/wormhole-sdk'
+import { registerChain, GovernancePayload, alephium_contracts, deserializeTransferFeeVAA, ChainId, getTokenBridgeForChainId } from '@alephium/wormhole-sdk'
 import {
   DestroyUnexecutedSequenceContracts,
   SetMessageFee,
@@ -11,10 +11,30 @@ import {
   UpdateMinimalConsistencyLevel,
   UpdateRefundAddress,
   UpgradeTokenBridgeContract,
-  Governance,
-  TokenBridge,
-  AddRewards
+  AddRewards,
+  Deposit
 } from '@alephium/wormhole-sdk/lib/cjs/alephium-contracts/ts'
+
+export async function deposit(
+  remoteChainId: ChainId,
+  alphAmount: bigint,
+  networkType: NetworkType,
+  nodeUrl?: string
+) {
+  const network = CONFIGS[networkType]['alephium']
+  const signer = getSignerProvider(network, nodeUrl)
+  const amount = alphAmount * ONE_ALPH
+  const tokenBridgeForChainId = getTokenBridgeForChainId(network.tokenBridgeAddress, remoteChainId, network.groupIndex)
+  const result = await Deposit.execute(signer, {
+    initialFields: {
+      payer: signer.address,
+      amount: amount,
+      tokenBridgeForChain: tokenBridgeForChainId
+    },
+    attoAlphAmount: amount + DUST_AMOUNT
+  })
+  console.log(`TxId: ${result.txId}`)
+}
 
 export async function topupRewards(
   alphAmount: bigint,

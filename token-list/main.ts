@@ -1,6 +1,6 @@
 import { program } from 'commander'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
-import { BridgeChain, createAlephium, createEVM, getBridgeChain, TokenMetaData, validateTokenMetadata } from './utils'
+import { getBridgeChain, validateTokenMetadata } from './utils'
 import { BridgeToken, mainnetBridgeTokens, testnetBridgeTokens } from './src'
 import path from 'path'
 import fs from 'fs'
@@ -59,6 +59,10 @@ program
       const targetTokenMetadata = await targetChain.getTokenMetadata(bridgeTokenId)
       validateTokenMetadata(sourceTokenMetadata, targetTokenMetadata)
       const bridgeToken: BridgeToken = {
+        name: sourceTokenMetadata.name,
+        symbol: sourceTokenMetadata.symbol,
+        decimals: sourceTokenMetadata.decimals,
+
         tokenChainId: tokenChain.chainId,
         originTokenId: options.tokenId,
         targetChainId: targetChain.chainId,

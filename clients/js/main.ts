@@ -31,7 +31,7 @@ import {
   isEVMChain,
   toChainId,
 } from "@alephium/wormhole-sdk";
-import { executeGovernanceAlph, getNextGovernanceSequence, topupRewards } from "./alph";
+import { deposit, executeGovernanceAlph, getNextGovernanceSequence, topupRewards } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";
 
@@ -649,6 +649,44 @@ yargs(hideBin(process.argv))
       const alphAmount = BigInt(argv.amount)
       const nodeUrl = argv['node-url']
       await topupRewards(alphAmount, network, nodeUrl)
+    }
+  )
+  .command(
+    "deposit",
+    "Deposit ALPH into TokenBridgeForChain contract",
+    (yargs) => {
+      return yargs
+        .option("remoteChainId", {
+          alias: "c",
+          describe: "remote chain id",
+          type: "number",
+          required: true,
+        })
+        .option("amount", {
+          alias: "a",
+          describe: "ALPH amount",
+          type: "number",
+          required: true,
+        })
+        .option("network", {
+          alias: "n",
+          describe: "network",
+          type: "string",
+          choices: ["mainnet", "testnet", "devnet"],
+          required: true,
+        })
+        .option('node-url', {
+          describe: "full node url",
+          type: "string",
+          required: false,
+        });
+    },
+    async (argv) => {
+      const remoteChainId = argv.remoteChainId as ChainId
+      const network = getNetworkType(argv.network)
+      const alphAmount = BigInt(argv.amount)
+      const nodeUrl = argv['node-url']
+      await deposit(remoteChainId, alphAmount, network, nodeUrl)
     }
   )
   .argv
