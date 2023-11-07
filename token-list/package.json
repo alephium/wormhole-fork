@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "@alephium/token-list": "0.0.11",
-    "@alephium/web3": "^0.18.2",
-    "@alephium/wormhole-sdk": "0.1.2",
+    "@alephium/web3": "^0.22.0",
+    "@alephium/wormhole-sdk": "0.2.0",
     "commander": "^9.5.0",
     "ethers": "^5.6.8"
   },

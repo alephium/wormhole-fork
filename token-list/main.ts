@@ -1,6 +1,6 @@
 import { program } from 'commander'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
-import { BridgeChain, createAlephium, createEVM, getBridgeChain, TokenMetaData, validateTokenMetadata } from './utils'
+import { getBridgeChain, validateTokenMetadata } from './utils'
 import { BridgeToken, mainnetBridgeTokens, testnetBridgeTokens } from './src'
 import path from 'path'
 import fs from 'fs'

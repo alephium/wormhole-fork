@@ -8,7 +8,7 @@ import { default as bscTestnetContracts } from '../configs/bsc/testnet.json'
 import { default as bscMainnetContracts } from '../configs/bsc/mainnet.json'
 import { ethers } from 'ethers'
 import { getForeignAssetEth } from '@alephium/wormhole-sdk/lib/cjs/nft_bridge'
-import { ALPH, mainnetTokensMetadata, testnetTokensMetadata } from '@alephium/token-list'
+import { ALPH } from '@alephium/token-list'
 
 export interface BridgeChain {
   chainId: ChainId
@@ -26,8 +26,6 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const textDecoder = new TextDecoder()
   web3.setCurrentNodeProvider(nodeUrl)
 
-  const tokenList = network === 'testnet' ? testnetTokensMetadata : mainnetTokensMetadata
-
   const getForeignAsset = async (tokenChainId: ChainId, tokenId: Uint8Array): Promise<string | null> => {
     return await getForeignAssetAlephium(
       deployments.contracts.tokenBridge,
@@ -41,10 +39,6 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const getTokenMetadata = async (tokenId: string): Promise<TokenMetaData> => {
     if (tokenId === ALPH_TOKEN_ID) {
       return { name: ALPH.name, symbol: ALPH.symbol, decimals: ALPH.decimals }
-    }
-    const tokenInTokenList = tokenList.tokens.find((t) => t.id === tokenId)
-    if (tokenInTokenList === undefined) {
-      throw new Error(`Token ${tokenId} does not exists in the token-list`)
     }
     const nodeProvider = web3.getCurrentNodeProvider()
     const result = await nodeProvider.fetchFungibleTokenMetaData(tokenId)
@@ -64,12 +58,11 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
 }
 
 function getEVMNodeUrl(chainId: EVMChainId, network: 'testnet' | 'mainnet'): string {
-  if (network === 'mainnet') throw new Error(`Not support`)
   switch (chainId) {
     case CHAIN_ID_ETH:
-      return 'https://ethereum-goerli.publicnode.com'
+      return network === 'testnet' ? 'https://ethereum-goerli.publicnode.com' : 'https://ethereum.publicnode.com'
     case CHAIN_ID_BSC:
-      return 'https://bsc-testnet.publicnode.com'
+      return network === 'testnet' ? 'https://bsc-testnet.publicnode.com' : 'https://bsc.publicnode.com'
   }
   throw new Error(`Invalid chain id: ${chainId}`)
 }
@@ -128,7 +121,7 @@ export function getBridgeChain(network: 'testnet' | 'mainnet', chainId: ChainId)
 }
 
 export function validateTokenMetadata(sourceMetadata: TokenMetaData, targetMetadata: TokenMetaData) {
-  const targetNamePostfix = ' (Wormhole)'
+  const targetNamePostfix = ' (AlphBridge)'
   const expectedName = sourceMetadata.name + targetNamePostfix
   if (expectedName !== targetMetadata.name) {
     throw new Error(`Invalid bridge token name, expect ${expectedName}, have ${targetMetadata.name}`)
