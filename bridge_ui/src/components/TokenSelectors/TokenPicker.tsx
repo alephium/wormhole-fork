@@ -8,7 +8,6 @@ import {
   DialogTitle,
   Divider,
   IconButton,
-  Link,
   List,
   ListItem,
   makeStyles,
@@ -27,7 +26,6 @@ import { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { selectTransferTargetChain } from "../../store/selectors";
 import { balancePretty } from "../../utils/balancePretty";
 import {
-  AVAILABLE_MARKETS_URL,
   CHAINS_BY_ID,
   getIsTokenTransferDisabled,
 } from "../../utils/consts";
