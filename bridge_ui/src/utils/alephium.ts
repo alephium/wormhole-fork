@@ -65,9 +65,13 @@ export class AlphTxInfo {
 }
 
 export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, confirmations: number): Promise<node.Confirmed> {
-  const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
-  if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= confirmations) {
-    return txStatus as node.Confirmed
+  try {
+    const txStatus = await provider.transactions.getTransactionsStatus({txId: txId})
+    if (isAlphTxConfirmed(txStatus) && txStatus.chainConfirmations >= confirmations) {
+      return txStatus as node.Confirmed
+    }
+  } catch (error) {
+    console.error(`failed to get tx status, tx id: ${txId}`)
   }
   await sleep(ALEPHIUM_POLLING_INTERVAL)
   return waitALPHTxConfirmed(provider, txId, confirmations)
