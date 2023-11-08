@@ -1,12 +1,17 @@
 import { AppBar, Hidden, Button, Box, Link, Toolbar } from "@mui/material";
 import React from "react";
 import LogoLink from "./LogoLink";
+import { useNetworkContext } from "../contexts/NetworkContext";
 
 const linkStyle = { ml: 3, textUnderlineOffset: 6 };
 const linkActiveStyle = { textDecoration: "underline" };
 
-const NavBar = () => (
-  <AppBar
+const NavBar = () => {
+  const { activeNetwork } = useNetworkContext()
+  const bridgeLink = activeNetwork.name === 'mainnet'
+    ? "https://bridge.alephium.org"
+    : "https://testnet.bridge.alephium.org"
+  return (<AppBar
     position="static"
     sx={{ backgroundColor: "transparent" }}
     elevation={0}
@@ -16,7 +21,7 @@ const NavBar = () => (
       <Box sx={{ flexGrow: 1 }} />
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         <Link
-          href={"https://testnet.bridge.alephium.org"}
+          href={bridgeLink}
           color="inherit"
           underline="hover"
           sx={linkStyle}
@@ -36,6 +41,6 @@ const NavBar = () => (
         <img src={hamburger} alt="menu" />
       </Box> */}
     </Toolbar>
-  </AppBar>
-);
+  </AppBar>)
+};
 export default NavBar;
