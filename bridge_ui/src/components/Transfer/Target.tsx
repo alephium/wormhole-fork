@@ -102,7 +102,11 @@ function Target() {
   const isTargetComplete = useSelector(selectTransferIsTargetComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
   const { statusMessage, isReady } = useIsWalletReady(targetChain);
-  const isLoading = (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) || isFetchingSourceAssetInfo;
+  const targetParsedTokenAccount = useSelector(selectTransferTargetParsedTokenAccount);
+  const isLoading =
+    (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) ||
+    isFetchingSourceAssetInfo ||
+    (data?.doesExist && targetParsedTokenAccount === undefined);
   const { associatedAccountExists, setAssociatedAccountExists } =
     useAssociatedAccountExistsState(
       targetChain,
@@ -178,7 +182,7 @@ function Target() {
         <SolanaTPSWarning />
       )}
       <ButtonWithLoader
-        disabled={!isTargetComplete || !associatedAccountExists}
+        disabled={!isTargetComplete || !associatedAccountExists || isLoading}
         onClick={handleNextClick}
         showLoader={isLoading}
         error={
