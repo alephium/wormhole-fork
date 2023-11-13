@@ -146,8 +146,9 @@ func (w *Watcher) getGovernanceEventsByTxId(
 			}
 		}
 
+		contractEvent := event
 		reobservedEvents = append(reobservedEvents, &reobservedEvent{
-			&event,
+			&contractEvent,
 			msg.consistencyLevel,
 			header,
 			txId,

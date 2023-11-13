@@ -234,24 +234,11 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 					return
 				}
 
-				for _, event := range events.Events {
-					unconfirmed, err := w.toUnconfirmedEvent(&event)
-					if err != nil {
-						logger.Error("failed to convert to unconfirmed event", zap.Error(err))
-						errC <- err
-						return
-					}
-					if unconfirmed.msg.IsAttestTokenVAA() {
-						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "attest"))
-						if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
-							logger.Error("ignore invalid attest token event", zap.Error(err))
-							continue
-						}
-					} else {
-						logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "transfer"))
-					}
-					unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
+				unconfirmed, err := w.handleUnconfirmedEvents(ctx, logger, events)
+				if err != nil {
+					errC <- err
 				}
+				unconfirmedEvents = append(unconfirmedEvents, unconfirmed...)
 
 				fromIndex = events.NextStart
 				if events.NextStart == *count {
@@ -263,6 +250,29 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 			eventsC <- unconfirmedEvents
 		}
 	}
+}
+
+func (w *Watcher) handleUnconfirmedEvents(ctx context.Context, logger *zap.Logger, events *sdk.ContractEvents) ([]*UnconfirmedEvent, error) {
+	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
+	for _, event := range events.Events {
+		contractEvent := event
+		unconfirmed, err := w.toUnconfirmedEvent(&contractEvent)
+		if err != nil {
+			logger.Error("failed to convert to unconfirmed event", zap.Error(err))
+			return nil, err
+		}
+		if unconfirmed.msg.IsAttestTokenVAA() {
+			logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "attest"))
+			if err = w.validateAttestToken(ctx, unconfirmed.msg); err != nil {
+				logger.Error("ignore invalid attest token event", zap.Error(err))
+				continue
+			}
+		} else {
+			logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "transfer"))
+		}
+		unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
+	}
+	return unconfirmedEvents, nil
 }
 
 func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {

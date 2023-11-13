@@ -258,3 +258,45 @@ func TestIsEventConfirmed(t *testing.T) {
 		assert.Equal(t, isEventConfirmed(logger, event, c.eventBlockHeader, c.currentTs, c.currentHeight), c.isConfirmed)
 	}
 }
+
+func TestHandleUnconfirmedEvents(t *testing.T) {
+	watcher := &Watcher{
+		chainIndex:         &ChainIndex{0, 0},
+		currentHeight:      0,
+		blockPollerEnabled: &atomic.Bool{},
+	}
+
+	logger, err := zap.NewDevelopment()
+	assert.Nil(t, err)
+
+	fields := []sdk.Val{
+		byteVecField("deae14cf3bcfaea1f8f7e905fd8b554833d1bccaa8a9a1dd01f29fea6c7bca07"),
+		u256Field(3),
+		u256Field(101),
+		byteVecField("1e308999"),
+		byteVecField("010000000000000000000000000000000000000000000000004563918244f400009fb80859f87d9d56a118624a12258e7dd471a0a474490807986d9b0bb7f576ab00ff0000000000000000000000000d0f183465284cb5cb426902445860456ed59b3400000000000000000000000000000000000000000000000000005af3107a4000"),
+		u256Field(1),
+	}
+
+	events := make([]sdk.ContractEvent, 0)
+	for i := 0; i < 10; i++ {
+		events = append(events, sdk.ContractEvent{
+			BlockHash:  randomByte32().ToHex(),
+			TxId:       randomByte32().ToHex(),
+			EventIndex: 0,
+			Fields:     fields,
+		})
+	}
+
+	unconfirmedEvents, err := watcher.handleUnconfirmedEvents(context.Background(), logger, &sdk.ContractEvents{Events: events})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blockHashes := make(map[string]bool, 0)
+	assert.Equal(t, 10, len(unconfirmedEvents))
+	for i := 0; i < 10; i++ {
+		blockHashes[unconfirmedEvents[i].BlockHash] = true
+	}
+	assert.Equal(t, 10, len(blockHashes))
+}
