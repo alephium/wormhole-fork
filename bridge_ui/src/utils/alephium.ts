@@ -77,9 +77,8 @@ export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, 
   return waitALPHTxConfirmed(provider, txId, confirmations)
 }
 
-async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.Confirmed): Promise<AlphTxInfo> {
-  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
-  const events = await provider.events.getEventsTxIdTxid(txId, { group: blockHeader.chainFrom })
+async function getTxInfo(provider: NodeProvider, txId: string) {
+  const events = await provider.events.getEventsTxIdTxid(txId, { group: ALEPHIUM_BRIDGE_GROUP_INDEX })
   const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
   if (typeof event === 'undefined') {
     return Promise.reject('failed to get event for tx: ' + txId)
@@ -97,17 +96,20 @@ async function getTxInfo(provider: NodeProvider, txId: string, confirmed: node.C
   }
   const sequence = parseSequenceFromLogAlph(event)
   const targetChain = parseTargetChainFromLogAlph(event)
-  return new AlphTxInfo(blockHeader, txId, sequence, targetChain, confirmed.chainConfirmations)
+  return { sequence, targetChain}
 }
 
 export async function waitTxConfirmedAndGetTxInfo(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
   const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
-  return getTxInfo(provider, txId, confirmed)
+  const { sequence, targetChain } = await getTxInfo(provider, txId)
+  const blockHeader = await provider.blockflow.getBlockflowHeadersBlockHash(confirmed.blockHash)
+  return new AlphTxInfo(blockHeader, txId, sequence, targetChain, confirmed.chainConfirmations)
 }
 
-export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string): Promise<AlphTxInfo> {
+export async function getAlphTxInfoByTxId(provider: NodeProvider, txId: string) {
   const confirmed = await waitALPHTxConfirmed(provider, txId, 1)
-  return getTxInfo(provider, txId, confirmed)
+  const txInfo = await getTxInfo(provider, txId)
+  return { ...txInfo, confirmations: confirmed.chainConfirmations }
 }
 
 export function isAlphTxNotFound(txStatus: node.TxStatus): Boolean {
