@@ -1,7 +1,7 @@
 {
-  "name": "wormhole-relayer",
+  "name": "alephium-bridge-relayer",
   "version": "0.1.0",
-  "description": "Wormhole Relayer",
+  "description": "Alephium Bridge Relayer",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
