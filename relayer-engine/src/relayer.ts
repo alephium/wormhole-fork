@@ -47,6 +47,7 @@ async function relayEVM(chainId: EVMChainId, ctx: WalletContext, next: Next) {
     const receipt = isNative
       ? (await redeemOnEthNative(tokenBridgeAddress, wallet.wallet, ctx.vaa.bytes))
       : (await redeemOnEth(tokenBridgeAddress, wallet.wallet, ctx.vaa.bytes))
+    await ctx.onTxSubmitted(vaaId, receipt.transactionHash)
     ctx.logger.info(`submitted complete transfer to ${coalesceChainName(chainId)} with tx id ${receipt.transactionHash}, vaa id: ${vaaId}`)
   })
   await next()
@@ -68,6 +69,7 @@ async function relayAlph(ctx: WalletContext, next: Next) {
     }
 
     const result = await redeemOnAlphWithReward(wallet.wallet, bridgeRewardRouterId, tokenBridgeForChainId, ctx.vaa.bytes)
+    await ctx.onTxSubmitted(vaaId, result.txId)
     ctx.logger.info(`submitted complete transfer to alephium with tx id ${result.txId}, vaa id: ${vaaId}`)
   })
   await next()

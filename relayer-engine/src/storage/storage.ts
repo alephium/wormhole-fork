@@ -24,6 +24,8 @@ export type onJobHandler = (job: RelayJob) => Promise<any>;
 
 export interface Storage {
   addVaaToQueue(vaa: Uint8Array): Promise<RelayJob>;
+  onTxSubmitted(vaaId: string, txId: string): Promise<void>
+  getTxId(vaaId: string): Promise<string | null>
   startWorker(cb: onJobHandler): void;
   stopWorker(): Promise<void>;
 }

@@ -14,8 +14,8 @@ import { onJobHandler, RelayJob, Storage } from "./storage";
 import { KoaAdapter } from "@bull-board/koa";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { deserializeVAA, uint8ArrayToHex } from "@alephium/wormhole-sdk";
-import { ParsedVaaWithBytes } from "../application";
+import { deserializeVAA } from "@alephium/wormhole-sdk";
+import { vaaIdToString } from "../application";
 
 export interface RedisConnectionOpts {
   redisClusterEndpoints?: ClusterNode[];
@@ -57,7 +57,7 @@ export class RedisStorage implements Storage {
 
   workerId: string;
 
-  constructor(opts: StorageOptions) {
+  constructor(opts: StorageOptions, logger: Logger) {
     this.opts = Object.assign({}, defaultOptions, opts);
     // ensure redis is defined
     if (!this.opts.redis) {
@@ -80,27 +80,22 @@ export class RedisStorage implements Storage {
     const { metrics, registry } = createStorageMetrics();
     this.metrics = metrics;
     this.registry = registry;
+    this.logger = logger
   }
 
   async addVaaToQueue(vaaBytes: Uint8Array): Promise<RelayJob> {
     const vaa = parseVaaWithBytes(vaaBytes);
-    const id = this.vaaId(vaa);
-    const idWithoutHash = id.substring(0, id.length - 6);
-    this.logger?.debug(`Adding VAA to queue`, {
-      emitterChain: vaa.id.emitterChain,
-      emitterAddress: vaa.id.emitterAddress,
-      targetChain: vaa.id.targetChain,
-      sequence: vaa.id.sequence,
-    });
+    const vaaId = vaaIdToString(vaa.id)
+    this.logger?.debug(`Adding VAA to queue, vaa id: ${vaaId}`);
     const job = await this.vaaQueue.add(
-      idWithoutHash,
+      vaaId,
       {
         vaaBytes: Buffer.from(vaaBytes).toString("base64"),
       },
       {
-        jobId: id,
-        removeOnComplete: 1000,
-        removeOnFail: 5000,
+        jobId: vaaId,
+        removeOnComplete: { age: 3600 * 24 * 7, count: 1000 },
+        removeOnFail: { age: 3600 * 24 * 14, count: 1000 },
         attempts: this.opts.attempts,
       },
     );
@@ -114,12 +109,6 @@ export class RedisStorage implements Storage {
       updateProgress: job.updateProgress.bind(job),
       maxAttempts: this.opts.attempts,
     };
-  }
-
-  private vaaId(vaa: ParsedVaaWithBytes): string {
-    const emitterAddress = uint8ArrayToHex(vaa.parsed.body.emitterAddress);
-    const sequence = vaa.id.sequence;
-    return `${vaa.id.emitterChain}/${emitterAddress}/${vaa.id.targetChain}/${sequence}`;
   }
 
   startWorker(handleJob: onJobHandler) {
@@ -143,7 +132,6 @@ export class RedisStorage implements Storage {
           log: job.log.bind(job),
           updateProgress: job.updateProgress.bind(job),
         };
-        await job.log(`processing by..${this.workerId}`);
         await handleJob(relayJob);
         return;
       },
@@ -162,6 +150,21 @@ export class RedisStorage implements Storage {
   async stopWorker() {
     await this.worker?.close();
     this.worker = null;
+  }
+
+  async onTxSubmitted(vaaId: string, txId: string): Promise<void> {
+    const txKey = `${vaaId}:txId`.toLowerCase()
+    await this.redis.set(txKey, txId)
+  }
+
+  async getTxId(vaaId: string): Promise<string | null> {
+    const txKey = `${vaaId}:txId`.toLowerCase()
+    return await this.redis.get(txKey)
+  }
+
+  async isProcessing(vaaId: string): Promise<boolean> {
+    const job = await this.vaaQueue.getJob(vaaId)
+    return job !== undefined
   }
 
   async spawnGaugeUpdateWorker(ms = 5000) {

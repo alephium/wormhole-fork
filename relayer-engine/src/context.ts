@@ -30,6 +30,7 @@ export interface Context {
   networkId: NetworkId;
   logger?: Logger;
   on: (eventName: RelayerEvents, listener: ListenerFn) => void;
+  onTxSubmitted: (vaaId: string, txId: string) => Promise<void>;
   config: {
     spyFilters: {
       emitterFilter?: { chainId?: ChainId; emitterAddress?: string };
