@@ -13,7 +13,8 @@ import {
   uint8ArrayToHex,
   getTokenBridgeForChainId,
   getIsTransferCompletedAlph,
-  redeemOnAlphWithReward
+  redeemOnAlphWithReward,
+  deserializeVAA
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -38,7 +39,7 @@ import {
   selectTransferSourceChain,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { setIsRedeeming, setIsWalletApproved, setRedeemTx } from "../store/transferSlice";
+import { setIsRedeeming, setIsRedeemingViaRelayer, setIsWalletApproved, setRedeemCompleted, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
@@ -54,6 +55,8 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   TERRA_TOKEN_BRIDGE_ADDRESS,
+  CLUSTER,
+  RELAYER_HOST,
 } from "../utils/consts";
 import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
@@ -63,6 +66,7 @@ import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
+import { SignerProvider } from "@alephium/web3";
 
 async function algo(
   dispatch: any,
@@ -235,6 +239,46 @@ async function terra(
   }
 }
 
+async function redeemViaRelayer(
+  dispatch: any,
+  signer: SignerProvider,
+  tokenBridgeForChainId: string,
+  signedVAA: Uint8Array
+): Promise<string | undefined> {
+  try {
+    dispatch(setIsRedeemingViaRelayer(true))
+    const parsedVAA = deserializeVAA(signedVAA)
+    const emitterChain = parsedVAA.body.emitterChainId.toString()
+    const targetChain = parsedVAA.body.targetChainId.toString()
+    const emitterAddress = uint8ArrayToHex(parsedVAA.body.emitterAddress)
+    const sequence = parsedVAA.body.sequence.toString()
+    const url = `${RELAYER_HOST}/vaas/${emitterChain}/${emitterAddress}/${targetChain}/${sequence}`
+    const { data } = await axios.request({ url, method: 'POST', timeout: 15000 })
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    dispatch(setIsWalletApproved(true))
+    dispatch(setIsRedeemingViaRelayer(false))
+    return data.txId ? data.txId as string : undefined
+  } catch (error) {
+    dispatch(setIsRedeemingViaRelayer(false))
+    console.error(`failed to redeem via relayer, error: ${error}`)
+    return await redeemManually(dispatch, signer, tokenBridgeForChainId, signedVAA)
+  }
+}
+
+async function redeemManually(
+  dispatch: any,
+  signer: SignerProvider,
+  tokenBridgeForChainId: string,
+  signedVAA: Uint8Array
+): Promise<string> {
+  const result = await redeemOnAlphWithReward(signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
+  console.log(`the redemption tx has been submitted, txId: ${result.txId}`)
+  dispatch(setIsWalletApproved(true))
+  return result.txId
+}
+
 async function alephium(
   dispatch: any,
   enqueueSnackbar: any,
@@ -248,19 +292,31 @@ async function alephium(
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
-    console.log('redeem on alephium')
-    const result = await redeemOnAlphWithReward(wallet.signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
-    console.log(`the redeem tx has been submitted, txId: ${result.txId}`)
-    dispatch(setIsWalletApproved(true))
-    const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
+
+    let txId: string | undefined = undefined
+    if (CLUSTER === 'mainnet') {
+      txId = await redeemViaRelayer(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
+    } else {
+      txId = await redeemManually(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
+    }
+
+    if (txId === undefined) {
+      dispatch(setRedeemCompleted())
+      enqueueSnackbar(null, {
+        content: <Alert severity="success">Transaction confirmed</Alert>,
+      });
+      return
+    }
+
+    const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)
     dispatch(
-      setRedeemTx({ id: result.txId, blockHeight: blockHeader.height })
+      setRedeemTx({ id: txId, blockHeight: blockHeader.height })
     );
-    console.log(`the redeem tx has been confirmed, txId: ${result.txId}`)
+    console.log(`the redeem tx has been confirmed, txId: ${txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
-      wallet.account.group,
+      ALEPHIUM_BRIDGE_GROUP_INDEX,
       signedVAA
     )
     if (isTransferCompleted) {
@@ -272,6 +328,7 @@ async function alephium(
         content: <Alert severity="error">Transfer failed, please try again later</Alert>,
       });
     }
+
   } catch (e) {
     enqueueSnackbar(null, {
       content: <Alert severity="error">{parseError(e)}</Alert>,

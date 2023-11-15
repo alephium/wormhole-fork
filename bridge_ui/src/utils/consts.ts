@@ -315,6 +315,13 @@ export const EXPLORER_API_SERVER_HOST =
     ? 'https://v2.indexer-api.explorer.testnet.bridge.alephium.org'
     : 'http://localhost:8100'
 
+export const RELAYER_HOST =
+  CLUSTER === 'mainnet'
+    ? ''
+    : CLUSTER === 'testnet'
+    ? ''
+    : 'http://localhost:31000'
+
 export const ALEPHIUM_HOST =
   CLUSTER === "mainnet"
     ? alephiumMainnetConfig.nodeUrl
