@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import {
   selectTransferIsApproving,
   selectTransferIsRedeeming,
+  selectTransferIsRedeemingViaRelayer,
   selectTransferIsSending,
   selectTransferIsWalletApproved,
   selectTransferRedeemTx,
@@ -33,15 +34,18 @@ export default function WaitingForWalletMessage() {
   const transferTx = useSelector(selectTransferTransferTx);
   const targetChain = useSelector(selectTransferTargetChain);
   const isRedeeming = useSelector(selectTransferIsRedeeming);
+  const isRedeemingViaRelayer = useSelector(selectTransferIsRedeemingViaRelayer);
   const redeemTx = useSelector(selectTransferRedeemTx);
-  const showWarning =
+  const showNote =
     isApproving || (isSending && !transferTx) || (isRedeeming && !redeemTx);
-  return showWarning ? (
-    <Typography className={classes.message} variant="body2">
-      {isWalletApproved ? WAITING_FOR_TX_CONFIRMATION : WAITING_FOR_WALLET_APPROVAL}{" "}
-      {targetChain === CHAIN_ID_SOLANA && isRedeeming
-        ? "Note: there will be several transactions"
-        : null}
-    </Typography>
-  ) : null;
+  return isRedeemingViaRelayer
+    ? (<Typography className={classes.message} variant="body2">Trying to redeem via relayer...</Typography>)
+    : showNote
+    ? (<Typography className={classes.message} variant="body2">
+        {isWalletApproved ? WAITING_FOR_TX_CONFIRMATION : WAITING_FOR_WALLET_APPROVAL}{" "}
+        {targetChain === CHAIN_ID_SOLANA && isRedeeming
+          ? "Note: there will be several transactions"
+          : null}
+       </Typography>)
+    : null;
 }
