@@ -154,7 +154,7 @@ export class RedisStorage implements Storage {
 
   async onTxSubmitted(vaaId: string, txId: string): Promise<void> {
     const txKey = `${vaaId}:txId`.toLowerCase()
-    await this.redis.set(txKey, txId)
+    await this.redis.set(txKey, txId, 'EX', 30 * 24 * 3600)
   }
 
   async getTxId(vaaId: string): Promise<string | null> {
