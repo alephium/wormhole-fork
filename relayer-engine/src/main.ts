@@ -78,6 +78,11 @@ function runAPI(relayerApp: StandardRelayerApp<any>, logger: Logger, config: Con
     reprocessVaaById(rootLogger, relayerApp, config)
   )
 
+  app.use(async (ctx, next) => {
+    ctx.set('Access-Control-Allow-Origin', '*')
+    ctx.set('Access-Control-Allow-Methods', 'POST, GET')
+    await next()
+  })
   app.use(relayerApp.storageKoaUI("/ui"))
 
   app.use(router.routes())
