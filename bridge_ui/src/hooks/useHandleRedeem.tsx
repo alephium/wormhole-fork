@@ -294,7 +294,7 @@ async function alephium(
     const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
 
     let txId: string | undefined = undefined
-    if (CLUSTER === 'mainnet') {
+    if (CLUSTER === 'mainnet' || CLUSTER === 'testnet') {
       txId = await redeemViaRelayer(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
     } else {
       txId = await redeemManually(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
