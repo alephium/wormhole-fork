@@ -319,7 +319,7 @@ export const RELAYER_HOST =
   CLUSTER === 'mainnet'
     ? ''
     : CLUSTER === 'testnet'
-    ? ''
+    ? 'https://relayer.testnet.bridge.alephium.org'
     : 'http://localhost:31000'
 
 export const ALEPHIUM_HOST =
