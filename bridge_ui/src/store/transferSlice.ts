@@ -56,7 +56,9 @@ export interface TransferState {
   isSending: boolean;
   isWalletApproved: boolean;
   isRedeeming: boolean;
+  isRedeemingViaRelayer: boolean;
   redeemTx: Transaction | undefined;
+  isRedeemCompleted: boolean;
   isApproving: boolean;
   isRecovery: boolean;
   gasPrice: number | undefined;
@@ -83,7 +85,9 @@ const initialState: TransferState = {
   isSending: false,
   isWalletApproved: false,
   isRedeeming: false,
+  isRedeemingViaRelayer: false,
   redeemTx: undefined,
+  isRedeemCompleted: false,
   isApproving: false,
   isRecovery: false,
   gasPrice: undefined,
@@ -222,10 +226,20 @@ export const transferSlice = createSlice({
     setIsRedeeming: (state, action: PayloadAction<boolean>) => {
       state.isRedeeming = action.payload;
     },
+    setIsRedeemingViaRelayer: (state, action: PayloadAction<boolean>) => {
+      state.isRedeemingViaRelayer = action.payload
+    },
     setRedeemTx: (state, action: PayloadAction<Transaction>) => {
       state.redeemTx = action.payload;
       state.isRedeeming = false;
+      state.isRedeemingViaRelayer = false;
       state.isWalletApproved = false;
+    },
+    setRedeemCompleted: (state) => {
+      state.isRedeemCompleted = true
+      state.isRedeeming = false
+      state.isRedeemingViaRelayer = false;
+      state.isWalletApproved = false
     },
     setIsApproving: (state, action: PayloadAction<boolean>) => {
       state.isApproving = action.payload;
@@ -270,6 +284,7 @@ export const transferSlice = createSlice({
       state.activeStep = 3;
       state.isRecovery = true;
       state.redeemTx = undefined
+      state.isRedeemCompleted = false
       state.useRelayer = action.payload.useRelayer;
     },
     setGasPrice: (state, action: PayloadAction<number | undefined>) => {
@@ -332,7 +347,9 @@ export const {
   setIsSending,
   setIsWalletApproved,
   setIsRedeeming,
+  setIsRedeemingViaRelayer,
   setRedeemTx,
+  setRedeemCompleted,
   setIsApproving,
   reset,
   setRecoveryVaa,
