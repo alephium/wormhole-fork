@@ -44,7 +44,7 @@ export async function spawnWalletWorker(
         actionWithCont.reject(e);
       }
     } catch (e) {
-      logger.error("", e);
+      logger.error(`worker error: ${e}`);
       // wait longer between loop iterations on error
       await sleep(DEFAULT_WORKER_RESTART_MS);
     }

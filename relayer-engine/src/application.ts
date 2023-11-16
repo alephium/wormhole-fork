@@ -492,7 +492,7 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
           this.processVaa(vaa.vaaBytes);
         }
       } catch (err) {
-        this.rootLogger.error("error connecting to the spy");
+        this.rootLogger.error(`error connecting to the spy: ${err}`);
       }
 
       await sleep(300); // wait a bit before trying to reconnect.
