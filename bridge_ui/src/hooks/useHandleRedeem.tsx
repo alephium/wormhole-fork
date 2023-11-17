@@ -39,7 +39,7 @@ import {
   selectTransferSourceChain,
   selectTransferTargetChain,
 } from "../store/selectors";
-import { setIsRedeeming, setIsRedeemingViaRelayer, setIsWalletApproved, setRedeemCompleted, setRedeemTx } from "../store/transferSlice";
+import { setIsRedeemedViaRelayer, setIsRedeeming, setIsRedeemingViaRelayer, setIsWalletApproved, setRedeemCompleted, setRedeemTx } from "../store/transferSlice";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
   ACALA_RELAY_URL,
@@ -259,6 +259,7 @@ async function redeemViaRelayer(
     }
     dispatch(setIsWalletApproved(true))
     dispatch(setIsRedeemingViaRelayer(false))
+    dispatch(setIsRedeemedViaRelayer(true))
     return data.txId ? data.txId as string : undefined
   } catch (error) {
     dispatch(setIsRedeemingViaRelayer(false))
@@ -273,6 +274,7 @@ async function redeemManually(
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<string> {
+  dispatch(setIsRedeemedViaRelayer(false))
   const result = await redeemOnAlphWithReward(signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
   console.log(`the redemption tx has been submitted, txId: ${result.txId}`)
   dispatch(setIsWalletApproved(true))

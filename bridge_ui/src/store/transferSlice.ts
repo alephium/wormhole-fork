@@ -57,6 +57,7 @@ export interface TransferState {
   isWalletApproved: boolean;
   isRedeeming: boolean;
   isRedeemingViaRelayer: boolean;
+  isRedeemedViaRelayer: boolean;
   redeemTx: Transaction | undefined;
   isRedeemCompleted: boolean;
   isApproving: boolean;
@@ -86,6 +87,7 @@ const initialState: TransferState = {
   isWalletApproved: false,
   isRedeeming: false,
   isRedeemingViaRelayer: false,
+  isRedeemedViaRelayer: false,
   redeemTx: undefined,
   isRedeemCompleted: false,
   isApproving: false,
@@ -235,6 +237,9 @@ export const transferSlice = createSlice({
       state.isRedeemingViaRelayer = false;
       state.isWalletApproved = false;
     },
+    setIsRedeemedViaRelayer: (state, action: PayloadAction<boolean>) => {
+      state.isRedeemedViaRelayer = action.payload
+    },
     setRedeemCompleted: (state) => {
       state.isRedeemCompleted = true
       state.isRedeeming = false
@@ -349,6 +354,7 @@ export const {
   setIsRedeeming,
   setIsRedeemingViaRelayer,
   setRedeemTx,
+  setIsRedeemedViaRelayer,
   setRedeemCompleted,
   setIsApproving,
   reset,
