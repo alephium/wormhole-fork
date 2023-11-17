@@ -317,9 +317,9 @@ export const EXPLORER_API_SERVER_HOST =
 
 export const RELAYER_HOST =
   CLUSTER === 'mainnet'
-    ? ''
+    ? 'https://relayer.bridge.alephium.org'
     : CLUSTER === 'testnet'
-    ? ''
+    ? 'https://relayer.testnet.bridge.alephium.org'
     : 'http://localhost:31000'
 
 export const ALEPHIUM_HOST =
