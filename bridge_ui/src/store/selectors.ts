@@ -217,6 +217,8 @@ export const selectTransferIsRedeeming = (state: RootState) =>
   state.transfer.isRedeeming;
 export const selectTransferIsRedeemingViaRelayer = (state: RootState) =>
   state.transfer.isRedeemingViaRelayer
+export const selectTransferIsRedeemedViaRelayer = (state: RootState) =>
+  state.transfer.isRedeemedViaRelayer
 export const selectTransferRedeemTx = (state: RootState) =>
   state.transfer.redeemTx;
 export const selectTransferIsApproving = (state: RootState) =>

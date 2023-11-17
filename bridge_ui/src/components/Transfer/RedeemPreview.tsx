@@ -3,6 +3,7 @@ import { CHAIN_ID_ALEPHIUM, isEVMChain } from "@alephium/wormhole-sdk";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  selectTransferIsRedeemedViaRelayer,
   selectTransferRedeemTx,
   selectTransferTargetChain,
 } from "../../store/selectors";
@@ -29,13 +30,13 @@ export default function RedeemPreview({
   const dispatch = useDispatch();
   const targetChain = useSelector(selectTransferTargetChain);
   const redeemTx = useSelector(selectTransferRedeemTx);
+  const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer);
   const handleResetClick = useCallback(() => {
     dispatch(reset());
   }, [dispatch]);
 
-  const explainerString =
-    overrideExplainerString ||
-    "Success! The redeem transaction was submitted. The tokens will become available once the transaction confirms.";
+  const explainerString = overrideExplainerString ||
+    `Success! The redeem transaction was submitted${(isRedeemedViaRelayer ? ' automatically by the relayer' : '')}. The tokens will become available once the transaction confirms.`;
 
   return (
     <>
