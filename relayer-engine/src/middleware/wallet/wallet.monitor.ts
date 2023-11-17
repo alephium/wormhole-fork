@@ -29,6 +29,7 @@ function buildWalletsConfig(
   };
   const tokens = tokensByChain ?? {};
   for (const [chainIdStr, addrs] of Object.entries(addresses)) {
+    if (addrs.length === 0) continue
     const chainId = Number(chainIdStr) as ChainId;
     const chainWallets = [];
     if (isEVMChain(chainId)) {
