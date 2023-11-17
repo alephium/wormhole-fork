@@ -215,6 +215,10 @@ export const selectTransferIsWalletApproved = (state: RootState) =>
   state.transfer.isWalletApproved
 export const selectTransferIsRedeeming = (state: RootState) =>
   state.transfer.isRedeeming;
+export const selectTransferIsRedeemingViaRelayer = (state: RootState) =>
+  state.transfer.isRedeemingViaRelayer
+export const selectTransferIsRedeemedViaRelayer = (state: RootState) =>
+  state.transfer.isRedeemedViaRelayer
 export const selectTransferRedeemTx = (state: RootState) =>
   state.transfer.redeemTx;
 export const selectTransferIsApproving = (state: RootState) =>
@@ -352,7 +356,7 @@ export const selectTransferIsTargetComplete = (state: RootState) =>
 export const selectTransferIsSendComplete = (state: RootState) =>
   !!selectTransferSignedVAAHex(state);
 export const selectTransferIsRedeemComplete = (state: RootState) =>
-  !!selectTransferRedeemTx(state);
+  !!selectTransferRedeemTx(state) || state.transfer.isRedeemCompleted;
 export const selectTransferShouldLockFields = (state: RootState) =>
   selectTransferIsSending(state) || selectTransferIsSendComplete(state);
 export const selectTransferIsRecovery = (state: RootState) =>

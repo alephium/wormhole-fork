@@ -52,10 +52,21 @@ export async function getIsTransferCompletedAlph(
   groupIndex: number,
   signedVAA: Uint8Array
 ) {
+  return getIsTransferCompletedBySequenceAlph(
+    tokenBridgeForChainId,
+    groupIndex,
+    extractSequenceFromVAA(signedVAA)
+  )
+}
+
+export async function getIsTransferCompletedBySequenceAlph(
+  tokenBridgeForChainId: string,
+  groupIndex: number,
+  sequence: bigint
+) {
   const tokenBridgeForChainAddress = addressFromContractId(tokenBridgeForChainId)
   const contract = TokenBridgeForChain.at(tokenBridgeForChainAddress)
   const contractState = await contract.fetchState()
-  const sequence = extractSequenceFromVAA(signedVAA)
 
   if (sequence < contractState.fields.start) {
     return isSequenceExecuted(tokenBridgeForChainId, sequence, groupIndex)

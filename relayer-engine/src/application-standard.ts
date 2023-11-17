@@ -92,7 +92,7 @@ export class StandardRelayerApp<
       attempts: opts.workflows.retries ?? 3,
       namespace: name,
       queueName: `${name}-relays`,
-    });
+    }, logger);
 
     this.spy(spyEndpoint);
     this.useStorage(this.store);
@@ -163,5 +163,9 @@ export class StandardRelayerApp<
     });
 
     return serverAdapter.registerPlugin();
+  }
+
+  async isProcessing(vaaId: string): Promise<boolean> {
+    return this.store.isProcessing(vaaId)
   }
 }

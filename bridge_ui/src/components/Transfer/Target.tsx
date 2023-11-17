@@ -172,7 +172,7 @@ function Target() {
           setAssociatedAccountExists={setAssociatedAccountExists}
         />
       ) : null}
-      {isEVMChain(targetChain) && !isReady ? null : <FeeMethodSelector />}
+      {((isEVMChain(targetChain) && !isReady) || (targetChain === CHAIN_ID_ALEPHIUM)) ? null : <FeeMethodSelector />}
       <LowBalanceWarning chainId={targetChain} />
       {targetChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
         <SolanaTPSWarning />

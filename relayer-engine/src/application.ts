@@ -64,7 +64,7 @@ export interface SerializableVaaId {
 }
 
 export function vaaIdToString(id: SerializableVaaId): string {
-  return `${id.emitterChain}/${id.emitterAddress}/${id.targetChain}/${id.sequence}`
+  return `${id.emitterChain}/${id.emitterAddress}/${id.targetChain}/${id.sequence}`.toLowerCase()
 }
 
 export interface ParsedVaaWithBytes {
@@ -255,11 +255,11 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
     targetChain: ChainId | string,
     sequence: bigint | string | BigNumber,
     {
-      retryTimeout = 100,
-      retries = 2,
+      retryTimeout = 3000,
+      retries = 3,
     }: { retryTimeout: number; retries: number } = {
-      retryTimeout: 100,
-      retries: 2,
+      retryTimeout: 3000,
+      retries: 3,
     },
   ): Promise<ParsedVaaWithBytes> {
     const res = await getSignedVAAWithRetry(
@@ -332,6 +332,7 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
       processVaa: this.processVaa.bind(this),
       vaa: parsedVaa,
       vaaBytes: vaa,
+      onTxSubmitted: this.storage.onTxSubmitted.bind(this.storage)
     };
     Object.assign(ctx, opts);
     try {
@@ -491,7 +492,7 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
           this.processVaa(vaa.vaaBytes);
         }
       } catch (err) {
-        this.rootLogger.error("error connecting to the spy");
+        this.rootLogger.error(`error connecting to the spy: ${err}`);
       }
 
       await sleep(300); // wait a bit before trying to reconnect.

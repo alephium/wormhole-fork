@@ -245,7 +245,8 @@ export function getGovernanceAddress(network: NetworkId, chainId: ChainId): stri
 
 export function getNodeUrl(network: NetworkId, chainId: ChainId): string {
   try {
-    return chainConfigs[chainId][network].nodeUrl
+    const chainName = coalesceChainName(chainId).toUpperCase()
+    return process.env[`${chainName}_NODE_URL`] ?? chainConfigs[chainId][network].nodeUrl
   } catch (_) {
     throw new Error(`Failed to get node url for ${coalesceChainName(chainId)}, network: ${network}`)
   }

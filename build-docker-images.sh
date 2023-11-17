@@ -55,6 +55,9 @@ docker build -f ./explorer-backend/Dockerfile . -t eu.gcr.io/alephium-org/wormho
 ### explorer
 docker build -f ./explorer/Dockerfile . -t eu.gcr.io/alephium-org/wormhole-explorer:$version --build-arg network=$network
 
+## relayer engine
+docker build -f ./relayer-engine/Dockerfile . -t eu.gcr.io/alephium-org/relayer-engine:$version
+
 if [ "${pushImage}" = true ]
 then
     docker push eu.gcr.io/alephium-org/guardiand:$version

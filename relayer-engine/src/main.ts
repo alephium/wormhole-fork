@@ -7,8 +7,10 @@ import { Context, Next as KoaNext } from "koa";
 import Router from "koa-router";
 import { ParsedVaaWithBytes } from "./application";
 import { relay } from "./relayer";
-import { SUPPORTED_CHAINS } from "./utils";
+import { SUPPORTED_CHAINS, getAlephiumGroupIndex, getNodeUrl, getTokenBridgeAddress } from "./utils";
 import { Config, getConfig } from "./config";
+import { CHAIN_ID_ALEPHIUM, ChainId, getIsTransferCompletedAlph, getIsTransferCompletedBySequenceAlph, getTokenBridgeForChainId } from "@alephium/wormhole-sdk";
+import { web3 } from "@alephium/web3";
 
 dotenv.config()
 
@@ -38,6 +40,9 @@ async function main() {
     return
   }
 
+  const alphNodeUrl = getNodeUrl(config.networkId, CHAIN_ID_ALEPHIUM)
+  web3.setCurrentNodeProvider(alphNodeUrl)
+
   const app = new StandardRelayerApp<StandardRelayerContext>(config.networkId, {
     name: 'relayer',
     logger: rootLogger,
@@ -56,11 +61,11 @@ async function main() {
   app.tokenBridge(SUPPORTED_CHAINS, relay)
 
   app.listen()
-  runAPI(app, rootLogger, config.apiPort)
+  runAPI(app, rootLogger, config)
   runMetrics(app, rootLogger, config.metricsPort)
 }
 
-function runAPI(relayerApp: StandardRelayerApp<any>, logger: Logger, port?: number) {
+function runAPI(relayerApp: StandardRelayerApp<any>, logger: Logger, config: Config) {
   const app = new Koa()
   const router = new Router()
 
@@ -70,15 +75,20 @@ function runAPI(relayerApp: StandardRelayerApp<any>, logger: Logger, port?: numb
 
   router.post(
     `/vaas/:emitterChain/:emitterAddress/:targetChain/:sequence`,
-    reprocessVaaById(rootLogger, relayerApp)
+    reprocessVaaById(rootLogger, relayerApp, config)
   )
 
+  app.use(async (ctx, next) => {
+    ctx.set('Access-Control-Allow-Origin', '*')
+    ctx.set('Access-Control-Allow-Methods', 'POST, GET')
+    await next()
+  })
   app.use(relayerApp.storageKoaUI("/ui"))
 
   app.use(router.routes())
   app.use(router.allowedMethods())
 
-  const listenPort = port ?? 31000
+  const listenPort = config.apiPort ?? 31000
   app.listen(listenPort, () => {
     logger.info(`running on ${listenPort}...`)
     logger.info(`for the UI, open http://localhost:${listenPort}/ui`)
@@ -103,19 +113,74 @@ function runMetrics(relayerApp: StandardRelayerApp<any>, logger: Logger, metrics
   })
 }
 
-function reprocessVaaById(rootLogger: Logger, relayer: StandardRelayerApp) {
+async function isTransferCompleted(emitterChain: ChainId, sequence: bigint, config: Config): Promise<boolean> {
+  const tokenBridgeId = getTokenBridgeAddress(config.networkId, CHAIN_ID_ALEPHIUM)
+  const groupIndex = getAlephiumGroupIndex(config.networkId)
+  const tokenBridgeForChainId = getTokenBridgeForChainId(tokenBridgeId, emitterChain, groupIndex)
+  return getIsTransferCompletedBySequenceAlph(tokenBridgeForChainId, groupIndex, sequence)
+}
+
+function reprocessVaaById(logger: Logger, relayer: StandardRelayerApp, config: Config) {
   return async (ctx: Context, _next: KoaNext) => {
     const { emitterChain, emitterAddress, targetChain, sequence } = ctx.params
-    const logger = rootLogger.child({ emitterChain, emitterAddress, targetChain, sequence })
-    logger.info("fetching vaa requested by API")
-    let vaa = await relayer.fetchVaa(emitterChain, emitterAddress, targetChain, sequence)
-    if (!vaa) {
-      logger.error("failed to fetch vaa")
-      return
+    const vaaId = `${emitterChain}/${emitterAddress}/${targetChain}/${sequence}`.toLowerCase()
+    try {
+      if ((Number(targetChain) as ChainId) !== CHAIN_ID_ALEPHIUM) {
+        ctx.body = { error: `invalid target chain id ${targetChain}` }
+        return
+      }
+
+      let txId = await relayer.storage.getTxId(vaaId)
+      if (txId) {
+        logger.debug(`transfer is completed, tx id: ${txId}`)
+        ctx.body = { txId: txId }
+        return
+      }
+
+      const completed = await isTransferCompleted(Number(emitterChain) as ChainId, BigInt(sequence), config)
+      if (completed) {
+        logger.debug(`transfer is completed, but we don't know the tx id`)
+        ctx.body = {}
+        return
+      }
+
+      const isProcessing = await relayer.isProcessing(vaaId)
+      if (!isProcessing) {
+        logger.info("fetching vaa requested by API")
+        const vaa = await relayer.fetchVaa(emitterChain, emitterAddress, targetChain, sequence)
+        if (!vaa) {
+          const errorMessage = `failed to fetch vaa, vaa id: ${vaaId}`
+          logger.error(errorMessage)
+          ctx.body = { error: errorMessage }
+          return
+        }
+        await relayer.retryProcessVaa(Buffer.from(vaa.bytes))
+      }
+
+      txId = await getTxId(relayer, vaaId)
+      ctx.body = txId ? { txId: txId } : { error: `failed to get tx id, vaa id: ${vaaId}` }
+    } catch (error) {
+      const errorMessage = `failed to process vaa, error: ${error}, vaa id: ${vaaId}`
+      logger.error(errorMessage)
+      ctx.body = { error: errorMessage }
     }
-    relayer.retryProcessVaa(Buffer.from(vaa.bytes))
-    ctx.body = "Processing"
   }
+}
+
+async function getTxId(
+  relayer: StandardRelayerApp,
+  vaaId: string,
+  retries: number = 2,
+  retryTimeout: number = 5
+): Promise<string | null> {
+  let result: string | null
+  let attempts = 0
+  while (!result && attempts < retries) {
+    attempts++
+    await new Promise((resolve) => setTimeout(resolve, retryTimeout * 1000))
+    result = await relayer.storage.getTxId(vaaId)
+  }
+  return result
 }
 
 main()
