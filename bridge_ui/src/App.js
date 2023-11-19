@@ -195,6 +195,15 @@ function App() {
               >
                 Alephium
               </Link>
+              <Link
+                href="https://explorer.bridge.alephium.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                className={classes.link}
+              >
+                Explorer
+              </Link>
             </div>
           </Hidden>
           <Hidden implementation="css" smUp>
