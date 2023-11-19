@@ -391,20 +391,6 @@ const ExplorerStats: React.FC<StatsProps> = ({
             headerTextAlign="center"
             data={[
               {
-                header: ChainID[2],
-                src: ethereumIcon,
-                to: `?emitterChain=2`,
-                description: (
-                  <ChainOverviewCard
-                    totals={totals}
-                    notionalTransferredTo={notionalTransferredTo}
-                    notionalTransferred={notionalTransferred}
-                    dataKey="2"
-                  />
-                ),
-                imgStyle: { height: 110 },
-              },
-              {
                 header: ChainID[255],
                 src: alephiumIcon,
                 to: `?emitterChain=255`,
@@ -414,6 +400,20 @@ const ExplorerStats: React.FC<StatsProps> = ({
                     notionalTransferredTo={notionalTransferredTo}
                     notionalTransferred={notionalTransferred}
                     dataKey="255"
+                  />
+                ),
+                imgStyle: { height: 110 },
+              },
+              {
+                header: ChainID[2],
+                src: ethereumIcon,
+                to: `?emitterChain=2`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="2"
                   />
                 ),
                 imgStyle: { height: 110 },
