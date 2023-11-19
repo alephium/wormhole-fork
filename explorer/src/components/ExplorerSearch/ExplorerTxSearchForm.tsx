@@ -36,9 +36,9 @@ const ExplorerTxSearchForm: React.FC<ExplorerTxSearchProps> = ({
   const handleSubmit = (event: any) => {
     event.preventDefault();
     // pushing to the history stack will cause the component to get new props, and useEffect will run.
-    if (txId) {
-      navigate(`/explorer?txId=${txId}`);
-    }
+    // if (txId) {
+    //   navigate(`/explorer?txId=${txId}`);
+    // }
   };
 
   const onTxId = (event: React.ChangeEvent<HTMLInputElement>) => {
