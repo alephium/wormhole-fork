@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/alephium/wormhole-fork/explorer-api-server/response"
 	"github.com/alephium/wormhole-fork/node/pkg/vaa"
@@ -153,6 +154,9 @@ func ExtractTransactionId(c *fiber.Ctx, l *zap.Logger) (string, error) {
 	txId := c.Params("txId")
 	if txId == "" {
 		return "", response.NewInvalidParamError(c, "MALFORMED TX ID", nil)
+	}
+	if strings.HasPrefix(txId, "0x") || strings.HasPrefix(txId, "0X") {
+		return txId[2:], nil
 	}
 	return txId, nil
 }
