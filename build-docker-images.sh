@@ -63,4 +63,6 @@ then
     docker push eu.gcr.io/alephium-org/guardiand:$version
     docker push eu.gcr.io/alephium-org/bridge-ui-$network:$version
     docker push eu.gcr.io/alephium-org/wormhole-explorer:$version
+    docker push eu.gcr.io/alephium-org/wormhole-explorer-api-server:$version
+    docker push eu.gcr.io/alephium-org/wormhole-explorer-backend:$version
 fi
