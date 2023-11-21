@@ -1,5 +1,5 @@
 import { Box, Card, CircularProgress } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNetworkContext } from "../../contexts/NetworkContext";
 import { ChainID } from "../../utils/consts";
 import { getVAAFromJson, Response, VAAMessage } from "../ExplorerSearch/ExplorerQuery";
@@ -158,6 +158,17 @@ const ExplorerStats: React.FC<StatsProps> = ({
   const [controller, setController] = useState<AbortController>(
     new AbortController()
   );
+  const [visible, setVisible] = useState<boolean>(true)
+
+  useEffect(() => {
+    const listener = () => {
+      setVisible(document.visibilityState === 'visible')
+    }
+    document.addEventListener('visibilitychange', listener)
+    return () => {
+      document.removeEventListener('visibilitychange', listener)
+    }
+  }, [])
 
   const fetchTotals = (baseUrl: string, signal: AbortSignal) => {
     const totalsUrl = `${baseUrl}api/stats/totalmessages`;
@@ -266,10 +277,11 @@ const ExplorerStats: React.FC<StatsProps> = ({
       );
   };
 
-  const getData = (props: StatsProps, baseUrl: string, signal: AbortSignal, func: (baseUrl: string,
-    forChain: ForChain,
-    forAddress: string | undefined,
-    signal: AbortSignal) => Promise<any>) => {
+  const getData = useCallback((
+    props: StatsProps, baseUrl: string, signal: AbortSignal,
+    func: (baseUrl: string, forChain: ForChain, forAddress: string | undefined, signal: AbortSignal) => Promise<any>
+  ) => {
+    if (!visible) return
     let forChain: ForChain = undefined;
     let forAddress: ForAddress = undefined;
     if (props.emitterChain) {
@@ -279,7 +291,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
       forAddress = props.emitterAddress;
     }
     return func(baseUrl, forChain, forAddress, signal)
-  };
+  }, [visible])
   const getAllEndpoints = (
     baseUrl: string,
     forChain: ForChain,
@@ -298,7 +310,7 @@ const ExplorerStats: React.FC<StatsProps> = ({
     forAddress: string | undefined,
     signal: AbortSignal) => fetchRecent(baseUrl, forChain, forAddress, signal)
 
-  const pollingController = (
+  const pollingController = useCallback((
     emitterChain: StatsProps["emitterChain"],
     emitterAddress: StatsProps["emitterAddress"],
     baseUrl: string,
@@ -317,10 +329,10 @@ const ExplorerStats: React.FC<StatsProps> = ({
     const { signal } = newController;
     // start polling
     let interval = setInterval(() => {
-      getData({ emitterChain, emitterAddress }, baseUrl, signal, getRecents);
+      getData({ emitterChain, emitterAddress }, baseUrl, signal, getAllEndpoints);
     }, 30000);
     setPollInterval(interval);
-  };
+  }, [getData])
 
   useEffect(() => {
     // getData if first load (no totals or recents), or emitterAddress/emitterChain changed.
@@ -355,6 +367,8 @@ const ExplorerStats: React.FC<StatsProps> = ({
     emitterChain,
     emitterAddress,
     activeNetwork.endpoints.backendUrl,
+    getData,
+    pollingController
   ]);
 
   useEffect(() => {
@@ -391,20 +405,6 @@ const ExplorerStats: React.FC<StatsProps> = ({
             headerTextAlign="center"
             data={[
               {
-                header: ChainID[2],
-                src: ethereumIcon,
-                to: `?emitterChain=2`,
-                description: (
-                  <ChainOverviewCard
-                    totals={totals}
-                    notionalTransferredTo={notionalTransferredTo}
-                    notionalTransferred={notionalTransferred}
-                    dataKey="2"
-                  />
-                ),
-                imgStyle: { height: 110 },
-              },
-              {
                 header: ChainID[255],
                 src: alephiumIcon,
                 to: `?emitterChain=255`,
@@ -414,6 +414,20 @@ const ExplorerStats: React.FC<StatsProps> = ({
                     notionalTransferredTo={notionalTransferredTo}
                     notionalTransferred={notionalTransferred}
                     dataKey="255"
+                  />
+                ),
+                imgStyle: { height: 110 },
+              },
+              {
+                header: ChainID[2],
+                src: ethereumIcon,
+                to: `?emitterChain=2`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="2"
                   />
                 ),
                 imgStyle: { height: 110 },

@@ -200,7 +200,7 @@ const nativeExplorerTxUri = (
 // define colors to represent chains in charts/graphs
 const chainColors: { [chain: string]: string } = {
   "2": "hsl(235, 5%, 43%)",
-  "4": "hsl(297, 100%, 61%)",
+  // "4": "hsl(297, 100%, 61%)",
   "255": "hsl(54, 100%, 61%)",
 };
 const chainIdColors = Object.entries(chainColors).map(([, color]) => color)

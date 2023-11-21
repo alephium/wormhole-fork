@@ -90,7 +90,7 @@ export function getVAAFromJson(data: any): VAAMessage {
         InitiatingTxID: txId,
         SignedVAABytes: vaaBase64,
         SignedVAA: vaa,
-        QuorumTime: data['updateAt'],
+        QuorumTime: data['indexedAt'],
         EmitterChain: coalesceChainName(parsedVaa.body.emitterChainId),
         EmitterAddress: vaa.EmitterAddress,
         TargetChain: coalesceChainName(parsedVaa.body.targetChainId),

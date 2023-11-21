@@ -254,7 +254,7 @@ async function alephium(provider: NodeProvider, txId: string, enqueueSnackbar: a
   try {
     const txInfo = await getAlphTxInfoByTxId(provider, txId);
     if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-      throw new Error('the transaction is awaiting confirmation')
+      throw new Error('the transaction is not confirmed')
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
