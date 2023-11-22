@@ -22,9 +22,7 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   hexToUint8Array,
-  getLocalTokenInfo,
-  getTokenPoolId,
-  getRemoteTokenInfo,
+  getTokenPoolId
 } from "@alephium/wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -125,8 +123,8 @@ import {
   getMultipleAccountsRPC,
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
-import { addressFromContractId, ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { ALPHTokenInfo, getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium";
+import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
+import { getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
 import { getETHTokenLogoURI } from "../utils/ethereum";
@@ -760,56 +758,28 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
   try {
     const balances = await getAvailableBalances(provider, address)
     const registeredTokens = await getRegisteredTokens()
-    const promises = registeredTokens.map(async (token) => {
-      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
-      if (token.tokenChain !== CHAIN_ID_ALEPHIUM) {
-        const tokenPoolId = getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
-        return getRemoteTokenInfo(addressFromContractId(tokenPoolId))
-          .then((tokenInfo) => ({
-            ...tokenInfo,
-            id: tokenPoolId,
-            logoURI: token.logo ?? tokenLogoURI
-          }))
-          .catch((error) => {
-            console.log(`Failed to get remote token info, token id: ${tokenPoolId}, error: ${error}`)
-            return Promise.resolve(undefined)
-          })
-      }
-      if (token.tokenAddress === ALPH_TOKEN_ID) {
-        return ALPHTokenInfo
-      }
-      return getLocalTokenInfo(provider, token.nativeAddress)
-        .then((tokenInfo) => ({
-          ...tokenInfo,
-          logoURI: token.logo ?? tokenLogoURI
-        }))
-        .catch((error) => {
-          console.log(`Failed to get local token info, token id: ${token.nativeAddress}, error: ${error}`)
-          return Promise.resolve(undefined)
-        })
-    })
     const tokenAccounts: ParsedTokenAccount[] = []
-    const allTokens = await Promise.all(promises)
-    for (const tokenInfo of allTokens) {
-      if (tokenInfo === undefined) {
-        continue
-      }
-      const amount = balances.get(tokenInfo.id.toLowerCase()) ?? BigInt(0)
-      if (amount > BigInt(0)) {
-        const uiAmount = formatUnits(amount, tokenInfo.decimals)
-        tokenAccounts.push(createParsedTokenAccount(
-          address,
-          tokenInfo.id,
-          amount.toString(),
-          tokenInfo.decimals,
-          parseFloat(uiAmount),
-          uiAmount,
-          tokenInfo.symbol,
-          tokenInfo.name,
-          tokenInfo.logoURI,
-          tokenInfo.id === ALPH_TOKEN_ID
-        ))
-      }
+    for (const token of registeredTokens) {
+      const localTokenId = token.tokenChain === CHAIN_ID_ALEPHIUM
+        ? token.nativeAddress
+        : getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
+      const amount = balances.get(localTokenId.toLowerCase())
+      if (amount === undefined) continue
+
+      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
+      const uiAmount = formatUnits(amount, token.decimals)
+      tokenAccounts.push(createParsedTokenAccount(
+        address,
+        localTokenId,
+        amount.toString(),
+        token.decimals,
+        parseFloat(uiAmount),
+        uiAmount,
+        token.symbol,
+        token.name,
+        tokenLogoURI,
+        localTokenId === ALPH_TOKEN_ID
+      ))
     }
     return { tokenAccounts, balances}
   } catch (error) {
