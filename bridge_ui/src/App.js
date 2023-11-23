@@ -187,15 +187,6 @@ function App() {
                 Bridge
               </Link>
               <Link
-                href="https://alephium.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                Alephium
-              </Link>
-              <Link
                 href="https://explorer.bridge.alephium.org"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -203,6 +194,15 @@ function App() {
                 className={classes.link}
               >
                 Explorer
+              </Link>
+              <Link
+                href="https://alephium.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                className={classes.link}
+              >
+                Alephium
               </Link>
             </div>
           </Hidden>
