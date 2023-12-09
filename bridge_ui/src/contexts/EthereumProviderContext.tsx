@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import WalletConnectProvider from "@walletconnect/web3-provider";
+import EthereumProvider from "@walletconnect/ethereum-provider";
 import { BigNumber, ethers } from "ethers";
 import React, {
   ReactChildren,
@@ -12,8 +12,8 @@ import React, {
 import metamaskIcon from "../icons/metamask-fox.svg";
 import walletconnectIcon from "../icons/walletconnect.svg";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
-const CacheSubprovider = require("web3-provider-engine/subproviders/cache");
 
+const WALLET_CONNECT_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
 export type Provider = ethers.providers.Web3Provider | undefined;
 export type Signer = ethers.Signer | undefined;
 
@@ -72,7 +72,7 @@ export const EthereumProviderProvider = ({
   );
   const [ethereumProvider, setEthereumProvider] = useState<any>(undefined);
   const [walletConnectProvider, setWalletConnectProvider] = useState<
-    WalletConnectProvider | undefined
+    EthereumProvider | undefined
   >(undefined);
 
   useEffect(() => {
@@ -205,93 +205,79 @@ export const EthereumProviderProvider = ({
             setProviderError("Please install MetaMask");
           });
       } else if (connectType === ConnectType.WALLETCONNECT) {
-        const walletConnectProvider = new WalletConnectProvider({
-          rpc: EVM_RPC_MAP,
-          storageId: "walletconnect-evm",
-        });
-        setWalletConnectProvider(walletConnectProvider);
-        walletConnectProvider
-          .enable()
-          .then(() => {
-            setProviderError(null);
-            const provider = new ethers.providers.Web3Provider(
-              walletConnectProvider,
-              "any"
-            );
-            provider
-              .getNetwork()
-              .then((network) => {
-                setChainId(network.chainId);
-              })
-              .catch(() => {
-                setProviderError("An error occurred while getting the network");
-              });
-            walletConnectProvider.on("chainChanged", (chainId: number) => {
-              setChainId(chainId);
-              // HACK: clear the block-cache when switching chains by creating a new CacheSubprovider
-              // Otherwise ethers may not resolve transaction receipts/waits
-              const index = walletConnectProvider._providers.findIndex(
-                (subprovider: any) => subprovider instanceof CacheSubprovider
+        EthereumProvider.init({
+          projectId: WALLET_CONNECT_PROJECT_ID,
+          showQrModal: true,
+          chains: [1],
+          rpcMap: EVM_RPC_MAP
+        }).then((walletConnectProvider) => {
+          setWalletConnectProvider(walletConnectProvider);
+          walletConnectProvider
+            .enable()
+            .then(() => {
+              setProviderError(null);
+              const provider = new ethers.providers.Web3Provider(
+                walletConnectProvider,
+                "any"
               );
-              if (index >= 0) {
-                const subprovider = walletConnectProvider._providers[index];
-                walletConnectProvider.removeProvider(subprovider);
-                walletConnectProvider.addProvider(
-                  new CacheSubprovider(),
-                  index
-                );
-                // also reset the latest block
-                walletConnectProvider._blockTracker._resetCurrentBlock();
+              provider
+                .getNetwork()
+                .then((network) => {
+                  setChainId(network.chainId);
+                })
+                .catch(() => {
+                  setProviderError("An error occurred while getting the network");
+                });
+              walletConnectProvider.on("chainChanged", (chainId: string) => {
+                setChainId(parseInt(chainId, 16))
+              });
+              walletConnectProvider.on(
+                "accountsChanged",
+                (accounts: string[]) => {
+                  try {
+                    const signer = provider.getSigner();
+                    setSigner(signer);
+                    signer
+                      .getAddress()
+                      .then((address) => {
+                        setSignerAddress(address);
+                      })
+                      .catch(() => {
+                        setProviderError(
+                          "An error occurred while getting the signer address"
+                        );
+                      });
+                  } catch (error) {
+                    console.error(error);
+                  }
+                }
+              );
+              walletConnectProvider.on(
+                "disconnect",
+                () => { disconnect() }
+              );
+              setProvider(provider);
+              const signer = provider.getSigner();
+              setSigner(signer);
+              signer
+                .getAddress()
+                .then((address) => {
+                  setSignerAddress(address);
+                })
+                .catch((error) => {
+                  setProviderError(
+                    "An error occurred while getting the signer address"
+                  );
+                  console.error(error);
+                });
+            })
+            .catch((error) => {
+              if (error.message !== "User closed modal") {
+                setProviderError("Error enabling WalletConnect session");
+                console.error(error);
               }
             });
-            walletConnectProvider.on(
-              "accountsChanged",
-              (accounts: string[]) => {
-                try {
-                  const signer = provider.getSigner();
-                  setSigner(signer);
-                  signer
-                    .getAddress()
-                    .then((address) => {
-                      setSignerAddress(address);
-                    })
-                    .catch(() => {
-                      setProviderError(
-                        "An error occurred while getting the signer address"
-                      );
-                    });
-                } catch (error) {
-                  console.error(error);
-                }
-              }
-            );
-            walletConnectProvider.on(
-              "disconnect",
-              (code: number, reason: string) => {
-                disconnect();
-              }
-            );
-            setProvider(provider);
-            const signer = provider.getSigner();
-            setSigner(signer);
-            signer
-              .getAddress()
-              .then((address) => {
-                setSignerAddress(address);
-              })
-              .catch((error) => {
-                setProviderError(
-                  "An error occurred while getting the signer address"
-                );
-                console.error(error);
-              });
-          })
-          .catch((error) => {
-            if (error.message !== "User closed modal") {
-              setProviderError("Error enabling WalletConnect session");
-              console.error(error);
-            }
-          });
+        })
       }
     },
     [disconnect]
