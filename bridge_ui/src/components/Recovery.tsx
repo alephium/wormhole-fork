@@ -82,11 +82,10 @@ import parseError from "../utils/parseError";
 import ButtonWithLoader from "./ButtonWithLoader";
 import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
-import { NodeProvider } from "@alephium/web3";
 import RelaySelector from "./RelaySelector";
 import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
 import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
-import { useWallet } from "@alephium/web3-react";
+import { Wallet, useWallet } from "@alephium/web3-react";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -250,9 +249,12 @@ async function terra(tx: string, enqueueSnackbar: any) {
   }
 }
 
-async function alephium(provider: NodeProvider, txId: string, enqueueSnackbar: any) {
+async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
   try {
-    const txInfo = await getAlphTxInfoByTxId(provider, txId);
+    if (wallet.nodeProvider === undefined) {
+      throw new Error('Wallet is not connected')
+    }
+    const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId);
     if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
       throw new Error('the transaction is not confirmed')
     }
@@ -529,11 +531,11 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && alphWallet?.nodeProvider !== undefined) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async (nodeProvider) => {
-          const { vaa, error } = await alephium(nodeProvider, recoverySourceTx, enqueueSnackbar);
+          const { vaa, error } = await alephium(alphWallet, recoverySourceTx, enqueueSnackbar);
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false);
             if (vaa) {
