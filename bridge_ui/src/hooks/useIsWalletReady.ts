@@ -142,7 +142,7 @@ function useIsWalletReady(
           signerAddress
         );
       } else {
-        if (provider && correctEvmNetwork && autoSwitch && evmChainId !== undefined) {
+        if (provider && correctEvmNetwork && autoSwitch) {
           forceNetworkSwitch();
         }
         return createWalletStatus(
@@ -161,7 +161,6 @@ function useIsWalletReady(
       undefined
     );
   }, [
-    evmChainId,
     chainId,
     autoSwitch,
     forceNetworkSwitch,

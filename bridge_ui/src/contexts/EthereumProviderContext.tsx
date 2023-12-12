@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import EthereumProvider from "@walletconnect/ethereum-provider";
+import EthereumProvider from "@alephium/walletconnect-ethereum-provider";
 import { BigNumber, ethers } from "ethers";
 import React, {
   ReactChildren,
@@ -12,6 +12,9 @@ import React, {
 import metamaskIcon from "../icons/metamask-fox.svg";
 import walletconnectIcon from "../icons/walletconnect.svg";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
+import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
+import { getEvmChainId } from "../utils/consts";
+import { CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 
 const WALLET_CONNECT_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
 export type Provider = ethers.providers.Web3Provider | undefined;
@@ -207,14 +210,18 @@ export const EthereumProviderProvider = ({
       } else if (connectType === ConnectType.WALLETCONNECT) {
         EthereumProvider.init({
           projectId: WALLET_CONNECT_PROJECT_ID,
-          showQrModal: true,
-          chains: [1],
+          showQrModal: false,
+          chains: [getEvmChainId(CHAIN_ID_ETH) as number],
           rpcMap: EVM_RPC_MAP
         }).then((walletConnectProvider) => {
           setWalletConnectProvider(walletConnectProvider);
+          walletConnectProvider.on('display_uri', (uri) => {
+            QRCodeModal.open(uri, () => console.log('qr closed'))
+          })
           walletConnectProvider
             .enable()
             .then(() => {
+              QRCodeModal.close()
               setProviderError(null);
               const provider = new ethers.providers.Web3Provider(
                 walletConnectProvider,
