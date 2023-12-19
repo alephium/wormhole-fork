@@ -108,6 +108,12 @@ export const EthereumProviderProvider = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (walletConnectProvider?.chainId !== undefined) {
+      setChainId(walletConnectProvider.chainId)
+    }
+  }, [walletConnectProvider?.chainId])
+
   const disconnect = useCallback(() => {
     setProviderError(null);
     setProvider(undefined);
@@ -235,9 +241,6 @@ export const EthereumProviderProvider = ({
                 .catch(() => {
                   setProviderError("An error occurred while getting the network");
                 });
-              walletConnectProvider.on("chainChanged", (chainId: string) => {
-                setChainId(parseInt(chainId, 16))
-              });
               walletConnectProvider.on(
                 "accountsChanged",
                 (accounts: string[]) => {
