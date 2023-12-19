@@ -77,6 +77,15 @@ function useIsWalletReady(
         return;
       }
 
+      // `wallet_switchEthereumChain` does not work if connected to
+      // metamask-mobile via walletconnect:
+      // https://github.com/MetaMask/metamask-mobile/issues/6655
+      // https://github.com/MetaMask/metamask-mobile/issues/7023
+      if (connectType === ConnectType.WALLETCONNECT) {
+        disconnect()
+        return;
+      }
+
       try {
         await provider.send("wallet_switchEthereumChain", [
           { chainId: hexStripZeros(hexlify(correctEvmNetwork)) },
