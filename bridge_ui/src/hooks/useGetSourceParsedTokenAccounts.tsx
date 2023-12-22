@@ -26,6 +26,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { useSnackbar } from "notistack";
 import {
   AccountInfo,
   Connection,
@@ -128,6 +129,8 @@ import { getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium
 import { getRegisteredTokens } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
 import { getETHTokenLogoURI } from "../utils/ethereum";
+import { Alert } from "@material-ui/lab";
+import parseError from "../utils/parseError";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -805,6 +808,7 @@ async function getTokenLogoURI(tokenChainId: ChainId, tokenId: string): Promise<
  */
 function useGetAvailableTokens(nft: boolean = false) {
   const dispatch = useDispatch();
+  const { enqueueSnackbar } = useSnackbar();
 
   const tokenAccounts = useSelector(
     nft
@@ -827,7 +831,7 @@ function useGetAvailableTokens(nft: boolean = false) {
     undefined
   );
 
-  const [alphTokens, setAlphTokens] = useState<ParsedTokenAccount[]>()
+  const [alphTokens, setAlphTokens] = useState<ParsedTokenAccount[] | undefined>()
   const [alphBalances, setAlphBalances] = useState<Map<string, bigint>>(new Map())
   const [alphTokenLoading, setAlphTokenLoading] = useState(false)
   const [alphTokenError, setAlphTokenError] = useState<string>()
@@ -1486,12 +1490,16 @@ function useGetAvailableTokens(nft: boolean = false) {
           setAlphTokenError(undefined)
         })
         .catch((error) => {
+          enqueueSnackbar(null, {
+            content: <Alert severity="error">{parseError(error)}</Alert>,
+          })
           console.log(`failed to load tokens from alephium, error: ${error}`)
+          setAlphTokens([])
           setAlphTokenLoading(false)
           setAlphTokenError(`${error}`)
         })
     }
-  }, [dispatch, lookupChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
+  }, [dispatch, enqueueSnackbar, lookupChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
 
   //Terra accounts load
   //At present, we don't have any mechanism for doing this.
