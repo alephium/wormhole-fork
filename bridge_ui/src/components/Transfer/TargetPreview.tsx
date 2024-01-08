@@ -5,7 +5,8 @@ import { CHAINS_BY_ID } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 import { useTargetInfo } from "./Target";
 import { useSelector } from "react-redux";
-import { selectTransferAmount } from "../../store/selectors";
+import { selectTransferAmount, selectTransferIsRecovery } from "../../store/selectors";
+import { useMemo } from "react";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -24,13 +25,17 @@ export default function TargetPreview() {
     tokenName,
     logo,
   } = useTargetInfo();
+  const isRecovery = useSelector(selectTransferIsRecovery);
+  const amount = useMemo(() => {
+    return !isRecovery ? `${transferAmount} ` : ''
+  }, [isRecovery, transferAmount])
 
   const explainerContent =
     targetChain && readableTargetAddress ? (
       <>
         {targetAsset ? (
           <>
-            <span>{`and receive ${transferAmount} `}</span>
+            <span>{`and receive ${amount}`}</span>
             <SmartAddress
               chainId={targetChain}
               address={targetAsset}
