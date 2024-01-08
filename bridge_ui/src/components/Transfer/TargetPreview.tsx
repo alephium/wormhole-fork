@@ -4,6 +4,8 @@ import { hexToALPHAddress } from "../../utils/alephium";
 import { CHAINS_BY_ID } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 import { useTargetInfo } from "./Target";
+import { useSelector } from "react-redux";
+import { selectTransferAmount } from "../../store/selectors";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -13,6 +15,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function TargetPreview() {
   const classes = useStyles();
+  const transferAmount = useSelector(selectTransferAmount)
   const {
     targetChain,
     readableTargetAddress,
@@ -27,7 +30,7 @@ export default function TargetPreview() {
       <>
         {targetAsset ? (
           <>
-            <span>and receive</span>
+            <span>{`and receive ${transferAmount} `}</span>
             <SmartAddress
               chainId={targetChain}
               address={targetAsset}
