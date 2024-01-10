@@ -25,7 +25,7 @@ import clsx from "clsx";
 import { ReactChild } from "react";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { ParsedTokenAccount } from "../store/transferSlice";
-import { CLUSTER, getExplorerName } from "../utils/consts";
+import { CLUSTER, WETH_ADDRESS, getExplorerName } from "../utils/consts";
 import { shortenAddress } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from "@alephium/web3";
@@ -89,14 +89,17 @@ export default function SmartAddress({
   isAsset?: boolean;
 }) {
   const classes = useStyles();
+  const isNativeETH = chainId === CHAIN_ID_ETH && address?.toLowerCase() === WETH_ADDRESS.toLowerCase()
   const isNativeTerra = chainId === CHAIN_ID_TERRA && isNativeDenom(address);
   const isNativeALPH = chainId === CHAIN_ID_ALEPHIUM && address === ALPH_TOKEN_ID
   const useableAddress = parsedTokenAccount?.mintKey || address || "";
   const useableSymbol = isNativeTerra
     ? formatNativeDenom(address)
+    : isNativeETH
+    ? 'ETH'
     : parsedTokenAccount?.symbol || symbol || "";
   // const useableLogo = logo || isNativeTerra ? getNativeTerraIcon(useableSymbol) : null
-  const isNative = parsedTokenAccount?.isNativeAsset || isNativeTerra || isNativeALPH || false;
+  const isNative = parsedTokenAccount?.isNativeAsset || isNativeETH || isNativeTerra || isNativeALPH || false;
   const addressShort = shortenAddress(useableAddress) || "";
 
   const useableName = isNative

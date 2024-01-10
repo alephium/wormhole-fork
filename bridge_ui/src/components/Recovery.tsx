@@ -531,7 +531,7 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM) {
+      } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && isReady) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
         (async (nodeProvider) => {
@@ -691,9 +691,7 @@ export default function Recovery() {
           margin="normal"
           chains={isNFT ? CHAINS_WITH_NFT_SUPPORT : CHAINS}
         />
-        {isEVMChain(recoverySourceChain) ? (
-          <KeyAndBalance chainId={recoverySourceChain} />
-        ) : null}
+        <KeyAndBalance chainId={recoverySourceChain} />
         <TextField
           variant="outlined"
           label="Source Tx (paste here)"
@@ -722,7 +720,7 @@ export default function Recovery() {
         />
         <ButtonWithLoader
           onClick={handleRecoverClick}
-          disabled={!enableRecovery}
+          disabled={!enableRecovery || !isReady}
           showLoader={recoverySourceTxIsLoading}
         >
           Recover
