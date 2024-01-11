@@ -4,9 +4,9 @@
   "private": true,
   "dependencies": {
     "@alephium/token-list": "0.0.12",
-    "@alephium/web3": "^0.27.5",
-    "@alephium/web3-react": "^0.27.5",
-    "@alephium/wormhole-sdk": "0.2.4",
+    "@alephium/web3": "^0.28.1",
+    "@alephium/web3-react": "^0.28.1",
+    "@alephium/wormhole-sdk": "0.2.5",
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
