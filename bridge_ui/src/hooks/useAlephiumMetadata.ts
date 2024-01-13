@@ -1,10 +1,11 @@
 import { TokenInfo } from '@alephium/token-list'
-import { NodeProvider, web3 } from '@alephium/web3'
+import { NodeProvider } from '@alephium/web3'
 import { getLocalTokenInfo } from '@alephium/wormhole-sdk'
 import { useEffect, useMemo, useState } from 'react'
 import { DataWrapper } from '../store/helpers'
 import { getAvailableBalances } from '../utils/alephium'
 import { ALEPHIUM_TOKEN_LIST } from '../utils/consts'
+import { useWallet } from '@alephium/web3-react'
 
 export type AlphMetadata = TokenInfo & {
   balance?: bigint
@@ -40,20 +41,15 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState('')
   const [data, setData] = useState<Map<string, AlphMetadata> | null>(null)
+  const alphWallet = useWallet()
 
   useEffect(() => {
     let cancelled = false
-    let nodeProvider: NodeProvider | undefined = undefined
-    try {
-      nodeProvider = web3.getCurrentNodeProvider()
-    } catch (error) {
-      setError(`${error}`)
-    }
-    if (tokenIds.length > 0 && nodeProvider !== undefined) {
+    if (tokenIds.length > 0 && alphWallet.connectionStatus === 'connected' && alphWallet.nodeProvider !== undefined) {
       setIsFetching(true)
       setError('')
       setData(null)
-      fetchAlphMetadata(nodeProvider, tokenIds, fetchBalance, walletAddress).then(
+      fetchAlphMetadata(alphWallet.nodeProvider, tokenIds, fetchBalance, walletAddress).then(
         (results) => {
           if (!cancelled) {
             setData(results)
@@ -71,7 +67,7 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
     return () => {
       cancelled = true;
     }
-  }, [tokenIds, walletAddress, fetchBalance])
+  }, [tokenIds, walletAddress, fetchBalance, alphWallet])
 
   return useMemo(
     () => ({

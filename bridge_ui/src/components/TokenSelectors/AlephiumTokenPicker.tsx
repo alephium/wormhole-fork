@@ -1,4 +1,3 @@
-import { web3 } from "@alephium/web3";
 import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from "@alephium/wormhole-sdk";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback } from "react";
@@ -45,10 +44,10 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
 
   const getAddress: (address: string, tokenId?: string) => Promise<ParsedTokenAccount> = useCallback(
     async (address: string, tokenId?: string) => {
-      if (isReady && alphWallet.connectionStatus === 'connected') {
+      if (isReady && alphWallet.connectionStatus === 'connected' && alphWallet.nodeProvider !== undefined) {
         try {
           const contractId = tryGetContractId(address)
-          const tokenInfo = await getLocalTokenInfo(web3.getCurrentNodeProvider(), contractId)
+          const tokenInfo = await getLocalTokenInfo(alphWallet.nodeProvider, contractId)
           const amount = balances.get(contractId.toLowerCase()) ?? BigInt(0)
           const uiAmount = formatUnits(amount, tokenInfo.decimals)
           return createParsedTokenAccount(

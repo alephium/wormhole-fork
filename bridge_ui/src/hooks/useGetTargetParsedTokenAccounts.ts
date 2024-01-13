@@ -17,6 +17,7 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import {
   selectTransferTargetAsset,
+  selectTransferTargetAssetWrapper,
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetParsedTokenAccount } from "../store/transferSlice";
@@ -36,6 +37,7 @@ function useGetTargetParsedTokenAccounts() {
   const dispatch = useDispatch();
   const targetChain = useSelector(selectTransferTargetChain);
   const targetAsset = useSelector(selectTransferTargetAsset);
+  const targetAssetWrapper = useSelector(selectTransferTargetAssetWrapper)
   const targetAssetArrayed = useMemo(
     () => (targetAsset ? [targetAsset] : []),
     [targetAsset]
@@ -71,6 +73,7 @@ function useGetTargetParsedTokenAccounts() {
   useEffect(() => {
     // targetParsedTokenAccount is cleared on setTargetAsset, but we need to clear it on wallet changes too
     dispatch(setTargetParsedTokenAccount(undefined));
+    const targetAsset = targetAssetWrapper.data?.address
     if (!targetAsset || !hasResolvedMetadata) {
       return;
     }
@@ -295,7 +298,7 @@ function useGetTargetParsedTokenAccounts() {
     };
   }, [
     dispatch,
-    targetAsset,
+    targetAssetWrapper,
     targetChain,
     provider,
     signerAddress,
