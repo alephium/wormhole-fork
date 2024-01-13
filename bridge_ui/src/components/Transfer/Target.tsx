@@ -1,8 +1,7 @@
 import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
-  hexToNativeString,
-  isEVMChain,
+  hexToNativeString
 } from "@alephium/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { useCallback, useMemo } from "react";
@@ -101,11 +100,7 @@ function Target() {
   const isTargetComplete = useSelector(selectTransferIsTargetComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
   const { statusMessage, isReady } = useIsWalletReady(targetChain);
-  const targetParsedTokenAccount = useSelector(selectTransferTargetParsedTokenAccount);
-  const isLoading =
-    (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) ||
-    isFetchingSourceAssetInfo ||
-    (data?.doesExist && targetParsedTokenAccount === undefined);
+  const isLoading = (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) || isFetchingSourceAssetInfo;
   const { associatedAccountExists, setAssociatedAccountExists } =
     useAssociatedAccountExistsState(
       targetChain,
