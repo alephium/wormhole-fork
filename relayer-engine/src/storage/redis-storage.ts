@@ -162,7 +162,7 @@ export class RedisStorage implements Storage {
     return await this.redis.get(txKey)
   }
 
-  async isProcessing(vaaId: string): Promise<boolean> {
+  async hasJob(vaaId: string): Promise<boolean> {
     const job = await this.vaaQueue.getJob(vaaId)
     return job !== undefined
   }

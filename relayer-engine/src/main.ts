@@ -144,8 +144,8 @@ function reprocessVaaById(logger: Logger, relayer: StandardRelayerApp, config: C
         return
       }
 
-      const isProcessing = await relayer.isProcessing(vaaId)
-      if (!isProcessing) {
+      const hasJob = await relayer.hasJob(vaaId)
+      if (!hasJob || !txId) {
         logger.info("fetching vaa requested by API")
         const vaa = await relayer.fetchVaa(emitterChain, emitterAddress, targetChain, sequence)
         if (!vaa) {
