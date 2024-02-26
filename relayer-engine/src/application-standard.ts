@@ -165,7 +165,7 @@ export class StandardRelayerApp<
     return serverAdapter.registerPlugin();
   }
 
-  async isProcessing(vaaId: string): Promise<boolean> {
-    return this.store.isProcessing(vaaId)
+  async hasJob(vaaId: string): Promise<boolean> {
+    return this.store.hasJob(vaaId)
   }
 }
