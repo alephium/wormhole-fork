@@ -125,8 +125,32 @@ const useStyles = makeStyles((theme) => ({
     backgroundRepeat: "no-repeat",
     backgroundPosition: "top center",
     backgroundSize: "contain",
+    zIndex: -1,
+  },
+  banner: {
+    width: "100%",
+    backgroundColor: "rgb(255,197,71)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "black",
+    padding: "14px 10%",
   },
 }));
+
+const BannerMessage = (
+  <>
+    <span>
+      We are aware of some difficulties redeeming on the bridge. The issue has
+      been identified, the fix is being worked on now. <b>Funds are safe!</b>
+    </span>
+    <i>
+      (if you want to bridge, you can bridge, but redeem will only be possible
+      once the fix is deployed)
+    </i>
+  </>
+);
 
 function App() {
   const classes = useStyles();
@@ -149,6 +173,7 @@ function App() {
 
   return (
     <div className={classes.bg}>
+      {BannerMessage && <div className={classes.banner}>{BannerMessage}</div>}
       {CLUSTER === "mainnet" ? null : (
         <AppBar position="static" className={classes.betaBanner} elevation={0}>
           <Typography style={{ textAlign: "center" }}>
