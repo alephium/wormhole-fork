@@ -346,18 +346,13 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		ethEventIndex, err := watcher.GetLatestEventIndexEth(ctx)
-		if err != nil {
-			logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDEthereum)), zap.Error(err))
-			return err
-		}
 		ethWatcher, err := transactions.NewEVMWatcher(
 			logger,
 			ctx,
 			*ethRpcUrl,
 			vaa.ChainIDEthereum,
 			bridgeConfig.Ethereum,
-			*ethEventIndex,
+			watcher.GetLatestEventIndexEth,
 			blockTxsC,
 		)
 		if err != nil {
@@ -369,18 +364,13 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		if *bscRpcUrl != "" && *network == "devnet" {
-			bscEventIndex, err := watcher.GetLatestEventIndexBsc(ctx)
-			if err != nil {
-				logger.Error("failed to get latest event index", zap.Uint16("chainId", uint16(vaa.ChainIDBSC)), zap.Error(err))
-				return err
-			}
 			bscWatcher, err := transactions.NewEVMWatcher(
 				logger,
 				ctx,
 				*bscRpcUrl,
 				vaa.ChainIDBSC,
 				bridgeConfig.Bsc,
-				*bscEventIndex,
+				watcher.GetLatestEventIndexBsc,
 				blockTxsC,
 			)
 			if err != nil {

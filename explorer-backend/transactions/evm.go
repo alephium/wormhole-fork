@@ -23,7 +23,7 @@ type EVMWatcher struct {
 	chainConfig     *common.ChainConfig
 	connector       *ethereum.EthereumConnector
 	contractAddress *ethCommon.Address
-	fromHeight      uint32
+	getEventIndex   func(context.Context) (*uint32, error)
 	blockTxsC       chan<- []*BlockTransactions
 	logger          *zap.Logger
 }
@@ -34,7 +34,7 @@ func NewEVMWatcher(
 	rpcUrl string,
 	chainId vaa.ChainID,
 	chainConfig *common.ChainConfig,
-	fromHeight uint32,
+	getEventIndex func(context.Context) (*uint32, error),
 	blockTxsC chan<- []*BlockTransactions,
 ) (*EVMWatcher, error) {
 	contractAddress := ethCommon.HexToAddress(chainConfig.Contracts.Governance)
@@ -48,7 +48,7 @@ func NewEVMWatcher(
 		chainConfig:     chainConfig,
 		contractAddress: &contractAddress,
 		connector:       connector,
-		fromHeight:      fromHeight,
+		getEventIndex:   getEventIndex,
 		blockTxsC:       blockTxsC,
 		logger:          namedLogger,
 	}, nil
@@ -69,7 +69,13 @@ func (w *EVMWatcher) Run() func(ctx context.Context) error {
 }
 
 func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
-	w.logger.Info("evm watcher started", zap.Uint32("fromHeight", w.fromHeight))
+	fromHeight, err := w.getEventIndex(ctx)
+	if err != nil {
+		w.logger.Error("failed to get latest event index", zap.Error(err), zap.Uint16("chainId", uint16(w.chainId)))
+		errC <- err
+		return
+	}
+	w.logger.Info("evm watcher started", zap.Uint32("fromHeight", *fromHeight))
 
 	blockC := make(chan *ethereum.NewBlock, 64)
 	subscription, err := w.connector.SubscribeForBlocks(ctx, blockC)
@@ -92,7 +98,7 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 			w.logger.Info("received new block", zap.Uint64("height", block.Number.Uint64()), zap.String("hash", block.Hash.Hex()))
 			if isFirstBlock {
 				isFirstBlock = false
-				if err := w.fetchEventsFromBlockRange(ctx, w.fromHeight, uint32(block.Number.Uint64())); err != nil {
+				if err := w.fetchEventsFromBlockRange(ctx, *fromHeight, uint32(block.Number.Uint64())); err != nil {
 					w.logger.Error("failed to fetch events by block range", zap.Error(err))
 					errC <- err
 					return
