@@ -32,7 +32,7 @@ export default function AddToAlephium() {
       (async (nodeProvider) => {
         try {
           const tokenInfo = await getLocalTokenInfo(nodeProvider, targetAsset)
-          const logoURI = getAlephiumTokenLogoURI(tokenInfo.id)
+          const logoURI = await getAlephiumTokenLogoURI(tokenInfo.id)
           const windowObject = alphWallet.signer as AlephiumWindowObject
           console.log(`add new token, tokenName: ${tokenInfo.name}, tokenSymbol: ${tokenInfo.symbol}, tokenId: ${tokenInfo.id}`)
           const result = await windowObject.request({
