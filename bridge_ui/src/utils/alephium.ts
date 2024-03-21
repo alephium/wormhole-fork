@@ -4,7 +4,6 @@ import {
   ALEPHIUM_POLLING_INTERVAL,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_TOKEN_LIST,
   CLUSTER,
   minimalAlphInContract
 } from "./consts";
@@ -24,7 +23,7 @@ import {
   alephium_contracts,
   isSequenceExecuted
 } from '@alephium/wormhole-sdk';
-import { TokenInfo, ALPH } from "@alephium/token-list";
+import { TokenInfo, ALPH, TokenList } from "@alephium/token-list";
 import alephiumIcon from "../icons/alephium.svg";
 import {
   NodeProvider,
@@ -43,6 +42,34 @@ import * as base58 from 'bs58'
 
 const WormholeMessageEventIndex = 0
 export const AlephiumBlockTime = 64000 // 64 seconds in ms
+
+let tokenListCache: TokenList | undefined = undefined
+
+async function fetchTokenList(): Promise<TokenList> {
+  const file = CLUSTER === 'mainnet' ? 'mainnet.json' : 'testnet.json'
+  const url = `https://raw.githubusercontent.com/alephium/token-list/master/tokens/${file}`
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch token list from ${url}`)
+  }
+  const tokenList =  await response.json()
+  tokenListCache = tokenList
+  return tokenList
+}
+
+async function getTokenFromTokenList(tokenId: string): Promise<TokenInfo | undefined> {
+  if (tokenListCache !== undefined) {
+    let result = tokenListCache.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
+    if (result === undefined) { // update the cache
+      const tokenList = await fetchTokenList()
+      result = tokenList.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
+    }
+    return result
+  }
+
+  const tokenList = await fetchTokenList()
+  return tokenList.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
+}
 
 export class AlphTxInfo {
   blockHash: string
@@ -158,17 +185,17 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     if (CLUSTER === 'devnet') {
       return await getLocalTokenInfo(provider, tokenId)
     }
-    return ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
+    return await getTokenFromTokenList(tokenId)
   } catch (error) {
     console.log("failed to get alephium token info, error: " + error)
     return undefined
   }
 }
 
-export function getAlephiumTokenLogoURI(tokenId: string): string | undefined {
+export async function getAlephiumTokenLogoURI(tokenId: string): Promise<string | undefined> {
   return tokenId === ALPH_TOKEN_ID
     ? alephiumIcon
-    : ALEPHIUM_TOKEN_LIST.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())?.logoURI
+    : (await getTokenFromTokenList(tokenId))?.logoURI
 }
 
 export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
@@ -177,7 +204,7 @@ export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId:
     return localTokenInfo
   }
 
-  const tokenInfo = ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
+  const tokenInfo = await getTokenFromTokenList(tokenId)
   if (tokenInfo === undefined) {
     throw new Error(`Token ${tokenId} does not exists in the token-list`)
   }

@@ -315,7 +315,7 @@ async function alephium(
   dispatch(setIsSending(true));
   try {
     if (!isValidAlephiumTokenId(localTokenId)) {
-      throw new Error(`Invalid local token: ${localTokenId}`)
+      throw new Error(`Invalid local token: ${localTokenId}, expected a 64 bytes hex string`)
     }
     const tokenInfo = await getAndCheckLocalTokenInfo(wallet.nodeProvider, localTokenId)
     const result = await attestFromAlph(

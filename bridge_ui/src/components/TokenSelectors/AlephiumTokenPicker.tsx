@@ -59,7 +59,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
             uiAmount,
             tokenInfo.symbol,
             tokenInfo.name,
-            getAlephiumTokenLogoURI(contractId),
+            await getAlephiumTokenLogoURI(contractId),
             false
           )
         } catch (e) {
