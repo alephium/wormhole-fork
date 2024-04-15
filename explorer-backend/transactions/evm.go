@@ -104,7 +104,7 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 					return
 				}
 			}
-			if err := w.fetchEventsByBlockHash(ctx, block.Hash); err != nil {
+			if err := w.fetchEventsByBlockNumber(ctx, block.Number); err != nil {
 				w.logger.Error("failed to fetch events by block hash", zap.String("blockHash", block.Hash.Hex()), zap.Error(err))
 				errC <- err
 				return
@@ -165,16 +165,17 @@ func (w *EVMWatcher) fetchEventsFromBlockRange(ctx context.Context, fromHeight u
 	}
 }
 
-func (w *EVMWatcher) fetchEventsByBlockHash(ctx context.Context, blockHash ethCommon.Hash) error {
+func (w *EVMWatcher) fetchEventsByBlockNumber(ctx context.Context, blockNumber *big.Int) error {
 	client := w.connector.Client()
 	query := eth.FilterQuery{
-		BlockHash: &blockHash,
+		FromBlock: blockNumber,
+		ToBlock:   blockNumber,
 		Addresses: []ethCommon.Address{*w.contractAddress},
 		Topics:    [][]ethCommon.Hash{{ethereum.LogMessagePublishedTopic}},
 	}
 	logs, err := client.FilterLogs(ctx, query)
 	if err != nil {
-		w.logger.Error("failed to get logs", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
+		w.logger.Error("failed to get logs", zap.Uint64("number", blockNumber.Uint64()), zap.Error(err))
 		return err
 	}
 	txs := make([]*BridgeTransaction, 0)
@@ -189,16 +190,16 @@ func (w *EVMWatcher) fetchEventsByBlockHash(ctx context.Context, blockHash ethCo
 		txs = append(txs, bridgeTx)
 	}
 	if len(txs) > 0 {
-		header, err := client.HeaderByHash(ctx, blockHash)
+		header, err := client.HeaderByNumber(ctx, blockNumber)
 		if err != nil {
-			w.logger.Error("failed to get header by block hash", zap.String("blockHash", blockHash.Hex()), zap.Error(err))
+			w.logger.Error("failed to get header by block number", zap.Uint64("number", blockNumber.Uint64()), zap.Error(err))
 			return err
 		}
 
 		blockTimestamp := time.Unix(int64(header.Time), 0).UTC()
 		blockTxs := &BlockTransactions{
 			blockNumber:    uint32(header.Number.Uint64()),
-			blockHash:      blockHash.Hex(),
+			blockHash:      header.Hash().Hex(),
 			blockTimestamp: &blockTimestamp,
 			txs:            txs,
 			chainId:        w.chainId,
