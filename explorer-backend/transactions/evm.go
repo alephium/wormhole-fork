@@ -105,7 +105,7 @@ func (w *EVMWatcher) fetchEvents(ctx context.Context, errC chan<- error) {
 				}
 			}
 			if err := w.fetchEventsByBlockNumber(ctx, block.Number); err != nil {
-				w.logger.Error("failed to fetch events by block hash", zap.String("blockHash", block.Hash.Hex()), zap.Error(err))
+				w.logger.Error("failed to fetch events by block number", zap.Uint64("number", block.Number.Uint64()), zap.Error(err))
 				errC <- err
 				return
 			}
