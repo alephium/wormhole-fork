@@ -4,7 +4,7 @@ import {
   CHAIN_ID_SOLANA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { RootState } from ".";
 
@@ -223,6 +223,12 @@ export const selectTransferRedeemTx = (state: RootState) =>
   state.transfer.redeemTx;
 export const selectTransferIsApproving = (state: RootState) =>
   state.transfer.isApproving;
+function normalizeAmount(amount: BigNumber, decimals: number): BigNumber {
+  if (decimals > 8) {
+    return amount.div(BigNumber.from(10).pow(BigNumber.from(decimals - 8)))
+  }
+  return amount
+}
 export const selectTransferSourceError = (
   state: RootState
 ): string | undefined => {
@@ -247,22 +253,19 @@ export const selectTransferSourceError = (
   // no NFT check - NFTs should be blocked by all token pickers
   try {
     // these may trigger error: fractional component exceeds decimals
-    if (
-      parseUnits(
-        state.transfer.amount,
-        state.transfer.sourceParsedTokenAccount.decimals
-      ).lte(0)
-    ) {
+    const decimals = state.transfer.sourceParsedTokenAccount.decimals
+    const transferAmount = parseUnits(state.transfer.amount, decimals)
+    if (transferAmount.lte(0)) {
       return "Amount must be greater than zero";
     }
+    if (normalizeAmount(transferAmount, decimals).lte(0)) {
+      return "Transfer amount will become 0 after normalization"
+    }
     if (
-      parseUnits(
-        state.transfer.amount,
-        state.transfer.sourceParsedTokenAccount.decimals
-      ).gt(
+      transferAmount.gt(
         parseUnits(
           state.transfer.sourceParsedTokenAccount.uiAmountString,
-          state.transfer.sourceParsedTokenAccount.decimals
+          decimals
         )
       )
     ) {
