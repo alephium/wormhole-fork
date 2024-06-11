@@ -253,10 +253,20 @@ func TestIsEventConfirmed(t *testing.T) {
 			},
 			msg: &WormholeMessage{
 				consistencyLevel: c.eventConsistencyLevel,
+				payload:          []byte{TransferTokenPayloadId},
 			},
 		}
-		assert.Equal(t, isEventConfirmed(logger, event, c.eventBlockHeader, c.currentTs, c.currentHeight), c.isConfirmed)
+		assert.Equal(t, isEventConfirmed(logger, event, c.eventBlockHeader, c.currentTs, c.currentHeight, false), c.isConfirmed)
 	}
+}
+
+func TestGetConfirmationDuration(t *testing.T) {
+	assert.Equal(t, getConfirmationDuration(false, false, 10), int64(10)*BlockTimeMs)
+	assert.Equal(t, getConfirmationDuration(false, true, 10), int64(10)*BlockTimeMs)
+	assert.Equal(t, getConfirmationDuration(true, false, 10), int64(10)*BlockTimeMs)
+	assert.Equal(t, getConfirmationDuration(true, true, 10), int64(MinimalConsistencyLevel)*BlockTimeMs)
+	assert.Equal(t, getConfirmationDuration(true, true, 205), int64(MinimalConsistencyLevel)*BlockTimeMs)
+	assert.Equal(t, getConfirmationDuration(true, true, 206), int64(206)*BlockTimeMs)
 }
 
 func TestHandleUnconfirmedEvents(t *testing.T) {

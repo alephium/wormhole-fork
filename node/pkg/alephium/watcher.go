@@ -51,7 +51,8 @@ var (
 		}, []string{"operation"})
 )
 
-const BlockTimeMs = 64000
+const BlockTimeMs = 16000
+const MinimalConsistencyLevel uint8 = 205
 
 type Watcher struct {
 	url    string
@@ -70,7 +71,8 @@ type Watcher struct {
 	pollIntervalMs     uint
 	currentHeight      int32
 
-	client *Client
+	client    *Client
+	isMainnet bool
 }
 
 type UnconfirmedEvent struct {
@@ -96,6 +98,7 @@ func NewAlephiumWatcher(
 	messageEvents chan *common.MessagePublication,
 	pollIntervalMs uint,
 	obsvReqC chan *gossipv1.ObservationRequest,
+	isMainnet bool,
 ) (*Watcher, error) {
 	governanceContractAddress, err := ToContractAddress(chainConfig.Contracts.Governance)
 	if err != nil {
@@ -125,7 +128,8 @@ func NewAlephiumWatcher(
 		blockPollerEnabled: &atomic.Bool{},
 		pollIntervalMs:     pollIntervalMs,
 
-		client: NewClient(url, apiKey, 10),
+		client:    NewClient(url, apiKey, 10),
+		isMainnet: isMainnet,
 	}
 	return watcher, nil
 }
@@ -408,7 +412,7 @@ func (w *Watcher) handleEvents_(
 				zap.Int("size", len(blockEvents.events)),
 			)
 			for _, event := range blockEvents.events {
-				if !isEventConfirmed(logger, event, blockEvents.header, now, height) {
+				if !isEventConfirmed(logger, event, blockEvents.header, now, height, w.isMainnet) {
 					remain = append(remain, event)
 					continue
 				}
@@ -478,6 +482,7 @@ func isEventConfirmed(
 	eventBlockHeader *sdk.BlockHeaderEntry,
 	currentTs int64,
 	currentHeight int32,
+	isMainnet bool,
 ) bool {
 	consistencyLevel := event.msg.consistencyLevel
 	if eventBlockHeader.Height+int32(consistencyLevel) > currentHeight {
@@ -485,10 +490,21 @@ func isEventConfirmed(
 		return false
 	}
 
-	duration := int64(consistencyLevel) * BlockTimeMs
+	duration := getConfirmationDuration(isMainnet, event.msg.IsTransferTokenVAA(), consistencyLevel)
 	if eventBlockHeader.Timestamp+duration > currentTs {
 		logger.Debug("not enough confirmation time", zap.String("txId", event.TxId), zap.Uint8("consistencyLevel", consistencyLevel))
 		return false
 	}
 	return true
+}
+
+func getConfirmationDuration(
+	isMainnet bool,
+	isTransferTokenVAA bool,
+	eventConsistencyLevel uint8,
+) int64 {
+	if isMainnet && isTransferTokenVAA {
+		return int64(maxUint8(eventConsistencyLevel, MinimalConsistencyLevel)) * BlockTimeMs
+	}
+	return int64(eventConsistencyLevel) * BlockTimeMs
 }

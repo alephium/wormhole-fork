@@ -692,7 +692,7 @@ func runNode(cmd *cobra.Command, args []string) {
 
 		alphWatcher, err := alephium.NewAlephiumWatcher(
 			*alphRPC, *alphApiKey, alphConfig, common.ReadinessAlephiumSyncing,
-			lockC, *alphPollIntervalMs, chainObsvReqC[vaa.ChainIDAlephium],
+			lockC, *alphPollIntervalMs, chainObsvReqC[vaa.ChainIDAlephium], *network == "mainnet",
 		)
 		if err != nil {
 			logger.Error("failed to create alephium watcher", zap.Error(err))
