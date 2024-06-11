@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as SequenceTestContractJson } from "../tests/SequenceTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -56,12 +63,35 @@ export namespace SequenceTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    check: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   SequenceTestInstance,
   SequenceTestTypes.Fields
 > {
+  encodeFields(fields: SequenceTestTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as SequenceTestTypes.Fields;
+  }
+
   consts = {
     ErrorCodes: {
       InvalidEmitChainId: BigInt(0),
@@ -106,35 +136,49 @@ class Factory extends ContractFactory<
 
   tests = {
     setExecuted: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         SequenceTestTypes.Fields,
         { offset: bigint; current: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "setExecuted", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "setExecuted", params, getContractByCodeHash);
     },
     compact: async (
       params: Omit<
-        TestContractParams<SequenceTestTypes.Fields, never>,
+        TestContractParamsWithoutMaps<SequenceTestTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "compact", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "compact", params, getContractByCodeHash);
     },
     checkSequenceInSubContract: async (
-      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "checkSequenceInSubContract", params);
+      params: TestContractParamsWithoutMaps<
+        SequenceTestTypes.Fields,
+        { seq: bigint }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "checkSequenceInSubContract",
+        params,
+        getContractByCodeHash
+      );
     },
     checkSequence: async (
-      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-    ): Promise<TestContractResult<boolean>> => {
-      return testMethod(this, "checkSequence", params);
+      params: TestContractParamsWithoutMaps<
+        SequenceTestTypes.Fields,
+        { seq: bigint }
+      >
+    ): Promise<TestContractResultWithoutMaps<boolean>> => {
+      return testMethod(this, "checkSequence", params, getContractByCodeHash);
     },
     check: async (
-      params: TestContractParams<SequenceTestTypes.Fields, { seq: bigint }>
-    ): Promise<TestContractResult<boolean>> => {
-      return testMethod(this, "check", params);
+      params: TestContractParamsWithoutMaps<
+        SequenceTestTypes.Fields,
+        { seq: bigint }
+      >
+    ): Promise<TestContractResultWithoutMaps<boolean>> => {
+      return testMethod(this, "check", params, getContractByCodeHash);
     },
   };
 }
@@ -144,7 +188,8 @@ export const SequenceTest = new Factory(
   Contract.fromJson(
     SequenceTestContractJson,
     "",
-    "e78956e3f4b52df13bc7a82b17c872b3cf6d78c56f8b7dd9edddea6c8c8ddf81"
+    "e78956e3f4b52df13bc7a82b17c872b3cf6d78c56f8b7dd9edddea6c8c8ddf81",
+    []
   )
 );
 
@@ -169,6 +214,16 @@ export class SequenceTestInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    check: async (
+      params: SequenceTestTypes.SignExecuteMethodParams<"check">
+    ): Promise<SequenceTestTypes.SignExecuteMethodResult<"check">> => {
+      return signExecuteMethod(SequenceTest, this, "check", params);
     },
   };
 

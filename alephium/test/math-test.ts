@@ -1,5 +1,4 @@
 import { web3 } from '@alephium/web3'
-import { buildProject } from './fixtures/wormhole-fixture'
 import { MathTest } from '../artifacts/ts'
 
 describe('test math', () => {
@@ -13,7 +12,6 @@ describe('test math', () => {
   }
 
   it('should test math methods', async () => {
-    await buildProject()
     const cases: TestCase[] = [
       {
         decimals: 6n,

@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v2.5.7",
+  "fullNodeVersion": "v3.0.3",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": true,
     "ignoreUnusedVariablesWarnings": false,
@@ -130,7 +130,7 @@
     },
     "IFungibleToken": {
       "sourceFile": "../node_modules/@alephium/web3/std/fungible_token_interface.ral",
-      "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
+      "sourceCodeHash": "62910bf11e1eeb6cb2fd468626ff606a9b06306b2b81590c3b10f6deb5966bde",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -182,7 +182,9 @@
       "sourceCodeHash": "52d7394d79d4441d90f31e5a084b15c612c8a87fa0cbb4a2071b7f79c5eda71a",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "e78956e3f4b52df13bc7a82b17c872b3cf6d78c56f8b7dd9edddea6c8c8ddf81",
-      "warnings": []
+      "warnings": [
+        "The return values of the function \"SequenceTest.copyCreateSubContract\" are not used. If this is intentional, consider using anonymous variables to suppress this warning."
+      ]
     },
     "SetMessageFee": {
       "sourceFile": "governance_scripts/set_message_fee.ral",
@@ -203,7 +205,12 @@
       "sourceCodeHash": "81c5941101098365861356351470f40d88b863ddb1546e57218e3756c1f483bc",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "3921ab78ca073b5125b2ff7e4232e72f2c1c62554bbc8f81d39e769e6bcf349c",
-      "warnings": []
+      "warnings": [
+        "The return values of the function \"TokenBridge.copyCreateSubContract\" are not used. If this is intentional, consider using anonymous variables to suppress this warning.",
+        "The return values of the function \"TokenBridge.copyCreateSubContract\" are not used. If this is intentional, consider using anonymous variables to suppress this warning.",
+        "The return values of the function \"TokenBridge.copyCreateSubContract\" are not used. If this is intentional, consider using anonymous variables to suppress this warning.",
+        "The return values of the function \"TokenBridge.copyCreateSubContractWithToken\" are not used. If this is intentional, consider using anonymous variables to suppress this warning."
+      ]
     },
     "TokenBridgeConstants": {
       "sourceFile": "token_bridge/token_bridge_constants.ral",
@@ -224,7 +231,9 @@
       "sourceCodeHash": "e737dbef9fd05aa9f486583b1ff973787ae2471f1e9c2de78fe8fcecbc2f2fa1",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "58443a1005d6791f07d0701f4ef91ec367777ab67be27990a6b8fcb7c84e7240",
-      "warnings": []
+      "warnings": [
+        "The return values of the function \"TokenBridgeForChain.copyCreateSubContract\" are not used. If this is intentional, consider using anonymous variables to suppress this warning."
+      ]
     },
     "TokenBridgeGovernance": {
       "sourceFile": "token_bridge/token_bridge_governance.ral",

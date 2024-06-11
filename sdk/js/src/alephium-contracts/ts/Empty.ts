@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as EmptyContractJson } from "../tests/Empty.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -35,18 +42,63 @@ export namespace EmptyTypes {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    foo: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    foo: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<EmptyInstance, EmptyTypes.Fields> {
+  encodeFields(fields: EmptyTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as EmptyTypes.Fields;
+  }
+
   at(address: string): EmptyInstance {
     return new EmptyInstance(address);
   }
 
   tests = {
     foo: async (
-      params: Omit<TestContractParams<EmptyTypes.Fields, never>, "testArgs">
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "foo", params);
+      params: Omit<
+        TestContractParamsWithoutMaps<EmptyTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "foo", params, getContractByCodeHash);
     },
   };
 }
@@ -56,7 +108,8 @@ export const Empty = new Factory(
   Contract.fromJson(
     EmptyContractJson,
     "",
-    "6d6160ec29f40a382f2154aa04b223925d5004e9848b0ca6f74b2f5bc8762d22"
+    "6d6160ec29f40a382f2154aa04b223925d5004e9848b0ca6f74b2f5bc8762d22",
+    []
   )
 );
 
@@ -69,4 +122,28 @@ export class EmptyInstance extends ContractInstance {
   async fetchState(): Promise<EmptyTypes.State> {
     return fetchContractState(Empty, this);
   }
+
+  methods = {
+    foo: async (
+      params?: EmptyTypes.CallMethodParams<"foo">
+    ): Promise<EmptyTypes.CallMethodResult<"foo">> => {
+      return callMethod(
+        Empty,
+        this,
+        "foo",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    foo: async (
+      params: EmptyTypes.SignExecuteMethodParams<"foo">
+    ): Promise<EmptyTypes.SignExecuteMethodResult<"foo">> => {
+      return signExecuteMethod(Empty, this, "foo", params);
+    },
+  };
 }

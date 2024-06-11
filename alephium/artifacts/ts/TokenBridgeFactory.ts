@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as TokenBridgeFactoryContractJson } from "../token_bridge/TokenBridgeFactory.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -77,12 +84,55 @@ export namespace TokenBridgeFactoryTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    getLocalTokenPoolTemplateId: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getRemoteTokenPoolTemplateId: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getTokenBridgeForChainTemplateId: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getAttestTokenHandlerTemplateId: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getUnexecutedSequenceTemplateId: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    parseContractUpgrade: {
+      params: SignExecuteContractMethodParams<{ payload: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   TokenBridgeFactoryInstance,
   TokenBridgeFactoryTypes.Fields
 > {
+  encodeFields(fields: TokenBridgeFactoryTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeFactoryTypes.Fields;
+  }
+
   consts = {
     ErrorCodes: {
       InvalidEmitChainId: BigInt(0),
@@ -128,53 +178,85 @@ class Factory extends ContractFactory<
   tests = {
     getLocalTokenPoolTemplateId: async (
       params: Omit<
-        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getLocalTokenPoolTemplateId", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getLocalTokenPoolTemplateId",
+        params,
+        getContractByCodeHash
+      );
     },
     getRemoteTokenPoolTemplateId: async (
       params: Omit<
-        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getRemoteTokenPoolTemplateId", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getRemoteTokenPoolTemplateId",
+        params,
+        getContractByCodeHash
+      );
     },
     getTokenBridgeForChainTemplateId: async (
       params: Omit<
-        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getTokenBridgeForChainTemplateId", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getTokenBridgeForChainTemplateId",
+        params,
+        getContractByCodeHash
+      );
     },
     getAttestTokenHandlerTemplateId: async (
       params: Omit<
-        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getAttestTokenHandlerTemplateId", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getAttestTokenHandlerTemplateId",
+        params,
+        getContractByCodeHash
+      );
     },
     getUnexecutedSequenceTemplateId: async (
       params: Omit<
-        TestContractParams<TokenBridgeFactoryTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getUnexecutedSequenceTemplateId", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getUnexecutedSequenceTemplateId",
+        params,
+        getContractByCodeHash
+      );
     },
     parseContractUpgrade: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeFactoryTypes.Fields,
         { payload: HexString }
       >
     ): Promise<
-      TestContractResult<[HexString, HexString, HexString, HexString]>
+      TestContractResultWithoutMaps<
+        [HexString, HexString, HexString, HexString]
+      >
     > => {
-      return testMethod(this, "parseContractUpgrade", params);
+      return testMethod(
+        this,
+        "parseContractUpgrade",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 }
@@ -184,7 +266,8 @@ export const TokenBridgeFactory = new Factory(
   Contract.fromJson(
     TokenBridgeFactoryContractJson,
     "",
-    "b8f3d38c07e360496aaf83fe93eefc04ee4fee57fb5102a628a6c394c67c2e6a"
+    "b8f3d38c07e360496aaf83fe93eefc04ee4fee57fb5102a628a6c394c67c2e6a",
+    []
   )
 );
 
@@ -275,6 +358,83 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
         "parseContractUpgrade",
         params,
         getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    getLocalTokenPoolTemplateId: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getLocalTokenPoolTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"getLocalTokenPoolTemplateId">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "getLocalTokenPoolTemplateId",
+        params
+      );
+    },
+    getRemoteTokenPoolTemplateId: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getRemoteTokenPoolTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"getRemoteTokenPoolTemplateId">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "getRemoteTokenPoolTemplateId",
+        params
+      );
+    },
+    getTokenBridgeForChainTemplateId: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getTokenBridgeForChainTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"getTokenBridgeForChainTemplateId">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "getTokenBridgeForChainTemplateId",
+        params
+      );
+    },
+    getAttestTokenHandlerTemplateId: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getAttestTokenHandlerTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"getAttestTokenHandlerTemplateId">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "getAttestTokenHandlerTemplateId",
+        params
+      );
+    },
+    getUnexecutedSequenceTemplateId: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getUnexecutedSequenceTemplateId">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"getUnexecutedSequenceTemplateId">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "getUnexecutedSequenceTemplateId",
+        params
+      );
+    },
+    parseContractUpgrade: async (
+      params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"parseContractUpgrade">
+    ): Promise<
+      TokenBridgeFactoryTypes.SignExecuteMethodResult<"parseContractUpgrade">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeFactory,
+        this,
+        "parseContractUpgrade",
+        params
       );
     },
   };

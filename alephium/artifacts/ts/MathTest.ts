@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as MathTestContractJson } from "../tests/MathTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -53,9 +60,34 @@ export namespace MathTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    normalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    deNormalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<MathTestInstance, {}> {
+  encodeFields() {
+    return encodeContractFields({}, this.contract.fieldsSig, []);
+  }
+
   at(address: string): MathTestInstance {
     return new MathTestInstance(address);
   }
@@ -63,19 +95,30 @@ class Factory extends ContractFactory<MathTestInstance, {}> {
   tests = {
     normalizeAmount: async (
       params: Omit<
-        TestContractParams<never, { amount: bigint; decimals: bigint }>,
+        TestContractParamsWithoutMaps<
+          never,
+          { amount: bigint; decimals: bigint }
+        >,
         "initialFields"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "normalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "normalizeAmount", params, getContractByCodeHash);
     },
     deNormalizeAmount: async (
       params: Omit<
-        TestContractParams<never, { amount: bigint; decimals: bigint }>,
+        TestContractParamsWithoutMaps<
+          never,
+          { amount: bigint; decimals: bigint }
+        >,
         "initialFields"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "deNormalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(
+        this,
+        "deNormalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 }
@@ -85,7 +128,8 @@ export const MathTest = new Factory(
   Contract.fromJson(
     MathTestContractJson,
     "",
-    "69d44b2a740c60e15d881653e1f90da2c11e3d3bec68a30601beb64b072f343c"
+    "69d44b2a740c60e15d881653e1f90da2c11e3d3bec68a30601beb64b072f343c",
+    []
   )
 );
 
@@ -121,6 +165,21 @@ export class MathTestInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    normalizeAmount: async (
+      params: MathTestTypes.SignExecuteMethodParams<"normalizeAmount">
+    ): Promise<MathTestTypes.SignExecuteMethodResult<"normalizeAmount">> => {
+      return signExecuteMethod(MathTest, this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: MathTestTypes.SignExecuteMethodParams<"deNormalizeAmount">
+    ): Promise<MathTestTypes.SignExecuteMethodResult<"deNormalizeAmount">> => {
+      return signExecuteMethod(MathTest, this, "deNormalizeAmount", params);
     },
   };
 

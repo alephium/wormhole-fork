@@ -4,44 +4,44 @@
 
 import { Contract, ContractFactory } from "@alephium/web3";
 import {
-  Governance,
-  UnexecutedSequence,
-  Empty,
-  GovernanceV1,
-  MathTest,
-  SequenceTest,
-  TestToken,
-  TokenBridgeV1,
-  UnexecutedSequenceTest,
   AttestTokenHandler,
   BridgeRewardRouter,
+  Empty,
+  Governance,
+  GovernanceV1,
   LocalTokenPool,
+  MathTest,
   RemoteTokenPool,
+  SequenceTest,
+  TestToken,
   TokenBridge,
   TokenBridgeFactory,
   TokenBridgeForChain,
+  TokenBridgeV1,
+  UnexecutedSequence,
+  UnexecutedSequenceTest,
 } from ".";
 
 let contracts: ContractFactory<any>[] | undefined = undefined;
 export function getContractByCodeHash(codeHash: string): Contract {
   if (contracts === undefined) {
     contracts = [
-      Governance,
-      UnexecutedSequence,
-      Empty,
-      GovernanceV1,
-      MathTest,
-      SequenceTest,
-      TestToken,
-      TokenBridgeV1,
-      UnexecutedSequenceTest,
       AttestTokenHandler,
       BridgeRewardRouter,
+      Empty,
+      Governance,
+      GovernanceV1,
       LocalTokenPool,
+      MathTest,
       RemoteTokenPool,
+      SequenceTest,
+      TestToken,
       TokenBridge,
       TokenBridgeFactory,
       TokenBridgeForChain,
+      TokenBridgeV1,
+      UnexecutedSequence,
+      UnexecutedSequenceTest,
     ];
   }
   const c = contracts.find(

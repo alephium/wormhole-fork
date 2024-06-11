@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as TokenBridgeV1ContractJson } from "../tests/TokenBridgeV1.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -40,12 +47,54 @@ export namespace TokenBridgeV1Types {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    foo: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    foo: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   TokenBridgeV1Instance,
   TokenBridgeV1Types.Fields
 > {
+  encodeFields(fields: TokenBridgeV1Types.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeV1Types.Fields;
+  }
+
   at(address: string): TokenBridgeV1Instance {
     return new TokenBridgeV1Instance(address);
   }
@@ -53,11 +102,11 @@ class Factory extends ContractFactory<
   tests = {
     foo: async (
       params: Omit<
-        TestContractParams<TokenBridgeV1Types.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeV1Types.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "foo", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "foo", params, getContractByCodeHash);
     },
   };
 }
@@ -67,7 +116,8 @@ export const TokenBridgeV1 = new Factory(
   Contract.fromJson(
     TokenBridgeV1ContractJson,
     "",
-    "0778af62d0feb156513decbaaa86999da11a1b7fd7aaaecc767a25155b33d15c"
+    "0778af62d0feb156513decbaaa86999da11a1b7fd7aaaecc767a25155b33d15c",
+    []
   )
 );
 
@@ -80,4 +130,28 @@ export class TokenBridgeV1Instance extends ContractInstance {
   async fetchState(): Promise<TokenBridgeV1Types.State> {
     return fetchContractState(TokenBridgeV1, this);
   }
+
+  methods = {
+    foo: async (
+      params?: TokenBridgeV1Types.CallMethodParams<"foo">
+    ): Promise<TokenBridgeV1Types.CallMethodResult<"foo">> => {
+      return callMethod(
+        TokenBridgeV1,
+        this,
+        "foo",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    foo: async (
+      params: TokenBridgeV1Types.SignExecuteMethodParams<"foo">
+    ): Promise<TokenBridgeV1Types.SignExecuteMethodResult<"foo">> => {
+      return signExecuteMethod(TokenBridgeV1, this, "foo", params);
+    },
+  };
 }
