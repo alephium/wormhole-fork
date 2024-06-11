@@ -99,7 +99,7 @@ function Target() {
   const error = useSelector(selectTransferTargetError);
   const isTargetComplete = useSelector(selectTransferIsTargetComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
-  const { statusMessage, isReady } = useIsWalletReady(targetChain);
+  const { statusMessage } = useIsWalletReady(targetChain);
   const isLoading = (!statusMessage && !targetAssetError && !data && !fetchSourceAssetInfoError) || isFetchingSourceAssetInfo;
   const { associatedAccountExists, setAssociatedAccountExists } =
     useAssociatedAccountExistsState(

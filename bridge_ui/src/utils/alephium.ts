@@ -41,7 +41,7 @@ import {
 import * as base58 from 'bs58'
 
 const WormholeMessageEventIndex = 0
-export const AlephiumBlockTime = 64000 // 64 seconds in ms
+export const AlephiumBlockTime = 16000 // 16 seconds in ms
 
 let tokenListCache: TokenList | undefined = undefined
 
@@ -173,7 +173,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
 
   const tokenAddress = addressFromContractId(tokenId)
   try {
-    const state = await provider.contracts.getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
+    const state = await provider.contracts.getContractsAddressState(tokenAddress)
     if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
       return getRemoteTokenInfoFromContractState(state)
     }
@@ -229,7 +229,7 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
   const tokenAddress = addressFromContractId(tokenId)
   return provider
     .contracts
-    .getContractsAddressState(tokenAddress, { group: groupOfAddress(tokenAddress) })
+    .getContractsAddressState(tokenAddress)
     .then(state => {
       if (state.codeHash === ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
         const tokenInfo = getRemoteTokenInfoFromContractState(state)
