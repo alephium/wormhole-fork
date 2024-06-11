@@ -1,0 +1,328 @@
+{
+  "fullNodeVersion": "v2.5.7",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": true,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "AddRewards": {
+      "sourceFile": "token_bridge_scripts/add_rewards.ral",
+      "sourceCodeHash": "19705b30211da8e058f431032cc1454dcb0b288f450d23cc2618558bc7bdfd31",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "AttestToken": {
+      "sourceFile": "token_bridge_scripts/attest_token.ral",
+      "sourceCodeHash": "441bb5d402be2ab3121bd8a2a3f4e5c4f2042a02df29a645c9044a9f03e9d073",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "AttestTokenHandler": {
+      "sourceFile": "token_bridge/attest_token_handler.ral",
+      "sourceCodeHash": "f59add5e5f831975d23f67106dde857eff6a121f0e5ac79f13bf398e48972171",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "a8d5b3de6a6267d4a12eb793dc90832b0b0e5b84f54c5458d0fedfe73dc0871c",
+      "warnings": []
+    },
+    "BridgeRewardRouter": {
+      "sourceFile": "token_bridge/bridge_reward_router.ral",
+      "sourceCodeHash": "37c98f60ed3691232d013e813713a6fab07e957be25dd0a06e50a92825ad8120",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b",
+      "warnings": []
+    },
+    "BridgeTokenPool": {
+      "sourceFile": "token_bridge/bridge_token_pool.ral",
+      "sourceCodeHash": "adf164e92ce485f1a04053511d661bf2f3b9905ae5746e0dbf1cec7f56277223",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CompleteTransfer": {
+      "sourceFile": "token_bridge_scripts/complete_transfer.ral",
+      "sourceCodeHash": "f76b6e207a5c5b02a6cf2dd604866c7e4c17de2f8e6e816505fa4c266a36dfed",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CompleteTransferWithReward": {
+      "sourceFile": "token_bridge_scripts/complete_transfer_with_reward.ral",
+      "sourceCodeHash": "3e4c3ce3b5deede7d44136b57921cee10f2d33140c11495984f9190244d52ea0",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Constants": {
+      "sourceFile": "constants.ral",
+      "sourceCodeHash": "1e2fccae5be23c59c6f497e01f49a5bead47776bda69d7e937ef44541da195de",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreateLocalAttestTokenHandler": {
+      "sourceFile": "token_bridge_scripts/create_local_attest_token_handler.ral",
+      "sourceCodeHash": "39e0ac83461f016783c1767ffb08adcfbcff47ad0f956727ab2c2b40bcff0b24",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreateLocalTokenPool": {
+      "sourceFile": "token_bridge_scripts/create_local_token_pool.ral",
+      "sourceCodeHash": "fa3ffda8c390c8885a3f9f2c7a03c2396bea50414224bba20425a20fc4b4225e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreateRemoteTokenPool": {
+      "sourceFile": "token_bridge_scripts/create_remote_token_pool.ral",
+      "sourceCodeHash": "a85e4c7f32c7d102f81eeac2f8cd6261128162b803c009f4177d414f75ae94c4",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Deposit": {
+      "sourceFile": "token_bridge_scripts/deposit.ral",
+      "sourceCodeHash": "cf792c513394c633b0a9e7d8798d11ac4d32271fdb3a46bd5e4aee39ff6ed95a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "DestroyUnexecutedSequenceContracts": {
+      "sourceFile": "token_bridge_scripts/destroy_unexecuted_sequence_contracts.ral",
+      "sourceCodeHash": "dbf50c01bdd07bb247a858e2e7488ccb6ec8f323cdcef891db29d2b2875fbd3e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Empty": {
+      "sourceFile": "tests/empty.ral",
+      "sourceCodeHash": "7d9c031c9856c6b85a248a566bbda6078150d71b4ee179bc687ff0aaae2c3c1f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "6d6160ec29f40a382f2154aa04b223925d5004e9848b0ca6f74b2f5bc8762d22",
+      "warnings": []
+    },
+    "GetToken": {
+      "sourceFile": "tests/get_token.ral",
+      "sourceCodeHash": "c63af090ca8c92e482aef0ca0dc4b04813548d202c11755d8de497bca056e861",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Governance": {
+      "sourceFile": "governance.ral",
+      "sourceCodeHash": "882b022dab2026db088f197ac5c20672a00c954a93ba6c8447252bff819124ee",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "7ebf06319b04aef7a7013a42ea2b7fccb3fc86178c27240aa2b2678d9068d9c7",
+      "warnings": []
+    },
+    "GovernanceV1": {
+      "sourceFile": "tests/governance_v1.ral",
+      "sourceCodeHash": "fd90f610f90fc63abddfab68b89c46ba193e7ea0b90785de2a544c158ac6faa9",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "237ca92e965dc50e86cb94535a4ffc9c9074ee6a7f1a1a24374f7380c6416d99",
+      "warnings": []
+    },
+    "IFungibleToken": {
+      "sourceFile": "../node_modules/@alephium/web3/std/fungible_token_interface.ral",
+      "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "LocalTokenPool": {
+      "sourceFile": "token_bridge/local_token_pool.ral",
+      "sourceCodeHash": "9ba6898d83987b40fefef8b7ed633732580bb620021869fe8fe6f57086f36a4e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "6330d3736eef41d3bc9c5026d0608def44267cc00ed8d8be0620d01f4627f035",
+      "warnings": []
+    },
+    "Math": {
+      "sourceFile": "math.ral",
+      "sourceCodeHash": "37611f211e9956bf2d84023936506a6434d836c6311dc7a4934a5094219489d2",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "MathTest": {
+      "sourceFile": "tests/math_test.ral",
+      "sourceCodeHash": "7f307735569bf071f47a34a3abfe87c9529c53890765d90c1aabf6bdb8494a81",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "69d44b2a740c60e15d881653e1f90da2c11e3d3bec68a30601beb64b072f343c",
+      "warnings": []
+    },
+    "RegisterChain": {
+      "sourceFile": "token_bridge_scripts/register_chain.ral",
+      "sourceCodeHash": "35dd1d3163db8b98ffbf2d66f7dc65a3fb95c822ea49ad1b1002ff0a4492743e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "RemoteTokenPool": {
+      "sourceFile": "token_bridge/remote_token_pool.ral",
+      "sourceCodeHash": "5e1d70dd59cba3c660dbc513b1ab3e5f4bf3e245419cf3ff7952dedde6765d1d",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "1887a5c2bc109b742c33e7c8aaa448d600e258cec66dbd7ff188b17fca3da2fd",
+      "warnings": []
+    },
+    "Sequence": {
+      "sourceFile": "sequence/sequence.ral",
+      "sourceCodeHash": "767b9d191607f06d700229022c3949c2a93d4e87190c39ed2c6454bb3efb2d26",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "SequenceTest": {
+      "sourceFile": "tests/sequence_test.ral",
+      "sourceCodeHash": "52d7394d79d4441d90f31e5a084b15c612c8a87fa0cbb4a2071b7f79c5eda71a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "e78956e3f4b52df13bc7a82b17c872b3cf6d78c56f8b7dd9edddea6c8c8ddf81",
+      "warnings": []
+    },
+    "SetMessageFee": {
+      "sourceFile": "governance_scripts/set_message_fee.ral",
+      "sourceCodeHash": "fb342e042b491a9279634da4848bd54e065857cb3903bb0dd78707b13fd2f442",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TestToken": {
+      "sourceFile": "tests/test_token.ral",
+      "sourceCodeHash": "c9887ff09cdf7c441e0182014e1f6a128055317172352bf1dc1db30f86390385",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "de33924ab0e8e07c90c855bfdde7f3b859de0ba8b192de514ecbc49ff52c16bc",
+      "warnings": []
+    },
+    "TokenBridge": {
+      "sourceFile": "token_bridge/token_bridge.ral",
+      "sourceCodeHash": "81c5941101098365861356351470f40d88b863ddb1546e57218e3756c1f483bc",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "3921ab78ca073b5125b2ff7e4232e72f2c1c62554bbc8f81d39e769e6bcf349c",
+      "warnings": []
+    },
+    "TokenBridgeConstants": {
+      "sourceFile": "token_bridge/token_bridge_constants.ral",
+      "sourceCodeHash": "364e2a165476432c561700e706a750d87e82ac898ba95b296d9e4e6499031024",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TokenBridgeFactory": {
+      "sourceFile": "token_bridge/token_bridge_factory.ral",
+      "sourceCodeHash": "6c6d2e8498d13346985b7608daa5256ee3cadad5967937f33592739ecfbf6b93",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "b8f3d38c07e360496aaf83fe93eefc04ee4fee57fb5102a628a6c394c67c2e6a",
+      "warnings": []
+    },
+    "TokenBridgeForChain": {
+      "sourceFile": "token_bridge/token_bridge_for_chain.ral",
+      "sourceCodeHash": "e737dbef9fd05aa9f486583b1ff973787ae2471f1e9c2de78fe8fcecbc2f2fa1",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "58443a1005d6791f07d0701f4ef91ec367777ab67be27990a6b8fcb7c84e7240",
+      "warnings": []
+    },
+    "TokenBridgeGovernance": {
+      "sourceFile": "token_bridge/token_bridge_governance.ral",
+      "sourceCodeHash": "48d066c4b7dd426e8babd0d1b8535a4b4cee87167335da5caa3b00361032a345",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TokenBridgeV1": {
+      "sourceFile": "tests/token_bridge_v1.ral",
+      "sourceCodeHash": "18a284a097b1ee2c41350c13815d2c5b4d2fd03861291fb0d54911953244c058",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "0778af62d0feb156513decbaaa86999da11a1b7fd7aaaecc767a25155b33d15c",
+      "warnings": []
+    },
+    "TokenPool": {
+      "sourceFile": "token_bridge/token_pool.ral",
+      "sourceCodeHash": "331682581e61a0269c12c4a7c9ff762b913a077999113e542aa0a7339a320097",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TransferFee": {
+      "sourceFile": "governance_scripts/transfer_fee.ral",
+      "sourceCodeHash": "f90acc004e17f048fbba3d3a32b8b92f5f8cae8e2940fddf2178f3d72c56f58f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TransferLocal": {
+      "sourceFile": "token_bridge_scripts/transfer_local.ral",
+      "sourceCodeHash": "ff683baae08db7e2547602adf683b7773de59be65d822180a9f0b8991d9d29df",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TransferRemote": {
+      "sourceFile": "token_bridge_scripts/transfer_remote.ral",
+      "sourceCodeHash": "30864c0ba18695e957da394e758cfa0cc91f5457fa847e3ef03a664566df48ad",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UnexecutedSequence": {
+      "sourceFile": "sequence/unexecuted_sequence.ral",
+      "sourceCodeHash": "81f69ecc5c11f1a803a600423428dfe5c9712b12f9808fb1aa225e722df16dd4",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "69f7a18c525aa6707771af5733f39e89bde6ee39ddcc8001c98fd1220c5191c9",
+      "warnings": []
+    },
+    "UnexecutedSequenceTest": {
+      "sourceFile": "tests/unexecuted_sequence_test.ral",
+      "sourceCodeHash": "36cab5d0f984478ddc22e1140de403c230a20e1d1100233fabbcbbaf07fcf95e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "959eab90ef1db13a92de0fffd3b3c7bc5b04d8b0e61bcae7ff8c0713b3d89ea7",
+      "warnings": []
+    },
+    "UpdateGovernanceContract": {
+      "sourceFile": "governance_scripts/upgrade_governance_contract.ral",
+      "sourceCodeHash": "c9e700d63277e02d0682450408fa19da4e3ce2e1b28d987badea6379ba304dd7",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateGuardianSet": {
+      "sourceFile": "governance_scripts/update_guardian_set.ral",
+      "sourceCodeHash": "e9910001120816862e553fcf9e7f91ab7033f2cf650987baa2db7fc58aed4ef6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateMinimalConsistencyLevel": {
+      "sourceFile": "token_bridge_scripts/update_minimal_consistency_level.ral",
+      "sourceCodeHash": "b1c1cff4c9e901dee7352a322f1dd1c20c57797bf33832e1c7f915695135bd00",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateRefundAddress": {
+      "sourceFile": "token_bridge_scripts/update_refund_address.ral",
+      "sourceCodeHash": "aa42f09902cdf4dd3f3c865ae084345b6f85193229ea495e9f859962429d3bee",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateRemoteTokenPool": {
+      "sourceFile": "token_bridge_scripts/update_remote_token_pool.ral",
+      "sourceCodeHash": "2878bf1e43d43594ad89571eab41bf190155f8a24ae01cf4a92ae82d6c631779",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpgradeTokenBridgeContract": {
+      "sourceFile": "token_bridge_scripts/upgrade_token_bridge_contract.ral",
+      "sourceCodeHash": "33faa7a56f2d182c462c937a5e90fd7e0ab5244a12489e70d13d8c0a4de918c6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    }
+  }
+}
