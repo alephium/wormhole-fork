@@ -7,6 +7,7 @@ import {
 import { ethers } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { RootState } from ".";
+import i18n from "../i18n";
 
 /*
  * Attest
@@ -80,35 +81,35 @@ export const selectNFTIsRedeeming = (state: RootState) => state.nft.isRedeeming;
 export const selectNFTRedeemTx = (state: RootState) => state.nft.redeemTx;
 export const selectNFTSourceError = (state: RootState): string | undefined => {
   if (!state.nft.sourceChain) {
-    return "Select a source chain";
+    return i18n.t("Select a source chain");
   }
   if (!state.nft.sourceParsedTokenAccount) {
-    return "Select an NFT";
+    return i18n.t("Select an NFT");
   }
   if (
     state.nft.sourceChain === CHAIN_ID_SOLANA &&
     !state.nft.sourceParsedTokenAccount.publicKey
   ) {
-    return "Token account unavailable";
+    return i18n.t("Token account unavailable");
   }
   if (!state.nft.sourceParsedTokenAccount.uiAmountString) {
-    return "Token amount unavailable";
+    return i18n.t("Token amount unavailable");
   }
   if (state.nft.sourceParsedTokenAccount.decimals !== 0) {
     // TODO: more advanced NFT check - also check supply and uri
-    return "For non-NFTs, use the Transfer flow";
+    return i18n.t("For non-NFTs, use the Transfer flow");
   }
   if (
     state.nft.sourceParsedTokenAccount?.uri === null ||
     state.nft.sourceParsedTokenAccount?.uri === undefined
   ) {
-    return "Failed to load NFT Metadata.";
+    return i18n.t("Failed to load NFT Metadata.");
   }
   if (
     state.nft.sourceParsedTokenAccount?.uri &&
     state.nft.sourceParsedTokenAccount?.uri.length > 200
   ) {
-    return "This NFT has a URL longer than the maximum supported length of 200.";
+    return i18n.t("This NFT has a URL longer than the maximum supported length of 200.");
   }
   try {
     // these may trigger error: fractional component exceeds decimals
@@ -118,13 +119,13 @@ export const selectNFTSourceError = (state: RootState): string | undefined => {
         state.nft.sourceParsedTokenAccount.decimals
       ).lte(0)
     ) {
-      return "Balance must be greater than zero";
+      return i18n.t("Balance must be greater than zero");
     }
   } catch (e: any) {
     if (e?.message) {
       return e.message.substring(0, e.message.indexOf("("));
     }
-    return "Invalid amount";
+    return i18n.t("Invalid amount");
   }
   return undefined;
 };
@@ -227,22 +228,22 @@ export const selectTransferSourceError = (
   state: RootState
 ): string | undefined => {
   if (!state.transfer.sourceChain) {
-    return "Select a source chain";
+    return i18n.t("Select a source chain");
   }
   if (!state.transfer.sourceParsedTokenAccount) {
-    return "Select a token";
+    return i18n.t("Select a token");
   }
   if (!state.transfer.amount) {
-    return "Enter an amount";
+    return i18n.t("Enter an amount");
   }
   if (
     state.transfer.sourceChain === CHAIN_ID_SOLANA &&
     !state.transfer.sourceParsedTokenAccount.publicKey
   ) {
-    return "Token account unavailable";
+    return i18n.t("Token account unavailable");
   }
   if (!state.transfer.sourceParsedTokenAccount.uiAmountString) {
-    return "Token amount unavailable";
+    return i18n.t("Token amount unavailable");
   }
   // no NFT check - NFTs should be blocked by all token pickers
   try {
@@ -253,7 +254,7 @@ export const selectTransferSourceError = (
         state.transfer.sourceParsedTokenAccount.decimals
       ).lte(0)
     ) {
-      return "Amount must be greater than zero";
+      return i18n.t("Amount must be greater than zero");
     }
     if (
       parseUnits(
@@ -266,30 +267,30 @@ export const selectTransferSourceError = (
         )
       )
     ) {
-      return "Amount may not be greater than balance";
+      return i18n.t("Amount may not be greater than balance");
     }
   } catch (e: any) {
     if (e?.message) {
       return e.message.substring(0, e.message.indexOf("("));
     }
-    return "Invalid amount";
+    return i18n.t("Invalid amount");
   }
   return undefined;
 };
 export const selectTransferIsSourceComplete = (state: RootState) =>
   !selectTransferSourceError(state);
 export const UNREGISTERED_ERROR_MESSAGE =
-  "Target asset unavailable. Is the token registered?";
+  i18n.t("Target asset unavailable. Is the token registered?");
 export const selectTransferTargetError = (state: RootState) => {
   const sourceError = selectTransferSourceError(state);
   if (sourceError) {
-    return `Error in source: ${sourceError}`;
+    return `${i18n.t('Error in source')}: ${sourceError}`;
   }
   if (!state.transfer.targetChain) {
-    return "Select a target chain";
+    return i18n.t("Select a target chain");
   }
   if (state.transfer.sourceChain === state.transfer.targetChain) {
-    return "Select a different target and source";
+    return i18n.t("Select a different target and source");
   }
   if (!selectTransferTargetAsset(state)) {
     return UNREGISTERED_ERROR_MESSAGE;
@@ -301,7 +302,7 @@ export const selectTransferTargetError = (state: RootState) => {
     return UNREGISTERED_ERROR_MESSAGE;
   }
   if (!state.transfer.targetAddressHex) {
-    return "Target account unavailable";
+    return i18n.t("Target account unavailable");
   }
   if (
     state.transfer.useRelayer &&
@@ -310,7 +311,7 @@ export const selectTransferTargetError = (state: RootState) => {
     state.transfer.targetChain !== CHAIN_ID_ACALA &&
     state.transfer.targetChain !== CHAIN_ID_KARURA
   ) {
-    return "Invalid relayer fee.";
+    return i18n.t("Invalid relayer fee.");
   }
   if (
     state.transfer.useRelayer &&
@@ -318,7 +319,7 @@ export const selectTransferTargetError = (state: RootState) => {
       state.transfer.targetChain === CHAIN_ID_KARURA) &&
     !state.transfer.acalaRelayerInfo.data?.shouldRelay
   ) {
-    return "Token is ineligible for relay.";
+    return i18n.t("Token is ineligible for relay.");
   }
   if (state.transfer.relayerFee && state.transfer.sourceParsedTokenAccount) {
     try {
@@ -341,13 +342,13 @@ export const selectTransferTargetError = (state: RootState) => {
             )
           )
       ) {
-        return "The amount being transferred plus fees exceeds the wallet's balance.";
+        return i18n.t("The amount being transferred plus fees exceeds the wallet's balance.");
       }
     } catch (e: any) {
       if (e?.message) {
         return e.message.substring(0, e.message.indexOf("("));
       }
-      return "Invalid amount";
+      return i18n.t("Invalid amount");
     }
   }
 };

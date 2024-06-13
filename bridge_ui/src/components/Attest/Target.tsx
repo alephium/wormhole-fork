@@ -2,6 +2,7 @@ import { isEVMChain } from "@alephium/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { GasEstimateSummary } from "../../hooks/useTransactionFees";
 import { incrementStep, setTargetChain } from "../../store/attestSlice";
@@ -25,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Target() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectAttestSourceChain);
@@ -58,8 +60,7 @@ function Target() {
       <KeyAndBalance chainId={targetChain} />
       <Alert severity="info" variant="outlined" className={classes.alert}>
         <Typography>
-          You will have to pay transaction fees on{" "}
-          {CHAINS_BY_ID[targetChain].name} to attest this token.{" "}
+          {t("You will have to pay transaction fees on {{ chainName }} to attest this token.", { chainName: CHAINS_BY_ID[targetChain].name })}
         </Typography>
         {isEVMChain(targetChain) && (
           <GasEstimateSummary
@@ -74,7 +75,7 @@ function Target() {
         onClick={handleNextClick}
         showLoader={false}
       >
-        Next
+        {t("Next")}
       </ButtonWithLoader>
     </>
   );

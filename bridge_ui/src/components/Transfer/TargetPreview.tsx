@@ -7,6 +7,7 @@ import { useTargetInfo } from "./Target";
 import { useSelector } from "react-redux";
 import { selectTransferAmount, selectTransferIsRecovery } from "../../store/selectors";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -15,6 +16,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function TargetPreview() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const transferAmount = useSelector(selectTransferAmount)
   const {
@@ -35,7 +37,7 @@ export default function TargetPreview() {
       <>
         {targetAsset ? (
           <>
-            <span>{`and receive ${amount}`}</span>
+            <span>{t('and receive {{ amount }}', { amount })}</span>
             <SmartAddress
               chainId={targetChain}
               address={targetAsset}
@@ -46,9 +48,9 @@ export default function TargetPreview() {
             />
           </>
         ) : null}
-        <span>to</span>
+        <span>{t("to")}</span>
         <SmartAddress chainId={targetChain} address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress} />
-        <span>on {CHAINS_BY_ID[targetChain].name}</span>
+        <span>{t("on {{ chainName }}", { chainName: CHAINS_BY_ID[targetChain].name })}</span>
       </>
     ) : (
       ""

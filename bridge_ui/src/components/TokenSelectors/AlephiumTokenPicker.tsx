@@ -7,6 +7,7 @@ import { ParsedTokenAccount } from "../../store/transferSlice";
 import { getAlephiumTokenLogoURI, tryGetContractId } from "../../utils/alephium";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null;
@@ -21,6 +22,7 @@ type AlephiumTokenPickerProps = {
 const returnsFalse = () => false;
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
+  const { t } = useTranslation()
   const { value, balances, onChange, disabled, tokens, isFetching, resetAccounts } = props
   const alphWallet = useWallet()
   const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM);
@@ -63,13 +65,13 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
             false
           )
         } catch (e) {
-          return Promise.reject("Unable to retrive the specific token.");
+          return Promise.reject(t("Unable to retrive the specific token."));
         }
       } else {
-        return Promise.reject({ error: "Wallet is not connected." });
+        return Promise.reject({ error: t("Wallet is not connected.") });
       }
     },
-    [isReady, alphWallet, balances]
+    [isReady, alphWallet, balances, t]
   );
 
   const isSearchableAddress = useCallback((address: string) => {

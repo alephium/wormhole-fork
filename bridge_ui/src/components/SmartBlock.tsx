@@ -2,6 +2,7 @@ import { ChainId, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
 import { FileCopy, OpenInNew } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";
+import { useTranslation } from "react-i18next";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 
@@ -39,6 +40,7 @@ export default function SmartBlock({
   chainId: ChainId;
   blockNumber: number;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const explorerAddress =
     chainId === CHAIN_ID_ETH
@@ -60,7 +62,7 @@ export default function SmartBlock({
       target="_blank"
       rel="noopener noreferrer"
     >
-      {"View on " + explorerName}
+      {t("View on {{ explorerName }}", { explorerName })}
     </Button>
   );
   const copyButton = (
@@ -71,7 +73,7 @@ export default function SmartBlock({
       onClick={copyToClipboard}
       className={classes.buttons}
     >
-      Copy
+      {t("Copy")}
     </Button>
   );
 

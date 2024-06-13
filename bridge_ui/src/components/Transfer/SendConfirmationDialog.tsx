@@ -9,6 +9,7 @@ import {
 } from "@material-ui/core";
 import { ArrowDownward } from "@material-ui/icons";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
   selectTransferOriginChain,
@@ -30,6 +31,7 @@ function SendConfirmationContent({
   onClose: () => void;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const sourceChain = useSelector(selectTransferSourceChain);
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
@@ -83,12 +85,12 @@ function SendConfirmationContent({
 
   const sendConfirmationContent = (
     <>
-      <DialogTitle>Are you sure?</DialogTitle>
+      <DialogTitle>{t("Are you sure?")}</DialogTitle>
       <DialogContent>
         {targetAsset ? (
           <div style={{ textAlign: "center", marginBottom: 16 }}>
             <Typography variant="subtitle1" style={{ marginBottom: 8 }}>
-              You are about to perform this transfer:
+              {t("You are about to perform this transfer")}:
             </Typography>
             <SmartAddress
               variant="h6"
@@ -133,7 +135,7 @@ function SendConfirmationContent({
       </DialogContent>
       <DialogActions>
         <Button variant="outlined" onClick={onClose}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button
           variant="contained"
@@ -142,7 +144,7 @@ function SendConfirmationContent({
           size={"medium"}
           disabled={!!countdown}
         >
-          {!!countdown ? countdown.toString() : "Confirm"}
+          {!!countdown ? countdown.toString() : t("Confirm")}
         </Button>
       </DialogActions>
     </>

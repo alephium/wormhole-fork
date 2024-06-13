@@ -14,6 +14,7 @@ import { Alert } from "@material-ui/lab";
 import { parseUnits } from "ethers/lib/utils";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import useEthereumMigratorInformation from "../../hooks/useEthereumMigratorInformation";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -97,6 +98,7 @@ function EvmMigrationLineItem({
   migratorAddress: string;
   onLoadComplete: () => void;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const { enqueueSnackbar } = useSnackbar();
   const { signer, signerAddress } = useEthereumProvider();
@@ -133,7 +135,7 @@ function EvmMigrationLineItem({
   const migrateTokens = useCallback(async () => {
     if (!poolInfo.data) {
       enqueueSnackbar(null, {
-        content: <Alert severity="error">Could not migrate the tokens.</Alert>,
+        content: <Alert severity="error">{t("Could not migrate the tokens.")}</Alert>,
       }); //Should never be hit
       return;
     }
@@ -154,19 +156,19 @@ function EvmMigrationLineItem({
       setTransaction(transaction.hash);
       enqueueSnackbar(null, {
         content: (
-          <Alert severity="success">Successfully migrated the tokens.</Alert>
+          <Alert severity="success">{t("Successfully migrated the tokens.")}</Alert>
         ),
       });
       setMigrationIsProcessing(false);
     } catch (e) {
       console.error(e);
       enqueueSnackbar(null, {
-        content: <Alert severity="error">Could not migrate the tokens.</Alert>,
+        content: <Alert severity="error">{t("Could not migrate the tokens.")}</Alert>,
       });
       setMigrationIsProcessing(false);
       setError("Failed to send the transaction.");
     }
-  }, [poolInfo.data, enqueueSnackbar]);
+  }, [poolInfo.data, enqueueSnackbar, t]);
 
   if (!poolInfo.data) {
     return null;
@@ -175,8 +177,7 @@ function EvmMigrationLineItem({
       <div className={classes.lineItem}>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Successfully migrated your tokens. They will become available once
-            this transaction confirms.
+            {t("Successfully migrated your tokens. They will become available once this transaction confirms.")}
           </Typography>
           <ShowTx chainId={chainId} tx={{ id: transaction, blockHeight: 1 }} />
         </div>
@@ -187,7 +188,7 @@ function EvmMigrationLineItem({
       <div className={classes.lineItem}>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Current Token
+            {t("Current Token")}
           </Typography>
           <Typography className={classes.balance}>
             {poolInfo.data.fromWalletBalance}
@@ -201,13 +202,13 @@ function EvmMigrationLineItem({
         </div>
         <div>
           <Typography variant="body2" color="textSecondary">
-            will become
+            {t("will become")}
           </Typography>
           <ArrowRightAltIcon fontSize="large" />
         </div>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Wormhole Token
+            {t("Wormhole Token")}
           </Typography>
           <Typography className={classes.balance}>
             {poolInfo.data.fromWalletBalance}
@@ -227,12 +228,12 @@ function EvmMigrationLineItem({
               error
                 ? error
                 : !sufficientPoolBalance
-                ? "The swap pool has insufficient funds."
+                ? t("The swap pool has insufficient funds.")
                 : ""
             }
             disabled={!sufficientPoolBalance || migrationIsProcessing}
           >
-            Convert
+            {t("Convert")}
           </ButtonWithLoader>
         </div>
       </div>

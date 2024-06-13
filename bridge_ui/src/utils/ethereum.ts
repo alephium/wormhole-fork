@@ -9,6 +9,7 @@ import {
 import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
 import axios from "axios"
+import i18n from "../i18n";
 
 export const DefaultEVMChainConfirmations = 15
 export const EpochDuration = 480000
@@ -35,7 +36,7 @@ export async function checkETHToken(tokenAddress: string) {
 
   const tokenWhitelist = await loadETHTokenWhitelist()
   if (tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase()) === undefined) {
-    throw new Error(`Token ${tokenAddress} does not exist in the token list: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
+    throw new Error(`${i18n.t('Token {{ tokenAddress }} does not exist in the token list', { tokenAddress })}: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
   }
 }
 

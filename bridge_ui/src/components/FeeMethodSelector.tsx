@@ -15,6 +15,7 @@ import {
 import clsx from "clsx";
 import { parseUnits } from "ethers/lib/utils";
 import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import SmartAddress from "../components/SmartAddress";
 import { useAcalaRelayerInfo } from "../hooks/useAcalaRelayerInfo";
@@ -84,6 +85,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function FeeMethodSelector() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const originAsset = useSelector(selectTransferOriginAsset);
   const originChain = useSelector(selectTransferOriginChain);
@@ -191,13 +193,13 @@ function FeeMethodSelector() {
                 {CHAINS_BY_ID[targetChain].name}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                {CHAINS_BY_ID[targetChain].name} pays gas for you &#127881;
+                {t("{{ chainName }} pays gas for you", { chainName: CHAINS_BY_ID[targetChain].name })}
               </Typography>
             </div>
           ) : (
             <>
               <Typography color="textSecondary" variant="body2">
-                {"Automatic redeem is unavailable for this token."}
+                {t("Automatic redeem is unavailable for this token.")}
               </Typography>
               <div />
             </>
@@ -234,17 +236,17 @@ function FeeMethodSelector() {
         <div className={clsx(classes.inlineBlock, classes.alignLeft)}>
           {relayerEligible ? (
             <div>
-              <Typography variant="body1">Automatic Payment</Typography>
+              <Typography variant="body1">{t("Automatic Payment")}</Typography>
               <Typography variant="body2" color="textSecondary">
-                {`Pay with additional ${
-                  sourceSymbol ? sourceSymbol : "tokens"
-                } and use a relayer`}
+                {sourceSymbol ?
+                  t('Pay with additional {{ token }} and use a relayer', { token: sourceSymbol }) :
+                  t('Pay with additional tokens and use a relayer')}
               </Typography>
             </div>
           ) : (
             <>
               <Typography color="textSecondary" variant="body2">
-                {"Automatic redeem is unavailable for this token."}
+                {t("Automatic redeem is unavailable for this token.")}
               </Typography>
               <div />
             </>
@@ -278,6 +280,8 @@ function FeeMethodSelector() {
     </Card>
   );
 
+  const chainName = CHAINS_BY_ID[targetChain]?.name
+  const token = getDefaultNativeCurrencySymbol(targetChain)
   const manualRedeemContent = (
     <Card
       className={
@@ -296,13 +300,15 @@ function FeeMethodSelector() {
           className={classes.inlineBlock}
         />
         <div className={clsx(classes.inlineBlock, classes.alignLeft)}>
-          <Typography variant="body1">{"Manual Payment"}</Typography>
+          <Typography variant="body1">{t("Manual Payment")}</Typography>
           <Typography variant="body2" color="textSecondary">
-            {`Pay with your own ${
-              targetChain === CHAIN_ID_TERRA
-                ? "funds"
-                : getDefaultNativeCurrencySymbol(targetChain)
-            } on ${CHAINS_BY_ID[targetChain]?.name || "target chain"}`}
+            {targetChain === CHAIN_ID_TERRA && chainName ?
+              t('Pay with your own funds on {{ chainName }}', { chainName }) :
+              targetChain === CHAIN_ID_TERRA ?
+                t('Pay with your own funds on target chain') :
+                  chainName ?
+                    t('Pay with your own {{ token }} on {{ chainName }}', { token, chainName }) :
+                    t('Pay with your own {{ token }} on target chain', { token })}
           </Typography>
         </div>
       </div>
@@ -323,7 +329,7 @@ function FeeMethodSelector() {
         variant="subtitle2"
         color="textSecondary"
       >
-        How would you like to pay the target chain fees?
+        {t("How would you like to pay the target chain fees?")}
       </Typography>
       {targetIsAcala ? acalaRelayerContent : relayerContent}
       {manualRedeemContent}

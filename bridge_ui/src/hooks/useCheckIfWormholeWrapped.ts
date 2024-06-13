@@ -48,6 +48,7 @@ import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
 import { Algodv2 } from "algosdk";
 import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -87,6 +88,7 @@ async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Pr
 // tokens. Wrapped tokens are tokens that are non-native, I.E, are locked up on
 // a different chain than this one.
 function useCheckIfWormholeWrapped(nft?: boolean) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const sourceChain = useSelector(
     nft ? selectNFTSourceChain : selectTransferSourceChain
@@ -136,7 +138,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from ${coalesceChainName(sourceChain)}, error: ${e}`)));
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from {{ chainName }}', { chainName: coalesceChainName(sourceChain) })}, ${t('Error')}: ${e}`)));
           }
         }
       }
@@ -162,7 +164,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from solana, error: ${e}`)));
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from solana')}, ${t('Error')}: ${e}`)));
           }
         }
       }
@@ -178,7 +180,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from terra, error: ${e}`)));
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from terra')}, ${t('Error')}: ${e}`)));
           }
         }
       }
@@ -191,7 +193,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from alephium, error: ${e}`)));
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from alephium')}, ${t('Error')}: ${e}`)));
           }
         }
       }
@@ -215,7 +217,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         } catch (e) {
           if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`Failed to get source asset info from algorand, error: ${e}`)));
+            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from algorand')}, ${t('Error')}: ${e}`)));
           }
         }
       }
@@ -233,6 +235,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     nft,
     setSourceWormholeWrappedInfo,
     tokenId,
+    t
   ]);
 }
 

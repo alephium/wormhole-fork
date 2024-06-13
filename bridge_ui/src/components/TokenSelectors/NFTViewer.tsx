@@ -33,6 +33,7 @@ import oasisIcon from "../../icons/oasis-network-rose-logo.svg";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
 import { Skeleton } from "@material-ui/lab";
 import Wormhole from "../../icons/wormhole-network.svg";
+import { useTranslation } from "react-i18next";
 
 const safeIPFS = (uri: string) =>
   uri.startsWith("ipfs://ipfs/")
@@ -276,6 +277,7 @@ export default function NFTViewer({
   value: NFTParsedTokenAccount;
   chainId: ChainId;
 }) {
+  const { t } = useTranslation();
   const uri = safeIPFS(value.uri || "");
   const [metadata, setMetadata] = useState({
     uri,
@@ -471,7 +473,7 @@ export default function NFTViewer({
             ) : null}
             {value.tokenId ? (
               <Typography className={classes.tokenId} align="right">
-                <Tooltip title="Copy" arrow>
+                <Tooltip title={t("Copy")} arrow>
                   <span onClick={copyTokenId}>
                     {value.tokenId.length > 18
                       ? `#${value.tokenId.substr(0, 16)}...`

@@ -10,6 +10,7 @@ import { useSnackbar } from "notistack";
 import { Alert } from "@material-ui/lab";
 import { useWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   addButton: {
@@ -23,6 +24,7 @@ function isExtensionWallet(signer: SignerProvider) {
 }
 
 export default function AddToAlephium() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const targetAsset = useSelector(selectTransferTargetAsset);
   const { enqueueSnackbar } = useSnackbar()
@@ -48,7 +50,7 @@ export default function AddToAlephium() {
           })
           if (!result) { // the token already exists
             enqueueSnackbar(null, {
-              content: <Alert severity="success">The token already exists</Alert>,
+              content: <Alert severity="success">{t("The token already exists")}</Alert>,
             })
           }
         } catch (error) {
@@ -56,7 +58,7 @@ export default function AddToAlephium() {
         }
       })(alphWallet.nodeProvider)
     }
-  }, [alphWallet, targetAsset, enqueueSnackbar])
+  }, [alphWallet, targetAsset, enqueueSnackbar, t])
   return alphWallet.connectionStatus === 'connected' && isExtensionWallet(alphWallet.signer) ? (
     <Button
       onClick={handleClick}
@@ -64,7 +66,7 @@ export default function AddToAlephium() {
       variant="outlined"
       className={classes.addButton}
     >
-      Add to Wallet
+      {t("Add to Wallet")}
     </Button>
   ) : null
 }

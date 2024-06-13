@@ -1,4 +1,5 @@
 import { makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
   selectAttestSourceChain,
@@ -20,11 +21,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SendPreview() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const sourceChain = useSelector(selectAttestSourceChain);
   const attestTx = useSelector(selectAttestAttestTx);
 
-  const explainerString = "The token has been attested!";
+  const explainerString = t("The token has been attested!");
 
   return (
     <>

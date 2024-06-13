@@ -11,6 +11,7 @@ import ShowTx from "../ShowTx";
 import { useHistory } from "react-router";
 import { getHowToAddToTokenListUrl } from "../../utils/consts";
 import { Alert } from "@material-ui/lab";
+import { Trans, useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -22,6 +23,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function CreatePreview() {
+  const { t } = useTranslation();
   const { push } = useHistory();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -36,7 +38,7 @@ export default function CreatePreview() {
   }, [dispatch, push]);
 
   const explainerString =
-    "Success! The create wrapped transaction was submitted.";
+    `${t('Success!')} ${t("The create wrapped transaction was submitted.")}`;
   const howToAddToTokenListUrl = getHowToAddToTokenListUrl(targetChain);
 
   return (
@@ -51,22 +53,22 @@ export default function CreatePreview() {
       {createTx ? <ShowTx chainId={targetChain} tx={createTx} /> : null}
       {howToAddToTokenListUrl ? (
         <Alert severity="info" variant="outlined" className={classes.alert}>
-          Remember to add the token to the{" "}
-          <Link
-            href={howToAddToTokenListUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Trans
+            t={t}
+            i18nKey="addTokenToTokenList"
+            components={{
+              1: <Link href={howToAddToTokenListUrl} target="_blank" rel="noopener noreferrer" />
+            }}
           >
-            token list
-          </Link>
-          {"."}
+            {'Remember to add the token to the <1>token list</1>.'}
+          </Trans>
         </Alert>
       ) : null}
       <ButtonWithLoader onClick={handleResetClick}>
-        Attest Another Token!
+        {t("Attest Another Token!")}
       </ButtonWithLoader>
       <ButtonWithLoader onClick={handleReturnClick}>
-        Return to Transfer
+        {t("Return to Transfer")}
       </ButtonWithLoader>
     </>
   );

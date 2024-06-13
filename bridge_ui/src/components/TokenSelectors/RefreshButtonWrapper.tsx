@@ -5,6 +5,7 @@ import {
   Tooltip,
 } from "@material-ui/core";
 import RefreshIcon from "@material-ui/icons/Refresh";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles(() =>
   createStyles({
@@ -29,12 +30,13 @@ export default function RefreshButtonWrapper({
   children: JSX.Element;
   callback: () => any;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
 
   const refreshWrapper = (
     <div className={classes.flexWrapper}>
       <div className={classes.inlineContentWrapper}>{children}</div>
-      <Tooltip title="Reload Tokens">
+      <Tooltip title={t("Reload Tokens")}>
         <IconButton onClick={callback}>
           <RefreshIcon />
         </IconButton>

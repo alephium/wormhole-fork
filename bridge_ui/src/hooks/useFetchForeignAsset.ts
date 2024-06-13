@@ -34,6 +34,7 @@ import {
 import useIsWalletReady from "./useIsWalletReady";
 import { Algodv2 } from "algosdk";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 export type ForeignAssetInfo = {
   doesExist: boolean;
@@ -45,6 +46,7 @@ function useFetchForeignAsset(
   originAsset: string,
   foreignChain: ChainId
 ): DataWrapper<ForeignAssetInfo> {
+  const { t } = useTranslation();
   const { provider, chainId: evmChainId } = useEthereumProvider();
   const { isReady } = useIsWalletReady(foreignChain, false);
   const correctEvmNetwork = getEvmChainId(foreignChain);
@@ -191,14 +193,14 @@ function useFetchForeignAsset(
         })
         .catch((e) => {
           if (!cancelled) {
-            setError("Could not retrieve the foreign asset.");
+            setError(t("Could not retrieve the foreign asset."));
             setIsLoading(false);
           }
         });
     } catch (e) {
       //This catch mostly just detects poorly formatted addresses
       if (!cancelled) {
-        setError("Could not retrieve the foreign asset.");
+        setError(t("Could not retrieve the foreign asset."));
         setIsLoading(false);
       }
     }
@@ -211,6 +213,7 @@ function useFetchForeignAsset(
     alphWallet,
     setArgs,
     argsEqual,
+    t
   ]);
 
   const compoundError = useMemo(() => {
