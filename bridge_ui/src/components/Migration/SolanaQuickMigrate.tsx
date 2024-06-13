@@ -15,8 +15,10 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import useSolanaMigratorInformation from "../../hooks/useSolanaMigratorInformation";
+import i18n from "../../i18n";
 import { COLORS } from "../../muiTheme";
 import {
   CHAINS_BY_ID,
@@ -82,6 +84,7 @@ function SolanaMigrationLineItem({
   migratorInfo: DefaultAssociatedTokenAccountInfo;
   onLoadComplete: () => void;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const poolInfo = useSolanaMigratorInformation(
     migratorInfo.fromMintKey,
@@ -106,10 +109,10 @@ function SolanaMigrationLineItem({
         setTransaction(result);
       })
       .catch((e) => {
-        setMigrationError("Unable to perform migration.");
+        setMigrationError(t("Unable to perform migration."));
         setMigrationIsProcessing(false);
       });
-  }, [poolInfo.data]);
+  }, [poolInfo.data, t]);
 
   const precheckError =
     poolInfo.data &&
@@ -128,7 +131,7 @@ function SolanaMigrationLineItem({
       <div className={classes.centered}>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Failed to load migration information for token
+            {t("Failed to load migration information for token")}
           </Typography>
           <SmartAddress
             chainId={CHAIN_ID_SOLANA}
@@ -143,8 +146,7 @@ function SolanaMigrationLineItem({
       <div className={classes.centered}>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Successfully migrated your tokens. They will become available once
-            this transaction confirms.
+            {t("Successfully migrated your tokens. They will become available once this transaction confirms.")}
           </Typography>
           <ShowTx
             chainId={CHAIN_ID_SOLANA}
@@ -158,7 +160,7 @@ function SolanaMigrationLineItem({
       <div className={classes.lineItem}>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Current Token
+            {t("Current Token")}
           </Typography>
           <Typography className={classes.balance}>
             {poolInfo.data.fromAssociatedTokenAccountBalance}
@@ -172,13 +174,13 @@ function SolanaMigrationLineItem({
         </div>
         <div>
           <Typography variant="body2" color="textSecondary">
-            will become
+            {t("will become")}
           </Typography>
           <ArrowRightAltIcon fontSize="large" />
         </div>
         <div>
           <Typography variant="body2" color="textSecondary">
-            Wormhole Token
+            {t("Wormhole Token")}
           </Typography>
           <Typography className={classes.balance}>
             {poolInfo.data.fromAssociatedTokenAccountBalance}
@@ -219,7 +221,7 @@ function SolanaMigrationLineItem({
                 !!poolInfo.error || !!precheckError || migrationIsProcessing
               }
             >
-              Convert
+              {t("Convert")}
             </ButtonWithLoader>
           </div>
         )}
@@ -269,11 +271,12 @@ const getTokenBalances = async (
     return output;
   } catch (e) {
     console.error(e);
-    return Promise.reject("Unable to retrieve token balances.");
+    return Promise.reject(i18n.t("Unable to retrieve token balances."));
   }
 };
 
 export default function SolanaQuickMigrate() {
+  const { t } = useTranslation();
   const chainId = CHAIN_ID_SOLANA;
   const classes = useStyles();
   const { isReady, walletAddress } = useIsWalletReady(chainId);
@@ -314,7 +317,7 @@ export default function SolanaQuickMigrate() {
           if (!cancelled) {
             setMigratorsLoading(false);
             setMigratorsError(
-              "Failed to retrieve available token information."
+              t("Failed to retrieve available token information.")
             );
           }
         }
@@ -324,7 +327,7 @@ export default function SolanaQuickMigrate() {
         cancelled = true;
       };
     }
-  }, [isReady, walletAddress, migrationMap]);
+  }, [isReady, walletAddress, migrationMap, t]);
 
   const hasEligibleAssets = migrators && migrators.length > 0;
   const chainName = CHAINS_BY_ID[chainId]?.name;
@@ -332,14 +335,13 @@ export default function SolanaQuickMigrate() {
   const content = (
     <div className={classes.containerDiv}>
       <Typography variant="h5">
-        {`This page allows you to convert certain wrapped tokens ${
-          chainName ? "on " + chainName : ""
-        } into
-        Wormhole V2 tokens.`}
+        {chainName ?
+          t('This page allows you to convert certain wrapped tokens on {{ chainName }} into Wormhole V2 tokens.', { chainName }) :
+          t('This page allows you to convert certain wrapped tokens into Wormhole V2 tokens.') }
       </Typography>
       <SolanaWalletKey />
       {!isReady ? (
-        <Typography variant="body1">Please connect your wallet.</Typography>
+        <Typography variant="body1">{t("Please connect your wallet.")}</Typography>
       ) : migratorsError ? (
         <Typography variant="h6">{migratorsError}</Typography>
       ) : (
@@ -349,8 +351,8 @@ export default function SolanaQuickMigrate() {
           <div className={!isLoading ? "" : classes.hidden}>
             <Typography>
               {hasEligibleAssets
-                ? "You have some assets that are eligible for migration! Click the 'Convert' button to swap them for Wormhole tokens."
-                : "You don't have any assets eligible for migration."}
+                ? t("You have some assets that are eligible for migration! Click the 'Convert' button to swap them for Wormhole tokens.")
+                : t("You don't have any assets eligible for migration.")}
             </Typography>
             <div className={classes.spacer} />
             {migrators?.map((info) => {
@@ -371,9 +373,9 @@ export default function SolanaQuickMigrate() {
     <Container maxWidth="md">
       <HeaderText
         white
-        subtitle="Convert assets from other bridges to Wormhole V2 tokens"
+        subtitle={t("Convert assets from other bridges to Wormhole V2 tokens")}
       >
-        Migrate Assets
+        {t("Migrate Assets")}
       </HeaderText>
       <Paper className={classes.mainPaper}>{content}</Paper>
     </Container>

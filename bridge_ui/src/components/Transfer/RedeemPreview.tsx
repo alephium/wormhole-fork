@@ -13,6 +13,7 @@ import ShowTx from "../ShowTx";
 import AddToAlephium from "./AddToAlephium";
 import AddToMetamask from "./AddToMetamask";
 import FeaturedMarkets from "./FeaturedMarkets";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -26,6 +27,7 @@ export default function RedeemPreview({
 }: {
   overrideExplainerString?: string;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const dispatch = useDispatch();
   const targetChain = useSelector(selectTransferTargetChain);
@@ -36,7 +38,7 @@ export default function RedeemPreview({
   }, [dispatch]);
 
   const explainerString = overrideExplainerString ||
-    `Success! The redeem transaction was submitted${(isRedeemedViaRelayer ? ' automatically by the relayer' : '')}. The tokens will become available once the transaction confirms.`;
+    `${t('Success!')} ${isRedeemedViaRelayer ? t('The redeem transaction was submitted automatically by the relayer') : t('The redeem transaction was submitted')}. ${t('The tokens will become available once the transaction confirms.')}`;
 
   return (
     <>
@@ -52,7 +54,7 @@ export default function RedeemPreview({
       {isEVMChain(targetChain) ? <AddToMetamask /> : null}
       <FeaturedMarkets />
       <ButtonWithLoader onClick={handleResetClick}>
-        Transfer More Tokens!
+        {t("Transfer More Tokens!")}
       </ButtonWithLoader>
     </>
   );

@@ -46,6 +46,7 @@ import StepDescription from "../StepDescription";
 import { TokenSelector } from "../TokenSelectors/SourceTokenSelector";
 import SourceAssetWarning from "./SourceAssetWarning";
 import ChainWarningMessage from "../ChainWarningMessage";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
@@ -72,6 +73,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Source() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
@@ -153,7 +155,7 @@ function Source() {
     <>
       <StepDescription>
         <div style={{ display: "flex", alignItems: "center" }}>
-          Select tokens to send through the website.
+          {t("Select tokens to send through the website.")}
           <div style={{ flexGrow: 1 }} />
           <div>
             <Button
@@ -163,7 +165,7 @@ function Source() {
               variant="outlined"
               startIcon={<VerifiedUser />}
             >
-              Token Origin Verifier
+              {t("Token Origin Verifier")}
             </Button>
           </div>
         </div>
@@ -173,7 +175,7 @@ function Source() {
         style={{ marginBottom: "25px" }}
       >
         <div className={classes.chainSelectContainer}>
-          <Typography variant="caption">Source</Typography>
+          <Typography variant="caption">{t("Source")}</Typography>
           <ChainSelect
             select
             variant="outlined"
@@ -193,7 +195,7 @@ function Source() {
           />
         </div>
         <div className={classes.chainSelectContainer}>
-          <Typography variant="caption">Target</Typography>
+          <Typography variant="caption">{t("Target")}</Typography>
           <ChainSelect
             variant="outlined"
             select
@@ -218,7 +220,7 @@ function Source() {
           fullWidth
           onClick={handleMigrationClick}
         >
-          Go to Migration Page
+          {t("Go to Migration Page")}
         </Button>
       ) : (
         <>
@@ -233,7 +235,7 @@ function Source() {
           {hasParsedTokenAccount ? (
             <NumberTextField
               variant="outlined"
-              label="Amount"
+              label={t("Amount")}
               fullWidth
               className={classes.transferField}
               value={amount}
@@ -258,7 +260,7 @@ function Source() {
             showLoader={false}
             error={statusMessage || error}
           >
-            Next
+            {t("Next")}
           </ButtonWithLoader>
         </>
       )}

@@ -74,6 +74,7 @@ import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
+import i18n from "../i18n";
 
 async function algo(
   dispatch: any,
@@ -106,11 +107,11 @@ async function algo(
       })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
     const emitterAddress = getEmitterAddressAlgorand(ALGORAND_TOKEN_BRIDGE_ID);
     enqueueSnackbar(null, {
-      content: <Alert severity="info">Fetching VAA</Alert>,
+      content: <Alert severity="info">{i18n.t('Fetching VAA')}</Alert>,
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALGORAND,
@@ -120,7 +121,7 @@ async function algo(
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+      content: <Alert severity="success">{i18n.t('Fetched Signed VAA')}</Alert>,
     });
   } catch (e) {
     console.error(e);
@@ -161,7 +162,7 @@ async function evm(
       setAttestTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
     const sequence = parseSequenceFromLogEth(
       receipt,
@@ -178,7 +179,7 @@ async function evm(
       await waitEVMTxConfirmed(signer.provider, receipt.blockNumber, chainId)
     }
     enqueueSnackbar(null, {
-      content: <Alert severity="info">Fetching VAA</Alert>,
+      content: <Alert severity="info">{i18n.t('Fetching VAA')}</Alert>,
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       chainId,
@@ -188,7 +189,7 @@ async function evm(
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+      content: <Alert severity="success">{i18n.t('Fetched Signed VAA')}</Alert>,
     });
   } catch (e) {
     console.error(e);
@@ -218,12 +219,12 @@ async function solana(
     );
     const txid = await signSendAndConfirm(wallet, connection, transaction);
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
     const info = await connection.getTransaction(txid);
     if (!info) {
       // TODO: error state
-      throw new Error("An error occurred while fetching the transaction info");
+      throw new Error(i18n.t("An error occurred while fetching the transaction info"));
     }
     dispatch(setAttestTx({ id: txid, blockHeight: info.slot }));
     const sequence = parseSequenceFromLogSolana(info);
@@ -231,7 +232,7 @@ async function solana(
       SOL_TOKEN_BRIDGE_ADDRESS
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="info">Fetching VAA</Alert>,
+      content: <Alert severity="info">{i18n.t('Fetching VAA')}</Alert>,
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_SOLANA,
@@ -241,7 +242,7 @@ async function solana(
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+      content: <Alert severity="success">{i18n.t('Fetched Signed VAA')}</Alert>,
     });
   } catch (e) {
     console.error(e);
@@ -315,7 +316,7 @@ async function alephium(
   dispatch(setIsSending(true));
   try {
     if (!isValidAlephiumTokenId(localTokenId)) {
-      throw new Error(`Invalid local token: ${localTokenId}, expected a 64 bytes hex string`)
+      throw new Error(i18n.t('Invalid local token: {{ tokenId }}, expected a 64 bytes hex string', { tokenId: localTokenId }))
     }
     const tokenInfo = await getAndCheckLocalTokenInfo(wallet.nodeProvider, localTokenId)
     const result = await attestFromAlph(
@@ -333,11 +334,11 @@ async function alephium(
     const txInfo = await waitTxConfirmedAndGetTxInfo(wallet.nodeProvider, result.txId);
     dispatch(setAttestTx({ id: txInfo.txId, blockHeight: txInfo.blockHeight, blockTimestamp: txInfo.blockTimestamp }));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
     await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL)
     enqueueSnackbar(null, {
-      content: <Alert severity="info">Fetching VAA</Alert>,
+      content: <Alert severity="info">{i18n.t('Fetching VAA')}</Alert>,
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -347,7 +348,7 @@ async function alephium(
     );
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Fetched Signed VAA</Alert>,
+      content: <Alert severity="success">{i18n.t('Fetched Signed VAA')}</Alert>,
     });
   } catch (e) {
     console.error(e);

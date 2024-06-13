@@ -1,6 +1,7 @@
 import { ChainId, isEVMChain } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Provider,
   useEthereumProvider,
@@ -71,6 +72,7 @@ function useEvmMetadata(
   fetchBalance: boolean,
   walletAddress?: string
 ): DataWrapper<Map<string, EvmMetadata>> {
+  const { t } = useTranslation();
   const { isReady } = useIsWalletReady(chainId, false);
   const { provider } = useEthereumProvider();
 
@@ -93,7 +95,7 @@ function useEvmMetadata(
         },
         () => {
           if (!cancelled) {
-            setError("Could not retrieve contract metadata");
+            setError(t("Could not retrieve contract metadata"));
             setIsFetching(false);
           }
         }
@@ -102,7 +104,7 @@ function useEvmMetadata(
     return () => {
       cancelled = true;
     };
-  }, [addresses, provider, isReady, chainId, walletAddress, fetchBalance]);
+  }, [addresses, provider, isReady, chainId, walletAddress, fetchBalance, t]);
 
   return useMemo(
     () => ({

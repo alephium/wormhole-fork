@@ -1,5 +1,6 @@
 import { CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { CircularProgress, makeStyles } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
 import { useHandleCreateWrapped } from "../../hooks/useHandleCreateWrapped";
@@ -26,6 +27,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Create() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const targetChain = useSelector(selectAttestTargetChain);
   const originAsset = useSelector(selectAttestSourceAsset);
@@ -61,7 +63,7 @@ function Create() {
             showLoader={showLoader}
             error={error}
           >
-            {shouldUpdate ? "Update" : "Create"}
+            {shouldUpdate ? t("Update") : t("Create")}
           </ButtonWithLoader>
           <WaitingForWalletMessage />
         </>

@@ -19,6 +19,7 @@ import {
 import { getEvmChainId } from "../utils/consts";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import useIsWalletReady from "../hooks/useIsWalletReady";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   flexTitle: {
@@ -77,6 +78,7 @@ const EvmConnectWalletDialog = ({
   onClose: () => void;
   chainId: ChainId;
 }) => {
+  const { t } = useTranslation();
   const { availableConnections, connect, chainId: evmChainId } = useEthereumProvider();
   const enableAutoSwitch = evmChainId === undefined
   const { forceNetworkSwitch } = useIsWalletReady(chainId, enableAutoSwitch)
@@ -109,7 +111,7 @@ const EvmConnectWalletDialog = ({
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>
         <div className={classes.flexTitle}>
-          <div>Select your wallet</div>
+          <div>{t("Select your wallet")}</div>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>

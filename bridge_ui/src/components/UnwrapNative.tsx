@@ -21,6 +21,7 @@ import {
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import avaxIcon from "../icons/avax.svg";
@@ -154,6 +155,7 @@ interface BalancesInfo {
 }
 
 function UnwrapNative() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const [selectedChainId, setSelectedChainId] = useState<SupportedChain>(
     CHAIN_ID_ETH as SupportedChain
@@ -195,14 +197,14 @@ function UnwrapNative() {
         console.error(e);
         if (cancelled) return;
         setBalances(
-          errorDataWrapper("An error occurred while fetching balances")
+          errorDataWrapper(t("An error occurred while fetching balances"))
         );
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [isReady, signer, selectedChainId, unwrapRequest.data]);
+  }, [isReady, signer, selectedChainId, unwrapRequest.data, t]);
   const handleClick = useCallback(() => {
     if (!isReady || !signer || !balances.data || balances.data.wrapped.eq(0))
       return;
@@ -232,11 +234,10 @@ function UnwrapNative() {
   const error = unwrapRequest.error || balances.error || statusMessage;
   return (
     <Container maxWidth="md">
-      <HeaderText white>Unwrap Native Tokens</HeaderText>
+      <HeaderText white>{t("Unwrap Native Tokens")}</HeaderText>
       <Paper className={classes.mainPaper}>
         <Typography style={{ textAlign: "center" }}>
-          Unwrap (withdraw) native tokens from their wrapped form (e.g. WETH
-          &rarr; ETH)
+          {t("Unwrap (withdraw) native tokens from their wrapped form (e.g. WETH &rarr; ETH)")}
         </Typography>
         <EthereumSignerKey chainId={selectedChainId} />
         <TextField
@@ -287,7 +288,7 @@ function UnwrapNative() {
           showLoader={balances.isFetching || unwrapRequest.isFetching}
           error={error}
         >
-          Unwrap All
+          {t("Unwrap All")}
         </ButtonWithLoader>
       </Paper>
     </Container>

@@ -4,11 +4,13 @@ import {
   TextField,
   TextFieldProps,
 } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 
 export default function NumberTextField({
   onMaxClick,
   ...props
 }: TextFieldProps & { onMaxClick?: () => void }) {
+  const { t } = useTranslation();
   return (
     <TextField
       type="number"
@@ -21,7 +23,7 @@ export default function NumberTextField({
               disabled={props.disabled}
               variant="outlined"
             >
-              Max
+              {t("Max")}
             </Button>
           </InputAdornment>
         ) : undefined,

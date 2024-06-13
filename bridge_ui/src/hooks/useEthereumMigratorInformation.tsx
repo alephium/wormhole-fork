@@ -2,6 +2,8 @@ import { ethers_contracts } from "@alephium/wormhole-sdk";
 import { Signer } from "@ethersproject/abstract-signer";
 import { formatUnits } from "@ethersproject/units";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 export type EthMigrationInfo = {
   isLoading: boolean;
@@ -90,7 +92,7 @@ const getRequisiteData = async (
       sharesDecimals,
     };
   } catch (e) {
-    return Promise.reject("Failed to retrieve required data.");
+    return Promise.reject(i18n.t("Failed to retrieve required data."));
   }
 };
 
@@ -100,6 +102,7 @@ function useEthereumMigratorInformation(
   signerAddress: string | undefined,
   toggleRefresh: boolean
 ): EthMigrationInfo {
+  const { t } = useTranslation();
   const migrator = useMemo(
     () =>
       migratorAddress &&
@@ -127,7 +130,7 @@ function useEthereumMigratorInformation(
       (error) => {
         if (!cancelled) {
           setIsLoading(false);
-          setError("Failed to retrieve necessary data.");
+          setError(t("Failed to retrieve required data."));
         }
       }
     );
@@ -136,7 +139,7 @@ function useEthereumMigratorInformation(
       cancelled = true;
       return;
     };
-  }, [migrator, signer, signerAddress, toggleRefresh]);
+  }, [migrator, signer, signerAddress, toggleRefresh, t]);
 
   return useMemo(() => {
     if (!migratorAddress || !signer || !signerAddress) {
@@ -144,10 +147,10 @@ function useEthereumMigratorInformation(
         isLoading: false,
         error:
           !signer || !signerAddress
-            ? "Wallet not connected"
+            ? t("Wallet is not connected")
             : !migratorAddress
-            ? "No contract address"
-            : "Error",
+            ? t("No contract address")
+            : t("Error"),
         data: null,
       };
     } else {
@@ -157,7 +160,7 @@ function useEthereumMigratorInformation(
         data,
       };
     }
-  }, [isLoading, error, data, migratorAddress, signer, signerAddress]);
+  }, [isLoading, error, data, migratorAddress, signer, signerAddress, t]);
 }
 
 export default useEthereumMigratorInformation;

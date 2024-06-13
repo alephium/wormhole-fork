@@ -8,6 +8,7 @@ import { Alert } from "@material-ui/lab";
 import { ethers } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useAllowance from "../../hooks/useAllowance";
 import { useHandleTransfer } from "../../hooks/useHandleTransfer";
@@ -35,6 +36,7 @@ import SendConfirmationDialog from "./SendConfirmationDialog";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 
 function Send() {
+  const { t } = useTranslation();
   const { handleClick, disabled, showLoader } = useHandleTransfer();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const handleTransferClick = useCallback(() => {
@@ -117,7 +119,7 @@ function Send() {
     isAllowanceFetching ||
     isApproveProcessing;
   const errorMessage = isWrongWallet
-    ? "A different wallet is connected than in Step 1."
+    ? t("A different wallet is connected than in Step 1.")
     : statusMessage || error || allowanceError || undefined;
 
   const approveExactAmount = useMemo(() => {
@@ -127,10 +129,10 @@ function Send() {
         () => {
           setAllowanceError("");
         },
-        (error) => setAllowanceError("Failed to approve the token transfer.")
+        (error) => setAllowanceError(t("Failed to approve the token transfer."))
       );
     };
-  }, [approveAmount, transferAmountParsed]);
+  }, [approveAmount, transferAmountParsed, t]);
   const approveUnlimited = useMemo(() => {
     return () => {
       setAllowanceError("");
@@ -138,25 +140,29 @@ function Send() {
         () => {
           setAllowanceError("");
         },
-        (error) => setAllowanceError("Failed to approve the token transfer.")
+        (error) => setAllowanceError(t("Failed to approve the token transfer."))
       );
     };
-  }, [approveAmount]);
+  }, [approveAmount, t]);
+
+  let tokensAmount = 0;
+  try {
+    tokensAmount = parseInt((humanReadableTransferAmount || sourceAmount).toString())
+  } catch (e) {
+    console.error(e)
+  }
 
   return (
     <>
       <StepDescription>
-        Transfer the tokens to the Alephium Bridge.
+        {t("Transfer the tokens to the Alephium Bridge.")}
       </StepDescription>
       <KeyAndBalance chainId={sourceChain} />
       {sourceChain === CHAIN_ID_TERRA && (
         <TerraFeeDenomPicker disabled={disabled} />
       )}
       <Alert severity="info" variant="outlined">
-        This will initiate the transfer on {CHAINS_BY_ID[sourceChain].name} and
-        wait for finalization. If you navigate away from this page before
-        completing Step 4, you will have to perform the recovery workflow to
-        complete the transfer.
+        {t("This will initiate the transfer on {{ chainName }} and wait for finalization. If you navigate away from this page before completing Step 4, you will have to perform the recovery workflow to complete the transfer.", { chainName: CHAINS_BY_ID[sourceChain].name })}
       </Alert>
       {sourceChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
         <SolanaTPSWarning />
@@ -171,7 +177,7 @@ function Send() {
                 color="primary"
               />
             }
-            label="Approve Unlimited Tokens"
+            label={t("approveUnlimitedTokens_other")}
           />
           <ButtonWithLoader
             disabled={isDisabled}
@@ -181,13 +187,9 @@ function Send() {
             showLoader={isAllowanceFetching || isApproveProcessing}
             error={errorMessage}
           >
-            {"Approve " +
-              (shouldApproveUnlimited
-                ? "Unlimited"
-                : humanReadableTransferAmount
-                ? humanReadableTransferAmount
-                : sourceAmount) +
-              ` Token${notOne ? "s" : ""}`}
+            { shouldApproveUnlimited ?
+              t("approveUnlimitedTokens", { count: notOne ? 0 : 1}) :
+              t("approveTokens", { count: tokensAmount }) }
           </ButtonWithLoader>
         </>
       ) : (
@@ -198,7 +200,7 @@ function Send() {
             showLoader={showLoader}
             error={errorMessage}
           >
-            Transfer
+            {t("Transfer")}
           </ButtonWithLoader>
           <SendConfirmationDialog
             open={isConfirmOpen}

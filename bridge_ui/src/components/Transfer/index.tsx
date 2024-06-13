@@ -7,6 +7,7 @@ import {
   Stepper,
 } from "@material-ui/core";
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";
 import useCheckIfWormholeWrapped from "../../hooks/useCheckIfWormholeWrapped";
@@ -34,6 +35,7 @@ import Target from "./Target";
 import TargetPreview from "./TargetPreview";
 
 function Transfer() {
+  const { t } = useTranslation()
   useCheckIfWormholeWrapped();
   useFetchTargetAsset();
   const dispatch = useDispatch();
@@ -91,7 +93,7 @@ function Transfer() {
           disabled={preventNavigation || isRedeemComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. Source
+            1. {t("Source")}
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -106,7 +108,7 @@ function Transfer() {
             onClick={() => dispatch(setStep(1))}
             icon={null}
           >
-            2. Target
+            2. {t("Target")}
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -114,7 +116,7 @@ function Transfer() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton disabled icon={null}>
-            3. Send tokens
+            3. {t("Send tokens")}
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -126,7 +128,7 @@ function Transfer() {
             disabled={!isSendComplete || isRedeemComplete}
             icon={null}
           >
-            4. Redeem tokens
+            4. {t("Redeem tokens")}
           </StepButton>
           <StepContent>
             {isRedeemComplete ? <RedeemPreview /> : <Redeem />}

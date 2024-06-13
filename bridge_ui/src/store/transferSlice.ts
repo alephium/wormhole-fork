@@ -14,6 +14,7 @@ import {
   getEmptyDataWrapper,
   receiveDataWrapper,
 } from "./helpers";
+import i18n from "../i18n";
 
 const LAST_STEP = 3;
 
@@ -164,7 +165,7 @@ export const transferSlice = createSlice({
       action: PayloadAction<string | undefined>
     ) => {
       state.sourceParsedTokenAccounts = errorDataWrapper(
-        action.payload || "An unknown error occurred."
+        action.payload || i18n.t("An unknown error occurred.")
       );
     },
     receiveSourceParsedTokenAccounts: (
@@ -317,7 +318,7 @@ export const transferSlice = createSlice({
       action: PayloadAction<string | undefined>
     ) => {
       state.acalaRelayerInfo = errorDataWrapper(
-        action.payload || "An unknown error occurred."
+        action.payload || i18n.t("An unknown error occurred.")
       );
     },
     receiveAcalaRelayerInfo: (

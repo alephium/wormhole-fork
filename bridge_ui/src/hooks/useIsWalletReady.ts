@@ -21,6 +21,7 @@ import {
   METAMASK_CHAIN_PARAMETERS,
 } from "../utils/metaMaskChainParameters";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 const createWalletStatus = (
   isReady: boolean,
@@ -43,6 +44,7 @@ function useIsWalletReady(
   walletAddress?: string;
   forceNetworkSwitch: () => void;
 } {
+  const { t } = useTranslation();
   const autoSwitch = enableNetworkAutoswitch;
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
@@ -156,7 +158,7 @@ function useIsWalletReady(
         }
         return createWalletStatus(
           false,
-          `Wallet is not connected to ${CLUSTER}. Expected Chain ID: ${correctEvmNetwork}`,
+          `${t('Wallet is not connected to {{ cluster }}', { cluster: CLUSTER })}. ${t('Expected Chain ID')}: ${correctEvmNetwork}`,
           forceNetworkSwitch,
           undefined
         );
@@ -165,7 +167,7 @@ function useIsWalletReady(
 
     return createWalletStatus(
       false,
-      "Wallet not connected",
+      t("Wallet is not connected"),
       forceNetworkSwitch,
       undefined
     );
@@ -183,6 +185,7 @@ function useIsWalletReady(
     terraWallet,
     alphWallet,
     algoPK,
+    t
   ]);
 }
 

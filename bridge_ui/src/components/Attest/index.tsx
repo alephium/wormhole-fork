@@ -8,6 +8,7 @@ import {
 } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { setStep } from "../../store/attestSlice";
 import {
@@ -32,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Attest() {
+  const { t } = useTranslation()
   const classes = useStyles();
   const dispatch = useDispatch();
   const activeStep = useSelector(selectAttestActiveStep);
@@ -51,10 +53,9 @@ function Attest() {
   }, [preventNavigation]);
   return (
     <Container maxWidth="md">
-      <HeaderText white>Token Registration</HeaderText>
+      <HeaderText white>{t("Token Registration")}</HeaderText>
       <Alert severity="info">
-        This form allows you to register a token on a new foreign chain. Tokens
-        must be registered before they can be transferred.
+        {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>
       <div className={classes.spacer} />
       <Stepper activeStep={activeStep} orientation="vertical">
@@ -63,7 +64,7 @@ function Attest() {
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. Source
+            1. {t("Source")}
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -74,7 +75,7 @@ function Attest() {
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. Target
+            2. {t("Target")}
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -82,7 +83,7 @@ function Attest() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton onClick={() => dispatch(setStep(2))} icon={null}>
-            3. Send attestation
+            3. {t("Send attestation")}
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -94,7 +95,7 @@ function Attest() {
             disabled={!isSendComplete}
             icon={null}
           >
-            4. Create wrapped token
+            4. {t("Create wrapped token")}
           </StepButton>
           <StepContent>
             {isCreateComplete ? <CreatePreview /> : <Create />}

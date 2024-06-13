@@ -1,6 +1,7 @@
 import { makeStyles, Button } from "@material-ui/core";
 import ChevronLeft from "@material-ui/icons/ChevronLeft";
 import ChevronRight from "@material-ui/icons/ChevronRight";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -39,6 +40,7 @@ export const PageSwitch = ({
   totalNumberOfPages,
   numberOfElementsLoaded,
 }: PageSwitchProps) => {
+  const { t } = useTranslation();
   const classes = useStyles();
   const handlePageSwitch = (direction: "previous" | "next") => {
     setPageNumber(direction === "previous" ? pageNumber - 1 : pageNumber + 1);
@@ -54,7 +56,7 @@ export const PageSwitch = ({
         className={classes.button}
       >
         <ChevronLeft />
-        <span>Previous</span>
+        <span>{t("Previous")}</span>
       </Button>
       <div className={classes.pageNumber}>
         {pageNumber}
@@ -71,7 +73,7 @@ export const PageSwitch = ({
         onClick={() => handlePageSwitch("next")}
         className={classes.button}
       >
-        <span>Next</span>
+        <span>{t("Next")}</span>
         <ChevronRight />
       </Button>
     </div>

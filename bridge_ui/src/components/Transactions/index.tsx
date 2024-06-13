@@ -32,6 +32,7 @@ import { selectTransferSourceChain, selectTransferTargetChain } from "../../stor
 import { getIsTxsCompletedAlph } from "../../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
 import { NodeProvider } from "@alephium/web3";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles(() => ({
   mainCard: {
@@ -86,6 +87,7 @@ const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Pro
 }
 
 function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher | undefined), chainId: ChainId): number | undefined {
+  const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
   const chainName = coalesceChainName(chainId)
   const pollingInterval = chainId === CHAIN_ID_ALEPHIUM ? ALEPHIUM_POLLING_INTERVAL : 3000
@@ -98,11 +100,11 @@ function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher
   useEffect(() => {
     if (error) {
       enqueueSnackbar(null, {
-        content: <Alert severity="error">{`Failed to get ${chainName} block number, error: ${error}`}</Alert>,
+        content: <Alert severity="error">{`${t('Failed to get {{ chainName }} block number', { chainName })}, ${t('Error')}: ${error}`}</Alert>,
         preventDuplicate: true
       })
     }
-  }, [error, enqueueSnackbar, chainName])
+  }, [error, enqueueSnackbar, chainName, t])
   return blockNumber
 }
 
@@ -182,6 +184,7 @@ function ListTransactions({
 }
 
 export default function Transactions() {
+  const { t } = useTranslation()
   const classes = useStyles()
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTargetChain = useSelector(selectTransferTargetChain)
@@ -241,11 +244,11 @@ export default function Transactions() {
       return await getIsTxsCompletedEvm(txTargetChain, provider, txs.map((t) => t.vaa))
     }
     enqueueSnackbar(null, {
-      content: <Alert severity="error">{`Wallet is not connected`}</Alert>,
+      content: <Alert severity="error">{t('Wallet is not connected')}</Alert>,
       preventDuplicate: true
     })
     return txs.map((_) => false)
-  }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain])
+  }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain, t])
 
   const reset = () => {
     setTxNumber(undefined)
@@ -279,14 +282,14 @@ export default function Transactions() {
         setTxNumber(txNumber)
       } catch (error) {
         enqueueSnackbar(null, {
-          content: <Alert severity="error">{`Failed to get tx number, error: ${error}`}</Alert>,
+          content: <Alert severity="error">{`${t('Failed to get tx number')}, ${t('Error')}: ${error}`}</Alert>,
         });
         console.error(`failed to get tx number, error: ${error}`)
       }
     }
 
     fetch()
-  }, [walletAddress, txSourceChain, txTargetChain, enqueueSnackbar])
+  }, [walletAddress, txSourceChain, txTargetChain, enqueueSnackbar, t])
 
   useEffect(() => {
     if (!walletAddress || !pageNumber) return
@@ -300,7 +303,7 @@ export default function Transactions() {
       } catch (error) {
         setIsLoading(false)
         enqueueSnackbar(null, {
-          content: <Alert severity="error">{`Failed to get txs, error: ${error}`}</Alert>,
+          content: <Alert severity="error">{`${t('Failed to get txs')}, ${t('Error')}: ${error}`}</Alert>,
         });
         console.error(`failed to get txs, error: ${error}`)
       }
@@ -308,7 +311,7 @@ export default function Transactions() {
 
     fetch()
 
-  }, [walletAddress, txSourceChain, txTargetChain, pageNumber, enqueueSnackbar])
+  }, [walletAddress, txSourceChain, txTargetChain, pageNumber, enqueueSnackbar, t])
 
   const ready = bothAreEvmChain ? sourceChainReady : (sourceChainReady && targetChainReady)
 
@@ -318,7 +321,7 @@ export default function Transactions() {
         <ChainSelect
           select
           variant="outlined"
-          label="Source Chain"
+          label={t("Source Chain")}
           value={txSourceChain}
           onChange={handleSourceChainChange}
           fullWidth
@@ -329,7 +332,7 @@ export default function Transactions() {
         <ChainSelect
           select
           variant="outlined"
-          label="Target Chain"
+          label={t("Target Chain")}
           value={txTargetChain}
           onChange={handleTargetChainChange}
           fullWidth

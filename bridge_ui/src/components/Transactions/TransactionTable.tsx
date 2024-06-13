@@ -9,6 +9,7 @@ import {
   TableRow,
   Typography
 } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { BridgeTransaction, TxStatus } from ".";
 import SmartTx from "./SmartTx";
 
@@ -61,6 +62,7 @@ const columns: Column[] = [
 ];
 
 export function TransactionTable(params: { txs: BridgeTransaction[], txsStatus: TxStatus[], isLoading: boolean }) {
+  const { t } = useTranslation()
   const classes = useStyles()
 
   return (
@@ -102,7 +104,7 @@ export function TransactionTable(params: { txs: BridgeTransaction[], txsStatus: 
               })}
             </TableBody>
           </Table>
-        : <Typography variant="body1">No transactions yet</Typography>
+        : <Typography variant="body1">{t("No transactions yet")}</Typography>
       }
     </TableContainer>
   )

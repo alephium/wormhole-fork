@@ -47,6 +47,7 @@ import { useWallet } from "@alephium/web3-react";
 import { useEffect } from "react";
 import { web3 } from "@alephium/web3";
 import backgroundGradient from "./images/top-gradient.png";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -129,6 +130,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function App() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const isBeta = useBetaContext();
   const { push } = useHistory();
@@ -152,7 +154,7 @@ function App() {
       {CLUSTER === "mainnet" ? null : (
         <AppBar position="static" className={classes.betaBanner} elevation={0}>
           <Typography style={{ textAlign: "center" }}>
-            Caution! You are using the {CLUSTER} build of this app.
+            {t("Caution! You are using the {{ networkName }} build of this app.", { networkName: CLUSTER })}
           </Typography>
         </AppBar>
       )}
@@ -171,7 +173,7 @@ function App() {
           >
             <img
               src={Alephium}
-              alt="Alephium"
+              alt={t("Alephium")}
               className={classes.alephiumLogo}
             />
           </Link>
@@ -184,7 +186,7 @@ function App() {
                 color="inherit"
                 className={classes.link}
               >
-                Bridge
+                {t("Bridge")}
               </Link>
               <Link
                 href="https://explorer.bridge.alephium.org"
@@ -193,7 +195,7 @@ function App() {
                 color="inherit"
                 className={classes.link}
               >
-                Explorer
+                {t("Explorer")}
               </Link>
               <Link
                 href="https://alephium.org"
@@ -202,12 +204,12 @@ function App() {
                 color="inherit"
                 className={classes.link}
               >
-                Alephium
+                {t("Alephium")}
               </Link>
             </div>
           </Hidden>
           <Hidden implementation="css" smUp>
-            <Tooltip title="View the FAQ">
+            <Tooltip title={t("View the FAQ")}>
               <IconButton
                 href="https://docs.wormholenetwork.com/wormhole/faqs"
                 target="_blank"
@@ -224,8 +226,7 @@ function App() {
       {isBeta ? (
         <AppBar position="static" className={classes.betaBanner} elevation={0}>
           <Typography style={{ textAlign: "center" }}>
-            Caution! You have enabled the beta. Enter the secret code again to
-            disable.
+            {t("Caution! You have enabled the beta. Enter the secret code again to disable.")}
           </Typography>
         </AppBar>
       ) : null}
@@ -236,13 +237,12 @@ function App() {
             subtitle={
               <>
                 <Typography variant="h5">
-                  A bridge that offers unlimited transfers across chains for
-                  tokens.
+                  {t("A bridge that offers unlimited transfers across chains for tokens.")}
                 </Typography>
               </>
             }
           >
-            Token Bridge 🌉
+            {t("Token Bridge")} 🌉
           </HeaderText>
           <Tabs
             value={pathname}
@@ -250,11 +250,11 @@ function App() {
             onChange={handleTabChange}
             indicatorColor="primary"
           >
-            <Tab label="Tokens" value="/transfer" disableRipple />
+            <Tab label={t("Tokens_other")} value="/transfer" disableRipple />
             {/* <Tab label="NFTs" value="/nft" /> */}
-            <Tab label="Redeem" value="/redeem" to="/redeem" disableRipple />
+            <Tab label={t("Redeem")} value="/redeem" to="/redeem" disableRipple />
             <Tab
-              label="Transactions"
+              label={t("Transactions")}
               value="/transactions"
               to="/transactions"
               disableRipple

@@ -24,6 +24,7 @@ import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, 
 import { useWallet } from "@alephium/web3-react";
 import { AlephiumBlockTime } from "../utils/alephium";
 import { ethers } from "ethers";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -46,6 +47,7 @@ export default function TransactionProgress({
   isSendComplete: boolean;
   consistencyLevel?: number
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const { provider } = useEthereumProvider();
   const alphWallet = useWallet()
@@ -135,6 +137,7 @@ export default function TransactionProgress({
       tx && tx.blockHeight && currentBlock ? currentBlock - tx.blockHeight : undefined;
     const remainMinutes = alphTxConfirmedTs === undefined ? undefined : getRemainMinutes(alphTxConfirmedTs)
     const expectedBlocks = consistencyLevel ?? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    const chainName = CHAINS_BY_ID[chainId].name
     if (!isSendComplete && blockDiff !== undefined) {
       return (
         <div className={classes.root}>
@@ -146,10 +149,10 @@ export default function TransactionProgress({
           />
           <Typography variant="body2" className={classes.message}>
             {blockDiff < expectedBlocks
-              ? `Waiting for ${blockDiff} / ${expectedBlocks} confirmations on ${CHAINS_BY_ID[chainId].name}...`
+              ? `${t('Waiting for {{ blockDiff }} / {{ expectedBlocks }} confirmations on {{ chainName }}', { blockDiff, expectedBlocks, chainName })}...`
               : !alphTxConfirmed && !!remainMinutes
-              ? `Waiting for confirmations on ${CHAINS_BY_ID[chainId].name}, ${remainMinutes.toFixed(2)} minutes remaining...`
-              : `Waiting for Wormhole Network consensus...`}
+              ? `${t('Waiting for confirmations on {{ chainName }}, {{ minutes }} minutes remaining', { chainName, minutes: remainMinutes.toFixed(2) })}...`
+              : `${t('Waiting for Wormhole Network consensus')}...`}
           </Typography>
         </div>
       );
@@ -161,14 +164,14 @@ export default function TransactionProgress({
         <div className={classes.root}>
           <Typography variant="body2" className={classes.message}>
             {!isFinalized
-              ? `Waiting for finality on ${CHAINS_BY_ID[chainId].name} which may take up to 15 minutes.`
-              : `Waiting for Wormhole Network consensus...`}
+              ? t('Waiting for finality on {{ chainName }} which may take up to 15 minutes.')
+              : `${t('Waiting for Wormhole Network consensus')}...`}
           </Typography>
           {!isFinalized ? (
             <>
-              <span>Last finalized block number</span>
+              <span>{t("Last finalized block number")}</span>
               <SmartBlock chainId={chainId} blockNumber={currentBlock} />
-              <span>This transaction's block number</span>
+              <span></span>
               <SmartBlock chainId={chainId} blockNumber={tx.blockHeight} />
             </>
           ) : null}
@@ -202,6 +205,7 @@ export default function TransactionProgress({
       (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
       blockDiff !== undefined
     ) {
+      const chainName = CHAINS_BY_ID[chainId].name
       return (
         <div className={classes.root}>
           <LinearProgress
@@ -212,8 +216,8 @@ export default function TransactionProgress({
           />
           <Typography variant="body2" className={classes.message}>
             {blockDiff < expectedBlocks
-              ? `Waiting for ${blockDiff} / ${expectedBlocks} confirmations on ${CHAINS_BY_ID[chainId].name}...`
-              : `Waiting for Wormhole Network consensus...`}
+              ? `${t('Waiting for {{ blockDiff }} / {{ expectedBlocks }} confirmations on {{ chainName }}', { blockDiff, expectedBlocks, chainName })}...`
+              : `${t('Waiting for Wormhole Network consensus')}...`}
           </Typography>
         </div>
       );

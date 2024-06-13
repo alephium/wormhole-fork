@@ -37,6 +37,7 @@ import {
 import useIsWalletReady from "./useIsWalletReady";
 import useTransferSignedVAA from "./useTransferSignedVAA";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * @param recoveryOnly Only fire when in recovery mode
@@ -49,6 +50,7 @@ export default function useGetIsTransferCompleted(
   isTransferCompleted: boolean;
   error: string | undefined;
 } {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isTransferCompleted, setIsTransferCompleted] = useState(false);
   const [error, setError] = useState<string>()
@@ -105,7 +107,7 @@ export default function useGetIsTransferCompleted(
               signedVAA
             );
           } catch (error) {
-            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            const errMsg = `${t('Failed to check if the transfer tx has been completed')}, ${t('Error')}: ${error}`
             setError(errMsg)
             console.error(errMsg);
           }
@@ -156,7 +158,7 @@ export default function useGetIsTransferCompleted(
         (async () => {
           try {
             if (typeof sourceChain === 'undefined') {
-              throw Error("transfer source chain is undefined")
+              throw Error(t("Transfer source chain is undefined"))
             }
 
             const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
@@ -166,7 +168,7 @@ export default function useGetIsTransferCompleted(
               signedVAA
             )
           } catch (error) {
-            const errMsg = `failed to check if the transfer tx has been completed, error: ${error}`
+            const errMsg = `${t('Failed to check if the transfer tx has been completed')}, ${t('Error')}: ${error}`
             setError(errMsg)
             console.error(errMsg)
           }
@@ -213,6 +215,7 @@ export default function useGetIsTransferCompleted(
     provider,
     alphWallet,
     pollState,
+    t
   ]);
 
   return { isTransferCompletedLoading: isLoading, isTransferCompleted, error };

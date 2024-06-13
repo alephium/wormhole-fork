@@ -2,6 +2,7 @@ import { CHAIN_ID_ALGORAND } from "@alephium/wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import { Algodv2 } from "algosdk";
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchSingleMetadata } from "../../hooks/useAlgoMetadata";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -22,6 +23,7 @@ type AlgoTokenPickerProps = {
 const returnsFalse = () => false;
 
 export default function AlgoTokenPicker(props: AlgoTokenPickerProps) {
+  const { t } = useTranslation();
   const { value, onChange, disabled, tokenAccounts, resetAccounts } = props;
   const { walletAddress } = useIsWalletReady(CHAIN_ID_ALGORAND);
 
@@ -45,7 +47,7 @@ export default function AlgoTokenPicker(props: AlgoTokenPickerProps) {
   const lookupAlgoAddress = useCallback(
     (lookupAsset: string) => {
       if (!walletAddress) {
-        return Promise.reject("Wallet not connected");
+        return Promise.reject(t("Wallet is not connected."));
       }
       const algodClient = new Algodv2(
         ALGORAND_HOST.algodToken,
@@ -82,7 +84,7 @@ export default function AlgoTokenPicker(props: AlgoTokenPickerProps) {
         })
         .catch(() => Promise.reject());
     },
-    [walletAddress]
+    [walletAddress, t]
   );
 
   const isSearchableAddress = useCallback((address: string) => {

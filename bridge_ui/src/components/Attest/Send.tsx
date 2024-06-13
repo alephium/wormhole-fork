@@ -23,6 +23,7 @@ import { createLocalTokenPool } from "../../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
 import { useSnackbar } from "notistack";
 import { setStep } from "../../store/attestSlice";
+import { Trans, useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   alert: {
@@ -31,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const SolanaTokenMetadataWarning = () => {
+  const { t } = useTranslation();
   const sourceAsset = useSelector(selectAttestSourceAsset);
   const sourceAssetArrayed = useMemo(() => {
     return [sourceAsset];
@@ -44,21 +46,21 @@ const SolanaTokenMetadataWarning = () => {
 
   return !metaplexData.data?.get(sourceAsset) ? (
     <Alert severity="warning" variant="outlined" className={classes.alert}>
-      This token is missing on-chain (Metaplex) metadata. Without it, the
-      wrapped token's name and symbol will be empty. See the{" "}
-      <Link
-        href={SOLANA_TOKEN_METADATA_PROGRAM_URL}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Trans
+        t={t}
+        i18nKey="missingMetaplexMetadata"
+        components={{
+          1: <Link href={SOLANA_TOKEN_METADATA_PROGRAM_URL} target="_blank" rel="noopener noreferrer" />
+        }}
       >
-        metaplex repository
-      </Link>{" "}
-      for details.
+        {"This token is missing on-chain (Metaplex) metadata. Without it, the wrapped token's name and symbol will be empty. See the <1>metaplex repository</1>for details."}
+      </Trans>
     </Alert>
   ) : null;
 };
 
 function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
+  const { t } = useTranslation()
   const alphWallet = useWallet()
   const dispatch = useDispatch()
   const { enqueueSnackbar } = useSnackbar()
@@ -80,11 +82,11 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
           await waitAlphTxConfirmed(alphWallet.nodeProvider, createLocalTokenPoolTxId, 1)
           console.log(`create local token pool tx id: ${createLocalTokenPoolTxId}`)
           enqueueSnackbar(null, {
-            content: <Alert severity="success">Transaction confirmed</Alert>
+            content: <Alert severity="success">{t("Transaction confirmed")}</Alert>
           })
         } else {
           enqueueSnackbar(null, {
-            content: <Alert severity="info">Local token pool already exists</Alert>
+            content: <Alert severity="info">{t("Local token pool already exists")}</Alert>
           })
         }
       } catch (error) {
@@ -94,7 +96,7 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
       setIsSending(false)
       dispatch(setStep(3))
     }
-  }, [alphWallet, signedVAAHex, enqueueSnackbar, localTokenId, dispatch])
+  }, [alphWallet, signedVAAHex, enqueueSnackbar, localTokenId, dispatch, t])
   const isReady = signedVAAHex !== undefined && alphWallet !== undefined && !isSending
 
   return (
@@ -105,13 +107,14 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
         showLoader={isSending}
         error={error}
       >
-        {isSending ? 'Waiting for transaction confirmation...' : 'Create Local Token Pool'}
+        {isSending ? `${t('Waiting for transaction confirmation')}...` : t('Create Local Token Pool')}
       </ButtonWithLoader>
     </>
   )
 }
 
 function Send() {
+  const { t } = useTranslation();
   const { handleClick, disabled, showLoader } = useHandleAttest();
   const sourceChain = useSelector(selectAttestSourceChain);
   const sourceAsset = useSelector(selectAttestSourceAsset);
@@ -131,7 +134,7 @@ function Send() {
         showLoader={showLoader}
         error={statusMessage}
       >
-        Attest
+        {t("Attest")}
       </ButtonWithLoader>
       {sourceChain === CHAIN_ID_SOLANA && <SolanaTokenMetadataWarning />}
       <WaitingForWalletMessage />

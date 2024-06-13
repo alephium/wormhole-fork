@@ -7,6 +7,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { Box, Link, makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
+import { Trans, useTranslation } from "react-i18next";
 import {
   AVAILABLE_MARKETS_URL,
   CHAINS_BY_ID,
@@ -27,15 +28,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function WormholeWrappedWarning() {
+  const { t } = useTranslation();
   const classes = useStyles();
   return (
     <Alert severity="info" variant="outlined" className={classes.alert}>
       <Typography component="div" className={classes.line}>
-        The tokens you will receive are{" "}
-        <Box fontWeight={900} display="inline">
-          Bridge Wrapped Tokens
-        </Box>{" "}
-        and will need to be exchanged for the underlying tokens.
+        <Trans
+          t={t}
+          i18nKey="bridgeWrappedTokens"
+          components={{ 1: <Box fontWeight={900} display="inline" /> }}
+        >
+          {'The tokens you will receive are <1>Bridge Wrapped Tokens</1>and will need to be exchanged for the underlying tokens.'}
+        </Trans>
       </Typography>
     </Alert>
   );
@@ -48,40 +52,48 @@ function MultichainWarning({
   symbol: string;
   targetChain: ChainId;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   return (
     <Alert severity="warning" variant="outlined" className={classes.alert}>
       <Typography
         variant="h6"
         className={classes.line}
-      >{`You will not receive native ${symbol} on ${CHAINS_BY_ID[targetChain].name}`}</Typography>
+      >
+        {t('You will not receive native {{ token }} on {{ chainName }}', { token: symbol, chainName: CHAINS_BY_ID[targetChain].name })}
+      </Typography>
       <Typography
         className={classes.line}
-      >{`To receive native ${symbol}, you will have to perform a swap with the wrapped tokens once you are done bridging.`}</Typography>
+      >
+        {t('To receive native {{ token }}, you will have to perform a swap with the wrapped tokens once you are done bridging.', { token: symbol })}
+      </Typography>
     </Alert>
   );
 }
 
 function RewardsWarning() {
+  const { t } = useTranslation();
   const classes = useStyles();
   return (
     <Alert severity="warning" variant="outlined" className={classes.alert}>
-      Lido stETH rewards can only be received on Ethereum. Use the value
-      accruing wrapper token wstETH instead.
+      {t("Lido stETH rewards can only be received on Ethereum. Use the value accruing wrapper token wstETH instead.")}
     </Alert>
   );
 }
 
 function LiquidityWarning() {
+  const { t } = useTranslation();
   const classes = useStyles();
   return (
     <Alert severity="info" variant="outlined" className={classes.alert}>
       <Typography component="div" className={classes.line}>
-        The tokens you will receive are{" "}
-        <Box fontWeight={900} display="inline">
-          Bridge Wrapped Tokens
-        </Box>{" "}
-        which currently have no liquid markets!
+        <Trans
+          t={t}
+          i18nKey="bridgeWrappedTokensNoLiquid"
+          components={{ 1: <Box fontWeight={900} display="inline" /> }}
+        >
+          {'The tokens you will receive are <1>Bridge Wrapped Tokens</1>which currently have no liquid markets!'}
+        </Trans>
       </Typography>
       <Typography component="div">
         <Link
@@ -89,7 +101,7 @@ function LiquidityWarning() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Click here to see available markets for wrapped tokens.
+          {t("Click here to see available markets for wrapped tokens.")}
         </Link>
       </Typography>
     </Alert>

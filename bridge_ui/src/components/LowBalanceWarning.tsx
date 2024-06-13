@@ -1,6 +1,7 @@
 import { ChainId, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { makeStyles, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import useTransactionFees from "../hooks/useTransactionFees";
@@ -15,6 +16,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function LowBalanceWarning({ chainId }: { chainId: ChainId }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const { isReady } = useIsWalletReady(chainId);
   const transactionFeeWarning = useTransactionFees(chainId);
@@ -28,10 +30,8 @@ function LowBalanceWarning({ chainId }: { chainId: ChainId }) {
 
   const warningMessage =
     chainId === CHAIN_ID_TERRA
-      ? "This wallet may not have sufficient funds to pay for the upcoming transaction fees."
-      : `This wallet has a very low ${getDefaultNativeCurrencySymbol(
-          chainId
-        )} balance and may not be able to pay for the upcoming transaction fees.`;
+      ? t("This wallet may not have sufficient funds to pay for the upcoming transaction fees.")
+      : t("This wallet has a very low {{ token }} balance and may not be able to pay for the upcoming transaction fees.", { token: getDefaultNativeCurrencySymbol(chainId)});
 
   const content = (
     <Alert severity="warning" variant="outlined" className={classes.alert}>

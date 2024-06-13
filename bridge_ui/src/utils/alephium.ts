@@ -39,6 +39,7 @@ import {
   sleep
 } from '@alephium/web3';
 import * as base58 from 'bs58'
+import i18n from "../i18n";
 
 const WormholeMessageEventIndex = 0
 export const AlephiumBlockTime = 16000 // 16 seconds in ms
@@ -50,7 +51,7 @@ async function fetchTokenList(): Promise<TokenList> {
   const url = `https://raw.githubusercontent.com/alephium/token-list/master/tokens/${file}`
   const response = await fetch(url)
   if (!response.ok) {
-    throw new Error(`Failed to fetch token list from ${url}`)
+    throw new Error(i18n.t('Failed to fetch token list from {{ url }}', { url }))
   }
   const tokenList =  await response.json()
   tokenListCache = tokenList
@@ -98,7 +99,7 @@ export async function waitALPHTxConfirmed(provider: NodeProvider, txId: string, 
       return txStatus as node.Confirmed
     }
   } catch (error) {
-    console.error(`failed to get tx status, tx id: ${txId}`)
+    console.error(`${i18n.t('Failed to get tx status')}, tx id: ${txId}`)
   }
   await sleep(ALEPHIUM_POLLING_INTERVAL)
   return waitALPHTxConfirmed(provider, txId, confirmations)
@@ -108,7 +109,7 @@ async function getTxInfo(provider: NodeProvider, txId: string) {
   const events = await provider.events.getEventsTxIdTxid(txId, { group: ALEPHIUM_BRIDGE_GROUP_INDEX })
   const event = events.events.find((event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS)
   if (typeof event === 'undefined') {
-    return Promise.reject('failed to get event for tx: ' + txId)
+    return Promise.reject(`${i18n.t('Failed to get event for tx')}: ${txId}`)
   }
   if (event.eventIndex !== WormholeMessageEventIndex) {
     return Promise.reject("invalid event index: " + event.eventIndex)
@@ -187,7 +188,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     }
     return await getTokenFromTokenList(tokenId)
   } catch (error) {
-    console.log("failed to get alephium token info, error: " + error)
+    console.log(`${i18n.t('Failed to get alephium token info')}, ${i18n.t('Error')}: ${error}`)
     return undefined
   }
 }
@@ -206,14 +207,14 @@ export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId:
 
   const tokenInfo = await getTokenFromTokenList(tokenId)
   if (tokenInfo === undefined) {
-    throw new Error(`Token ${tokenId} does not exists in the token-list`)
+    throw new Error(i18n.t('Token {{ tokenId }} does not exists in the token-list', { tokenId }))
   }
   if (
     tokenInfo.name !== localTokenInfo.name ||
     tokenInfo.symbol !== localTokenInfo.symbol ||
     tokenInfo.decimals !== localTokenInfo.decimals
   ) {
-    throw new Error(`Invalid token info, expected: ${localTokenInfo}, have: ${tokenInfo}`)
+    throw new Error(i18n.t('Invalid token info, expected: {{ localTokenInfo }}, have: {{ tokenInfo }}', { localTokenInfo, tokenInfo }))
   }
   return localTokenInfo
 }
@@ -256,7 +257,7 @@ export function tryGetContractId(idOrAddress: string): string {
   if (isBase58(idOrAddress)) {
     return binToHex(contractIdFromAddress(idOrAddress))
   }
-  throw new Error(`Invalid contract id or contract address: ${idOrAddress}`)
+  throw new Error(`${i18n.t('Invalid contract id or contract address')}: ${idOrAddress}`)
 }
 
 export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {

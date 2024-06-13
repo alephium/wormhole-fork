@@ -6,6 +6,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";
 
 const useStyles = makeStyles((theme) => ({
@@ -21,13 +22,14 @@ export default function RelaySelector({
   selectedValue: Relayer | null;
   onChange: (newValue: Relayer | null) => void;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const availableRelayers = useRelayersAvailable(true);
 
   const loader = (
     <div>
       <CircularProgress></CircularProgress>
-      <Typography>Loading available relayers</Typography>
+      <Typography>{t("Loading available relayers")}</Typography>
     </div>
   );
 
@@ -51,7 +53,7 @@ export default function RelaySelector({
     <TextField
       onChange={onChangeWrapper}
       value={selectedValue ? selectedValue.url : ""}
-      label="Select a relayer"
+      label={t("Select a relayer")}
       select
       fullWidth
     >
@@ -65,7 +67,7 @@ export default function RelaySelector({
 
   const error = (
     <Typography variant="body2" color="textSecondary">
-      No relayers are available at this time.
+      {t("No relayers are available at this time.")}
     </Typography>
   );
 

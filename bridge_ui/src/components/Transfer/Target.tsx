@@ -37,6 +37,7 @@ import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import RegisterNowButton from "./RegisterNowButton";
 import { hexToALPHAddress } from "../../utils/alephium";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   transferField: {
@@ -74,6 +75,7 @@ export const useTargetInfo = () => {
 };
 
 function Target() {
+  const { t } = useTranslation();
   useGetTargetParsedTokenAccounts();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -119,7 +121,7 @@ function Target() {
   }, [dispatch]);
   return (
     <>
-      <StepDescription>Select a recipient chain and address.</StepDescription>
+      <StepDescription>{t("Select a recipient chain and address.")}</StepDescription>
       <ChainSelect
         variant="outlined"
         select
@@ -134,7 +136,7 @@ function Target() {
         <>
           {targetAsset ? (
             <div className={classes.transferField}>
-              <Typography variant="subtitle2">Bridged tokens:</Typography>
+              <Typography variant="subtitle2">{t("Bridged tokens")}:</Typography>
               <Typography component="div">
                 <SmartAddress
                   chainId={targetChain}
@@ -145,19 +147,19 @@ function Target() {
                   variant="h6"
                   isAsset
                 />
-                {`(Amount: ${transferAmount})`}
+                {`(${t('Amount')}: ${transferAmount})`}
               </Typography>
             </div>
           ) : null}
           <div className={classes.transferField}>
-            <Typography variant="subtitle2">Sent to:</Typography>
+            <Typography variant="subtitle2">{t('Sent to')}:</Typography>
             <Typography component="div">
               <SmartAddress
                 chainId={targetChain}
                 address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress}
                 variant="h6"
               />
-              {`(Current balance: ${uiAmountString || "0"})`}
+              {t('Current balance')} {uiAmountString || "0"}
             </Typography>
           </div>
         </>
@@ -182,7 +184,7 @@ function Target() {
           statusMessage || fetchSourceAssetInfoError || (isLoading ? undefined : error || targetAssetError)
         }
       >
-        Next
+        {t("Next")}
       </ButtonWithLoader>
       {!statusMessage && data && !data.doesExist ? <RegisterNowButton /> : null}
     </>

@@ -86,6 +86,8 @@ import RelaySelector from "./RelaySelector";
 import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
 import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
 import { Wallet, useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -126,11 +128,11 @@ async function algo(tx: string, enqueueSnackbar: any) {
       }
     }
     if (!confirmedTxInfo) {
-      throw new Error("Transaction not found or not confirmed");
+      throw new Error(i18n.t("Transaction not found or not confirmed"));
     }
     const sequence = parseSequenceFromLogAlgorand(confirmedTxInfo);
     if (!sequence) {
-      throw new Error("Sequence not found");
+      throw new Error(i18n.t("Sequence not found"));
     }
     const emitterAddress = getEmitterAddressAlgorand(ALGORAND_TOKEN_BRIDGE_ID);
     const { vaaBytes } = await getSignedVAAWithRetry(
@@ -161,7 +163,7 @@ async function evm(
     const receipt = await provider.getTransactionReceipt(tx);
     const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
     if (!isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
-      throw new Error('the transaction is awaiting confirmation')
+      throw new Error(i18n.t('The transaction is awaiting confirmation'))
     }
     const sequence = parseSequenceFromLogEth(
       receipt,
@@ -198,7 +200,7 @@ async function solana(tx: string, enqueueSnackbar: any, nft: boolean) {
     const connection = new Connection(SOLANA_HOST, "confirmed");
     const info = await connection.getTransaction(tx);
     if (!info) {
-      throw new Error("An error occurred while fetching the transaction info");
+      throw new Error(i18n.t("An error occurred while fetching the transaction info"));
     }
     const sequence = parseSequenceFromLogSolana(info);
     const emitterAddress = await getEmitterAddressSolana(
@@ -227,7 +229,7 @@ async function terra(tx: string, enqueueSnackbar: any) {
     const info = await lcd.tx.txInfo(tx);
     const sequence = parseSequenceFromLogTerra(info);
     if (!sequence) {
-      throw new Error("Sequence not found");
+      throw new Error(i18n.t("Sequence not found"));
     }
     const emitterAddress = await getEmitterAddressTerra(
       TERRA_TOKEN_BRIDGE_ADDRESS
@@ -252,11 +254,11 @@ async function terra(tx: string, enqueueSnackbar: any) {
 async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
   try {
     if (wallet.nodeProvider === undefined) {
-      throw new Error('Wallet is not connected')
+      throw new Error(i18n.t('Wallet is not connected'))
     }
     const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId);
     if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-      throw new Error('the transaction is not confirmed')
+      throw new Error(i18n.t('The transaction is not confirmed'))
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -284,6 +286,7 @@ function RelayerRecovery({
   signedVaa: string;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const relayerInfo = useRelayersAvailable(true);
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null);
@@ -333,13 +336,13 @@ function RelayerRecovery({
           enqueueSnackbar(null, {
             content: (
               <Alert severity="error">
-                {"Relay request rejected. Error: " + error.message}
+                {t('Relay request rejected.')} {t('Error')}: {error.message}
               </Alert>
             ),
           });
         }
       );
-  }, [selectedRelayer, enqueueSnackbar, onClick, signedVaa, parsedPayload]);
+  }, [selectedRelayer, parsedPayload, signedVaa, onClick, enqueueSnackbar, t]);
 
   if (!isEligible) {
     return null;
@@ -347,7 +350,7 @@ function RelayerRecovery({
 
   return (
     <Alert variant="outlined" severity="info" className={classes.relayAlert}>
-      <Typography>{"This transaction is eligible to be relayed"}</Typography>
+      <Typography>{t('This transaction is eligible to be relayed')}</Typography>
       <RelaySelector
         selectedValue={selectedRelayer}
         onChange={handleRelayerChange}
@@ -357,7 +360,7 @@ function RelayerRecovery({
         onClick={handleGo}
         showLoader={isAttemptingToSchedule}
       >
-        Request Relay
+        {t("Request Relay")}
       </ButtonWithLoader>
     </Alert>
   );
@@ -374,6 +377,7 @@ function AcalaRelayerRecovery({
   onClick: () => void;
   isNFT: boolean;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const originChain: ChainId = parsedPayload?.originChain;
   const originAsset = parsedPayload?.originAddress;
@@ -401,15 +405,15 @@ function AcalaRelayerRecovery({
   return enabled ? (
     <Alert variant="outlined" severity="info" className={classes.relayAlert}>
       <Typography>
-        This transaction is eligible to be relayed by{" "}
-        {CHAINS_BY_ID[targetChain].name} &#127881;
+        {t('This transaction is eligible to be relayed by {{ chainName }}', { chainName: CHAINS_BY_ID[targetChain].name})}
       </Typography>
-      <ButtonWithLoader onClick={onClick}>Request Relay</ButtonWithLoader>
+      <ButtonWithLoader onClick={onClick}>{t("Request Relay")}</ButtonWithLoader>
     </Alert>
   ) : null;
 }
 
 export default function Recovery() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const { push } = useHistory();
   const { enqueueSnackbar } = useSnackbar();
@@ -677,13 +681,14 @@ export default function Recovery() {
     <Container maxWidth="md">
       <Card className={classes.mainCard}>
         <Alert severity="info" variant="outlined">
-          If you have sent your tokens but have not redeemed them, you may paste
-          in the Source Transaction ID (from Step 3) to resume your transfer.
+          {t(
+            "If you have sent your tokens but have not redeemed them, you may paste in the Source Transaction ID (from Step 3) to resume your transfer."
+          )}
         </Alert>
         <ChainSelect
           select
           variant="outlined"
-          label="Source Chain"
+          label={t("Source Chain")}
           disabled={!!recoverySignedVAA}
           value={recoverySourceChain}
           onChange={handleSourceChainChange}
@@ -694,7 +699,7 @@ export default function Recovery() {
         <KeyAndBalance chainId={recoverySourceChain} />
         <TextField
           variant="outlined"
-          label="Source Tx (paste here)"
+          label={t("Source Tx (paste here)")}
           disabled={
             !!recoverySignedVAA ||
             recoverySourceTxIsLoading ||
@@ -723,19 +728,19 @@ export default function Recovery() {
           disabled={!enableRecovery || !isReady}
           showLoader={recoverySourceTxIsLoading}
         >
-          Recover
+          {t("Recover")}
         </ButtonWithLoader>
         <div className={classes.advancedContainer}>
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              Advanced
+              {t("Advanced")}
             </AccordionSummary>
             <AccordionDetails>
               <div>
                 <Box position="relative">
                   <TextField
                     variant="outlined"
-                    label="Signed VAA (Hex)"
+                    label={t("Signed VAA (Hex)")}
                     disabled={recoverySourceTxIsLoading}
                     value={recoverySignedVAA || ""}
                     onChange={handleSignedVAAChange}
@@ -765,7 +770,7 @@ export default function Recovery() {
                 </Box>
                 <TextField
                   variant="outlined"
-                  label="Emitter Chain"
+                  label={t("Emitter Chain")}
                   disabled
                   value={recoveryParsedVAA?.body.emitterChainId || ""}
                   fullWidth
@@ -773,7 +778,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Emitter Address"
+                  label={t("Emitter Address")}
                   disabled
                   value={
                     (recoveryParsedVAA &&
@@ -788,7 +793,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Sequence"
+                  label={t("Sequence")}
                   disabled
                   value={recoveryParsedVAA?.body.sequence.toString() || ""}
                   fullWidth
@@ -796,7 +801,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Timestamp"
+                  label={t("Timestamp")}
                   disabled
                   value={
                     (recoveryParsedVAA &&
@@ -810,7 +815,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Guardian Set"
+                  label={t("Guardian Set")}
                   disabled
                   value={recoveryParsedVAA?.guardianSetIndex.toString() || ""}
                   fullWidth
@@ -821,7 +826,7 @@ export default function Recovery() {
                 </Box>
                 <TextField
                   variant="outlined"
-                  label="Origin Chain"
+                  label={t("Origin Chain")}
                   disabled
                   value={parsedPayload?.originChain.toString() || ""}
                   fullWidth
@@ -829,7 +834,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Origin Token Address"
+                  label={t("Origin Token Address")}
                   disabled
                   value={
                     (parsedPayload &&
@@ -845,7 +850,7 @@ export default function Recovery() {
                 {isNFT ? (
                   <TextField
                     variant="outlined"
-                    label="Origin Token ID"
+                    label={t("Origin Token ID")}
                     disabled
                     // @ts-ignore
                     value={parsedPayload?.originAddress || ""}
@@ -855,7 +860,7 @@ export default function Recovery() {
                 ) : null}
                 <TextField
                   variant="outlined"
-                  label="Target Chain"
+                  label={t("Target Chain")}
                   disabled
                   value={parsedVAATargetChain || ""}
                   fullWidth
@@ -863,7 +868,7 @@ export default function Recovery() {
                 />
                 <TextField
                   variant="outlined"
-                  label="Target Address"
+                  label={t("Target Address")}
                   disabled
                   value={
                     (parsedPayload &&
@@ -880,7 +885,7 @@ export default function Recovery() {
                   <>
                     <TextField
                       variant="outlined"
-                      label="Amount"
+                      label={t("Amount")}
                       disabled
                       value={
                         parsedPayload && "amount" in parsedPayload
@@ -892,7 +897,7 @@ export default function Recovery() {
                     />
                     <TextField
                       variant="outlined"
-                      label="Relayer Fee"
+                      label={t("Relayer Fee")}
                       disabled
                       value={
                         parsedPayload && "fee" in parsedPayload

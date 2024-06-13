@@ -20,6 +20,7 @@ import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import { Alert } from "@material-ui/lab";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -128,12 +129,13 @@ export const BasicAccountRender = (
   nft: boolean,
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
+  const { t } = useTranslation();
   const { data: marketsData } = useMarketsMap(false);
   const classes = useStyles();
   const mintPrettyString = shortenAddress(account.mintKey);
   const uri = nft ? account.image_256 : account.logo || account.uri;
-  const symbol = account.symbol || "Unknown";
-  const name = account.name || "Unknown";
+  const symbol = account.symbol || t("Unknown");
+  const name = account.name || t("Unknown");
   const tokenId = account.tokenId;
   const shouldDisplayBalance = !displayBalance || displayBalance(account);
 
@@ -208,7 +210,7 @@ export const BasicAccountRender = (
     <div className={classes.migrationAlert}>
       <Alert severity="warning">
         <Typography variant="body2">
-          This is a legacy asset eligible for migration.
+          {t("This is a legacy asset eligible for migration.")}
         </Typography>
         <div>{tokenContent}</div>
       </Alert>
@@ -262,6 +264,7 @@ export default function TokenPicker({
   showLoader?: boolean;
   useTokenId?: boolean;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const [holderString, setHolderString] = useState("");
   const [tokenIdHolderString, setTokenIdHolderString] = useState("");
@@ -308,12 +311,12 @@ export default function TokenPicker({
           setSelectionError(e.message);
         } else {
           setSelectionError(
-            "Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list."
+            t("Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list.")
           );
         }
       }
     },
-    [getAddress, onChange, closeDialog]
+    [getAddress, onChange, closeDialog, t]
   );
 
   const resetAccountsWrapper = useCallback(() => {
@@ -445,7 +448,7 @@ export default function TokenPicker({
         (error) => {
           if (!cancelled) {
             setLocalLoading(false);
-            setLoadingError("Could not find the specified address.");
+            setLoadingError(t("Could not find the specified address."));
           }
         }
       );
@@ -459,6 +462,7 @@ export default function TokenPicker({
     localFind,
     tokenIdHolderString,
     useTokenId,
+    t
   ]);
 
   //TODO reset button
@@ -469,7 +473,7 @@ export default function TokenPicker({
     <div className={classes.alignCenter}>
       <CircularProgress />
       <Typography variant="body2">
-        {showLoader ? "Loading available tokens" : "Searching for results"}
+        {showLoader ? t("Loading available tokens") : t("Searching for results")}
       </Typography>
     </div>
   );
@@ -492,7 +496,7 @@ export default function TokenPicker({
     >
       <DialogTitle>
         <div id="simple-dialog-title" className={classes.flexTitle}>
-          <Typography variant="h5">Select a token</Typography>
+          <Typography variant="h5">{t("Select a token")}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
             <IconButton onClick={resetAccountsWrapper}>
@@ -504,7 +508,7 @@ export default function TokenPicker({
       <DialogContent className={classes.dialogContent}>
         <TextField
           variant="outlined"
-          label="Search name or paste address"
+          label={t("Search name or paste address")}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
@@ -513,7 +517,7 @@ export default function TokenPicker({
         {useTokenId ? (
           <TextField
             variant="outlined"
-            label="Token Id"
+            label={t("Token ID")}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}
             fullWidth
@@ -532,7 +536,9 @@ export default function TokenPicker({
                   Featured {CHAINS_BY_ID[chainId].name} &gt;{" "}
                   {CHAINS_BY_ID[targetChain].name} markets{" "}
                   <Tooltip
-                    title={`Markets for these ${CHAINS_BY_ID[chainId].name} tokens exist for the corresponding tokens on ${CHAINS_BY_ID[targetChain].name}`}
+                    title={
+                      t('Markets for these {{ chainName }} tokens exist for the corresponding tokens on {{ targetChainName }}', { chainName: CHAINS_BY_ID[chainId].name, targetChainName: CHAINS_BY_ID[targetChain].name })
+                    }
                   >
                     <InfoOutlined
                       fontSize="small"
@@ -564,7 +570,7 @@ export default function TokenPicker({
                   <>
                     <Divider style={{ marginTop: 8, marginBottom: 16 }} />
                     <Typography variant="subtitle2" gutterBottom>
-                      Other Assets
+                      {t("Other Assets")}
                     </Typography>
                   </>
                 ) : null}
@@ -587,7 +593,7 @@ export default function TokenPicker({
             })}
             {featuredOptions.length || nonFeaturedOptions.length ? null : (
               <div className={classes.alignCenter}>
-                <Typography>No results found</Typography>
+                <Typography>{t("No results found")}</Typography>
               </div>
             )}
           </List>
@@ -608,7 +614,7 @@ export default function TokenPicker({
         {value ? (
           <RenderOption account={value} />
         ) : (
-          <Typography color="textSecondary">Select a token</Typography>
+          <Typography color="textSecondary">{t("Select a token")}</Typography>
         )}
       </Button>
     </div>

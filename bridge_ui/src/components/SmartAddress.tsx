@@ -29,6 +29,7 @@ import { CLUSTER, WETH_ADDRESS, getExplorerName } from "../utils/consts";
 import { shortenAddress } from "../utils/solana";
 import { formatNativeDenom } from "../utils/terra";
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from "@alephium/web3";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -88,6 +89,7 @@ export default function SmartAddress({
   extraContent?: ReactChild;
   isAsset?: boolean;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const isNativeETH = chainId === CHAIN_ID_ETH && address?.toLowerCase() === WETH_ADDRESS.toLowerCase()
   const isNativeTerra = chainId === CHAIN_ID_TERRA && isNativeDenom(address);
@@ -204,7 +206,7 @@ export default function SmartAddress({
       target="_blank"
       rel="noopener noreferrer"
     >
-      {"View on " + explorerName}
+      {t("View on {{ explorerName }}", { explorerName })}
     </Button>
   );
   //TODO add icon here
@@ -216,7 +218,7 @@ export default function SmartAddress({
       onClick={copyToClipboard}
       className={classes.buttons}
     >
-      Copy
+      {t("Copy")}
     </Button>
   );
 

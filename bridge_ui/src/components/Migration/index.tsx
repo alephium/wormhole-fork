@@ -7,6 +7,7 @@ import {
 import { getAddress } from "@ethersproject/address";
 import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
 import { PublicKey } from "@solana/web3.js";
+import { useTranslation } from "react-i18next";
 import { withRouter } from "react-router";
 import { RouteComponentProps } from "react-router-dom";
 import { COLORS } from "../../muiTheme";
@@ -42,6 +43,7 @@ interface Migration extends RouteComponentProps<RouteParams> {
 }
 
 const SolanaRoot: React.FC<Migration> = (props) => {
+  const { t } = useTranslation();
   const legacyAsset: string = props.match.params.legacyAsset;
   const fromTokenAccount: string = props.match.params.fromTokenAccount;
   const targetAsset: string | undefined = MIGRATION_ASSET_MAP.get(legacyAsset);
@@ -61,13 +63,13 @@ const SolanaRoot: React.FC<Migration> = (props) => {
   if (!fromMint || !toMint) {
     content = (
       <Typography style={{ textAlign: "center" }}>
-        This asset is not eligible for migration.
+        {t("This asset is not eligible for migration.")}
       </Typography>
     );
   } else if (!fromTokenAcct) {
     content = (
       <Typography style={{ textAlign: "center" }}>
-        Invalid token account.
+        {t("Invalid token account.")}
       </Typography>
     );
   } else {
@@ -84,6 +86,7 @@ const SolanaRoot: React.FC<Migration> = (props) => {
 };
 
 const EthereumRoot: React.FC<Migration> = (props) => {
+  const { t } = useTranslation();
   const legacyAsset: string = props.match.params.legacyAsset;
   const assetMap = getMigrationAssetMap(props.chainId);
   const targetPool = assetMap.get(getAddress(legacyAsset));
@@ -92,7 +95,7 @@ const EthereumRoot: React.FC<Migration> = (props) => {
   if (!legacyAsset || !targetPool) {
     content = (
       <Typography style={{ textAlign: "center" }}>
-        This asset is not eligible for migration.
+        {t("This asset is not eligible for migration.")}
       </Typography>
     );
   } else {
@@ -105,6 +108,7 @@ const EthereumRoot: React.FC<Migration> = (props) => {
 };
 
 const MigrationRoot: React.FC<Migration> = (props) => {
+  const { t } = useTranslation();
   const classes = useStyles();
   let content = null;
 
@@ -118,9 +122,9 @@ const MigrationRoot: React.FC<Migration> = (props) => {
     <Container maxWidth="md">
       <HeaderText
         white
-        subtitle="Convert assets from other bridges to Wormhole V2 tokens"
+        subtitle={t("Convert assets from other bridges to Wormhole V2 tokens")}
       >
-        Migrate Assets
+        {t("Migrate Assets")}
       </HeaderText>
       <Paper className={classes.mainPaper}>{content}</Paper>
     </Container>
