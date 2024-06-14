@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as TokenBridgeForChainContractJson } from "../token_bridge/TokenBridgeForChain.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -49,6 +56,22 @@ export namespace TokenBridgeForChainTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    completeTransfer: {
+      params: CallContractParams<{ vaa: HexString; caller: Address }>;
+      result: CallContractResult<null>;
+    };
+    destroyUnexecutedSequenceContracts: {
+      params: CallContractParams<{ paths: HexString }>;
+      result: CallContractResult<null>;
+    };
+    deposit: {
+      params: CallContractParams<{ from: Address; alphAmount: bigint }>;
+      result: CallContractResult<null>;
+    };
+    withdraw: {
+      params: CallContractParams<{ alphAmount: bigint }>;
+      result: CallContractResult<null>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -62,12 +85,57 @@ export namespace TokenBridgeForChainTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    nextSendSequence: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    completeTransfer: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    destroyUnexecutedSequenceContracts: {
+      params: SignExecuteContractMethodParams<{ paths: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    deposit: {
+      params: SignExecuteContractMethodParams<{
+        from: Address;
+        alphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    withdraw: {
+      params: SignExecuteContractMethodParams<{ alphAmount: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   TokenBridgeForChainInstance,
   TokenBridgeForChainTypes.Fields
 > {
+  encodeFields(fields: TokenBridgeForChainTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeForChainTypes.Fields;
+  }
+
   consts = {
     Path: {
       AttestTokenHandler: "00",
@@ -118,94 +186,126 @@ class Factory extends ContractFactory<
 
   tests = {
     setExecuted: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { offset: bigint; current: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "setExecuted", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "setExecuted", params, getContractByCodeHash);
     },
     compact: async (
       params: Omit<
-        TestContractParams<TokenBridgeForChainTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeForChainTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "compact", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "compact", params, getContractByCodeHash);
     },
     checkSequenceInSubContract: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { seq: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "checkSequenceInSubContract", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "checkSequenceInSubContract",
+        params,
+        getContractByCodeHash
+      );
     },
     checkSequence: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { seq: bigint }
       >
-    ): Promise<TestContractResult<boolean>> => {
-      return testMethod(this, "checkSequence", params);
+    ): Promise<TestContractResultWithoutMaps<boolean>> => {
+      return testMethod(this, "checkSequence", params, getContractByCodeHash);
     },
     nextSendSequence: async (
       params: Omit<
-        TestContractParams<TokenBridgeForChainTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeForChainTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "nextSendSequence", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(
+        this,
+        "nextSendSequence",
+        params,
+        getContractByCodeHash
+      );
     },
     checkCompleteTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { vaa: HexString }
       >
-    ): Promise<TestContractResult<[boolean, HexString]>> => {
-      return testMethod(this, "checkCompleteTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<[boolean, HexString]>> => {
+      return testMethod(
+        this,
+        "checkCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     parseCompleteTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { payload: HexString }
       >
     ): Promise<
-      TestContractResult<[bigint, HexString, bigint, Address, bigint]>
+      TestContractResultWithoutMaps<
+        [bigint, HexString, bigint, Address, bigint]
+      >
     > => {
-      return testMethod(this, "parseCompleteTransfer", params);
+      return testMethod(
+        this,
+        "parseCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     completeTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { vaa: HexString; caller: Address }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "completeTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     destroyUnexecutedSequenceContracts: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { paths: HexString }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "destroyUnexecutedSequenceContracts", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params,
+        getContractByCodeHash
+      );
     },
     deposit: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { from: Address; alphAmount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "deposit", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "deposit", params, getContractByCodeHash);
     },
     withdraw: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeForChainTypes.Fields,
         { alphAmount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "withdraw", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "withdraw", params, getContractByCodeHash);
     },
   };
 }
@@ -215,7 +315,8 @@ export const TokenBridgeForChain = new Factory(
   Contract.fromJson(
     TokenBridgeForChainContractJson,
     "",
-    "58443a1005d6791f07d0701f4ef91ec367777ab67be27990a6b8fcb7c84e7240"
+    "58443a1005d6791f07d0701f4ef91ec367777ab67be27990a6b8fcb7c84e7240",
+    []
   )
 );
 
@@ -242,6 +343,107 @@ export class TokenBridgeForChainInstance extends ContractInstance {
         params === undefined ? {} : params,
         getContractByCodeHash
       );
+    },
+    completeTransfer: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"completeTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.CallMethodResult<"completeTransfer">
+    > => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    destroyUnexecutedSequenceContracts: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"destroyUnexecutedSequenceContracts">
+    ): Promise<
+      TokenBridgeForChainTypes.CallMethodResult<"destroyUnexecutedSequenceContracts">
+    > => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params,
+        getContractByCodeHash
+      );
+    },
+    deposit: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"deposit">
+    ): Promise<TokenBridgeForChainTypes.CallMethodResult<"deposit">> => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "deposit",
+        params,
+        getContractByCodeHash
+      );
+    },
+    withdraw: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"withdraw">
+    ): Promise<TokenBridgeForChainTypes.CallMethodResult<"withdraw">> => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "withdraw",
+        params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    nextSendSequence: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"nextSendSequence">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"nextSendSequence">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "nextSendSequence",
+        params
+      );
+    },
+    completeTransfer: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"completeTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"completeTransfer">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "completeTransfer",
+        params
+      );
+    },
+    destroyUnexecutedSequenceContracts: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"destroyUnexecutedSequenceContracts">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"destroyUnexecutedSequenceContracts">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params
+      );
+    },
+    deposit: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"deposit">
+    ): Promise<TokenBridgeForChainTypes.SignExecuteMethodResult<"deposit">> => {
+      return signExecuteMethod(TokenBridgeForChain, this, "deposit", params);
+    },
+    withdraw: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"withdraw">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"withdraw">
+    > => {
+      return signExecuteMethod(TokenBridgeForChain, this, "withdraw", params);
     },
   };
 

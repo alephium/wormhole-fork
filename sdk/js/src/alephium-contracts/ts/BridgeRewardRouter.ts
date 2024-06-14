@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as BridgeRewardRouterContractJson } from "../token_bridge/BridgeRewardRouter.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -34,32 +41,98 @@ export namespace BridgeRewardRouterTypes {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    completeTransfer: {
+      params: CallContractParams<{
+        tokenBridgeForChain: HexString;
+        vaa: HexString;
+        caller: Address;
+      }>;
+      result: CallContractResult<null>;
+    };
+    addRewards: {
+      params: CallContractParams<{ caller: Address; amount: bigint }>;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    completeTransfer: {
+      params: SignExecuteContractMethodParams<{
+        tokenBridgeForChain: HexString;
+        vaa: HexString;
+        caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    addRewards: {
+      params: SignExecuteContractMethodParams<{
+        caller: Address;
+        amount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   BridgeRewardRouterInstance,
   BridgeRewardRouterTypes.Fields
 > {
+  encodeFields(fields: BridgeRewardRouterTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as BridgeRewardRouterTypes.Fields;
+  }
+
   at(address: string): BridgeRewardRouterInstance {
     return new BridgeRewardRouterInstance(address);
   }
 
   tests = {
     completeTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         BridgeRewardRouterTypes.Fields,
         { tokenBridgeForChain: HexString; vaa: HexString; caller: Address }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "completeTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     addRewards: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         BridgeRewardRouterTypes.Fields,
         { caller: Address; amount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "addRewards", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "addRewards", params, getContractByCodeHash);
     },
   };
 }
@@ -69,7 +142,8 @@ export const BridgeRewardRouter = new Factory(
   Contract.fromJson(
     BridgeRewardRouterContractJson,
     "",
-    "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b"
+    "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b",
+    []
   )
 );
 
@@ -82,4 +156,55 @@ export class BridgeRewardRouterInstance extends ContractInstance {
   async fetchState(): Promise<BridgeRewardRouterTypes.State> {
     return fetchContractState(BridgeRewardRouter, this);
   }
+
+  methods = {
+    completeTransfer: async (
+      params: BridgeRewardRouterTypes.CallMethodParams<"completeTransfer">
+    ): Promise<
+      BridgeRewardRouterTypes.CallMethodResult<"completeTransfer">
+    > => {
+      return callMethod(
+        BridgeRewardRouter,
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    addRewards: async (
+      params: BridgeRewardRouterTypes.CallMethodParams<"addRewards">
+    ): Promise<BridgeRewardRouterTypes.CallMethodResult<"addRewards">> => {
+      return callMethod(
+        BridgeRewardRouter,
+        this,
+        "addRewards",
+        params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    completeTransfer: async (
+      params: BridgeRewardRouterTypes.SignExecuteMethodParams<"completeTransfer">
+    ): Promise<
+      BridgeRewardRouterTypes.SignExecuteMethodResult<"completeTransfer">
+    > => {
+      return signExecuteMethod(
+        BridgeRewardRouter,
+        this,
+        "completeTransfer",
+        params
+      );
+    },
+    addRewards: async (
+      params: BridgeRewardRouterTypes.SignExecuteMethodParams<"addRewards">
+    ): Promise<
+      BridgeRewardRouterTypes.SignExecuteMethodResult<"addRewards">
+    > => {
+      return signExecuteMethod(BridgeRewardRouter, this, "addRewards", params);
+    },
+  };
 }

@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as AttestTokenHandlerContractJson } from "../token_bridge/AttestTokenHandler.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -39,12 +46,88 @@ export namespace AttestTokenHandlerTypes {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    createLocalTokenPool: {
+      params: CallContractParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+        tokenAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    createRemoteTokenPool: {
+      params: CallContractParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    updateRemoteTokenPool: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    createLocalTokenPool: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+        tokenAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    createRemoteTokenPool: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updateRemoteTokenPool: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   AttestTokenHandlerInstance,
   AttestTokenHandlerTypes.Fields
 > {
+  encodeFields(fields: AttestTokenHandlerTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as AttestTokenHandlerTypes.Fields;
+  }
+
   consts = {
     Path: {
       AttestTokenHandler: "00",
@@ -95,17 +178,24 @@ class Factory extends ContractFactory<
 
   tests = {
     parseAttestToken: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         AttestTokenHandlerTypes.Fields,
         { vaa: HexString }
       >
     ): Promise<
-      TestContractResult<[HexString, HexString, HexString, bigint, bigint]>
+      TestContractResultWithoutMaps<
+        [HexString, HexString, HexString, bigint, bigint]
+      >
     > => {
-      return testMethod(this, "parseAttestToken", params);
+      return testMethod(
+        this,
+        "parseAttestToken",
+        params,
+        getContractByCodeHash
+      );
     },
     createLocalTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         AttestTokenHandlerTypes.Fields,
         {
           vaa: HexString;
@@ -114,32 +204,52 @@ class Factory extends ContractFactory<
           tokenAmount: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createLocalTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createLocalTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     createRemoteTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         AttestTokenHandlerTypes.Fields,
         { vaa: HexString; payer: Address; createContractAlphAmount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createRemoteTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     updateRemoteTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         AttestTokenHandlerTypes.Fields,
         { vaa: HexString }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updateRemoteTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updateRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     removeTrailingZeros: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         AttestTokenHandlerTypes.Fields,
         { bytes: HexString }
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "removeTrailingZeros", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "removeTrailingZeros",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 }
@@ -149,7 +259,8 @@ export const AttestTokenHandler = new Factory(
   Contract.fromJson(
     AttestTokenHandlerContractJson,
     "",
-    "a8d5b3de6a6267d4a12eb793dc90832b0b0e5b84f54c5458d0fedfe73dc0871c"
+    "a8d5b3de6a6267d4a12eb793dc90832b0b0e5b84f54c5458d0fedfe73dc0871c",
+    []
   )
 );
 
@@ -162,4 +273,87 @@ export class AttestTokenHandlerInstance extends ContractInstance {
   async fetchState(): Promise<AttestTokenHandlerTypes.State> {
     return fetchContractState(AttestTokenHandler, this);
   }
+
+  methods = {
+    createLocalTokenPool: async (
+      params: AttestTokenHandlerTypes.CallMethodParams<"createLocalTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.CallMethodResult<"createLocalTokenPool">
+    > => {
+      return callMethod(
+        AttestTokenHandler,
+        this,
+        "createLocalTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+    createRemoteTokenPool: async (
+      params: AttestTokenHandlerTypes.CallMethodParams<"createRemoteTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.CallMethodResult<"createRemoteTokenPool">
+    > => {
+      return callMethod(
+        AttestTokenHandler,
+        this,
+        "createRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateRemoteTokenPool: async (
+      params: AttestTokenHandlerTypes.CallMethodParams<"updateRemoteTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.CallMethodResult<"updateRemoteTokenPool">
+    > => {
+      return callMethod(
+        AttestTokenHandler,
+        this,
+        "updateRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    createLocalTokenPool: async (
+      params: AttestTokenHandlerTypes.SignExecuteMethodParams<"createLocalTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.SignExecuteMethodResult<"createLocalTokenPool">
+    > => {
+      return signExecuteMethod(
+        AttestTokenHandler,
+        this,
+        "createLocalTokenPool",
+        params
+      );
+    },
+    createRemoteTokenPool: async (
+      params: AttestTokenHandlerTypes.SignExecuteMethodParams<"createRemoteTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.SignExecuteMethodResult<"createRemoteTokenPool">
+    > => {
+      return signExecuteMethod(
+        AttestTokenHandler,
+        this,
+        "createRemoteTokenPool",
+        params
+      );
+    },
+    updateRemoteTokenPool: async (
+      params: AttestTokenHandlerTypes.SignExecuteMethodParams<"updateRemoteTokenPool">
+    ): Promise<
+      AttestTokenHandlerTypes.SignExecuteMethodResult<"updateRemoteTokenPool">
+    > => {
+      return signExecuteMethod(
+        AttestTokenHandler,
+        this,
+        "updateRemoteTokenPool",
+        params
+      );
+    },
+  };
 }

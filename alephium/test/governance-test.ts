@@ -3,10 +3,10 @@ import {
   InputAsset,
   TestContractResult,
   binToHex,
-  Project,
   web3,
   TestContractParams,
-  HexString
+  HexString,
+  ONE_ALPH
 } from '@alephium/web3'
 import {
   CHAIN_ID_ALEPHIUM,
@@ -15,11 +15,9 @@ import {
   expectAssertionFailed,
   expectOneOfError,
   GuardianSet,
-  oneAlph,
   randomAssetAddress,
   VAA,
   VAABody,
-  buildProject,
   getContractState,
   randomContractAddress
 } from './fixtures/wormhole-fixture'
@@ -38,16 +36,15 @@ import {
   createGovernanceWithGuardianSets
 } from './fixtures/governance-fixture'
 import * as blake from 'blakejs'
-import { Governance, GovernanceTypes } from '../artifacts/ts'
+import { Empty, Governance, GovernanceTypes, GovernanceV1 } from '../artifacts/ts'
 import { expectAssertionError } from '@alephium/web3-test'
 
 describe('test governance', () => {
   const testGuardianSet = GuardianSet.random(18, 1)
   const governanceContractAddress = randomContractAddress()
 
-  beforeAll(async () => {
+  beforeAll(() => {
     web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
-    await buildProject()
   })
 
   function createTestParams(
@@ -278,12 +275,12 @@ describe('test governance', () => {
 
   it('should transfer message fee to recipient', async () => {
     const asset: Asset = {
-      alphAmount: oneAlph * 4n
+      alphAmount: ONE_ALPH * 4n
     }
     const inputAsset: InputAsset = {
       address: randomAssetAddress(),
       asset: {
-        alphAmount: oneAlph * 4n
+        alphAmount: ONE_ALPH * 4n
       }
     }
     const recipient = randomBytes(32)
@@ -311,7 +308,6 @@ describe('test governance', () => {
   })
 
   it('should test upgrade contract', async () => {
-    await buildProject()
     const governanceFixture = createGovernance(undefined, undefined, governanceContractAddress)
     async function upgrade(contractUpgrade: ContractUpgrade): Promise<TestContractResult<null>> {
       const vaaBody = new VAABody(
@@ -331,7 +327,7 @@ describe('test governance', () => {
     }
 
     {
-      const v1 = Project.contract('GovernanceV1')
+      const v1 = GovernanceV1.contract
       const newContractCode = v1.bytecode
       const contractUpgrade = new ContractUpgrade(newContractCode)
       const testResult = await upgrade(contractUpgrade)
@@ -340,7 +336,7 @@ describe('test governance', () => {
       expect(newContract.bytecode).toEqual(newContractCode)
     }
 
-    const v2 = Project.contract('Empty')
+    const v2 = Empty.contract
     {
       await expectAssertionFailed(async () => {
         const newContractCode = v2.bytecode

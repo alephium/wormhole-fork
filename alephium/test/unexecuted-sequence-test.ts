@@ -1,22 +1,15 @@
-import { addressFromContractId, web3, InputAsset, ContractDestroyedEvent } from '@alephium/web3'
+import { addressFromContractId, web3, InputAsset, ContractDestroyedEvent, ONE_ALPH } from '@alephium/web3'
 import { UnexecutedSequenceTest, UnexecutedSequenceTypes } from '../artifacts/ts'
 import { createUnexecutedSequence } from './fixtures/sequence-fixture'
-import {
-  buildProject,
-  expectAssertionFailed,
-  oneAlph,
-  randomAssetAddress,
-  randomContractId
-} from './fixtures/wormhole-fixture'
+import { expectAssertionFailed, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe('test unexecuted sequence', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
   const allExecuted = (BigInt(1) << BigInt(256)) - 1n
   const caller = randomAssetAddress()
-  const inputAsset: InputAsset[] = [{ address: caller, asset: { alphAmount: oneAlph } }]
+  const inputAsset: InputAsset[] = [{ address: caller, asset: { alphAmount: ONE_ALPH } }]
 
   it('should check sequence passed', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const startSequence = 256n
     let sequences = 0n
@@ -36,7 +29,6 @@ describe('test unexecuted sequence', () => {
   }, 50000)
 
   it('should check sequence failed if sequence executed', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const startSequence = 256n
     for (let seq = 0n; seq < 256n; seq++) {
@@ -56,7 +48,6 @@ describe('test unexecuted sequence', () => {
   }, 60000)
 
   it('should check sequence failed if sequence is out of range', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const startSequence = 256n
     const sequences = [0n, startSequence - 1n, startSequence * 2n, startSequence * 10n]
@@ -76,7 +67,6 @@ describe('test unexecuted sequence', () => {
   })
 
   it('should destroy contract if all sequences executed', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const startSequence = 0n
     const unexecutedSequenceOffset = 1n
@@ -91,7 +81,7 @@ describe('test unexecuted sequence', () => {
     })
 
     expect(testResult.contracts.length).toEqual(1)
-    expect(testResult.contracts[0].asset).toEqual({ alphAmount: 2n * oneAlph, tokens: [] })
+    expect(testResult.contracts[0].asset).toEqual({ alphAmount: 2n * ONE_ALPH, tokens: [] })
     expect(testResult.events.length).toEqual(1)
     const event = testResult.events[0] as ContractDestroyedEvent
     expect(event.name).toEqual('ContractDestroyed')
@@ -99,7 +89,6 @@ describe('test unexecuted sequence', () => {
   })
 
   it('should destroy contract manually', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const unexecutedSequenceFixture = createUnexecutedSequence(parentId, 0n, 0n)
     const testResult = await UnexecutedSequenceTest.tests.destroy({
@@ -110,7 +99,7 @@ describe('test unexecuted sequence', () => {
     })
 
     expect(testResult.contracts.length).toEqual(1)
-    expect(testResult.contracts[0].asset).toEqual({ alphAmount: 2n * oneAlph, tokens: [] })
+    expect(testResult.contracts[0].asset).toEqual({ alphAmount: 2n * ONE_ALPH, tokens: [] })
     expect(testResult.events.length).toEqual(1)
     const event = testResult.events[0] as ContractDestroyedEvent
     expect(event.name).toEqual('ContractDestroyed')
@@ -118,7 +107,6 @@ describe('test unexecuted sequence', () => {
   })
 
   it('should only parent contract can call these methods', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const unexecutedSequenceFixture = createUnexecutedSequence(randomContractId(), 0n, 0n)
     expectAssertionFailed(async () => {

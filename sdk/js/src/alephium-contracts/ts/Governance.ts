@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as GovernanceContractJson } from "../Governance.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -57,6 +64,17 @@ export namespace GovernanceTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    publishWormholeMessage: {
+      params: CallContractParams<{
+        payer: Address;
+        targetChainId: bigint;
+        sequence: bigint;
+        nonce: HexString;
+        payload: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
     parseAndVerifyVAA: {
       params: CallContractParams<{ data: HexString; isGovernanceVAA: boolean }>;
       result: CallContractResult<
@@ -72,6 +90,22 @@ export namespace GovernanceTypes {
       }>;
       result: CallContractResult<[bigint, bigint, HexString]>;
     };
+    submitContractUpgrade: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    submitNewGuardianSet: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    submitSetMessageFee: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    submitTransferFees: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -85,12 +119,78 @@ export namespace GovernanceTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    getMessageFee: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    publishWormholeMessage: {
+      params: SignExecuteContractMethodParams<{
+        payer: Address;
+        targetChainId: bigint;
+        sequence: bigint;
+        nonce: HexString;
+        payload: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    parseAndVerifyVAA: {
+      params: SignExecuteContractMethodParams<{
+        data: HexString;
+        isGovernanceVAA: boolean;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    parseAndVerifyGovernanceVAAGeneric: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        targetSequence: bigint;
+        coreModule: bigint;
+        action: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    submitContractUpgrade: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    submitNewGuardianSet: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    submitSetMessageFee: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    submitTransferFees: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   GovernanceInstance,
   GovernanceTypes.Fields
 > {
+  encodeFields(fields: GovernanceTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as GovernanceTypes.Fields;
+  }
+
   eventIndex = { WormholeMessage: 0 };
   consts = {
     Version: "01",
@@ -146,14 +246,14 @@ class Factory extends ContractFactory<
   tests = {
     getMessageFee: async (
       params: Omit<
-        TestContractParams<GovernanceTypes.Fields, never>,
+        TestContractParamsWithoutMaps<GovernanceTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getMessageFee", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getMessageFee", params, getContractByCodeHash);
     },
     publishWormholeMessage: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         GovernanceTypes.Fields,
         {
           payer: Address;
@@ -164,21 +264,33 @@ class Factory extends ContractFactory<
           consistencyLevel: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "publishWormholeMessage", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "publishWormholeMessage",
+        params,
+        getContractByCodeHash
+      );
     },
     parseAndVerifyVAA: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         GovernanceTypes.Fields,
         { data: HexString; isGovernanceVAA: boolean }
       >
     ): Promise<
-      TestContractResult<[bigint, bigint, HexString, bigint, HexString]>
+      TestContractResultWithoutMaps<
+        [bigint, bigint, HexString, bigint, HexString]
+      >
     > => {
-      return testMethod(this, "parseAndVerifyVAA", params);
+      return testMethod(
+        this,
+        "parseAndVerifyVAA",
+        params,
+        getContractByCodeHash
+      );
     },
     parseAndVerifyGovernanceVAAGeneric: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         GovernanceTypes.Fields,
         {
           vaa: HexString;
@@ -187,52 +299,104 @@ class Factory extends ContractFactory<
           action: HexString;
         }
       >
-    ): Promise<TestContractResult<[bigint, bigint, HexString]>> => {
-      return testMethod(this, "parseAndVerifyGovernanceVAAGeneric", params);
+    ): Promise<TestContractResultWithoutMaps<[bigint, bigint, HexString]>> => {
+      return testMethod(
+        this,
+        "parseAndVerifyGovernanceVAAGeneric",
+        params,
+        getContractByCodeHash
+      );
     },
     parseAndVerifyGovernanceVAA: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         GovernanceTypes.Fields,
         { vaa: HexString; action: HexString }
       >
-    ): Promise<TestContractResult<[bigint, HexString]>> => {
-      return testMethod(this, "parseAndVerifyGovernanceVAA", params);
+    ): Promise<TestContractResultWithoutMaps<[bigint, HexString]>> => {
+      return testMethod(
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params,
+        getContractByCodeHash
+      );
     },
     getGuardiansInfo: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         GovernanceTypes.Fields,
         { guardianSetIndex: bigint }
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getGuardiansInfo", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(
+        this,
+        "getGuardiansInfo",
+        params,
+        getContractByCodeHash
+      );
     },
     submitContractUpgrade: async (
-      params: TestContractParams<GovernanceTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "submitContractUpgrade", params);
+      params: TestContractParamsWithoutMaps<
+        GovernanceTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "submitContractUpgrade",
+        params,
+        getContractByCodeHash
+      );
     },
     updatePreviousGuardianSet: async (
       params: Omit<
-        TestContractParams<GovernanceTypes.Fields, never>,
+        TestContractParamsWithoutMaps<GovernanceTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updatePreviousGuardianSet", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updatePreviousGuardianSet",
+        params,
+        getContractByCodeHash
+      );
     },
     submitNewGuardianSet: async (
-      params: TestContractParams<GovernanceTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "submitNewGuardianSet", params);
+      params: TestContractParamsWithoutMaps<
+        GovernanceTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "submitNewGuardianSet",
+        params,
+        getContractByCodeHash
+      );
     },
     submitSetMessageFee: async (
-      params: TestContractParams<GovernanceTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "submitSetMessageFee", params);
+      params: TestContractParamsWithoutMaps<
+        GovernanceTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "submitSetMessageFee",
+        params,
+        getContractByCodeHash
+      );
     },
     submitTransferFees: async (
-      params: TestContractParams<GovernanceTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "submitTransferFees", params);
+      params: TestContractParamsWithoutMaps<
+        GovernanceTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "submitTransferFees",
+        params,
+        getContractByCodeHash
+      );
     },
   };
 }
@@ -242,7 +406,8 @@ export const Governance = new Factory(
   Contract.fromJson(
     GovernanceContractJson,
     "",
-    "7ebf06319b04aef7a7013a42ea2b7fccb3fc86178c27240aa2b2678d9068d9c7"
+    "7ebf06319b04aef7a7013a42ea2b7fccb3fc86178c27240aa2b2678d9068d9c7",
+    []
   )
 );
 
@@ -285,6 +450,17 @@ export class GovernanceInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    publishWormholeMessage: async (
+      params: GovernanceTypes.CallMethodParams<"publishWormholeMessage">
+    ): Promise<GovernanceTypes.CallMethodResult<"publishWormholeMessage">> => {
+      return callMethod(
+        Governance,
+        this,
+        "publishWormholeMessage",
+        params,
+        getContractByCodeHash
+      );
+    },
     parseAndVerifyVAA: async (
       params: GovernanceTypes.CallMethodParams<"parseAndVerifyVAA">
     ): Promise<GovernanceTypes.CallMethodResult<"parseAndVerifyVAA">> => {
@@ -308,6 +484,129 @@ export class GovernanceInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
+    },
+    submitContractUpgrade: async (
+      params: GovernanceTypes.CallMethodParams<"submitContractUpgrade">
+    ): Promise<GovernanceTypes.CallMethodResult<"submitContractUpgrade">> => {
+      return callMethod(
+        Governance,
+        this,
+        "submitContractUpgrade",
+        params,
+        getContractByCodeHash
+      );
+    },
+    submitNewGuardianSet: async (
+      params: GovernanceTypes.CallMethodParams<"submitNewGuardianSet">
+    ): Promise<GovernanceTypes.CallMethodResult<"submitNewGuardianSet">> => {
+      return callMethod(
+        Governance,
+        this,
+        "submitNewGuardianSet",
+        params,
+        getContractByCodeHash
+      );
+    },
+    submitSetMessageFee: async (
+      params: GovernanceTypes.CallMethodParams<"submitSetMessageFee">
+    ): Promise<GovernanceTypes.CallMethodResult<"submitSetMessageFee">> => {
+      return callMethod(
+        Governance,
+        this,
+        "submitSetMessageFee",
+        params,
+        getContractByCodeHash
+      );
+    },
+    submitTransferFees: async (
+      params: GovernanceTypes.CallMethodParams<"submitTransferFees">
+    ): Promise<GovernanceTypes.CallMethodResult<"submitTransferFees">> => {
+      return callMethod(
+        Governance,
+        this,
+        "submitTransferFees",
+        params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    getMessageFee: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"getMessageFee">
+    ): Promise<GovernanceTypes.SignExecuteMethodResult<"getMessageFee">> => {
+      return signExecuteMethod(Governance, this, "getMessageFee", params);
+    },
+    publishWormholeMessage: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"publishWormholeMessage">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"publishWormholeMessage">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "publishWormholeMessage",
+        params
+      );
+    },
+    parseAndVerifyVAA: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"parseAndVerifyVAA">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"parseAndVerifyVAA">
+    > => {
+      return signExecuteMethod(Governance, this, "parseAndVerifyVAA", params);
+    },
+    parseAndVerifyGovernanceVAAGeneric: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"parseAndVerifyGovernanceVAAGeneric">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"parseAndVerifyGovernanceVAAGeneric">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "parseAndVerifyGovernanceVAAGeneric",
+        params
+      );
+    },
+    submitContractUpgrade: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"submitContractUpgrade">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"submitContractUpgrade">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "submitContractUpgrade",
+        params
+      );
+    },
+    submitNewGuardianSet: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"submitNewGuardianSet">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"submitNewGuardianSet">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "submitNewGuardianSet",
+        params
+      );
+    },
+    submitSetMessageFee: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"submitSetMessageFee">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"submitSetMessageFee">
+    > => {
+      return signExecuteMethod(Governance, this, "submitSetMessageFee", params);
+    },
+    submitTransferFees: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"submitTransferFees">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"submitTransferFees">
+    > => {
+      return signExecuteMethod(Governance, this, "submitTransferFees", params);
     },
   };
 

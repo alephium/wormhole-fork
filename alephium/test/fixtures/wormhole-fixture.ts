@@ -3,23 +3,16 @@ import { ethers } from 'ethers'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { ContractState, contractIdFromAddress, binToHex, Project, encodeI256, Fields } from '@alephium/web3'
+import { ContractState, contractIdFromAddress, binToHex, encodeI256, Fields, ONE_ALPH } from '@alephium/web3'
 import { MathTest } from '../../artifacts/ts'
 
 export const CHAIN_ID_ALEPHIUM = 255
-export const dustAmount = BigInt('1000000000000000')
-export const oneAlph = BigInt('1000000000000000000')
-export const minimalAlphInContract = oneAlph
+export const dustAmount = 1000000000000000n
+export const minimalAlphInContract = ONE_ALPH / 10n
 export const tokenMax = (1n << 256n) - 1n
-export const gasPrice = BigInt('100000000000')
-export const maxGasPerTx = BigInt('625000')
+export const gasPrice = 100000000000n
+export const maxGasPerTx = 5000000n
 export const defaultGasFee = gasPrice * maxGasPerTx
-
-export async function buildProject(): Promise<void> {
-  if (typeof Project.currentProject === 'undefined') {
-    await Project.build({ ignoreUnusedConstantsWarnings: true })
-  }
-}
 
 export class ContractFixture<T extends Fields> {
   selfState: ContractState<T>
@@ -255,7 +248,7 @@ export function randomContractAddress(): string {
 }
 
 export function alph(n: number): bigint {
-  return oneAlph * BigInt(n)
+  return ONE_ALPH * BigInt(n)
 }
 
 export function encodeU256(value: bigint): Uint8Array {
@@ -276,11 +269,11 @@ async function expectFailed<T>(func: () => Promise<T>, details: string[]) {
 }
 
 export async function expectAssertionFailed<T>(func: () => Promise<T>) {
-  await expectFailed(func, ['AssertionFailed', 'AssertionFailedWithErrorCode'])
+  await expectFailed(func, ['Assertion Failed'])
 }
 
 export async function expectNotEnoughBalance<T>(func: () => Promise<T>) {
-  await expectFailed(func, ['NotEnoughApprovedBalance'])
+  await expectFailed(func, ['Not enough approved balance'])
 }
 
 export async function expectOneOfError<T>(func: () => Promise<T>, errors: string[]) {

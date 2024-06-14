@@ -1,5 +1,5 @@
 {
-  "version": "v2.5.6",
+  "version": "v2.5.7",
   "name": "CreateLocalAttestTokenHandler",
   "bytecodeTemplate": "01010300000009{1}{2}a2{1}{2}0e0c{0}0102",
   "fieldsSig": {

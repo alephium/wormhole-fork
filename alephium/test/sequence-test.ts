@@ -4,18 +4,12 @@ import {
   InputAsset,
   subContractId,
   ContractDestroyedEvent,
-  ContractCreatedEvent
+  ContractCreatedEvent,
+  ONE_ALPH
 } from '@alephium/web3'
 import { SequenceTest, SequenceTestTypes, UnexecutedSequenceTypes } from '../artifacts/ts'
 import { createSequence, createUnexecutedSequence } from './fixtures/sequence-fixture'
-import {
-  buildProject,
-  defaultGasFee,
-  expectAssertionFailed,
-  oneAlph,
-  randomAssetAddress,
-  randomContractId
-} from './fixtures/wormhole-fixture'
+import { defaultGasFee, expectAssertionFailed, randomAssetAddress, randomContractId } from './fixtures/wormhole-fixture'
 
 describe('test sequence', () => {
   web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
@@ -24,12 +18,11 @@ describe('test sequence', () => {
   const inputAsset: InputAsset[] = [
     {
       address: caller,
-      asset: { alphAmount: oneAlph }
+      asset: { alphAmount: ONE_ALPH }
     }
   ]
 
   it('should execute correctly', async () => {
-    await buildProject()
     const sequenceFixture = createSequence(0n, 0n, 0n)
     for (let seq = 0n; seq < 256n; seq++) {
       const testResult = await SequenceTest.tests.check({
@@ -67,7 +60,6 @@ describe('test sequence', () => {
   }, 90000)
 
   it('should increase executed sequence', async () => {
-    await buildProject()
     const sequenceFixture = createSequence(512n, allExecuted, allExecuted)
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
@@ -85,11 +77,10 @@ describe('test sequence', () => {
   })
 
   it('should check sequence failed and create unexecuted sequence subcontract', async () => {
-    await buildProject()
     const sequenceFixture = createSequence(0n, 1n, 1n)
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
-      initialAsset: { alphAmount: oneAlph * 2n },
+      initialAsset: { alphAmount: ONE_ALPH * 2n },
       address: sequenceFixture.address,
       testArgs: { seq: 768n },
       inputAssets: inputAsset,
@@ -105,8 +96,8 @@ describe('test sequence', () => {
     expect(unexecutedSequenceContractState.fields.begin).toEqual(0n)
     expect(unexecutedSequenceContractState.fields.sequences).toEqual(1n)
 
-    const sequenceOutput = testResult.txOutputs[1]
-    expect(sequenceOutput.alphAmount).toEqual(oneAlph)
+    const sequenceOutput = testResult.txOutputs.find((o) => o.address === sequenceFixture.address)!
+    expect(sequenceOutput.alphAmount).toEqual(ONE_ALPH)
     const unexecutedSequenceOutput = testResult.txOutputs[0]
     expect(unexecutedSequenceOutput.address).toEqual(
       addressFromContractId(subContractId(sequenceFixture.contractId, '0000000000000000', 0))
@@ -114,7 +105,6 @@ describe('test sequence', () => {
   })
 
   it('should failed when executed repeatedly', async () => {
-    await buildProject()
     const unexecutedSequenceTemplateId = randomContractId()
     const sequenceFixture = createSequence(0n, allExecuted, 0n)
     for (let seq = 0n; seq < 256n; seq++) {
@@ -148,13 +138,12 @@ describe('test sequence', () => {
   }, 120000)
 
   it('should check sequence succeed and create unexecuted sequence subcontract', async () => {
-    await buildProject()
     const start = 256n
     const firstNext256 = BigInt(0xff) << 248n
     const sequenceFixture = createSequence(start, firstNext256, 0n)
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
-      initialAsset: { alphAmount: oneAlph * 2n },
+      initialAsset: { alphAmount: ONE_ALPH * 2n },
       address: sequenceFixture.address,
       testArgs: { seq: start + 513n },
       existingContracts: sequenceFixture.dependencies,
@@ -165,7 +154,7 @@ describe('test sequence', () => {
     expect(sequenceContractState.fields.start).toEqual(start + 256n)
     expect(sequenceContractState.fields.firstNext256).toEqual(0n)
     expect(sequenceContractState.fields.secondNext256).toEqual(2n)
-    expect(sequenceContractState.asset).toEqual({ alphAmount: oneAlph, tokens: [] })
+    expect(sequenceContractState.asset).toEqual({ alphAmount: ONE_ALPH, tokens: [] })
 
     const subContractOutput = testResult.contracts[0] as UnexecutedSequenceTypes.State
     expect(subContractOutput.fields.begin).toEqual(256n)
@@ -178,7 +167,6 @@ describe('test sequence', () => {
   })
 
   it('should mark old sequence as done', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const sequenceFixture = createSequence(512n, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001', 0)
@@ -187,7 +175,7 @@ describe('test sequence', () => {
     for (let seq = 0n; seq < 8n; seq++) {
       const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
-        initialAsset: { alphAmount: oneAlph * 10n },
+        initialAsset: { alphAmount: ONE_ALPH * 10n },
         address: sequenceFixture.address,
         testArgs: { seq: 256n + seq },
         existingContracts: Array.prototype.concat(sequenceFixture.dependencies, unexecutedSequenceFixture.states()),
@@ -205,7 +193,6 @@ describe('test sequence', () => {
   })
 
   it('should failed if old sequences executed', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const sequenceInfo = createSequence(512n, 0n, 0n, parentId)
     const unexecutedSequenceContractId = subContractId(parentId, '0000000000000001', 0)
@@ -215,7 +202,7 @@ describe('test sequence', () => {
       await expectAssertionFailed(async () => {
         await SequenceTest.tests.check({
           initialFields: sequenceInfo.selfState.fields,
-          initialAsset: { alphAmount: oneAlph * 10n },
+          initialAsset: { alphAmount: ONE_ALPH * 10n },
           address: sequenceInfo.address,
           testArgs: { seq: 256n + seq },
           existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
@@ -226,7 +213,6 @@ describe('test sequence', () => {
   }, 60000)
 
   it('should destroy sub contract if all old sequence executed', async () => {
-    await buildProject()
     const parentId = randomContractId()
     const sequenceFixture = createSequence(512n, 0n, 0n, parentId)
     const unexecutedSequenceFixture = subContractId(parentId, '0000000000000001', 0)
@@ -234,7 +220,7 @@ describe('test sequence', () => {
     const unexecutedSequenceInfo = createUnexecutedSequence(parentId, 256n, sequences, unexecutedSequenceFixture)
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
-      initialAsset: { alphAmount: oneAlph },
+      initialAsset: { alphAmount: ONE_ALPH },
       address: sequenceFixture.address,
       testArgs: { seq: 256n },
       existingContracts: Array.prototype.concat(sequenceFixture.dependencies, unexecutedSequenceInfo.states()),
@@ -245,11 +231,11 @@ describe('test sequence', () => {
     expect(testResult.events.length).toEqual(1)
 
     const sequenceContractAssets = testResult.txOutputs.find((o) => o.address === sequenceFixture.address)!
-    expect(sequenceContractAssets.alphAmount).toEqual(oneAlph * 2n)
+    expect(sequenceContractAssets.alphAmount).toEqual(ONE_ALPH * 2n)
     const destroyEvent = testResult.events[0] as ContractDestroyedEvent
     expect(destroyEvent.name).toEqual('ContractDestroyed')
     expect(destroyEvent.fields.address).toEqual(unexecutedSequenceInfo.address)
     const assetOutput = testResult.txOutputs[1]
-    expect(assetOutput.alphAmount).toEqual(oneAlph - defaultGasFee)
+    expect(assetOutput.alphAmount).toEqual(ONE_ALPH - defaultGasFee)
   })
 })

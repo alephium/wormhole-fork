@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as TokenBridgeContractJson } from "../token_bridge/TokenBridge.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -42,13 +49,103 @@ export namespace TokenBridgeTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    createLocalAttestTokenHandler: {
+      params: CallContractParams<{
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    registerChain: {
+      params: CallContractParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    upgradeContract: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    destroyUnexecutedSequenceContracts: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    updateMinimalConsistencyLevel: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
     getRefundAddress: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<Address>;
     };
+    updateRefundAddress: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
     getMessageFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
+    };
+    attestToken: {
+      params: CallContractParams<{
+        payer: Address;
+        localTokenId: HexString;
+        decimals: bigint;
+        symbol: HexString;
+        name: HexString;
+        nonce: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    createLocalTokenPool: {
+      params: CallContractParams<{
+        localTokenId: HexString;
+        decimals: bigint;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    createRemoteTokenPool: {
+      params: CallContractParams<{
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        decimals: bigint;
+        symbol: HexString;
+        name: HexString;
+        msgSequence: bigint;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    updateRemoteTokenPool: {
+      params: CallContractParams<{
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        symbol: HexString;
+        name: HexString;
+        msgSequence: bigint;
+      }>;
+      result: CallContractResult<null>;
+    };
+    transferToken: {
+      params: CallContractParams<{
+        fromAddress: Address;
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        toChainId: bigint;
+        toAddress: HexString;
+        tokenAmount: bigint;
+        messageFee: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: CallContractResult<null>;
     };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
@@ -63,12 +160,129 @@ export namespace TokenBridgeTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    createLocalAttestTokenHandler: {
+      params: SignExecuteContractMethodParams<{
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    registerChain: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    upgradeContract: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    destroyUnexecutedSequenceContracts: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updateMinimalConsistencyLevel: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    getRefundAddress: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    updateRefundAddress: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    getMessageFee: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    attestToken: {
+      params: SignExecuteContractMethodParams<{
+        payer: Address;
+        localTokenId: HexString;
+        decimals: bigint;
+        symbol: HexString;
+        name: HexString;
+        nonce: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    createLocalTokenPool: {
+      params: SignExecuteContractMethodParams<{
+        localTokenId: HexString;
+        decimals: bigint;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    createRemoteTokenPool: {
+      params: SignExecuteContractMethodParams<{
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        decimals: bigint;
+        symbol: HexString;
+        name: HexString;
+        msgSequence: bigint;
+        payer: Address;
+        createContractAlphAmount: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updateRemoteTokenPool: {
+      params: SignExecuteContractMethodParams<{
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        symbol: HexString;
+        name: HexString;
+        msgSequence: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    transferToken: {
+      params: SignExecuteContractMethodParams<{
+        fromAddress: Address;
+        bridgeTokenId: HexString;
+        tokenChainId: bigint;
+        toChainId: bigint;
+        toAddress: HexString;
+        tokenAmount: bigint;
+        messageFee: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+        consistencyLevel: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   TokenBridgeInstance,
   TokenBridgeTypes.Fields
 > {
+  encodeFields(fields: TokenBridgeTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeTypes.Fields;
+  }
+
   consts = {
     TokenBridgeModule: BigInt(102075932637695572646848357),
     Path: {
@@ -127,15 +341,20 @@ class Factory extends ContractFactory<
 
   tests = {
     parseAndVerifyGovernanceVAA: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         { vaa: HexString; action: HexString }
       >
-    ): Promise<TestContractResult<[bigint, HexString]>> => {
-      return testMethod(this, "parseAndVerifyGovernanceVAA", params);
+    ): Promise<TestContractResultWithoutMaps<[bigint, HexString]>> => {
+      return testMethod(
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params,
+        getContractByCodeHash
+      );
     },
     createAttestTokenHandler: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           payer: Address;
@@ -145,68 +364,118 @@ class Factory extends ContractFactory<
           isLocal: boolean;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createAttestTokenHandler", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createAttestTokenHandler",
+        params,
+        getContractByCodeHash
+      );
     },
     createLocalAttestTokenHandler: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         { payer: Address; createContractAlphAmount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createLocalAttestTokenHandler", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createLocalAttestTokenHandler",
+        params,
+        getContractByCodeHash
+      );
     },
     parseAndVerifyRegisterChain: async (
-      params: TestContractParams<TokenBridgeTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<[bigint, HexString]>> => {
-      return testMethod(this, "parseAndVerifyRegisterChain", params);
+      params: TestContractParamsWithoutMaps<
+        TokenBridgeTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<[bigint, HexString]>> => {
+      return testMethod(
+        this,
+        "parseAndVerifyRegisterChain",
+        params,
+        getContractByCodeHash
+      );
     },
     registerChain: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         { vaa: HexString; payer: Address; createContractAlphAmount: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "registerChain", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "registerChain", params, getContractByCodeHash);
     },
     upgradeContract: async (
-      params: TestContractParams<TokenBridgeTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "upgradeContract", params);
+      params: TestContractParamsWithoutMaps<
+        TokenBridgeTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "upgradeContract", params, getContractByCodeHash);
     },
     destroyUnexecutedSequenceContracts: async (
-      params: TestContractParams<TokenBridgeTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "destroyUnexecutedSequenceContracts", params);
+      params: TestContractParamsWithoutMaps<
+        TokenBridgeTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params,
+        getContractByCodeHash
+      );
     },
     updateMinimalConsistencyLevel: async (
-      params: TestContractParams<TokenBridgeTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updateMinimalConsistencyLevel", params);
+      params: TestContractParamsWithoutMaps<
+        TokenBridgeTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updateMinimalConsistencyLevel",
+        params,
+        getContractByCodeHash
+      );
     },
     getRefundAddress: async (
       params: Omit<
-        TestContractParams<TokenBridgeTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<Address>> => {
-      return testMethod(this, "getRefundAddress", params);
+    ): Promise<TestContractResultWithoutMaps<Address>> => {
+      return testMethod(
+        this,
+        "getRefundAddress",
+        params,
+        getContractByCodeHash
+      );
     },
     updateRefundAddress: async (
-      params: TestContractParams<TokenBridgeTypes.Fields, { vaa: HexString }>
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updateRefundAddress", params);
+      params: TestContractParamsWithoutMaps<
+        TokenBridgeTypes.Fields,
+        { vaa: HexString }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updateRefundAddress",
+        params,
+        getContractByCodeHash
+      );
     },
     getMessageFee: async (
       params: Omit<
-        TestContractParams<TokenBridgeTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getMessageFee", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getMessageFee", params, getContractByCodeHash);
     },
     attestToken: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           payer: Address;
@@ -218,19 +487,24 @@ class Factory extends ContractFactory<
           consistencyLevel: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "attestToken", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "attestToken", params, getContractByCodeHash);
     },
     nextSendSequence: async (
       params: Omit<
-        TestContractParams<TokenBridgeTypes.Fields, never>,
+        TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "nextSendSequence", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(
+        this,
+        "nextSendSequence",
+        params,
+        getContractByCodeHash
+      );
     },
     createLocalTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           localTokenId: HexString;
@@ -239,11 +513,16 @@ class Factory extends ContractFactory<
           createContractAlphAmount: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createLocalTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createLocalTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     createRemoteTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           bridgeTokenId: HexString;
@@ -256,11 +535,16 @@ class Factory extends ContractFactory<
           createContractAlphAmount: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createRemoteTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "createRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     updateRemoteTokenPool: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           bridgeTokenId: HexString;
@@ -270,11 +554,16 @@ class Factory extends ContractFactory<
           msgSequence: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updateRemoteTokenPool", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updateRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
     },
     transferToken: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         TokenBridgeTypes.Fields,
         {
           fromAddress: Address;
@@ -289,8 +578,8 @@ class Factory extends ContractFactory<
           consistencyLevel: bigint;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "transferToken", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "transferToken", params, getContractByCodeHash);
     },
   };
 }
@@ -300,7 +589,8 @@ export const TokenBridge = new Factory(
   Contract.fromJson(
     TokenBridgeContractJson,
     "",
-    "3921ab78ca073b5125b2ff7e4232e72f2c1c62554bbc8f81d39e769e6bcf349c"
+    "3921ab78ca073b5125b2ff7e4232e72f2c1c62554bbc8f81d39e769e6bcf349c",
+    []
   )
 );
 
@@ -315,6 +605,67 @@ export class TokenBridgeInstance extends ContractInstance {
   }
 
   methods = {
+    createLocalAttestTokenHandler: async (
+      params: TokenBridgeTypes.CallMethodParams<"createLocalAttestTokenHandler">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"createLocalAttestTokenHandler">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "createLocalAttestTokenHandler",
+        params,
+        getContractByCodeHash
+      );
+    },
+    registerChain: async (
+      params: TokenBridgeTypes.CallMethodParams<"registerChain">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"registerChain">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "registerChain",
+        params,
+        getContractByCodeHash
+      );
+    },
+    upgradeContract: async (
+      params: TokenBridgeTypes.CallMethodParams<"upgradeContract">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"upgradeContract">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "upgradeContract",
+        params,
+        getContractByCodeHash
+      );
+    },
+    destroyUnexecutedSequenceContracts: async (
+      params: TokenBridgeTypes.CallMethodParams<"destroyUnexecutedSequenceContracts">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"destroyUnexecutedSequenceContracts">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateMinimalConsistencyLevel: async (
+      params: TokenBridgeTypes.CallMethodParams<"updateMinimalConsistencyLevel">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"updateMinimalConsistencyLevel">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "updateMinimalConsistencyLevel",
+        params,
+        getContractByCodeHash
+      );
+    },
     getRefundAddress: async (
       params?: TokenBridgeTypes.CallMethodParams<"getRefundAddress">
     ): Promise<TokenBridgeTypes.CallMethodResult<"getRefundAddress">> => {
@@ -323,6 +674,17 @@ export class TokenBridgeInstance extends ContractInstance {
         this,
         "getRefundAddress",
         params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    updateRefundAddress: async (
+      params: TokenBridgeTypes.CallMethodParams<"updateRefundAddress">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"updateRefundAddress">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "updateRefundAddress",
+        params,
         getContractByCodeHash
       );
     },
@@ -336,6 +698,182 @@ export class TokenBridgeInstance extends ContractInstance {
         params === undefined ? {} : params,
         getContractByCodeHash
       );
+    },
+    attestToken: async (
+      params: TokenBridgeTypes.CallMethodParams<"attestToken">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"attestToken">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "attestToken",
+        params,
+        getContractByCodeHash
+      );
+    },
+    createLocalTokenPool: async (
+      params: TokenBridgeTypes.CallMethodParams<"createLocalTokenPool">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"createLocalTokenPool">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "createLocalTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+    createRemoteTokenPool: async (
+      params: TokenBridgeTypes.CallMethodParams<"createRemoteTokenPool">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"createRemoteTokenPool">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "createRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateRemoteTokenPool: async (
+      params: TokenBridgeTypes.CallMethodParams<"updateRemoteTokenPool">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"updateRemoteTokenPool">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "updateRemoteTokenPool",
+        params,
+        getContractByCodeHash
+      );
+    },
+    transferToken: async (
+      params: TokenBridgeTypes.CallMethodParams<"transferToken">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"transferToken">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "transferToken",
+        params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    createLocalAttestTokenHandler: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"createLocalAttestTokenHandler">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"createLocalAttestTokenHandler">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "createLocalAttestTokenHandler",
+        params
+      );
+    },
+    registerChain: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"registerChain">
+    ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"registerChain">> => {
+      return signExecuteMethod(TokenBridge, this, "registerChain", params);
+    },
+    upgradeContract: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"upgradeContract">
+    ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"upgradeContract">> => {
+      return signExecuteMethod(TokenBridge, this, "upgradeContract", params);
+    },
+    destroyUnexecutedSequenceContracts: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"destroyUnexecutedSequenceContracts">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"destroyUnexecutedSequenceContracts">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "destroyUnexecutedSequenceContracts",
+        params
+      );
+    },
+    updateMinimalConsistencyLevel: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"updateMinimalConsistencyLevel">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"updateMinimalConsistencyLevel">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "updateMinimalConsistencyLevel",
+        params
+      );
+    },
+    getRefundAddress: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"getRefundAddress">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"getRefundAddress">
+    > => {
+      return signExecuteMethod(TokenBridge, this, "getRefundAddress", params);
+    },
+    updateRefundAddress: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"updateRefundAddress">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"updateRefundAddress">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "updateRefundAddress",
+        params
+      );
+    },
+    getMessageFee: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"getMessageFee">
+    ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"getMessageFee">> => {
+      return signExecuteMethod(TokenBridge, this, "getMessageFee", params);
+    },
+    attestToken: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"attestToken">
+    ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"attestToken">> => {
+      return signExecuteMethod(TokenBridge, this, "attestToken", params);
+    },
+    createLocalTokenPool: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"createLocalTokenPool">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"createLocalTokenPool">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "createLocalTokenPool",
+        params
+      );
+    },
+    createRemoteTokenPool: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"createRemoteTokenPool">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"createRemoteTokenPool">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "createRemoteTokenPool",
+        params
+      );
+    },
+    updateRemoteTokenPool: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"updateRemoteTokenPool">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"updateRemoteTokenPool">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "updateRemoteTokenPool",
+        params
+      );
+    },
+    transferToken: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"transferToken">
+    ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"transferToken">> => {
+      return signExecuteMethod(TokenBridge, this, "transferToken", params);
     },
   };
 

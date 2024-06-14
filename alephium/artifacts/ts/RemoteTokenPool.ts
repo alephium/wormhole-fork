@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as RemoteTokenPoolContractJson } from "../token_bridge/RemoteTokenPool.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -59,6 +66,18 @@ export namespace RemoteTokenPoolTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    completeTransfer: {
+      params: CallContractParams<{
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        recipient: Address;
+        normalizedArbiterFee: bigint;
+        caller: Address;
+      }>;
+      result: CallContractResult<null>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
@@ -66,6 +85,14 @@ export namespace RemoteTokenPoolTypes {
     deNormalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
+    };
+    updateDetails: {
+      params: CallContractParams<{
+        symbol: HexString;
+        name: HexString;
+        sequence: bigint;
+      }>;
+      result: CallContractResult<null>;
     };
     transfer: {
       params: CallContractParams<{
@@ -90,12 +117,91 @@ export namespace RemoteTokenPoolTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    getSymbol: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getName: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getDecimals: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getTotalSupply: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    completeTransfer: {
+      params: SignExecuteContractMethodParams<{
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        recipient: Address;
+        normalizedArbiterFee: bigint;
+        caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    normalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    deNormalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updateDetails: {
+      params: SignExecuteContractMethodParams<{
+        symbol: HexString;
+        name: HexString;
+        sequence: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    transfer: {
+      params: SignExecuteContractMethodParams<{
+        fromAddress: Address;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   RemoteTokenPoolInstance,
   RemoteTokenPoolTypes.Fields
 > {
+  encodeFields(fields: RemoteTokenPoolTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as RemoteTokenPoolTypes.Fields;
+  }
+
   consts = {
     AlphBridgePostfix: "2028416c706842726964676529",
     Path: {
@@ -148,38 +254,38 @@ class Factory extends ContractFactory<
   tests = {
     getSymbol: async (
       params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<RemoteTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getSymbol", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "getSymbol", params, getContractByCodeHash);
     },
     getName: async (
       params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<RemoteTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getName", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "getName", params, getContractByCodeHash);
     },
     getDecimals: async (
       params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<RemoteTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getDecimals", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getDecimals", params, getContractByCodeHash);
     },
     getTotalSupply: async (
       params: Omit<
-        TestContractParams<RemoteTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<RemoteTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getTotalSupply", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getTotalSupply", params, getContractByCodeHash);
     },
     completeTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         {
           emitterChainId: bigint;
@@ -191,11 +297,16 @@ class Factory extends ContractFactory<
           caller: Address;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "completeTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     prepareTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         {
           callerContractId: HexString;
@@ -205,11 +316,11 @@ class Factory extends ContractFactory<
           nonce: HexString;
         }
       >
-    ): Promise<TestContractResult<[HexString, bigint]>> => {
-      return testMethod(this, "prepareTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<[HexString, bigint]>> => {
+      return testMethod(this, "prepareTransfer", params, getContractByCodeHash);
     },
     prepareCompleteTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         {
           callerContractId: HexString;
@@ -220,35 +331,45 @@ class Factory extends ContractFactory<
           normalizedArbiterFee: bigint;
         }
       >
-    ): Promise<TestContractResult<[bigint, bigint]>> => {
-      return testMethod(this, "prepareCompleteTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<[bigint, bigint]>> => {
+      return testMethod(
+        this,
+        "prepareCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     normalizeAmount: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         { amount: bigint; decimals: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "normalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "normalizeAmount", params, getContractByCodeHash);
     },
     deNormalizeAmount: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         { amount: bigint; decimals: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "deNormalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(
+        this,
+        "deNormalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
     updateDetails: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         { symbol: HexString; name: HexString; sequence: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "updateDetails", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "updateDetails", params, getContractByCodeHash);
     },
     transfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         RemoteTokenPoolTypes.Fields,
         {
           fromAddress: Address;
@@ -258,8 +379,8 @@ class Factory extends ContractFactory<
           nonce: HexString;
         }
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "transfer", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "transfer", params, getContractByCodeHash);
     },
   };
 }
@@ -269,7 +390,8 @@ export const RemoteTokenPool = new Factory(
   Contract.fromJson(
     RemoteTokenPoolContractJson,
     "",
-    "1887a5c2bc109b742c33e7c8aaa448d600e258cec66dbd7ff188b17fca3da2fd"
+    "1887a5c2bc109b742c33e7c8aaa448d600e258cec66dbd7ff188b17fca3da2fd",
+    []
   )
 );
 
@@ -328,6 +450,17 @@ export class RemoteTokenPoolInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    completeTransfer: async (
+      params: RemoteTokenPoolTypes.CallMethodParams<"completeTransfer">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"completeTransfer">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
     normalizeAmount: async (
       params: RemoteTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<RemoteTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
@@ -350,6 +483,17 @@ export class RemoteTokenPoolInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    updateDetails: async (
+      params: RemoteTokenPoolTypes.CallMethodParams<"updateDetails">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"updateDetails">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "updateDetails",
+        params,
+        getContractByCodeHash
+      );
+    },
     transfer: async (
       params: RemoteTokenPoolTypes.CallMethodParams<"transfer">
     ): Promise<RemoteTokenPoolTypes.CallMethodResult<"transfer">> => {
@@ -360,6 +504,81 @@ export class RemoteTokenPoolInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    getSymbol: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"getSymbol">
+    ): Promise<RemoteTokenPoolTypes.SignExecuteMethodResult<"getSymbol">> => {
+      return signExecuteMethod(RemoteTokenPool, this, "getSymbol", params);
+    },
+    getName: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"getName">
+    ): Promise<RemoteTokenPoolTypes.SignExecuteMethodResult<"getName">> => {
+      return signExecuteMethod(RemoteTokenPool, this, "getName", params);
+    },
+    getDecimals: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"getDecimals">
+    ): Promise<RemoteTokenPoolTypes.SignExecuteMethodResult<"getDecimals">> => {
+      return signExecuteMethod(RemoteTokenPool, this, "getDecimals", params);
+    },
+    getTotalSupply: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"getTotalSupply">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"getTotalSupply">
+    > => {
+      return signExecuteMethod(RemoteTokenPool, this, "getTotalSupply", params);
+    },
+    completeTransfer: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"completeTransfer">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"completeTransfer">
+    > => {
+      return signExecuteMethod(
+        RemoteTokenPool,
+        this,
+        "completeTransfer",
+        params
+      );
+    },
+    normalizeAmount: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"normalizeAmount">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"normalizeAmount">
+    > => {
+      return signExecuteMethod(
+        RemoteTokenPool,
+        this,
+        "normalizeAmount",
+        params
+      );
+    },
+    deNormalizeAmount: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"deNormalizeAmount">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"deNormalizeAmount">
+    > => {
+      return signExecuteMethod(
+        RemoteTokenPool,
+        this,
+        "deNormalizeAmount",
+        params
+      );
+    },
+    updateDetails: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"updateDetails">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"updateDetails">
+    > => {
+      return signExecuteMethod(RemoteTokenPool, this, "updateDetails", params);
+    },
+    transfer: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"transfer">
+    ): Promise<RemoteTokenPoolTypes.SignExecuteMethodResult<"transfer">> => {
+      return signExecuteMethod(RemoteTokenPool, this, "transfer", params);
     },
   };
 
