@@ -8,6 +8,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { TextField, Typography } from "@material-ui/core";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import useGetSourceParsedTokens from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -39,6 +40,7 @@ type TokenSelectorProps = {
 };
 
 export const TokenSelector = (props: TokenSelectorProps) => {
+  const { t } = useTranslation();
   const { disabled, nft } = props;
   const dispatch = useDispatch();
 
@@ -139,9 +141,9 @@ export const TokenSelector = (props: TokenSelectorProps) => {
   ) : (
     <TextField
       variant="outlined"
-      placeholder="Asset"
+      placeholder={t("Asset")}
       fullWidth
-      value={"Not Implemented"}
+      value={t("Not Implemented")}
       disabled={true}
     />
   );

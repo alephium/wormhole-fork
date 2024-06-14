@@ -1,5 +1,6 @@
 import { makeStyles, Typography } from "@material-ui/core";
 import numeral from "numeral";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
   selectSourceWalletAddress,
@@ -18,6 +19,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SourcePreview() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const sourceChain = useSelector(selectTransferSourceChain);
   const sourceParsedTokenAccount = useSelector(
@@ -31,9 +33,9 @@ export default function SourcePreview() {
     sourceChain && sourceParsedTokenAccount ? (
       <>
         <span>
-          You will transfer {sourceAmount}{" "}
+          {t('You will transfer {{ sourceAmount }}', { sourceAmount })}
           {relayerFee
-            ? `(+~${numeral(relayerFee).format("0.00")} relayer fee)`
+            ? ` (+~${numeral(relayerFee).format("0.00")} ${t('Relayer Fee')})`
             : ""}
         </span>
         <SmartAddress
@@ -43,11 +45,11 @@ export default function SourcePreview() {
         />
         {sourceWalletAddress ? (
           <>
-            <span>from</span>
+            <span>{t("from")}</span>
             <SmartAddress chainId={sourceChain} address={sourceWalletAddress} />
           </>
         ) : null}
-        <span>on {CHAINS_BY_ID[sourceChain].name}</span>
+        <span>{t('on {{ chainName }}', { chainName: CHAINS_BY_ID[sourceChain].name })}</span>
       </>
     ) : (
       ""

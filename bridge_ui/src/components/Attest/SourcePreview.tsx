@@ -1,4 +1,5 @@
 import { makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
   selectAttestSourceAsset,
@@ -14,6 +15,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SourcePreview() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const sourceChain = useSelector(selectAttestSourceChain);
   const sourceAsset = useSelector(selectAttestSourceAsset);
@@ -21,9 +23,9 @@ export default function SourcePreview() {
   const explainerContent =
     sourceChain && sourceAsset ? (
       <>
-        <span>You will attest</span>
+        <span>{t("You will attest")}</span>
         <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset />
-        <span>on {CHAINS_BY_ID[sourceChain].name}</span>
+        <span>{t("on {{ chainName }}", { chainName: CHAINS_BY_ID[sourceChain].name })}</span>
       </>
     ) : (
       ""

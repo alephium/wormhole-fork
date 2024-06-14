@@ -111,7 +111,7 @@ import {
   WMATIC_ADDRESS,
   WMATIC_DECIMALS,
   WNEON_ADDRESS,
-  WNEON_DECIMALS,  
+  WNEON_DECIMALS,
   WROSE_ADDRESS,
   WROSE_DECIMALS,
   ALEPHIUM_BRIDGE_GROUP_INDEX,
@@ -131,6 +131,8 @@ import { useWallet } from "@alephium/web3-react";
 import { getETHTokenLogoURI } from "../utils/ethereum";
 import { Alert } from "@material-ui/lab";
 import parseError from "../utils/parseError";
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 export function createParsedTokenAccount(
   publicKey: string,
@@ -605,7 +607,7 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
           balance: amount.toBigInt()
         }
       } catch (error) {
-        console.log(`Failed to get balance, token address: ${token.nativeAddress}, error: ${error}`)
+        console.log(`${i18n.t('Failed to get balance')}, ${i18n.t('token address')}: ${token.nativeAddress}, ${i18n.t('Error')}: ${error}`)
         return undefined
       }
     })
@@ -631,7 +633,7 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
     }
     return tokenAccounts
   } catch (error) {
-    return Promise.reject(`Unable to retrive your EVM tokens, error: ${error}`)
+    return Promise.reject(`${i18n.t('Unable to retrive your EVM tokens')}, ${i18n.t('Error')}: ${error}`)
   }
 }
 
@@ -786,7 +788,7 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
     }
     return { tokenAccounts, balances}
   } catch (error) {
-    const errMsg = `Failed to load alephium token metadata: ${error}`
+    const errMsg = `${i18n.t('Failed to load alephium token metadata')}: ${error}`
     console.error(errMsg)
     throw new Error(errMsg)
   }
@@ -807,6 +809,7 @@ async function getTokenLogoURI(tokenChainId: ChainId, tokenId: string): Promise<
  * This should handle every type of chain in the future, but only reads the Transfer state.
  */
 function useGetAvailableTokens(nft: boolean = false) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -1380,7 +1383,7 @@ function useGetAvailableTokens(nft: boolean = false) {
       cancelled = true;
     };
   }, [lookupChain, provider, signerAddress, nft, ethNativeAccount]);
-  
+
   useEffect(() => {
     let cancelled = false;
     if (
@@ -1454,14 +1457,14 @@ function useGetAvailableTokens(nft: boolean = false) {
             dispatch(
               nft
                 ? errorSourceParsedTokenAccountsNFT(
-                    "Cannot load your Ethereum NFTs at the moment."
+                    t("Cannot load your Ethereum NFTs at the moment.")
                   )
                 : errorSourceParsedTokenAccounts(
-                    "Cannot load your Ethereum tokens at the moment."
+                    t("Cannot load your Ethereum tokens at the moment.")
                   )
             );
           !cancelled &&
-            setCovalentError("Cannot load your Ethereum tokens at the moment.");
+            setCovalentError(t("Cannot load your Ethereum tokens at the moment."));
           !cancelled && setCovalentLoading(false);
         }
       );
@@ -1470,7 +1473,7 @@ function useGetAvailableTokens(nft: boolean = false) {
         cancelled = true;
       };
     }
-  }, [lookupChain, provider, signerAddress, dispatch, nft, covalent, signer]);
+  }, [lookupChain, provider, signerAddress, dispatch, nft, covalent, signer, t]);
 
   useEffect(() => {
     if (

@@ -59,8 +59,10 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import { useWallet } from "@alephium/web3-react";
+import { useTranslation } from "react-i18next";
 
 function useFetchTargetAsset(nft?: boolean) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const isSourceAssetWormholeWrapped = useSelector(
     nft
@@ -180,7 +182,7 @@ function useFetchTargetAsset(nft?: boolean) {
             dispatch(
               setTargetAsset(
                 errorDataWrapper(
-                  "Unable to determine existence of wrapped asset"
+                  t("Unable to determine existence of wrapped asset")
                 )
               )
             );
@@ -217,7 +219,7 @@ function useFetchTargetAsset(nft?: boolean) {
             dispatch(
               setTargetAsset(
                 errorDataWrapper(
-                  "Unable to determine existence of wrapped asset"
+                  t("Unable to determine existence of wrapped asset")
                 )
               )
             );
@@ -247,7 +249,7 @@ function useFetchTargetAsset(nft?: boolean) {
             dispatch(
               setTargetAsset(
                 errorDataWrapper(
-                  "Unable to determine existence of wrapped asset"
+                  t("Unable to determine existence of wrapped asset")
                 )
               )
             );
@@ -276,7 +278,7 @@ function useFetchTargetAsset(nft?: boolean) {
           if (!cancelled) {
             dispatch(
               setTargetAsset(
-                errorDataWrapper("Failed to get token wrapper contract id " + e)
+                errorDataWrapper(t("Failed to get token wrapper contract id") + " " + e)
               )
             )
           }
@@ -314,7 +316,7 @@ function useFetchTargetAsset(nft?: boolean) {
             dispatch(
               setTargetAsset(
                 errorDataWrapper(
-                  "Unable to determine existence of wrapped asset"
+                  t("Unable to determine existence of wrapped asset")
                 )
               )
             );
@@ -339,6 +341,7 @@ function useFetchTargetAsset(nft?: boolean) {
     hasCorrectEvmNetwork,
     argsMatchLastSuccess,
     setArgs,
+    t
   ]);
 }
 

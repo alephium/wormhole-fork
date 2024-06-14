@@ -4,6 +4,7 @@ import {
   CHAIN_ID_TERRA
 } from "@alephium/wormhole-sdk";
 import { Button, makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { Transaction } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 import { getTransactionLink } from "../utils/transaction";
@@ -25,6 +26,7 @@ export default function ShowTx({
   chainId: ChainId;
   tx: Transaction;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const showExplorerLink =
     CLUSTER === "testnet" ||
@@ -48,7 +50,7 @@ export default function ShowTx({
           variant="outlined"
           className={classes.viewButton}
         >
-          View on {explorerName}
+          {t('View on {{ explorerName }}', { explorerName })}
         </Button>
       ) : null}
     </div>

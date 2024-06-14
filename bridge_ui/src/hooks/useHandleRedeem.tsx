@@ -67,6 +67,7 @@ import useTransferSignedVAA from "./useTransferSignedVAA";
 import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
+import i18n from "../i18n";
 
 async function algo(
   dispatch: any,
@@ -97,7 +98,7 @@ async function algo(
       })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -143,7 +144,7 @@ async function evm(
       setRedeemTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -195,7 +196,7 @@ async function solana(
     // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
     dispatch(setRedeemTx({ id: txid, blockHeight: 1 }));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -229,7 +230,7 @@ async function terra(
       setRedeemTx({ id: result.result.txhash, blockHeight: result.result.height })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -305,7 +306,7 @@ async function alephium(
     if (txId === undefined) {
       dispatch(setRedeemCompleted())
       enqueueSnackbar(null, {
-        content: <Alert severity="success">Transaction confirmed</Alert>,
+        content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
       });
       return
     }
@@ -323,11 +324,11 @@ async function alephium(
     )
     if (isTransferCompleted) {
       enqueueSnackbar(null, {
-        content: <Alert severity="success">Transaction confirmed</Alert>,
+        content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
       });
     } else {
       enqueueSnackbar(null, {
-        content: <Alert severity="error">Transfer failed, please try again later</Alert>,
+        content: <Alert severity="error">{i18n.t('Transfer failed, please try again later')}</Alert>,
       });
     }
 
@@ -459,7 +460,7 @@ export function useHandleRedeem() {
         })
       );
       enqueueSnackbar(null, {
-        content: <Alert severity="success">Transaction confirmed</Alert>,
+        content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
       });
     } catch (e) {
       enqueueSnackbar(null, {

@@ -6,6 +6,7 @@ import { DataWrapper } from '../store/helpers'
 import { getAvailableBalances } from '../utils/alephium'
 import { ALEPHIUM_TOKEN_LIST } from '../utils/consts'
 import { useWallet } from '@alephium/web3-react'
+import { useTranslation } from 'react-i18next'
 
 export type AlphMetadata = TokenInfo & {
   balance?: bigint
@@ -38,6 +39,7 @@ const fetchAlphMetadata = async (nodeProvider: NodeProvider, tokenIds: string[],
 }
 
 function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddress?: string): DataWrapper<Map<string, AlphMetadata>> {
+  const { t } = useTranslation()
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState('')
   const [data, setData] = useState<Map<string, AlphMetadata> | null>(null)
@@ -58,7 +60,7 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
         },
         (error) => {
           if (!cancelled) {
-            setError(`Could not retrieve contract metadata, error: ${error}`)
+            setError(`${t("Could not retrieve contract metadata")}, ${t("Error")}: ${error}`)
             setIsFetching(false)
           }
         }
@@ -67,7 +69,7 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
     return () => {
       cancelled = true;
     }
-  }, [tokenIds, walletAddress, fetchBalance, alphWallet])
+  }, [tokenIds, walletAddress, fetchBalance, alphWallet, t])
 
   return useMemo(
     () => ({

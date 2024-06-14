@@ -15,6 +15,7 @@ import {
   selectTransferTargetChain,
 } from "../../store/selectors";
 import { ChainId, hexToNativeAssetString } from "@alephium/wormhole-sdk";
+import { useTranslation } from "react-i18next";
 
 export function RegisterNowButtonCore({
   originChain,
@@ -25,6 +26,7 @@ export function RegisterNowButtonCore({
   originAsset: string | undefined;
   targetChain: ChainId;
 }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const history = useHistory();
   // user might be in the middle of a different attest
@@ -49,7 +51,7 @@ export function RegisterNowButtonCore({
       style={{ display: "block", margin: "4px auto 0px" }}
       onClick={handleClick}
     >
-      Register Now
+      {t('Register Now')}
     </Button>
   );
 }

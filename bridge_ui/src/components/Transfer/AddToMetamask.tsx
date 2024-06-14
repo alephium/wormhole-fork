@@ -2,6 +2,7 @@ import { isEVMChain } from "@alephium/wormhole-sdk";
 import { Button, makeStyles } from "@material-ui/core";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import {
@@ -23,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function AddToMetamask() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
@@ -84,7 +86,7 @@ export default function AddToMetamask() {
       variant="outlined"
       className={classes.addButton}
     >
-      Add to Metamask
+      {t("Add to Metamask")}
     </Button>
   ) : null;
 }

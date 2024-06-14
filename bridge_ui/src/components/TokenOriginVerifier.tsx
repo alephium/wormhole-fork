@@ -16,6 +16,7 @@ import {
 } from "@material-ui/core";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useBetaContext } from "../contexts/BetaContext";
 import useFetchForeignAsset, {
   ForeignAssetInfo,
@@ -71,6 +72,7 @@ function PrimaryAssetInfomation({
   originAsset: string;
   showLoader: boolean;
 }) {
+  const { t } = useTranslation()
   const classes = useStyles();
   const tokenArray = useMemo(() => [originAsset], [originAsset]);
   const metadata = useMetadata(originChain, tokenArray);
@@ -81,12 +83,12 @@ function PrimaryAssetInfomation({
   );
   const wrapped = (
     <div>
-      <Typography>{`This is wrapped by the Bridge! Here is the original token: `}</Typography>
+      <Typography>{t("This is wrapped by the Bridge! Here is the original token:")}</Typography>
       <div className={classes.flexBox}>
-        <Typography>{`Chain: ${CHAINS_BY_ID[originChain].name}`}</Typography>
+        <Typography>{`${t('Chain')}: ${CHAINS_BY_ID[originChain].name}`}</Typography>
         <div>
           <Typography component="div">
-            {"Token: "}
+            {`${t('Tokens_one')}: `}
             <SmartAddress
               address={originAsset}
               chainId={originChain}
@@ -111,6 +113,7 @@ function SecondaryAssetInformation({
   foreignAssetInfo?: ForeignAssetInfo;
   originAssetInfo?: OriginalAssetInfo;
 }) {
+  const { t } = useTranslation()
   const classes = useStyles();
   const tokenArray: string[] = useMemo(() => {
     //Saved to a variable to help typescript cope
@@ -122,10 +125,13 @@ function SecondaryAssetInformation({
       : [];
   }, [foreignAssetInfo, originAssetInfo, chainId]);
   const metadata = useMetadata(chainId, tokenArray);
+  const chainName = CHAINS_BY_ID[chainId].name
   //TODO when this is the origin chain
   return !originAssetInfo ? null : chainId === originAssetInfo.originChain ? (
     <div>
-      <Typography>{`Transferring to ${CHAINS_BY_ID[chainId].name} will unwrap the token:`}</Typography>
+      <Typography>
+        {t('Transferring to {{ chainName }} will unwrap the token', { chainName })}:
+      </Typography>
       <div className={classes.resultContainer}>
         <SmartAddress
           chainId={chainId}
@@ -144,7 +150,7 @@ function SecondaryAssetInformation({
     </div>
   ) : !foreignAssetInfo ? null : foreignAssetInfo.doesExist === false ? (
     <div>
-      <Typography>{`This token has not yet been registered on ${CHAINS_BY_ID[chainId].name}`}</Typography>
+      <Typography>{t('This token has not yet been registered on {{ chainName }}', { chainName })}</Typography>
       <RegisterNowButtonCore
         originChain={originAssetInfo?.originChain || undefined}
         originAsset={
@@ -158,7 +164,7 @@ function SecondaryAssetInformation({
     </div>
   ) : (
     <div>
-      <Typography>When bridged, this asset becomes: </Typography>
+      <Typography>{t('When bridged, this asset becomes:')} </Typography>
       <div className={classes.resultContainer}>
         <SmartAddress
           chainId={chainId}
@@ -179,6 +185,7 @@ function SecondaryAssetInformation({
 }
 
 export default function TokenOriginVerifier() {
+  const { t } = useTranslation()
   const classes = useStyles();
   const isBeta = useBetaContext();
 
@@ -264,15 +271,15 @@ export default function TokenOriginVerifier() {
 
   const primaryContent = (
     <>
-      <Typography variant="h5">Source Information</Typography>
+      <Typography variant="h5">{t("Source Information")}</Typography>
       <Typography variant="body1" color="textSecondary">
-        Enter a token from any supported chain to get started.
+        {t("Enter a token from any supported chain to get started.")}
       </Typography>
       <div className={classes.spacer} />
       <TextField
         select
         variant="outlined"
-        label="Chain"
+        label={t("Chain")}
         value={primaryLookupChain}
         onChange={handlePrimaryLookupChainChange}
         fullWidth
@@ -288,7 +295,7 @@ export default function TokenOriginVerifier() {
         fullWidth
         variant="outlined"
         margin="normal"
-        label="Paste an address"
+        label={t("Paste an address")}
         value={primaryLookupAsset}
         onChange={handlePrimaryLookupAssetChange}
       />
@@ -319,15 +326,15 @@ export default function TokenOriginVerifier() {
 
   const secondaryContent = originInfo.data ? (
     <>
-      <Typography variant="h5">Bridge Results</Typography>
+      <Typography variant="h5">{t("Bridge Results")}</Typography>
       <Typography variant="body1" color="textSecondary">
-        Select a chain to see the result of bridging this token.
+        {t("Select a chain to see the result of bridging this token.")}
       </Typography>
       <div className={classes.spacer} />
       <TextField
         select
         variant="outlined"
-        label="Other Chain"
+        label={t("Other Chain")}
         value={secondaryLookupChain}
         onChange={handleSecondaryLookupChainChange}
         fullWidth
@@ -365,7 +372,7 @@ export default function TokenOriginVerifier() {
   const content = (
     <div>
       <Container maxWidth="md" className={classes.centered}>
-        <HeaderText white>Token Origin Verifier</HeaderText>
+        <HeaderText white>{t("Token Origin Verifier")}</HeaderText>
       </Container>
       <Container maxWidth="sm">
         <Card className={classes.mainCard}>{primaryContent}</Card>

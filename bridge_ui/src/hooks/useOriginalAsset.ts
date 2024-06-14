@@ -44,6 +44,8 @@ import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenWrappedInfo, tryGetContractId } from "../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 export type OriginalAssetInfo = {
   originChain: ChainId | null;
@@ -92,10 +94,10 @@ export async function getOriginalAssetToken(
       );
     }
   } catch (e) {
-    promise = Promise.reject("Invalid foreign arguments.");
+    promise = Promise.reject(i18n.t("Invalid foreign arguments."));
   }
   if (!promise) {
-    promise = Promise.reject("Invalid foreign arguments.");
+    promise = Promise.reject(i18n.t("Invalid foreign arguments."));
   }
   return promise;
 }
@@ -125,10 +127,10 @@ export async function getOriginalAssetNFT(
       );
     }
   } catch (e) {
-    promise = Promise.reject("Invalid foreign arguments.");
+    promise = Promise.reject(i18n.t("Invalid foreign arguments."));
   }
   if (!promise) {
-    promise = Promise.reject("Invalid foreign arguments.");
+    promise = Promise.reject(i18n.t("Invalid foreign arguments."));
   }
   return promise;
 }
@@ -161,14 +163,14 @@ export async function getOriginalAsset(
     uint8ArrayToNative(result.assetAddress, result.chainId) ===
       ethers.constants.AddressZero
   ) {
-    throw new Error("Unable to find address.");
+    throw new Error(i18n.t("Unable to find address."));
   }
   if (
     result.chainId === CHAIN_ID_SOLANA &&
     uint8ArrayToNative(result.assetAddress, result.chainId) ===
       SOLANA_SYSTEM_PROGRAM_ADDRESS
   ) {
-    throw new Error("Unable to find address.");
+    throw new Error(i18n.t("Unable to find address."));
   }
 
   return result;
@@ -181,6 +183,7 @@ function useOriginalAsset(
   nft: boolean,
   tokenId?: string
 ): DataWrapper<OriginalAssetInfo> {
+  const { t } = useTranslation();
   const { provider } = useEthereumProvider();
   const { isReady } = useIsWalletReady(foreignChain, false);
   const [originAddress, setOriginAddress] = useState<string | null>(null);
@@ -248,7 +251,7 @@ function useOriginalAsset(
       .catch((e) => {
         if (!cancelled) {
           setIsLoading(false);
-          setError("Unable to determine original asset.");
+          setError(t("Unable to determine original asset."));
         }
       });
   }, [
@@ -260,7 +263,8 @@ function useOriginalAsset(
     argumentError,
     tokenId,
     argsEqual,
-    alphWallet
+    alphWallet,
+    t
   ]);
 
   const output: DataWrapper<OriginalAssetInfo> = useMemo(

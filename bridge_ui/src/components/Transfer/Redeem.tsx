@@ -67,6 +67,7 @@ import RedeemPreview from "./RedeemPreview";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 import { useSnackbar, VariantType } from "notistack";
 import AddToAlephium from "./AddToAlephium";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   alert: {
@@ -80,6 +81,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Redeem() {
+  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar()
   const {
     handleClick,
@@ -188,7 +190,7 @@ function Redeem() {
       !isTransferCompleted &&
       !targetIsAcala ? (
         <Typography className={classes.centered}>
-          {"Please connect your wallet to check for transfer completion."}
+          {t("Please connect your wallet to check for transfer completion.")}
         </Typography>
       ) : null}
 
@@ -198,16 +200,16 @@ function Redeem() {
         <div className={classes.centered}>
           <CircularProgress style={{ marginBottom: 16 }} />
           <Typography>
-            {"Waiting for a relayer to process your transfer."}
+            {t("Waiting for a relayer to process your transfer.")}
           </Typography>
-          <Tooltip title="Your fees will be refunded on the target chain">
+          <Tooltip title={t("Your fees will be refunded on the target chain")}>
             <Button
               onClick={handleManuallyRedeemClick}
               size="small"
               variant="outlined"
               style={{ marginTop: 16 }}
             >
-              Manually redeem instead
+              {t("Manually redeem instead")}
             </Button>
           </Tooltip>
         </div>
@@ -222,8 +224,7 @@ function Redeem() {
             showLoader={showLoader}
           >
             <span>
-              Redeem ({CHAINS_BY_ID[targetChain].name} pays gas for you
-              &#127881;)
+              {t("Redeem")} ({t("{{ chainName }} pays gas for you", { chainName: CHAINS_BY_ID[targetChain].name })})
             </span>
           </ButtonWithLoader>
           <Button
@@ -232,13 +233,13 @@ function Redeem() {
             variant="outlined"
             style={{ marginTop: 16 }}
           >
-            Manually redeem instead
+            {t("Manually redeem instead")}
           </Button>
         </div>
       ) : null}
 
       {isTransferCompleted ? (
-        <RedeemPreview overrideExplainerString="Success! Your transfer is complete." />
+        <RedeemPreview overrideExplainerString={`${t('Success!')} ${t("Your transfer is complete.")}`} />
       ) : null}
     </>
   );
@@ -265,7 +266,7 @@ function Redeem() {
               color="primary"
             />
           }
-          label="Automatically unwrap to native currency"
+          label={t("Automatically unwrap to native currency")}
         />
       )}
       {targetChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && (
@@ -308,7 +309,7 @@ function Redeem() {
             variant="outlined"
             style={{ marginTop: 16 }}
           >
-            Return to relayer view
+            {t("Return to relayer view")}
           </Button>
         </div>
       ) : null}
@@ -316,20 +317,20 @@ function Redeem() {
       {isRecovery && isReady && isTransferCompleted ? (
         <>
           <Alert severity="info" variant="outlined" className={classes.alert}>
-            These tokens have already been redeemed.{" "}
+            {t("These tokens have already been redeemed.")}{" "}
             {!isEVMChain(targetChain) && howToAddTokensUrl ? (
               <Link
                 href={howToAddTokensUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Click here to see how to add them to your wallet.
+                {t("Click here to see how to add them to your wallet.")}
               </Link>
             ) : null}
           </Alert>
           {targetAsset ? (
             <>
-              <span>Token Address:</span>
+              <span>{t("Token Address")}:</span>
               <SmartAddress
                 chainId={targetChain}
                 address={targetAsset || undefined}
@@ -340,7 +341,7 @@ function Redeem() {
           {targetChain === CHAIN_ID_ALEPHIUM ? <AddToAlephium /> : null}
           {isEVMChain(targetChain) ? <AddToMetamask /> : null}
           <ButtonWithLoader onClick={handleResetClick}>
-            Transfer More Tokens!
+            {t("Transfer More Tokens!")}
           </ButtonWithLoader>
         </>
       ) : null}
@@ -349,7 +350,7 @@ function Redeem() {
 
   return (
     <>
-      <StepDescription>Receive the tokens on the target chain</StepDescription>
+      <StepDescription>{t("Receive the tokens on the target chain")}</StepDescription>
       {manualRedeem ? nonRelayContent : relayerContent}
     </>
   );

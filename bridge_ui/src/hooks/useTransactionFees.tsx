@@ -25,6 +25,8 @@ import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
 import { useWallet } from "@alephium/web3-react";
+import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 export type GasEstimate = {
   currentGasPrice: string;
@@ -149,7 +151,7 @@ const getBalancesAlephium = async (provider: NodeProvider, walletAddress: string
       return total - locked
     })
     .catch((e) => {
-      return Promise.reject("failed to get alephium balance, err: " + e);
+      return Promise.reject(`${i18n.t('Failed to get alephium balance')}, ${i18n.t('Error')}: ${e}`);
     })
 }
 
@@ -167,6 +169,7 @@ const toBalanceString = (balance: bigint | undefined, chainId: ChainId) => {
 };
 
 export default function useTransactionFees(chainId: ChainId) {
+  const { t } = useTranslation();
   const { walletAddress, isReady } = useIsWalletReady(chainId);
   const { provider } = useEthereumProvider();
   const [balance, setBalance] = useState<bigint | undefined>(undefined);
@@ -193,7 +196,7 @@ export default function useTransactionFees(chainId: ChainId) {
         },
         (error) => {
           setIsLoading(false);
-          setError("Cannot load wallet balance");
+          setError(t("Cannot load wallet balance"));
         }
       );
     } else if (isEVMChain(chainId) && isReady && walletAddress) {
@@ -208,7 +211,7 @@ export default function useTransactionFees(chainId: ChainId) {
           },
           (error) => {
             setIsLoading(false);
-            setError("Cannot load wallet balance");
+            setError(t("Cannot load wallet balance"));
           }
         );
       }
@@ -228,7 +231,7 @@ export default function useTransactionFees(chainId: ChainId) {
         },
         (error) => {
           setIsLoading(false);
-          setError("Cannot load wallet balance");
+          setError(t("Cannot load wallet balance"));
         }
       );
     } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress && alphWallet?.nodeProvider !== undefined) {
@@ -242,11 +245,11 @@ export default function useTransactionFees(chainId: ChainId) {
         },
         (error) => {
           setIsLoading(false);
-          setError("Cannot load wallet balance");
+          setError(t("Cannot load wallet balance"));
         }
       )
     }
-  }, [provider, walletAddress, isReady, chainId, loadStart, alphWallet]);
+  }, [provider, walletAddress, isReady, chainId, loadStart, alphWallet, t]);
 
   const results = useMemo(() => {
     return {
@@ -305,6 +308,7 @@ function EthGasEstimateSummary({
   chainId: ChainId;
   priceQuote?: number;
 }) {
+  const { t } = useTranslation();
   const estimate = useEthereumGasPrice(methodType, chainId);
   if (!estimate) {
     return null;
@@ -331,7 +335,7 @@ function EthGasEstimateSummary({
         &nbsp;{estimate.currentGasPrice}
       </div>
       <div>
-        Est. Fees: {estimate.lowEstimate} - {estimate.highEstimate}{" "}
+        {t("Est. Fees")}: {estimate.lowEstimate} - {estimate.highEstimate}{" "}
         {getDefaultNativeCurrencySymbol(chainId)}
         {priceQuote ? <div>{`($${lowUsd} - $${highUsd})`}</div> : null}
       </div>

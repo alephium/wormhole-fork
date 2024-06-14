@@ -1,6 +1,7 @@
 import { Button, makeStyles, Typography } from "@material-ui/core";
 import { Launch } from "@material-ui/icons";
 import { TokenInfo } from "@solana/spl-token-registry";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
 import { DataWrapper } from "../../store/helpers";
@@ -43,6 +44,7 @@ function getJupiterSwapUrl(
 }
 
 export default function FeaturedMarkets() {
+  const { t } = useTranslation();
   const sourceChain = useSelector(selectTransferSourceChain);
   const sourceAsset = useSelector(selectTransferSourceAsset);
   const targetChain = useSelector(selectTransferTargetChain);
@@ -100,7 +102,7 @@ export default function FeaturedMarkets() {
         gutterBottom
         className={classes.description}
       >
-        Featured markets
+        {t("Featured markets")}
       </Typography>
       {tokenMarketButtons}
     </div>

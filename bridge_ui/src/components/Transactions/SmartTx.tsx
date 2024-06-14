@@ -7,6 +7,7 @@ import { getTransactionLink, shortenTxId } from "../../utils/transaction";
 import { BridgeTransaction } from ".";
 import { useHistory } from "react-router-dom";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -35,6 +36,7 @@ const tooltipStyles = {
 const StyledTooltip = withStyles(tooltipStyles)(Tooltip)
 
 export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
+  const { t } = useTranslation()
   const classes = useStyles()
   const explorerAddress = getTransactionLink(tx.emitterChain, tx.txId)
   const explorerName = getExplorerName(tx.emitterChain)
@@ -55,7 +57,7 @@ export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
       target="_blank"
       rel="noopener noreferrer"
     >
-      {"View on " + explorerName}
+      {t("View on {{ explorerName }}", { explorerName })}
     </Button>
   );
   const copyButton = (
@@ -66,7 +68,7 @@ export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
       onClick={copyToClipboard}
       className={classes.buttons}
     >
-      Copy
+      {t("Copy")}
     </Button>
   )
   const redeemButton = tx.status !== 'Confirmed' ? null : (
@@ -76,7 +78,7 @@ export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
       onClick={redeemHandler}
       className={classes.buttons}
     >
-      Redeem
+      {t("Redeem")}
     </Button>
   )
 

@@ -65,6 +65,7 @@ import { waitALPHTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 import { createWrappedOnEthWithoutWait, updateWrappedOnEthWithoutWait } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
+import i18n from "../i18n";
 
 async function algo(
   dispatch: any,
@@ -143,7 +144,7 @@ async function evm(
       setCreateTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -194,7 +195,7 @@ async function solana(
     // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
     dispatch(setCreateTx({ id: txid, blockHeight: 1 }));
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -235,7 +236,7 @@ async function terra(
       setCreateTx({ id: result.result.txhash, blockHeight: result.result.height })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {
@@ -269,7 +270,7 @@ async function alephium(
       setCreateTx({ id: result.txId, blockHeight: blockHeader.height })
     );
     enqueueSnackbar(null, {
-      content: <Alert severity="success">Transaction confirmed</Alert>,
+      content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
   } catch (e) {
     enqueueSnackbar(null, {

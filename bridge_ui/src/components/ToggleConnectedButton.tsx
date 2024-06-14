@@ -1,5 +1,6 @@
 import { Button, makeStyles, Tooltip } from "@material-ui/core";
 import { LinkOff } from "@material-ui/icons";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
   button: {
@@ -27,6 +28,7 @@ const ToggleConnectedButton = ({
   pk: string;
   walletIcon?: string;
 }) => {
+  const { t } = useTranslation();
   const classes = useStyles();
   const is0x = pk.startsWith("0x");
   return connected ? (
@@ -45,7 +47,7 @@ const ToggleConnectedButton = ({
           )
         }
       >
-        Disconnect {pk.substring(0, is0x ? 6 : 3)}...
+        {t("Disconnect")} {pk.substring(0, is0x ? 6 : 3)}...
         {pk.substr(pk.length - (is0x ? 4 : 3))}
       </Button>
     </Tooltip>
@@ -57,7 +59,7 @@ const ToggleConnectedButton = ({
       onClick={connect}
       className={classes.button}
     >
-      Connect
+      {t("Connect")}
     </Button>
   );
 };

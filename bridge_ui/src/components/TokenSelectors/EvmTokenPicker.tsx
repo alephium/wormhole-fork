@@ -2,6 +2,7 @@ import { ChainId, CHAIN_ID_ETH, ethers_contracts } from "@alephium/wormhole-sdk"
 import { WormholeAbi__factory } from "@alephium/wormhole-sdk/lib/esm/ethers-contracts/abi";
 import { getAddress as getEthAddress } from "@ethersproject/address";
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { DataWrapper } from "../../store/helpers";
@@ -44,6 +45,7 @@ type EthereumSourceTokenSelectorProps = {
 export default function EvmTokenPicker(
   props: EthereumSourceTokenSelectorProps
 ) {
+  const { t } = useTranslation();
   const {
     value,
     onChange,
@@ -75,10 +77,10 @@ export default function EvmTokenPicker(
             ? getEthereumNFT(address, provider)
             : getEthereumToken(address, provider));
           if (!tokenAccount) {
-            return Promise.reject("Could not find the specified token.");
+            return Promise.reject(t("Unable to retrive the specific token."));
           }
           if (nft && !tokenId) {
-            return Promise.reject("Token ID is required.");
+            return Promise.reject(t("Token ID is required."));
           } else if (nft && tokenId) {
             return ethNFTToNFTParsedTokenAccount(
               tokenAccount as ethers_contracts.NFTImplementation,
@@ -92,13 +94,13 @@ export default function EvmTokenPicker(
             );
           }
         } catch (e) {
-          return Promise.reject("Unable to retrive the specific token.");
+          return Promise.reject(t("Unable to retrive the specific token."));
         }
       } else {
-        return Promise.reject({ error: "Wallet is not connected." });
+        return Promise.reject({ error: t("Wallet is not connected.") });
       }
     },
-    [isReady, nft, provider, signerAddress]
+    [isReady, nft, provider, signerAddress, t]
   );
 
   const onChangeWrapper = useCallback(
@@ -116,13 +118,13 @@ export default function EvmTokenPicker(
       const migration = isMigrationEligible(account.mintKey);
       if (v1 === true && !migration) {
         throw new Error(
-          "Wormhole v1 assets cannot be transferred with this bridge."
+          t("Wormhole v1 assets cannot be transferred with this bridge.")
         );
       }
       onChange(account);
       return Promise.resolve();
     },
-    [chainId, onChange, provider, isMigrationEligible]
+    [chainId, onChange, provider, isMigrationEligible, t]
   );
 
   const RenderComp = useCallback(

@@ -4,6 +4,7 @@ import { Alert } from "@material-ui/lab";
 import { parseUnits } from "ethers/lib/utils";
 import { useSnackbar } from "notistack";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import useEthereumMigratorInformation from "../../hooks/useEthereumMigratorInformation";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -30,6 +31,7 @@ export default function EvmWorkflow({
   chainId: ChainId;
   migratorAddress: string;
 }) {
+  const { t } = useTranslation();
   const classes = useStyles();
   const { enqueueSnackbar } = useSnackbar();
   const { signer, signerAddress } = useEthereumProvider();
@@ -83,17 +85,17 @@ export default function EvmWorkflow({
 
   const getNotReadyCause = () => {
     if (!isReady) {
-      return "Connect your wallet to proceed.";
+      return t("Connect your wallet to proceed.");
     } else if (poolInfo.error) {
-      return "Unable to retrieve necessary information. This asset may not be supported.";
+      return t("Unable to retrieve necessary information. This asset may not be supported.");
     } else if (!migrationAmount) {
-      return "Enter an amount to transfer.";
+      return t("Enter an amount to transfer.");
     } else if (!amountGreaterThanZero) {
-      return "The transfer amount must be greater than zero.";
+      return t("The transfer amount must be greater than zero.");
     } else if (!sufficientFromTokens) {
-      return "There are not sufficient funds in your wallet for this transfer.";
+      return t("There are not sufficient funds in your wallet for this transfer.");
     } else if (!sufficientPoolBalance) {
-      return "There are not sufficient funds in the pool for this transfer.";
+      return t("There are not sufficient funds in the pool for this transfer.");
     } else {
       return "";
     }
@@ -112,7 +114,7 @@ export default function EvmWorkflow({
   const migrateTokens = useCallback(async () => {
     if (!poolInfo.data) {
       enqueueSnackbar(null, {
-        content: <Alert severity="error">Could not migrate the tokens.</Alert>,
+        content: <Alert severity="error">{t("Could not migrate the tokens.")}</Alert>,
       }); //Should never be hit
       return;
     }
@@ -131,19 +133,19 @@ export default function EvmWorkflow({
       forceRefresh();
       enqueueSnackbar(null, {
         content: (
-          <Alert severity="success">Successfully migrated the tokens.</Alert>
+          <Alert severity="success">{t("Successfully migrated the tokens.")}</Alert>
         ),
       });
       setMigrationIsProcessing(false);
     } catch (e) {
       console.error(e);
       enqueueSnackbar(null, {
-        content: <Alert severity="error">Could not migrate the tokens.</Alert>,
+        content: <Alert severity="error">{t("Could not migrate the tokens.")}</Alert>,
       });
       setMigrationIsProcessing(false);
-      setError("Failed to send the transaction.");
+      setError(t("Failed to send the transaction."));
     }
-  }, [poolInfo.data, migrationAmount, enqueueSnackbar, forceRefresh]);
+  }, [poolInfo.data, enqueueSnackbar, t, migrationAmount, forceRefresh]);
 
   //TODO tokenName
   const toTokenPretty = (
@@ -167,24 +169,24 @@ export default function EvmWorkflow({
   );
 
   const fatalError = poolInfo.error
-    ? "Unable to retrieve necessary information. This asset may not be supported."
+    ? t("Unable to retrieve necessary information. This asset may not be supported.")
     : null;
 
   const explainerContent = (
     <div>
-      <Typography>This action will convert</Typography>
+      <Typography>{t("This action will convert")}</Typography>
       <Typography variant="h6">
-        {fromTokenPretty} {`(Balance: ${fromWalletBalance || ""})`}
+        {fromTokenPretty} {`(${t('Balance')}: ${fromWalletBalance || ""})`}
       </Typography>
       <div className={classes.spacer} />
-      <Typography>to</Typography>
+      <Typography>{t("to")}</Typography>
       <Typography variant="h6">
-        {toTokenPretty} {`(Balance: ${poolInfo.data?.toWalletBalance || ""})`}
+        {toTokenPretty} {`(${t('Balance')}: ${poolInfo.data?.toWalletBalance || ""})`}
       </Typography>
       <div className={classes.spacer} />
-      <Typography>Utilizing this pool</Typography>
+      <Typography>{t("Utilizing this pool")}</Typography>
       <Typography variant="h6">
-        {poolPretty} {`(Balance: ${poolInfo.data?.toPoolBalance || ""})`}
+        {poolPretty} {`(${t('Balance')}: ${poolInfo.data?.toPoolBalance || ""})`}
       </Typography>
     </div>
   );
@@ -197,7 +199,7 @@ export default function EvmWorkflow({
         variant="outlined"
         value={migrationAmount}
         onChange={handleAmountChange}
-        label={"Amount"}
+        label={t("Amount")}
         disabled={!!migrationIsProcessing || !!transaction}
         onMaxClick={fromWalletBalance ? handleMaxClick : undefined}
       />
@@ -209,8 +211,8 @@ export default function EvmWorkflow({
           onClick={migrateTokens}
         >
           {migrationAmount && isReadyToTransfer
-            ? "Migrate " + migrationAmount + " Tokens"
-            : "Migrate"}
+            ? t('Migrate {{ tokensAmount }} Tokens', { tokensAmount: migrationAmount })
+            : t('Migrate')}
         </ButtonWithLoader>
       )}
 
@@ -220,8 +222,7 @@ export default function EvmWorkflow({
       {transaction ? (
         <>
           <Typography>
-            Successfully migrated your tokens! They will be available once this
-            transaction confirms.
+            {t("Successfully migrated your tokens! They will be available once this transaction confirms.")}
           </Typography>
           <ShowTx tx={{ id: transaction, blockHeight: 1 }} chainId={chainId} />
         </>
@@ -233,7 +234,7 @@ export default function EvmWorkflow({
     <div className={classes.containerDiv}>
       <EthereumSignerKey chainId={chainId} />
       {!isReady ? (
-        <Typography variant="body1">Please connect your wallet.</Typography>
+        <Typography variant="body1">{t("Please connect your wallet.")}</Typography>
       ) : poolInfo.isLoading ? (
         <CircularProgress />
       ) : fatalError ? (

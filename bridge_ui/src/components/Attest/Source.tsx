@@ -1,5 +1,6 @@
 import { makeStyles, TextField } from "@material-ui/core";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import {
   incrementStep,
@@ -25,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Source() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectAttestSourceChain);
@@ -59,7 +61,7 @@ function Source() {
       />
       <KeyAndBalance chainId={sourceChain} />
       <TextField
-        label="Asset"
+        label={t("Asset")}
         variant="outlined"
         fullWidth
         className={classes.transferField}
@@ -73,7 +75,7 @@ function Source() {
         onClick={handleNextClick}
         showLoader={false}
       >
-        Next
+        {t("Next")}
       </ButtonWithLoader>
     </>
   );

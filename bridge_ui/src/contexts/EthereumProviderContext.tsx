@@ -15,6 +15,7 @@ import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
 import { getEvmChainId } from "../utils/consts";
 import { CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
+import { useTranslation } from "react-i18next";
 
 const WALLET_CONNECT_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
 export type Provider = ethers.providers.Web3Provider | undefined;
@@ -60,6 +61,7 @@ export const EthereumProviderProvider = ({
 }: {
   children: ReactChildren;
 }) => {
+  const { t } = useTranslation();
   const [providerError, setProviderError] = useState<string | null>(null);
   const [provider, setProvider] = useState<Provider>(undefined);
   const [chainId, setChainId] = useState<number | undefined>(undefined);
@@ -96,7 +98,7 @@ export const EthereumProviderProvider = ({
       }
       connections.push({
         connectType: ConnectType.WALLETCONNECT,
-        name: "Wallet Connect",
+        name: "WalletConnect",
         icon: walletconnectIcon,
       });
       if (!cancelled) {
@@ -158,7 +160,7 @@ export const EthereumProviderProvider = ({
                     })
                     .catch(() => {
                       setProviderError(
-                        "An error occurred while getting the network"
+                        t("An error occurred while getting the network")
                       );
                     });
                   const signer = provider.getSigner();
@@ -170,7 +172,7 @@ export const EthereumProviderProvider = ({
                     })
                     .catch(() => {
                       setProviderError(
-                        "An error occurred while getting the signer address"
+                        t("An error occurred while getting the signer address")
                       );
                     });
                   // TODO: try using ethers directly
@@ -194,7 +196,7 @@ export const EthereumProviderProvider = ({
                           })
                           .catch(() => {
                             setProviderError(
-                              "An error occurred while getting the signer address"
+                              t("An error occurred while getting the signer address")
                             );
                           });
                       } catch (e) {}
@@ -203,15 +205,15 @@ export const EthereumProviderProvider = ({
                 })
                 .catch(() => {
                   setProviderError(
-                    "An error occurred while requesting eth accounts"
+                    t("An error occurred while requesting eth accounts")
                   );
                 });
             } else {
-              setProviderError("Please install MetaMask");
+              setProviderError(t("Please install MetaMask"));
             }
           })
           .catch(() => {
-            setProviderError("Please install MetaMask");
+            setProviderError(t("Please install MetaMask"));
           });
       } else if (connectType === ConnectType.WALLETCONNECT) {
         EthereumProvider.init({
@@ -239,7 +241,7 @@ export const EthereumProviderProvider = ({
                   setChainId(network.chainId);
                 })
                 .catch(() => {
-                  setProviderError("An error occurred while getting the network");
+                  setProviderError(t("An error occurred while getting the network"));
                 });
               walletConnectProvider.on(
                 "accountsChanged",
@@ -254,7 +256,7 @@ export const EthereumProviderProvider = ({
                       })
                       .catch(() => {
                         setProviderError(
-                          "An error occurred while getting the signer address"
+                          t("An error occurred while getting the signer address")
                         );
                       });
                   } catch (error) {
@@ -276,21 +278,21 @@ export const EthereumProviderProvider = ({
                 })
                 .catch((error) => {
                   setProviderError(
-                    "An error occurred while getting the signer address"
+                    t("An error occurred while getting the signer address")
                   );
                   console.error(error);
                 });
             })
             .catch((error) => {
               if (error.message !== "User closed modal") {
-                setProviderError("Error enabling WalletConnect session");
+                setProviderError(t("Error enabling WalletConnect session"));
                 console.error(error);
               }
             });
         })
       }
     },
-    [disconnect]
+    [disconnect, t]
   );
 
   const contextValue = useMemo(

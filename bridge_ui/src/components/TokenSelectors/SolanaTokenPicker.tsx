@@ -1,6 +1,7 @@
 import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
 import { TokenInfo } from "@solana/spl-token-registry";
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
 import useMetaplexData from "../../hooks/useMetaplexData";
@@ -36,6 +37,7 @@ const isMigrationEligible = (address: string) => {
 export default function SolanaSourceTokenSelector(
   props: SolanaSourceTokenSelectorProps
 ) {
+  const { t } = useTranslation();
   const {
     value,
     onChange,
@@ -196,14 +198,14 @@ export default function SolanaSourceTokenSelector(
 
       if (v1 && !isMigrationEligible(newValue.mintKey)) {
         throw Error(
-          "Wormhole v1 assets should not be transferred with this bridge."
+          t("Wormhole v1 assets should not be transferred with this bridge.")
         );
       }
 
       onChange(newValue);
       return Promise.resolve();
     },
-    [isWormholev1, onChange]
+    [isWormholev1, onChange, t]
   );
 
   const RenderComp = useCallback(

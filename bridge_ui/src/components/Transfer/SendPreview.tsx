@@ -1,4 +1,5 @@
 import { makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
   selectTransferSourceChain,
@@ -20,11 +21,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SendPreview() {
+  const { t } = useTranslation();
   const classes = useStyles();
   const sourceChain = useSelector(selectTransferSourceChain);
   const transferTx = useSelector(selectTransferTransferTx);
 
-  const explainerString = "The tokens have entered the bridge!";
+  const explainerString = t("The tokens have entered the bridge!");
 
   return (
     <>
