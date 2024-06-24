@@ -1,6 +1,6 @@
 {
   "name": "@alephium/wormhole-sdk",
-  "version": "0.3.1-rc.1",
+  "version": "0.3.1-rc.2",
   "description": "SDK for interacting with Alephium Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",
@@ -60,6 +60,7 @@
     "@alephium/web3": "^1.0.5",
     "@alephium/token-list": "0.0.11",
     "@coral-xyz/borsh": "0.2.6",
+    "@project-serum/borsh": "0.2.5",
     "@improbable-eng/grpc-web": "^0.14.0",
     "@project-serum/anchor": "^0.25.0",
     "@solana/spl-token": "^0.1.8",
