@@ -12,7 +12,8 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
-  coalesceChainId
+  coalesceChainId,
+  CHAIN_ID_ALEPHIUM
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import {
@@ -20,12 +21,49 @@ import {
   getIsWrappedAssetEth,
 } from "./getIsWrappedAsset";
 import { getWrappedMeta } from "../solana/tokenBridge";
+import { ALPH_TOKEN_ID, NodeProvider, addressFromContractId } from "@alephium/web3";
+import { RemoteTokenPool } from "../alephium-contracts/ts";
+import { getRemoteTokenInfoFromContractState } from "./alephium";
 
 // TODO: remove `as ChainId` and return number in next minor version as we can't ensure it will match our type definition
 export interface WormholeWrappedInfo {
   isWrapped: boolean;
   chainId: ChainId;
   assetAddress: Uint8Array;
+}
+
+export async function getOriginalAssetAlephium(
+  provider: NodeProvider,
+  tokenId: string,
+): Promise<WormholeWrappedInfo> {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return {
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: Buffer.from(tokenId, 'hex')
+    }
+  }
+  const tokenAddress = addressFromContractId(tokenId)
+  return provider
+    .contracts
+    .getContractsAddressState(tokenAddress)
+    .then(state => {
+      if (state.codeHash === RemoteTokenPool.contract.codeHash) {
+        const tokenInfo = getRemoteTokenInfoFromContractState(state)
+        const originalAsset = Buffer.from(tokenInfo.id, 'hex')
+        return {
+          isWrapped: true,
+          chainId: tokenInfo.tokenChainId,
+          assetAddress: originalAsset,
+        }
+      } else {
+        return {
+          isWrapped: false,
+          chainId: CHAIN_ID_ALEPHIUM,
+          assetAddress: Buffer.from(tokenId, 'hex'),
+        }
+      }
+    })
 }
 
 /**

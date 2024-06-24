@@ -5,6 +5,20 @@ import { ethers } from "ethers";
 import { Bridge__factory } from "../ethers-contracts";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { getWrappedMeta } from "../solana/tokenBridge";
+import { ALPH_TOKEN_ID, NodeProvider, addressFromContractId } from "@alephium/web3";
+import { RemoteTokenPool } from "../alephium-contracts/ts";
+
+export async function getIsWrappedAssetAlephium(
+  provider: NodeProvider,
+  tokenId: string,
+): Promise<boolean> {
+  if (tokenId === ALPH_TOKEN_ID) return false
+  const tokenAddress = addressFromContractId(tokenId)
+  return provider
+    .contracts
+    .getContractsAddressState(tokenAddress)
+    .then((state) => state.codeHash === RemoteTokenPool.contract.codeHash)
+}
 
 /**
  * Returns whether or not an asset address on Ethereum is a wormhole wrapped asset
