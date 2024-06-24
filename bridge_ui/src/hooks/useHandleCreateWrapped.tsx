@@ -15,7 +15,8 @@ import {
   createRemoteTokenPoolOnAlph,
   updateRemoteTokenPoolOnAlph,
   updateWrappedOnTerra,
-  getAttestTokenHandlerId
+  getAttestTokenHandlerId,
+  postVaaSolanaWithRetry,
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -58,7 +59,6 @@ import {
 } from "../utils/consts";
 import { getKaruraGasParams } from "../utils/karura";
 import parseError from "../utils/parseError";
-import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { waitALPHTxConfirmed } from "../utils/alephium";
@@ -168,7 +168,7 @@ async function solana(
       throw new Error("wallet.signTransaction is undefined");
     }
     const connection = new Connection(SOLANA_HOST, "confirmed");
-    await postVaaWithRetry(
+    await postVaaSolanaWithRetry(
       connection,
       wallet.signTransaction,
       SOL_BRIDGE_ADDRESS,

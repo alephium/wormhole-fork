@@ -5,15 +5,13 @@ import {
   CHAIN_ID_KLAYTN,
   CHAIN_ID_SOLANA,
   getClaimAddressSolana,
-  isEVMChain
-} from "@alephium/wormhole-sdk";
-import {
-  createMetaOnSolana,
-  getForeignAssetSol,
-  isNFTVAASolanaNative,
+  isEVMChain,
+  postVaaSolanaWithRetry,
   redeemOnEth,
   redeemOnSolana,
-} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
+  deserializeTransferNFTVAA,
+  nft_bridge
+} from "@alephium/wormhole-sdk";
 import { arrayify } from "@ethersproject/bytes";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -38,10 +36,8 @@ import {
 import { getKaruraGasParams } from "../utils/karura";
 import { getMetadataAddress } from "../utils/metaplex";
 import parseError from "../utils/parseError";
-import { postVaaWithRetry } from "../utils/postVaa";
 import { signSendAndConfirm } from "../utils/solana";
 import useNFTSignedVAA from "./useNFTSignedVAA";
-import { deserializeTransferNFTVAA } from "@alephium/wormhole-sdk/lib/esm";
 
 async function evm(
   dispatch: any,
@@ -102,7 +98,7 @@ async function solana(
     const claimInfo = await connection.getAccountInfo(claimAddress);
     let txid;
     if (!claimInfo) {
-      await postVaaWithRetry(
+      await postVaaSolanaWithRetry(
         connection,
         wallet.signTransaction,
         SOL_BRIDGE_ADDRESS,
@@ -121,10 +117,10 @@ async function solana(
       txid = await signSendAndConfirm(wallet, connection, transaction);
       // TODO: didn't want to make an info call we didn't need, can we get the block without it by modifying the above call?
     }
-    const isNative = await isNFTVAASolanaNative(signedVAA);
+    const isNative = await nft_bridge.isNFTVAASolanaNative(signedVAA);
     if (!isNative) {
       const payload = deserializeTransferNFTVAA(signedVAA).body.payload
-      const mintAddress = await getForeignAssetSol(
+      const mintAddress = await nft_bridge.getForeignAssetSol(
         SOL_NFT_BRIDGE_ADDRESS,
         payload.originChain,
         payload.originAddress,
@@ -133,7 +129,7 @@ async function solana(
       const [metadataAddress] = await getMetadataAddress(mintAddress);
       const metadata = await connection.getAccountInfo(metadataAddress);
       if (!metadata) {
-        const transaction = await createMetaOnSolana(
+        const transaction = await nft_bridge.createMetaOnSolana(
           connection,
           SOL_BRIDGE_ADDRESS,
           SOL_NFT_BRIDGE_ADDRESS,
