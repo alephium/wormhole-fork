@@ -22,6 +22,12 @@ export async function redeemOnEth(
   return receipt;
 }
 
+export async function isNFTVAASolanaNative(
+  signedVAA: Uint8Array
+): Promise<boolean> {
+  return deserializeTransferNFTVAA(signedVAA).body.payload.originChain === CHAIN_ID_SOLANA
+}
+
 export async function redeemOnSolana(
   connection: Connection,
   bridgeAddress: string,
