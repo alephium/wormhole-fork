@@ -1,5 +1,5 @@
 import { binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
+import { AccountLayout, NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   Connection,
   Keypair,
@@ -14,16 +14,13 @@ import { fromUint8Array } from "js-base64";
 import { CompleteTransfer, CompleteTransferWithReward } from "../alephium-contracts/ts/scripts";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { ixFromRust } from "../solana";
-import { importCoreWasm, importTokenWasm } from "../solana/wasm";
 import {
   CHAIN_ID_SOLANA,
-  WSOL_ADDRESS,
   WSOL_DECIMALS,
   MAX_VAA_DECIMALS,
 } from "../utils";
-import { hexToNativeString, uint8ArrayToHex } from "../utils/array";
 import { deserializeTransferTokenVAA } from "../utils/vaa";
+import { createCompleteTransferNativeInstruction, createCompleteTransferWrappedInstruction } from "../solana/tokenBridge";
 
 export async function redeemOnAlphWithReward(
   signerProvider: SignerProvider,
@@ -98,33 +95,22 @@ export async function redeemAndUnwrapOnSolana(
   payerAddress: string,
   signedVAA: Uint8Array
 ) {
-  const { complete_transfer_native_ix } = await importTokenWasm();
-  const parsedVAA = deserializeTransferTokenVAA(signedVAA)
-  const parsedPayload = parsedVAA.body.payload
-  const targetAddress = hexToNativeString(
-    uint8ArrayToHex(parsedPayload.targetAddress),
-    CHAIN_ID_SOLANA
-  );
-  if (!targetAddress) {
-    throw new Error("Failed to read the target address.");
-  }
-  const targetPublicKey = new PublicKey(targetAddress);
+  const parsed = deserializeTransferTokenVAA(signedVAA);
+  const targetPublicKey = new PublicKey(parsed.body.payload.targetAddress);
   const targetAmount =
-    parsedPayload.amount *
-    BigInt(WSOL_DECIMALS - MAX_VAA_DECIMALS) *
-    BigInt(10);
+    parsed.body.payload.amount * BigInt(Math.pow(10, WSOL_DECIMALS - MAX_VAA_DECIMALS))
   const rentBalance = await Token.getMinBalanceRentForExemptAccount(connection);
-  const mintPublicKey = new PublicKey(WSOL_ADDRESS);
+  if (Buffer.compare(parsed.body.payload.originAddress, NATIVE_MINT.toBuffer()) != 0) {
+    return Promise.reject("tokenAddress != NATIVE_MINT");
+  }
   const payerPublicKey = new PublicKey(payerAddress);
   const ancillaryKeypair = Keypair.generate();
 
-  const completeTransferIx = ixFromRust(
-    complete_transfer_native_ix(
-      tokenBridgeAddress,
-      bridgeAddress,
-      payerAddress,
-      signedVAA
-    )
+  const completeTransferIx = createCompleteTransferNativeInstruction(
+    tokenBridgeAddress,
+    bridgeAddress,
+    payerPublicKey,
+    signedVAA
   );
 
   //This will create a temporary account where the wSOL will be moved
@@ -137,10 +123,10 @@ export async function redeemAndUnwrapOnSolana(
   });
 
   //Initialize the account as a WSOL account, with the original payerAddress as owner
-  const initAccountIx = await Token.createInitAccountInstruction(
+  const initAccountIx = Token.createInitAccountInstruction(
     TOKEN_PROGRAM_ID,
-    mintPublicKey,
     ancillaryKeypair.publicKey,
+    NATIVE_MINT,
     payerPublicKey
   );
 
@@ -151,7 +137,7 @@ export async function redeemAndUnwrapOnSolana(
     ancillaryKeypair.publicKey,
     payerPublicKey,
     [],
-    new u64(targetAmount.toString(16), 16)
+    Number(targetAmount)
   );
 
   //Close the ancillary account for cleanup. Payer address receives any remaining funds
@@ -163,15 +149,17 @@ export async function redeemAndUnwrapOnSolana(
     []
   );
 
-  const { blockhash } = await connection.getRecentBlockhash();
+  const { blockhash } = await connection.getLatestBlockhash();
   const transaction = new Transaction();
   transaction.recentBlockhash = blockhash;
-  transaction.feePayer = new PublicKey(payerAddress);
-  transaction.add(completeTransferIx);
-  transaction.add(createAncillaryAccountIx);
-  transaction.add(initAccountIx);
-  transaction.add(balanceTransferIx);
-  transaction.add(closeAccountIx);
+  transaction.feePayer = payerPublicKey;
+  transaction.add(
+    completeTransferIx,
+    createAncillaryAccountIx,
+    initAccountIx,
+    balanceTransferIx,
+    closeAccountIx
+  );
   transaction.partialSign(ancillaryKeypair);
   return transaction;
 }
@@ -184,41 +172,21 @@ export async function redeemOnSolana(
   signedVAA: Uint8Array,
   feeRecipientAddress?: string
 ) {
-  const { parse_vaa } = await importCoreWasm();
-  const parsedVAA = parse_vaa(signedVAA);
-  const isSolanaNative =
-    Buffer.from(new Uint8Array(parsedVAA.payload)).readUInt16BE(65) ===
-    CHAIN_ID_SOLANA;
-  const { complete_transfer_wrapped_ix, complete_transfer_native_ix } =
-    await importTokenWasm();
-  const ixs = [];
-  if (isSolanaNative) {
-    ixs.push(
-      ixFromRust(
-        complete_transfer_native_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          signedVAA,
-          feeRecipientAddress
-        )
-      )
-    );
-  } else {
-    ixs.push(
-      ixFromRust(
-        complete_transfer_wrapped_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          signedVAA,
-          feeRecipientAddress
-        )
-      )
-    );
-  }
-  const transaction = new Transaction().add(...ixs);
-  const { blockhash } = await connection.getRecentBlockhash();
+  const parsed = deserializeTransferTokenVAA(signedVAA);
+  const createCompleteTransferInstruction =
+    parsed.body.payload.originChain == CHAIN_ID_SOLANA
+      ? createCompleteTransferNativeInstruction
+      : createCompleteTransferWrappedInstruction;
+  const transaction = new Transaction().add(
+    createCompleteTransferInstruction(
+      tokenBridgeAddress,
+      bridgeAddress,
+      payerAddress,
+      signedVAA,
+      feeRecipientAddress
+    )
+  );
+  const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
   return transaction;

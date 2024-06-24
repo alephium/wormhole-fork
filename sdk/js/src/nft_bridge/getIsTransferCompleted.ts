@@ -1,12 +1,12 @@
 import { ethers } from "ethers";
 import { NFTBridge__factory } from "../ethers-contracts";
 import { getSignedVAAHash } from "../bridge";
-import { importCoreWasm } from "../solana/wasm";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import axios from "axios";
 import { redeemOnTerra } from ".";
-import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
+import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS, deserializeVAA } from "..";
+import { getClaim } from "../solana/wormhole";
 
 export async function getIsTransferCompletedEth(
   nftBridgeAddress: string,
@@ -49,7 +49,7 @@ export async function getIsTransferCompletedTerra(
         gasPrices,
       }
     );
-  } catch (e) {
+  } catch (e: any) {
     // redeemed if the VAA was already executed
     return e.response.data.message.includes("VaaAlreadyExecuted");
   }
@@ -61,11 +61,12 @@ export async function getIsTransferCompletedSolana(
   signedVAA: Uint8Array,
   connection: Connection
 ) {
-  const { claim_address } = await importCoreWasm();
-  const claimAddress = await claim_address(nftBridgeAddress, signedVAA);
-  const claimInfo = await connection.getAccountInfo(
-    new PublicKey(claimAddress),
-    "confirmed"
-  );
-  return !!claimInfo;
+  const parsed = deserializeVAA(signedVAA);
+  return getClaim(
+    connection,
+    nftBridgeAddress,
+    parsed.body.emitterAddress,
+    parsed.body.emitterChainId,
+    parsed.body.sequence
+  ).catch((e) => false);
 }

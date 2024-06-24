@@ -6,9 +6,8 @@ import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { ixFromRust } from "../solana";
-import { importTokenWasm } from "../solana/wasm";
 import { CreateRemoteTokenPool, CreateLocalTokenPool } from "../alephium-contracts/ts/scripts";
+import { createCreateWrappedInstruction } from "../solana/tokenBridge";
 
 export async function createRemoteTokenPoolOnAlph(
   signerProvider: SignerProvider,
@@ -80,17 +79,15 @@ export async function createWrappedOnSolana(
   payerAddress: string,
   signedVAA: Uint8Array
 ): Promise<Transaction> {
-  const { create_wrapped_ix } = await importTokenWasm();
-  const ix = ixFromRust(
-    create_wrapped_ix(
+  const transaction = new Transaction().add(
+    createCreateWrappedInstruction(
       tokenBridgeAddress,
       bridgeAddress,
       payerAddress,
       signedVAA
     )
   );
-  const transaction = new Transaction().add(ix);
-  const { blockhash } = await connection.getRecentBlockhash();
+  const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
   return transaction;

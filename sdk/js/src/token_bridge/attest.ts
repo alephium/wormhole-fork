@@ -11,16 +11,15 @@ import {
   SuggestedParams,
 } from "algosdk";
 import { ethers, PayableOverrides } from "ethers";
-import { isNativeDenom } from "..";
+import { createBridgeFeeTransferInstruction, isNativeDenom } from "..";
 import { getMessageFee, optin, TransactionSignerPair } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { getBridgeFeeIx, ixFromRust } from "../solana";
-import { importTokenWasm } from "../solana/wasm";
 import { textToHexString, textToUint8Array, uint8ArrayToHex, utf8StringTo32Bytes } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
 import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, isHexString, SignerProvider } from "@alephium/web3";
 import { AttestToken } from "../alephium-contracts/ts/scripts"
+import { createAttestTokenInstruction } from "../solana/tokenBridge";
 
 function normalizeString(str: string): string {
   if (isHexString(str) && str.length === 64) {
@@ -101,25 +100,22 @@ export async function attestFromSolana(
   mintAddress: string
 ): Promise<Transaction> {
   const nonce = createNonce().readUInt32LE(0);
-  const transferIx = await getBridgeFeeIx(
+  const transferIx = await createBridgeFeeTransferInstruction(
     connection,
     bridgeAddress,
     payerAddress
   );
-  const { attest_ix } = await importTokenWasm();
   const messageKey = Keypair.generate();
-  const ix = ixFromRust(
-    attest_ix(
-      tokenBridgeAddress,
-      bridgeAddress,
-      payerAddress,
-      messageKey.publicKey.toString(),
-      mintAddress,
-      nonce
-    )
+  const attestIx = createAttestTokenInstruction(
+    tokenBridgeAddress,
+    bridgeAddress,
+    payerAddress,
+    mintAddress,
+    messageKey.publicKey,
+    nonce
   );
-  const transaction = new Transaction().add(transferIx, ix);
-  const { blockhash } = await connection.getRecentBlockhash();
+  const transaction = new Transaction().add(transferIx, attestIx);
+  const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
   transaction.partialSign(messageKey);

@@ -1,11 +1,11 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2, bigIntToBytes } from "algosdk";
 import axios from "axios";
 import { ethers } from "ethers";
 import { redeemOnTerra } from ".";
 import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
-import { extractSequenceFromVAA } from "../utils";
+import { deserializeVAA, extractSequenceFromVAA } from "../utils";
 import { addressFromContractId, subContractId } from "@alephium/web3";
 import {
   BITS_PER_KEY,
@@ -15,11 +15,11 @@ import {
 } from "../algorand";
 import { getSignedVAAHash } from "../bridge";
 import { Bridge__factory } from "../ethers-contracts";
-import { importCoreWasm } from "../solana/wasm";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { zeroPad } from "./alephium";
 import { TokenBridgeForChain } from "../alephium-contracts/ts/TokenBridgeForChain";
 import { UnexecutedSequence } from "../alephium-contracts/ts/UnexecutedSequence";
+import { getClaim } from "../solana/wormhole";
 
 const bigInt512 = BigInt(512)
 const bigInt256 = BigInt(256)
@@ -137,13 +137,14 @@ export async function getIsTransferCompletedSolana(
   signedVAA: Uint8Array,
   connection: Connection
 ): Promise<boolean> {
-  const { claim_address } = await importCoreWasm();
-  const claimAddress = await claim_address(tokenBridgeAddress, signedVAA);
-  const claimInfo = await connection.getAccountInfo(
-    new PublicKey(claimAddress),
-    "confirmed"
-  );
-  return !!claimInfo;
+  const parsed = deserializeVAA(signedVAA)
+  return getClaim(
+    connection,
+    tokenBridgeAddress,
+    parsed.body.emitterAddress,
+    parsed.body.emitterChainId,
+    parsed.body.sequence
+  ).catch((e) => false);
 }
 
 // Algorand

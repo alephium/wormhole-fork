@@ -1,4 +1,4 @@
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { BN } from "@project-serum/anchor";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, Overrides } from "ethers";
@@ -6,9 +6,13 @@ import {
   NFTBridge__factory,
   NFTImplementation__factory,
 } from "../ethers-contracts";
-import { getBridgeFeeIx, ixFromRust } from "../solana";
-import { importNftWasm } from "../solana/wasm";
 import { ChainId, ChainName, CHAIN_ID_SOLANA, coalesceChainId, createNonce } from "../utils";
+import { createBridgeFeeTransferInstruction } from "../solana";
+import {
+  createApproveAuthoritySignerInstruction,
+  createTransferNativeInstruction,
+  createTransferWrappedInstruction
+} from "../solana/nftBridge";
 
 export async function transferFromEth(
   tokenBridgeAddress: string,
@@ -39,7 +43,7 @@ export async function transferFromEth(
 export async function transferFromSolana(
   connection: Connection,
   bridgeAddress: string,
-  tokenBridgeAddress: string,
+  nftBridgeAddress: string,
   payerAddress: string,
   fromAddress: string,
   mintAddress: string,
@@ -49,67 +53,63 @@ export async function transferFromSolana(
   originChain?: ChainId | ChainName,
   originTokenId?: Uint8Array
 ): Promise<Transaction> {
-  const originChainId: ChainId | undefined = originChain ? coalesceChainId(originChain) : undefined
+  const originChainId: ChainId | undefined = originChain
+    ? coalesceChainId(originChain)
+    : undefined;
   const nonce = createNonce().readUInt32LE(0);
-  const transferIx = await getBridgeFeeIx(
+  const transferIx = await createBridgeFeeTransferInstruction(
     connection,
     bridgeAddress,
     payerAddress
   );
-  const {
-    transfer_native_ix,
-    transfer_wrapped_ix,
-    approval_authority_address,
-  } = await importNftWasm();
-  const approvalIx = Token.createApproveInstruction(
-    TOKEN_PROGRAM_ID,
-    new PublicKey(fromAddress),
-    new PublicKey(approval_authority_address(tokenBridgeAddress)),
-    new PublicKey(payerAddress),
-    [],
-    Number(1)
+  const approvalIx = createApproveAuthoritySignerInstruction(
+    nftBridgeAddress,
+    fromAddress,
+    payerAddress
   );
-  let messageKey = Keypair.generate();
+  let message = Keypair.generate();
   const isSolanaNative =
     originChain === undefined || originChain === CHAIN_ID_SOLANA;
   if (!isSolanaNative && (!originAddress || !originTokenId)) {
-    throw new Error(
+    return Promise.reject(
       "originAddress and originTokenId are required when specifying originChain"
     );
   }
-  const ix = ixFromRust(
-    isSolanaNative
-      ? transfer_native_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          messageKey.publicKey.toString(),
-          fromAddress,
-          mintAddress,
-          nonce,
-          targetAddress,
-          coalesceChainId(targetChain)
-        )
-      : transfer_wrapped_ix(
-          tokenBridgeAddress,
-          bridgeAddress,
-          payerAddress,
-          messageKey.publicKey.toString(),
-          fromAddress,
-          payerAddress,
-          originChainId as number, // checked by isSolanaNative
-          originAddress as Uint8Array, // checked by throw
-          originTokenId as Uint8Array, // checked by throw
-          nonce,
-          targetAddress,
-          coalesceChainId(targetChain)
-        )
+  const nftBridgeTransferIx = isSolanaNative
+    ? createTransferNativeInstruction(
+        nftBridgeAddress,
+        bridgeAddress,
+        payerAddress,
+        message.publicKey,
+        fromAddress,
+        mintAddress,
+        nonce,
+        targetAddress,
+        coalesceChainId(targetChain)
+      )
+    : createTransferWrappedInstruction(
+        nftBridgeAddress,
+        bridgeAddress,
+        payerAddress,
+        message.publicKey,
+        fromAddress,
+        payerAddress,
+        originChainId!,
+        originAddress!,
+        BigInt(new BN(originTokenId!).toString()),
+        nonce,
+        targetAddress,
+        coalesceChainId(targetChain)
+      );
+  const transaction = new Transaction().add(
+    transferIx,
+    approvalIx,
+    nftBridgeTransferIx
   );
-  const transaction = new Transaction().add(transferIx, approvalIx, ix);
-  const { blockhash } = await connection.getRecentBlockhash();
+  const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
-  transaction.partialSign(messageKey);
+  transaction.partialSign(message);
   return transaction;
 }
 

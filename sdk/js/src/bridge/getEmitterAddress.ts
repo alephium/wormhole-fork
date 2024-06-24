@@ -1,9 +1,8 @@
-import { PublicKey } from "@solana/web3.js";
 import { decodeAddress, getApplicationAddress } from "algosdk";
 import { bech32 } from "bech32";
 import { arrayify, BytesLike, Hexable, zeroPad } from "ethers/lib/utils";
-import { importTokenWasm } from "../solana/wasm";
 import { uint8ArrayToHex } from "../utils";
+import { deriveWormholeEmitterKey } from "../solana/wormhole";
 
 export function getEmitterAddressEth(
   contractAddress: number | BytesLike | Hexable
@@ -12,10 +11,7 @@ export function getEmitterAddressEth(
 }
 
 export async function getEmitterAddressSolana(programAddress: string) {
-  const { emitter_address } = await importTokenWasm();
-  return Buffer.from(
-    zeroPad(new PublicKey(emitter_address(programAddress)).toBytes(), 32)
-  ).toString("hex");
+  return deriveWormholeEmitterKey(programAddress).toBuffer().toString("hex");
 }
 
 export async function getEmitterAddressTerra(programAddress: string) {

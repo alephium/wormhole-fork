@@ -1,7 +1,7 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { ethers } from "ethers";
 import { Bridge__factory } from "../ethers-contracts";
-import { importNftWasm } from "../solana/wasm";
+import { getWrappedMeta } from "../solana/nftBridge";
 
 /**
  * Returns whether or not an asset address on Ethereum is a wormhole wrapped asset
@@ -23,24 +23,19 @@ export async function getIsWrappedAssetEth(
 /**
  * Returns whether or not an asset on Solana is a wormhole wrapped asset
  * @param connection
- * @param tokenBridgeAddress
+ * @param nftBridgeAddress
  * @param mintAddress
  * @returns
  */
 export async function getIsWrappedAssetSol(
   connection: Connection,
-  tokenBridgeAddress: string,
+  nftBridgeAddress: string,
   mintAddress: string
 ) {
-  if (!mintAddress) return false;
-  const { wrapped_meta_address } = await importNftWasm();
-  const wrappedMetaAddress = wrapped_meta_address(
-    tokenBridgeAddress,
-    new PublicKey(mintAddress).toBytes()
-  );
-  const wrappedMetaAddressPK = new PublicKey(wrappedMetaAddress);
-  const wrappedMetaAccountInfo = await connection.getAccountInfo(
-    wrappedMetaAddressPK
-  );
-  return !!wrappedMetaAccountInfo;
+  if (!mintAddress) {
+    return false;
+  }
+  return getWrappedMeta(connection, nftBridgeAddress, mintAddress)
+    .catch((_) => null)
+    .then((meta) => meta != null);
 }

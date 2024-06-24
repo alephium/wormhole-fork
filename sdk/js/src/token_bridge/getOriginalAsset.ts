@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { decodeLocalState } from "../algorand";
 import { TokenImplementation__factory } from "../ethers-contracts";
-import { importTokenWasm } from "../solana/wasm";
 import { buildNativeId, canonicalAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
@@ -13,14 +12,14 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
-  coalesceChainId,
-  hexToUint8Array,
+  coalesceChainId
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import {
   getIsWrappedAssetAlgorand,
   getIsWrappedAssetEth,
 } from "./getIsWrappedAsset";
+import { getWrappedMeta } from "../solana/tokenBridge";
 
 // TODO: remove `as ChainId` and return number in next minor version as we can't ensure it will match our type definition
 export interface WormholeWrappedInfo {
@@ -115,39 +114,37 @@ export async function getOriginalAssetSol(
   tokenBridgeAddress: string,
   mintAddress: string
 ): Promise<WormholeWrappedInfo> {
-  if (mintAddress) {
-    // TODO: share some of this with getIsWrappedAssetSol, like a getWrappedMetaAccountAddress or something
-    const { parse_wrapped_meta, wrapped_meta_address } =
-      await importTokenWasm();
-    const wrappedMetaAddress = wrapped_meta_address(
-      tokenBridgeAddress,
-      new PublicKey(mintAddress).toBytes()
-    );
-    const wrappedMetaAddressPK = new PublicKey(wrappedMetaAddress);
-    const wrappedMetaAccountInfo = await connection.getAccountInfo(
-      wrappedMetaAddressPK
-    );
-    if (wrappedMetaAccountInfo) {
-      const parsed = parse_wrapped_meta(wrappedMetaAccountInfo.data);
-      return {
-        isWrapped: true,
-        chainId: parsed.chain,
-        assetAddress: parsed.token_address,
-      };
-    }
-  }
   try {
+    const mint = new PublicKey(mintAddress);
+
+    return getWrappedMeta(
+      connection,
+      tokenBridgeAddress,
+      mintAddress
+    )
+      .catch((_) => null)
+      .then((meta) => {
+        if (meta === null) {
+          return {
+            isWrapped: false,
+            chainId: CHAIN_ID_SOLANA,
+            assetAddress: mint.toBytes(),
+          };
+        } else {
+          return {
+            isWrapped: true,
+            chainId: meta.chain as ChainId,
+            assetAddress: Uint8Array.from(meta.tokenAddress),
+          };
+        }
+      });
+  } catch (_) {
     return {
       isWrapped: false,
       chainId: CHAIN_ID_SOLANA,
-      assetAddress: new PublicKey(mintAddress).toBytes(),
+      assetAddress: new Uint8Array(32),
     };
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_SOLANA,
-    assetAddress: new Uint8Array(32),
-  };
+  }
 }
 
 /**

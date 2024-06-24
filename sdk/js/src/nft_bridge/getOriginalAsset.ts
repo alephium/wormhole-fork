@@ -4,7 +4,6 @@ import { BigNumber, ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { canonicalAddress, WormholeWrappedInfo } from "..";
 import { TokenImplementation__factory } from "../ethers-contracts";
-import { importNftWasm } from "../solana/wasm";
 import {
   ChainId,
   ChainName,
@@ -13,6 +12,7 @@ import {
   coalesceChainId,
 } from "../utils";
 import { getIsWrappedAssetEth } from "./getIsWrappedAsset";
+import { getWrappedMeta } from "../solana/nftBridge";
 
 // TODO: remove `as ChainId` and return number in next minor version as we can't ensure it will match our type definition
 export interface WormholeWrappedNFTInfo {
@@ -69,54 +69,43 @@ export async function getOriginalAssetEth(
 /**
  * Returns a origin chain and asset address on {originChain} for a provided Wormhole wrapped address
  * @param connection
- * @param tokenBridgeAddress
+ * @param nftBridgeAddress
  * @param mintAddress
  * @returns
  */
 export async function getOriginalAssetSol(
   connection: Connection,
-  tokenBridgeAddress: string,
+  nftBridgeAddress: string,
   mintAddress: string
 ): Promise<WormholeWrappedNFTInfo> {
-  if (mintAddress) {
-    // TODO: share some of this with getIsWrappedAssetSol, like a getWrappedMetaAccountAddress or something
-    const { parse_wrapped_meta, wrapped_meta_address } = await importNftWasm();
-    const wrappedMetaAddress = wrapped_meta_address(
-      tokenBridgeAddress,
-      new PublicKey(mintAddress).toBytes()
-    );
-    const wrappedMetaAddressPK = new PublicKey(wrappedMetaAddress);
-    const wrappedMetaAccountInfo = await connection.getAccountInfo(
-      wrappedMetaAddressPK
-    );
-    if (wrappedMetaAccountInfo) {
-      const parsed = parse_wrapped_meta(wrappedMetaAccountInfo.data);
-      const token_id_arr = parsed.token_id as BigUint64Array;
-      const token_id_bytes = [];
-      for (let elem of token_id_arr.reverse()) {
-        token_id_bytes.push(...bigToUint8Array(elem));
-      }
-      const token_id = BigNumber.from(token_id_bytes).toString();
-      return {
-        isWrapped: true,
-        chainId: parsed.chain,
-        assetAddress: parsed.token_address,
-        tokenId: token_id,
-      };
-    }
-  }
   try {
+    const mint = new PublicKey(mintAddress);
+
+    return getWrappedMeta(connection, nftBridgeAddress, mintAddress)
+      .catch((_) => null)
+      .then((meta) => {
+        if (meta === null) {
+          return {
+            isWrapped: false,
+            chainId: CHAIN_ID_SOLANA,
+            assetAddress: mint.toBytes(),
+          };
+        } else {
+          return {
+            isWrapped: true,
+            chainId: meta.chain as ChainId,
+            assetAddress: Uint8Array.from(meta.tokenAddress),
+            tokenId: meta.tokenId.toString(),
+          };
+        }
+      });
+  } catch (_) {
     return {
       isWrapped: false,
       chainId: CHAIN_ID_SOLANA,
-      assetAddress: new PublicKey(mintAddress).toBytes(),
+      assetAddress: new Uint8Array(32),
     };
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_SOLANA,
-    assetAddress: new Uint8Array(32),
-  };
+  }
 }
 
 // Derived from https://www.jackieli.dev/posts/bigint-to-uint8array/
