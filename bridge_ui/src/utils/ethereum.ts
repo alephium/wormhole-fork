@@ -26,7 +26,7 @@ let _whitelist: TokenInfo[] | undefined = undefined
 
 async function loadETHTokenWhitelist(): Promise<TokenInfo[]> {
   if (_whitelist !== undefined) return _whitelist
-  const { data: { tokens } } = await axios.get('https://ipfs.io/ipns/tokens.1inch.eth/')
+  const { data: { tokens } } = await axios.get('https://tokens-1inch-eth.ipns.dweb.link/')
   _whitelist = tokens
   return tokens
 }
