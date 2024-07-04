@@ -1,6 +1,12 @@
 import { stringToHex, ContractState } from '@alephium/web3'
 import { zeroPad } from '../../lib/utils'
-import { CHAIN_ID_ALEPHIUM, ContractFixture, GuardianSet, randomContractAddress } from './wormhole-fixture'
+import {
+  CHAIN_ID_ALEPHIUM,
+  ContractFixture,
+  GuardianSet,
+  minimalAlphInContract,
+  randomContractAddress
+} from './wormhole-fixture'
 import { Governance, GovernanceTypes, TokenBridgeFactoryTypes } from '../../artifacts/ts'
 import { createTemplateContracts, createTokenBridgeFactory, TemplateContracts } from './token-bridge-fixture'
 
@@ -114,6 +120,6 @@ export function createGovernance(receivedSequence?: bigint, messageFee?: bigint,
     guardianSetIndexes: [0n, BigInt(initGuardianSet.index)],
     previousGuardianSetExpirationTimeMS: 0n
   }
-  const contractState = Governance.stateForTest(initFields, undefined, address)
+  const contractState = Governance.stateForTest(initFields, { alphAmount: minimalAlphInContract }, address)
   return new GovernanceFixture(contractState, tokenBridgeFactory.states(), templateContracts, tokenBridgeFactory)
 }

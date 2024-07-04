@@ -268,6 +268,6 @@ function evm_chain_subset(e: EVMChainName): ChainName {
   return e;
 }
 
-export const MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 105
+export const MAINNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 205
 export const TESTNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 10
 export const DEVNET_ALPH_MINIMAL_CONSISTENCY_LEVEL = 10

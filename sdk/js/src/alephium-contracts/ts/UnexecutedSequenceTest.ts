@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as UnexecutedSequenceTestContractJson } from "../tests/UnexecutedSequenceTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -34,32 +41,85 @@ export namespace UnexecutedSequenceTestTypes {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    checkSequence: {
+      params: CallContractParams<{ seq: bigint }>;
+      result: CallContractResult<null>;
+    };
+    destroy: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    checkSequence: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+    destroy: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   UnexecutedSequenceTestInstance,
   UnexecutedSequenceTestTypes.Fields
 > {
+  encodeFields(fields: UnexecutedSequenceTestTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as UnexecutedSequenceTestTypes.Fields;
+  }
+
   at(address: string): UnexecutedSequenceTestInstance {
     return new UnexecutedSequenceTestInstance(address);
   }
 
   tests = {
     checkSequence: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         UnexecutedSequenceTestTypes.Fields,
         { seq: bigint }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "checkSequence", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "checkSequence", params, getContractByCodeHash);
     },
     destroy: async (
       params: Omit<
-        TestContractParams<UnexecutedSequenceTestTypes.Fields, never>,
+        TestContractParamsWithoutMaps<
+          UnexecutedSequenceTestTypes.Fields,
+          never
+        >,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "destroy", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "destroy", params, getContractByCodeHash);
     },
   };
 }
@@ -69,7 +129,8 @@ export const UnexecutedSequenceTest = new Factory(
   Contract.fromJson(
     UnexecutedSequenceTestContractJson,
     "",
-    "959eab90ef1db13a92de0fffd3b3c7bc5b04d8b0e61bcae7ff8c0713b3d89ea7"
+    "959eab90ef1db13a92de0fffd3b3c7bc5b04d8b0e61bcae7ff8c0713b3d89ea7",
+    []
   )
 );
 
@@ -82,4 +143,55 @@ export class UnexecutedSequenceTestInstance extends ContractInstance {
   async fetchState(): Promise<UnexecutedSequenceTestTypes.State> {
     return fetchContractState(UnexecutedSequenceTest, this);
   }
+
+  methods = {
+    checkSequence: async (
+      params: UnexecutedSequenceTestTypes.CallMethodParams<"checkSequence">
+    ): Promise<
+      UnexecutedSequenceTestTypes.CallMethodResult<"checkSequence">
+    > => {
+      return callMethod(
+        UnexecutedSequenceTest,
+        this,
+        "checkSequence",
+        params,
+        getContractByCodeHash
+      );
+    },
+    destroy: async (
+      params?: UnexecutedSequenceTestTypes.CallMethodParams<"destroy">
+    ): Promise<UnexecutedSequenceTestTypes.CallMethodResult<"destroy">> => {
+      return callMethod(
+        UnexecutedSequenceTest,
+        this,
+        "destroy",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    checkSequence: async (
+      params: UnexecutedSequenceTestTypes.SignExecuteMethodParams<"checkSequence">
+    ): Promise<
+      UnexecutedSequenceTestTypes.SignExecuteMethodResult<"checkSequence">
+    > => {
+      return signExecuteMethod(
+        UnexecutedSequenceTest,
+        this,
+        "checkSequence",
+        params
+      );
+    },
+    destroy: async (
+      params: UnexecutedSequenceTestTypes.SignExecuteMethodParams<"destroy">
+    ): Promise<
+      UnexecutedSequenceTestTypes.SignExecuteMethodResult<"destroy">
+    > => {
+      return signExecuteMethod(UnexecutedSequenceTest, this, "destroy", params);
+    },
+  };
 }

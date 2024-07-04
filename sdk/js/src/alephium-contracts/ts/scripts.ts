@@ -11,11 +11,6 @@ import {
   SignerProvider,
   HexString,
 } from "@alephium/web3";
-import { default as SetMessageFeeScriptJson } from "../governance_scripts/SetMessageFee.ral.json";
-import { default as TransferFeeScriptJson } from "../governance_scripts/TransferFee.ral.json";
-import { default as UpdateGuardianSetScriptJson } from "../governance_scripts/UpdateGuardianSet.ral.json";
-import { default as UpdateGovernanceContractScriptJson } from "../governance_scripts/UpdateGovernanceContract.ral.json";
-import { default as GetTokenScriptJson } from "../tests/GetToken.ral.json";
 import { default as AddRewardsScriptJson } from "../token_bridge_scripts/AddRewards.ral.json";
 import { default as AttestTokenScriptJson } from "../token_bridge_scripts/AttestToken.ral.json";
 import { default as CompleteTransferScriptJson } from "../token_bridge_scripts/CompleteTransfer.ral.json";
@@ -25,40 +20,24 @@ import { default as CreateLocalTokenPoolScriptJson } from "../token_bridge_scrip
 import { default as CreateRemoteTokenPoolScriptJson } from "../token_bridge_scripts/CreateRemoteTokenPool.ral.json";
 import { default as DepositScriptJson } from "../token_bridge_scripts/Deposit.ral.json";
 import { default as DestroyUnexecutedSequenceContractsScriptJson } from "../token_bridge_scripts/DestroyUnexecutedSequenceContracts.ral.json";
+import { default as GetTokenScriptJson } from "../tests/GetToken.ral.json";
 import { default as RegisterChainScriptJson } from "../token_bridge_scripts/RegisterChain.ral.json";
+import { default as SetMessageFeeScriptJson } from "../governance_scripts/SetMessageFee.ral.json";
+import { default as TransferFeeScriptJson } from "../governance_scripts/TransferFee.ral.json";
 import { default as TransferLocalScriptJson } from "../token_bridge_scripts/TransferLocal.ral.json";
 import { default as TransferRemoteScriptJson } from "../token_bridge_scripts/TransferRemote.ral.json";
+import { default as UpdateGovernanceContractScriptJson } from "../governance_scripts/UpdateGovernanceContract.ral.json";
+import { default as UpdateGuardianSetScriptJson } from "../governance_scripts/UpdateGuardianSet.ral.json";
 import { default as UpdateMinimalConsistencyLevelScriptJson } from "../token_bridge_scripts/UpdateMinimalConsistencyLevel.ral.json";
 import { default as UpdateRefundAddressScriptJson } from "../token_bridge_scripts/UpdateRefundAddress.ral.json";
 import { default as UpdateRemoteTokenPoolScriptJson } from "../token_bridge_scripts/UpdateRemoteTokenPool.ral.json";
 import { default as UpgradeTokenBridgeContractScriptJson } from "../token_bridge_scripts/UpgradeTokenBridgeContract.ral.json";
 
-export const SetMessageFee = new ExecutableScript<{
-  governance: HexString;
-  vaa: HexString;
-}>(Script.fromJson(SetMessageFeeScriptJson));
-export const TransferFee = new ExecutableScript<{
-  governance: HexString;
-  vaa: HexString;
-}>(Script.fromJson(TransferFeeScriptJson));
-export const UpdateGuardianSet = new ExecutableScript<{
-  governance: HexString;
-  vaa: HexString;
-}>(Script.fromJson(UpdateGuardianSetScriptJson));
-export const UpdateGovernanceContract = new ExecutableScript<{
-  governance: HexString;
-  vaa: HexString;
-}>(Script.fromJson(UpdateGovernanceContractScriptJson));
-export const GetToken = new ExecutableScript<{
-  sender: Address;
-  token: HexString;
-  amount: bigint;
-  factor: bigint;
-}>(Script.fromJson(GetTokenScriptJson));
 export const AddRewards = new ExecutableScript<{
   bridgeRewardRouter: HexString;
   amount: bigint;
-}>(Script.fromJson(AddRewardsScriptJson));
+}>(Script.fromJson(AddRewardsScriptJson, "", []));
+
 export const AttestToken = new ExecutableScript<{
   payer: Address;
   tokenBridge: HexString;
@@ -68,49 +47,75 @@ export const AttestToken = new ExecutableScript<{
   name: HexString;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(AttestTokenScriptJson));
+}>(Script.fromJson(AttestTokenScriptJson, "", []));
+
 export const CompleteTransfer = new ExecutableScript<{
   tokenBridgeForChain: HexString;
   vaa: HexString;
-}>(Script.fromJson(CompleteTransferScriptJson));
+}>(Script.fromJson(CompleteTransferScriptJson, "", []));
+
 export const CompleteTransferWithReward = new ExecutableScript<{
   bridgeRewardRouter: HexString;
   tokenBridgeForChain: HexString;
   vaa: HexString;
-}>(Script.fromJson(CompleteTransferWithRewardScriptJson));
+}>(Script.fromJson(CompleteTransferWithRewardScriptJson, "", []));
+
 export const CreateLocalAttestTokenHandler = new ExecutableScript<{
   tokenBridge: HexString;
   payer: Address;
   alphAmount: bigint;
-}>(Script.fromJson(CreateLocalAttestTokenHandlerScriptJson));
+}>(Script.fromJson(CreateLocalAttestTokenHandlerScriptJson, "", []));
+
 export const CreateLocalTokenPool = new ExecutableScript<{
   payer: Address;
   attestTokenHandler: HexString;
   localTokenId: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(CreateLocalTokenPoolScriptJson));
+}>(Script.fromJson(CreateLocalTokenPoolScriptJson, "", []));
+
 export const CreateRemoteTokenPool = new ExecutableScript<{
   payer: Address;
   attestTokenHandler: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(CreateRemoteTokenPoolScriptJson));
+}>(Script.fromJson(CreateRemoteTokenPoolScriptJson, "", []));
+
 export const Deposit = new ExecutableScript<{
   tokenBridgeForChain: HexString;
   payer: Address;
   amount: bigint;
-}>(Script.fromJson(DepositScriptJson));
+}>(Script.fromJson(DepositScriptJson, "", []));
+
 export const DestroyUnexecutedSequenceContracts = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(DestroyUnexecutedSequenceContractsScriptJson));
+}>(Script.fromJson(DestroyUnexecutedSequenceContractsScriptJson, "", []));
+
+export const GetToken = new ExecutableScript<{
+  sender: Address;
+  token: HexString;
+  amount: bigint;
+  factor: bigint;
+}>(Script.fromJson(GetTokenScriptJson, "", []));
+
 export const RegisterChain = new ExecutableScript<{
   payer: Address;
   tokenBridge: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(RegisterChainScriptJson));
+}>(Script.fromJson(RegisterChainScriptJson, "", []));
+
+export const SetMessageFee = new ExecutableScript<{
+  governance: HexString;
+  vaa: HexString;
+}>(Script.fromJson(SetMessageFeeScriptJson, "", []));
+
+export const TransferFee = new ExecutableScript<{
+  governance: HexString;
+  vaa: HexString;
+}>(Script.fromJson(TransferFeeScriptJson, "", []));
+
 export const TransferLocal = new ExecutableScript<{
   tokenBridge: HexString;
   fromAddress: Address;
@@ -122,7 +127,8 @@ export const TransferLocal = new ExecutableScript<{
   arbiterFee: bigint;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(TransferLocalScriptJson));
+}>(Script.fromJson(TransferLocalScriptJson, "", []));
+
 export const TransferRemote = new ExecutableScript<{
   tokenBridge: HexString;
   fromAddress: Address;
@@ -135,20 +141,34 @@ export const TransferRemote = new ExecutableScript<{
   arbiterFee: bigint;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(TransferRemoteScriptJson));
+}>(Script.fromJson(TransferRemoteScriptJson, "", []));
+
+export const UpdateGovernanceContract = new ExecutableScript<{
+  governance: HexString;
+  vaa: HexString;
+}>(Script.fromJson(UpdateGovernanceContractScriptJson, "", []));
+
+export const UpdateGuardianSet = new ExecutableScript<{
+  governance: HexString;
+  vaa: HexString;
+}>(Script.fromJson(UpdateGuardianSetScriptJson, "", []));
+
 export const UpdateMinimalConsistencyLevel = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateMinimalConsistencyLevelScriptJson));
+}>(Script.fromJson(UpdateMinimalConsistencyLevelScriptJson, "", []));
+
 export const UpdateRefundAddress = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateRefundAddressScriptJson));
+}>(Script.fromJson(UpdateRefundAddressScriptJson, "", []));
+
 export const UpdateRemoteTokenPool = new ExecutableScript<{
   attestTokenHandler: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateRemoteTokenPoolScriptJson));
+}>(Script.fromJson(UpdateRemoteTokenPoolScriptJson, "", []));
+
 export const UpgradeTokenBridgeContract = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpgradeTokenBridgeContractScriptJson));
+}>(Script.fromJson(UpgradeTokenBridgeContractScriptJson, "", []));

@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as GovernanceV1ContractJson } from "../tests/GovernanceV1.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -42,12 +49,54 @@ export namespace GovernanceV1Types {
   };
 
   export type State = ContractState<Fields>;
+
+  export interface CallMethodTable {
+    foo: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+  }
+  export type CallMethodParams<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["params"];
+  export type CallMethodResult<T extends keyof CallMethodTable> =
+    CallMethodTable[T]["result"];
+  export type MultiCallParams = Partial<{
+    [Name in keyof CallMethodTable]: CallMethodTable[Name]["params"];
+  }>;
+  export type MultiCallResults<T extends MultiCallParams> = {
+    [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
+      ? CallMethodTable[MaybeName]["result"]
+      : undefined;
+  };
+
+  export interface SignExecuteMethodTable {
+    foo: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   GovernanceV1Instance,
   GovernanceV1Types.Fields
 > {
+  encodeFields(fields: GovernanceV1Types.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as GovernanceV1Types.Fields;
+  }
+
   at(address: string): GovernanceV1Instance {
     return new GovernanceV1Instance(address);
   }
@@ -55,11 +104,11 @@ class Factory extends ContractFactory<
   tests = {
     foo: async (
       params: Omit<
-        TestContractParams<GovernanceV1Types.Fields, never>,
+        TestContractParamsWithoutMaps<GovernanceV1Types.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "foo", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "foo", params, getContractByCodeHash);
     },
   };
 }
@@ -69,7 +118,8 @@ export const GovernanceV1 = new Factory(
   Contract.fromJson(
     GovernanceV1ContractJson,
     "",
-    "237ca92e965dc50e86cb94535a4ffc9c9074ee6a7f1a1a24374f7380c6416d99"
+    "237ca92e965dc50e86cb94535a4ffc9c9074ee6a7f1a1a24374f7380c6416d99",
+    []
   )
 );
 
@@ -82,4 +132,28 @@ export class GovernanceV1Instance extends ContractInstance {
   async fetchState(): Promise<GovernanceV1Types.State> {
     return fetchContractState(GovernanceV1, this);
   }
+
+  methods = {
+    foo: async (
+      params?: GovernanceV1Types.CallMethodParams<"foo">
+    ): Promise<GovernanceV1Types.CallMethodResult<"foo">> => {
+      return callMethod(
+        GovernanceV1,
+        this,
+        "foo",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    foo: async (
+      params: GovernanceV1Types.SignExecuteMethodParams<"foo">
+    ): Promise<GovernanceV1Types.SignExecuteMethodResult<"foo">> => {
+      return signExecuteMethod(GovernanceV1, this, "foo", params);
+    },
+  };
 }

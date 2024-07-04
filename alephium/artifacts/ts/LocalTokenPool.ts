@@ -23,6 +23,13 @@ import {
   fetchContractState,
   ContractInstance,
   getContractEventsCurrentCount,
+  TestContractParamsWithoutMaps,
+  TestContractResultWithoutMaps,
+  SignExecuteContractMethodParams,
+  SignExecuteScriptTxResult,
+  signExecuteMethod,
+  addStdIdToFields,
+  encodeContractFields,
 } from "@alephium/web3";
 import { default as LocalTokenPoolContractJson } from "../token_bridge/LocalTokenPool.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -56,6 +63,18 @@ export namespace LocalTokenPoolTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    completeTransfer: {
+      params: CallContractParams<{
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        recipient: Address;
+        normalizedArbiterFee: bigint;
+        caller: Address;
+      }>;
+      result: CallContractResult<null>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
@@ -87,12 +106,83 @@ export namespace LocalTokenPoolTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+
+  export interface SignExecuteMethodTable {
+    getSymbol: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getName: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getDecimals: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    getTotalSupply: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    completeTransfer: {
+      params: SignExecuteContractMethodParams<{
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        recipient: Address;
+        normalizedArbiterFee: bigint;
+        caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    normalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    deNormalizeAmount: {
+      params: SignExecuteContractMethodParams<{
+        amount: bigint;
+        decimals: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    transfer: {
+      params: SignExecuteContractMethodParams<{
+        fromAddress: Address;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+  }
+  export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["params"];
+  export type SignExecuteMethodResult<T extends keyof SignExecuteMethodTable> =
+    SignExecuteMethodTable[T]["result"];
 }
 
 class Factory extends ContractFactory<
   LocalTokenPoolInstance,
   LocalTokenPoolTypes.Fields
 > {
+  encodeFields(fields: LocalTokenPoolTypes.Fields) {
+    return encodeContractFields(
+      addStdIdToFields(this.contract, fields),
+      this.contract.fieldsSig,
+      []
+    );
+  }
+
+  getInitialFieldsWithDefaultValues() {
+    return this.contract.getInitialFieldsWithDefaultValues() as LocalTokenPoolTypes.Fields;
+  }
+
   consts = {
     Path: {
       AttestTokenHandler: "00",
@@ -144,38 +234,38 @@ class Factory extends ContractFactory<
   tests = {
     getSymbol: async (
       params: Omit<
-        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<LocalTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getSymbol", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "getSymbol", params, getContractByCodeHash);
     },
     getName: async (
       params: Omit<
-        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<LocalTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "getName", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "getName", params, getContractByCodeHash);
     },
     getDecimals: async (
       params: Omit<
-        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<LocalTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getDecimals", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getDecimals", params, getContractByCodeHash);
     },
     getTotalSupply: async (
       params: Omit<
-        TestContractParams<LocalTokenPoolTypes.Fields, never>,
+        TestContractParamsWithoutMaps<LocalTokenPoolTypes.Fields, never>,
         "testArgs"
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getTotalSupply", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "getTotalSupply", params, getContractByCodeHash);
     },
     completeTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         {
           emitterChainId: bigint;
@@ -187,11 +277,16 @@ class Factory extends ContractFactory<
           caller: Address;
         }
       >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "completeTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     prepareTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         {
           callerContractId: HexString;
@@ -201,11 +296,11 @@ class Factory extends ContractFactory<
           nonce: HexString;
         }
       >
-    ): Promise<TestContractResult<[HexString, bigint]>> => {
-      return testMethod(this, "prepareTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<[HexString, bigint]>> => {
+      return testMethod(this, "prepareTransfer", params, getContractByCodeHash);
     },
     prepareCompleteTransfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         {
           callerContractId: HexString;
@@ -216,27 +311,37 @@ class Factory extends ContractFactory<
           normalizedArbiterFee: bigint;
         }
       >
-    ): Promise<TestContractResult<[bigint, bigint]>> => {
-      return testMethod(this, "prepareCompleteTransfer", params);
+    ): Promise<TestContractResultWithoutMaps<[bigint, bigint]>> => {
+      return testMethod(
+        this,
+        "prepareCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
     },
     normalizeAmount: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         { amount: bigint; decimals: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "normalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(this, "normalizeAmount", params, getContractByCodeHash);
     },
     deNormalizeAmount: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         { amount: bigint; decimals: bigint }
       >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "deNormalizeAmount", params);
+    ): Promise<TestContractResultWithoutMaps<bigint>> => {
+      return testMethod(
+        this,
+        "deNormalizeAmount",
+        params,
+        getContractByCodeHash
+      );
     },
     transfer: async (
-      params: TestContractParams<
+      params: TestContractParamsWithoutMaps<
         LocalTokenPoolTypes.Fields,
         {
           fromAddress: Address;
@@ -246,8 +351,8 @@ class Factory extends ContractFactory<
           nonce: HexString;
         }
       >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "transfer", params);
+    ): Promise<TestContractResultWithoutMaps<HexString>> => {
+      return testMethod(this, "transfer", params, getContractByCodeHash);
     },
   };
 }
@@ -257,7 +362,8 @@ export const LocalTokenPool = new Factory(
   Contract.fromJson(
     LocalTokenPoolContractJson,
     "",
-    "6330d3736eef41d3bc9c5026d0608def44267cc00ed8d8be0620d01f4627f035"
+    "6330d3736eef41d3bc9c5026d0608def44267cc00ed8d8be0620d01f4627f035",
+    []
   )
 );
 
@@ -316,6 +422,17 @@ export class LocalTokenPoolInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    completeTransfer: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"completeTransfer">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"completeTransfer">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
     normalizeAmount: async (
       params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
@@ -348,6 +465,69 @@ export class LocalTokenPoolInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
+    },
+  };
+
+  view = this.methods;
+
+  transact = {
+    getSymbol: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"getSymbol">
+    ): Promise<LocalTokenPoolTypes.SignExecuteMethodResult<"getSymbol">> => {
+      return signExecuteMethod(LocalTokenPool, this, "getSymbol", params);
+    },
+    getName: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"getName">
+    ): Promise<LocalTokenPoolTypes.SignExecuteMethodResult<"getName">> => {
+      return signExecuteMethod(LocalTokenPool, this, "getName", params);
+    },
+    getDecimals: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"getDecimals">
+    ): Promise<LocalTokenPoolTypes.SignExecuteMethodResult<"getDecimals">> => {
+      return signExecuteMethod(LocalTokenPool, this, "getDecimals", params);
+    },
+    getTotalSupply: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"getTotalSupply">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"getTotalSupply">
+    > => {
+      return signExecuteMethod(LocalTokenPool, this, "getTotalSupply", params);
+    },
+    completeTransfer: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"completeTransfer">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"completeTransfer">
+    > => {
+      return signExecuteMethod(
+        LocalTokenPool,
+        this,
+        "completeTransfer",
+        params
+      );
+    },
+    normalizeAmount: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"normalizeAmount">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"normalizeAmount">
+    > => {
+      return signExecuteMethod(LocalTokenPool, this, "normalizeAmount", params);
+    },
+    deNormalizeAmount: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"deNormalizeAmount">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"deNormalizeAmount">
+    > => {
+      return signExecuteMethod(
+        LocalTokenPool,
+        this,
+        "deNormalizeAmount",
+        params
+      );
+    },
+    transfer: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"transfer">
+    ): Promise<LocalTokenPoolTypes.SignExecuteMethodResult<"transfer">> => {
+      return signExecuteMethod(LocalTokenPool, this, "transfer", params);
     },
   };
 

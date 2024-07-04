@@ -26,6 +26,7 @@ import {
   TestToken,
   TestTokenInstance,
 } from ".";
+import { default as mainnetDeployments } from "../.deployments.mainnet.json";
 import { default as testnetDeployments } from "../.deployments.testnet.json";
 import { default as devnetDeployments } from "../.deployments.devnet.json";
 
@@ -131,7 +132,9 @@ export function loadDeployments(
   deployerAddress?: string
 ): Deployments {
   const deployments =
-    networkId === "testnet"
+    networkId === "mainnet"
+      ? mainnetDeployments
+      : networkId === "testnet"
       ? testnetDeployments
       : networkId === "devnet"
       ? devnetDeployments
@@ -139,7 +142,7 @@ export function loadDeployments(
   if (deployments === undefined) {
     throw Error("The contract has not been deployed to the " + networkId);
   }
-  const allDeployments = Array.isArray(deployments)
+  const allDeployments: any[] = Array.isArray(deployments)
     ? deployments
     : [deployments];
   if (deployerAddress === undefined) {

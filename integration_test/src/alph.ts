@@ -3,7 +3,6 @@ import base58 from 'bs58'
 import { getSignedVAA, normalizeTokenId, assert } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
-import path from 'path'
 import {
   addressFromContractId,
   ALPH_TOKEN_ID,
@@ -14,7 +13,6 @@ import {
   groupOfAddress,
   node,
   NodeProvider,
-  Project,
   web3,
   ContractFactory,
   ContractInstance,
@@ -63,13 +61,6 @@ export type AlephiumBridgeChain = BridgeChain & {
 export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const nodeProvider = new NodeProvider('http://127.0.0.1:22973')
   web3.setCurrentNodeProvider(nodeProvider)
-  const bridgeRootPath = path.join(process.cwd(), '..')
-  await Project.build(
-    { ignoreUnusedConstantsWarnings: true },
-    path.join(bridgeRootPath, 'alephium'),
-    path.join(bridgeRootPath, 'alephium', 'contracts'),
-    path.join(bridgeRootPath, 'alephium', 'artifacts')
-  )
   const nodeWallet = await testNodeWallet()
   const accounts = await nodeWallet.getAccounts()
   const accountAddress = accounts[0].address
@@ -120,7 +111,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const getNativeTokenBalanceByAddress = async (address: string): Promise<bigint> => {
     const decoded = base58.decode(address)
     if (decoded[0] === 3) {
-      const contractState = await nodeProvider.contracts.getContractsAddressState(address, { group: groupIndex })
+      const contractState = await nodeProvider.contracts.getContractsAddressState(address)
       return BigInt(contractState.asset.attoAlphAmount)
     }
     const balance = await nodeWallet.nodeProvider.addresses.getAddressesAddressBalance(address)
@@ -158,9 +149,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const getLocalLockedTokenBalance = async (tokenId: string): Promise<bigint> => {
     const localTokenPoolId = getTokenPoolId(tokenBridgeContractId, CHAIN_ID_ALEPHIUM, tokenId, groupIndex)
     const contractAddress = addressFromContractId(localTokenPoolId)
-    const contractState = await nodeWallet.nodeProvider.contracts.getContractsAddressState(contractAddress, {
-      group: groupIndex
-    })
+    const contractState = await nodeWallet.nodeProvider.contracts.getContractsAddressState(contractAddress)
     if (tokenId === ALPH_TOKEN_ID) {
       const total = BigInt(contractState.asset.attoAlphAmount)
       return total - oneAlph // minus `MinimalAlphInContract`
