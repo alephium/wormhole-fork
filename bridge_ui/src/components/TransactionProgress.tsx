@@ -164,7 +164,7 @@ export default function TransactionProgress({
         <div className={classes.root}>
           <Typography variant="body2" className={classes.message}>
             {!isFinalized
-              ? t('Waiting for finality on {{ chainName }} which may take up to 15 minutes.')
+              ? `${t('Waiting for finality on {{ chainName }} which may take up to 15 minutes.', { chainName: CHAINS_BY_ID[chainId].name })}`
               : `${t('Waiting for Wormhole Network consensus')}...`}
           </Typography>
           {!isFinalized ? (
