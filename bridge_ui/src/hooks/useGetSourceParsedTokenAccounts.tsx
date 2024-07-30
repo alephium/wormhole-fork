@@ -619,6 +619,9 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
       if (result === undefined || result.balance === BigInt(0)) {
         continue
       }
+      if (tokenAccounts.find((t) => t.contract_address.toLowerCase() === result.tokenId.toLowerCase()) !== undefined) {
+        continue
+      }
       const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
       tokenAccounts.push({
         contract_decimals: token.decimals,
