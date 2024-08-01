@@ -41,19 +41,20 @@ module.exports = {
           mnemonic: {
             phrase: process.env.MNEMONIC,
           },
-          providerOrUrl: 'https://sepolia.infura.io/v3/' + process.env.INFURA_KEY,
+          providerOrUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
           pollingInterval: 8000,
         });
       },
       network_id: "11155111",
-      gasPrice: 1000000000,
-      deploymentPollingInterval: 8000
+      gasPrice: 30000000000,
+      deploymentPollingInterval: 8000,
+      confirmations: 1,
     },
     bscTestnet: {
-      provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://data-seed-prebsc-1-s1.binance.org:8545'),
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://bsc-testnet-rpc.publicnode.com'),
       network_id: "97",
       networkCheckTimeout: 50000,
-      confirmations: 10,
+      confirmations: 1,
     },
   },
 
