@@ -49,6 +49,7 @@ import { Algodv2 } from "algosdk";
 import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
+import { getEvmJsonRpcProvider } from "../utils/ethereum";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;
@@ -103,7 +104,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
   const setSourceWormholeWrappedInfo = nft
     ? setNFTSourceWormholeWrappedInfo
     : setTransferSourceWormholeWrappedInfo;
-  const { provider } = useEthereumProvider();
+  const { provider: evmProvider, chainId: evmChainId } = useEthereumProvider();
   const isRecovery = useSelector(
     nft ? selectNFTIsRecovery : selectTransferIsRecovery
   );
@@ -114,7 +115,12 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     }
     let cancelled = false;
     (async () => {
-      if (isEVMChain(sourceChain) && provider && sourceAsset) {
+      if (isEVMChain(sourceChain) && sourceAsset) {
+        // use JsonRpcProvider if both source chain and target chain are evm chains
+        const provider = evmChainId === sourceChain ? evmProvider : getEvmJsonRpcProvider(sourceChain)
+        if (provider === undefined) {
+          throw new Error(`Invalid evm chain id: ${sourceChain}`)
+        }
         dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
         try {
           const wrappedInfo = makeStateSafe(
@@ -230,7 +236,8 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     isRecovery,
     sourceChain,
     sourceAsset,
-    provider,
+    evmProvider,
+    evmChainId,
     alphWallet,
     nft,
     setSourceWormholeWrappedInfo,
