@@ -131,7 +131,7 @@ const nativeExplorerContractUri = (
       base = "https://explorer.solana.com/address/";
     } else if (chainId === chainIDs["ethereum"]) {
       base = activeNetwork.name === 'testnet'
-        ? "https://goerli.etherscan.io/address/"
+        ? "https://sepolia.etherscan.io/address/"
         : activeNetwork.name === 'mainnet'
         ? "https://etherscan.io/address/"
         : "http://not_available"
@@ -178,7 +178,7 @@ const nativeExplorerTxUri = (
   if (chainId === chainIDs["ethereum"]) {
     const prefix = transactionId.startsWith('0x') ? '' : '0x'
     base = activeNetwork.name === 'testnet'
-      ? `https://goerli.etherscan.io/tx/${prefix}`
+      ? `https://sepolia.etherscan.io/tx/${prefix}`
       : `https://etherscan.io/tx/${prefix}`
   } else if (chainId === chainIDs["bsc"]) {
     const prefix = transactionId.startsWith('0x') ? '' : '0x'

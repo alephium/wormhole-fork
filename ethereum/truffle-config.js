@@ -35,17 +35,17 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: false,
     },
-    goerli: {
+    sepolia: {
       provider: () => {
         return new HDWalletProvider({
           mnemonic: {
             phrase: process.env.MNEMONIC,
           },
-          providerOrUrl: 'https://goerli.infura.io/v3/' + process.env.INFURA_KEY,
+          providerOrUrl: 'https://sepolia.infura.io/v3/' + process.env.INFURA_KEY,
           pollingInterval: 8000,
         });
       },
-      network_id: "5",
+      network_id: "11155111",
       gasPrice: 1000000000,
       deploymentPollingInterval: 8000
     },

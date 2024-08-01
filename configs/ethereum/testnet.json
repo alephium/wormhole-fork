@@ -6,7 +6,7 @@
     "tokenBridge": "0x3a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
     "wrappedNative": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
   },
-  "nodeUrl": "https://goerli.infura.io/v3/",
+  "nodeUrl": "https://sepolia.infura.io/v3/",
   "coreEmitterAddress": "000000000000000000000000D583089D29311C6E8d075c699404aB0eC539b0B7",
   "tokenBridgeEmitterAddress": "0000000000000000000000003a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
   "bridgeTokens": [

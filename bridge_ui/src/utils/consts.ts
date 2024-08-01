@@ -87,7 +87,7 @@ export const CHAINS: ChainInfo[] =
         },
         {
           id: CHAIN_ID_ETH,
-          name: "Ethereum (Goerli)",
+          name: "Ethereum (Sepolia)",
           logo: ethIcon,
         },
         alephiumChainInfo
@@ -279,14 +279,14 @@ export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://ethereum-rpc.publicnode.com'
     : CLUSTER === 'testnet'
-    ? 'https://ethereum-goerli.publicnode.com'
+    ? 'https://ethereum-sepolia-rpc.publicnode.com'
     : 'http://localhost:8545'
 
 export const BSC_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://bsc-rpc.publicnode.com'
     : CLUSTER === 'testnet'
-    ? 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    ? 'https://bsc-testnet-rpc.publicnode.com'
     : 'http://localhost:8546'
 
 export const TERRA_HOST =

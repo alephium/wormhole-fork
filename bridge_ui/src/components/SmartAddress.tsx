@@ -114,7 +114,7 @@ export default function SmartAddress({
   const explorerAddress = isNative || useableAddress === ''
     ? null
     : chainId === CHAIN_ID_ETH
-    ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/${
+    ? `https://${CLUSTER === "testnet" ? "sepolia." : ""}etherscan.io/${
         isAsset ? "token" : "address"
       }/${useableAddress}`
     : chainId === CHAIN_ID_ETHEREUM_ROPSTEN

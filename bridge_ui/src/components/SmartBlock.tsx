@@ -45,7 +45,7 @@ export default function SmartBlock({
   const explorerAddress =
     chainId === CHAIN_ID_ETH
       ? `https://${
-          CLUSTER === "testnet" ? "goerli." : ""
+          CLUSTER === "testnet" ? "sepolia." : ""
         }etherscan.io/block/${blockNumber}`
       : undefined;
   const explorerName = getExplorerName(chainId);
