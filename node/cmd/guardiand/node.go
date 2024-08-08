@@ -373,8 +373,10 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	alphConfig := bridgeConfig.Alephium
 	ethConfig := bridgeConfig.Ethereum
+	bscConfig := bridgeConfig.Bsc
 
 	ethContract := eth_common.HexToAddress(ethConfig.Contracts.Governance)
+	bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
 
 	governanceChainId := vaa.ChainID(bridgeConfig.Guardian.GovernanceChainId)
 	governanceEmitterAddress, err := vaa.StringToAddress(bridgeConfig.Guardian.GovernanceEmitterAddress)
@@ -415,6 +417,9 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 	if *ethRPC == "" {
 		logger.Fatal("Please specify --ethRPC")
+	}
+	if *bscRPC == "" {
+		logger.Fatal("Please specify --bscRPC")
 	}
 	if *nodeName == "" {
 		logger.Fatal("Please specify --nodeName")
@@ -676,13 +681,9 @@ func runNode(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if *bscRPC != "" && *network == "devnet" {
-			bscConfig := bridgeConfig.Bsc
-			bscContract := eth_common.HexToAddress(bscConfig.Contracts.Governance)
-			if err := supervisor.Run(ctx, "bscwatch",
-				ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
-				return err
-			}
+		if err := supervisor.Run(ctx, "bscwatch",
+			ethereum.NewEthWatcher(*bscRPC, bscContract, "bsc", common.ReadinessBSCSyncing, vaa.ChainIDBSC, lockC, setC, chainObsvReqC[vaa.ChainIDBSC], unsafeDevMode, bscPollIntervalMs, true).Run); err != nil {
+			return err
 		}
 
 		// if err := supervisor.Run(ctx, "algorandwatch",

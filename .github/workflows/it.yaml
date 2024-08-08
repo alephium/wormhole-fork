@@ -4,10 +4,10 @@ on:
   pull_request:
   push:
     branches:
-      - refactor-configs
+      - master
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -24,7 +24,7 @@ jobs:
         run: docker system prune -f
       - name: start docker images
         working-directory: ./docker
-        run: MONGO_USER=root MONGO_PASSWORD=root docker-compose up -d
+        run: MONGO_USER=root MONGO_PASSWORD=root docker compose up -d
       - name: wait until contracts are deployed
         working-directory: ./docker
         run: ./wait-until-services-up.sh

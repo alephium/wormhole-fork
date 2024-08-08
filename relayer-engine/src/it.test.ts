@@ -201,22 +201,22 @@ describe('Ethereum to Alephium', () => {
   })
 })
 
-// describe('Alephium to BSC', () => {
-//   test('Send Alephium token to BSC', async () => {
-//     await transferFromAlphToEvmChain(CHAIN_ID_BSC)
-//   })
-//
-//   test('Spy Relay redeemed on BSC', async () => {
-//     await checkTransferCompletedOnEVM(CHAIN_ID_BSC)
-//   })
-// })
+describe('Alephium to BSC', () => {
+  test('Send Alephium token to BSC', async () => {
+    await transferFromAlphToEvmChain(CHAIN_ID_BSC)
+  })
 
-// describe('BSC to Alephium', () => {
-//   test('Send BNB to Alephium', async () => {
-//     await transferFromEvmChainToAlph(CHAIN_ID_BSC)
-//   })
-//
-//   test('Spy Relay redeemed on Alephium', async () => {
-//     await checkTransferCompletedOnAlephium()
-//   })
-// })
+  test('Spy Relay redeemed on BSC', async () => {
+    await checkTransferCompletedOnEVM(CHAIN_ID_BSC)
+  })
+})
+
+describe('BSC to Alephium', () => {
+  test('Send BNB to Alephium', async () => {
+    await transferFromEvmChainToAlph(CHAIN_ID_BSC)
+  })
+
+  test('Spy Relay redeemed on Alephium', async () => {
+    await checkTransferCompletedOnAlephium()
+  })
+})

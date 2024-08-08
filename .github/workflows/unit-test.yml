@@ -8,7 +8,7 @@ on:
 jobs:
   # Verify whether the Makefile builds the node (no dependencies other than Go)
   node:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -17,7 +17,7 @@ jobs:
       - run: make node && make guardian-test
 
   ethereum:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -26,7 +26,7 @@ jobs:
       - run: cd ethereum && make test
 
   ethereum-upgrade:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -38,7 +38,7 @@ jobs:
       - run: cd ethereum && PATH=$PATH:$XDG_CONFIG_HOME/.foundry/bin/ make test-upgrade
 
   alephium:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [16, 18]
@@ -52,7 +52,7 @@ jobs:
         working-directory: ./alephium
         run: |
           pushd docker
-          docker-compose up -d
+          docker compose up -d
           popd
           SECONDS=0
           sleep 5
@@ -76,7 +76,7 @@ jobs:
           npm run lint
 
   sdk:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [16, 18]
@@ -99,7 +99,7 @@ jobs:
           npm ci && npm run build && npm run test
 
   token-list:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js

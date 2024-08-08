@@ -363,23 +363,21 @@ func run(cmd *cobra.Command, args []string) {
 			return err
 		}
 
-		if *bscRpcUrl != "" && *network == "devnet" {
-			bscWatcher, err := transactions.NewEVMWatcher(
-				logger,
-				ctx,
-				*bscRpcUrl,
-				vaa.ChainIDBSC,
-				bridgeConfig.Bsc,
-				watcher.GetLatestEventIndexBsc,
-				blockTxsC,
-			)
-			if err != nil {
-				logger.Error("failed to create bsc watcher", zap.Error(err))
-				return err
-			}
-			if err := supervisor.Run(ctx, "bsc-watcher", bscWatcher.Run()); err != nil {
-				return err
-			}
+		bscWatcher, err := transactions.NewEVMWatcher(
+			logger,
+			ctx,
+			*bscRpcUrl,
+			vaa.ChainIDBSC,
+			bridgeConfig.Bsc,
+			watcher.GetLatestEventIndexBsc,
+			blockTxsC,
+		)
+		if err != nil {
+			logger.Error("failed to create bsc watcher", zap.Error(err))
+			return err
+		}
+		if err := supervisor.Run(ctx, "bsc-watcher", bscWatcher.Run()); err != nil {
+			return err
 		}
 
 		if err := supervisor.Run(ctx, "watcher", watcher.Run()); err != nil {

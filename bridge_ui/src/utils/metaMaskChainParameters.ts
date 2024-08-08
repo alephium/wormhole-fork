@@ -31,11 +31,11 @@ export const METAMASK_CHAIN_PARAMETERS: {
     blockExplorerUrls: ["https://ropsten.etherscan.io"],
   },
   5: {
-    chainId: "0x5",
-    chainName: "Görli",
-    nativeCurrency: { name: "Görli Ether", symbol: "GOR", decimals: 18 },
-    rpcUrls: ["https://rpc.ankr.com/eth_goerli"],
-    blockExplorerUrls: ["https://goerli.etherscan.io"],
+    chainId: "0xaa36a7",
+    chainName: "Sepolia",
+    nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
+    blockExplorerUrls: ["https://sepolia.etherscan.io"],
   },
   56: {
     chainId: "0x38",
