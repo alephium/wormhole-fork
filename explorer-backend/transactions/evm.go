@@ -37,6 +37,10 @@ func NewEVMWatcher(
 	getEventIndex func(context.Context) (*uint32, error),
 	blockTxsC chan<- []*BlockTransactions,
 ) (*EVMWatcher, error) {
+	logger.Info("start evm watcher 0")
+	logger.Info("start evm watcher 1", zap.String("rpcUrl", rpcUrl))
+	logger.info("start evm watcher 2", zap.String("governance", chainConfig.Contracts.Governance))
+	logger.Info("start evm watcher 3")
 	contractAddress := ethCommon.HexToAddress(chainConfig.Contracts.Governance)
 	namedLogger := logger.Named(chainId.String())
 	connector, err := ethereum.NewEthereumConnector(ctx, chainId.String(), rpcUrl, contractAddress, namedLogger)
