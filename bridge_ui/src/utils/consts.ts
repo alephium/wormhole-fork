@@ -209,7 +209,7 @@ export const WORMHOLE_RPC_HOSTS =
     ? guardianTestnetConfig.guardianUrls
     : guardianDevnetConfig.guardianUrls
 export const ETH_NETWORK_CHAIN_ID =
-  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
+  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 11155111 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 3 : 1337;
 export const BSC_NETWORK_CHAIN_ID =
