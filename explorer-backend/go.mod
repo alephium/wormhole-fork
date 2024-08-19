@@ -53,7 +53,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/alephium/go-sdk v0.0.0-20230918114914-5feda0147395
-	github.com/alephium/wormhole-fork/node v0.0.0-20231019002157-bf40b14f9721
+	github.com/alephium/wormhole-fork/node v0.0.0-20240818215257-cb0667c4f6c1
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
