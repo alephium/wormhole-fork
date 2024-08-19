@@ -2,13 +2,13 @@
   "chainId": 4,
   "wrappedNative": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
   "contracts": {
-    "governance": "0x1e6dc1ca45Df702cb5b933Fd13be7F9512Ada597",
-    "tokenBridge": "0xCc666109acDfa61EfF62f5125949332715f5ee60",
+    "governance": "0x2fCd6055044C4D9A028c8eA372EE00c8A5F0072a",
+    "tokenBridge": "0x95549935bC0F4a10ee7e5CF8bA18E5EFc0321F65",
     "wrappedNative": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
   },
   "nodeUrl": "https://data-seed-prebsc-1-s1.binance.org:8545/",
-  "coreEmitterAddress": "0000000000000000000000001e6dc1ca45Df702cb5b933Fd13be7F9512Ada597",
-  "tokenBridgeEmitterAddress": "000000000000000000000000Cc666109acDfa61EfF62f5125949332715f5ee60",
+  "coreEmitterAddress": "0000000000000000000000002fCd6055044C4D9A028c8eA372EE00c8A5F0072a",
+  "tokenBridgeEmitterAddress": "00000000000000000000000095549935bC0F4a10ee7e5CF8bA18E5EFc0321F65",
   "bridgeTokens": [
     "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
   ]
