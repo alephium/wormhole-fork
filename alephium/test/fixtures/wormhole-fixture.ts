@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import * as base58 from 'bs58'
 import { nonce, zeroPad } from '../../lib/utils'
 import * as elliptic from 'elliptic'
-import { ContractState, contractIdFromAddress, binToHex, encodeI256, Fields, ONE_ALPH } from '@alephium/web3'
+import { ContractState, contractIdFromAddress, binToHex, codec, Fields, ONE_ALPH } from '@alephium/web3'
 import { MathTest } from '../../artifacts/ts'
 
 export const CHAIN_ID_ALEPHIUM = 255
@@ -222,11 +222,11 @@ export function randomP2PKHAddressHex(): string {
 }
 
 export function randomP2MPKHAddressHex(m: number, n: number): string {
-  let hex: string = '01' + binToHex(encodeI256(BigInt(n)))
+  let hex: string = '01' + binToHex(codec.i256Codec.encode(BigInt(n)))
   for (let i = 0; i < n; i += 1) {
     hex += randomByte32Hex()
   }
-  return hex + binToHex(encodeI256(BigInt(m)))
+  return hex + binToHex(codec.i256Codec.encode(BigInt(m)))
 }
 
 export function randomP2SHAddressHex(): string {

@@ -119,6 +119,10 @@ export namespace GovernanceTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     getMessageFee: {
@@ -187,49 +191,45 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as GovernanceTypes.Fields;
-  }
-
   eventIndex = { WormholeMessage: 0 };
   consts = {
     Version: "01",
-    GuardianSetExpireDuration: BigInt(86400000),
-    CoreModule: BigInt(1131377253),
+    GuardianSetExpireDuration: BigInt("86400000"),
+    CoreModule: BigInt("1131377253"),
     ErrorCodes: {
-      InvalidEmitChainId: BigInt(0),
-      InvalidEmitAddress: BigInt(1),
-      InvalidMessageSize: BigInt(2),
-      InvalidSequence: BigInt(3),
-      InvalidModule: BigInt(4),
-      InvalidActionId: BigInt(5),
-      InvalidVersion: BigInt(6),
-      InvalidGuardianSetIndex: BigInt(7),
-      InvalidGuardianSetSize: BigInt(8),
-      InvalidSignatureSize: BigInt(9),
-      InvalidSignatureGuardianIndex: BigInt(10),
-      InvalidSignature: BigInt(11),
-      GuardianSetExpired: BigInt(12),
-      InvalidTargetChainId: BigInt(13),
-      ContractStateMismatch: BigInt(14),
-      InvalidRegisterChainMessage: BigInt(15),
-      InvalidTokenId: BigInt(16),
-      InvalidNonceSize: BigInt(17),
-      TokenNotExist: BigInt(18),
-      InvalidTransferTargetChain: BigInt(19),
-      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
-      InvalidCaller: BigInt(21),
-      ArbiterFeeLessThanAmount: BigInt(22),
-      InvalidAttestTokenMessage: BigInt(23),
-      InvalidPayloadId: BigInt(24),
-      InvalidTransferMessage: BigInt(25),
-      ExpectRemoteToken: BigInt(26),
-      InvalidConsistencyLevel: BigInt(27),
-      InvalidUpdateRefundAddressMessage: BigInt(28),
-      TransferAmountLessThanMessageFee: BigInt(29),
-      InvalidAttestTokenArg: BigInt(30),
-      InvalidAttestTokenHandler: BigInt(31),
-      NotSupported: BigInt(32),
+      InvalidEmitChainId: BigInt("0"),
+      InvalidEmitAddress: BigInt("1"),
+      InvalidMessageSize: BigInt("2"),
+      InvalidSequence: BigInt("3"),
+      InvalidModule: BigInt("4"),
+      InvalidActionId: BigInt("5"),
+      InvalidVersion: BigInt("6"),
+      InvalidGuardianSetIndex: BigInt("7"),
+      InvalidGuardianSetSize: BigInt("8"),
+      InvalidSignatureSize: BigInt("9"),
+      InvalidSignatureGuardianIndex: BigInt("10"),
+      InvalidSignature: BigInt("11"),
+      GuardianSetExpired: BigInt("12"),
+      InvalidTargetChainId: BigInt("13"),
+      ContractStateMismatch: BigInt("14"),
+      InvalidRegisterChainMessage: BigInt("15"),
+      InvalidTokenId: BigInt("16"),
+      InvalidNonceSize: BigInt("17"),
+      TokenNotExist: BigInt("18"),
+      InvalidTransferTargetChain: BigInt("19"),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt("20"),
+      InvalidCaller: BigInt("21"),
+      ArbiterFeeLessThanAmount: BigInt("22"),
+      InvalidAttestTokenMessage: BigInt("23"),
+      InvalidPayloadId: BigInt("24"),
+      InvalidTransferMessage: BigInt("25"),
+      ExpectRemoteToken: BigInt("26"),
+      InvalidConsistencyLevel: BigInt("27"),
+      InvalidUpdateRefundAddressMessage: BigInt("28"),
+      TransferAmountLessThanMessageFee: BigInt("29"),
+      InvalidAttestTokenArg: BigInt("30"),
+      InvalidAttestTokenHandler: BigInt("31"),
+      NotSupported: BigInt("32"),
     },
     ActionId: {
       ContractUpgrade: "01",
@@ -438,7 +438,7 @@ export class GovernanceInstance extends ContractInstance {
     );
   }
 
-  methods = {
+  view = {
     getMessageFee: async (
       params?: GovernanceTypes.CallMethodParams<"getMessageFee">
     ): Promise<GovernanceTypes.CallMethodResult<"getMessageFee">> => {
@@ -531,8 +531,6 @@ export class GovernanceInstance extends ContractInstance {
     },
   };
 
-  view = this.methods;
-
   transact = {
     getMessageFee: async (
       params: GovernanceTypes.SignExecuteMethodParams<"getMessageFee">
@@ -610,14 +608,14 @@ export class GovernanceInstance extends ContractInstance {
     },
   };
 
-  async multicall<Calls extends GovernanceTypes.MultiCallParams>(
-    calls: Calls
-  ): Promise<GovernanceTypes.MultiCallResults<Calls>> {
+  async multicall<Callss extends GovernanceTypes.MultiCallParams[]>(
+    ...callss: Callss
+  ): Promise<GovernanceTypes.MulticallReturnType<Callss>> {
     return (await multicallMethods(
       Governance,
       this,
-      calls,
+      callss,
       getContractByCodeHash
-    )) as GovernanceTypes.MultiCallResults<Calls>;
+    )) as GovernanceTypes.MulticallReturnType<Callss>;
   }
 }

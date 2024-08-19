@@ -68,6 +68,10 @@ export namespace BridgeRewardRouterTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     completeTransfer: {
@@ -102,10 +106,6 @@ class Factory extends ContractFactory<
       this.contract.fieldsSig,
       []
     );
-  }
-
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as BridgeRewardRouterTypes.Fields;
   }
 
   at(address: string): BridgeRewardRouterInstance {
@@ -157,7 +157,7 @@ export class BridgeRewardRouterInstance extends ContractInstance {
     return fetchContractState(BridgeRewardRouter, this);
   }
 
-  methods = {
+  view = {
     completeTransfer: async (
       params: BridgeRewardRouterTypes.CallMethodParams<"completeTransfer">
     ): Promise<
@@ -183,8 +183,6 @@ export class BridgeRewardRouterInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     completeTransfer: async (

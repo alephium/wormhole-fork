@@ -44,7 +44,6 @@ import { default as guardianTestnetConfig } from '../../../configs/guardian/test
 import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
 export const alphArbiterFee = BigInt("0")
-export const minimalAlphInContract = BigInt("1000000000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =

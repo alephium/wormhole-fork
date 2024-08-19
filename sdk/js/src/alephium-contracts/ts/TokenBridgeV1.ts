@@ -66,6 +66,10 @@ export namespace TokenBridgeV1Types {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     foo: {
@@ -89,10 +93,6 @@ class Factory extends ContractFactory<
       this.contract.fieldsSig,
       []
     );
-  }
-
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeV1Types.Fields;
   }
 
   at(address: string): TokenBridgeV1Instance {
@@ -131,7 +131,7 @@ export class TokenBridgeV1Instance extends ContractInstance {
     return fetchContractState(TokenBridgeV1, this);
   }
 
-  methods = {
+  view = {
     foo: async (
       params?: TokenBridgeV1Types.CallMethodParams<"foo">
     ): Promise<TokenBridgeV1Types.CallMethodResult<"foo">> => {
@@ -144,8 +144,6 @@ export class TokenBridgeV1Instance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     foo: async (

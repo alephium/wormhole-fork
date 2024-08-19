@@ -64,6 +64,10 @@ export namespace UnexecutedSequenceTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     checkSequence: {
@@ -91,10 +95,6 @@ class Factory extends ContractFactory<
       this.contract.fieldsSig,
       []
     );
-  }
-
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as UnexecutedSequenceTestTypes.Fields;
   }
 
   at(address: string): UnexecutedSequenceTestInstance {
@@ -144,7 +144,7 @@ export class UnexecutedSequenceTestInstance extends ContractInstance {
     return fetchContractState(UnexecutedSequenceTest, this);
   }
 
-  methods = {
+  view = {
     checkSequence: async (
       params: UnexecutedSequenceTestTypes.CallMethodParams<"checkSequence">
     ): Promise<
@@ -170,8 +170,6 @@ export class UnexecutedSequenceTestInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     checkSequence: async (

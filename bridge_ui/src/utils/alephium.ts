@@ -4,8 +4,7 @@ import {
   ALEPHIUM_POLLING_INTERVAL,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  CLUSTER,
-  minimalAlphInContract
+  CLUSTER
 } from "./consts";
 import {
   ChainId,
@@ -36,7 +35,8 @@ import {
   isBase58,
   binToHex,
   contractIdFromAddress,
-  sleep
+  sleep,
+  MINIMAL_CONTRACT_DEPOSIT
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 import i18n from "../i18n";
@@ -289,7 +289,7 @@ export async function createLocalTokenPool(
     localTokenId,
     signedVaa,
     payer,
-    minimalAlphInContract
+    MINIMAL_CONTRACT_DEPOSIT
   )
   return result.txId
 }

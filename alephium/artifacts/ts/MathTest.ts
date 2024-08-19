@@ -60,6 +60,10 @@ export namespace MathTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     normalizeAmount: {
@@ -143,7 +147,7 @@ export class MathTestInstance extends ContractInstance {
     return fetchContractState(MathTest, this);
   }
 
-  methods = {
+  view = {
     normalizeAmount: async (
       params: MathTestTypes.CallMethodParams<"normalizeAmount">
     ): Promise<MathTestTypes.CallMethodResult<"normalizeAmount">> => {
@@ -168,8 +172,6 @@ export class MathTestInstance extends ContractInstance {
     },
   };
 
-  view = this.methods;
-
   transact = {
     normalizeAmount: async (
       params: MathTestTypes.SignExecuteMethodParams<"normalizeAmount">
@@ -183,14 +185,14 @@ export class MathTestInstance extends ContractInstance {
     },
   };
 
-  async multicall<Calls extends MathTestTypes.MultiCallParams>(
-    calls: Calls
-  ): Promise<MathTestTypes.MultiCallResults<Calls>> {
+  async multicall<Callss extends MathTestTypes.MultiCallParams[]>(
+    ...callss: Callss
+  ): Promise<MathTestTypes.MulticallReturnType<Callss>> {
     return (await multicallMethods(
       MathTest,
       this,
-      calls,
+      callss,
       getContractByCodeHash
-    )) as MathTestTypes.MultiCallResults<Calls>;
+    )) as MathTestTypes.MulticallReturnType<Callss>;
   }
 }
