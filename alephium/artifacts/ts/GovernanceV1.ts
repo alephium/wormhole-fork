@@ -68,6 +68,10 @@ export namespace GovernanceV1Types {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     foo: {
@@ -91,10 +95,6 @@ class Factory extends ContractFactory<
       this.contract.fieldsSig,
       []
     );
-  }
-
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as GovernanceV1Types.Fields;
   }
 
   at(address: string): GovernanceV1Instance {
@@ -133,7 +133,7 @@ export class GovernanceV1Instance extends ContractInstance {
     return fetchContractState(GovernanceV1, this);
   }
 
-  methods = {
+  view = {
     foo: async (
       params?: GovernanceV1Types.CallMethodParams<"foo">
     ): Promise<GovernanceV1Types.CallMethodResult<"foo">> => {
@@ -146,8 +146,6 @@ export class GovernanceV1Instance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     foo: async (

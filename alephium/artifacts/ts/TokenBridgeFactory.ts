@@ -84,6 +84,10 @@ export namespace TokenBridgeFactoryTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     getLocalTokenPoolTemplateId: {
@@ -129,45 +133,41 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeFactoryTypes.Fields;
-  }
-
   consts = {
     ErrorCodes: {
-      InvalidEmitChainId: BigInt(0),
-      InvalidEmitAddress: BigInt(1),
-      InvalidMessageSize: BigInt(2),
-      InvalidSequence: BigInt(3),
-      InvalidModule: BigInt(4),
-      InvalidActionId: BigInt(5),
-      InvalidVersion: BigInt(6),
-      InvalidGuardianSetIndex: BigInt(7),
-      InvalidGuardianSetSize: BigInt(8),
-      InvalidSignatureSize: BigInt(9),
-      InvalidSignatureGuardianIndex: BigInt(10),
-      InvalidSignature: BigInt(11),
-      GuardianSetExpired: BigInt(12),
-      InvalidTargetChainId: BigInt(13),
-      ContractStateMismatch: BigInt(14),
-      InvalidRegisterChainMessage: BigInt(15),
-      InvalidTokenId: BigInt(16),
-      InvalidNonceSize: BigInt(17),
-      TokenNotExist: BigInt(18),
-      InvalidTransferTargetChain: BigInt(19),
-      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
-      InvalidCaller: BigInt(21),
-      ArbiterFeeLessThanAmount: BigInt(22),
-      InvalidAttestTokenMessage: BigInt(23),
-      InvalidPayloadId: BigInt(24),
-      InvalidTransferMessage: BigInt(25),
-      ExpectRemoteToken: BigInt(26),
-      InvalidConsistencyLevel: BigInt(27),
-      InvalidUpdateRefundAddressMessage: BigInt(28),
-      TransferAmountLessThanMessageFee: BigInt(29),
-      InvalidAttestTokenArg: BigInt(30),
-      InvalidAttestTokenHandler: BigInt(31),
-      NotSupported: BigInt(32),
+      InvalidEmitChainId: BigInt("0"),
+      InvalidEmitAddress: BigInt("1"),
+      InvalidMessageSize: BigInt("2"),
+      InvalidSequence: BigInt("3"),
+      InvalidModule: BigInt("4"),
+      InvalidActionId: BigInt("5"),
+      InvalidVersion: BigInt("6"),
+      InvalidGuardianSetIndex: BigInt("7"),
+      InvalidGuardianSetSize: BigInt("8"),
+      InvalidSignatureSize: BigInt("9"),
+      InvalidSignatureGuardianIndex: BigInt("10"),
+      InvalidSignature: BigInt("11"),
+      GuardianSetExpired: BigInt("12"),
+      InvalidTargetChainId: BigInt("13"),
+      ContractStateMismatch: BigInt("14"),
+      InvalidRegisterChainMessage: BigInt("15"),
+      InvalidTokenId: BigInt("16"),
+      InvalidNonceSize: BigInt("17"),
+      TokenNotExist: BigInt("18"),
+      InvalidTransferTargetChain: BigInt("19"),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt("20"),
+      InvalidCaller: BigInt("21"),
+      ArbiterFeeLessThanAmount: BigInt("22"),
+      InvalidAttestTokenMessage: BigInt("23"),
+      InvalidPayloadId: BigInt("24"),
+      InvalidTransferMessage: BigInt("25"),
+      ExpectRemoteToken: BigInt("26"),
+      InvalidConsistencyLevel: BigInt("27"),
+      InvalidUpdateRefundAddressMessage: BigInt("28"),
+      TransferAmountLessThanMessageFee: BigInt("29"),
+      InvalidAttestTokenArg: BigInt("30"),
+      InvalidAttestTokenHandler: BigInt("31"),
+      NotSupported: BigInt("32"),
     },
   };
 
@@ -281,7 +281,7 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     return fetchContractState(TokenBridgeFactory, this);
   }
 
-  methods = {
+  view = {
     getLocalTokenPoolTemplateId: async (
       params?: TokenBridgeFactoryTypes.CallMethodParams<"getLocalTokenPoolTemplateId">
     ): Promise<
@@ -362,8 +362,6 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     },
   };
 
-  view = this.methods;
-
   transact = {
     getLocalTokenPoolTemplateId: async (
       params: TokenBridgeFactoryTypes.SignExecuteMethodParams<"getLocalTokenPoolTemplateId">
@@ -439,14 +437,14 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     },
   };
 
-  async multicall<Calls extends TokenBridgeFactoryTypes.MultiCallParams>(
-    calls: Calls
-  ): Promise<TokenBridgeFactoryTypes.MultiCallResults<Calls>> {
+  async multicall<Callss extends TokenBridgeFactoryTypes.MultiCallParams[]>(
+    ...callss: Callss
+  ): Promise<TokenBridgeFactoryTypes.MulticallReturnType<Callss>> {
     return (await multicallMethods(
       TokenBridgeFactory,
       this,
-      calls,
+      callss,
       getContractByCodeHash
-    )) as TokenBridgeFactoryTypes.MultiCallResults<Calls>;
+    )) as TokenBridgeFactoryTypes.MulticallReturnType<Callss>;
   }
 }

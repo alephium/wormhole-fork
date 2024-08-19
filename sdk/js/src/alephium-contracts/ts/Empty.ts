@@ -61,6 +61,10 @@ export namespace EmptyTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> =
+    Callss["length"] extends 1
+      ? MultiCallResults<Callss[0]>
+      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
 
   export interface SignExecuteMethodTable {
     foo: {
@@ -81,10 +85,6 @@ class Factory extends ContractFactory<EmptyInstance, EmptyTypes.Fields> {
       this.contract.fieldsSig,
       []
     );
-  }
-
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as EmptyTypes.Fields;
   }
 
   at(address: string): EmptyInstance {
@@ -123,7 +123,7 @@ export class EmptyInstance extends ContractInstance {
     return fetchContractState(Empty, this);
   }
 
-  methods = {
+  view = {
     foo: async (
       params?: EmptyTypes.CallMethodParams<"foo">
     ): Promise<EmptyTypes.CallMethodResult<"foo">> => {
@@ -136,8 +136,6 @@ export class EmptyInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     foo: async (

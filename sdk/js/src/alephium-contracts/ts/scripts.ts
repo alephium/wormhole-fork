@@ -11,6 +11,7 @@ import {
   SignerProvider,
   HexString,
 } from "@alephium/web3";
+import { getContractByCodeHash } from "./contracts";
 import { default as AddRewardsScriptJson } from "../token_bridge_scripts/AddRewards.ral.json";
 import { default as AttestTokenScriptJson } from "../token_bridge_scripts/AttestToken.ral.json";
 import { default as CompleteTransferScriptJson } from "../token_bridge_scripts/CompleteTransfer.ral.json";
@@ -36,7 +37,7 @@ import { default as UpgradeTokenBridgeContractScriptJson } from "../token_bridge
 export const AddRewards = new ExecutableScript<{
   bridgeRewardRouter: HexString;
   amount: bigint;
-}>(Script.fromJson(AddRewardsScriptJson, "", []));
+}>(Script.fromJson(AddRewardsScriptJson, "", []), getContractByCodeHash);
 
 export const AttestToken = new ExecutableScript<{
   payer: Address;
@@ -47,24 +48,30 @@ export const AttestToken = new ExecutableScript<{
   name: HexString;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(AttestTokenScriptJson, "", []));
+}>(Script.fromJson(AttestTokenScriptJson, "", []), getContractByCodeHash);
 
 export const CompleteTransfer = new ExecutableScript<{
   tokenBridgeForChain: HexString;
   vaa: HexString;
-}>(Script.fromJson(CompleteTransferScriptJson, "", []));
+}>(Script.fromJson(CompleteTransferScriptJson, "", []), getContractByCodeHash);
 
 export const CompleteTransferWithReward = new ExecutableScript<{
   bridgeRewardRouter: HexString;
   tokenBridgeForChain: HexString;
   vaa: HexString;
-}>(Script.fromJson(CompleteTransferWithRewardScriptJson, "", []));
+}>(
+  Script.fromJson(CompleteTransferWithRewardScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const CreateLocalAttestTokenHandler = new ExecutableScript<{
   tokenBridge: HexString;
   payer: Address;
   alphAmount: bigint;
-}>(Script.fromJson(CreateLocalAttestTokenHandlerScriptJson, "", []));
+}>(
+  Script.fromJson(CreateLocalAttestTokenHandlerScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const CreateLocalTokenPool = new ExecutableScript<{
   payer: Address;
@@ -72,49 +79,58 @@ export const CreateLocalTokenPool = new ExecutableScript<{
   localTokenId: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(CreateLocalTokenPoolScriptJson, "", []));
+}>(
+  Script.fromJson(CreateLocalTokenPoolScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const CreateRemoteTokenPool = new ExecutableScript<{
   payer: Address;
   attestTokenHandler: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(CreateRemoteTokenPoolScriptJson, "", []));
+}>(
+  Script.fromJson(CreateRemoteTokenPoolScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const Deposit = new ExecutableScript<{
   tokenBridgeForChain: HexString;
   payer: Address;
   amount: bigint;
-}>(Script.fromJson(DepositScriptJson, "", []));
+}>(Script.fromJson(DepositScriptJson, "", []), getContractByCodeHash);
 
 export const DestroyUnexecutedSequenceContracts = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(DestroyUnexecutedSequenceContractsScriptJson, "", []));
+}>(
+  Script.fromJson(DestroyUnexecutedSequenceContractsScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const GetToken = new ExecutableScript<{
   sender: Address;
   token: HexString;
   amount: bigint;
   factor: bigint;
-}>(Script.fromJson(GetTokenScriptJson, "", []));
+}>(Script.fromJson(GetTokenScriptJson, "", []), getContractByCodeHash);
 
 export const RegisterChain = new ExecutableScript<{
   payer: Address;
   tokenBridge: HexString;
   vaa: HexString;
   alphAmount: bigint;
-}>(Script.fromJson(RegisterChainScriptJson, "", []));
+}>(Script.fromJson(RegisterChainScriptJson, "", []), getContractByCodeHash);
 
 export const SetMessageFee = new ExecutableScript<{
   governance: HexString;
   vaa: HexString;
-}>(Script.fromJson(SetMessageFeeScriptJson, "", []));
+}>(Script.fromJson(SetMessageFeeScriptJson, "", []), getContractByCodeHash);
 
 export const TransferFee = new ExecutableScript<{
   governance: HexString;
   vaa: HexString;
-}>(Script.fromJson(TransferFeeScriptJson, "", []));
+}>(Script.fromJson(TransferFeeScriptJson, "", []), getContractByCodeHash);
 
 export const TransferLocal = new ExecutableScript<{
   tokenBridge: HexString;
@@ -127,7 +143,7 @@ export const TransferLocal = new ExecutableScript<{
   arbiterFee: bigint;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(TransferLocalScriptJson, "", []));
+}>(Script.fromJson(TransferLocalScriptJson, "", []), getContractByCodeHash);
 
 export const TransferRemote = new ExecutableScript<{
   tokenBridge: HexString;
@@ -141,34 +157,49 @@ export const TransferRemote = new ExecutableScript<{
   arbiterFee: bigint;
   nonce: HexString;
   consistencyLevel: bigint;
-}>(Script.fromJson(TransferRemoteScriptJson, "", []));
+}>(Script.fromJson(TransferRemoteScriptJson, "", []), getContractByCodeHash);
 
 export const UpdateGovernanceContract = new ExecutableScript<{
   governance: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateGovernanceContractScriptJson, "", []));
+}>(
+  Script.fromJson(UpdateGovernanceContractScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const UpdateGuardianSet = new ExecutableScript<{
   governance: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateGuardianSetScriptJson, "", []));
+}>(Script.fromJson(UpdateGuardianSetScriptJson, "", []), getContractByCodeHash);
 
 export const UpdateMinimalConsistencyLevel = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateMinimalConsistencyLevelScriptJson, "", []));
+}>(
+  Script.fromJson(UpdateMinimalConsistencyLevelScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const UpdateRefundAddress = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateRefundAddressScriptJson, "", []));
+}>(
+  Script.fromJson(UpdateRefundAddressScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const UpdateRemoteTokenPool = new ExecutableScript<{
   attestTokenHandler: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpdateRemoteTokenPoolScriptJson, "", []));
+}>(
+  Script.fromJson(UpdateRemoteTokenPoolScriptJson, "", []),
+  getContractByCodeHash
+);
 
 export const UpgradeTokenBridgeContract = new ExecutableScript<{
   tokenBridge: HexString;
   vaa: HexString;
-}>(Script.fromJson(UpgradeTokenBridgeContractScriptJson, "", []));
+}>(
+  Script.fromJson(UpgradeTokenBridgeContractScriptJson, "", []),
+  getContractByCodeHash
+);
