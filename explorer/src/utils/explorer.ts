@@ -156,7 +156,7 @@ const nativeExplorerContractUri = (
     } else if (chainId === chainIDs["alephium"]) {
       nativeAddress = addressFromContractId(nativeAddress)
       base = activeNetwork.name === 'testnet'
-        ? "https://explorer.testnet.alephium.org/addresses/"
+        ? "https://testnet.alephium.org/addresses/"
         : activeNetwork.name === 'mainnet'
         ? "https://explorer.alephium.org/addresses/"
         : "http://localhost:30000/"
@@ -187,7 +187,7 @@ const nativeExplorerTxUri = (
       : `https://bscscan.com/tx/${prefix}`
   } else if (chainId === chainIDs["alephium"]) {
     base = activeNetwork.name === 'testnet'
-      ? 'https://explorer.testnet.alephium.org/transactions/'
+      ? 'https://testnet.alephium.org/transactions/'
       : 'https://explorer.alephium.org/transactions/'
   }
 
