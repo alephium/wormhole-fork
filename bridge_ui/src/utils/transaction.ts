@@ -7,7 +7,7 @@ export function getTransactionLink(chainId: ChainId, txId: string): string | und
     : chainId === CHAIN_ID_BSC
     ? `https://${CLUSTER === "testnet" ? "testnet." : ""}bscscan.com/tx/${txId}`
     : chainId === CHAIN_ID_ALEPHIUM
-    ? `https://explorer.${CLUSTER === 'testnet' ? 'testnet.' : ''}alephium.org/transactions/${txId}`
+    ? `https://${CLUSTER === 'testnet' ? 'testnet.' : 'explorer.'}alephium.org/transactions/${txId}`
     : undefined;
 }
 
