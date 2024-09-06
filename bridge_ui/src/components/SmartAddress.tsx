@@ -190,7 +190,7 @@ export default function SmartAddress({
         isAsset ? "asset" : "address"
       }/${useableAddress}`
     : chainId === CHAIN_ID_ALEPHIUM
-    ? `https://explorer.${CLUSTER === "testnet" ? "testnet." : ""}alephium.org/addresses/${toALPHAddress(useableAddress)}`
+    ? `https://${CLUSTER === "testnet" ? "testnet." : "explorer."}alephium.org/addresses/${toALPHAddress(useableAddress)}`
     : undefined;
   const explorerName = getExplorerName(chainId);
 

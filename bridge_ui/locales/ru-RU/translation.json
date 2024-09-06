@@ -192,7 +192,7 @@
   "The tokens have entered the bridge!": "The tokens have entered the bridge!",
   "This is a Shuttle-wrapped asset from Polygon! Transferring it will result in a double wrapped (Bridge-wrapped Shuttle-wrapped) asset, which has no liquid markets.": "This is a Shuttle-wrapped asset from Polygon! Transferring it will result in a double wrapped (Bridge-wrapped Shuttle-wrapped) asset, which has no liquid markets.",
   "bridgeWrappedTokensNoLiquid": "The tokens you will receive are <1>Bridge Wrapped Tokens</1>which currently have no liquid markets!",
-  "bridgeWrappedTokens": "The tokens you will receive are <1>Bridge Wrapped Tokens</1>and will need to be exchanged for the underlying tokens.",
+  "bridgeWrappedTokens": "The tokens you will receive are <1>Bridge Wrapped Tokens</1> and will need to be exchanged for the underlying tokens.",
   "You will not receive native {{ token }} on {{ chainName }}": "You will not receive native {{ token }} on {{ chainName }}",
   "To receive native {{ token }}, you will have to perform a swap with the wrapped tokens once you are done bridging.": "To receive native {{ token }}, you will have to perform a swap with the wrapped tokens once you are done bridging.",
   "Lido stETH rewards can only be received on Ethereum. Use the value accruing wrapper token wstETH instead.": "Lido stETH rewards can only be received on Ethereum. Use the value accruing wrapper token wstETH instead.",

@@ -22,7 +22,7 @@ export type TokenMetaData = { name: string, symbol: string, decimals: number }
 
 export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const deployments = network === 'testnet' ? alephiumTestnetContracts : alephiumMainnetContracts
-  const nodeUrl = network === 'testnet' ? 'https://wallet-v20.testnet.alephium.org' : 'https://wallet-v20.mainnet.alephium.org'
+  const nodeUrl = network === 'testnet' ? 'https://node.testnet.alephium.org' : 'https://node.mainnet.alephium.org'
   const textDecoder = new TextDecoder()
   web3.setCurrentNodeProvider(nodeUrl)
 
