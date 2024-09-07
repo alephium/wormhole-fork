@@ -30,7 +30,7 @@ export const METAMASK_CHAIN_PARAMETERS: {
     rpcUrls: ["https://rpc.ankr.com/eth_ropsten"],
     blockExplorerUrls: ["https://ropsten.etherscan.io"],
   },
-  5: {
+  11155111: {
     chainId: "0xaa36a7",
     chainName: "Sepolia",
     nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
