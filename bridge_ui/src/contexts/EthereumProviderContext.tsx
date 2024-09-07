@@ -14,7 +14,7 @@ import walletconnectIcon from "../icons/walletconnect.svg";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
 import { getEvmChainId } from "../utils/consts";
-import { CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
+import { ChainId } from "@alephium/wormhole-sdk";
 import { useTranslation } from "react-i18next";
 
 const WALLET_CONNECT_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
@@ -33,7 +33,7 @@ export interface Connection {
 }
 
 interface IEthereumProviderContext {
-  connect(connectType: ConnectType): void;
+  connect(connectType: ConnectType, chainId: ChainId): void;
   disconnect(): void;
   provider: Provider;
   chainId: number | undefined;
@@ -45,7 +45,7 @@ interface IEthereumProviderContext {
 }
 
 const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
-  connect: (connectType: ConnectType) => {},
+  connect: (connectType: ConnectType, chainId: ChainId) => {},
   disconnect: () => {},
   provider: undefined,
   chainId: undefined,
@@ -136,7 +136,7 @@ export const EthereumProviderProvider = ({
   }, [ethereumProvider, walletConnectProvider]);
 
   const connect = useCallback(
-    (connectType: ConnectType) => {
+    (connectType: ConnectType, wormholeChainId: ChainId) => {
       setConnectType(connectType);
       if (connectType === ConnectType.METAMASK) {
         detectEthereumProvider()
@@ -219,7 +219,7 @@ export const EthereumProviderProvider = ({
         EthereumProvider.init({
           projectId: WALLET_CONNECT_PROJECT_ID,
           showQrModal: false,
-          chains: [getEvmChainId(CHAIN_ID_ETH) as number],
+          chains: [getEvmChainId(wormholeChainId) as number],
           rpcMap: EVM_RPC_MAP
         }).then((walletConnectProvider) => {
           setWalletConnectProvider(walletConnectProvider);
