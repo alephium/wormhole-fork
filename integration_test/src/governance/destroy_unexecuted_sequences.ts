@@ -92,7 +92,7 @@ async function destroyUnexecutedSequences() {
   const exists1 = await contractExists(unexecutedSequenceContractId, web3.getCurrentNodeProvider())
   assert(exists1)
 
-  const seq = getNextGovernanceSequence()
+  const seq = await getNextGovernanceSequence()
   const destroyUnexecutedSequencesVaa = createDestroyUnexecutedSequencesVaa(seq)
 
   for (const guardianIndex of guardianSetIndexes) {

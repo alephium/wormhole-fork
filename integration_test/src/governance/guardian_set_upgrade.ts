@@ -36,7 +36,7 @@ function createGuardianSetUpgradeVaa(sequence: number): string {
 
 async function runGuardianSetUpgrade(): Promise<void> {
   // we only need to inject the vaa on guardian-0
-  const seq = getNextGovernanceSequence()
+  const seq = await getNextGovernanceSequence()
   const guardianSetUpgradeVaa = createGuardianSetUpgradeVaa(seq)
   await injectVAA(guardianSetUpgradeVaa, 0, 'guardian-set-upgrade.proto')
   await submitGovernanceVAA('GuardianSetUpgrade', seq, CHAIN_ID_UNSET, [CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_BSC])

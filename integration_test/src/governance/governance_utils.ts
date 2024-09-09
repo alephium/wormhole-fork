@@ -1,9 +1,10 @@
 import { binToHex } from '@alephium/web3'
-import { ChainId, coalesceChainName } from '@alephium/wormhole-sdk'
+import { alephium_contracts, ChainId, coalesceChainName } from '@alephium/wormhole-sdk'
 import Dockerode, { Container } from 'dockerode'
 import { getSignedVAA } from '../utils'
 import { execSync } from 'child_process'
 import { default as guardianDevnetConfig } from '../../../configs/guardian/devnet.json'
+import { default as alphDevnetContracts } from '../../../configs/alephium/devnet.json'
 
 export const newGuardianSet = [
   '0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe',
@@ -46,11 +47,13 @@ export async function runCmdInContainer(container: Container, cmd: string[], wor
   })
 }
 
-export function getNextGovernanceSequence() {
-  const command = `npm --prefix ../clients/js start -- get-next-governance-sequence -n devnet -u http://127.0.0.1:8100`
-  const output = execSync(command)
-  const numberStr = output.toString('utf8').slice(output.lastIndexOf(':') + 2)
-  return parseInt(numberStr)
+// In github CI, we sometimes get errors when requesting the coin list from CoinGecko,
+// causing the explorer backend to fail to start, so we fetch the governance sequence from chain
+export async function getNextGovernanceSequence() {
+  const state0 = await alephium_contracts.Governance.at(alphDevnetContracts.contracts.nativeGovernance).fetchState()
+  const state1 = await alephium_contracts.TokenBridge.at(alphDevnetContracts.contracts.nativeTokenBridge).fetchState()
+  const nextSequence = Math.max(Number(state0.fields.receivedSequence), Number(state1.fields.receivedSequence))
+  return nextSequence
 }
 
 export async function injectVAA(vaa: string, guardianIndex: number, fileName: string) {

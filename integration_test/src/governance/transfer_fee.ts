@@ -33,7 +33,7 @@ async function transferFeeOnChain(chain: BridgeChain, recipient: string) {
   console.log(
     `Balances before transfer on ${chainName}, recipient: ${recipientBalanceBeforeTransfer}, governance contract: ${governanceBalanceBeforeTransfer}`
   )
-  const seq = getNextGovernanceSequence()
+  const seq = await getNextGovernanceSequence()
   const transferAmount = await chain.getCurrentMessageFee()
   console.log(`Transfer amount for ${chainName}: ${transferAmount}`)
   const transferFeeVaa = createTransferFeeVaa(chain.chainId, seq, chain.normalizeAddress(recipient), transferAmount)

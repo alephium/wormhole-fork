@@ -22,7 +22,7 @@ function createUpdateRefundAddressVaa(sequence: number): string {
 
 async function updateRefundAddress() {
   const alph = (await getBridgeChains()).alph
-  const seq = getNextGovernanceSequence()
+  const seq = await getNextGovernanceSequence()
   const updateRefundAddressVaa = createUpdateRefundAddressVaa(seq)
   const currentRefundAddress = (await alph.getTokenBridgeContractState()).fields.refundAddress
   assert(currentRefundAddress.toLowerCase() !== newRefundAddress.toLowerCase())
