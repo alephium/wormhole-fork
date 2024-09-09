@@ -44,4 +44,4 @@ jobs:
     - name: auth docker
       run: gcloud auth configure-docker
     - name: build and push mainnet docker images
-      run: ./build-docker-images.sh "mainnet" ${{ needs.get_dist_tag.outputs.DIST_TAG }} true
+      run: ./build-docker-images.sh "testnet" ${{ needs.get_dist_tag.outputs.DIST_TAG }} true
