@@ -91,7 +91,9 @@ function Redeem() {
     showLoader,
   } = useHandleRedeem();
   const useRelayer = useSelector(selectTransferUseRelayer);
-  const [manualRedeem, setManualRedeem] = useState(!useRelayer);
+  const targetChain = useSelector(selectTransferTargetChain);
+  const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
+  const [manualRedeem, setManualRedeem] = useState(!useRelayer && !useAutoRelayer);
   const handleManuallyRedeemClick = useCallback(() => {
     setManualRedeem(true);
   }, []);
@@ -100,16 +102,13 @@ function Redeem() {
       setManualRedeem(false);
     }
   }, [useRelayer]);
-  const targetChain = useSelector(selectTransferTargetChain);
   const targetIsAcala =
     targetChain === CHAIN_ID_ACALA || targetChain === CHAIN_ID_KARURA;
   const targetAsset = useSelector(selectTransferTargetAsset);
   const isRecovery = useSelector(selectTransferIsRecovery);
+  const shouldCheckCompletion = useRelayer || useAutoRelayer
   const { isTransferCompletedLoading, isTransferCompleted, error: checkTransferCompletedError } =
-    useGetIsTransferCompleted(
-      useRelayer ? false : true,
-      useRelayer ? 5000 : undefined
-    );
+    useGetIsTransferCompleted(!shouldCheckCompletion, shouldCheckCompletion ? 5000 : undefined);
   const classes = useStyles();
   const dispatch = useDispatch();
   const { isReady, statusMessage } = useIsWalletReady(targetChain);
