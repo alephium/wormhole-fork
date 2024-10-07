@@ -409,6 +409,12 @@ export const BSC_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? bscTestnetConfig.contracts.tokenBridge
     : bscDevnetConfig.contracts.tokenBridge
 );
+export const BSC_TOKENS_FOR_REWARD =
+  CLUSTER === "mainnet"
+    ? bscMainnetConfig.tokensForReward
+    : CLUSTER === "testnet"
+    ? bscTestnetConfig.tokensForReward
+    : bscDevnetConfig.tokensForReward
 export const POLYGON_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7"
