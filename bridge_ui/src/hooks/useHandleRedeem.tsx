@@ -14,7 +14,10 @@ import {
   getTokenBridgeForChainId,
   getIsTransferCompletedAlph,
   redeemOnAlphWithReward,
-  deserializeVAA
+  deserializeVAA,
+  needToReward,
+  deserializeTransferTokenVAA,
+  redeemOnAlph
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { WalletContextState } from "@solana/wallet-adapter-react";
@@ -57,6 +60,7 @@ import {
   TERRA_TOKEN_BRIDGE_ADDRESS,
   CLUSTER,
   RELAYER_HOST,
+  BSC_TOKENS_FOR_REWARD,
 } from "../utils/consts";
 import parseError from "../utils/parseError";
 import { postVaaWithRetry } from "../utils/postVaa";
@@ -276,10 +280,16 @@ async function redeemManually(
   signedVAA: Uint8Array
 ): Promise<string> {
   dispatch(setIsRedeemedViaRelayer(false))
-  const result = await redeemOnAlphWithReward(signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)
-  console.log(`the redemption tx has been submitted, txId: ${result.txId}`)
+  const parsedVaa = deserializeTransferTokenVAA(signedVAA)
+  let txId: string
+  if (needToReward(parsedVaa, BSC_TOKENS_FOR_REWARD)) {
+    txId = (await redeemOnAlphWithReward(signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)).txId
+  } else {
+    txId = (await redeemOnAlph(signer, tokenBridgeForChainId, signedVAA)).txId
+  }
+  console.log(`the redemption tx has been submitted, txId: ${txId}`)
   dispatch(setIsWalletApproved(true))
-  return result.txId
+  return txId
 }
 
 async function alephium(

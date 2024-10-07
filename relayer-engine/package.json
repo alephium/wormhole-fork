@@ -14,9 +14,9 @@
   "dependencies": {
     "@bull-board/api": "^5.0.0",
     "@bull-board/koa": "^5.0.0",
-    "@alephium/web3": "^0.22.0",
-    "@alephium/web3-wallet": "^0.22.0",
-    "@alephium/wormhole-sdk": "0.2.1",
+    "@alephium/web3": "^1.5.0",
+    "@alephium/web3-wallet": "^1.5.0",
+    "@alephium/wormhole-sdk": "0.3.2",
     "@certusone/wormhole-spydk": "^0.0.1",
     "@datastructures-js/queue": "^4.2.3",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",

@@ -11,5 +11,12 @@
   "tokenBridgeEmitterAddress": "00000000000000000000000095549935bC0F4a10ee7e5CF8bA18E5EFc0321F65",
   "bridgeTokens": [
     "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+  ],
+  "tokensForReward": [
+    {
+      "id": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
+      "minimal": "10000000000000000",
+      "decimals": 18
+    }
   ]
 }
