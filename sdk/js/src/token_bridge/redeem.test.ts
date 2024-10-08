@@ -2,7 +2,7 @@ import { hexToBinUnsafe } from "@alephium/web3"
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, TransferToken, tryNativeToHexString, VAA } from "../utils"
 import { needToReward } from "./redeem"
 
-describe('serialize/deserialize vaa', () => {
+describe('redeem', () => {
   const tokens = [
     {
       id: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',

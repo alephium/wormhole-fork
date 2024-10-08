@@ -254,7 +254,7 @@ describe('test governance', () => {
     const invalidVaa = new VAA(vaa.version, vaa.guardianSetIndex, invalidSignatures, vaa.body)
     await expectOneOfError(
       async () => await Governance.tests.submitNewGuardianSet(createTestParams(invalidVaa)),
-      ['AssertionFailed', 'FailedInRecoverEthAddress', 'InvalidConversion', 'InvalidBytesSliceArg']
+      ['Assertion Failed', 'FailedInRecoverEthAddress', 'InvalidConversion', 'InvalidBytesSliceArg']
     )
   })
 
