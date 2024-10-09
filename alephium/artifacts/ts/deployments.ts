@@ -23,10 +23,10 @@ import {
   TokenBridgeInstance,
   BridgeRewardRouter,
   BridgeRewardRouterInstance,
-  TestToken,
-  TestTokenInstance,
   BridgeRewardRouterV2,
   BridgeRewardRouterV2Instance,
+  TestToken,
+  TestTokenInstance,
 } from ".";
 import { default as mainnetDeployments } from "../.deployments.mainnet.json";
 import { default as testnetDeployments } from "../.deployments.testnet.json";
@@ -44,8 +44,8 @@ export type Deployments = {
     Governance: DeployContractExecutionResult<GovernanceInstance>;
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
     BridgeRewardRouter: DeployContractExecutionResult<BridgeRewardRouterInstance>;
-    TestToken?: DeployContractExecutionResult<TestTokenInstance>;
     BridgeRewardRouterV2?: DeployContractExecutionResult<BridgeRewardRouterV2Instance>;
+    TestToken?: DeployContractExecutionResult<TestTokenInstance>;
   };
   scripts: {
     CreateLocalAttestTokenHandler: RunScriptResult;
@@ -109,15 +109,6 @@ function toDeployments(json: any): Deployments {
         json.contracts["BridgeRewardRouter"].contractInstance.address
       ),
     },
-    TestToken:
-      json.contracts["TestToken"] === undefined
-        ? undefined
-        : {
-            ...json.contracts["TestToken"],
-            contractInstance: TestToken.at(
-              json.contracts["TestToken"].contractInstance.address
-            ),
-          },
     BridgeRewardRouterV2:
       json.contracts["BridgeRewardRouterV2"] === undefined
         ? undefined
@@ -125,6 +116,15 @@ function toDeployments(json: any): Deployments {
             ...json.contracts["BridgeRewardRouterV2"],
             contractInstance: BridgeRewardRouterV2.at(
               json.contracts["BridgeRewardRouterV2"].contractInstance.address
+            ),
+          },
+    TestToken:
+      json.contracts["TestToken"] === undefined
+        ? undefined
+        : {
+            ...json.contracts["TestToken"],
+            contractInstance: TestToken.at(
+              json.contracts["TestToken"].contractInstance.address
             ),
           },
   };
