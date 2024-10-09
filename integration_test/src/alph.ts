@@ -327,7 +327,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     const bridgeRewardRouterAlphBalanceAfterRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
     const txFee = await getTransactionFee(result.txId)
     const targetAddress = base58.encode(vaa.body.payload.targetAddress)
-    const rewardAmount = vaa.body.payload.originChain !== CHAIN_ID_ALEPHIUM ? ONE_ALPH : 0n
+    const rewardAmount = vaa.body.payload.originChain !== CHAIN_ID_ALEPHIUM ? (ONE_ALPH / 100n) : 0n
     if (targetAddress === accountAddress) {
       const transferAmount =
         vaa.body.payload.originChain === CHAIN_ID_ALEPHIUM && binToHex(vaa.body.payload.originAddress) === ALPH_TOKEN_ID
