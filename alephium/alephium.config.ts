@@ -17,7 +17,8 @@ export type Settings = {
   governanceEmitterAddress: string
   minimalConsistencyLevel: number
   messageFee: bigint
-  initRewards: bigint
+  initALPHAmountInRouterContract: bigint
+  rewardAmount: bigint
 }
 
 function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
@@ -36,7 +37,8 @@ function loadSettings(network: 'devnet' | 'testnet' | 'mainnet'): Settings {
     governanceEmitterAddress: guardianConfig.governanceEmitterAddress as string,
     minimalConsistencyLevel: alephiumConfig.minimalConsistencyLevel as number,
     messageFee: BigInt(alephiumConfig.messageFee),
-    initRewards: BigInt(alephiumConfig.initRewards) * ONE_ALPH
+    initALPHAmountInRouterContract: BigInt(alephiumConfig.initALPHAmountInRouterContract) * ONE_ALPH,
+    rewardAmount: BigInt(alephiumConfig.rewardAmount)
   }
 }
 

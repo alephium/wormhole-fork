@@ -25,6 +25,8 @@ import {
   BridgeRewardRouterInstance,
   TestToken,
   TestTokenInstance,
+  BridgeRewardRouterV2,
+  BridgeRewardRouterV2Instance,
 } from ".";
 import { default as mainnetDeployments } from "../.deployments.mainnet.json";
 import { default as testnetDeployments } from "../.deployments.testnet.json";
@@ -43,6 +45,7 @@ export type Deployments = {
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
     BridgeRewardRouter: DeployContractExecutionResult<BridgeRewardRouterInstance>;
     TestToken?: DeployContractExecutionResult<TestTokenInstance>;
+    BridgeRewardRouterV2?: DeployContractExecutionResult<BridgeRewardRouterV2Instance>;
   };
   scripts: {
     CreateLocalAttestTokenHandler: RunScriptResult;
@@ -113,6 +116,15 @@ function toDeployments(json: any): Deployments {
             ...json.contracts["TestToken"],
             contractInstance: TestToken.at(
               json.contracts["TestToken"].contractInstance.address
+            ),
+          },
+    BridgeRewardRouterV2:
+      json.contracts["BridgeRewardRouterV2"] === undefined
+        ? undefined
+        : {
+            ...json.contracts["BridgeRewardRouterV2"],
+            contractInstance: BridgeRewardRouterV2.at(
+              json.contracts["BridgeRewardRouterV2"].contractInstance.address
             ),
           },
   };

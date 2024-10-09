@@ -1,7 +1,8 @@
 {
   "chainId": 255,
   "groupIndex": 0,
-  "initRewards": 0,
+  "initALPHAmountInRouterContract": 0,
+  "rewardAmount": "10000000000000000",
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
   "contracts": {
