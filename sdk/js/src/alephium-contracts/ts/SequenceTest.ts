@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as SequenceTestContractJson } from "../tests/SequenceTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -46,6 +48,22 @@ export namespace SequenceTestTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    setExecuted: {
+      params: CallContractParams<{ offset: bigint; current: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    compact: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+    checkSequenceInSubContract: {
+      params: CallContractParams<{ seq: bigint }>;
+      result: CallContractResult<null>;
+    };
+    checkSequence: {
+      params: CallContractParams<{ seq: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     check: {
       params: CallContractParams<{ seq: bigint }>;
       result: CallContractResult<boolean>;
@@ -63,12 +81,30 @@ export namespace SequenceTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
+    setExecuted: {
+      params: SignExecuteContractMethodParams<{
+        offset: bigint;
+        current: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    compact: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    checkSequenceInSubContract: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+    checkSequence: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
     check: {
       params: SignExecuteContractMethodParams<{ seq: bigint }>;
       result: SignExecuteScriptTxResult;
@@ -181,6 +217,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "check", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: SequenceTestTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -204,6 +248,52 @@ export class SequenceTestInstance extends ContractInstance {
   }
 
   view = {
+    setExecuted: async (
+      params: SequenceTestTypes.CallMethodParams<"setExecuted">
+    ): Promise<SequenceTestTypes.CallMethodResult<"setExecuted">> => {
+      return callMethod(
+        SequenceTest,
+        this,
+        "setExecuted",
+        params,
+        getContractByCodeHash
+      );
+    },
+    compact: async (
+      params?: SequenceTestTypes.CallMethodParams<"compact">
+    ): Promise<SequenceTestTypes.CallMethodResult<"compact">> => {
+      return callMethod(
+        SequenceTest,
+        this,
+        "compact",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    checkSequenceInSubContract: async (
+      params: SequenceTestTypes.CallMethodParams<"checkSequenceInSubContract">
+    ): Promise<
+      SequenceTestTypes.CallMethodResult<"checkSequenceInSubContract">
+    > => {
+      return callMethod(
+        SequenceTest,
+        this,
+        "checkSequenceInSubContract",
+        params,
+        getContractByCodeHash
+      );
+    },
+    checkSequence: async (
+      params: SequenceTestTypes.CallMethodParams<"checkSequence">
+    ): Promise<SequenceTestTypes.CallMethodResult<"checkSequence">> => {
+      return callMethod(
+        SequenceTest,
+        this,
+        "checkSequence",
+        params,
+        getContractByCodeHash
+      );
+    },
     check: async (
       params: SequenceTestTypes.CallMethodParams<"check">
     ): Promise<SequenceTestTypes.CallMethodResult<"check">> => {
@@ -218,6 +308,33 @@ export class SequenceTestInstance extends ContractInstance {
   };
 
   transact = {
+    setExecuted: async (
+      params: SequenceTestTypes.SignExecuteMethodParams<"setExecuted">
+    ): Promise<SequenceTestTypes.SignExecuteMethodResult<"setExecuted">> => {
+      return signExecuteMethod(SequenceTest, this, "setExecuted", params);
+    },
+    compact: async (
+      params: SequenceTestTypes.SignExecuteMethodParams<"compact">
+    ): Promise<SequenceTestTypes.SignExecuteMethodResult<"compact">> => {
+      return signExecuteMethod(SequenceTest, this, "compact", params);
+    },
+    checkSequenceInSubContract: async (
+      params: SequenceTestTypes.SignExecuteMethodParams<"checkSequenceInSubContract">
+    ): Promise<
+      SequenceTestTypes.SignExecuteMethodResult<"checkSequenceInSubContract">
+    > => {
+      return signExecuteMethod(
+        SequenceTest,
+        this,
+        "checkSequenceInSubContract",
+        params
+      );
+    },
+    checkSequence: async (
+      params: SequenceTestTypes.SignExecuteMethodParams<"checkSequence">
+    ): Promise<SequenceTestTypes.SignExecuteMethodResult<"checkSequence">> => {
+      return signExecuteMethod(SequenceTest, this, "checkSequence", params);
+    },
     check: async (
       params: SequenceTestTypes.SignExecuteMethodParams<"check">
     ): Promise<SequenceTestTypes.SignExecuteMethodResult<"check">> => {
@@ -225,14 +342,22 @@ export class SequenceTestInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends SequenceTestTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<SequenceTestTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends SequenceTestTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<SequenceTestTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<SequenceTestTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | SequenceTestTypes.MultiCallParams
+      | SequenceTestTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       SequenceTest,
       this,
       callss,
       getContractByCodeHash
-    )) as SequenceTestTypes.MulticallReturnType<Callss>;
+    );
   }
 }

@@ -9,7 +9,8 @@ import {
   subContractId,
   binToHex,
   ALPH_TOKEN_ID,
-  Token
+  Token,
+  ONE_ALPH
 } from '@alephium/web3'
 import { createGovernance } from './governance-fixture'
 import {
@@ -39,7 +40,7 @@ import {
   TokenBridgeForChain,
   TokenBridgeForChainTypes,
   UnexecutedSequenceTypes,
-  BridgeRewardRouter
+  BridgeRewardRouterV2
 } from '../../artifacts/ts'
 
 export const tokenBridgeModule = zeroPad(stringToHex('TokenBridge'), 32)
@@ -253,7 +254,9 @@ export function createTemplateContracts(): TemplateContracts {
 }
 
 function createContract<T extends Fields>(
-  factory: ContractFactory<any, T>,
+  factory: ContractFactory<any, T> & {
+    stateForTest: (initFields: T, asset?: Asset, address?: string) => ContractState<T>
+  },
   initFields: T,
   deps: ContractState[] = [],
   asset?: Asset,
@@ -523,10 +526,22 @@ export function expectAssetsEqual(expected: Asset[], have: Asset[]) {
   )
 }
 
-export function createBridgeRewardRouter(alphAmount: bigint): ContractFixture<any> {
+export function createBridgeRewardRouter(
+  alphAmount: bigint,
+  rewardAmount = ONE_ALPH / 100n,
+  owner = randomAssetAddress()
+): ContractFixture<any> {
   const address = randomContractAddress()
   return new ContractFixture(
-    BridgeRewardRouter.stateForTest({ alphChainId: BigInt(CHAIN_ID_ALEPHIUM) }, { alphAmount }, address),
+    BridgeRewardRouterV2.stateForTest(
+      {
+        alphChainId: BigInt(CHAIN_ID_ALEPHIUM),
+        rewardAmount: ONE_ALPH / 100n,
+        owner
+      },
+      { alphAmount },
+      address
+    ),
     []
   )
 }

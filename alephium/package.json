@@ -31,9 +31,9 @@
     "npm": ">=7.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^1.5.0",
-    "@alephium/web3-wallet": "^1.5.0",
-    "@alephium/web3-test": "^1.5.0",
+    "@alephium/web3": "^1.7.4",
+    "@alephium/web3-wallet": "^1.7.4",
+    "@alephium/web3-test": "^1.7.4",
     "@types/elliptic": "^6.4.14",
     "blakejs": "^1.2.1",
     "bs58": "^5.0.0",
@@ -42,7 +42,7 @@
     "ethers": "5.4.4"
   },
   "devDependencies": {
-    "@alephium/cli": "^1.5.0",
+    "@alephium/cli": "^1.7.4",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",

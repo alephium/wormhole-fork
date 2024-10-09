@@ -1,7 +1,8 @@
 {
   "chainId": 255,
   "groupIndex": 0,
-  "initRewards": 0,
+  "initALPHAmountInRouterContract": 0,
+  "rewardAmount": "10000000000000000",
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
   "contracts": {
@@ -9,7 +10,7 @@
     "nativeGovernance": "22kH5DXnKjRvnr8y4FSKo9ADCAgQTqQz6oqLP2JJuLapX",
     "tokenBridge": "4c91e8825fcfea5219cf6a5b4f1607db7f0bd22850f39ed87dad9445bd99a800",
     "nativeTokenBridge": "yqr94FUpZARYoSjB8F7TxLZQUXMKTrt52PVcfY938Hu1",
-    "bridgeRewardRouter": "ed9a4a48ccf608cad050ad8601ee8517a4c969026629d2ca0999d24720d38200"
+    "bridgeRewardRouter": "998e057e2046f18f659bbc2ff4c75f12114e83bd1952c6b93819c4556d0d8100"
   },
   "nodeUrl": "https://node.testnet.alephium.org",
   "explorerUrl": "https://backend.testnet.alephium.org",

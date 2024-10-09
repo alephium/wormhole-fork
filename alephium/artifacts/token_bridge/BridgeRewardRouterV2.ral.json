@@ -1,0 +1,89 @@
+{
+  "version": "v3.7.0",
+  "name": "BridgeRewardRouterV2",
+  "bytecode": "03044085409540aa40bf0101030b004046d382f1b532160213c3038d7ea4c68000a2160116020e0c16000107b2a4d1a0002a344c40351601111306626c1703133b16031340422c2a170416041340412a17051601160516050e2a626d17061606ce00304c1916041340432a170716070e2a1708160116071608626d170916011608160816092a6263170a160aa000a8010102020004d321662d9716001601a9010001010008d3ff750640b4a001450c7b1600a100010001010008d34f58efe6b4a001450c7b1600a101",
+  "codeHash": "8f42eca7dec231419f3b3f19e944bd7127d86fdfb35b751c1515c57650c85c07",
+  "fieldsSig": {
+    "names": [
+      "alphChainId",
+      "rewardAmount",
+      "owner"
+    ],
+    "types": [
+      "U256",
+      "U256",
+      "Address"
+    ],
+    "isMutable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "eventsSig": [],
+  "functions": [
+    {
+      "name": "completeTransfer",
+      "paramNames": [
+        "tokenBridgeForChain",
+        "vaa",
+        "caller"
+      ],
+      "paramTypes": [
+        "TokenBridgeForChain",
+        "ByteVec",
+        "Address"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "addRewards",
+      "paramNames": [
+        "caller",
+        "amount"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "updateRewardAmount",
+      "paramNames": [
+        "newRewardAmount"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "updateOwner",
+      "paramNames": [
+        "newOwner"
+      ],
+      "paramTypes": [
+        "Address"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    }
+  ],
+  "constants": [],
+  "enums": []
+}

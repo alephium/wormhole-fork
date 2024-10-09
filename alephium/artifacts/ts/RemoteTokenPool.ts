@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as RemoteTokenPoolContractJson } from "../token_bridge/RemoteTokenPool.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -78,6 +80,27 @@ export namespace RemoteTokenPoolTypes {
       }>;
       result: CallContractResult<null>;
     };
+    prepareTransfer: {
+      params: CallContractParams<{
+        callerContractId: HexString;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: CallContractResult<[HexString, bigint]>;
+    };
+    prepareCompleteTransfer: {
+      params: CallContractParams<{
+        callerContractId: HexString;
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        normalizedArbiterFee: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint]>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
@@ -117,10 +140,9 @@ export namespace RemoteTokenPoolTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     getSymbol: {
@@ -148,6 +170,27 @@ export namespace RemoteTokenPoolTypes {
         recipient: Address;
         normalizedArbiterFee: bigint;
         caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    prepareTransfer: {
+      params: SignExecuteContractMethodParams<{
+        callerContractId: HexString;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    prepareCompleteTransfer: {
+      params: SignExecuteContractMethodParams<{
+        callerContractId: HexString;
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        normalizedArbiterFee: bigint;
       }>;
       result: SignExecuteScriptTxResult;
     };
@@ -383,6 +426,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "transfer", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: RemoteTokenPoolTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -457,6 +508,30 @@ export class RemoteTokenPoolInstance extends ContractInstance {
         RemoteTokenPool,
         this,
         "completeTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    prepareTransfer: async (
+      params: RemoteTokenPoolTypes.CallMethodParams<"prepareTransfer">
+    ): Promise<RemoteTokenPoolTypes.CallMethodResult<"prepareTransfer">> => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "prepareTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    prepareCompleteTransfer: async (
+      params: RemoteTokenPoolTypes.CallMethodParams<"prepareCompleteTransfer">
+    ): Promise<
+      RemoteTokenPoolTypes.CallMethodResult<"prepareCompleteTransfer">
+    > => {
+      return callMethod(
+        RemoteTokenPool,
+        this,
+        "prepareCompleteTransfer",
         params,
         getContractByCodeHash
       );
@@ -542,6 +617,30 @@ export class RemoteTokenPoolInstance extends ContractInstance {
         params
       );
     },
+    prepareTransfer: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"prepareTransfer">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"prepareTransfer">
+    > => {
+      return signExecuteMethod(
+        RemoteTokenPool,
+        this,
+        "prepareTransfer",
+        params
+      );
+    },
+    prepareCompleteTransfer: async (
+      params: RemoteTokenPoolTypes.SignExecuteMethodParams<"prepareCompleteTransfer">
+    ): Promise<
+      RemoteTokenPoolTypes.SignExecuteMethodResult<"prepareCompleteTransfer">
+    > => {
+      return signExecuteMethod(
+        RemoteTokenPool,
+        this,
+        "prepareCompleteTransfer",
+        params
+      );
+    },
     normalizeAmount: async (
       params: RemoteTokenPoolTypes.SignExecuteMethodParams<"normalizeAmount">
     ): Promise<
@@ -580,14 +679,22 @@ export class RemoteTokenPoolInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends RemoteTokenPoolTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<RemoteTokenPoolTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends RemoteTokenPoolTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<RemoteTokenPoolTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<RemoteTokenPoolTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | RemoteTokenPoolTypes.MultiCallParams
+      | RemoteTokenPoolTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       RemoteTokenPool,
       this,
       callss,
       getContractByCodeHash
-    )) as RemoteTokenPoolTypes.MulticallReturnType<Callss>;
+    );
   }
 }

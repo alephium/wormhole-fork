@@ -1,4 +1,4 @@
-import { addressFromContractId } from '@alephium/web3'
+import { addressFromContractId, ONE_ALPH } from '@alephium/web3'
 import { ContractFixture, randomContractAddress, randomContractId } from './wormhole-fixture'
 import { UnexecutedSequence, SequenceTest } from '../../artifacts/ts'
 
@@ -9,7 +9,7 @@ export function createUnexecutedSequence(parentId: string, begin: bigint, sequen
     begin: begin,
     sequences: sequences
   }
-  const state = UnexecutedSequence.stateForTest(initFields, undefined, address)
+  const state = UnexecutedSequence.stateForTest(initFields, { alphAmount: ONE_ALPH }, address)
   return new ContractFixture(state, [])
 }
 

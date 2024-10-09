@@ -10,7 +10,8 @@ import {
   subContractId,
   ALPH_TOKEN_ID,
   ContractDestroyedEvent,
-  ONE_ALPH
+  ONE_ALPH,
+  MINIMAL_CONTRACT_DEPOSIT
 } from '@alephium/web3'
 import { nonce, zeroPad } from '../lib/utils'
 import {
@@ -75,7 +76,8 @@ import * as base58 from 'bs58'
 import {
   AttestTokenHandler,
   AttestTokenHandlerTypes,
-  BridgeRewardRouter,
+  BridgeRewardRouterV2,
+  BridgeRewardRouterV2Types,
   Empty,
   GovernanceTypes,
   LocalTokenPoolTypes,
@@ -989,7 +991,7 @@ describe('test token bridge', () => {
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
     async function test(fixture: ContractFixture<any>) {
-      const testResult = await BridgeRewardRouter.tests.completeTransfer({
+      const testResult = await BridgeRewardRouterV2.tests.completeTransfer({
         initialFields: fixture.selfState.fields,
         address: fixture.address,
         initialAsset: fixture.selfState.asset,
@@ -1047,12 +1049,12 @@ describe('test token bridge', () => {
     expect(recipientOutputs0[0].tokens).toEqual([
       { id: remoteTokenPoolFixture.remoteTokenPool.contractId, amount: transferAmount - arbiterFee }
     ])
-    expect(recipientOutputs0[1].alphAmount).toEqual(ONE_ALPH)
+    expect(recipientOutputs0[1].alphAmount).toEqual(ONE_ALPH / 100n)
 
     const bridgeRewardRouterState0 = testResult0.contracts.find((c) => c.address === fixture0.address)!
-    expect(bridgeRewardRouterState0.asset.alphAmount).toEqual(ONE_ALPH * 2n)
+    expect(bridgeRewardRouterState0.asset.alphAmount).toEqual(ONE_ALPH * 3n - ONE_ALPH / 100n)
 
-    const fixture1 = createBridgeRewardRouter(ONE_ALPH)
+    const fixture1 = createBridgeRewardRouter(MINIMAL_CONTRACT_DEPOSIT)
     const testResult1 = await test(fixture1)
 
     const recipientOutputs1 = testResult1.txOutputs.filter((c) => c.address === hexToBase58(toAddress))
@@ -1063,7 +1065,7 @@ describe('test token bridge', () => {
     ])
 
     const bridgeRewardRouterState1 = testResult1.contracts.find((c) => c.address === fixture1.address)!
-    expect(bridgeRewardRouterState1.asset.alphAmount).toEqual(ONE_ALPH)
+    expect(bridgeRewardRouterState1.asset.alphAmount).toEqual(MINIMAL_CONTRACT_DEPOSIT)
   })
 
   it('should not reward if the token is from alephium', async () => {
@@ -1078,7 +1080,7 @@ describe('test token bridge', () => {
     const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
 
     const fixture = createBridgeRewardRouter(alph(3))
-    const testResult = await BridgeRewardRouter.tests.completeTransfer({
+    const testResult = await BridgeRewardRouterV2.tests.completeTransfer({
       address: fixture.address,
       initialFields: fixture.selfState.fields,
       testArgs: {
@@ -1500,9 +1502,9 @@ describe('test token bridge', () => {
     expect(refundAddressOutput.alphAmount).toEqual(alph(4) - defaultGasFee)
   })
 
-  it('should test add rewards', async () => {
+  it('should topup rewards', async () => {
     const fixture = createBridgeRewardRouter(ONE_ALPH)
-    const testResult = await BridgeRewardRouter.tests.addRewards({
+    const testResult = await BridgeRewardRouterV2.tests.addRewards({
       initialFields: fixture.selfState.fields,
       address: fixture.address,
       initialAsset: fixture.selfState.asset,
@@ -1514,5 +1516,52 @@ describe('test token bridge', () => {
 
     const callerOutputs = testResult.txOutputs.filter((c) => c.address === payer)
     checkTxCallerBalance(callerOutputs, ONE_ALPH, [])
+  })
+
+  it('should update reward amount', async () => {
+    const fixture = createBridgeRewardRouter(ONE_ALPH * 3n, ONE_ALPH, payer)
+    const testResult = await BridgeRewardRouterV2.tests.updateRewardAmount({
+      initialFields: fixture.selfState.fields,
+      address: fixture.address,
+      initialAsset: fixture.selfState.asset,
+      testArgs: { newRewardAmount: ONE_ALPH / 10n },
+      inputAssets: [defaultInputAsset]
+    })
+    const contractState = testResult.contracts.find((c) => c.address === fixture.address)!
+    expect((contractState.fields as BridgeRewardRouterV2Types.Fields).rewardAmount).toEqual(ONE_ALPH / 10n)
+
+    await expectAssertionFailed(async () => {
+      await BridgeRewardRouterV2.tests.updateRewardAmount({
+        initialFields: fixture.selfState.fields,
+        address: fixture.address,
+        initialAsset: fixture.selfState.asset,
+        testArgs: { newRewardAmount: ONE_ALPH / 10n },
+        inputAssets: [{ address: randomAssetAddress(), asset: { alphAmount: ONE_ALPH } }]
+      })
+    })
+  })
+
+  it('should update owner', async () => {
+    const fixture = createBridgeRewardRouter(ONE_ALPH * 3n, ONE_ALPH, payer)
+    const newOwner = randomAssetAddress()
+    const testResult = await BridgeRewardRouterV2.tests.updateOwner({
+      initialFields: fixture.selfState.fields,
+      address: fixture.address,
+      initialAsset: fixture.selfState.asset,
+      testArgs: { newOwner },
+      inputAssets: [defaultInputAsset]
+    })
+    const contractState = testResult.contracts.find((c) => c.address === fixture.address)!
+    expect((contractState.fields as BridgeRewardRouterV2Types.Fields).owner).toEqual(newOwner)
+
+    await expectAssertionFailed(async () => {
+      await BridgeRewardRouterV2.tests.updateOwner({
+        initialFields: fixture.selfState.fields,
+        address: fixture.address,
+        initialAsset: fixture.selfState.asset,
+        testArgs: { newOwner },
+        inputAssets: [{ address: randomAssetAddress(), asset: { alphAmount: ONE_ALPH } }]
+      })
+    })
   })
 })

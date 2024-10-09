@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeForChainContractJson } from "../token_bridge/TokenBridgeForChain.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -52,9 +54,33 @@ export namespace TokenBridgeForChainTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    setExecuted: {
+      params: CallContractParams<{ offset: bigint; current: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    compact: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<null>;
+    };
+    checkSequenceInSubContract: {
+      params: CallContractParams<{ seq: bigint }>;
+      result: CallContractResult<null>;
+    };
+    checkSequence: {
+      params: CallContractParams<{ seq: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     nextSendSequence: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
+    };
+    checkCompleteTransfer: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<[boolean, HexString]>;
+    };
+    parseCompleteTransfer: {
+      params: CallContractParams<{ payload: HexString }>;
+      result: CallContractResult<[bigint, HexString, bigint, Address, bigint]>;
     };
     completeTransfer: {
       params: CallContractParams<{ vaa: HexString; caller: Address }>;
@@ -85,14 +111,40 @@ export namespace TokenBridgeForChainTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
+    setExecuted: {
+      params: SignExecuteContractMethodParams<{
+        offset: bigint;
+        current: bigint;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    compact: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    checkSequenceInSubContract: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+    checkSequence: {
+      params: SignExecuteContractMethodParams<{ seq: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
     nextSendSequence: {
       params: Omit<SignExecuteContractMethodParams<{}>, "args">;
+      result: SignExecuteScriptTxResult;
+    };
+    checkCompleteTransfer: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    parseCompleteTransfer: {
+      params: SignExecuteContractMethodParams<{ payload: HexString }>;
       result: SignExecuteScriptTxResult;
     };
     completeTransfer: {
@@ -308,6 +360,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "withdraw", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: TokenBridgeForChainTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -331,6 +391,52 @@ export class TokenBridgeForChainInstance extends ContractInstance {
   }
 
   view = {
+    setExecuted: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"setExecuted">
+    ): Promise<TokenBridgeForChainTypes.CallMethodResult<"setExecuted">> => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "setExecuted",
+        params,
+        getContractByCodeHash
+      );
+    },
+    compact: async (
+      params?: TokenBridgeForChainTypes.CallMethodParams<"compact">
+    ): Promise<TokenBridgeForChainTypes.CallMethodResult<"compact">> => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "compact",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    checkSequenceInSubContract: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"checkSequenceInSubContract">
+    ): Promise<
+      TokenBridgeForChainTypes.CallMethodResult<"checkSequenceInSubContract">
+    > => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "checkSequenceInSubContract",
+        params,
+        getContractByCodeHash
+      );
+    },
+    checkSequence: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"checkSequence">
+    ): Promise<TokenBridgeForChainTypes.CallMethodResult<"checkSequence">> => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "checkSequence",
+        params,
+        getContractByCodeHash
+      );
+    },
     nextSendSequence: async (
       params?: TokenBridgeForChainTypes.CallMethodParams<"nextSendSequence">
     ): Promise<
@@ -341,6 +447,32 @@ export class TokenBridgeForChainInstance extends ContractInstance {
         this,
         "nextSendSequence",
         params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    checkCompleteTransfer: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"checkCompleteTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.CallMethodResult<"checkCompleteTransfer">
+    > => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "checkCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    parseCompleteTransfer: async (
+      params: TokenBridgeForChainTypes.CallMethodParams<"parseCompleteTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.CallMethodResult<"parseCompleteTransfer">
+    > => {
+      return callMethod(
+        TokenBridgeForChain,
+        this,
+        "parseCompleteTransfer",
+        params,
         getContractByCodeHash
       );
     },
@@ -395,6 +527,47 @@ export class TokenBridgeForChainInstance extends ContractInstance {
   };
 
   transact = {
+    setExecuted: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"setExecuted">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"setExecuted">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "setExecuted",
+        params
+      );
+    },
+    compact: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"compact">
+    ): Promise<TokenBridgeForChainTypes.SignExecuteMethodResult<"compact">> => {
+      return signExecuteMethod(TokenBridgeForChain, this, "compact", params);
+    },
+    checkSequenceInSubContract: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"checkSequenceInSubContract">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"checkSequenceInSubContract">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "checkSequenceInSubContract",
+        params
+      );
+    },
+    checkSequence: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"checkSequence">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"checkSequence">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "checkSequence",
+        params
+      );
+    },
     nextSendSequence: async (
       params: TokenBridgeForChainTypes.SignExecuteMethodParams<"nextSendSequence">
     ): Promise<
@@ -404,6 +577,30 @@ export class TokenBridgeForChainInstance extends ContractInstance {
         TokenBridgeForChain,
         this,
         "nextSendSequence",
+        params
+      );
+    },
+    checkCompleteTransfer: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"checkCompleteTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"checkCompleteTransfer">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "checkCompleteTransfer",
+        params
+      );
+    },
+    parseCompleteTransfer: async (
+      params: TokenBridgeForChainTypes.SignExecuteMethodParams<"parseCompleteTransfer">
+    ): Promise<
+      TokenBridgeForChainTypes.SignExecuteMethodResult<"parseCompleteTransfer">
+    > => {
+      return signExecuteMethod(
+        TokenBridgeForChain,
+        this,
+        "parseCompleteTransfer",
         params
       );
     },
@@ -445,14 +642,22 @@ export class TokenBridgeForChainInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends TokenBridgeForChainTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<TokenBridgeForChainTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends TokenBridgeForChainTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<TokenBridgeForChainTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<TokenBridgeForChainTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | TokenBridgeForChainTypes.MultiCallParams
+      | TokenBridgeForChainTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       TokenBridgeForChain,
       this,
       callss,
       getContractByCodeHash
-    )) as TokenBridgeForChainTypes.MulticallReturnType<Callss>;
+    );
   }
 }

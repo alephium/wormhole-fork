@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v3.5.2",
+  "fullNodeVersion": "v3.7.0",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": true,
     "ignoreUnusedVariablesWarnings": false,
@@ -33,6 +33,12 @@
       "sourceCodeHash": "37c98f60ed3691232d013e813713a6fab07e957be25dd0a06e50a92825ad8120",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b"
+    },
+    "BridgeRewardRouterV2": {
+      "sourceFile": "token_bridge/bridge_reward_router_v2.ral",
+      "sourceCodeHash": "41d7a4c02cc4300d7792a9b0b3fa6a02bc5689740a5546cf7dffce9f2296d626",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "8f42eca7dec231419f3b3f19e944bd7127d86fdfb35b751c1515c57650c85c07"
     },
     "BridgeTokenPool": {
       "sourceFile": "token_bridge/bridge_token_pool.ral",
