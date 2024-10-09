@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as GovernanceContractJson } from "../Governance.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -90,8 +92,20 @@ export namespace GovernanceTypes {
       }>;
       result: CallContractResult<[bigint, bigint, HexString]>;
     };
+    parseAndVerifyGovernanceVAA: {
+      params: CallContractParams<{ vaa: HexString; action: HexString }>;
+      result: CallContractResult<[bigint, HexString]>;
+    };
+    getGuardiansInfo: {
+      params: CallContractParams<{ guardianSetIndex: bigint }>;
+      result: CallContractResult<HexString>;
+    };
     submitContractUpgrade: {
       params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<null>;
+    };
+    updatePreviousGuardianSet: {
+      params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<null>;
     };
     submitNewGuardianSet: {
@@ -119,10 +133,9 @@ export namespace GovernanceTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     getMessageFee: {
@@ -156,8 +169,23 @@ export namespace GovernanceTypes {
       }>;
       result: SignExecuteScriptTxResult;
     };
+    parseAndVerifyGovernanceVAA: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        action: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    getGuardiansInfo: {
+      params: SignExecuteContractMethodParams<{ guardianSetIndex: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
     submitContractUpgrade: {
       params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updatePreviousGuardianSet: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
       result: SignExecuteScriptTxResult;
     };
     submitNewGuardianSet: {
@@ -399,6 +427,14 @@ class Factory extends ContractFactory<
       );
     },
   };
+
+  stateForTest(
+    initFields: GovernanceTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -485,6 +521,30 @@ export class GovernanceInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    parseAndVerifyGovernanceVAA: async (
+      params: GovernanceTypes.CallMethodParams<"parseAndVerifyGovernanceVAA">
+    ): Promise<
+      GovernanceTypes.CallMethodResult<"parseAndVerifyGovernanceVAA">
+    > => {
+      return callMethod(
+        Governance,
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getGuardiansInfo: async (
+      params: GovernanceTypes.CallMethodParams<"getGuardiansInfo">
+    ): Promise<GovernanceTypes.CallMethodResult<"getGuardiansInfo">> => {
+      return callMethod(
+        Governance,
+        this,
+        "getGuardiansInfo",
+        params,
+        getContractByCodeHash
+      );
+    },
     submitContractUpgrade: async (
       params: GovernanceTypes.CallMethodParams<"submitContractUpgrade">
     ): Promise<GovernanceTypes.CallMethodResult<"submitContractUpgrade">> => {
@@ -493,6 +553,19 @@ export class GovernanceInstance extends ContractInstance {
         this,
         "submitContractUpgrade",
         params,
+        getContractByCodeHash
+      );
+    },
+    updatePreviousGuardianSet: async (
+      params?: GovernanceTypes.CallMethodParams<"updatePreviousGuardianSet">
+    ): Promise<
+      GovernanceTypes.CallMethodResult<"updatePreviousGuardianSet">
+    > => {
+      return callMethod(
+        Governance,
+        this,
+        "updatePreviousGuardianSet",
+        params === undefined ? {} : params,
         getContractByCodeHash
       );
     },
@@ -568,6 +641,23 @@ export class GovernanceInstance extends ContractInstance {
         params
       );
     },
+    parseAndVerifyGovernanceVAA: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"parseAndVerifyGovernanceVAA">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"parseAndVerifyGovernanceVAA">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params
+      );
+    },
+    getGuardiansInfo: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"getGuardiansInfo">
+    ): Promise<GovernanceTypes.SignExecuteMethodResult<"getGuardiansInfo">> => {
+      return signExecuteMethod(Governance, this, "getGuardiansInfo", params);
+    },
     submitContractUpgrade: async (
       params: GovernanceTypes.SignExecuteMethodParams<"submitContractUpgrade">
     ): Promise<
@@ -577,6 +667,18 @@ export class GovernanceInstance extends ContractInstance {
         Governance,
         this,
         "submitContractUpgrade",
+        params
+      );
+    },
+    updatePreviousGuardianSet: async (
+      params: GovernanceTypes.SignExecuteMethodParams<"updatePreviousGuardianSet">
+    ): Promise<
+      GovernanceTypes.SignExecuteMethodResult<"updatePreviousGuardianSet">
+    > => {
+      return signExecuteMethod(
+        Governance,
+        this,
+        "updatePreviousGuardianSet",
         params
       );
     },
@@ -608,14 +710,22 @@ export class GovernanceInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends GovernanceTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<GovernanceTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends GovernanceTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<GovernanceTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<GovernanceTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | GovernanceTypes.MultiCallParams
+      | GovernanceTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       Governance,
       this,
       callss,
       getContractByCodeHash
-    )) as GovernanceTypes.MulticallReturnType<Callss>;
+    );
   }
 }

@@ -33,13 +33,15 @@ import {
   encodeContractFields,
   Narrow,
 } from "@alephium/web3";
-import { default as BridgeRewardRouterContractJson } from "../token_bridge/BridgeRewardRouter.ral.json";
+import { default as BridgeRewardRouterV2ContractJson } from "../token_bridge/BridgeRewardRouterV2.ral.json";
 import { getContractByCodeHash } from "./contracts";
 
 // Custom types for the contract
-export namespace BridgeRewardRouterTypes {
+export namespace BridgeRewardRouterV2Types {
   export type Fields = {
     alphChainId: bigint;
+    rewardAmount: bigint;
+    owner: Address;
   };
 
   export type State = ContractState<Fields>;
@@ -55,6 +57,14 @@ export namespace BridgeRewardRouterTypes {
     };
     addRewards: {
       params: CallContractParams<{ caller: Address; amount: bigint }>;
+      result: CallContractResult<null>;
+    };
+    updateRewardAmount: {
+      params: CallContractParams<{ newRewardAmount: bigint }>;
+      result: CallContractResult<null>;
+    };
+    updateOwner: {
+      params: CallContractParams<{ newOwner: Address }>;
       result: CallContractResult<null>;
     };
   }
@@ -90,6 +100,14 @@ export namespace BridgeRewardRouterTypes {
       }>;
       result: SignExecuteScriptTxResult;
     };
+    updateRewardAmount: {
+      params: SignExecuteContractMethodParams<{ newRewardAmount: bigint }>;
+      result: SignExecuteScriptTxResult;
+    };
+    updateOwner: {
+      params: SignExecuteContractMethodParams<{ newOwner: Address }>;
+      result: SignExecuteScriptTxResult;
+    };
   }
   export type SignExecuteMethodParams<T extends keyof SignExecuteMethodTable> =
     SignExecuteMethodTable[T]["params"];
@@ -98,10 +116,10 @@ export namespace BridgeRewardRouterTypes {
 }
 
 class Factory extends ContractFactory<
-  BridgeRewardRouterInstance,
-  BridgeRewardRouterTypes.Fields
+  BridgeRewardRouterV2Instance,
+  BridgeRewardRouterV2Types.Fields
 > {
-  encodeFields(fields: BridgeRewardRouterTypes.Fields) {
+  encodeFields(fields: BridgeRewardRouterV2Types.Fields) {
     return encodeContractFields(
       addStdIdToFields(this.contract, fields),
       this.contract.fieldsSig,
@@ -109,14 +127,14 @@ class Factory extends ContractFactory<
     );
   }
 
-  at(address: string): BridgeRewardRouterInstance {
-    return new BridgeRewardRouterInstance(address);
+  at(address: string): BridgeRewardRouterV2Instance {
+    return new BridgeRewardRouterV2Instance(address);
   }
 
   tests = {
     completeTransfer: async (
       params: TestContractParamsWithoutMaps<
-        BridgeRewardRouterTypes.Fields,
+        BridgeRewardRouterV2Types.Fields,
         { tokenBridgeForChain: HexString; vaa: HexString; caller: Address }
       >
     ): Promise<TestContractResultWithoutMaps<null>> => {
@@ -129,16 +147,37 @@ class Factory extends ContractFactory<
     },
     addRewards: async (
       params: TestContractParamsWithoutMaps<
-        BridgeRewardRouterTypes.Fields,
+        BridgeRewardRouterV2Types.Fields,
         { caller: Address; amount: bigint }
       >
     ): Promise<TestContractResultWithoutMaps<null>> => {
       return testMethod(this, "addRewards", params, getContractByCodeHash);
     },
+    updateRewardAmount: async (
+      params: TestContractParamsWithoutMaps<
+        BridgeRewardRouterV2Types.Fields,
+        { newRewardAmount: bigint }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(
+        this,
+        "updateRewardAmount",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateOwner: async (
+      params: TestContractParamsWithoutMaps<
+        BridgeRewardRouterV2Types.Fields,
+        { newOwner: Address }
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "updateOwner", params, getContractByCodeHash);
+    },
   };
 
   stateForTest(
-    initFields: BridgeRewardRouterTypes.Fields,
+    initFields: BridgeRewardRouterV2Types.Fields,
     asset?: Asset,
     address?: string
   ) {
@@ -147,33 +186,33 @@ class Factory extends ContractFactory<
 }
 
 // Use this object to test and deploy the contract
-export const BridgeRewardRouter = new Factory(
+export const BridgeRewardRouterV2 = new Factory(
   Contract.fromJson(
-    BridgeRewardRouterContractJson,
+    BridgeRewardRouterV2ContractJson,
     "",
-    "213e716a4d9125a71678f579c770a9721e5d4b1c95822f2f623f3ae27cc0f76b",
+    "8f42eca7dec231419f3b3f19e944bd7127d86fdfb35b751c1515c57650c85c07",
     []
   )
 );
 
 // Use this class to interact with the blockchain
-export class BridgeRewardRouterInstance extends ContractInstance {
+export class BridgeRewardRouterV2Instance extends ContractInstance {
   constructor(address: Address) {
     super(address);
   }
 
-  async fetchState(): Promise<BridgeRewardRouterTypes.State> {
-    return fetchContractState(BridgeRewardRouter, this);
+  async fetchState(): Promise<BridgeRewardRouterV2Types.State> {
+    return fetchContractState(BridgeRewardRouterV2, this);
   }
 
   view = {
     completeTransfer: async (
-      params: BridgeRewardRouterTypes.CallMethodParams<"completeTransfer">
+      params: BridgeRewardRouterV2Types.CallMethodParams<"completeTransfer">
     ): Promise<
-      BridgeRewardRouterTypes.CallMethodResult<"completeTransfer">
+      BridgeRewardRouterV2Types.CallMethodResult<"completeTransfer">
     > => {
       return callMethod(
-        BridgeRewardRouter,
+        BridgeRewardRouterV2,
         this,
         "completeTransfer",
         params,
@@ -181,12 +220,36 @@ export class BridgeRewardRouterInstance extends ContractInstance {
       );
     },
     addRewards: async (
-      params: BridgeRewardRouterTypes.CallMethodParams<"addRewards">
-    ): Promise<BridgeRewardRouterTypes.CallMethodResult<"addRewards">> => {
+      params: BridgeRewardRouterV2Types.CallMethodParams<"addRewards">
+    ): Promise<BridgeRewardRouterV2Types.CallMethodResult<"addRewards">> => {
       return callMethod(
-        BridgeRewardRouter,
+        BridgeRewardRouterV2,
         this,
         "addRewards",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateRewardAmount: async (
+      params: BridgeRewardRouterV2Types.CallMethodParams<"updateRewardAmount">
+    ): Promise<
+      BridgeRewardRouterV2Types.CallMethodResult<"updateRewardAmount">
+    > => {
+      return callMethod(
+        BridgeRewardRouterV2,
+        this,
+        "updateRewardAmount",
+        params,
+        getContractByCodeHash
+      );
+    },
+    updateOwner: async (
+      params: BridgeRewardRouterV2Types.CallMethodParams<"updateOwner">
+    ): Promise<BridgeRewardRouterV2Types.CallMethodResult<"updateOwner">> => {
+      return callMethod(
+        BridgeRewardRouterV2,
+        this,
+        "updateOwner",
         params,
         getContractByCodeHash
       );
@@ -195,23 +258,52 @@ export class BridgeRewardRouterInstance extends ContractInstance {
 
   transact = {
     completeTransfer: async (
-      params: BridgeRewardRouterTypes.SignExecuteMethodParams<"completeTransfer">
+      params: BridgeRewardRouterV2Types.SignExecuteMethodParams<"completeTransfer">
     ): Promise<
-      BridgeRewardRouterTypes.SignExecuteMethodResult<"completeTransfer">
+      BridgeRewardRouterV2Types.SignExecuteMethodResult<"completeTransfer">
     > => {
       return signExecuteMethod(
-        BridgeRewardRouter,
+        BridgeRewardRouterV2,
         this,
         "completeTransfer",
         params
       );
     },
     addRewards: async (
-      params: BridgeRewardRouterTypes.SignExecuteMethodParams<"addRewards">
+      params: BridgeRewardRouterV2Types.SignExecuteMethodParams<"addRewards">
     ): Promise<
-      BridgeRewardRouterTypes.SignExecuteMethodResult<"addRewards">
+      BridgeRewardRouterV2Types.SignExecuteMethodResult<"addRewards">
     > => {
-      return signExecuteMethod(BridgeRewardRouter, this, "addRewards", params);
+      return signExecuteMethod(
+        BridgeRewardRouterV2,
+        this,
+        "addRewards",
+        params
+      );
+    },
+    updateRewardAmount: async (
+      params: BridgeRewardRouterV2Types.SignExecuteMethodParams<"updateRewardAmount">
+    ): Promise<
+      BridgeRewardRouterV2Types.SignExecuteMethodResult<"updateRewardAmount">
+    > => {
+      return signExecuteMethod(
+        BridgeRewardRouterV2,
+        this,
+        "updateRewardAmount",
+        params
+      );
+    },
+    updateOwner: async (
+      params: BridgeRewardRouterV2Types.SignExecuteMethodParams<"updateOwner">
+    ): Promise<
+      BridgeRewardRouterV2Types.SignExecuteMethodResult<"updateOwner">
+    > => {
+      return signExecuteMethod(
+        BridgeRewardRouterV2,
+        this,
+        "updateOwner",
+        params
+      );
     },
   };
 }

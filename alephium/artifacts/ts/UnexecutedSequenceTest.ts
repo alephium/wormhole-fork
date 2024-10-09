@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as UnexecutedSequenceTestContractJson } from "../tests/UnexecutedSequenceTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -64,10 +66,9 @@ export namespace UnexecutedSequenceTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     checkSequence: {
@@ -122,6 +123,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "destroy", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: UnexecutedSequenceTestTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract

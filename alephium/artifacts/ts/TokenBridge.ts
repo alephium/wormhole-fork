@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeContractJson } from "../token_bridge/TokenBridge.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -49,12 +51,30 @@ export namespace TokenBridgeTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    parseAndVerifyGovernanceVAA: {
+      params: CallContractParams<{ vaa: HexString; action: HexString }>;
+      result: CallContractResult<[bigint, HexString]>;
+    };
+    createAttestTokenHandler: {
+      params: CallContractParams<{
+        payer: Address;
+        createContractAlphAmount: bigint;
+        targetChainId: bigint;
+        targetTokenBridgeId: HexString;
+        isLocal: boolean;
+      }>;
+      result: CallContractResult<null>;
+    };
     createLocalAttestTokenHandler: {
       params: CallContractParams<{
         payer: Address;
         createContractAlphAmount: bigint;
       }>;
       result: CallContractResult<null>;
+    };
+    parseAndVerifyRegisterChain: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<[bigint, HexString]>;
     };
     registerChain: {
       params: CallContractParams<{
@@ -99,6 +119,10 @@ export namespace TokenBridgeTypes {
         consistencyLevel: bigint;
       }>;
       result: CallContractResult<null>;
+    };
+    nextSendSequence: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
     };
     createLocalTokenPool: {
       params: CallContractParams<{
@@ -160,17 +184,37 @@ export namespace TokenBridgeTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
+    parseAndVerifyGovernanceVAA: {
+      params: SignExecuteContractMethodParams<{
+        vaa: HexString;
+        action: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    createAttestTokenHandler: {
+      params: SignExecuteContractMethodParams<{
+        payer: Address;
+        createContractAlphAmount: bigint;
+        targetChainId: bigint;
+        targetTokenBridgeId: HexString;
+        isLocal: boolean;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
     createLocalAttestTokenHandler: {
       params: SignExecuteContractMethodParams<{
         payer: Address;
         createContractAlphAmount: bigint;
       }>;
+      result: SignExecuteScriptTxResult;
+    };
+    parseAndVerifyRegisterChain: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
       result: SignExecuteScriptTxResult;
     };
     registerChain: {
@@ -215,6 +259,10 @@ export namespace TokenBridgeTypes {
         nonce: HexString;
         consistencyLevel: bigint;
       }>;
+      result: SignExecuteScriptTxResult;
+    };
+    nextSendSequence: {
+      params: Omit<SignExecuteContractMethodParams<{}>, "args">;
       result: SignExecuteScriptTxResult;
     };
     createLocalTokenPool: {
@@ -582,6 +630,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "transferToken", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: TokenBridgeTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -605,6 +661,32 @@ export class TokenBridgeInstance extends ContractInstance {
   }
 
   view = {
+    parseAndVerifyGovernanceVAA: async (
+      params: TokenBridgeTypes.CallMethodParams<"parseAndVerifyGovernanceVAA">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"parseAndVerifyGovernanceVAA">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params,
+        getContractByCodeHash
+      );
+    },
+    createAttestTokenHandler: async (
+      params: TokenBridgeTypes.CallMethodParams<"createAttestTokenHandler">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"createAttestTokenHandler">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "createAttestTokenHandler",
+        params,
+        getContractByCodeHash
+      );
+    },
     createLocalAttestTokenHandler: async (
       params: TokenBridgeTypes.CallMethodParams<"createLocalAttestTokenHandler">
     ): Promise<
@@ -614,6 +696,19 @@ export class TokenBridgeInstance extends ContractInstance {
         TokenBridge,
         this,
         "createLocalAttestTokenHandler",
+        params,
+        getContractByCodeHash
+      );
+    },
+    parseAndVerifyRegisterChain: async (
+      params: TokenBridgeTypes.CallMethodParams<"parseAndVerifyRegisterChain">
+    ): Promise<
+      TokenBridgeTypes.CallMethodResult<"parseAndVerifyRegisterChain">
+    > => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "parseAndVerifyRegisterChain",
         params,
         getContractByCodeHash
       );
@@ -710,6 +805,17 @@ export class TokenBridgeInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    nextSendSequence: async (
+      params?: TokenBridgeTypes.CallMethodParams<"nextSendSequence">
+    ): Promise<TokenBridgeTypes.CallMethodResult<"nextSendSequence">> => {
+      return callMethod(
+        TokenBridge,
+        this,
+        "nextSendSequence",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
     createLocalTokenPool: async (
       params: TokenBridgeTypes.CallMethodParams<"createLocalTokenPool">
     ): Promise<TokenBridgeTypes.CallMethodResult<"createLocalTokenPool">> => {
@@ -757,6 +863,30 @@ export class TokenBridgeInstance extends ContractInstance {
   };
 
   transact = {
+    parseAndVerifyGovernanceVAA: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"parseAndVerifyGovernanceVAA">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"parseAndVerifyGovernanceVAA">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "parseAndVerifyGovernanceVAA",
+        params
+      );
+    },
+    createAttestTokenHandler: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"createAttestTokenHandler">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"createAttestTokenHandler">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "createAttestTokenHandler",
+        params
+      );
+    },
     createLocalAttestTokenHandler: async (
       params: TokenBridgeTypes.SignExecuteMethodParams<"createLocalAttestTokenHandler">
     ): Promise<
@@ -766,6 +896,18 @@ export class TokenBridgeInstance extends ContractInstance {
         TokenBridge,
         this,
         "createLocalAttestTokenHandler",
+        params
+      );
+    },
+    parseAndVerifyRegisterChain: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"parseAndVerifyRegisterChain">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"parseAndVerifyRegisterChain">
+    > => {
+      return signExecuteMethod(
+        TokenBridge,
+        this,
+        "parseAndVerifyRegisterChain",
         params
       );
     },
@@ -832,6 +974,13 @@ export class TokenBridgeInstance extends ContractInstance {
     ): Promise<TokenBridgeTypes.SignExecuteMethodResult<"attestToken">> => {
       return signExecuteMethod(TokenBridge, this, "attestToken", params);
     },
+    nextSendSequence: async (
+      params: TokenBridgeTypes.SignExecuteMethodParams<"nextSendSequence">
+    ): Promise<
+      TokenBridgeTypes.SignExecuteMethodResult<"nextSendSequence">
+    > => {
+      return signExecuteMethod(TokenBridge, this, "nextSendSequence", params);
+    },
     createLocalTokenPool: async (
       params: TokenBridgeTypes.SignExecuteMethodParams<"createLocalTokenPool">
     ): Promise<
@@ -875,14 +1024,22 @@ export class TokenBridgeInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends TokenBridgeTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<TokenBridgeTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends TokenBridgeTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<TokenBridgeTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<TokenBridgeTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | TokenBridgeTypes.MultiCallParams
+      | TokenBridgeTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       TokenBridge,
       this,
       callss,
       getContractByCodeHash
-    )) as TokenBridgeTypes.MulticallReturnType<Callss>;
+    );
   }
 }

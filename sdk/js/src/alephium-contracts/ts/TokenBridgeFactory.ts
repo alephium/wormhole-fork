@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeFactoryContractJson } from "../token_bridge/TokenBridgeFactory.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -84,10 +86,9 @@ export namespace TokenBridgeFactoryTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     getLocalTokenPoolTemplateId: {
@@ -259,6 +260,14 @@ class Factory extends ContractFactory<
       );
     },
   };
+
+  stateForTest(
+    initFields: TokenBridgeFactoryTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -437,14 +446,22 @@ export class TokenBridgeFactoryInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends TokenBridgeFactoryTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<TokenBridgeFactoryTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends TokenBridgeFactoryTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<TokenBridgeFactoryTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<TokenBridgeFactoryTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | TokenBridgeFactoryTypes.MultiCallParams
+      | TokenBridgeFactoryTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       TokenBridgeFactory,
       this,
       callss,
       getContractByCodeHash
-    )) as TokenBridgeFactoryTypes.MulticallReturnType<Callss>;
+    );
   }
 }

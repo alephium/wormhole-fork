@@ -1,0 +1,42 @@
+Contract BridgeRewardRouterV2(
+  alphChainId: U256,
+  mut rewardAmount: U256,
+  mut owner: Address
+) {
+  @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+  pub fn completeTransfer(tokenBridgeForChain: TokenBridgeForChain, vaa: ByteVec, caller: Address) -> () {
+    tokenBridgeForChain.completeTransfer{caller -> ALPH: dustAmount!()}(vaa, caller)
+    if (tokenRemaining!(selfAddress!(), ALPH) >= (minimalContractDeposit!() + rewardAmount)) {
+      let signatureSize = u256From1Byte!(byteVecSlice!(vaa, 5, 6))
+      let payloadOffset = 59 + signatureSize * 66 // 6 + signatureSize * 66 + 53
+      let tokenChainIdOffset = payloadOffset + 65 // payloadOffset + 1 + 32 + 32
+      let tokenChainId = u256From2Byte!(byteVecSlice!(vaa, tokenChainIdOffset, tokenChainIdOffset + 2))
+
+      // only reward tokens from other chains
+      if (tokenChainId != alphChainId) {
+        let targetAddressSizeOffset = payloadOffset + 67 // payloadOffset + 1 + 32 + 32 + 2
+        let targetAddressOffset = targetAddressSizeOffset + 2
+        let targetAddressSize = u256From2Byte!(byteVecSlice!(vaa, targetAddressSizeOffset, targetAddressOffset))
+        let targetAddress = byteVecToAddress!(byteVecSlice!(vaa, targetAddressOffset, targetAddressOffset + targetAddressSize))
+        transferTokenFromSelf!(targetAddress, ALPH, rewardAmount)
+      }
+    }
+  }
+
+  @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+  pub fn addRewards(caller: Address, amount: U256) -> () {
+    transferTokenToSelf!(caller, ALPH, amount)
+  }
+
+  @using(updateFields = true)
+  pub fn updateRewardAmount(newRewardAmount: U256) -> () {
+    checkCaller!(callerAddress!() == owner, 0)
+    rewardAmount = newRewardAmount
+  }
+
+  @using(updateFields = true)
+  pub fn updateOwner(newOwner: Address) -> () {
+    checkCaller!(callerAddress!() == owner, 0)
+    owner = newOwner
+  }
+}

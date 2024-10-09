@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as AttestTokenHandlerContractJson } from "../token_bridge/AttestTokenHandler.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -48,6 +50,12 @@ export namespace AttestTokenHandlerTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    parseAttestToken: {
+      params: CallContractParams<{ vaa: HexString }>;
+      result: CallContractResult<
+        [HexString, HexString, HexString, bigint, bigint]
+      >;
+    };
     createLocalTokenPool: {
       params: CallContractParams<{
         vaa: HexString;
@@ -69,6 +77,10 @@ export namespace AttestTokenHandlerTypes {
       params: CallContractParams<{ vaa: HexString }>;
       result: CallContractResult<null>;
     };
+    removeTrailingZeros: {
+      params: CallContractParams<{ bytes: HexString }>;
+      result: CallContractResult<HexString>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -82,12 +94,15 @@ export namespace AttestTokenHandlerTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
+    parseAttestToken: {
+      params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
     createLocalTokenPool: {
       params: SignExecuteContractMethodParams<{
         vaa: HexString;
@@ -107,6 +122,10 @@ export namespace AttestTokenHandlerTypes {
     };
     updateRemoteTokenPool: {
       params: SignExecuteContractMethodParams<{ vaa: HexString }>;
+      result: SignExecuteScriptTxResult;
+    };
+    removeTrailingZeros: {
+      params: SignExecuteContractMethodParams<{ bytes: HexString }>;
       result: SignExecuteScriptTxResult;
     };
   }
@@ -252,6 +271,14 @@ class Factory extends ContractFactory<
       );
     },
   };
+
+  stateForTest(
+    initFields: AttestTokenHandlerTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -275,6 +302,19 @@ export class AttestTokenHandlerInstance extends ContractInstance {
   }
 
   view = {
+    parseAttestToken: async (
+      params: AttestTokenHandlerTypes.CallMethodParams<"parseAttestToken">
+    ): Promise<
+      AttestTokenHandlerTypes.CallMethodResult<"parseAttestToken">
+    > => {
+      return callMethod(
+        AttestTokenHandler,
+        this,
+        "parseAttestToken",
+        params,
+        getContractByCodeHash
+      );
+    },
     createLocalTokenPool: async (
       params: AttestTokenHandlerTypes.CallMethodParams<"createLocalTokenPool">
     ): Promise<
@@ -314,9 +354,34 @@ export class AttestTokenHandlerInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    removeTrailingZeros: async (
+      params: AttestTokenHandlerTypes.CallMethodParams<"removeTrailingZeros">
+    ): Promise<
+      AttestTokenHandlerTypes.CallMethodResult<"removeTrailingZeros">
+    > => {
+      return callMethod(
+        AttestTokenHandler,
+        this,
+        "removeTrailingZeros",
+        params,
+        getContractByCodeHash
+      );
+    },
   };
 
   transact = {
+    parseAttestToken: async (
+      params: AttestTokenHandlerTypes.SignExecuteMethodParams<"parseAttestToken">
+    ): Promise<
+      AttestTokenHandlerTypes.SignExecuteMethodResult<"parseAttestToken">
+    > => {
+      return signExecuteMethod(
+        AttestTokenHandler,
+        this,
+        "parseAttestToken",
+        params
+      );
+    },
     createLocalTokenPool: async (
       params: AttestTokenHandlerTypes.SignExecuteMethodParams<"createLocalTokenPool">
     ): Promise<
@@ -353,5 +418,36 @@ export class AttestTokenHandlerInstance extends ContractInstance {
         params
       );
     },
+    removeTrailingZeros: async (
+      params: AttestTokenHandlerTypes.SignExecuteMethodParams<"removeTrailingZeros">
+    ): Promise<
+      AttestTokenHandlerTypes.SignExecuteMethodResult<"removeTrailingZeros">
+    > => {
+      return signExecuteMethod(
+        AttestTokenHandler,
+        this,
+        "removeTrailingZeros",
+        params
+      );
+    },
   };
+
+  async multicall<Calls extends AttestTokenHandlerTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<AttestTokenHandlerTypes.MultiCallResults<Calls>>;
+  async multicall<Callss extends AttestTokenHandlerTypes.MultiCallParams[]>(
+    callss: Narrow<Callss>
+  ): Promise<AttestTokenHandlerTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | AttestTokenHandlerTypes.MultiCallParams
+      | AttestTokenHandlerTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
+      AttestTokenHandler,
+      this,
+      callss,
+      getContractByCodeHash
+    );
+  }
 }

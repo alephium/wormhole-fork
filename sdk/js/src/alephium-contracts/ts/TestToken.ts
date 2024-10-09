@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as TestTokenContractJson } from "../tests/TestToken.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -83,10 +85,9 @@ export namespace TestTokenTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
-  export type MulticallReturnType<Callss extends MultiCallParams[]> =
-    Callss["length"] extends 1
-      ? MultiCallResults<Callss[0]>
-      : { [index in keyof Callss]: MultiCallResults<Callss[index]> };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     getSymbol: {
@@ -178,6 +179,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "buy", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: TestTokenTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -280,14 +289,22 @@ export class TestTokenInstance extends ContractInstance {
     },
   };
 
+  async multicall<Calls extends TestTokenTypes.MultiCallParams>(
+    calls: Calls
+  ): Promise<TestTokenTypes.MultiCallResults<Calls>>;
   async multicall<Callss extends TestTokenTypes.MultiCallParams[]>(
-    ...callss: Callss
-  ): Promise<TestTokenTypes.MulticallReturnType<Callss>> {
-    return (await multicallMethods(
+    callss: Narrow<Callss>
+  ): Promise<TestTokenTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | TestTokenTypes.MultiCallParams
+      | TestTokenTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       TestToken,
       this,
       callss,
       getContractByCodeHash
-    )) as TestTokenTypes.MulticallReturnType<Callss>;
+    );
   }
 }
