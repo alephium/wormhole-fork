@@ -1,8 +1,8 @@
 import { Sequence } from '../sequence'
 import { BridgeChain } from '../bridge_chain'
-import { assert, randomBigInt } from '../utils'
+import { assert, randomBigInt, RewardAmount } from '../utils'
 import * as base58 from 'bs58'
-import { DUST_AMOUNT, ONE_ALPH } from '@alephium/web3'
+import { DUST_AMOUNT } from '@alephium/web3'
 
 export class TransferTokenTest {
   fromChain: BridgeChain
@@ -152,7 +152,7 @@ export class TransferTokenTest {
       )
       assert(tokenBalanceAfterTransfer === amount)
       const alphBalanceAfterTransfer = await this.toChain.getNativeTokenBalanceByAddress(multiSigAddressBase58)
-      assert(alphBalanceAfterTransfer === alphBalanceBeforeTransfer + ONE_ALPH + DUST_AMOUNT)
+      assert(alphBalanceAfterTransfer === alphBalanceBeforeTransfer + RewardAmount + DUST_AMOUNT)
     }
   }
 }
