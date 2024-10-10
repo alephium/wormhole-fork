@@ -487,7 +487,7 @@ export async function setStorageAt(rpc: string, contractAddress: string, storage
   })).data
 }
 
-export async function checkMainnetContract(
+export async function checkEvmMainnetContract(
   chainId: ChainId,
   nodeUrl: string | undefined
 ) {

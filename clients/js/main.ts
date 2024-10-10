@@ -21,7 +21,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { checkMainnetContract, executeGovernanceEvm } from "./evm";
+import { checkEvmMainnetContract, executeGovernanceEvm } from "./evm";
 import { impossible } from "./utils";
 import {
   assertChain,
@@ -508,7 +508,7 @@ yargs(hideBin(process.argv))
           async (argv) => {
             const nodeUrl = argv['node-url'];
             const chainId = argv['chain-id'] as ChainId;
-            await checkMainnetContract(chainId, nodeUrl);
+            await checkEvmMainnetContract(chainId, nodeUrl);
           }
         );
     },
