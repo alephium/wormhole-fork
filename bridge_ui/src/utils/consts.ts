@@ -44,7 +44,6 @@ import { default as guardianTestnetConfig } from '../../../configs/guardian/test
 import { default as guardianMainnetConfig } from '../../../configs/guardian/mainnet.json'
 
 export const alphArbiterFee = BigInt("0")
-export const minimalAlphInContract = BigInt("1000000000000000000")
 
 export type Cluster = "devnet" | "testnet" | "mainnet";
 export const CLUSTER: Cluster =
@@ -66,11 +65,11 @@ const alephiumChainInfo: ChainInfo = {
 export const CHAINS: ChainInfo[] =
   CLUSTER === "mainnet"
     ? [
-        // {
-        //   id: CHAIN_ID_BSC,
-        //   name: "Binance Smart Chain",
-        //   logo: bscIcon,
-        // },
+        {
+          id: CHAIN_ID_BSC,
+          name: "Binance Smart Chain",
+          logo: bscIcon,
+        },
         {
           id: CHAIN_ID_ETH,
           name: "Ethereum",
@@ -80,14 +79,14 @@ export const CHAINS: ChainInfo[] =
       ]
     : CLUSTER === "testnet"
     ? [
-        // {
-        //   id: CHAIN_ID_BSC,
-        //   name: "Binance Smart Chain",
-        //   logo: bscIcon,
-        // },
+        {
+          id: CHAIN_ID_BSC,
+          name: "Binance Smart Chain",
+          logo: bscIcon,
+        },
         {
           id: CHAIN_ID_ETH,
-          name: "Ethereum (Goerli)",
+          name: "Ethereum (Sepolia)",
           logo: ethIcon,
         },
         alephiumChainInfo
@@ -210,7 +209,7 @@ export const WORMHOLE_RPC_HOSTS =
     ? guardianTestnetConfig.guardianUrls
     : guardianDevnetConfig.guardianUrls
 export const ETH_NETWORK_CHAIN_ID =
-  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 5 : 1338;
+  CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 11155111 : 1338;
 export const ROPSTEN_ETH_NETWORK_CHAIN_ID =
   CLUSTER === "mainnet" ? 1 : CLUSTER === "testnet" ? 3 : 1337;
 export const BSC_NETWORK_CHAIN_ID =
@@ -277,16 +276,16 @@ export const SOLANA_HOST = process.env.REACT_APP_SOLANA_API_URL
 
 export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
-    ? 'https://ethereum.publicnode.com'
+    ? 'https://ethereum-rpc.publicnode.com'
     : CLUSTER === 'testnet'
-    ? 'https://ethereum-goerli.publicnode.com'
+    ? 'https://ethereum-sepolia-rpc.publicnode.com'
     : 'http://localhost:8545'
 
 export const BSC_RPC_HOST =
   CLUSTER === 'mainnet'
-    ? ''
+    ? 'https://bsc-rpc.publicnode.com'
     : CLUSTER === 'testnet'
-    ? 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    ? 'https://bsc-testnet-rpc.publicnode.com'
     : 'http://localhost:8546'
 
 export const TERRA_HOST =
@@ -312,7 +311,7 @@ export const EXPLORER_API_SERVER_HOST =
   CLUSTER === 'mainnet'
     ? 'https://indexer-api.explorer.bridge.alephium.org'
     : CLUSTER === 'testnet'
-    ? 'https://v2.indexer-api.explorer.testnet.bridge.alephium.org'
+    ? 'https://indexer-api.explorer.testnet.bridge.alephium.org'
     : 'http://localhost:8100'
 
 export const RELAYER_HOST =
@@ -389,13 +388,13 @@ export const ETH_TOKEN_BRIDGE_ADDRESS = getAddress(
     ? ethereumTestnetConfig.contracts.tokenBridge
     : ethereumDevnetConfig.contracts.tokenBridge
 );
-export const BSC_BRIDGE_ADDRESS =
-  CLUSTER === "mainnet" ? ""
-    : getAddress(
-      CLUSTER === "testnet"
-        ? bscTestnetConfig.contracts.governance
-        : bscDevnetConfig.contracts.governance
-    );
+export const BSC_BRIDGE_ADDRESS = getAddress(
+  CLUSTER === "mainnet"
+    ? bscMainnetConfig.contracts.governance
+    : CLUSTER === "testnet"
+    ? bscTestnetConfig.contracts.governance
+    : bscDevnetConfig.contracts.governance
+);
 export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x5a58505a96D1dbf8dF91cB21B54419FC36e93fdE"
@@ -403,13 +402,19 @@ export const BSC_NFT_BRIDGE_ADDRESS = getAddress(
     ? "0xcD16E5613EF35599dc82B24Cb45B5A93D779f1EE"
     : "0x26b4afb60d6c903165150c6f0aa14f8016be4aec"
 );
-export const BSC_TOKEN_BRIDGE_ADDRESS =
-  CLUSTER === "mainnet" ? ""
-    : getAddress(
-      CLUSTER === "testnet"
-        ? bscTestnetConfig.contracts.tokenBridge
-        : bscDevnetConfig.contracts.tokenBridge
-    );
+export const BSC_TOKEN_BRIDGE_ADDRESS = getAddress(
+  CLUSTER === "mainnet"
+    ? bscMainnetConfig.contracts.tokenBridge
+    : CLUSTER === "testnet"
+    ? bscTestnetConfig.contracts.tokenBridge
+    : bscDevnetConfig.contracts.tokenBridge
+);
+export const BSC_TOKENS_FOR_REWARD =
+  CLUSTER === "mainnet"
+    ? bscMainnetConfig.tokensForReward
+    : CLUSTER === "testnet"
+    ? bscTestnetConfig.tokensForReward
+    : bscDevnetConfig.tokensForReward
 export const POLYGON_BRIDGE_ADDRESS = getAddress(
   CLUSTER === "mainnet"
     ? "0x7A4B5a56256163F07b2C80A7cA55aBE66c4ec4d7"

@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeV1ContractJson } from "../tests/TokenBridgeV1.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -66,6 +68,9 @@ export namespace TokenBridgeV1Types {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     foo: {
@@ -91,10 +96,6 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as TokenBridgeV1Types.Fields;
-  }
-
   at(address: string): TokenBridgeV1Instance {
     return new TokenBridgeV1Instance(address);
   }
@@ -109,6 +110,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "foo", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: TokenBridgeV1Types.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -131,7 +140,7 @@ export class TokenBridgeV1Instance extends ContractInstance {
     return fetchContractState(TokenBridgeV1, this);
   }
 
-  methods = {
+  view = {
     foo: async (
       params?: TokenBridgeV1Types.CallMethodParams<"foo">
     ): Promise<TokenBridgeV1Types.CallMethodResult<"foo">> => {
@@ -144,8 +153,6 @@ export class TokenBridgeV1Instance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     foo: async (

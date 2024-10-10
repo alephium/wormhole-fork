@@ -114,7 +114,7 @@ export default function SmartAddress({
   const explorerAddress = isNative || useableAddress === ''
     ? null
     : chainId === CHAIN_ID_ETH
-    ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/${
+    ? `https://${CLUSTER === "testnet" ? "sepolia." : ""}etherscan.io/${
         isAsset ? "token" : "address"
       }/${useableAddress}`
     : chainId === CHAIN_ID_ETHEREUM_ROPSTEN
@@ -190,7 +190,7 @@ export default function SmartAddress({
         isAsset ? "asset" : "address"
       }/${useableAddress}`
     : chainId === CHAIN_ID_ALEPHIUM
-    ? `https://explorer.${CLUSTER === "testnet" ? "testnet." : ""}alephium.org/addresses/${toALPHAddress(useableAddress)}`
+    ? `https://${CLUSTER === "testnet" ? "testnet." : "explorer."}alephium.org/addresses/${toALPHAddress(useableAddress)}`
     : undefined;
   const explorerName = getExplorerName(chainId);
 

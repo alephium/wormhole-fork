@@ -21,9 +21,11 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   MAX_VAA_DECIMALS,
+  CHAIN_ID_BSC,
+  CHAIN_ID_ALEPHIUM,
 } from "../utils";
-import { hexToNativeString, uint8ArrayToHex } from "../utils/array";
-import { deserializeTransferTokenVAA } from "../utils/vaa";
+import { hexToNativeString, tryUint8ArrayToNative, uint8ArrayToHex } from "../utils/array";
+import { deserializeTransferTokenVAA, TransferToken, VAA } from "../utils/vaa";
 
 export async function redeemOnAlphWithReward(
   signerProvider: SignerProvider,
@@ -53,6 +55,32 @@ export async function redeemOnAlph(
     },
     attoAlphAmount: DUST_AMOUNT * BigInt(2)
   })
+}
+
+function deNormalizeAmount(amount: bigint, decimals: number): bigint {
+  if (decimals > 8) {
+    return amount * BigInt(10 ** (decimals - 8))
+  }
+  return amount
+}
+
+export function needToReward(
+  vaa: VAA<TransferToken>,
+  bscTokens: { id: string, minimal: string, decimals: number }[]
+): boolean {
+  if (vaa.body.targetChainId !== CHAIN_ID_ALEPHIUM) {
+    return false
+  }
+  const payload = vaa.body.payload
+  if (vaa.body.emitterChainId === CHAIN_ID_BSC) {
+    if (payload.originChain === CHAIN_ID_BSC) {
+      const tokenId = tryUint8ArrayToNative(payload.originAddress, CHAIN_ID_BSC).toLowerCase()
+      const token = bscTokens.find((t) => t.id.toLowerCase() === tokenId)
+      return token !== undefined && (deNormalizeAmount(payload.amount, token.decimals) >= BigInt(token.minimal))
+    }
+    return false
+  }
+  return true
 }
 
 export async function redeemOnEth(

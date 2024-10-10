@@ -24,7 +24,7 @@ async function updateMessageFeeOnChain(chain: BridgeChain) {
   const currentMessageFee = await chain.getCurrentMessageFee()
   console.log(`Current message fee on ${coalesceChainName(chain.chainId)} is ${currentMessageFee}`)
   const newMessageFee = currentMessageFee + dustAmount
-  const seq = getNextGovernanceSequence()
+  const seq = await getNextGovernanceSequence()
   const updateMessageFeeVaa = createUpdateMessageFeeVaa(seq, newMessageFee, chain.chainId)
   for (const guardianIndex of guardianSetIndexes) {
     await injectVAA(updateMessageFeeVaa, guardianIndex, `update-message-fee-${chain.chainId}.proto`)

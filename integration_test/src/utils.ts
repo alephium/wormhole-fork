@@ -4,6 +4,9 @@ import { AlephiumBridgeChain, createAlephium } from './alph'
 import { createEth } from './eth'
 import { BridgeChain } from './bridge_chain'
 import { createBsc } from './bsc'
+import { ONE_ALPH } from '@alephium/web3'
+
+export const RewardAmount = ONE_ALPH / 100n
 
 export function assert(condition: boolean) {
   if (!condition) {

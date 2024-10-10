@@ -1,15 +1,15 @@
 {
   "chainId": 2,
-  "wrappedNative": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
+  "wrappedNative": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
   "contracts": {
-    "governance": "0xD583089D29311C6E8d075c699404aB0eC539b0B7",
-    "tokenBridge": "0x3a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
-    "wrappedNative": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+    "governance": "0x91025D8a7E70cF478eC9F759C492cD23D298045C",
+    "tokenBridge": "0x207Bd15F7150F7E205aD95FBbC2720FA397c388B",
+    "wrappedNative": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"
   },
-  "nodeUrl": "https://goerli.infura.io/v3/",
-  "coreEmitterAddress": "000000000000000000000000D583089D29311C6E8d075c699404aB0eC539b0B7",
-  "tokenBridgeEmitterAddress": "0000000000000000000000003a93b292Ac5ad34dDc4260fF03BFD28e134A082d",
+  "nodeUrl": "https://sepolia.infura.io/v3/",
+  "coreEmitterAddress": "00000000000000000000000091025D8a7E70cF478eC9F759C492cD23D298045C",
+  "tokenBridgeEmitterAddress": "000000000000000000000000207Bd15F7150F7E205aD95FBbC2720FA397c388B",
   "bridgeTokens": [
-    "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+    "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"
   ]
 }

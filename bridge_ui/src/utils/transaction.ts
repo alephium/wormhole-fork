@@ -3,11 +3,11 @@ import { CLUSTER } from "./consts";
 
 export function getTransactionLink(chainId: ChainId, txId: string): string | undefined {
   return chainId === CHAIN_ID_ETH
-    ? `https://${CLUSTER === "testnet" ? "goerli." : ""}etherscan.io/tx/${txId}`
+    ? `https://${CLUSTER === "testnet" ? "sepolia." : ""}etherscan.io/tx/${txId}`
     : chainId === CHAIN_ID_BSC
     ? `https://${CLUSTER === "testnet" ? "testnet." : ""}bscscan.com/tx/${txId}`
     : chainId === CHAIN_ID_ALEPHIUM
-    ? `https://explorer.${CLUSTER === 'testnet' ? 'testnet.' : ''}alephium.org/transactions/${txId}`
+    ? `https://${CLUSTER === 'testnet' ? 'testnet.' : 'explorer.'}alephium.org/transactions/${txId}`
     : undefined;
 }
 

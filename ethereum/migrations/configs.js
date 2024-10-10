@@ -17,7 +17,7 @@ function isDevnet(network) {
 }
 
 function isTestnet(network) {
-  return network === 'goerli' || network === 'goerli-fork' || network === 'bscTestnet'
+  return network === 'sepolia' || network === 'sepolia-fork' || network === 'bscTestnet'
 }
 
 function isMainnet(network) {

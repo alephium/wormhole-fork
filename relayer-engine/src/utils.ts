@@ -25,7 +25,7 @@ import { default as testnetBscConfig } from "../../configs/bsc/testnet.json"
 import { default as mainnetBscConfig } from "../../configs/bsc/mainnet.json"
 import { groupOfAddress, NetworkId } from "@alephium/web3";
 
-export const SUPPORTED_CHAINS = [CHAIN_ID_ETH, CHAIN_ID_ALEPHIUM]
+export const SUPPORTED_CHAINS = [CHAIN_ID_ETH, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC]
 
 export function encodeEmitterAddress(
   chainId: wormholeSdk.ChainId,

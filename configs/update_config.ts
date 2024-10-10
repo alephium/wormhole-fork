@@ -52,7 +52,7 @@ function updateAlphConfig(network: string) {
       nativeGovernance: deployments.contracts.Governance.contractInstance.address,
       tokenBridge: deployments.contracts.TokenBridge.contractInstance.contractId,
       nativeTokenBridge: deployments.contracts.TokenBridge.contractInstance.address,
-      bridgeRewardRouter: deployments.contracts.BridgeRewardRouter.contractInstance.contractId
+      bridgeRewardRouter: deployments.contracts.BridgeRewardRouterV2.contractInstance.contractId
     }
     const bridgeTokens = [ALPHTokenId]
     if (deployments.contracts.TestToken !== undefined) {

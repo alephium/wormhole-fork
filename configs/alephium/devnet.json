@@ -1,7 +1,8 @@
 {
   "chainId": 255,
   "groupIndex": 0,
-  "initRewards": 1024,
+  "initALPHAmountInRouterContract": 1024,
+  "rewardAmount": "10000000000000000",
   "mnemonic": "vault alarm sad mass witness property virus style good flower rice alpha viable evidence run glare pretty scout evil judge enroll refuse another lava",
   "minimalConsistencyLevel": 10,
   "messageFee": "100000000000000",
@@ -10,7 +11,7 @@
     "nativeGovernance": "2AQynxxmUZTM5XAc8moRefkNgnGrKgUeA5pSCvyfGgSvs",
     "tokenBridge": "3c69f024ff0a7978c0e5608fe5df698dfba5ef9134a947dc189f4a5443a48600",
     "nativeTokenBridge": "xknGRWmSqJAYr6XbJ7yARaHHfXSQvM8pDi1H8ubr4dxs",
-    "bridgeRewardRouter": "a8299c36025dee783e550bc25ac654599a5a82ff6d844dfdb5d987ee4e1f2500",
+    "bridgeRewardRouter": "f3e20506b69e3dee12d633c5105ded9501bfc7e5273648a6474351e6deb69400",
     "testToken": "a66087d9db0f50bd87c78c6fd30be97407805df31abc8908a403d632fa868000"
   },
   "nodeUrl": "http://127.0.0.1:22973",

@@ -65,4 +65,5 @@ then
     docker push eu.gcr.io/alephium-org/wormhole-explorer:$version
     docker push eu.gcr.io/alephium-org/wormhole-explorer-api-server:$version
     docker push eu.gcr.io/alephium-org/wormhole-explorer-backend:$version
+    docker push eu.gcr.io/alephium-org/relayer-engine:$version
 fi

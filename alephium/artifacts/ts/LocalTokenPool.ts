@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as LocalTokenPoolContractJson } from "../token_bridge/LocalTokenPool.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -75,6 +77,27 @@ export namespace LocalTokenPoolTypes {
       }>;
       result: CallContractResult<null>;
     };
+    prepareTransfer: {
+      params: CallContractParams<{
+        callerContractId: HexString;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: CallContractResult<[HexString, bigint]>;
+    };
+    prepareCompleteTransfer: {
+      params: CallContractParams<{
+        callerContractId: HexString;
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        normalizedArbiterFee: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint]>;
+    };
     normalizeAmount: {
       params: CallContractParams<{ amount: bigint; decimals: bigint }>;
       result: CallContractResult<bigint>;
@@ -106,6 +129,9 @@ export namespace LocalTokenPoolTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     getSymbol: {
@@ -133,6 +159,27 @@ export namespace LocalTokenPoolTypes {
         recipient: Address;
         normalizedArbiterFee: bigint;
         caller: Address;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    prepareTransfer: {
+      params: SignExecuteContractMethodParams<{
+        callerContractId: HexString;
+        toAddress: HexString;
+        amount: bigint;
+        arbiterFee: bigint;
+        nonce: HexString;
+      }>;
+      result: SignExecuteScriptTxResult;
+    };
+    prepareCompleteTransfer: {
+      params: SignExecuteContractMethodParams<{
+        callerContractId: HexString;
+        emitterChainId: bigint;
+        amount: bigint;
+        vaaTokenId: HexString;
+        vaaTokenChainId: bigint;
+        normalizedArbiterFee: bigint;
       }>;
       result: SignExecuteScriptTxResult;
     };
@@ -179,10 +226,6 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as LocalTokenPoolTypes.Fields;
-  }
-
   consts = {
     Path: {
       AttestTokenHandler: "00",
@@ -190,39 +233,39 @@ class Factory extends ContractFactory<
       TokenPool: "02",
     },
     ErrorCodes: {
-      InvalidEmitChainId: BigInt(0),
-      InvalidEmitAddress: BigInt(1),
-      InvalidMessageSize: BigInt(2),
-      InvalidSequence: BigInt(3),
-      InvalidModule: BigInt(4),
-      InvalidActionId: BigInt(5),
-      InvalidVersion: BigInt(6),
-      InvalidGuardianSetIndex: BigInt(7),
-      InvalidGuardianSetSize: BigInt(8),
-      InvalidSignatureSize: BigInt(9),
-      InvalidSignatureGuardianIndex: BigInt(10),
-      InvalidSignature: BigInt(11),
-      GuardianSetExpired: BigInt(12),
-      InvalidTargetChainId: BigInt(13),
-      ContractStateMismatch: BigInt(14),
-      InvalidRegisterChainMessage: BigInt(15),
-      InvalidTokenId: BigInt(16),
-      InvalidNonceSize: BigInt(17),
-      TokenNotExist: BigInt(18),
-      InvalidTransferTargetChain: BigInt(19),
-      InvalidDestroyUnexecutedSequenceMessage: BigInt(20),
-      InvalidCaller: BigInt(21),
-      ArbiterFeeLessThanAmount: BigInt(22),
-      InvalidAttestTokenMessage: BigInt(23),
-      InvalidPayloadId: BigInt(24),
-      InvalidTransferMessage: BigInt(25),
-      ExpectRemoteToken: BigInt(26),
-      InvalidConsistencyLevel: BigInt(27),
-      InvalidUpdateRefundAddressMessage: BigInt(28),
-      TransferAmountLessThanMessageFee: BigInt(29),
-      InvalidAttestTokenArg: BigInt(30),
-      InvalidAttestTokenHandler: BigInt(31),
-      NotSupported: BigInt(32),
+      InvalidEmitChainId: BigInt("0"),
+      InvalidEmitAddress: BigInt("1"),
+      InvalidMessageSize: BigInt("2"),
+      InvalidSequence: BigInt("3"),
+      InvalidModule: BigInt("4"),
+      InvalidActionId: BigInt("5"),
+      InvalidVersion: BigInt("6"),
+      InvalidGuardianSetIndex: BigInt("7"),
+      InvalidGuardianSetSize: BigInt("8"),
+      InvalidSignatureSize: BigInt("9"),
+      InvalidSignatureGuardianIndex: BigInt("10"),
+      InvalidSignature: BigInt("11"),
+      GuardianSetExpired: BigInt("12"),
+      InvalidTargetChainId: BigInt("13"),
+      ContractStateMismatch: BigInt("14"),
+      InvalidRegisterChainMessage: BigInt("15"),
+      InvalidTokenId: BigInt("16"),
+      InvalidNonceSize: BigInt("17"),
+      TokenNotExist: BigInt("18"),
+      InvalidTransferTargetChain: BigInt("19"),
+      InvalidDestroyUnexecutedSequenceMessage: BigInt("20"),
+      InvalidCaller: BigInt("21"),
+      ArbiterFeeLessThanAmount: BigInt("22"),
+      InvalidAttestTokenMessage: BigInt("23"),
+      InvalidPayloadId: BigInt("24"),
+      InvalidTransferMessage: BigInt("25"),
+      ExpectRemoteToken: BigInt("26"),
+      InvalidConsistencyLevel: BigInt("27"),
+      InvalidUpdateRefundAddressMessage: BigInt("28"),
+      TransferAmountLessThanMessageFee: BigInt("29"),
+      InvalidAttestTokenArg: BigInt("30"),
+      InvalidAttestTokenHandler: BigInt("31"),
+      NotSupported: BigInt("32"),
     },
     PayloadId: { Transfer: "01", AttestToken: "02" },
   };
@@ -355,6 +398,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "transfer", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: LocalTokenPoolTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -377,7 +428,7 @@ export class LocalTokenPoolInstance extends ContractInstance {
     return fetchContractState(LocalTokenPool, this);
   }
 
-  methods = {
+  view = {
     getSymbol: async (
       params?: LocalTokenPoolTypes.CallMethodParams<"getSymbol">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"getSymbol">> => {
@@ -433,6 +484,30 @@ export class LocalTokenPoolInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    prepareTransfer: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"prepareTransfer">
+    ): Promise<LocalTokenPoolTypes.CallMethodResult<"prepareTransfer">> => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "prepareTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
+    prepareCompleteTransfer: async (
+      params: LocalTokenPoolTypes.CallMethodParams<"prepareCompleteTransfer">
+    ): Promise<
+      LocalTokenPoolTypes.CallMethodResult<"prepareCompleteTransfer">
+    > => {
+      return callMethod(
+        LocalTokenPool,
+        this,
+        "prepareCompleteTransfer",
+        params,
+        getContractByCodeHash
+      );
+    },
     normalizeAmount: async (
       params: LocalTokenPoolTypes.CallMethodParams<"normalizeAmount">
     ): Promise<LocalTokenPoolTypes.CallMethodResult<"normalizeAmount">> => {
@@ -467,8 +542,6 @@ export class LocalTokenPoolInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     getSymbol: async (
@@ -505,6 +578,25 @@ export class LocalTokenPoolInstance extends ContractInstance {
         params
       );
     },
+    prepareTransfer: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"prepareTransfer">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"prepareTransfer">
+    > => {
+      return signExecuteMethod(LocalTokenPool, this, "prepareTransfer", params);
+    },
+    prepareCompleteTransfer: async (
+      params: LocalTokenPoolTypes.SignExecuteMethodParams<"prepareCompleteTransfer">
+    ): Promise<
+      LocalTokenPoolTypes.SignExecuteMethodResult<"prepareCompleteTransfer">
+    > => {
+      return signExecuteMethod(
+        LocalTokenPool,
+        this,
+        "prepareCompleteTransfer",
+        params
+      );
+    },
     normalizeAmount: async (
       params: LocalTokenPoolTypes.SignExecuteMethodParams<"normalizeAmount">
     ): Promise<
@@ -533,12 +625,20 @@ export class LocalTokenPoolInstance extends ContractInstance {
 
   async multicall<Calls extends LocalTokenPoolTypes.MultiCallParams>(
     calls: Calls
-  ): Promise<LocalTokenPoolTypes.MultiCallResults<Calls>> {
-    return (await multicallMethods(
+  ): Promise<LocalTokenPoolTypes.MultiCallResults<Calls>>;
+  async multicall<Callss extends LocalTokenPoolTypes.MultiCallParams[]>(
+    callss: Narrow<Callss>
+  ): Promise<LocalTokenPoolTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | LocalTokenPoolTypes.MultiCallParams
+      | LocalTokenPoolTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       LocalTokenPool,
       this,
-      calls,
+      callss,
       getContractByCodeHash
-    )) as LocalTokenPoolTypes.MultiCallResults<Calls>;
+    );
   }
 }

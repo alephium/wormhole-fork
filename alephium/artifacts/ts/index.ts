@@ -4,6 +4,7 @@
 
 export * from "./AttestTokenHandler";
 export * from "./BridgeRewardRouter";
+export * from "./BridgeRewardRouterV2";
 export * from "./Empty";
 export * from "./Governance";
 export * from "./GovernanceV1";

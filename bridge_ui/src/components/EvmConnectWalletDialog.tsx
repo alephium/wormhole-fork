@@ -101,7 +101,11 @@ const EvmConnectWalletDialog = ({
     .map((connection) => (
       <WalletOptions
         connection={connection}
-        connect={(evmChainId === undefined || getEvmChainId(chainId) === evmChainId) ? connect : forceNetworkSwitch}
+        connect={
+          (evmChainId === undefined || getEvmChainId(chainId) === evmChainId)
+            ? (connectionType) => connect(connectionType, chainId)
+            : forceNetworkSwitch
+          }
         onClose={onClose}
         key={connection.name}
       />

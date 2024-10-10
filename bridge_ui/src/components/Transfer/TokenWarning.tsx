@@ -38,7 +38,7 @@ function WormholeWrappedWarning() {
           i18nKey="bridgeWrappedTokens"
           components={{ 1: <Box fontWeight={900} display="inline" /> }}
         >
-          {'The tokens you will receive are <1>Bridge Wrapped Tokens</1>and will need to be exchanged for the underlying tokens.'}
+          {'The tokens you will receive are <1>Bridge Wrapped Tokens</1> and will need to be exchanged for the underlying tokens.'}
         </Trans>
       </Typography>
     </Alert>

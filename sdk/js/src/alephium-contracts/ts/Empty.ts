@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as EmptyContractJson } from "../tests/Empty.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -61,6 +63,9 @@ export namespace EmptyTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     foo: {
@@ -83,10 +88,6 @@ class Factory extends ContractFactory<EmptyInstance, EmptyTypes.Fields> {
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as EmptyTypes.Fields;
-  }
-
   at(address: string): EmptyInstance {
     return new EmptyInstance(address);
   }
@@ -101,6 +102,10 @@ class Factory extends ContractFactory<EmptyInstance, EmptyTypes.Fields> {
       return testMethod(this, "foo", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(initFields: EmptyTypes.Fields, asset?: Asset, address?: string) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -123,7 +128,7 @@ export class EmptyInstance extends ContractInstance {
     return fetchContractState(Empty, this);
   }
 
-  methods = {
+  view = {
     foo: async (
       params?: EmptyTypes.CallMethodParams<"foo">
     ): Promise<EmptyTypes.CallMethodResult<"foo">> => {
@@ -136,8 +141,6 @@ export class EmptyInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     foo: async (

@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as BridgeRewardRouterContractJson } from "../token_bridge/BridgeRewardRouter.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -68,6 +70,9 @@ export namespace BridgeRewardRouterTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     completeTransfer: {
@@ -104,10 +109,6 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as BridgeRewardRouterTypes.Fields;
-  }
-
   at(address: string): BridgeRewardRouterInstance {
     return new BridgeRewardRouterInstance(address);
   }
@@ -135,6 +136,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "addRewards", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: BridgeRewardRouterTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -157,7 +166,7 @@ export class BridgeRewardRouterInstance extends ContractInstance {
     return fetchContractState(BridgeRewardRouter, this);
   }
 
-  methods = {
+  view = {
     completeTransfer: async (
       params: BridgeRewardRouterTypes.CallMethodParams<"completeTransfer">
     ): Promise<
@@ -183,8 +192,6 @@ export class BridgeRewardRouterInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     completeTransfer: async (

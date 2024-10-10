@@ -1,4 +1,4 @@
-import { addressFromContractId, groupOfAddress, web3 } from "@alephium/web3"
+import { addressFromContractId, groupOfAddress, NetworkId, web3 } from "@alephium/web3"
 import {
   CHAIN_ID_ALEPHIUM,
   getIsTransferCompletedAlph,
@@ -12,12 +12,18 @@ import {
   uint8ArrayToHex,
   coalesceChainName,
   EVMChainId,
-  isEVMChain
+  isEVMChain,
+  needToReward,
+  deserializeTransferTokenVAA,
+  redeemOnAlph
 } from "@alephium/wormhole-sdk"
 import { vaaIdToString } from "./application"
 import { Next } from "./compose.middleware"
 import { WalletContext } from "./middleware"
 import { getBridgeRewardRouterId, getTokenBridgeAddress, getWrappedNativeAddress } from "./utils"
+import { default as bscDevnetConfig } from '../../configs/bsc/devnet.json'
+import { default as bscTestnetConfig } from '../../configs/bsc/testnet.json'
+import { default as bscMainnetConfig } from '../../configs/bsc/mainnet.json'
 
 export async function relay(ctx: WalletContext, next: Next) {
   const targetChain = ctx.vaa.parsed.body.targetChainId
@@ -53,6 +59,14 @@ async function relayEVM(chainId: EVMChainId, ctx: WalletContext, next: Next) {
   await next()
 }
 
+function getBscTokensForReward(networkId: NetworkId): { id: string, minimal: string, decimals: number }[] {
+  return networkId === 'mainnet'
+    ? bscMainnetConfig.tokensForReward
+    : networkId === 'testnet'
+    ? bscTestnetConfig.tokensForReward
+    : bscDevnetConfig.tokensForReward
+}
+
 async function relayAlph(ctx: WalletContext, next: Next) {
   await ctx.wallets.onAlephium(async (wallet) => {
     web3.setCurrentNodeProvider(ctx.providers.alephium[0])
@@ -68,9 +82,15 @@ async function relayAlph(ctx: WalletContext, next: Next) {
       return
     }
 
-    const result = await redeemOnAlphWithReward(wallet.wallet, bridgeRewardRouterId, tokenBridgeForChainId, ctx.vaa.bytes)
-    await ctx.onTxSubmitted(vaaId, result.txId)
-    ctx.logger.info(`submitted complete transfer to alephium with tx id ${result.txId}, vaa id: ${vaaId}`)
+    const parsedVaa = deserializeTransferTokenVAA(ctx.vaa.bytes)
+    let txId: string
+    if (needToReward(parsedVaa, getBscTokensForReward(ctx.networkId))) {
+      txId = (await redeemOnAlphWithReward(wallet.wallet, bridgeRewardRouterId, tokenBridgeForChainId, ctx.vaa.bytes)).txId
+    } else {
+      txId = (await redeemOnAlph(wallet.wallet, tokenBridgeForChainId, ctx.vaa.bytes)).txId
+    }
+    await ctx.onTxSubmitted(vaaId, txId)
+    ctx.logger.info(`submitted complete transfer to alephium with tx id ${txId}, vaa id: ${vaaId}`)
   })
   await next()
 }

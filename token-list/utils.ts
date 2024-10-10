@@ -22,7 +22,7 @@ export type TokenMetaData = { name: string, symbol: string, decimals: number }
 
 export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
   const deployments = network === 'testnet' ? alephiumTestnetContracts : alephiumMainnetContracts
-  const nodeUrl = network === 'testnet' ? 'https://wallet-v20.testnet.alephium.org' : 'https://wallet-v20.mainnet.alephium.org'
+  const nodeUrl = network === 'testnet' ? 'https://node.testnet.alephium.org' : 'https://node.mainnet.alephium.org'
   const textDecoder = new TextDecoder()
   web3.setCurrentNodeProvider(nodeUrl)
 
@@ -60,9 +60,9 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
 function getEVMNodeUrl(chainId: EVMChainId, network: 'testnet' | 'mainnet'): string {
   switch (chainId) {
     case CHAIN_ID_ETH:
-      return network === 'testnet' ? 'https://ethereum-goerli.publicnode.com' : 'https://ethereum.publicnode.com'
+      return network === 'testnet' ? 'https://ethereum-sepolia-rpc.publicnode.com' : 'https://ethereum-rpc.publicnode.com'
     case CHAIN_ID_BSC:
-      return network === 'testnet' ? 'https://bsc-testnet.publicnode.com' : 'https://bsc.publicnode.com'
+      return network === 'testnet' ? 'https://bsc-testnet-rpc.publicnode.com' : 'https://bsc-rpc.publicnode.com'
   }
   throw new Error(`Invalid chain id: ${chainId}`)
 }

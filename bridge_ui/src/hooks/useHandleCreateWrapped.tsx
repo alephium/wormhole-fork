@@ -41,7 +41,6 @@ import {
 } from "../store/selectors";
 import { signSendAndConfirmAlgorand } from "../utils/algorand";
 import {
-  minimalAlphInContract,
   ACALA_HOST,
   ALGORAND_BRIDGE_ID,
   ALGORAND_HOST,
@@ -65,6 +64,7 @@ import { waitALPHTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
 import { createWrappedOnEthWithoutWait, updateWrappedOnEthWithoutWait } from "../utils/ethereum";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
+import { MINIMAL_CONTRACT_DEPOSIT } from "@alephium/web3";
 import i18n from "../i18n";
 
 async function algo(
@@ -262,7 +262,7 @@ async function alephium(
     const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
     const result = shouldUpdate
       ? await updateRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA)
-      : await createRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA, wallet.account.address, minimalAlphInContract)
+      : await createRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA, wallet.account.address, MINIMAL_CONTRACT_DEPOSIT)
     dispatch(setIsWalletApproved(true))
     const confirmedTx = await waitALPHTxConfirmed(wallet.nodeProvider, result.txId, 1)
     const blockHeader = await wallet.nodeProvider.blockflow.getBlockflowHeadersBlockHash(confirmedTx.blockHash)

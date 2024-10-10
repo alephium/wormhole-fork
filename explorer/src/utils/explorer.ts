@@ -131,7 +131,7 @@ const nativeExplorerContractUri = (
       base = "https://explorer.solana.com/address/";
     } else if (chainId === chainIDs["ethereum"]) {
       base = activeNetwork.name === 'testnet'
-        ? "https://goerli.etherscan.io/address/"
+        ? "https://sepolia.etherscan.io/address/"
         : activeNetwork.name === 'mainnet'
         ? "https://etherscan.io/address/"
         : "http://not_available"
@@ -156,7 +156,7 @@ const nativeExplorerContractUri = (
     } else if (chainId === chainIDs["alephium"]) {
       nativeAddress = addressFromContractId(nativeAddress)
       base = activeNetwork.name === 'testnet'
-        ? "https://explorer.testnet.alephium.org/addresses/"
+        ? "https://testnet.alephium.org/addresses/"
         : activeNetwork.name === 'mainnet'
         ? "https://explorer.alephium.org/addresses/"
         : "http://localhost:30000/"
@@ -178,7 +178,7 @@ const nativeExplorerTxUri = (
   if (chainId === chainIDs["ethereum"]) {
     const prefix = transactionId.startsWith('0x') ? '' : '0x'
     base = activeNetwork.name === 'testnet'
-      ? `https://goerli.etherscan.io/tx/${prefix}`
+      ? `https://sepolia.etherscan.io/tx/${prefix}`
       : `https://etherscan.io/tx/${prefix}`
   } else if (chainId === chainIDs["bsc"]) {
     const prefix = transactionId.startsWith('0x') ? '' : '0x'
@@ -187,7 +187,7 @@ const nativeExplorerTxUri = (
       : `https://bscscan.com/tx/${prefix}`
   } else if (chainId === chainIDs["alephium"]) {
     base = activeNetwork.name === 'testnet'
-      ? 'https://explorer.testnet.alephium.org/transactions/'
+      ? 'https://testnet.alephium.org/transactions/'
       : 'https://explorer.alephium.org/transactions/'
   }
 
@@ -200,7 +200,7 @@ const nativeExplorerTxUri = (
 // define colors to represent chains in charts/graphs
 const chainColors: { [chain: string]: string } = {
   "2": "hsl(235, 5%, 43%)",
-  // "4": "hsl(297, 100%, 61%)",
+  "4": "hsl(297, 100%, 61%)",
   "255": "hsl(54, 100%, 61%)",
 };
 const chainIdColors = Object.entries(chainColors).map(([, color]) => color)

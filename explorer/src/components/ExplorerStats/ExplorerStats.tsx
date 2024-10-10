@@ -431,6 +431,20 @@ const ExplorerStats: React.FC<StatsProps> = ({
                   />
                 ),
                 imgStyle: { height: 110 },
+              },
+              {
+                header: ChainID[4],
+                src: binanceChainIcon,
+                to: `?emitterChain=4`,
+                description: (
+                  <ChainOverviewCard
+                    totals={totals}
+                    notionalTransferredTo={notionalTransferredTo}
+                    notionalTransferred={notionalTransferred}
+                    dataKey="4"
+                  />
+                ),
+                imgStyle: { height: 110 },
               }
             ]}
           />

@@ -17,7 +17,7 @@ export interface SourceTxContext extends Context {
 
 export const explorerApiServerEndpoints: { [k in NetworkId]: string | undefined } = {
   ['mainnet']: "https://indexer-api.explorer.bridge.alephium.org",
-  ['testnet']: "https://v2.indexer-api.explorer.testnet.bridge.alephium.org",
+  ['testnet']: "https://indexer-api.explorer.testnet.bridge.alephium.org",
   ['devnet']: "https://localhost:8100",
 };
 

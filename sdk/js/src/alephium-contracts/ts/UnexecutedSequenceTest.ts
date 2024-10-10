@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as UnexecutedSequenceTestContractJson } from "../tests/UnexecutedSequenceTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -64,6 +66,9 @@ export namespace UnexecutedSequenceTestTypes {
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
   };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
+  };
 
   export interface SignExecuteMethodTable {
     checkSequence: {
@@ -93,10 +98,6 @@ class Factory extends ContractFactory<
     );
   }
 
-  getInitialFieldsWithDefaultValues() {
-    return this.contract.getInitialFieldsWithDefaultValues() as UnexecutedSequenceTestTypes.Fields;
-  }
-
   at(address: string): UnexecutedSequenceTestInstance {
     return new UnexecutedSequenceTestInstance(address);
   }
@@ -122,6 +123,14 @@ class Factory extends ContractFactory<
       return testMethod(this, "destroy", params, getContractByCodeHash);
     },
   };
+
+  stateForTest(
+    initFields: UnexecutedSequenceTestTypes.Fields,
+    asset?: Asset,
+    address?: string
+  ) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -144,7 +153,7 @@ export class UnexecutedSequenceTestInstance extends ContractInstance {
     return fetchContractState(UnexecutedSequenceTest, this);
   }
 
-  methods = {
+  view = {
     checkSequence: async (
       params: UnexecutedSequenceTestTypes.CallMethodParams<"checkSequence">
     ): Promise<
@@ -170,8 +179,6 @@ export class UnexecutedSequenceTestInstance extends ContractInstance {
       );
     },
   };
-
-  view = this.methods;
 
   transact = {
     checkSequence: async (

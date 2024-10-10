@@ -170,12 +170,9 @@ func ReadConfigsByNetwork(network string) (*BridgeConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	var bscConfig *ChainConfig
-	if networkId == DEVNET {
-		bscConfig, err = ReadBscConfig(network)
-		if err != nil {
-			return nil, err
-		}
+	bscConfig, err := ReadBscConfig(network)
+	if err != nil {
+		return nil, err
 	}
 	guardianConfig, err := ReadGuardianConfig(network)
 	if err != nil {

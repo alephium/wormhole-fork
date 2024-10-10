@@ -1,6 +1,6 @@
 import { testNodeWallet } from '@alephium/web3-test'
 import base58 from 'bs58'
-import { getSignedVAA, normalizeTokenId, assert } from './utils'
+import { getSignedVAA, normalizeTokenId, assert, RewardAmount } from './utils'
 import { BridgeChain, TransferResult } from './bridge_chain'
 import { Sequence } from './sequence'
 import {
@@ -17,7 +17,6 @@ import {
   ContractFactory,
   ContractInstance,
   fetchContractState,
-  ONE_ALPH,
   DUST_AMOUNT
 } from '@alephium/web3'
 import {
@@ -327,7 +326,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
     const bridgeRewardRouterAlphBalanceAfterRedeem = await getNativeTokenBalanceByAddress(bridgeRewardRouterAddress)
     const txFee = await getTransactionFee(result.txId)
     const targetAddress = base58.encode(vaa.body.payload.targetAddress)
-    const rewardAmount = vaa.body.payload.originChain !== CHAIN_ID_ALEPHIUM ? ONE_ALPH : 0n
+    const rewardAmount = vaa.body.payload.originChain !== CHAIN_ID_ALEPHIUM ? RewardAmount : 0n
     if (targetAddress === accountAddress) {
       const transferAmount =
         vaa.body.payload.originChain === CHAIN_ID_ALEPHIUM && binToHex(vaa.body.payload.originAddress) === ALPH_TOKEN_ID

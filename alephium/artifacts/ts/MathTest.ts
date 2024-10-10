@@ -21,6 +21,7 @@ import {
   callMethod,
   multicallMethods,
   fetchContractState,
+  Asset,
   ContractInstance,
   getContractEventsCurrentCount,
   TestContractParamsWithoutMaps,
@@ -30,6 +31,7 @@ import {
   signExecuteMethod,
   addStdIdToFields,
   encodeContractFields,
+  Narrow,
 } from "@alephium/web3";
 import { default as MathTestContractJson } from "../tests/MathTest.ral.json";
 import { getContractByCodeHash } from "./contracts";
@@ -59,6 +61,9 @@ export namespace MathTestTypes {
     [MaybeName in keyof T]: MaybeName extends keyof CallMethodTable
       ? CallMethodTable[MaybeName]["result"]
       : undefined;
+  };
+  export type MulticallReturnType<Callss extends MultiCallParams[]> = {
+    [index in keyof Callss]: MultiCallResults<Callss[index]>;
   };
 
   export interface SignExecuteMethodTable {
@@ -121,6 +126,10 @@ class Factory extends ContractFactory<MathTestInstance, {}> {
       );
     },
   };
+
+  stateForTest(initFields: {}, asset?: Asset, address?: string) {
+    return this.stateForTest_(initFields, asset, address, undefined);
+  }
 }
 
 // Use this object to test and deploy the contract
@@ -143,7 +152,7 @@ export class MathTestInstance extends ContractInstance {
     return fetchContractState(MathTest, this);
   }
 
-  methods = {
+  view = {
     normalizeAmount: async (
       params: MathTestTypes.CallMethodParams<"normalizeAmount">
     ): Promise<MathTestTypes.CallMethodResult<"normalizeAmount">> => {
@@ -168,8 +177,6 @@ export class MathTestInstance extends ContractInstance {
     },
   };
 
-  view = this.methods;
-
   transact = {
     normalizeAmount: async (
       params: MathTestTypes.SignExecuteMethodParams<"normalizeAmount">
@@ -185,12 +192,20 @@ export class MathTestInstance extends ContractInstance {
 
   async multicall<Calls extends MathTestTypes.MultiCallParams>(
     calls: Calls
-  ): Promise<MathTestTypes.MultiCallResults<Calls>> {
-    return (await multicallMethods(
+  ): Promise<MathTestTypes.MultiCallResults<Calls>>;
+  async multicall<Callss extends MathTestTypes.MultiCallParams[]>(
+    callss: Narrow<Callss>
+  ): Promise<MathTestTypes.MulticallReturnType<Callss>>;
+  async multicall<
+    Callss extends
+      | MathTestTypes.MultiCallParams
+      | MathTestTypes.MultiCallParams[]
+  >(callss: Callss): Promise<unknown> {
+    return await multicallMethods(
       MathTest,
       this,
-      calls,
+      callss,
       getContractByCodeHash
-    )) as MathTestTypes.MultiCallResults<Calls>;
+    );
   }
 }
