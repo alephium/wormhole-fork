@@ -2,13 +2,13 @@
   "chainId": 4,
   "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "contracts": {
-    "governance": "",
-    "tokenBridge": "",
+    "governance": "0xE674e61111ecE5988113DA56f0b2Cc3CB22D5304",
+    "tokenBridge": "0x2971F580C34d3D584e0342741c6a622f69424dD8",
     "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
   },
-  "nodeUrl": "",
-  "coreEmitterAddress": "",
-  "tokenBridgeEmitterAddress": "",
+  "nodeUrl": "https://bsc-rpc.publicnode.com",
+  "coreEmitterAddress": "000000000000000000000000E674e61111ecE5988113DA56f0b2Cc3CB22D5304",
+  "tokenBridgeEmitterAddress": "0000000000000000000000002971F580C34d3D584e0342741c6a622f69424dD8",
   "bridgeTokens": [
     "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
   ],
