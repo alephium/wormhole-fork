@@ -21,7 +21,7 @@ function isTestnet(network) {
 }
 
 function isMainnet(network) {
-  return network === 'mainnet' || network === 'mainnet-fork'
+  return network === 'mainnet' || network === 'mainnet-fork' || network === 'bscMainnet'
 }
 
 function getDeploymentsFileName(network) {
