@@ -2,13 +2,13 @@
   "chainId": 4,
   "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "contracts": {
-    "governance": "",
-    "tokenBridge": "",
+    "governance": "0x6d3e74a96a0c0133B7a8d04Ae06c0F98aF0d8336",
+    "tokenBridge": "0xD7336118f02a0EC09D4208C69f0541763df7361c",
     "wrappedNative": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
   },
   "nodeUrl": "",
-  "coreEmitterAddress": "",
-  "tokenBridgeEmitterAddress": "",
+  "coreEmitterAddress": "0000000000000000000000006d3e74a96a0c0133B7a8d04Ae06c0F98aF0d8336",
+  "tokenBridgeEmitterAddress": "000000000000000000000000D7336118f02a0EC09D4208C69f0541763df7361c",
   "bridgeTokens": [
     "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
   ],

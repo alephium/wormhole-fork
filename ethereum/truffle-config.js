@@ -56,6 +56,12 @@ module.exports = {
       networkCheckTimeout: 50000,
       confirmations: 1,
     },
+    bscMainnet: {
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, 'https://bsc-rpc.publicnode.com'),
+      network_id: "56",
+      networkCheckTimeout: 50000,
+      confirmations: 1,
+    }
   },
 
   compilers: {
