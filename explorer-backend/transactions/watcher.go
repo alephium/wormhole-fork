@@ -153,7 +153,7 @@ func getBSCDefaultEventIndex(networkId common.NetworkId) uint32 {
 	case common.TESTNET:
 		return 30048254 // the block height of the contract deployment tx
 	case common.MAINNET:
-		panic("bsc event index not specified") // TODO: the block height of the contract deployment tx
+		return 42981056 // the block height of the contract deployment tx
 	default:
 		panic("invalid network id")
 	}
