@@ -1,5 +1,8 @@
 import {
   CHAINS,
+  CHAIN_ID_BSC,
+  CHAIN_ID_ETH,
+  ChainId,
   GovernancePayload,
   ethers_contracts
 } from "@alephium/wormhole-sdk"
@@ -10,6 +13,9 @@ import { EVMChainName } from "@alephium/wormhole-sdk"
 import axios from "axios";
 import * as celo from "@celo-tools/celo-ethers-wrapper";
 import { solidityKeccak256 } from "ethers/lib/utils"
+import { default as guardianMainnetConfig } from '../../configs/guardian/mainnet.json'
+import { default as ethereumMainnetConfig } from '../../configs/ethereum/mainnet.json'
+import { default as bscMainnetConfig } from '../../configs/bsc/mainnet.json'
 
 const _IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
 
@@ -479,4 +485,78 @@ export async function setStorageAt(rpc: string, contractAddress: string, storage
       val,
     ],
   })).data
+}
+
+export async function checkMainnetContract(
+  chainId: ChainId,
+  nodeUrl: string | undefined
+) {
+  if (chainId !== CHAIN_ID_ETH && chainId !== CHAIN_ID_BSC) {
+    throw Error(`Invalid evm chain id ${chainId}`)
+  }
+  const config = chainId === CHAIN_ID_ETH ? ethereumMainnetConfig : bscMainnetConfig
+  const provider = new ethers.providers.JsonRpcProvider(nodeUrl ?? config.nodeUrl)
+  await checkGovernance(chainId, config.contracts.governance, provider)
+  await checkTokenBridge(chainId, config.contracts.tokenBridge, config.contracts.wrappedNative, provider)
+  console.log(`The deployed contract is correct`)
+}
+
+async function checkGovernance(
+  expectedChainId: ChainId,
+  governanceAddress: string,
+  provider: ethers.providers.JsonRpcProvider
+) {
+  const governance = ethers_contracts.Implementation__factory.connect(governanceAddress, provider)
+  const index = await governance.getCurrentGuardianSetIndex()
+  const guardianSet = await governance.getGuardianSet(index)
+  const signers = guardianSet[0]
+  signers.forEach((address, index) => {
+    const expected = guardianMainnetConfig.initSigners[index]
+    if (expected.toLowerCase() !== address.toLowerCase()) {
+      throw Error(`Invaid guardian signer at index ${index}, expected ${expected}, got ${address}`)
+    }
+  })
+
+  checkChainParams(
+    (await governance.chainId()) as ChainId,
+    await governance.governanceChainId(),
+    await governance.governanceContract(),
+    expectedChainId
+  )
+}
+
+async function checkTokenBridge(
+  expectedChainId: ChainId,
+  tokenBridgeAddress: string,
+  expectedWrappedNative: string,
+  provider: ethers.providers.JsonRpcProvider
+) {
+  const tokenBridge = ethers_contracts.BridgeImplementation__factory.connect(tokenBridgeAddress, provider)
+  checkChainParams(
+    (await tokenBridge.chainId()) as ChainId,
+    await tokenBridge.governanceChainId(),
+    await tokenBridge.governanceContract(),
+    expectedChainId
+  )
+  const wrappedNative = await tokenBridge.WETH()
+  if (wrappedNative !== expectedWrappedNative) {
+    throw Error(`Invaid wrapped native address, expected ${expectedWrappedNative}, got ${wrappedNative}`)
+  }
+}
+
+function checkChainParams(
+  chainId: ChainId,
+  governanceChainId: number,
+  governanceContract: string,
+  expectedChainId: ChainId
+) {
+  if (chainId !== expectedChainId) {
+    throw Error(`Invaid chain id, expected ${expectedChainId}, got ${chainId}`)
+  }
+  if (governanceChainId !== guardianMainnetConfig.governanceChainId) {
+    throw Error(`Invalid governance chain id, expected ${guardianMainnetConfig.governanceChainId}, got ${governanceChainId}`)
+  }
+  if (governanceContract !== '0x' + guardianMainnetConfig.governanceEmitterAddress) {
+    throw Error(`Invalid governance contract, expected ${guardianMainnetConfig.governanceEmitterAddress}, got ${governanceContract}`)
+  }
 }

@@ -21,7 +21,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport'
-import { executeGovernanceEvm } from "./evm";
+import { checkMainnetContract, executeGovernanceEvm } from "./evm";
 import { impossible } from "./utils";
 import {
   assertChain,
@@ -486,6 +486,29 @@ yargs(hideBin(process.argv))
               guardian_addresses,
               argv["guardian-set-index"]
             );
+          }
+        )
+        .command(
+          "check-mainnet-contract",
+          "Check the deployed mainnet contract to ensure it is correct",
+          (yargs) => {
+            return yargs
+              .option("chain-id", {
+                alias: "c",
+                describe: "chain id",
+                type: "number",
+                required: true
+              })
+              .option('node-url', {
+                describe: "full node url",
+                type: "string",
+                required: false,
+              });
+          },
+          async (argv) => {
+            const nodeUrl = argv['node-url'];
+            const chainId = argv['chain-id'] as ChainId;
+            await checkMainnetContract(chainId, nodeUrl);
           }
         );
     },
