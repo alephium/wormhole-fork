@@ -1,6 +1,6 @@
 {
   "name": "@alephium/wormhole-sdk",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "SDK for interacting with Alephium Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",
@@ -64,7 +64,7 @@
     "@solana/web3.js": "^1.24.0",
     "@terra-money/terra.js": "^3.0.7",
     "algosdk": "2.4.0",
-    "axios": "^0.24.0",
+    "axios": "^1.7.7",
     "bech32": "^2.0.0",
     "bs58": "^5.0.0",
     "fs-extra": "^10.1.0",
