@@ -58,7 +58,7 @@ async function fetchTokenList(): Promise<TokenList> {
   return tokenList
 }
 
-async function getTokenFromTokenList(tokenId: string): Promise<TokenInfo | undefined> {
+async function getTokenFromTokenList(tokenId: string): Promise<TokenInfo & { nameOnChain?: string; symbolOnChain?: string } | undefined> {
   if (tokenListCache !== undefined) {
     let result = tokenListCache.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
     if (result === undefined) { // update the cache
@@ -200,9 +200,9 @@ export async function getAlephiumTokenLogoURI(tokenId: string): Promise<string |
 }
 
 export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo> {
-  const localTokenInfo = await getLocalTokenInfo(provider, tokenId)
+  const onChainTokenInfo = await getLocalTokenInfo(provider, tokenId)
   if (CLUSTER === 'devnet' || tokenId === ALPH_TOKEN_ID) {
-    return localTokenInfo
+    return onChainTokenInfo
   }
 
   const tokenInfo = await getTokenFromTokenList(tokenId)
@@ -210,13 +210,13 @@ export async function getAndCheckLocalTokenInfo(provider: NodeProvider, tokenId:
     throw new Error(i18n.t('Token {{ tokenId }} does not exists in the token-list', { tokenId }))
   }
   if (
-    tokenInfo.name !== localTokenInfo.name ||
-    tokenInfo.symbol !== localTokenInfo.symbol ||
-    tokenInfo.decimals !== localTokenInfo.decimals
+    (tokenInfo.name === onChainTokenInfo.name || tokenInfo.nameOnChain === onChainTokenInfo.name) &&
+    (tokenInfo.symbol === onChainTokenInfo.symbol || tokenInfo.symbolOnChain === onChainTokenInfo.symbol) &&
+    (tokenInfo.decimals === onChainTokenInfo.decimals)
   ) {
-    throw new Error(i18n.t('Invalid token info, expected: {{ localTokenInfo }}, have: {{ tokenInfo }}', { localTokenInfo, tokenInfo }))
+    return onChainTokenInfo
   }
-  return localTokenInfo
+  throw new Error(i18n.t('Invalid token info, expected: {{ localTokenInfo }}, have: {{ tokenInfo }}', { localTokenInfo: onChainTokenInfo, tokenInfo }))
 }
 
 export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo> {
