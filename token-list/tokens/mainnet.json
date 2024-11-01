@@ -52,5 +52,41 @@
     "originTokenId": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
     "targetChainId": 255,
     "bridgeTokenId": "19246e8c2899bc258a1156e08466e3cdd3323da756d8a543c7fc911847b96f00"
+  },
+  {
+    "name": "Tether USD",
+    "symbol": "USDT",
+    "decimals": 18,
+    "tokenChainId": 4,
+    "originTokenId": "0x55d398326f99059ff775485246999027b3197955",
+    "targetChainId": 255,
+    "bridgeTokenId": "7ff5e72636f640eb2c28056df3b6879e4c86933505abebf566518ad396335700"
+  },
+  {
+    "name": "USD Coin",
+    "symbol": "USDC",
+    "decimals": 18,
+    "tokenChainId": 4,
+    "originTokenId": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+    "targetChainId": 255,
+    "bridgeTokenId": "75e1e9f91468616a371fe416430819bf5386a3e6a258864c574271a404ec8900"
+  },
+  {
+    "name": "Wrapped BNB",
+    "symbol": "WBNB",
+    "decimals": 18,
+    "tokenChainId": 4,
+    "originTokenId": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "targetChainId": 255,
+    "bridgeTokenId": "c1a33b163fc45db6b8466ee78d20c61072b6aac07baa37ffbf33a3dec9f17800"
+  },
+  {
+    "name": "Alephium",
+    "symbol": "ALPH",
+    "decimals": 18,
+    "tokenChainId": 255,
+    "originTokenId": "0000000000000000000000000000000000000000000000000000000000000000",
+    "targetChainId": 4,
+    "bridgeTokenId": "0x8683BA2F8b0f69b2105f26f488bADe1d3AB4dec8"
   }
 ]
