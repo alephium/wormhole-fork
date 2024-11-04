@@ -1,6 +1,7 @@
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, CHAIN_ID_BSC } from '@alephium/wormhole-sdk'
 import { BridgeToken, mainnetBridgeTokens } from '../src'
 import { BridgeChain, getBridgeChain, validateTokenMetadata } from '../utils'
+import { default as BscMainnet } from '../../configs/bsc/mainnet.json'
 
 describe('test bridge token list', () => {
   async function validateBridgeToken(network: 'testnet' | 'mainnet', tokenList: BridgeToken[]) {
@@ -24,7 +25,18 @@ describe('test bridge token list', () => {
     }
   }
 
-  test('testnet:bridge token list', async () => {
+  test('mainnet:bridge token list', async () => {
     await validateBridgeToken('mainnet', mainnetBridgeTokens)
+  }, 90000)
+
+  test('mainnet:reward token list', async () => {
+    const bridgeChain = getBridgeChain('mainnet', CHAIN_ID_BSC)
+    const tokenList = BscMainnet.tokensForReward
+    for (const token of tokenList) {
+      const tokenMetadata = await bridgeChain.getTokenMetadata(token.id)
+      if (tokenMetadata.decimals !== token.decimals) {
+        throw new Error(`Invalid token decimals in reward token list, expected ${tokenMetadata.decimals}, got ${token.decimals}`)
+      }
+    }
   }, 90000)
 })
