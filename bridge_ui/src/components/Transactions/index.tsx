@@ -24,7 +24,7 @@ import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";
 import { PageSwitch, DefaultPageSize } from "./PageSwitch";
-import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, getIsTxsCompletedEvm, isEVMTxConfirmed } from "../../utils/ethereum";
+import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, getIsTxsCompletedEvm, isEVMTxConfirmed } from "../../utils/evm";
 import { TransactionTable } from "./TransactionTable";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { useSelector } from "react-redux";

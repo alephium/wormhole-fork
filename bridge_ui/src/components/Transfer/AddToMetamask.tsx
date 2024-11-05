@@ -14,7 +14,7 @@ import { getEvmChainId } from "../../utils/consts";
 import {
   ethTokenToParsedTokenAccount,
   getEthereumToken,
-} from "../../utils/ethereum";
+} from "../../utils/evm";
 
 const useStyles = makeStyles((theme) => ({
   addButton: {

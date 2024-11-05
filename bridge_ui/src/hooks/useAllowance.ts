@@ -11,7 +11,7 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { selectTransferIsApproving } from "../store/selectors";
 import { setIsApproving, setIsWalletApproved } from "../store/transferSlice";
 import { getTokenBridgeAddressForChain } from "../utils/consts";
-import { approveEthWithoutWait } from "../utils/ethereum";
+import { approveEthWithoutWait } from "../utils/evm";
 
 export default function useAllowance(
   chainId: ChainId,

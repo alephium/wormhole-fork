@@ -128,7 +128,7 @@ import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
 import { getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
-import { getETHTokenLogoURI } from "../utils/ethereum";
+import { getETHTokenLogoURI } from "../utils/evm";
 import { Alert } from "@material-ui/lab";
 import parseError from "../utils/parseError";
 import i18n from "../i18n";

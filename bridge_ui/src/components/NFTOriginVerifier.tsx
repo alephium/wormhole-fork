@@ -50,7 +50,7 @@ import {
   getEthereumNFT,
   isNFT,
   isValidEthereumAddress,
-} from "../utils/ethereum";
+} from "../utils/evm";
 import HeaderText from "./HeaderText";
 import KeyAndBalance from "./KeyAndBalance";
 import NFTViewer from "./TokenSelectors/NFTViewer";

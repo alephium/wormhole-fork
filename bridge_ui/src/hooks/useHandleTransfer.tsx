@@ -84,7 +84,7 @@ import { postWithFees, waitForTerraExecution } from "../utils/terra";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
 import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { ExecuteScriptResult } from "@alephium/web3";
-import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/ethereum";
+import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import i18n from "../i18n";
 

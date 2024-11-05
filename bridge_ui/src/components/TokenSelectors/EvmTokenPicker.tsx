@@ -18,7 +18,7 @@ import {
   getEthereumNFT,
   getEthereumToken,
   isValidEthereumAddress,
-} from "../../utils/ethereum";
+} from "../../utils/evm";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 
 const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {

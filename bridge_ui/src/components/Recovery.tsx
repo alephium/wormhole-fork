@@ -84,7 +84,7 @@ import ChainSelect from "./ChainSelect";
 import KeyAndBalance from "./KeyAndBalance";
 import RelaySelector from "./RelaySelector";
 import { selectTransferSourceChain, selectTransferTransferTx } from "../store/selectors";
-import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/ethereum";
+import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from "../utils/evm";
 import { Wallet, useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";

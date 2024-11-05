@@ -72,7 +72,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken } from "../utils/ethereum";
+import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import i18n from "../i18n";
 
