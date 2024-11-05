@@ -22,27 +22,59 @@ interface TokenInfo {
   logoURI: string
 }
 
-let _whitelist: TokenInfo[] | undefined = undefined
+const TokenListURLs = {
+  [CHAIN_ID_ETH]: 'https://tokens-1inch-eth.ipns.dweb.link/',
+  [CHAIN_ID_BSC]: 'https://tokens.coingecko.com/binance-smart-chain/all.json'
+}
 
-async function loadETHTokenWhitelist(): Promise<TokenInfo[]> {
-  if (_whitelist !== undefined) return _whitelist
-  const { data: { tokens } } = await axios.get('https://tokens-1inch-eth.ipns.dweb.link/')
-  _whitelist = tokens
+let _tokenWhiteList: Map<ChainId, TokenInfo[] | undefined> = new Map()
+
+function getTokenListURL(chainId: ChainId): string {
+  if (chainId === CHAIN_ID_BSC || chainId === CHAIN_ID_ETH) {
+    return TokenListURLs[chainId]
+  }
+  throw new Error(`Invalid evm chain id: ${chainId}`)
+}
+
+async function loadEVMTokenWhitelist(chainId: ChainId): Promise<TokenInfo[]> {
+  const whitelist = _tokenWhiteList.get(chainId)
+  if (whitelist !== undefined) return whitelist
+  const url = getTokenListURL(chainId)
+  const { data: { tokens } } = await axios.get(url)
+  _tokenWhiteList.set(chainId, tokens)
   return tokens
 }
 
-export async function checkETHToken(tokenAddress: string) {
+async function checkEVMToken(chainId: ChainId, tokenAddress: string) {
   if (CLUSTER !== 'mainnet') return
 
-  const tokenWhitelist = await loadETHTokenWhitelist()
+  const tokenWhitelist = await loadEVMTokenWhitelist(chainId)
   if (tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase()) === undefined) {
-    throw new Error(`${i18n.t('Token {{ tokenAddress }} does not exist in the token list', { tokenAddress })}: https://tokenlists.org/token-list?url=tokens.1inch.eth`)
+    throw new Error(`${i18n.t('Token {{ tokenAddress }} does not exist in the token list', { tokenAddress })}: ${getTokenListURL(chainId)}`)
   }
 }
 
-export async function getETHTokenLogoURI(tokenAddress: string): Promise<string | undefined> {
-  const tokenWhitelist = await loadETHTokenWhitelist()
-  return tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase())?.logoURI
+async function getEVMTokenLogoAndSymbol(chainId: ChainId, tokenAddress: string) {
+  const tokenWhitelist = await loadEVMTokenWhitelist(chainId)
+  const tokenInfo = tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase())
+  if (tokenInfo === undefined) return undefined
+  return { logoURI: tokenInfo.logoURI, symbol: tokenInfo.symbol }
+}
+
+export async function checkETHToken(tokenAddress: string) {
+  await checkEVMToken(CHAIN_ID_ETH, tokenAddress)
+}
+
+export async function getETHTokenLogoAndSymbol(tokenAddress: string) {
+  return await getEVMTokenLogoAndSymbol(CHAIN_ID_ETH, tokenAddress)
+}
+
+export async function checkBSCToken(tokenAddress: string) {
+  await checkEVMToken(CHAIN_ID_BSC, tokenAddress)
+}
+
+export async function getBSCTokenLogoAndSymbol(tokenAddress: string) {
+  return await getEVMTokenLogoAndSymbol(CHAIN_ID_BSC, tokenAddress)
 }
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
@@ -55,6 +87,7 @@ export async function getEthereumToken(
 }
 
 export async function ethTokenToParsedTokenAccount(
+  chainId: ChainId,
   token: ethers_contracts.TokenImplementation,
   signerAddress: string
 ) {
@@ -62,7 +95,7 @@ export async function ethTokenToParsedTokenAccount(
   const balance = await token.balanceOf(signerAddress);
   const symbol = await token.symbol();
   const name = await token.name();
-  const logoURI = await getETHTokenLogoURI(token.address)
+  const logoURI = (await getEVMTokenLogoAndSymbol(chainId, token.address))?.logoURI
   return createParsedTokenAccount(
     signerAddress,
     token.address,

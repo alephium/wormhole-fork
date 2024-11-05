@@ -43,6 +43,7 @@ export default function AddToMetamask() {
         try {
           const token = await getEthereumToken(targetAsset, provider);
           const { symbol, decimals } = await ethTokenToParsedTokenAccount(
+            targetChain,
             token,
             signerAddress
           );
@@ -74,6 +75,7 @@ export default function AddToMetamask() {
     signerAddress,
     hasCorrectEvmNetwork,
     sourceParsedTokenAccount,
+    targetChain
   ]);
   return provider &&
     signerAddress &&

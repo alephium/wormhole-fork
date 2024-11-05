@@ -22,7 +22,8 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   hexToUint8Array,
-  getTokenPoolId
+  getTokenPoolId,
+  tryNativeToHexString
 } from "@alephium/wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -125,10 +126,10 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { getAvailableBalances, getAlephiumTokenLogoURI } from "../utils/alephium";
+import { getAvailableBalances, getAlephiumTokenLogoAndSymbol } from "../utils/alephium";
 import { getRegisteredTokens } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
-import { getETHTokenLogoURI } from "../utils/evm";
+import { getBSCTokenLogoAndSymbol, getETHTokenLogoAndSymbol } from "../utils/evm";
 import { Alert } from "@material-ui/lab";
 import parseError from "../utils/parseError";
 import i18n from "../i18n";
@@ -622,13 +623,13 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
       if (tokenAccounts.find((t) => t.contract_address.toLowerCase() === result.tokenId.toLowerCase()) !== undefined) {
         continue
       }
-      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
+      const info = await getTokenLogoAndSymbol(token.tokenChain, token.nativeAddress)
       tokenAccounts.push({
         contract_decimals: token.decimals,
-        contract_ticker_symbol: token.symbol,
+        contract_ticker_symbol: info?.symbol ?? token.symbol,
         contract_name: token.name,
         contract_address: result.tokenId,
-        logo_url: token.logo ?? tokenLogoURI,
+        logo_url: info?.logoURI ?? token.logo,
         balance: result.balance.toString(),
         quote: undefined,
         quote_rate: undefined
@@ -774,7 +775,7 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
       const amount = balances.get(localTokenId.toLowerCase())
       if (amount === undefined) continue
 
-      const tokenLogoURI = await getTokenLogoURI(token.tokenChain, token.nativeAddress)
+      const info = await getTokenLogoAndSymbol(token.tokenChain, token.nativeAddress)
       const uiAmount = formatUnits(amount, token.decimals)
       tokenAccounts.push(createParsedTokenAccount(
         address,
@@ -783,9 +784,9 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
         token.decimals,
         parseFloat(uiAmount),
         uiAmount,
-        token.symbol,
+        info?.symbol ?? token.symbol,
         token.name,
-        tokenLogoURI,
+        info?.logoURI ?? token.logo,
         localTokenId === ALPH_TOKEN_ID
       ))
     }
@@ -797,11 +798,24 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
   }
 }
 
-async function getTokenLogoURI(tokenChainId: ChainId, tokenId: string): Promise<string | undefined> {
+async function getTokenLogoAndSymbol(tokenChainId: ChainId, tokenId: string): Promise<{ logoURI?: string, symbol?: string } | undefined> {
+  if (tokenChainId !== CHAIN_ID_ALEPHIUM) {
+    const wrappedIdOnALPH = getTokenPoolId(
+      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      tokenChainId,
+      tryNativeToHexString(tokenId, tokenChainId),
+      ALEPHIUM_BRIDGE_GROUP_INDEX
+    )
+    const info = await getAlephiumTokenLogoAndSymbol(wrappedIdOnALPH)
+    if (info !== undefined) return info
+  }
+
   if (tokenChainId === CHAIN_ID_ETH) {
-    return getETHTokenLogoURI(tokenId)
+    return getETHTokenLogoAndSymbol(tokenId)
   } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
-    return getAlephiumTokenLogoURI(tokenId)
+    return getAlephiumTokenLogoAndSymbol(tokenId)
+  } else if (tokenChainId === CHAIN_ID_BSC) {
+    return getBSCTokenLogoAndSymbol(tokenId)
   } else {
     return undefined
   }

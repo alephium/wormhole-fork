@@ -89,6 +89,7 @@ export default function EvmTokenPicker(
             );
           } else {
             return ethTokenToParsedTokenAccount(
+              chainId,
               tokenAccount as ethers_contracts.TokenImplementation,
               signerAddress
             );
@@ -100,7 +101,7 @@ export default function EvmTokenPicker(
         return Promise.reject({ error: t("Wallet is not connected.") });
       }
     },
-    [isReady, nft, provider, signerAddress, t]
+    [isReady, nft, provider, signerAddress, t, chainId]
   );
 
   const onChangeWrapper = useCallback(
