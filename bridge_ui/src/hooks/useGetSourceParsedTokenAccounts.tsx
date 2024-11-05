@@ -22,8 +22,7 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   hexToUint8Array,
-  getTokenPoolId,
-  tryNativeToHexString
+  getTokenPoolId
 } from "@alephium/wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -126,10 +125,9 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { getAvailableBalances, getAlephiumTokenLogoAndSymbol } from "../utils/alephium";
-import { getRegisteredTokens } from "../utils/tokens";
+import { getAvailableBalances } from "../utils/alephium";
+import { getRegisteredTokens, getTokenLogoAndSymbol } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
-import { getBSCTokenLogoAndSymbol, getETHTokenLogoAndSymbol } from "../utils/evm";
 import { Alert } from "@material-ui/lab";
 import parseError from "../utils/parseError";
 import i18n from "../i18n";
@@ -795,29 +793,6 @@ const getAlephiumParsedTokenAccounts = async (address: string, provider: NodePro
     const errMsg = `${i18n.t('Failed to load alephium token metadata')}: ${error}`
     console.error(errMsg)
     throw new Error(errMsg)
-  }
-}
-
-async function getTokenLogoAndSymbol(tokenChainId: ChainId, tokenId: string): Promise<{ logoURI?: string, symbol?: string } | undefined> {
-  if (tokenChainId !== CHAIN_ID_ALEPHIUM) {
-    const wrappedIdOnALPH = getTokenPoolId(
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-      tokenChainId,
-      tryNativeToHexString(tokenId, tokenChainId),
-      ALEPHIUM_BRIDGE_GROUP_INDEX
-    )
-    const info = await getAlephiumTokenLogoAndSymbol(wrappedIdOnALPH)
-    if (info !== undefined) return info
-  }
-
-  if (tokenChainId === CHAIN_ID_ETH) {
-    return getETHTokenLogoAndSymbol(tokenId)
-  } else if (tokenChainId === CHAIN_ID_ALEPHIUM) {
-    return getAlephiumTokenLogoAndSymbol(tokenId)
-  } else if (tokenChainId === CHAIN_ID_BSC) {
-    return getBSCTokenLogoAndSymbol(tokenId)
-  } else {
-    return undefined
   }
 }
 
