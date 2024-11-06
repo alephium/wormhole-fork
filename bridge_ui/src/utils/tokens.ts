@@ -17,8 +17,12 @@ export type RegisteredTokenInfo = {
   logo?: string
 }
 
+let _registeredTokens: RegisteredTokenInfo[] | undefined = undefined
+
 export async function getRegisteredTokens(): Promise<RegisteredTokenInfo[]> {
   try {
+    if (_registeredTokens !== undefined) return _registeredTokens
+
     const response = await fetch(`${EXPLORER_API_SERVER_HOST}/api/stats/tokens`)
     if (!response.ok) {
       throw new Error(`${i18n.t('Failed to get tokens')}, ${i18n.t('response status')}: ${response.status}`)
@@ -27,7 +31,7 @@ export async function getRegisteredTokens(): Promise<RegisteredTokenInfo[]> {
     if (!Array.isArray(tokenList)) {
       throw new Error(i18n.t('Invalid response, expect a token list'))
     }
-    return (tokenList as any[]).map((item) => {
+    const tokens = (tokenList as any[]).map((item) => {
       const symbol = (item['symbol'] as string).toUpperCase()
       return {
         tokenAddress: item['tokenAddress'],
@@ -39,6 +43,8 @@ export async function getRegisteredTokens(): Promise<RegisteredTokenInfo[]> {
         logo: symbol === 'ALPH' ? alephiumIcon : symbol === 'WETH' ? ethIcon : symbol === 'WBNB' ? bscIcon : undefined
       }
     })
+    _registeredTokens = tokens
+    return tokens
   } catch (error) {
     console.log(error)
     return []
