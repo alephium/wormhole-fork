@@ -69,9 +69,11 @@ import {
   selectNFTSourceChain,
   selectNFTSourceParsedTokenAccounts,
   selectNFTSourceWalletAddress,
+  selectNFTTargetChain,
   selectSourceWalletAddress,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccounts,
+  selectTransferTargetChain,
 } from "../store/selectors";
 import {
   errorSourceParsedTokenAccounts,
@@ -589,15 +591,21 @@ export type CovalentNFTData = {
   token_url: string;
 };
 
-export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, walletAddress: string): Promise<CovalentData[]> => {
+export const getEVMAccounts = async (
+  sourceChainId: ChainId,
+  targetChainId: ChainId,
+  signer: ethers.Signer,
+  walletAddress: string
+): Promise<CovalentData[]> => {
   try {
-    const tokens = await getRegisteredTokens()
-    const promises = tokens.map(async (token) => {
+    const registeredTokens = await getRegisteredTokens()
+    const filteredTokens = registeredTokens.filter((t) => t.tokenChain === sourceChainId || t.tokenChain === targetChainId)
+    const promises = filteredTokens.map(async (token) => {
       try {
-        const tokenId = token.tokenChain === chainId
+        const tokenId = token.tokenChain === sourceChainId
           ? token.nativeAddress
           : await ethers_contracts.BridgeImplementation__factory
-              .connect(getTokenBridgeAddressForChain(chainId), signer)
+              .connect(getTokenBridgeAddressForChain(sourceChainId), signer)
               .wrappedAsset(token.tokenChain, hexToUint8Array(token.tokenAddress))
         if (tokenId === ethers.constants.AddressZero) return undefined
         const tokenContract = ethers_contracts.ERC20__factory.connect(tokenId, signer)
@@ -613,9 +621,9 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
     })
     const tokenAccounts: CovalentData[] = []
     const results = await Promise.all(promises)
-    for (let index = 0; index < tokens.length; index++) {
+    for (let index = 0; index < filteredTokens.length; index++) {
       const result = results[index]
-      const token = tokens[index]
+      const token = filteredTokens[index]
       if (result === undefined || result.balance === BigInt(0)) {
         continue
       }
@@ -762,12 +770,13 @@ const getAlgorandParsedTokenAccounts = async (
   }
 };
 
-const getAlephiumParsedTokenAccounts = async (address: string, provider: NodeProvider) => {
+const getAlephiumParsedTokenAccounts = async (targetChainId: ChainId, address: string, provider: NodeProvider) => {
   try {
     const balances = await getAvailableBalances(provider, address)
     const registeredTokens = await getRegisteredTokens()
+    const filteredTokens = registeredTokens.filter((t) => t.tokenChain === CHAIN_ID_ALEPHIUM || t.tokenChain === targetChainId)
     const tokenAccounts: ParsedTokenAccount[] = []
-    for (const token of registeredTokens) {
+    for (const token of filteredTokens) {
       const localTokenId = token.tokenChain === CHAIN_ID_ALEPHIUM
         ? token.nativeAddress
         : getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
@@ -815,6 +824,10 @@ function useGetAvailableTokens(nft: boolean = false) {
   const lookupChain = useSelector(
     nft ? selectNFTSourceChain : selectTransferSourceChain
   );
+  const targetChain = useSelector(
+    nft ? selectNFTTargetChain : selectTransferTargetChain
+  )
+  const [selectedTargetChain, setSelectedTargetChain] = useState<ChainId>(targetChain)
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
   const { provider, signerAddress, signer } = useEthereumProvider();
@@ -893,16 +906,20 @@ function useGetAvailableTokens(nft: boolean = false) {
   //TODO this useEffect could be somewhere else in the codebase
   //It resets the SourceParsedTokens accounts when the wallet changes
   useEffect(() => {
-    if (
+    const sourceChainChanged =
       selectedSourceWalletAddress !== undefined &&
       currentSourceWalletAddress !== undefined &&
       currentSourceWalletAddress !== selectedSourceWalletAddress
-    ) {
+    const targetChainChanged = targetChain !== selectedTargetChain
+    if (sourceChainChanged || targetChainChanged) {
       resetSourceAccounts();
-      return;
-    } else {
+    }
+    if (targetChainChanged) {
+      setSelectedTargetChain(targetChain)
     }
   }, [
+    targetChain,
+    selectedTargetChain,
     selectedSourceWalletAddress,
     currentSourceWalletAddress,
     dispatch,
@@ -1433,7 +1450,7 @@ function useGetAvailableTokens(nft: boolean = false) {
       //TODO less cancel
       !cancelled && setCovalentLoading(true);
       !cancelled && dispatch(fetchSourceParsedTokenAccounts());
-      getEVMAccounts(lookupChain, signer, walletAddress).then(
+      getEVMAccounts(lookupChain, targetChain, signer, walletAddress).then(
         (accounts) => {
           !cancelled && setCovalentLoading(false);
           !cancelled && setCovalentError(undefined);
@@ -1466,7 +1483,7 @@ function useGetAvailableTokens(nft: boolean = false) {
         cancelled = true;
       };
     }
-  }, [lookupChain, provider, signerAddress, dispatch, nft, covalent, signer, t]);
+  }, [lookupChain, targetChain, provider, signerAddress, dispatch, nft, covalent, signer, t]);
 
   useEffect(() => {
     if (
@@ -1478,7 +1495,7 @@ function useGetAvailableTokens(nft: boolean = false) {
     ) {
       setAlphTokenLoading(true)
       dispatch(fetchSourceParsedTokenAccounts())
-      getAlephiumParsedTokenAccounts(currentSourceWalletAddress, alphWallet.nodeProvider)
+      getAlephiumParsedTokenAccounts(targetChain, currentSourceWalletAddress, alphWallet.nodeProvider)
         .then((result) => {
           setAlphTokens(result.tokenAccounts)
           setAlphBalances(result.balances)
@@ -1495,7 +1512,7 @@ function useGetAvailableTokens(nft: boolean = false) {
           setAlphTokenError(`${error}`)
         })
     }
-  }, [dispatch, enqueueSnackbar, lookupChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
+  }, [dispatch, enqueueSnackbar, lookupChain, targetChain, currentSourceWalletAddress, alphWallet?.nodeProvider, alphTokens, alphTokenLoading]);
 
   //Terra accounts load
   //At present, we don't have any mechanism for doing this.
