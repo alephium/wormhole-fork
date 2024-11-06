@@ -599,6 +599,7 @@ export const getEVMAccounts = async (chainId: ChainId, signer: ethers.Signer, wa
           : await ethers_contracts.BridgeImplementation__factory
               .connect(getTokenBridgeAddressForChain(chainId), signer)
               .wrappedAsset(token.tokenChain, hexToUint8Array(token.tokenAddress))
+        if (tokenId === ethers.constants.AddressZero) return undefined
         const tokenContract = ethers_contracts.ERC20__factory.connect(tokenId, signer)
         const amount = await tokenContract.balanceOf(walletAddress)
         return {
