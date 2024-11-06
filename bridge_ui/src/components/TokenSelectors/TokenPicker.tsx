@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   List,
   ListItem,
@@ -15,21 +14,14 @@ import {
   Tooltip,
   Typography,
 } from "@material-ui/core";
-import { InfoOutlined, Launch } from "@material-ui/icons";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import { Alert } from "@material-ui/lab";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
-import useMarketsMap from "../../hooks/useMarketsMap";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
-import { selectTransferTargetChain } from "../../store/selectors";
 import { balancePretty } from "../../utils/balancePretty";
-import {
-  CHAINS_BY_ID,
-  getIsTokenTransferDisabled,
-} from "../../utils/consts";
+import { getIsTokenTransferDisabled } from "../../utils/consts";
 import { shortenAddress } from "../../utils/solana";
 import NFTViewer from "./NFTViewer";
 
@@ -119,10 +111,6 @@ const useStyles = makeStyles((theme) =>
   })
 );
 
-const noClickThrough = (e: any) => {
-  e.stopPropagation();
-};
-
 export const BasicAccountRender = (
   account: MarketParsedTokenAccount,
   isMigrationEligible: (address: string) => boolean,
@@ -130,7 +118,6 @@ export const BasicAccountRender = (
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
   const { t } = useTranslation();
-  const { data: marketsData } = useMarketsMap(false);
   const classes = useStyles();
   const mintPrettyString = shortenAddress(account.mintKey);
   const uri = nft ? account.image_256 : account.logo || account.uri;
@@ -157,27 +144,6 @@ export const BasicAccountRender = (
 
   const tokenContent = (
     <div className={classes.tokenOverviewContainer}>
-      {account.markets ? (
-        <div className={classes.tokenMarketsList}>
-          {account.markets.map((market) =>
-            marketsData?.markets?.[market] ? (
-              <Button
-                key={market}
-                size="small"
-                variant="outlined"
-                color="secondary"
-                startIcon={<Launch />}
-                href={marketsData.markets[market].link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={noClickThrough}
-              >
-                {marketsData.markets[market].name}
-              </Button>
-            ) : null
-          )}
-        </div>
-      ) : null}
       <div className={classes.tokenImageContainer}>
         {uri && <img alt="" className={classes.tokenImage} src={uri} />}
       </div>
@@ -273,9 +239,6 @@ export default function TokenPicker({
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [selectionError, setSelectionError] = useState("");
 
-  const targetChain = useSelector(selectTransferTargetChain);
-  const { data: marketsData } = useMarketsMap(true);
-
   const openDialog = useCallback(() => {
     setHolderString("");
     setSelectionError("");
@@ -346,61 +309,11 @@ export default function TokenPicker({
     [holderString]
   );
 
-  const marketChainTokens = marketsData?.tokens?.[chainId];
-  const featuredMarkets = marketsData?.tokenMarkets?.[chainId]?.[targetChain];
-
-  const featuredOptions = useMemo(() => {
-    // only tokens have featured markets
-    if (!nft && featuredMarkets) {
-      const ownedMarketTokens = options
-        .filter(
-          (option: NFTParsedTokenAccount) => featuredMarkets?.[option.mintKey]
-        )
-        .map(
-          (option) => {
-            const fromMarkets = marketsData?.tokens?.[chainId]?.[option.mintKey]
-            return ({
-              ...option,
-              symbol: fromMarkets?.symbol,
-              logo: fromMarkets?.logo,
-              markets: featuredMarkets[option.mintKey].markets,
-            } as MarketParsedTokenAccount)
-          }
-        );
-      return [
-        ...ownedMarketTokens,
-        ...Object.keys(featuredMarkets)
-          .filter(
-            (mintKey) =>
-              !ownedMarketTokens.find((option) => option.mintKey === mintKey)
-          )
-          .map(
-            (mintKey) =>
-              ({
-                amount: "0",
-                decimals: 0,
-                markets: featuredMarkets[mintKey].markets,
-                mintKey,
-                publicKey: "",
-                uiAmount: 0,
-                uiAmountString: "0", // if we can't look up by address, we can select the market that isn't in the list of holdings, but can't proceed since the balance will be 0
-                symbol: marketChainTokens?.[mintKey]?.symbol,
-                logo: marketChainTokens?.[mintKey]?.logo,
-              } as MarketParsedTokenAccount)
-          ),
-      ].filter(searchFilter);
-    }
-    return [];
-  }, [chainId, nft, marketsData, marketChainTokens, featuredMarkets, options, searchFilter]);
-
   const nonFeaturedOptions = useMemo(() => {
     return options.filter(
-      (option: NFTParsedTokenAccount) =>
-        searchFilter(option) &&
-        // only tokens have featured markets
-        (nft || !featuredMarkets?.[option.mintKey])
+      (option: NFTParsedTokenAccount) => searchFilter(option)
     );
-  }, [nft, options, featuredMarkets, searchFilter]);
+  }, [options, searchFilter]);
 
   const localFind = useCallback(
     (address: string, tokenIdHolderString: string) => {
@@ -530,52 +443,6 @@ export default function TokenPicker({
           displayLocalError
         ) : (
           <List component="div" className={classes.tokenList}>
-            {featuredOptions.length ? (
-              <>
-                <Typography variant="subtitle2" gutterBottom>
-                  Featured {CHAINS_BY_ID[chainId].name} &gt;{" "}
-                  {CHAINS_BY_ID[targetChain].name} markets{" "}
-                  <Tooltip
-                    title={
-                      t('Markets for these {{ chainName }} tokens exist for the corresponding tokens on {{ targetChainName }}', { chainName: CHAINS_BY_ID[chainId].name, targetChainName: CHAINS_BY_ID[targetChain].name })
-                    }
-                  >
-                    <InfoOutlined
-                      fontSize="small"
-                      style={{ verticalAlign: "text-bottom" }}
-                    />
-                  </Tooltip>
-                </Typography>
-                {featuredOptions.map((option) => {
-                  return (
-                    <ListItem
-                      component="div"
-                      button
-                      onClick={() => handleSelectOption(option)}
-                      key={
-                        option.publicKey +
-                        option.mintKey +
-                        (option.tokenId || "")
-                      }
-                      disabled={getIsTokenTransferDisabled(
-                        chainId,
-                        option.mintKey
-                      )}
-                    >
-                      <RenderOption account={option} />
-                    </ListItem>
-                  );
-                })}
-                {nonFeaturedOptions.length ? (
-                  <>
-                    <Divider style={{ marginTop: 8, marginBottom: 16 }} />
-                    <Typography variant="subtitle2" gutterBottom>
-                      {t("Other Assets")}
-                    </Typography>
-                  </>
-                ) : null}
-              </>
-            ) : null}
             {nonFeaturedOptions.map((option) => {
               return (
                 <ListItem
@@ -591,7 +458,7 @@ export default function TokenPicker({
                 </ListItem>
               );
             })}
-            {featuredOptions.length || nonFeaturedOptions.length ? null : (
+            {nonFeaturedOptions.length ? null : (
               <div className={classes.alignCenter}>
                 <Typography>{t("No results found")}</Typography>
               </div>
