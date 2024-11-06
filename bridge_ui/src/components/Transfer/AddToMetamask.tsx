@@ -12,9 +12,9 @@ import {
 } from "../../store/selectors";
 import { getEvmChainId } from "../../utils/consts";
 import {
-  ethTokenToParsedTokenAccount,
+  evmTokenToParsedTokenAccount,
   getEthereumToken,
-} from "../../utils/ethereum";
+} from "../../utils/evm";
 
 const useStyles = makeStyles((theme) => ({
   addButton: {
@@ -42,7 +42,8 @@ export default function AddToMetamask() {
       (async () => {
         try {
           const token = await getEthereumToken(targetAsset, provider);
-          const { symbol, decimals } = await ethTokenToParsedTokenAccount(
+          const { symbol, decimals } = await evmTokenToParsedTokenAccount(
+            targetChain,
             token,
             signerAddress
           );
@@ -74,6 +75,7 @@ export default function AddToMetamask() {
     signerAddress,
     hasCorrectEvmNetwork,
     sourceParsedTokenAccount,
+    targetChain
   ]);
   return provider &&
     signerAddress &&

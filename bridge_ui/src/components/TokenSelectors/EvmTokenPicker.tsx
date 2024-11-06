@@ -14,12 +14,13 @@ import {
 } from "../../utils/consts";
 import {
   ethNFTToNFTParsedTokenAccount,
-  ethTokenToParsedTokenAccount,
+  evmTokenToParsedTokenAccount,
   getEthereumNFT,
   getEthereumToken,
   isValidEthereumAddress,
-} from "../../utils/ethereum";
+} from "../../utils/evm";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
+import { getTokenLogoAndSymbol } from "../../utils/tokens";
 
 const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
   if (chainId !== CHAIN_ID_ETH) {
@@ -88,10 +89,17 @@ export default function EvmTokenPicker(
               signerAddress
             );
           } else {
-            return ethTokenToParsedTokenAccount(
+            const logoAndSymbol = await getTokenLogoAndSymbol(chainId, tokenAccount.address)
+            const tokenInfo = await evmTokenToParsedTokenAccount(
+              chainId,
               tokenAccount as ethers_contracts.TokenImplementation,
               signerAddress
             );
+            return {
+              ...tokenInfo,
+              symbol: logoAndSymbol?.symbol ?? tokenInfo.symbol,
+              logo: logoAndSymbol?.logoURI ?? tokenInfo.logo
+            }
           }
         } catch (e) {
           return Promise.reject(t("Unable to retrive the specific token."));
@@ -100,7 +108,7 @@ export default function EvmTokenPicker(
         return Promise.reject({ error: t("Wallet is not connected.") });
       }
     },
-    [isReady, nft, provider, signerAddress, t]
+    [isReady, nft, provider, signerAddress, t, chainId]
   );
 
   const onChangeWrapper = useCallback(

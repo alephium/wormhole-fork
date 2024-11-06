@@ -12,7 +12,6 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import ShowTx from "../ShowTx";
 import AddToAlephium from "./AddToAlephium";
 import AddToMetamask from "./AddToMetamask";
-import FeaturedMarkets from "./FeaturedMarkets";
 import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
@@ -52,7 +51,6 @@ export default function RedeemPreview({
       {redeemTx ? <ShowTx chainId={targetChain} tx={redeemTx} /> : null}
       {targetChain === CHAIN_ID_ALEPHIUM ? <AddToAlephium /> : null}
       {isEVMChain(targetChain) ? <AddToMetamask /> : null}
-      <FeaturedMarkets />
       <ButtonWithLoader onClick={handleResetClick}>
         {t("Transfer More Tokens!")}
       </ButtonWithLoader>

@@ -193,6 +193,15 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
   }
 }
 
+export async function getAlephiumTokenLogoAndSymbol(tokenId: string) {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return { logoURI: alephiumIcon, symbol: 'ALPH' }
+  }
+  const tokenInfo = await getTokenFromTokenList(tokenId)
+  if (tokenInfo === undefined) return undefined
+  return { logoURI: tokenInfo.logoURI, symbol: tokenInfo.symbol }
+}
+
 export async function getAlephiumTokenLogoURI(tokenId: string): Promise<string | undefined> {
   return tokenId === ALPH_TOKEN_ID
     ? alephiumIcon

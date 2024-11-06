@@ -49,7 +49,7 @@ import { Algodv2 } from "algosdk";
 import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
-import { getEvmJsonRpcProvider } from "../utils/ethereum";
+import { getEvmJsonRpcProvider } from "../utils/evm";
 
 export interface StateSafeWormholeWrappedInfo {
   isWrapped: boolean;

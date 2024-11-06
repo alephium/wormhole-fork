@@ -20,7 +20,7 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
 import SmartBlock from "./SmartBlock";
-import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from "../utils/ethereum";
+import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from "../utils/evm";
 import { useWallet } from "@alephium/web3-react";
 import { AlephiumBlockTime } from "../utils/alephium";
 import { ethers } from "ethers";

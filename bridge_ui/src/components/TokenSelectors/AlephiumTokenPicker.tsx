@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { ParsedTokenAccount } from "../../store/transferSlice";
-import { getAlephiumTokenLogoURI, tryGetContractId } from "../../utils/alephium";
+import { getAlephiumTokenLogoAndSymbol, tryGetContractId } from "../../utils/alephium";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
@@ -50,6 +50,7 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
         try {
           const contractId = tryGetContractId(address)
           const tokenInfo = await getLocalTokenInfo(alphWallet.nodeProvider, contractId)
+          const logoAndSymbol = await getAlephiumTokenLogoAndSymbol(contractId)
           const amount = balances.get(contractId.toLowerCase()) ?? BigInt(0)
           const uiAmount = formatUnits(amount, tokenInfo.decimals)
           return createParsedTokenAccount(
@@ -59,9 +60,9 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
             tokenInfo.decimals,
             parseFloat(uiAmount),
             uiAmount,
-            tokenInfo.symbol,
+            logoAndSymbol?.symbol ?? tokenInfo.symbol,
             tokenInfo.name,
-            await getAlephiumTokenLogoURI(contractId),
+            logoAndSymbol?.logoURI,
             false
           )
         } catch (e) {

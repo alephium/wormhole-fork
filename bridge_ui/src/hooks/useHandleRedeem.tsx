@@ -68,7 +68,7 @@ import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees } from "../utils/terra";
 import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/ethereum";
+import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
 import i18n from "../i18n";
