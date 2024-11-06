@@ -14,7 +14,7 @@ import {
 } from "../../utils/consts";
 import {
   ethNFTToNFTParsedTokenAccount,
-  ethTokenToParsedTokenAccount,
+  evmTokenToParsedTokenAccount,
   getEthereumNFT,
   getEthereumToken,
   isValidEthereumAddress,
@@ -90,7 +90,7 @@ export default function EvmTokenPicker(
             );
           } else {
             const logoAndSymbol = await getTokenLogoAndSymbol(chainId, tokenAccount.address)
-            const tokenInfo = await ethTokenToParsedTokenAccount(
+            const tokenInfo = await evmTokenToParsedTokenAccount(
               chainId,
               tokenAccount as ethers_contracts.TokenImplementation,
               signerAddress

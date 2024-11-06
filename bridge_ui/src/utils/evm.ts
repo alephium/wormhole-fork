@@ -86,7 +86,7 @@ export async function getEthereumToken(
   return token;
 }
 
-export async function ethTokenToParsedTokenAccount(
+export async function evmTokenToParsedTokenAccount(
   chainId: ChainId,
   token: ethers_contracts.TokenImplementation,
   signerAddress: string

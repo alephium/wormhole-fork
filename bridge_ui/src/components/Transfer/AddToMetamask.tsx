@@ -12,7 +12,7 @@ import {
 } from "../../store/selectors";
 import { getEvmChainId } from "../../utils/consts";
 import {
-  ethTokenToParsedTokenAccount,
+  evmTokenToParsedTokenAccount,
   getEthereumToken,
 } from "../../utils/evm";
 
@@ -42,7 +42,7 @@ export default function AddToMetamask() {
       (async () => {
         try {
           const token = await getEthereumToken(targetAsset, provider);
-          const { symbol, decimals } = await ethTokenToParsedTokenAccount(
+          const { symbol, decimals } = await evmTokenToParsedTokenAccount(
             targetChain,
             token,
             signerAddress
