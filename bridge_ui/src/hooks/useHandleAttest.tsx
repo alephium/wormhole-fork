@@ -20,7 +20,8 @@ import {
   parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  CHAIN_ID_ETH
+  CHAIN_ID_ETH,
+  CHAIN_ID_BSC
 } from "@alephium/wormhole-sdk";
 import { CHAIN_ID_UNSET } from "@alephium/wormhole-sdk/lib/esm";
 import { Alert } from "@material-ui/lab";
@@ -72,7 +73,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import { postWithFees, waitForTerraExecution } from "../utils/terra";
-import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken } from "../utils/evm";
+import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken, checkBSCToken } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import i18n from "../i18n";
 
@@ -143,6 +144,8 @@ async function evm(
   try {
     if (chainId === CHAIN_ID_ETH) {
       await checkETHToken(sourceAsset)
+    } else if (chainId === CHAIN_ID_BSC) {
+      await checkBSCToken(sourceAsset)
     }
 
     // Klaytn requires specifying gasPrice
