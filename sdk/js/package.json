@@ -1,6 +1,6 @@
 {
   "name": "@alephium/wormhole-sdk",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "SDK for interacting with Alephium Wormhole",
   "homepage": "https://wormholenetwork.com",
   "main": "./lib/cjs/index.js",
@@ -38,7 +38,6 @@
   "author": "certusone",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@alephium/cli": "^1.7.4",
     "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
     "@openzeppelin/contracts": "^4.2.0",
     "@typechain/ethers-v5": "^7.0.1",
@@ -57,7 +56,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@alephium/web3": "^1.7.4",
+    "@alephium/web3": "^1.8.5",
     "@alephium/token-list": "0.0.11",
     "@improbable-eng/grpc-web": "^0.14.0",
     "@solana/spl-token": "^0.1.8",
