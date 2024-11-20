@@ -1,8 +1,6 @@
 import { binToHex, NodeProvider } from "@alephium/web3";
-import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers } from "ethers";
-import { fromUint8Array } from "js-base64";
 import {
   calcLogicSigAccount,
   decodeLocalState,
@@ -53,28 +51,6 @@ export async function getForeignAssetEth(
       coalesceChainId(originChain),
       originAsset
     );
-  } catch (e) {
-    return null;
-  }
-}
-
-export async function getForeignAssetTerra(
-  tokenBridgeAddress: string,
-  client: LCDClient,
-  originChain: ChainId | ChainName,
-  originAsset: Uint8Array
-): Promise<string | null> {
-  try {
-    const result: { address: string } = await client.wasm.contractQuery(
-      tokenBridgeAddress,
-      {
-        wrapped_registry: {
-          chain: coalesceChainId(originChain),
-          address: fromUint8Array(originAsset),
-        },
-      }
-    );
-    return result.address;
   } catch (e) {
     return null;
   }

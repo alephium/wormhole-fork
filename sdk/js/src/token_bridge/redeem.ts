@@ -1,5 +1,4 @@
 import { binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
@@ -88,18 +87,6 @@ export async function redeemOnEthNative(
   const v = await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function redeemOnTerra(
-  tokenBridgeAddress: string,
-  walletAddress: string,
-  signedVAA: Uint8Array
-) {
-  return new MsgExecuteContract(walletAddress, tokenBridgeAddress, {
-    submit_vaa: {
-      data: fromUint8Array(signedVAA),
-    },
-  });
 }
 
 /**

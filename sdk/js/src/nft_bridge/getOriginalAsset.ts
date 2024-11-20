@@ -1,13 +1,10 @@
-import { LCDClient } from "@terra-money/terra.js";
 import { BigNumber, ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
-import { canonicalAddress, WormholeWrappedInfo } from "..";
 import { TokenImplementation__factory } from "../ethers-contracts";
 import {
   ChainId,
   ChainName,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   coalesceChainId,
 } from "../utils";
 import { getIsWrappedAssetEth } from "./getIsWrappedAsset";
@@ -92,33 +89,4 @@ function bigToUint8Array(big: bigint) {
     j += 2;
   }
   return u8;
-}
-
-export async function getOriginalAssetTerra(
-  client: LCDClient,
-  wrappedAddress: string
-): Promise<WormholeWrappedInfo> {
-  try {
-    const result: {
-      asset_address: string;
-      asset_chain: ChainId;
-      bridge: string;
-    } = await client.wasm.contractQuery(wrappedAddress, {
-      wrapped_asset_info: {},
-    });
-    if (result) {
-      return {
-        isWrapped: true,
-        chainId: result.asset_chain,
-        assetAddress: new Uint8Array(
-          Buffer.from(result.asset_address, "base64")
-        ),
-      };
-    }
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_TERRA,
-    assetAddress: zeroPad(canonicalAddress(wrappedAddress), 32),
-  };
 }

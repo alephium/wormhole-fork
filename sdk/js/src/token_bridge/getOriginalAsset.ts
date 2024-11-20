@@ -1,15 +1,12 @@
-import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { decodeLocalState } from "../algorand";
 import { TokenImplementation__factory } from "../ethers-contracts";
-import { buildNativeId, canonicalAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
   ChainName,
   CHAIN_ID_ALGORAND,
-  CHAIN_ID_TERRA,
   coalesceChainId,
 } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
@@ -60,42 +57,6 @@ export async function getOriginalAssetEth(
     isWrapped: false,
     chainId: coalesceChainId(lookupChain),
     assetAddress: zeroPad(arrayify(wrappedAddress), 32),
-  };
-}
-
-export async function getOriginalAssetTerra(
-  client: LCDClient,
-  wrappedAddress: string
-): Promise<WormholeWrappedInfo> {
-  if (isNativeDenom(wrappedAddress)) {
-    return {
-      isWrapped: false,
-      chainId: CHAIN_ID_TERRA,
-      assetAddress: buildNativeId(wrappedAddress),
-    };
-  }
-  try {
-    const result: {
-      asset_address: string;
-      asset_chain: ChainId;
-      bridge: string;
-    } = await client.wasm.contractQuery(wrappedAddress, {
-      wrapped_asset_info: {},
-    });
-    if (result) {
-      return {
-        isWrapped: true,
-        chainId: result.asset_chain,
-        assetAddress: new Uint8Array(
-          Buffer.from(result.asset_address, "base64")
-        ),
-      };
-    }
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_TERRA,
-    assetAddress: zeroPad(canonicalAddress(wrappedAddress), 32),
   };
 }
 

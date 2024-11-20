@@ -1,4 +1,3 @@
-import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { CHAIN_ID_SOLANA } from "..";
@@ -32,41 +31,6 @@ export async function getForeignAssetEth(
       return addr;
     }
     return await tokenBridge.wrappedAsset(originChainId, originAsset);
-  } catch (e) {
-    return null;
-  }
-}
-
-/**
- * Returns a foreign asset address on Terra for a provided native chain and asset address
- * @param tokenBridgeAddress
- * @param client
- * @param originChain
- * @param originAsset
- * @returns
- */
-export async function getForeignAssetTerra(
-  tokenBridgeAddress: string,
-  client: LCDClient,
-  originChain: ChainId,
-  originAsset: Uint8Array
-): Promise<string | null> {
-  const originChainId = coalesceChainId(originChain);
-  try {
-    const address =
-      originChain == CHAIN_ID_SOLANA
-        ? "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-        : fromUint8Array(originAsset);
-    const result: { address: string } = await client.wasm.contractQuery(
-      tokenBridgeAddress,
-      {
-        wrapped_registry: {
-          chain: originChainId,
-          address,
-        },
-      }
-    );
-    return result.address;
   } catch (e) {
     return null;
   }

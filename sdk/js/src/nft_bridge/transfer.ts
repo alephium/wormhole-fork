@@ -1,10 +1,9 @@
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, Overrides } from "ethers";
 import {
   NFTBridge__factory,
   NFTImplementation__factory,
 } from "../ethers-contracts";
-import { ChainId, ChainName, CHAIN_ID_SOLANA, coalesceChainId, createNonce } from "../utils";
+import { ChainId, ChainName, coalesceChainId, createNonce } from "../utils";
 
 export async function transferFromEth(
   tokenBridgeAddress: string,

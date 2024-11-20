@@ -1,11 +1,9 @@
-export * from "./terra";
 export * from "./rpc";
 export * from "./utils";
 export * from "./bridge";
 export * from "./token_bridge";
 
 export * as ethers_contracts from "./ethers-contracts";
-export * as terra from "./terra";
 export * as rpc from "./rpc";
 export * as utils from "./utils";
 export * as bridge from "./bridge";

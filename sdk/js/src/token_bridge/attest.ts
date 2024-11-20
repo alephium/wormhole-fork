@@ -1,4 +1,3 @@
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import {
   Algodv2,
   bigIntToBytes,
@@ -10,7 +9,6 @@ import {
   SuggestedParams,
 } from "algosdk";
 import { ethers, PayableOverrides } from "ethers";
-import { isNativeDenom } from "..";
 import { getMessageFee, optin, TransactionSignerPair } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { textToHexString, textToUint8Array, uint8ArrayToHex, utf8StringTo32Bytes } from "../utils";
@@ -65,29 +63,6 @@ export async function attestFromEth(
   const v = await bridge.attestToken(tokenAddress, createNonce(), overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function attestFromTerra(
-  tokenBridgeAddress: string,
-  walletAddress: string,
-  asset: string
-): Promise<MsgExecuteContract> {
-  const nonce = Math.round(Math.random() * 100000);
-  const isNativeAsset = isNativeDenom(asset);
-  return new MsgExecuteContract(walletAddress, tokenBridgeAddress, {
-    create_asset_meta: {
-      asset_info: isNativeAsset
-        ? {
-            native_token: { denom: asset },
-          }
-        : {
-            token: {
-              contract_addr: asset,
-            },
-          },
-      nonce: nonce,
-    },
-  });
 }
 
 /**

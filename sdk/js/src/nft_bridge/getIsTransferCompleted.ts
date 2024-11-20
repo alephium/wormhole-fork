@@ -1,10 +1,6 @@
 import { ethers } from "ethers";
 import { NFTBridge__factory } from "../ethers-contracts";
 import { getSignedVAAHash } from "../bridge";
-import { LCDClient } from "@terra-money/terra.js";
-import axios from "axios";
-import { redeemOnTerra } from ".";
-import { TERRA_REDEEMED_CHECK_WALLET_ADDRESS } from "..";
 
 export async function getIsTransferCompletedEth(
   nftBridgeAddress: string,
@@ -14,42 +10,4 @@ export async function getIsTransferCompletedEth(
   const nftBridge = NFTBridge__factory.connect(nftBridgeAddress, provider);
   const signedVAAHash = getSignedVAAHash(signedVAA);
   return await nftBridge.isTransferCompleted(signedVAAHash);
-}
-
-export async function getIsTransferCompletedTerra(
-  nftBridgeAddress: string,
-  signedVAA: Uint8Array,
-  client: LCDClient,
-  gasPriceUrl: string
-) {
-  const msg = await redeemOnTerra(
-    nftBridgeAddress,
-    TERRA_REDEEMED_CHECK_WALLET_ADDRESS,
-    signedVAA
-  );
-  // TODO: remove gasPriceUrl and just use the client's gas prices
-  const gasPrices = await axios.get(gasPriceUrl).then((result) => result.data);
-  const account = await client.auth.accountInfo(
-    TERRA_REDEEMED_CHECK_WALLET_ADDRESS
-  );
-  try {
-    await client.tx.estimateFee(
-      [
-        {
-          sequenceNumber: account.getSequenceNumber(),
-          publicKey: account.getPublicKey(),
-        },
-      ],
-      {
-        msgs: [msg],
-        memo: "already redeemed calculation",
-        feeDenoms: ["uluna"],
-        gasPrices,
-      }
-    );
-  } catch (e: any) {
-    // redeemed if the VAA was already executed
-    return e.response.data.message.includes("VaaAlreadyExecuted");
-  }
-  return false;
 }

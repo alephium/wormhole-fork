@@ -1,4 +1,3 @@
-import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2, getApplicationAddress } from "algosdk";
 import { ethers } from "ethers";
 import { Bridge__factory } from "../ethers-contracts";
@@ -19,15 +18,6 @@ export async function getIsWrappedAssetEth(
   if (!assetAddress) return false;
   const tokenBridge = Bridge__factory.connect(tokenBridgeAddress, provider);
   return await tokenBridge.isWrappedAsset(assetAddress);
-}
-
-// TODO: this doesn't seem right
-export async function getIsWrappedAssetTerra(
-  tokenBridgeAddress: string,
-  client: LCDClient,
-  assetAddress: string
-): Promise<boolean> {
-  return false;
 }
 
 /**

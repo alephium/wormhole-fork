@@ -1,7 +1,4 @@
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import { ethers, Overrides } from "ethers";
-import { fromUint8Array } from "js-base64";
-import { CHAIN_ID_SOLANA } from "..";
 import { Bridge__factory } from "../ethers-contracts";
 
 export async function redeemOnEth(
@@ -14,16 +11,4 @@ export async function redeemOnEth(
   const v = await bridge.completeTransfer(signedVAA, overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function redeemOnTerra(
-  tokenBridgeAddress: string,
-  walletAddress: string,
-  signedVAA: Uint8Array
-): Promise<MsgExecuteContract> {
-  return new MsgExecuteContract(walletAddress, tokenBridgeAddress, {
-    submit_vaa: {
-      data: fromUint8Array(signedVAA),
-    },
-  });
 }

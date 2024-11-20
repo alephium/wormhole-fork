@@ -1,8 +1,6 @@
 import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
-import { fromUint8Array } from "js-base64";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { CreateRemoteTokenPool, CreateLocalTokenPool } from "../alephium-contracts/ts/scripts";
@@ -56,18 +54,6 @@ export async function createWrappedOnEth(
   const v = await bridge.createWrapped(signedVAA, overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function createWrappedOnTerra(
-  tokenBridgeAddress: string,
-  walletAddress: string,
-  signedVAA: Uint8Array
-): Promise<MsgExecuteContract> {
-  return new MsgExecuteContract(walletAddress, tokenBridgeAddress, {
-    submit_vaa: {
-      data: fromUint8Array(signedVAA),
-    },
-  });
 }
 
 export async function createWrappedOnAlgorand(

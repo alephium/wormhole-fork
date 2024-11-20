@@ -1,5 +1,4 @@
 import { ALPH_TOKEN_ID, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { MsgExecuteContract } from "@terra-money/terra.js";
 import {
   Algodv2,
   bigIntToBytes,
@@ -12,7 +11,6 @@ import {
   Transaction as AlgorandTransaction,
 } from "algosdk";
 import { BigNumber, ethers, Overrides, PayableOverrides } from "ethers";
-import { isNativeDenom } from "..";
 import { TransferLocal, TransferRemote } from "../alephium-contracts/ts/scripts";
 import {
   assetOptinCheck,
@@ -178,95 +176,6 @@ export async function transferFromEthNative(
   );
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function transferFromTerra(
-  walletAddress: string,
-  tokenBridgeAddress: string,
-  tokenAddress: string,
-  amount: string,
-  recipientChain: ChainId | ChainName,
-  recipientAddress: Uint8Array,
-  relayerFee: string = "0",
-  payload: Uint8Array | null = null
-) {
-  const recipientChainId = coalesceChainId(recipientChain);
-  const nonce = Math.round(Math.random() * 100000);
-  const isNativeAsset = isNativeDenom(tokenAddress);
-  const mk_initiate_transfer = (info: object) =>
-    payload
-      ? {
-          initiate_transfer_with_payload: {
-            asset: {
-              amount,
-              info,
-            },
-            recipient_chain: recipientChainId,
-            recipient: Buffer.from(recipientAddress).toString("base64"),
-            fee: relayerFee,
-            nonce: nonce,
-            payload: payload,
-          },
-        }
-      : {
-          initiate_transfer: {
-            asset: {
-              amount,
-              info,
-            },
-            recipient_chain: recipientChainId,
-            recipient: Buffer.from(recipientAddress).toString("base64"),
-            fee: relayerFee,
-            nonce: nonce,
-          },
-        };
-  return isNativeAsset
-    ? [
-        new MsgExecuteContract(
-          walletAddress,
-          tokenBridgeAddress,
-          {
-            deposit_tokens: {},
-          },
-          { [tokenAddress]: amount }
-        ),
-        new MsgExecuteContract(
-          walletAddress,
-          tokenBridgeAddress,
-          mk_initiate_transfer({
-            native_token: {
-              denom: tokenAddress,
-            },
-          }),
-          {}
-        ),
-      ]
-    : [
-        new MsgExecuteContract(
-          walletAddress,
-          tokenAddress,
-          {
-            increase_allowance: {
-              spender: tokenBridgeAddress,
-              amount: amount,
-              expires: {
-                never: {},
-              },
-            },
-          },
-          {}
-        ),
-        new MsgExecuteContract(
-          walletAddress,
-          tokenBridgeAddress,
-          mk_initiate_transfer({
-            token: {
-              contract_addr: tokenAddress,
-            },
-          }),
-          {}
-        ),
-      ];
 }
 
 /**

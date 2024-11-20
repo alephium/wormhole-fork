@@ -5,7 +5,6 @@ import {
   nativeStringToHexAlgorand,
   uint8ArrayToNativeStringAlgorand,
 } from "../algorand";
-import { canonicalAddress, humanAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
   ChainName,
@@ -65,12 +64,7 @@ export const tryUint8ArrayToNative = (
   } else if (chainId === CHAIN_ID_SOLANA) {
     throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
-    const h = uint8ArrayToHex(a);
-    if (isHexNativeTerra(h)) {
-      return nativeTerraHexToDenom(h);
-    } else {
-      return humanAddress(a.slice(-20)); // terra expects 20 bytes, not 32
-    }
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
     return uint8ArrayToNativeStringAlgorand(a);
   } else if (chainId === CHAIN_ID_NEAR) {
@@ -171,16 +165,7 @@ export const tryNativeToHexString = (
   } else if (chainId === CHAIN_ID_SOLANA) {
     throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
-    if (isNativeDenom(address)) {
-      return (
-        "01" +
-        uint8ArrayToHex(
-          zeroPad(new Uint8Array(Buffer.from(address, "ascii")), 31)
-        )
-      );
-    } else {
-      return uint8ArrayToHex(zeroPad(canonicalAddress(address), 32));
-    }
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
     return nativeStringToHexAlgorand(address);
   } else if (chainId === CHAIN_ID_NEAR) {
