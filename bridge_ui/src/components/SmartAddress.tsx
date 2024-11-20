@@ -14,7 +14,6 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
-  isNativeDenom,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALEPHIUM,
 } from "@alephium/wormhole-sdk";
@@ -27,7 +26,6 @@ import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from "../utils/consts";
 import { shortenAddress } from "../utils/solana";
-import { formatNativeDenom } from "../utils/terra";
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
 
@@ -92,16 +90,13 @@ export default function SmartAddress({
   const { t } = useTranslation();
   const classes = useStyles();
   const isNativeETH = chainId === CHAIN_ID_ETH && address?.toLowerCase() === WETH_ADDRESS.toLowerCase()
-  const isNativeTerra = chainId === CHAIN_ID_TERRA && isNativeDenom(address);
   const isNativeALPH = chainId === CHAIN_ID_ALEPHIUM && address === ALPH_TOKEN_ID
   const useableAddress = parsedTokenAccount?.mintKey || address || "";
-  const useableSymbol = isNativeTerra
-    ? formatNativeDenom(address)
-    : isNativeETH
+  const useableSymbol = isNativeETH
     ? 'ETH'
     : parsedTokenAccount?.symbol || symbol || "";
   // const useableLogo = logo || isNativeTerra ? getNativeTerraIcon(useableSymbol) : null
-  const isNative = parsedTokenAccount?.isNativeAsset || isNativeETH || isNativeTerra || isNativeALPH || false;
+  const isNative = parsedTokenAccount?.isNativeAsset || isNativeETH || isNativeALPH || false;
   const addressShort = shortenAddress(useableAddress) || "";
 
   const useableName = isNative

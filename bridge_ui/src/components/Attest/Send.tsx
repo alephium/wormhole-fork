@@ -1,4 +1,4 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, CHAIN_ID_TERRA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { Link, makeStyles } from "@material-ui/core";
 import { useCallback, useMemo, useState } from "react";
@@ -18,7 +18,6 @@ import KeyAndBalance from "../KeyAndBalance";
 import TransactionProgress from "../TransactionProgress";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 import { ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL, SOLANA_TOKEN_METADATA_PROGRAM_URL } from "../../utils/consts";
-import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import { createLocalTokenPool } from "../../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
 import { useSnackbar } from "notistack";
@@ -125,9 +124,6 @@ function Send() {
   return (
     <>
       <KeyAndBalance chainId={sourceChain} />
-      {sourceChain === CHAIN_ID_TERRA && (
-        <TerraFeeDenomPicker disabled={disabled} />
-      )}
       <ButtonWithLoader
         disabled={!isReady || disabled}
         onClick={handleClick}

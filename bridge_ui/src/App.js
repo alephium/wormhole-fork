@@ -1,9 +1,4 @@
 import {
-  CHAIN_ID_BSC,
-  CHAIN_ID_ETH,
-  CHAIN_ID_SOLANA,
-} from "@alephium/wormhole-sdk";
-import {
   AppBar,
   Container,
   Hidden,
@@ -29,9 +24,6 @@ import {
 import Attest from "./components/Attest";
 import Footer from "./components/Footer";
 import HeaderText from "./components/HeaderText";
-import Migration from "./components/Migration";
-import EvmQuickMigrate from "./components/Migration/EvmQuickMigrate";
-import SolanaQuickMigrate from "./components/Migration/SolanaQuickMigrate";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
 import CustodyAddresses from "./components/Stats/CustodyAddresses";
@@ -39,7 +31,6 @@ import TokenOriginVerifier from "./components/TokenOriginVerifier";
 import Transactions from "./components/Transactions";
 import Transfer from "./components/Transfer";
 import UnwrapNative from "./components/UnwrapNative";
-import WithdrawTokensTerra from "./components/WithdrawTokensTerra";
 import { useBetaContext } from "./contexts/BetaContext";
 import Alephium from "./icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
@@ -280,29 +271,8 @@ function App() {
         <Route exact path="/register">
           <Attest />
         </Route>
-        <Route exact path="/migrate/Solana/:legacyAsset/:fromTokenAccount">
-          <Migration chainId={CHAIN_ID_SOLANA} />
-        </Route>
-        <Route exact path="/migrate/Ethereum/:legacyAsset/">
-          <Migration chainId={CHAIN_ID_ETH} />
-        </Route>
-        <Route exact path="/migrate/BinanceSmartChain/:legacyAsset/">
-          <Migration chainId={CHAIN_ID_BSC} />
-        </Route>
-        <Route exact path="/migrate/Ethereum/">
-          <EvmQuickMigrate chainId={CHAIN_ID_ETH} />
-        </Route>
-        <Route exact path="/migrate/BinanceSmartChain/">
-          <EvmQuickMigrate chainId={CHAIN_ID_BSC} />
-        </Route>
-        <Route exact path="/migrate/Solana/">
-          <SolanaQuickMigrate />
-        </Route>
         <Route exact path="/stats">
           <Stats />
-        </Route>
-        <Route exact path="/withdraw-tokens-terra">
-          <WithdrawTokensTerra />
         </Route>
         <Route exact path="/unwrap-native">
           <UnwrapNative />

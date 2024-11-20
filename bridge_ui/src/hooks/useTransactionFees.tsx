@@ -18,7 +18,6 @@ import {
   TERRA_HOST,
 } from "../utils/consts";
 import { getMultipleAccountsRPC } from "../utils/solana";
-import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import useIsWalletReady from "./useIsWalletReady";
 import { LCDClient } from "@terra-money/terra.js";
 import { NodeProvider } from "@alephium/web3";
@@ -163,8 +162,6 @@ const toBalanceString = (balance: bigint | undefined, chainId: ChainId) => {
     return formatUnits(balance, 18); //wei decimals
   } else if (chainId === CHAIN_ID_SOLANA) {
     return formatUnits(balance, 9); //lamports to sol decmals
-  } else if (chainId === CHAIN_ID_TERRA) {
-    return formatUnits(balance, NATIVE_TERRA_DECIMALS);
   }
 };
 
@@ -343,13 +340,6 @@ function EthGasEstimateSummary({
   );
 }
 
-const terraEstimatesByContract = {
-  transfer: {
-    lowGasEstimate: BigInt(400000),
-    highGasEstimate: BigInt(700000),
-  },
-};
-
 export const evmEstimatesByContract = {
   transfer: {
     lowGasEstimate: BigInt(250000),
@@ -402,37 +392,6 @@ export async function getGasEstimates(
   return output;
 }
 
-function TerraGasEstimateSummary({ methodType }: { methodType: MethodType }) {
-  if (methodType === "transfer") {
-    const lowEstimate = formatUnits(
-      terraEstimatesByContract.transfer.lowGasEstimate,
-      NATIVE_TERRA_DECIMALS
-    );
-    const highEstimate = formatUnits(
-      terraEstimatesByContract.transfer.highGasEstimate,
-      NATIVE_TERRA_DECIMALS
-    );
-    return (
-      <Typography
-        component="div"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginTop: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          Est. Fees: {lowEstimate} - {highEstimate}
-          {" UST"}
-        </div>
-      </Typography>
-    );
-  } else {
-    return null;
-  }
-}
-
 export function GasEstimateSummary({
   methodType,
   chainId,
@@ -450,8 +409,6 @@ export function GasEstimateSummary({
         priceQuote={priceQuote}
       />
     );
-  } else if (chainId === CHAIN_ID_TERRA) {
-    return <TerraGasEstimateSummary methodType={methodType} />;
   } else {
     return null;
   }
