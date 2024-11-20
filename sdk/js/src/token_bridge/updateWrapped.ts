@@ -2,7 +2,6 @@ import { binToHex, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
 import { ethers, Overrides } from "ethers";
 import {
   createWrappedOnAlgorand,
-  createWrappedOnSolana,
   createWrappedOnTerra,
 } from ".";
 import { UpdateRemoteTokenPool } from "../alephium-contracts/ts/scripts";
@@ -34,7 +33,5 @@ export async function updateWrappedOnEth(
 }
 
 export const updateWrappedOnTerra = createWrappedOnTerra;
-
-export const updateWrappedOnSolana = createWrappedOnSolana;
 
 export const updateWrappedOnAlgorand = createWrappedOnAlgorand;

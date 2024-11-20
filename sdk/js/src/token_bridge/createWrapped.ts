@@ -1,13 +1,10 @@
 import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { ixFromRust } from "../solana";
-import { importTokenWasm } from "../solana/wasm";
 import { CreateRemoteTokenPool, CreateLocalTokenPool } from "../alephium-contracts/ts/scripts";
 
 export async function createRemoteTokenPoolOnAlph(
@@ -71,29 +68,6 @@ export async function createWrappedOnTerra(
       data: fromUint8Array(signedVAA),
     },
   });
-}
-
-export async function createWrappedOnSolana(
-  connection: Connection,
-  bridgeAddress: string,
-  tokenBridgeAddress: string,
-  payerAddress: string,
-  signedVAA: Uint8Array
-): Promise<Transaction> {
-  const { create_wrapped_ix } = await importTokenWasm();
-  const ix = ixFromRust(
-    create_wrapped_ix(
-      tokenBridgeAddress,
-      bridgeAddress,
-      payerAddress,
-      signedVAA
-    )
-  );
-  const transaction = new Transaction().add(ix);
-  const { blockhash } = await connection.getRecentBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = new PublicKey(payerAddress);
-  return transaction;
 }
 
 export async function createWrappedOnAlgorand(

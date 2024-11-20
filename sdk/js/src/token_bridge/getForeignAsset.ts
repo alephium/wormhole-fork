@@ -1,5 +1,4 @@
 import { binToHex, NodeProvider } from "@alephium/web3";
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2 } from "algosdk";
 import { ethers } from "ethers";
@@ -10,7 +9,6 @@ import {
   hexToNativeAssetBigIntAlgorand,
 } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { importTokenWasm } from "../solana/wasm";
 import {
   ChainId,
   ChainName,
@@ -80,33 +78,6 @@ export async function getForeignAssetTerra(
   } catch (e) {
     return null;
   }
-}
-
-/**
- * Returns a foreign asset address on Solana for a provided native chain and asset address
- * @param connection
- * @param tokenBridgeAddress
- * @param originChain
- * @param originAsset zero pad to 32 bytes
- * @returns
- */
-export async function getForeignAssetSolana(
-  connection: Connection,
-  tokenBridgeAddress: string,
-  originChain: ChainId | ChainName,
-  originAsset: Uint8Array
-): Promise<string | null> {
-  const { wrapped_address } = await importTokenWasm();
-  const wrappedAddress = wrapped_address(
-    tokenBridgeAddress,
-    originAsset,
-    coalesceChainId(originChain)
-  );
-  const wrappedAddressPK = new PublicKey(wrappedAddress);
-  const wrappedAssetAccountInfo = await connection.getAccountInfo(
-    wrappedAddressPK
-  );
-  return wrappedAssetAccountInfo ? wrappedAddressPK.toString() : null;
 }
 
 export async function getForeignAssetAlgorand(

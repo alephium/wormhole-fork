@@ -1,4 +1,3 @@
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { Algodv2, bigIntToBytes } from "algosdk";
 import axios from "axios";
@@ -15,7 +14,6 @@ import {
 } from "../algorand";
 import { getSignedVAAHash } from "../bridge";
 import { Bridge__factory } from "../ethers-contracts";
-import { importCoreWasm } from "../solana/wasm";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { zeroPad } from "./alephium";
 import { TokenBridgeForChain } from "../alephium-contracts/ts/TokenBridgeForChain";
@@ -130,20 +128,6 @@ export async function getIsTransferCompletedTerra(
     return e.response.data.message.includes("VaaAlreadyExecuted");
   }
   return false;
-}
-
-export async function getIsTransferCompletedSolana(
-  tokenBridgeAddress: string,
-  signedVAA: Uint8Array,
-  connection: Connection
-): Promise<boolean> {
-  const { claim_address } = await importCoreWasm();
-  const claimAddress = await claim_address(tokenBridgeAddress, signedVAA);
-  const claimInfo = await connection.getAccountInfo(
-    new PublicKey(claimAddress),
-    "confirmed"
-  );
-  return !!claimInfo;
 }
 
 // Algorand

@@ -1,5 +1,4 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
-import { PublicKey } from "@solana/web3.js";
 import { hexValue, hexZeroPad, stripZeros } from "ethers/lib/utils";
 import {
   hexToNativeAssetStringAlgorand,
@@ -13,11 +12,11 @@ import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   CHAIN_ID_UNSET,
   coalesceChainId,
   isEVMChain,
+  CHAIN_ID_SOLANA,
 } from "./consts";
 
 /**
@@ -64,7 +63,7 @@ export const tryUint8ArrayToNative = (
   if (isEVMChain(chainId)) {
     return hexZeroPad(hexValue(a), 20);
   } else if (chainId === CHAIN_ID_SOLANA) {
-    return new PublicKey(a).toString();
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
     const h = uint8ArrayToHex(a);
     if (isHexNativeTerra(h)) {
@@ -170,7 +169,7 @@ export const tryNativeToHexString = (
   if (isEVMChain(chainId)) {
     return uint8ArrayToHex(zeroPad(arrayify(address), 32));
   } else if (chainId === CHAIN_ID_SOLANA) {
-    return uint8ArrayToHex(zeroPad(new PublicKey(address).toBytes(), 32));
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
     if (isNativeDenom(address)) {
       return (

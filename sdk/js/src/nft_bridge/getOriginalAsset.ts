@@ -1,10 +1,8 @@
-import { Connection, PublicKey } from "@solana/web3.js";
 import { LCDClient } from "@terra-money/terra.js";
 import { BigNumber, ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { canonicalAddress, WormholeWrappedInfo } from "..";
 import { TokenImplementation__factory } from "../ethers-contracts";
-import { importNftWasm } from "../solana/wasm";
 import {
   ChainId,
   ChainName,
@@ -63,59 +61,6 @@ export async function getOriginalAssetEth(
     chainId: coalesceChainId(lookupChain),
     assetAddress: zeroPad(arrayify(wrappedAddress), 32),
     tokenId,
-  };
-}
-
-/**
- * Returns a origin chain and asset address on {originChain} for a provided Wormhole wrapped address
- * @param connection
- * @param tokenBridgeAddress
- * @param mintAddress
- * @returns
- */
-export async function getOriginalAssetSol(
-  connection: Connection,
-  tokenBridgeAddress: string,
-  mintAddress: string
-): Promise<WormholeWrappedNFTInfo> {
-  if (mintAddress) {
-    // TODO: share some of this with getIsWrappedAssetSol, like a getWrappedMetaAccountAddress or something
-    const { parse_wrapped_meta, wrapped_meta_address } = await importNftWasm();
-    const wrappedMetaAddress = wrapped_meta_address(
-      tokenBridgeAddress,
-      new PublicKey(mintAddress).toBytes()
-    );
-    const wrappedMetaAddressPK = new PublicKey(wrappedMetaAddress);
-    const wrappedMetaAccountInfo = await connection.getAccountInfo(
-      wrappedMetaAddressPK
-    );
-    if (wrappedMetaAccountInfo) {
-      const parsed = parse_wrapped_meta(wrappedMetaAccountInfo.data);
-      const token_id_arr = parsed.token_id as BigUint64Array;
-      const token_id_bytes = [];
-      for (let elem of token_id_arr.reverse()) {
-        token_id_bytes.push(...bigToUint8Array(elem));
-      }
-      const token_id = BigNumber.from(token_id_bytes).toString();
-      return {
-        isWrapped: true,
-        chainId: parsed.chain,
-        assetAddress: parsed.token_address,
-        tokenId: token_id,
-      };
-    }
-  }
-  try {
-    return {
-      isWrapped: false,
-      chainId: CHAIN_ID_SOLANA,
-      assetAddress: new PublicKey(mintAddress).toBytes(),
-    };
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_SOLANA,
-    assetAddress: new Uint8Array(32),
   };
 }
 

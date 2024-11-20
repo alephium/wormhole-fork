@@ -1,4 +1,3 @@
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 import {
   Algodv2,
@@ -14,8 +13,6 @@ import { ethers, PayableOverrides } from "ethers";
 import { isNativeDenom } from "..";
 import { getMessageFee, optin, TransactionSignerPair } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import { getBridgeFeeIx, ixFromRust } from "../solana";
-import { importTokenWasm } from "../solana/wasm";
 import { textToHexString, textToUint8Array, uint8ArrayToHex, utf8StringTo32Bytes } from "../utils";
 import { safeBigIntToNumber } from "../utils/bigint";
 import { createNonce } from "../utils/createNonce";
@@ -91,39 +88,6 @@ export async function attestFromTerra(
       nonce: nonce,
     },
   });
-}
-
-export async function attestFromSolana(
-  connection: Connection,
-  bridgeAddress: string,
-  tokenBridgeAddress: string,
-  payerAddress: string,
-  mintAddress: string
-): Promise<Transaction> {
-  const nonce = createNonce().readUInt32LE(0);
-  const transferIx = await getBridgeFeeIx(
-    connection,
-    bridgeAddress,
-    payerAddress
-  );
-  const { attest_ix } = await importTokenWasm();
-  const messageKey = Keypair.generate();
-  const ix = ixFromRust(
-    attest_ix(
-      tokenBridgeAddress,
-      bridgeAddress,
-      payerAddress,
-      messageKey.publicKey.toString(),
-      mintAddress,
-      nonce
-    )
-  );
-  const transaction = new Transaction().add(transferIx, ix);
-  const { blockhash } = await connection.getRecentBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = new PublicKey(payerAddress);
-  transaction.partialSign(messageKey);
-  return transaction;
 }
 
 /**
