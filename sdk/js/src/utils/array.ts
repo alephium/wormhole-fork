@@ -1,11 +1,6 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
 import { hexValue, hexZeroPad, stripZeros } from "ethers/lib/utils";
 import {
-  hexToNativeAssetStringAlgorand,
-  nativeStringToHexAlgorand,
-  uint8ArrayToNativeStringAlgorand,
-} from "../algorand";
-import {
   ChainId,
   ChainName,
   CHAIN_ID_ALEPHIUM,
@@ -66,7 +61,7 @@ export const tryUint8ArrayToNative = (
   } else if (chainId === CHAIN_ID_TERRA) {
     throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
-    return uint8ArrayToNativeStringAlgorand(a);
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("uint8ArrayToNative: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {
@@ -87,11 +82,12 @@ export const tryUint8ArrayToNative = (
  *
  * @throws if address is not the right length for the given chain
  */
-export const tryHexToNativeAssetString = (h: string, c: ChainId): string =>
-  c === CHAIN_ID_ALGORAND
-    ? // Algorand assets are represented by their asset ids, not an address
-      hexToNativeAssetStringAlgorand(h)
-    : tryHexToNativeString(h, c);
+export const tryHexToNativeAssetString = (h: string, c: ChainId): string => {
+  if (c === CHAIN_ID_ALGORAND) {
+    throw new Error(`Not supported`)
+  }
+  return tryHexToNativeString(h, c);
+}
 
 /**
  *
@@ -167,7 +163,7 @@ export const tryNativeToHexString = (
   } else if (chainId === CHAIN_ID_TERRA) {
     throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
-    return nativeStringToHexAlgorand(address);
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("hexToNativeString: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {

@@ -1,7 +1,5 @@
 import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
-import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { CreateRemoteTokenPool, CreateLocalTokenPool } from "../alephium-contracts/ts/scripts";
 
@@ -54,20 +52,4 @@ export async function createWrappedOnEth(
   const v = await bridge.createWrapped(signedVAA, overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-export async function createWrappedOnAlgorand(
-  client: Algodv2,
-  tokenBridgeId: bigint,
-  bridgeId: bigint,
-  senderAddr: string,
-  attestVAA: Uint8Array
-): Promise<TransactionSignerPair[]> {
-  return await _submitVAAAlgorand(
-    client,
-    tokenBridgeId,
-    bridgeId,
-    attestVAA,
-    senderAddr
-  );
 }

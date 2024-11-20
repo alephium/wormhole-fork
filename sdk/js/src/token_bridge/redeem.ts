@@ -1,13 +1,10 @@
 import { binToHex, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
-import { Algodv2 } from "algosdk";
 import { ethers, Overrides } from "ethers";
-import { fromUint8Array } from "js-base64";
 import { CompleteTransfer, CompleteTransferWithReward } from "../alephium-contracts/ts/scripts";
-import { TransactionSignerPair, _submitVAAAlgorand } from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
 import { CHAIN_ID_BSC, CHAIN_ID_ALEPHIUM } from "../utils";
-import { hexToNativeString, tryUint8ArrayToNative, uint8ArrayToHex } from "../utils/array";
-import { deserializeTransferTokenVAA, TransferToken, VAA } from "../utils/vaa";
+import { tryUint8ArrayToNative } from "../utils/array";
+import { TransferToken, VAA } from "../utils/vaa";
 
 export async function redeemOnAlphWithReward(
   signerProvider: SignerProvider,
@@ -87,29 +84,4 @@ export async function redeemOnEthNative(
   const v = await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
   const receipt = await v.wait();
   return receipt;
-}
-
-/**
- * This basically just submits the VAA to Algorand
- * @param client AlgodV2 client
- * @param tokenBridgeId Token bridge ID
- * @param bridgeId Core bridge ID
- * @param vaa The VAA to be redeemed
- * @param acct Sending account
- * @returns Transaction ID(s)
- */
-export async function redeemOnAlgorand(
-  client: Algodv2,
-  tokenBridgeId: bigint,
-  bridgeId: bigint,
-  vaa: Uint8Array,
-  senderAddr: string
-): Promise<TransactionSignerPair[]> {
-  return await _submitVAAAlgorand(
-    client,
-    tokenBridgeId,
-    bridgeId,
-    vaa,
-    senderAddr
-  );
 }

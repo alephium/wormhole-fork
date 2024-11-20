@@ -69,24 +69,3 @@ export function parseSequencesFromLogEth(
     return sequence.toString();
   });
 }
-
-export function parseSequenceFromLogAlgorand(
-  result: Record<string, any>
-): string {
-  let sequence = "";
-  if (result["inner-txns"]) {
-    const innerTxns: [] = result["inner-txns"];
-    class iTxn {
-      "local-state-delta": [[Object]];
-      logs: Buffer[] | undefined;
-      "pool-eror": string;
-      txn: { txn: [Object] } | undefined;
-    }
-    innerTxns.forEach((txn: iTxn) => {
-      if (txn.logs) {
-        sequence = BigNumber.from(txn.logs[0].slice(0, 8)).toString();
-      }
-    });
-  }
-  return sequence;
-}

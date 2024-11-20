@@ -1,18 +1,7 @@
 import { binToHex, NodeProvider } from "@alephium/web3";
-import { Algodv2 } from "algosdk";
 import { ethers } from "ethers";
-import {
-  calcLogicSigAccount,
-  decodeLocalState,
-  hexToNativeAssetBigIntAlgorand,
-} from "../algorand";
 import { Bridge__factory } from "../ethers-contracts";
-import {
-  ChainId,
-  ChainName,
-  CHAIN_ID_ALGORAND,
-  coalesceChainId,
-} from "../utils";
+import { ChainId, ChainName, coalesceChainId } from "../utils";
 import { contractExists, getTokenPoolId } from "./alephium";
 
 export async function getForeignAssetAlephium(
@@ -53,36 +42,5 @@ export async function getForeignAssetEth(
     );
   } catch (e) {
     return null;
-  }
-}
-
-export async function getForeignAssetAlgorand(
-  client: Algodv2,
-  tokenBridgeId: bigint,
-  chain: ChainId | ChainName,
-  contract: string
-): Promise<bigint | null> {
-  const chainId = coalesceChainId(chain);
-  if (chainId === CHAIN_ID_ALGORAND) {
-    return hexToNativeAssetBigIntAlgorand(contract);
-  } else {
-    let { lsa, doesExist } = await calcLogicSigAccount(
-      client,
-      tokenBridgeId,
-      BigInt(chainId),
-      contract
-    );
-    if (!doesExist) {
-      return null;
-    }
-    let asset: Uint8Array = await decodeLocalState(
-      client,
-      tokenBridgeId,
-      lsa.address()
-    );
-    if (asset.length > 8) {
-      const tmp = Buffer.from(asset.slice(0, 8));
-      return tmp.readBigUInt64BE(0);
-    } else return null;
   }
 }
