@@ -32,7 +32,6 @@ import AlgoTokenPicker from "./AlgoTokenPicker";
 import EvmTokenPicker from "./EvmTokenPicker";
 import RefreshButtonWrapper from "./RefreshButtonWrapper";
 import SolanaTokenPicker from "./SolanaTokenPicker";
-import TerraTokenPicker from "./TerraTokenPicker";
 
 type TokenSelectorProps = {
   disabled: boolean;
@@ -111,14 +110,6 @@ export const TokenSelector = (props: TokenSelectorProps) => {
       resetAccounts={maps?.resetAccounts}
       chainId={lookupChain}
       nft={nft}
-    />
-  ) : lookupChain === CHAIN_ID_TERRA ? (
-    <TerraTokenPicker
-      value={sourceParsedTokenAccount || null}
-      disabled={disabled}
-      onChange={handleOnChange}
-      resetAccounts={maps?.resetAccounts}
-      tokenAccounts={maps?.tokenAccounts}
     />
   ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
     <AlephiumTokenPicker

@@ -2,25 +2,15 @@ import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ACALA,
-  CHAIN_ID_ALGORAND,
   CHAIN_ID_KARURA,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  getEmitterAddressAlgorand,
   getEmitterAddressEth,
-  getEmitterAddressSolana,
-  getEmitterAddressTerra,
   hexToNativeAssetString,
   hexToNativeString,
   hexToUint8Array,
   isEVMChain,
-  parseSequenceFromLogAlgorand,
   parseSequenceFromLogEth,
-  parseSequenceFromLogSolana,
-  parseSequenceFromLogTerra,
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
-  CHAIN_ID_UNSET,
   TransferToken,
   TransferNFT,
   deserializeTransferTokenVAA,
@@ -41,9 +31,6 @@ import {
 } from "@material-ui/core";
 import { ExpandMore } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import algosdk from "algosdk";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
@@ -61,8 +48,6 @@ import { getAlphTxInfoByTxId } from "../utils/alephium";
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
@@ -70,11 +55,6 @@ import {
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
   RELAY_URL_EXTENSION,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_HOST,
-  TERRA_TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_RPC_HOSTS
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
@@ -105,52 +85,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
 }));
-
-async function algo(tx: string, enqueueSnackbar: any) {
-  try {
-    const algodClient = new algosdk.Algodv2(
-      ALGORAND_HOST.algodToken,
-      ALGORAND_HOST.algodServer,
-      ALGORAND_HOST.algodPort
-    );
-    const pendingInfo = await algodClient
-      .pendingTransactionInformation(tx)
-      .do();
-    let confirmedTxInfo: Record<string, any> | undefined = undefined;
-    // This is the code from waitForConfirmation
-    if (pendingInfo !== undefined) {
-      if (
-        pendingInfo["confirmed-round"] !== null &&
-        pendingInfo["confirmed-round"] > 0
-      ) {
-        //Got the completed Transaction
-        confirmedTxInfo = pendingInfo;
-      }
-    }
-    if (!confirmedTxInfo) {
-      throw new Error(i18n.t("Transaction not found or not confirmed"));
-    }
-    const sequence = parseSequenceFromLogAlgorand(confirmedTxInfo);
-    if (!sequence) {
-      throw new Error(i18n.t("Sequence not found"));
-    }
-    const emitterAddress = getEmitterAddressAlgorand(ALGORAND_TOKEN_BRIDGE_ID);
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      CHAIN_ID_ALGORAND,
-      emitterAddress,
-      CHAIN_ID_UNSET,
-      sequence,
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
 
 async function evm(
   provider: ethers.providers.Web3Provider,
@@ -183,62 +117,6 @@ async function evm(
       emitterAddress,
       targetChain,
       sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
-
-async function solana(tx: string, enqueueSnackbar: any, nft: boolean) {
-  try {
-    const connection = new Connection(SOLANA_HOST, "confirmed");
-    const info = await connection.getTransaction(tx);
-    if (!info) {
-      throw new Error(i18n.t("An error occurred while fetching the transaction info"));
-    }
-    const sequence = parseSequenceFromLogSolana(info);
-    const emitterAddress = await getEmitterAddressSolana(
-      nft ? SOL_NFT_BRIDGE_ADDRESS : SOL_TOKEN_BRIDGE_ADDRESS
-    );
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      CHAIN_ID_SOLANA,
-      emitterAddress,
-      CHAIN_ID_UNSET,
-      sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
-
-async function terra(tx: string, enqueueSnackbar: any) {
-  try {
-    const lcd = new LCDClient(TERRA_HOST);
-    const info = await lcd.tx.txInfo(tx);
-    const sequence = parseSequenceFromLogTerra(info);
-    if (!sequence) {
-      throw new Error(i18n.t("Sequence not found"));
-    }
-    const emitterAddress = await getEmitterAddressTerra(
-      TERRA_TOKEN_BRIDGE_ADDRESS
-    );
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      CHAIN_ID_TERRA,
-      emitterAddress,
-      CHAIN_ID_UNSET,
-      sequence,
       WORMHOLE_RPC_HOSTS.length
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
@@ -501,40 +379,6 @@ export default function Recovery() {
             }
           }
         })();
-      } else if (recoverySourceChain === CHAIN_ID_SOLANA) {
-        setRecoverySourceTxError("");
-        setRecoverySourceTxIsLoading(true);
-        (async () => {
-          const { vaa, error } = await solana(
-            recoverySourceTx,
-            enqueueSnackbar,
-            isNFT
-          );
-          if (!cancelled) {
-            setRecoverySourceTxIsLoading(false);
-            if (vaa) {
-              setRecoverySignedVAA(vaa);
-            }
-            if (error) {
-              setRecoverySourceTxError(error);
-            }
-          }
-        })();
-      } else if (recoverySourceChain === CHAIN_ID_TERRA) {
-        setRecoverySourceTxError("");
-        setRecoverySourceTxIsLoading(true);
-        (async () => {
-          const { vaa, error } = await terra(recoverySourceTx, enqueueSnackbar);
-          if (!cancelled) {
-            setRecoverySourceTxIsLoading(false);
-            if (vaa) {
-              setRecoverySignedVAA(vaa);
-            }
-            if (error) {
-              setRecoverySourceTxError(error);
-            }
-          }
-        })();
       } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && isReady) {
         setRecoverySourceTxError("");
         setRecoverySourceTxIsLoading(true);
@@ -550,21 +394,6 @@ export default function Recovery() {
             }
           }
         })(alphWallet.nodeProvider);
-      } else if (recoverySourceChain === CHAIN_ID_ALGORAND) {
-        setRecoverySourceTxError("");
-        setRecoverySourceTxIsLoading(true);
-        (async () => {
-          const { vaa, error } = await algo(recoverySourceTx, enqueueSnackbar);
-          if (!cancelled) {
-            setRecoverySourceTxIsLoading(false);
-            if (vaa) {
-              setRecoverySignedVAA(vaa);
-            }
-            if (error) {
-              setRecoverySourceTxError(error);
-            }
-          }
-        })();
       }
       return () => {
         cancelled = true;

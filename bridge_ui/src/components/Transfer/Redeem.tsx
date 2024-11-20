@@ -13,7 +13,6 @@ import {
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   isEVMChain,
   WSOL_ADDRESS,
 } from "@alephium/wormhole-sdk";
@@ -61,7 +60,6 @@ import SmartAddress from "../SmartAddress";
 import { SolanaCreateAssociatedAddressAlternate } from "../SolanaCreateAssociatedAddress";
 import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
-import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import AddToMetamask from "./AddToMetamask";
 import RedeemPreview from "./RedeemPreview";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
@@ -253,9 +251,6 @@ function Redeem() {
   const nonRelayContent = (
     <>
       <KeyAndBalance chainId={targetChain} />
-      {targetChain === CHAIN_ID_TERRA && (
-        <TerraFeeDenomPicker disabled={disabled} />
-      )}
       {isNativeEligible && (
         <FormControlLabel
           control={

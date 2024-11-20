@@ -1,4 +1,3 @@
-import { CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -12,7 +11,6 @@ import {
 } from "../../store/selectors";
 import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
-import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 
 const useStyles = makeStyles((theme) => ({
@@ -47,9 +45,6 @@ function Create() {
   return (
     <>
       <KeyAndBalance chainId={targetChain} />
-      {targetChain === CHAIN_ID_TERRA && (
-        <TerraFeeDenomPicker disabled={disabled} />
-      )}
       {foreignAssetInfo.isFetching ? (
         <>
           <div className={classes.spacer} />

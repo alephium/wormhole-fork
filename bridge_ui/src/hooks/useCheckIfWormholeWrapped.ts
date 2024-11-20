@@ -1,13 +1,7 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  getOriginalAssetAlgorand,
   getOriginalAssetEth,
-  getOriginalAssetSol,
-  getOriginalAssetTerra,
   isEVMChain,
   uint8ArrayToHex,
   WormholeWrappedInfo,
@@ -15,10 +9,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
-  getOriginalAssetSol as getOriginalAssetSolNFT,
 } from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -34,18 +25,11 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   getNFTBridgeAddressForChain,
-  getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_HOST,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import { NodeProvider } from '@alephium/web3'
 import { getAlephiumTokenWrappedInfo } from "../utils/alephium";
-import { Algodv2 } from "algosdk";
 import { errorDataWrapper, fetchDataWrapper, receiveDataWrapper } from "../store/helpers";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
@@ -148,48 +132,6 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
           }
         }
       }
-      if (sourceChain === CHAIN_ID_SOLANA && sourceAsset) {
-        try {
-          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
-          const connection = new Connection(SOLANA_HOST, "confirmed");
-          const wrappedInfo = makeStateSafe(
-            await (nft
-              ? getOriginalAssetSolNFT(
-                  connection,
-                  SOL_NFT_BRIDGE_ADDRESS,
-                  sourceAsset
-                )
-              : getOriginalAssetSol(
-                  connection,
-                  SOL_TOKEN_BRIDGE_ADDRESS,
-                  sourceAsset
-                ))
-          );
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from solana')}, ${t('Error')}: ${e}`)));
-          }
-        }
-      }
-      if (sourceChain === CHAIN_ID_TERRA && sourceAsset) {
-        try {
-          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
-          const lcd = new LCDClient(TERRA_HOST);
-          const wrappedInfo = makeStateSafe(
-            await getOriginalAssetTerra(lcd, sourceAsset)
-          );
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from terra')}, ${t('Error')}: ${e}`)));
-          }
-        }
-      }
       if (sourceChain === CHAIN_ID_ALEPHIUM && sourceAsset && alphWallet?.nodeProvider !== undefined) {
         try {
           dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
@@ -200,30 +142,6 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
         } catch (e) {
           if (!cancelled) {
             dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from alephium')}, ${t('Error')}: ${e}`)));
-          }
-        }
-      }
-      if (sourceChain === CHAIN_ID_ALGORAND && sourceAsset) {
-        try {
-          dispatch(setSourceWormholeWrappedInfo(fetchDataWrapper()));
-          const algodClient = new Algodv2(
-            ALGORAND_HOST.algodToken,
-            ALGORAND_HOST.algodServer,
-            ALGORAND_HOST.algodPort
-          );
-          const wrappedInfo = makeStateSafe(
-            await getOriginalAssetAlgorand(
-              algodClient,
-              ALGORAND_TOKEN_BRIDGE_ID,
-              BigInt(sourceAsset)
-            )
-          );
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(receiveDataWrapper(wrappedInfo)));
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(setSourceWormholeWrappedInfo(errorDataWrapper(`${t('Failed to get source asset info from algorand')}, ${t('Error')}: ${e}`)));
           }
         }
       }

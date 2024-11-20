@@ -1,27 +1,13 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   getForeignAssetAlephium,
-  getForeignAssetAlgorand,
   getForeignAssetEth,
-  getForeignAssetSolana,
-  getForeignAssetTerra,
   hexToNativeAssetString,
   hexToUint8Array,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import {
-  getForeignAssetEth as getForeignAssetEthNFT,
-  getForeignAssetSol as getForeignAssetSolNFT,
-} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
-import { BigNumber } from "@ethersproject/bignumber";
-import { arrayify } from "@ethersproject/bytes";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import algosdk from "algosdk";
+import { getForeignAssetEth as getForeignAssetEthNFT } from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,16 +33,9 @@ import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice
 import {
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_HOST,
-  TERRA_TOKEN_BRIDGE_ADDRESS,
 } from "../utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
@@ -189,73 +168,6 @@ function useFetchTargetAsset(nft?: boolean) {
           }
         }
       }
-      if (targetChain === CHAIN_ID_SOLANA && originChain && originAsset) {
-        dispatch(setTargetAsset(fetchDataWrapper()));
-        try {
-          const connection = new Connection(SOLANA_HOST, "confirmed");
-          const asset = await (nft
-            ? getForeignAssetSolNFT(
-                SOL_NFT_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset),
-                arrayify(BigNumber.from(tokenId || "0"))
-              )
-            : getForeignAssetSolana(
-                connection,
-                SOL_TOKEN_BRIDGE_ADDRESS,
-                originChain,
-                hexToUint8Array(originAsset)
-              ));
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                receiveDataWrapper({ doesExist: !!asset, address: asset })
-              )
-            );
-            setArgs();
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                errorDataWrapper(
-                  t("Unable to determine existence of wrapped asset")
-                )
-              )
-            );
-          }
-        }
-      }
-      if (targetChain === CHAIN_ID_TERRA && originChain && originAsset) {
-        dispatch(setTargetAsset(fetchDataWrapper()));
-        try {
-          const lcd = new LCDClient(TERRA_HOST);
-          const asset = await getForeignAssetTerra(
-            TERRA_TOKEN_BRIDGE_ADDRESS,
-            lcd,
-            originChain,
-            hexToUint8Array(originAsset)
-          );
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                receiveDataWrapper({ doesExist: !!asset, address: asset })
-              )
-            );
-            setArgs();
-          }
-        } catch (e) {
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                errorDataWrapper(
-                  t("Unable to determine existence of wrapped asset")
-                )
-              )
-            );
-          }
-        }
-      }
       if (targetChain === CHAIN_ID_ALEPHIUM && originChain && originAsset && alphWallet?.nodeProvider !== undefined) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
@@ -281,45 +193,6 @@ function useFetchTargetAsset(nft?: boolean) {
                 errorDataWrapper(t("Failed to get token wrapper contract id") + " " + e)
               )
             )
-          }
-        }
-      }
-      if (targetChain === CHAIN_ID_ALGORAND && originChain && originAsset) {
-        dispatch(setTargetAsset(fetchDataWrapper()));
-        try {
-          const algodClient = new algosdk.Algodv2(
-            ALGORAND_HOST.algodToken,
-            ALGORAND_HOST.algodServer,
-            ALGORAND_HOST.algodPort
-          );
-          const asset = await getForeignAssetAlgorand(
-            algodClient,
-            ALGORAND_TOKEN_BRIDGE_ID,
-            originChain,
-            originAsset
-          );
-          console.log("foreign asset algo:", asset);
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                receiveDataWrapper({
-                  doesExist: !!asset,
-                  address: asset === null ? asset : asset.toString(),
-                })
-              )
-            );
-            setArgs();
-          }
-        } catch (e) {
-          console.error(e);
-          if (!cancelled) {
-            dispatch(
-              setTargetAsset(
-                errorDataWrapper(
-                  t("Unable to determine existence of wrapped asset")
-                )
-              )
-            );
           }
         }
       }

@@ -1,8 +1,4 @@
-import {
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  isEVMChain,
-} from "@alephium/wormhole-sdk";
+import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
 import { Checkbox, FormControlLabel } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { ethers } from "ethers";
@@ -30,7 +26,6 @@ import KeyAndBalance from "../KeyAndBalance";
 import ShowTx from "../ShowTx";
 import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
-import TerraFeeDenomPicker from "../TerraFeeDenomPicker";
 import TransactionProgress from "../TransactionProgress";
 import SendConfirmationDialog from "./SendConfirmationDialog";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
@@ -158,9 +153,6 @@ function Send() {
         {t("Transfer the tokens to the Alephium Bridge.")}
       </StepDescription>
       <KeyAndBalance chainId={sourceChain} />
-      {sourceChain === CHAIN_ID_TERRA && (
-        <TerraFeeDenomPicker disabled={disabled} />
-      )}
       <Alert severity="info" variant="outlined">
         {t("This will initiate the transfer on {{ chainName }} and wait for finalization. If you navigate away from this page before completing Step 4, you will have to perform the recovery workflow to complete the transfer.", { chainName: CHAINS_BY_ID[sourceChain].name })}
       </Alert>

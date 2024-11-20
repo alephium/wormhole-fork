@@ -12,11 +12,7 @@ import {
   isEVMChain,
   uint8ArrayToHex,
 } from "@alephium/wormhole-sdk";
-import {
-  getOriginalAssetEth,
-  getOriginalAssetSol,
-  WormholeWrappedNFTInfo,
-} from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
+import { getOriginalAssetEth, WormholeWrappedNFTInfo } from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import {
   Button,
   Card,
@@ -29,21 +25,17 @@ import {
 } from "@material-ui/core";
 import { Launch } from "@material-ui/icons";
 import { Alert } from "@material-ui/lab";
-import { Connection } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
-import { getMetaplexData } from "../hooks/useMetaplexData";
 import { COLORS } from "../muiTheme";
 import { NFTParsedTokenAccount } from "../store/nftSlice";
 import {
   BETA_CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
-  getNFTBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_NFT_BRIDGE_ADDRESS,
+  getNFTBridgeAddressForChain
 } from "../utils/consts";
 import {
   ethNFTToNFTParsedTokenAccount,
@@ -156,45 +148,6 @@ export default function NFTOriginVerifier() {
       } else {
         setLookupError("Invalid address");
       }
-    } else if (lookupChain === CHAIN_ID_SOLANA && lookupAsset) {
-      (async () => {
-        try {
-          setIsLoading(true);
-          const [metadata] = await getMetaplexData([lookupAsset]);
-          if (metadata) {
-            const connection = new Connection(SOLANA_HOST, "confirmed");
-            const info = await getOriginalAssetSol(
-              connection,
-              SOL_NFT_BRIDGE_ADDRESS,
-              lookupAsset
-            );
-            if (!cancelled) {
-              setIsLoading(false);
-              setParsedTokenAccount({
-                amount: "0",
-                decimals: 0,
-                mintKey: lookupAsset,
-                publicKey: "",
-                uiAmount: 0,
-                uiAmountString: "0",
-                uri: metadata.data.uri,
-              });
-              setOriginInfo(info);
-            }
-          } else {
-            if (!cancelled) {
-              setIsLoading(false);
-              setLookupError("Error fetching metadata");
-            }
-          }
-        } catch (e) {
-          console.error(e);
-          if (!cancelled) {
-            setIsLoading(false);
-            setLookupError("Invalid token");
-          }
-        }
-      })();
     }
     return () => {
       cancelled = true;

@@ -1,13 +1,8 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  getOriginalAssetAlgorand,
   getOriginalAssetEth,
-  getOriginalAssetSol,
-  getOriginalAssetTerra,
   hexToNativeAssetString,
   isEVMChain,
   uint8ArrayToHex,
@@ -15,13 +10,9 @@ import {
 } from "@alephium/wormhole-sdk";
 import {
   getOriginalAssetEth as getOriginalAssetEthNFT,
-  getOriginalAssetSol as getOriginalAssetSolNFT,
   WormholeWrappedNFTInfo,
 } from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
 import { Web3Provider } from "@ethersproject/providers";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import { Algodv2 } from "algosdk";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -30,15 +21,9 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOLANA_SYSTEM_PROGRAM_ADDRESS,
-  SOL_NFT_BRIDGE_ADDRESS,
-  SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_HOST,
+  SOLANA_SYSTEM_PROGRAM_ADDRESS
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
@@ -68,30 +53,9 @@ export async function getOriginalAssetToken(
         foreignNativeStringAddress,
         foreignChain
       );
-    } else if (foreignChain === CHAIN_ID_SOLANA) {
-      const connection = new Connection(SOLANA_HOST, "confirmed");
-      promise = await getOriginalAssetSol(
-        connection,
-        SOL_TOKEN_BRIDGE_ADDRESS,
-        foreignNativeStringAddress
-      );
-    } else if (foreignChain === CHAIN_ID_TERRA) {
-      const lcd = new LCDClient(TERRA_HOST);
-      promise = await getOriginalAssetTerra(lcd, foreignNativeStringAddress);
     } else if (foreignChain === CHAIN_ID_ALEPHIUM && alphNodeProvider) {
       const tokenId = tryGetContractId(foreignNativeStringAddress)
       promise = await getAlephiumTokenWrappedInfo(tokenId, alphNodeProvider)
-    } else if (foreignChain === CHAIN_ID_ALGORAND) {
-      const algodClient = new Algodv2(
-        ALGORAND_HOST.algodToken,
-        ALGORAND_HOST.algodServer,
-        ALGORAND_HOST.algodPort
-      );
-      promise = await getOriginalAssetAlgorand(
-        algodClient,
-        ALGORAND_TOKEN_BRIDGE_ID,
-        BigInt(foreignNativeStringAddress)
-      );
     }
   } catch (e) {
     promise = Promise.reject(i18n.t("Invalid foreign arguments."));
@@ -117,13 +81,6 @@ export async function getOriginalAssetNFT(
         foreignNativeStringAddress,
         tokenId,
         foreignChain
-      );
-    } else if (foreignChain === CHAIN_ID_SOLANA) {
-      const connection = new Connection(SOLANA_HOST, "confirmed");
-      promise = getOriginalAssetSolNFT(
-        connection,
-        SOL_NFT_BRIDGE_ADDRESS,
-        foreignNativeStringAddress
       );
     }
   } catch (e) {

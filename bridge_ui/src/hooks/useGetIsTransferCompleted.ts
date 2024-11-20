@@ -1,19 +1,10 @@
 import {
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  getIsTransferCompletedAlgorand,
   getIsTransferCompletedEth,
-  getIsTransferCompletedSolana,
-  getIsTransferCompletedTerra,
   getIsTransferCompletedAlph,
   isEVMChain,
   getTokenBridgeForChainId,
 } from "@alephium/wormhole-sdk";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import algosdk from "algosdk";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -26,13 +17,8 @@ import {
 import {
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
-  getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  TERRA_GAS_PRICES_URL,
-  TERRA_HOST,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
 import useTransferSignedVAA from "./useTransferSignedVAA";
@@ -116,43 +102,6 @@ export default function useGetIsTransferCompleted(
             setIsLoading(false);
           }
         })();
-      } else if (targetChain === CHAIN_ID_SOLANA) {
-        setIsLoading(true);
-        (async () => {
-          try {
-            const connection = new Connection(SOLANA_HOST, "confirmed");
-            transferCompleted = await getIsTransferCompletedSolana(
-              getTokenBridgeAddressForChain(targetChain),
-              signedVAA,
-              connection
-            );
-          } catch (error) {
-            console.error(error);
-          }
-          if (!cancelled) {
-            setIsTransferCompleted(transferCompleted);
-            setIsLoading(false);
-          }
-        })();
-      } else if (targetChain === CHAIN_ID_TERRA) {
-        setIsLoading(true);
-        (async () => {
-          try {
-            const lcdClient = new LCDClient(TERRA_HOST);
-            transferCompleted = await getIsTransferCompletedTerra(
-              getTokenBridgeAddressForChain(targetChain),
-              signedVAA,
-              lcdClient,
-              TERRA_GAS_PRICES_URL
-            );
-          } catch (error) {
-            console.error(error);
-          }
-          if (!cancelled) {
-            setIsTransferCompleted(transferCompleted);
-            setIsLoading(false);
-          }
-        })();
       } else if (targetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         setIsLoading(true);
         (async () => {
@@ -177,28 +126,6 @@ export default function useGetIsTransferCompleted(
             setIsLoading(false)
           }
         })()
-      } else if (targetChain === CHAIN_ID_ALGORAND) {
-        setIsLoading(true);
-        (async () => {
-          try {
-            const algodClient = new algosdk.Algodv2(
-              ALGORAND_HOST.algodToken,
-              ALGORAND_HOST.algodServer,
-              ALGORAND_HOST.algodPort
-            );
-            transferCompleted = await getIsTransferCompletedAlgorand(
-              algodClient,
-              ALGORAND_TOKEN_BRIDGE_ID,
-              signedVAA
-            );
-          } catch (error) {
-            console.error(error);
-          }
-          if (!cancelled) {
-            setIsTransferCompleted(transferCompleted);
-            setIsLoading(false);
-          }
-        })();
       }
     }
     return () => {

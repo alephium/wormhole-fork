@@ -1,20 +1,12 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   getForeignAssetAlephium,
-  getForeignAssetAlgorand,
   getForeignAssetEth,
-  getForeignAssetSolana,
-  getForeignAssetTerra,
   hexToUint8Array,
   isEVMChain,
   nativeToHexString,
 } from "@alephium/wormhole-sdk";
-import { Connection } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -22,17 +14,10 @@ import { DataWrapper } from "../store/helpers";
 import {
   ALEPHIUM_BRIDGE_GROUP_INDEX,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALGORAND_HOST,
-  ALGORAND_TOKEN_BRIDGE_ID,
   getEvmChainId,
-  getTokenBridgeAddressForChain,
-  SOLANA_HOST,
-  SOL_TOKEN_BRIDGE_ADDRESS,
-  TERRA_HOST,
-  TERRA_TOKEN_BRIDGE_ADDRESS,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import useIsWalletReady from "./useIsWalletReady";
-import { Algodv2 } from "algosdk";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 
@@ -133,40 +118,6 @@ function useFetchForeignAsset(
             ALEPHIUM_BRIDGE_GROUP_INDEX
           )
         }
-        : foreignChain === CHAIN_ID_TERRA
-        ? () => {
-            const lcd = new LCDClient(TERRA_HOST);
-            return getForeignAssetTerra(
-              TERRA_TOKEN_BRIDGE_ADDRESS,
-              lcd,
-              originChain,
-              hexToUint8Array(originAssetHex)
-            );
-          }
-        : foreignChain === CHAIN_ID_SOLANA
-        ? () => {
-            const connection = new Connection(SOLANA_HOST, "confirmed");
-            return getForeignAssetSolana(
-              connection,
-              SOL_TOKEN_BRIDGE_ADDRESS,
-              originChain,
-              hexToUint8Array(originAssetHex)
-            );
-          }
-        : foreignChain === CHAIN_ID_ALGORAND
-        ? () => {
-            const algodClient = new Algodv2(
-              ALGORAND_HOST.algodToken,
-              ALGORAND_HOST.algodServer,
-              ALGORAND_HOST.algodPort
-            );
-            return getForeignAssetAlgorand(
-              algodClient,
-              ALGORAND_TOKEN_BRIDGE_ID,
-              originChain,
-              originAssetHex
-            );
-          }
         : () => Promise.resolve(null);
 
       getterFunc()

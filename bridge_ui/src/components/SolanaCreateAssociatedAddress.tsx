@@ -1,10 +1,8 @@
 import {
   ChainId,
   CHAIN_ID_SOLANA,
-  getForeignAssetSolana,
   hexToNativeAssetString,
   hexToNativeString,
-  hexToUint8Array,
 } from "@alephium/wormhole-sdk";
 import { Button, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
@@ -23,7 +21,7 @@ import {
   selectTransferOriginChain,
   selectTransferTargetAddressHex,
 } from "../store/selectors";
-import { SOLANA_HOST, SOL_TOKEN_BRIDGE_ADDRESS } from "../utils/consts";
+import { SOLANA_HOST } from "../utils/consts";
 import parseError from "../utils/parseError";
 import { signSendAndConfirm } from "../utils/solana";
 import ButtonWithLoader from "./ButtonWithLoader";
@@ -183,27 +181,11 @@ export function SolanaCreateAssociatedAddressAlternate() {
   const [targetAsset, setTargetAsset] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
     if (!(originChain && originAsset && addressHex && base58TargetAddress)) {
       setTargetAsset(null);
     } else if (originChain === CHAIN_ID_SOLANA && base58OriginAddress) {
       setTargetAsset(base58OriginAddress);
-    } else {
-      getForeignAssetSolana(
-        connection,
-        SOL_TOKEN_BRIDGE_ADDRESS,
-        originChain,
-        hexToUint8Array(originAsset)
-      ).then((result) => {
-        if (!cancelled) {
-          setTargetAsset(result);
-        }
-      });
     }
-
-    return () => {
-      cancelled = true;
-    };
   }, [
     originChain,
     originAsset,
