@@ -16,10 +16,7 @@ import {
 } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
-import {
-  EVM_RPC_MAP,
-  METAMASK_CHAIN_PARAMETERS,
-} from "../utils/metaMaskChainParameters";
+import { METAMASK_CHAIN_PARAMETERS } from "../utils/metaMaskChainParameters";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 
@@ -56,7 +53,7 @@ function useIsWalletReady(
     signerAddress,
     chainId: evmChainId,
     connectType,
-    disconnect,
+    walletConnectProvider
   } = useEthereumProvider();
   const hasEthInfo = !!provider && !!signerAddress;
   const correctEvmNetwork = getEvmChainId(chainId);
@@ -69,29 +66,25 @@ function useIsWalletReady(
       if (!isEVMChain(chainId)) {
         return;
       }
-      if (
-        connectType === ConnectType.WALLETCONNECT &&
-        EVM_RPC_MAP[correctEvmNetwork] === undefined
-      ) {
-        // WalletConnect requires a rpc url for this chain
-        // Force user to switch connect type
-        disconnect();
-        return;
-      }
-
-      // `wallet_switchEthereumChain` does not work if connected to
-      // metamask-mobile via walletconnect:
-      // https://github.com/MetaMask/metamask-mobile/issues/6655
-      // https://github.com/MetaMask/metamask-mobile/issues/7023
-      if (connectType === ConnectType.WALLETCONNECT) {
-        disconnect()
-        return;
+      try {
+        if (connectType === ConnectType.WALLETCONNECT && walletConnectProvider) {
+          await walletConnectProvider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: hexStripZeros(hexlify(correctEvmNetwork)) }]
+          })
+          return
+        }
+      } catch (error) {
+        console.error(`Failed to switch chain to ${correctEvmNetwork}: `, error)
+        return
       }
 
       try {
-        await provider.send("wallet_switchEthereumChain", [
-          { chainId: hexStripZeros(hexlify(correctEvmNetwork)) },
-        ]);
+        if (connectType === ConnectType.METAMASK) {
+          await provider.send("wallet_switchEthereumChain", [
+            { chainId: hexStripZeros(hexlify(correctEvmNetwork)) },
+          ]);
+        }
       } catch (switchError: any) {
         // This error code indicates that the chain has not been added to MetaMask.
         if (switchError.code === 4902) {
@@ -109,7 +102,7 @@ function useIsWalletReady(
         }
       }
     }
-  }, [provider, correctEvmNetwork, chainId, connectType, disconnect]);
+  }, [provider, correctEvmNetwork, chainId, connectType, walletConnectProvider]);
 
   return useMemo(() => {
     if (chainId === CHAIN_ID_ALEPHIUM && alphWallet && alphWallet.nodeProvider) {
