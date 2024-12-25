@@ -15,8 +15,13 @@ import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
-import { AlephiumWalletProvider } from "@alephium/web3-react";
+import { AlephiumWalletProvider, createWalletConnectConnector, createDesktopWalletConnector } from "@alephium/web3-react";
 import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from "./utils/consts";
+
+const connectors = {
+  walletConnect: createWalletConnectConnector({customStoragePrefix: 'alephium'}),
+  desktopWallet: createDesktopWalletConnector({customStoragePrefix: 'alephium'})
+}
 
 ReactDOM.render(
   <ErrorBoundary>
@@ -32,6 +37,7 @@ ReactDOM.render(
                     <AlephiumWalletProvider
                       network={CLUSTER}
                       addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                      connectors={connectors}
                     >
                       <AlgorandContextProvider>
                         <HashRouter>
