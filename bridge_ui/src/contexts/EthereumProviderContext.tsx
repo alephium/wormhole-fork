@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import EthereumProvider from "@alephium/walletconnect-ethereum-provider";
+import EthereumProvider from "@walletconnect/ethereum-provider";
 import { BigNumber, ethers } from "ethers";
 import React, {
   ReactChildren,
@@ -14,7 +14,7 @@ import walletconnectIcon from "../icons/walletconnect.svg";
 import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
 import { getEvmChainId } from "../utils/consts";
-import { ChainId } from "@alephium/wormhole-sdk";
+import { CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId } from "@alephium/wormhole-sdk";
 import { useTranslation } from "react-i18next";
 
 const WALLET_CONNECT_PROJECT_ID = '6e2562e43678dd68a9070a62b6d52207'
@@ -41,6 +41,7 @@ interface IEthereumProviderContext {
   signerAddress: string | undefined;
   providerError: string | null;
   availableConnections: Connection[];
+  walletConnectProvider: EthereumProvider | undefined;
   connectType: ConnectType | undefined;
 }
 
@@ -54,6 +55,7 @@ const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
   providerError: null,
   availableConnections: [],
   connectType: undefined,
+  walletConnectProvider: undefined,
 });
 
 export const EthereumProviderProvider = ({
@@ -219,8 +221,9 @@ export const EthereumProviderProvider = ({
         EthereumProvider.init({
           projectId: WALLET_CONNECT_PROJECT_ID,
           showQrModal: false,
-          chains: [getEvmChainId(wormholeChainId) as number],
-          rpcMap: EVM_RPC_MAP
+          chains: [getEvmChainId(CHAIN_ID_ETH) as number, getEvmChainId(CHAIN_ID_BSC) as number],
+          rpcMap: EVM_RPC_MAP,
+          customStoragePrefix: 'ethereum'
         }).then((walletConnectProvider) => {
           setWalletConnectProvider(walletConnectProvider);
           walletConnectProvider.on('display_uri', (uri) => {
@@ -268,6 +271,10 @@ export const EthereumProviderProvider = ({
                 "disconnect",
                 () => { disconnect() }
               );
+              walletConnectProvider.on(
+                'chainChanged',
+                (hexChainId) => setChainId(BigNumber.from(hexChainId).toNumber())
+              );
               setProvider(provider);
               const signer = provider.getSigner();
               setSigner(signer);
@@ -306,6 +313,7 @@ export const EthereumProviderProvider = ({
       providerError,
       availableConnections,
       connectType,
+      walletConnectProvider
     }),
     [
       connect,
@@ -317,6 +325,7 @@ export const EthereumProviderProvider = ({
       providerError,
       availableConnections,
       connectType,
+      walletConnectProvider
     ]
   );
   return (
