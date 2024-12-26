@@ -1,23 +1,16 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
-import { PublicKey } from "@solana/web3.js";
 import { hexValue, hexZeroPad, stripZeros } from "ethers/lib/utils";
-import {
-  hexToNativeAssetStringAlgorand,
-  nativeStringToHexAlgorand,
-  uint8ArrayToNativeStringAlgorand,
-} from "../algorand";
-import { canonicalAddress, humanAddress, isNativeDenom } from "../terra";
 import {
   ChainId,
   ChainName,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
-  CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
   CHAIN_ID_UNSET,
   coalesceChainId,
   isEVMChain,
+  CHAIN_ID_SOLANA,
 } from "./consts";
 
 /**
@@ -64,16 +57,11 @@ export const tryUint8ArrayToNative = (
   if (isEVMChain(chainId)) {
     return hexZeroPad(hexValue(a), 20);
   } else if (chainId === CHAIN_ID_SOLANA) {
-    return new PublicKey(a).toString();
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
-    const h = uint8ArrayToHex(a);
-    if (isHexNativeTerra(h)) {
-      return nativeTerraHexToDenom(h);
-    } else {
-      return humanAddress(a.slice(-20)); // terra expects 20 bytes, not 32
-    }
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
-    return uint8ArrayToNativeStringAlgorand(a);
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("uint8ArrayToNative: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {
@@ -94,11 +82,12 @@ export const tryUint8ArrayToNative = (
  *
  * @throws if address is not the right length for the given chain
  */
-export const tryHexToNativeAssetString = (h: string, c: ChainId): string =>
-  c === CHAIN_ID_ALGORAND
-    ? // Algorand assets are represented by their asset ids, not an address
-      hexToNativeAssetStringAlgorand(h)
-    : tryHexToNativeString(h, c);
+export const tryHexToNativeAssetString = (h: string, c: ChainId): string => {
+  if (c === CHAIN_ID_ALGORAND) {
+    throw new Error(`Not supported`)
+  }
+  return tryHexToNativeString(h, c);
+}
 
 /**
  *
@@ -170,20 +159,11 @@ export const tryNativeToHexString = (
   if (isEVMChain(chainId)) {
     return uint8ArrayToHex(zeroPad(arrayify(address), 32));
   } else if (chainId === CHAIN_ID_SOLANA) {
-    return uint8ArrayToHex(zeroPad(new PublicKey(address).toBytes(), 32));
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_TERRA) {
-    if (isNativeDenom(address)) {
-      return (
-        "01" +
-        uint8ArrayToHex(
-          zeroPad(new Uint8Array(Buffer.from(address, "ascii")), 31)
-        )
-      );
-    } else {
-      return uint8ArrayToHex(zeroPad(canonicalAddress(address), 32));
-    }
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_ALGORAND) {
-    return nativeStringToHexAlgorand(address);
+    throw new Error(`Not supported`)
   } else if (chainId === CHAIN_ID_NEAR) {
     throw Error("hexToNativeString: Near not supported yet.");
   } else if (chainId === CHAIN_ID_ALEPHIUM) {

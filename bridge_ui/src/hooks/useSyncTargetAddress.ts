@@ -1,9 +1,7 @@
 import {
-  canonicalAddress,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   isEVMChain,
   uint8ArrayToHex,
 } from "@alephium/wormhole-sdk";
@@ -102,18 +100,6 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
             }
           }
         })();
-      } else if (
-        targetChain === CHAIN_ID_TERRA &&
-        terraWallet &&
-        terraWallet.walletAddress
-      ) {
-        dispatch(
-          setTargetAddressHex(
-            uint8ArrayToHex(
-              zeroPad(canonicalAddress(terraWallet.walletAddress), 32)
-            )
-          )
-        );
       } else if(targetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         dispatch(setTargetAddressHex(uint8ArrayToHex(base58.decode(alphWallet.account.address))))
       } else if (targetChain === CHAIN_ID_ALGORAND && algoAccounts[0]) {

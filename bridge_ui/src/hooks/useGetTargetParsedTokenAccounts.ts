@@ -1,14 +1,5 @@
-import {
-  CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  isEVMChain,
-  isNativeDenom
-} from "@alephium/wormhole-sdk";
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ALGORAND, CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { formatUnits } from "ethers/lib/utils";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,10 +15,8 @@ import { setTargetParsedTokenAccount } from "../store/transferSlice";
 import {
   ALGORAND_HOST,
   getEvmChainId,
-  SOLANA_HOST,
-  TERRA_HOST,
+  SOLANA_HOST
 } from "../utils/consts";
-import { NATIVE_TERRA_DECIMALS } from "../utils/terra";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
 import { Algodv2 } from "algosdk";
@@ -44,7 +33,6 @@ function useGetTargetParsedTokenAccounts() {
   );
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
-  const terraWallet = useConnectedWallet();
   const alphWallet = useWallet();
   const {
     provider,
@@ -99,75 +87,6 @@ function useGetTargetParsedTokenAccounts() {
             )
           )
         }
-    }
-    if (targetChain === CHAIN_ID_TERRA && terraWallet) {
-      const lcd = new LCDClient(TERRA_HOST);
-      if (isNativeDenom(targetAsset)) {
-        lcd.bank
-          .balance(terraWallet.walletAddress)
-          .then(([coins]) => {
-            const balance = coins.get(targetAsset)?.amount?.toString();
-            if (balance && !cancelled) {
-              dispatch(
-                setTargetParsedTokenAccount(
-                  createParsedTokenAccount(
-                    "",
-                    "",
-                    balance,
-                    NATIVE_TERRA_DECIMALS,
-                    Number(formatUnits(balance, NATIVE_TERRA_DECIMALS)),
-                    formatUnits(balance, NATIVE_TERRA_DECIMALS),
-                    symbol,
-                    tokenName,
-                    logo
-                  )
-                )
-              );
-            }
-          })
-          .catch(() => {
-            if (!cancelled) {
-              // TODO: error state
-            }
-          });
-      } else {
-        lcd.wasm
-          .contractQuery(targetAsset, {
-            token_info: {},
-          })
-          .then((info: any) =>
-            lcd.wasm
-              .contractQuery(targetAsset, {
-                balance: {
-                  address: terraWallet.walletAddress,
-                },
-              })
-              .then((balance: any) => {
-                if (balance && info && !cancelled) {
-                  dispatch(
-                    setTargetParsedTokenAccount(
-                      createParsedTokenAccount(
-                        "",
-                        "",
-                        balance.balance.toString(),
-                        info.decimals,
-                        Number(formatUnits(balance.balance, info.decimals)),
-                        formatUnits(balance.balance, info.decimals),
-                        symbol,
-                        tokenName,
-                        logo
-                      )
-                    )
-                  );
-                }
-              })
-          )
-          .catch(() => {
-            if (!cancelled) {
-              // TODO: error state
-            }
-          });
-      }
     }
     if (targetChain === CHAIN_ID_SOLANA && solPK) {
       let mint;
@@ -304,7 +223,6 @@ function useGetTargetParsedTokenAccounts() {
     signerAddress,
     solanaWallet,
     solPK,
-    terraWallet,
     alphWallet,
     hasCorrectEvmNetwork,
     hasResolvedMetadata,
