@@ -14,7 +14,7 @@ import {
   getEmptyDataWrapper,
   receiveDataWrapper,
 } from "./helpers";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 const LAST_STEP = 3;
 

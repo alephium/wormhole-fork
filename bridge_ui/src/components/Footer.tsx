@@ -1,5 +1,7 @@
 import { makeStyles, Typography } from "@material-ui/core";
 import { useTranslation } from "react-i18next";
+import LanguageSwitch from "../localization/LanguageSwitch";
+import styled from "styled-components";
 
 const useStyles = makeStyles((theme) => ({
   footer: {
@@ -67,6 +69,16 @@ export default function Footer() {
           </Typography>
         </div>
       </div>
+      <LanguageSwitchContainer>
+        <LanguageSwitch />
+      </LanguageSwitchContainer>
     </footer>
   );
 }
+
+const LanguageSwitchContainer = styled.div`
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  backdrop-filter: blur(20px);
+`

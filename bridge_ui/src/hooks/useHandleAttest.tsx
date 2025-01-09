@@ -42,7 +42,7 @@ import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken, checkBSCToken } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 async function evm(
   dispatch: any,

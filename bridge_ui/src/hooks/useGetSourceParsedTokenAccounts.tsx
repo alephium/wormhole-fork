@@ -132,7 +132,7 @@ import { getRegisteredTokens, getTokenLogoAndSymbol } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
 import { Alert } from "@material-ui/lab";
 import parseError from "../utils/parseError";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 import { useTranslation } from "react-i18next";
 
 export function createParsedTokenAccount(
