@@ -7,7 +7,7 @@ import {
 import { ethers } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { RootState } from ".";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 /*
  * Attest
