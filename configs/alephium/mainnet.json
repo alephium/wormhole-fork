@@ -12,7 +12,7 @@
     "nativeTokenBridge": "23Fj7xr1pxWfYLixz3aBC3u5dUJVpAjXArbpiYWxeGjQT",
     "bridgeRewardRouter": "4bf696a349e05532d4b0aec34d33c82a7ce4920210dfb83a76068a4cb698a000"
   },
-  "nodeUrl": "https://node-v20.mainnet.alephium.org",
+  "nodeUrl": "https://node.mainnet.alephium.org",
   "explorerUrl": "https://backend-v113.mainnet.alephium.org",
   "networkId": 0,
   "coreEmitterAddress": "125397fbf4311a8b1da4c2eb01ca091b06f07d8a86b52b1836e0688c83b5b200",
