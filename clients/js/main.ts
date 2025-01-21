@@ -4,7 +4,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import {
-  setDefaultWasm,
   getSignedVAAWithRetry,
   ChainId,
   VAA,
@@ -31,11 +30,10 @@ import {
   isEVMChain,
   toChainId,
 } from "@alephium/wormhole-sdk";
-import { deposit, executeGovernanceAlph, getNextGovernanceSequence, topupRewards } from "./alph";
+import { deposit, executeGovernanceAlph, getNextGovernanceSequence, topupRewards, updateRewardAmount } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";
-
-setDefaultWasm("node");
+import { convertAlphAmountWithDecimals } from "@alephium/web3";
 
 const GOVERNANCE_CHAIN = guardianDevnetConfig.governanceChainId
 const GOVERNANCE_EMITTER = guardianDevnetConfig.governanceEmitterAddress
@@ -672,6 +670,37 @@ yargs(hideBin(process.argv))
       const alphAmount = BigInt(argv.amount)
       const nodeUrl = argv['node-url']
       await topupRewards(alphAmount, network, nodeUrl)
+    }
+  )
+  .command(
+    "update-reward-amount",
+    "Update the reward amount in the bridge reward contract",
+    (yargs) => {
+      return yargs
+        .option("amount", {
+          alias: "a",
+          describe: "ALPH amount",
+          type: "number",
+          required: true,
+        })
+        .option("network", {
+          alias: "n",
+          describe: "network",
+          type: "string",
+          choices: ["mainnet", "testnet", "devnet"],
+          required: true,
+        })
+        .option('node-url', {
+          describe: "full node url",
+          type: "string",
+          required: false,
+        });
+    },
+    async (argv) => {
+      const network = getNetworkType(argv.network)
+      const alphAmount = convertAlphAmountWithDecimals(argv.amount)
+      const nodeUrl = argv['node-url']
+      await updateRewardAmount(alphAmount, network, nodeUrl)
     }
   )
   .command(
