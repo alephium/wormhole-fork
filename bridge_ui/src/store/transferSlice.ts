@@ -71,13 +71,13 @@ export interface TransferState {
 
 const initialState: TransferState = {
   activeStep: 0,
-  sourceChain: CHAIN_ID_ALEPHIUM,
+  sourceChain: CHAIN_ID_ETH,
   sourceAssetInfo: getEmptyDataWrapper(),
   sourceWalletAddress: undefined,
   sourceParsedTokenAccount: undefined,
   sourceParsedTokenAccounts: getEmptyDataWrapper(),
   amount: "",
-  targetChain: CHAIN_ID_ETH,
+  targetChain: CHAIN_ID_ALEPHIUM,
   targetAddressHex: undefined,
   targetAsset: getEmptyDataWrapper(),
   targetParsedTokenAccount: undefined,
