@@ -25,6 +25,7 @@ import {
 } from "../store/selectors";
 import { setSourceWormholeWrappedInfo as setTransferSourceWormholeWrappedInfo } from "../store/transferSlice";
 import {
+  getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain
 } from "../utils/consts";
@@ -101,7 +102,7 @@ function useCheckIfWormholeWrapped(nft?: boolean) {
     (async () => {
       if (isEVMChain(sourceChain) && sourceAsset) {
         // use JsonRpcProvider if both source chain and target chain are evm chains
-        const provider = evmChainId === sourceChain ? evmProvider : getEvmJsonRpcProvider(sourceChain)
+        const provider = evmChainId === getEvmChainId(sourceChain) ? evmProvider : getEvmJsonRpcProvider(sourceChain)
         if (provider === undefined) {
           throw new Error(`Invalid evm chain id: ${sourceChain}`)
         }
