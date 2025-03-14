@@ -276,16 +276,16 @@ export const SOLANA_HOST = process.env.REACT_APP_SOLANA_API_URL
 
 export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
-    ? 'https://ethereum-rpc.publicnode.com'
+    ? 'https://eth-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://ethereum-sepolia-rpc.publicnode.com'
+    ? 'https://eth-sepolia.public.blastapi.io'
     : 'http://localhost:8545'
 
 export const BSC_RPC_HOST =
   CLUSTER === 'mainnet'
-    ? 'https://bsc-rpc.publicnode.com'
+    ? 'https://bsc-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://bsc-testnet-rpc.publicnode.com'
+    ? 'https://bsc-testnet.public.blastapi.io'
     : 'http://localhost:8546'
 
 export const TERRA_HOST =
