@@ -60,9 +60,9 @@ export function createAlephium(network: 'testnet' | 'mainnet'): BridgeChain {
 function getEVMNodeUrl(chainId: EVMChainId, network: 'testnet' | 'mainnet'): string {
   switch (chainId) {
     case CHAIN_ID_ETH:
-      return network === 'testnet' ? 'https://ethereum-sepolia-rpc.publicnode.com' : 'https://ethereum-rpc.publicnode.com'
+      return network === 'testnet' ? 'https://eth-sepolia.public.blastapi.io' : 'https://eth-mainnet.public.blastapi.io'
     case CHAIN_ID_BSC:
-      return network === 'testnet' ? 'https://bsc-testnet-rpc.publicnode.com' : 'https://bsc-rpc.publicnode.com'
+      return network === 'testnet' ? 'https://bsc-testnet.public.blastapi.io' : 'https://bsc-mainnet.public.blastapi.io'
   }
   throw new Error(`Invalid chain id: ${chainId}`)
 }
