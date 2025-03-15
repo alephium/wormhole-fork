@@ -12,7 +12,8 @@ import {
   UpdateRefundAddress,
   UpgradeTokenBridgeContract,
   AddRewards,
-  Deposit
+  Deposit,
+  BridgeRewardRouterV2
 } from '@alephium/wormhole-sdk/lib/cjs/alephium-contracts/ts'
 
 export async function deposit(
@@ -50,6 +51,26 @@ export async function topupRewards(
       amount: amount
     },
     attoAlphAmount: amount + DUST_AMOUNT
+  })
+  console.log(`TxId: ${result.txId}`)
+}
+
+export async function updateRewardAmount(
+  attoAlphAmount: bigint,
+  networkType: NetworkType,
+  nodeUrl?: string
+) {
+  if (attoAlphAmount < DUST_AMOUNT) {
+    throw new Error(`The reward amount cannot be less than the dust amount`)
+  }
+
+  const network = CONFIGS[networkType]['alephium']
+  const signer = getSignerProvider(network, nodeUrl)
+  const rewardRouterV2Address = addressFromContractId(network.bridgeRewardRouter)
+  const rewardRouterV2 = BridgeRewardRouterV2.at(rewardRouterV2Address)
+  const result = await rewardRouterV2.transact.updateRewardAmount({
+    signer,
+    args: { newRewardAmount: attoAlphAmount }
   })
   console.log(`TxId: ${result.txId}`)
 }
