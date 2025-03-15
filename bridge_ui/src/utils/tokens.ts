@@ -3,7 +3,7 @@ import ethIcon from "../icons/eth.svg";
 import alephiumIcon from "../icons/alephium.svg";
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId, getTokenPoolId, tryNativeToHexString } from "@alephium/wormhole-sdk";
 import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, EXPLORER_API_SERVER_HOST } from "./consts";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 import { getAlephiumTokenLogoAndSymbol } from "./alephium";
 import { getBSCTokenLogoAndSymbol, getETHTokenLogoAndSymbol } from "./evm";
 

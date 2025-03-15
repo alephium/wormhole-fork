@@ -29,7 +29,7 @@ import useIsWalletReady from "./useIsWalletReady";
 import { NodeProvider } from "@alephium/web3";
 import { getAlephiumTokenWrappedInfo, tryGetContractId } from "../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 import { useTranslation } from "react-i18next";
 
 export type OriginalAssetInfo = {

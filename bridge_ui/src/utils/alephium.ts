@@ -39,7 +39,7 @@ import {
   MINIMAL_CONTRACT_DEPOSIT
 } from '@alephium/web3';
 import * as base58 from 'bs58'
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 const WormholeMessageEventIndex = 0
 export const AlephiumBlockTime = 16000 // 16 seconds in ms

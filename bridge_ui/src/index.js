@@ -1,4 +1,4 @@
-import "./i18n";
+import "./localization/i18n";
 
 import { CssBaseline } from "@material-ui/core";
 import { ThemeProvider } from "@material-ui/core/styles";
