@@ -52,7 +52,7 @@ import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedA
 import { ExecuteScriptResult } from "@alephium/web3";
 import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 async function evm(
   dispatch: any,

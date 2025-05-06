@@ -9,7 +9,7 @@ import {
 import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
 import axios from "axios"
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 export const DefaultEVMChainConfirmations = 15
 export const EpochDuration = 480000

@@ -24,7 +24,7 @@ import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
 import { useWallet } from "@alephium/web3-react";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 import { useTranslation } from "react-i18next";
 
 export type GasEstimate = {

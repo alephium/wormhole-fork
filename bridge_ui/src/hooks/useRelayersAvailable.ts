@@ -3,7 +3,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import axios from "axios";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 import { DataWrapper } from "../store/helpers";
 import { selectRelayerTokenInfo } from "../store/selectors";
 import {

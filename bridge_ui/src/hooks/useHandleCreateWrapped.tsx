@@ -35,7 +35,7 @@ import useAttestSignedVAA from "./useAttestSignedVAA";
 import { createWrappedOnEthWithoutWait, updateWrappedOnEthWithoutWait } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import { MINIMAL_CONTRACT_DEPOSIT } from "@alephium/web3";
-import i18n from "../i18n";
+import i18n from "../localization/i18n";
 
 async function evm(
   dispatch: any,
