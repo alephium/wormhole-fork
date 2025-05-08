@@ -27,7 +27,7 @@ jobs:
           echo ::set-output name=DIST_TAG::$dist_tag
         shell: bash
   publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: get_dist_tag
     permissions:
       id-token: write
