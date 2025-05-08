@@ -27,6 +27,11 @@ const TokenListURLs = {
   [CHAIN_ID_BSC]: 'https://tokens.coingecko.com/binance-smart-chain/all.json'
 }
 
+const BackupTokenListURLs = {
+  [CHAIN_ID_ETH]: 'https://raw.githubusercontent.com/alephium/wormhole-fork/refs/heads/master/token-list/tokens/eth-token-whitelist.json',
+  [CHAIN_ID_BSC]: 'https://raw.githubusercontent.com/alephium/wormhole-fork/refs/heads/master/token-list/tokens/bsc-token-whitelist.json'
+}
+
 let _tokenWhiteList: Map<ChainId, TokenInfo[] | undefined> = new Map()
 
 function getTokenListURL(chainId: ChainId): string {
@@ -40,6 +45,24 @@ async function loadEVMTokenWhitelist(chainId: ChainId): Promise<TokenInfo[]> {
   const whitelist = _tokenWhiteList.get(chainId)
   if (whitelist !== undefined) return whitelist
   const url = getTokenListURL(chainId)
+  try {
+    const { data: { tokens } } = await axios.get(url)
+    _tokenWhiteList.set(chainId, tokens)
+    return tokens
+  } catch {
+    return await loadEVMTokenWhitelistFromBackup(chainId)
+  }
+}
+
+function getBackupTokenListURL(chainId: ChainId): string {
+  if (chainId === CHAIN_ID_BSC || chainId === CHAIN_ID_ETH) {
+    return BackupTokenListURLs[chainId]
+  }
+  throw new Error(`Invalid evm chain id: ${chainId}`)
+}
+
+async function loadEVMTokenWhitelistFromBackup(chainId: ChainId): Promise<TokenInfo[]> {
+  const url = getBackupTokenListURL(chainId)
   const { data: { tokens } } = await axios.get(url)
   _tokenWhiteList.set(chainId, tokens)
   return tokens
