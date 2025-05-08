@@ -8,8 +8,9 @@ import {
 } from "../hooks/useGetSourceParsedTokenAccounts";
 import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
-import axios from "axios"
 import i18n from "../i18n";
+import { default as ETHTokens } from '../tokens/eth-token-whitelist.json'
+import { default as BSCTokens } from '../tokens/bsc-token-whitelist.json'
 
 export const DefaultEVMChainConfirmations = 15
 export const EpochDuration = 480000
@@ -22,27 +23,14 @@ interface TokenInfo {
   logoURI: string
 }
 
-const TokenListURLs = {
-  [CHAIN_ID_ETH]: 'https://tokens-1inch-eth.ipns.dweb.link/',
-  [CHAIN_ID_BSC]: 'https://tokens.coingecko.com/binance-smart-chain/all.json'
-}
-
-let _tokenWhiteList: Map<ChainId, TokenInfo[] | undefined> = new Map()
-
-function getTokenListURL(chainId: ChainId): string {
-  if (chainId === CHAIN_ID_BSC || chainId === CHAIN_ID_ETH) {
-    return TokenListURLs[chainId]
+function loadEVMTokenWhitelist(chainId: ChainId): TokenInfo[] {
+  if (chainId === CHAIN_ID_ETH) {
+    return ETHTokens.tokens as TokenInfo[]
+  } else if (chainId === CHAIN_ID_BSC) {
+    return BSCTokens.tokens as TokenInfo[]
+  } else {
+    throw Error(`Invalid evm chain id: ${chainId}`)
   }
-  throw new Error(`Invalid evm chain id: ${chainId}`)
-}
-
-async function loadEVMTokenWhitelist(chainId: ChainId): Promise<TokenInfo[]> {
-  const whitelist = _tokenWhiteList.get(chainId)
-  if (whitelist !== undefined) return whitelist
-  const url = getTokenListURL(chainId)
-  const { data: { tokens } } = await axios.get(url)
-  _tokenWhiteList.set(chainId, tokens)
-  return tokens
 }
 
 async function checkEVMToken(chainId: ChainId, tokenAddress: string) {
@@ -50,7 +38,7 @@ async function checkEVMToken(chainId: ChainId, tokenAddress: string) {
 
   const tokenWhitelist = await loadEVMTokenWhitelist(chainId)
   if (tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase()) === undefined) {
-    throw new Error(`${i18n.t('Token {{ tokenAddress }} does not exist in the token list', { tokenAddress })}: ${getTokenListURL(chainId)}`)
+    throw new Error(`${i18n.t('Token {{ tokenAddress }} does not exist in the token list', { tokenAddress })}`)
   }
 }
 
