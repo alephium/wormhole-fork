@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as UnexecutedSequenceContractJson } from "../sequence/UnexecutedSequence.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace UnexecutedSequenceTypes {
@@ -182,6 +182,7 @@ export const UnexecutedSequence = new Factory(
     []
   )
 );
+registerContract(UnexecutedSequence);
 
 // Use this class to interact with the blockchain
 export class UnexecutedSequenceInstance extends ContractInstance {

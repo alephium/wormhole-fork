@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as BridgeRewardRouterContractJson } from "../token_bridge/BridgeRewardRouter.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace BridgeRewardRouterTypes {
@@ -155,6 +155,7 @@ export const BridgeRewardRouter = new Factory(
     []
   )
 );
+registerContract(BridgeRewardRouter);
 
 // Use this class to interact with the blockchain
 export class BridgeRewardRouterInstance extends ContractInstance {

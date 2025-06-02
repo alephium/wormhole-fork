@@ -29,7 +29,8 @@ export async function registerChain(
     throw new Error('Register chain will create two contracts, please approve at least 2 ALPH')
   }
   const account = await signerProvider.getSelectedAccount()
-  return RegisterChain.execute(signerProvider, {
+  return RegisterChain.execute({
+    signer: signerProvider,
     initialFields: {
       payer: account.address,
       tokenBridge: tokenBridgeId,
@@ -46,7 +47,8 @@ export async function deposit(
   amount: bigint
 ): Promise<ExecuteScriptResult> {
   const account = await signerProvider.getSelectedAccount()
-  return Deposit.execute(signerProvider, {
+  return Deposit.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
       payer: account.address,
@@ -61,7 +63,8 @@ export async function destroyUnexecutedSequenceContracts(
   tokenBridgeId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return DestroyUnexecutedSequenceContracts.execute(signerProvider, {
+  return DestroyUnexecutedSequenceContracts.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       vaa: binToHex(signedVAA)
@@ -74,7 +77,8 @@ export async function updateRefundAddress(
   tokenBridgeId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return UpdateRefundAddress.execute(signerProvider, {
+  return UpdateRefundAddress.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       vaa: binToHex(signedVAA)

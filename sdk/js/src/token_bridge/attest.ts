@@ -1,7 +1,6 @@
 import { ethers, PayableOverrides } from "ethers";
 import { Bridge__factory } from "../ethers-contracts";
-import { textToHexString, textToUint8Array, uint8ArrayToHex, utf8StringTo32Bytes } from "../utils";
-import { safeBigIntToNumber } from "../utils/bigint";
+import { utf8StringTo32Bytes } from "../utils";
 import { createNonce } from "../utils/createNonce";
 import { ALPH_TOKEN_ID, binToHex, DUST_AMOUNT, ExecuteScriptResult, isHexString, SignerProvider } from "@alephium/web3";
 import { AttestToken } from "../alephium-contracts/ts/scripts"
@@ -26,7 +25,8 @@ export async function attestFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return AttestToken.execute(signerProvider, {
+  return AttestToken.execute({
+    signer: signerProvider,
     initialFields: {
       payer: payer,
       tokenBridge: tokenBridgeId,

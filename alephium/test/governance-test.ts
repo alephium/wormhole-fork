@@ -56,9 +56,9 @@ describe('test governance', () => {
     const governanceFixture = createGovernance(receivedSequence, undefined, governanceContractAddress)
     return {
       initialFields: governanceFixture.selfState.fields,
-      address: governanceFixture.address,
+      contractAddress: governanceFixture.address,
       existingContracts: governanceFixture.dependencies,
-      testArgs: { vaa: binToHex(vaa.encode()) },
+      args: { vaa: binToHex(vaa.encode()) },
       initialAsset: initialAsset,
       inputAssets: inputAssets
     }
@@ -84,8 +84,8 @@ describe('test governance', () => {
       const vaa = gs.sign(gs.quorumSize(), vaaBody)
       return Governance.tests.parseAndVerifyVAA({
         initialFields,
-        address: governanceAddress,
-        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA: false },
+        contractAddress: governanceAddress,
+        args: { data: binToHex(vaa.encode()), isGovernanceVAA: false },
         blockTimeStamp: Number(initialFields.previousGuardianSetExpirationTimeMS)
       })
     }
@@ -118,8 +118,8 @@ describe('test governance', () => {
       const vaa = gs.sign(gs.quorumSize(), vaaBody)
       return Governance.tests.parseAndVerifyVAA({
         initialFields: initialFields,
-        address: governanceAddress,
-        testArgs: { data: binToHex(vaa.encode()), isGovernanceVAA },
+        contractAddress: governanceAddress,
+        args: { data: binToHex(vaa.encode()), isGovernanceVAA },
         blockTimeStamp
       })
     }
@@ -320,9 +320,9 @@ describe('test governance', () => {
       const vaa = initGuardianSet.sign(initGuardianSet.quorumSize(), vaaBody)
       return await Governance.tests.submitContractUpgrade({
         initialFields: governanceFixture.selfState.fields,
-        address: governanceFixture.address,
+        contractAddress: governanceFixture.address,
         existingContracts: governanceFixture.dependencies,
-        testArgs: { vaa: binToHex(vaa.encode()) }
+        args: { vaa: binToHex(vaa.encode()) }
       })
     }
 

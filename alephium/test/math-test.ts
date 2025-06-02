@@ -34,12 +34,12 @@ describe('test math', () => {
     ]
     for (const tc of cases) {
       let testResult = await MathTest.tests.normalizeAmount({
-        testArgs: { amount: tc.amount, decimals: tc.decimals }
+        args: { amount: tc.amount, decimals: tc.decimals }
       })
       expect(testResult.returns).toEqual(tc.normalizedAmount)
 
       testResult = await MathTest.tests.deNormalizeAmount({
-        testArgs: { amount: tc.normalizedAmount, decimals: tc.decimals }
+        args: { amount: tc.normalizedAmount, decimals: tc.decimals }
       })
       expect(testResult.returns).toEqual(tc.deNormalizedAmount)
     }

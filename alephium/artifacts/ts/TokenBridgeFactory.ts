@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeFactoryContractJson } from "../token_bridge/TokenBridgeFactory.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace TokenBridgeFactoryTypes {
@@ -180,7 +180,7 @@ class Factory extends ContractFactory<
     getLocalTokenPoolTemplateId: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<HexString>> => {
       return testMethod(
@@ -193,7 +193,7 @@ class Factory extends ContractFactory<
     getRemoteTokenPoolTemplateId: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<HexString>> => {
       return testMethod(
@@ -206,7 +206,7 @@ class Factory extends ContractFactory<
     getTokenBridgeForChainTemplateId: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<HexString>> => {
       return testMethod(
@@ -219,7 +219,7 @@ class Factory extends ContractFactory<
     getAttestTokenHandlerTemplateId: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<HexString>> => {
       return testMethod(
@@ -232,7 +232,7 @@ class Factory extends ContractFactory<
     getUnexecutedSequenceTemplateId: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeFactoryTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<HexString>> => {
       return testMethod(
@@ -279,6 +279,7 @@ export const TokenBridgeFactory = new Factory(
     []
   )
 );
+registerContract(TokenBridgeFactory);
 
 // Use this class to interact with the blockchain
 export class TokenBridgeFactoryInstance extends ContractInstance {

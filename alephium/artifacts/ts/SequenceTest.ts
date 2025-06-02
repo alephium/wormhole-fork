@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as SequenceTestContractJson } from "../tests/SequenceTest.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace SequenceTestTypes {
@@ -182,7 +182,7 @@ class Factory extends ContractFactory<
     compact: async (
       params: Omit<
         TestContractParamsWithoutMaps<SequenceTestTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<null>> => {
       return testMethod(this, "compact", params, getContractByCodeHash);
@@ -236,6 +236,7 @@ export const SequenceTest = new Factory(
     []
   )
 );
+registerContract(SequenceTest);
 
 // Use this class to interact with the blockchain
 export class SequenceTestInstance extends ContractInstance {

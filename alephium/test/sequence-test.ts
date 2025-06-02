@@ -27,8 +27,8 @@ describe('test sequence', () => {
     for (let seq = 0n; seq < 256n; seq++) {
       const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
-        address: sequenceFixture.address,
-        testArgs: { seq: seq },
+        contractAddress: sequenceFixture.address,
+        args: { seq: seq },
         inputAssets: inputAsset
       })
       expect(testResult.returns).toEqual(true)
@@ -44,8 +44,8 @@ describe('test sequence', () => {
     for (let seq = 256n; seq < 512n; seq++) {
       const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
-        address: sequenceFixture.address,
-        testArgs: { seq: seq },
+        contractAddress: sequenceFixture.address,
+        args: { seq: seq },
         inputAssets: inputAsset
       })
       expect(testResult.returns).toEqual(true)
@@ -63,8 +63,8 @@ describe('test sequence', () => {
     const sequenceFixture = createSequence(512n, allExecuted, allExecuted)
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
-      address: sequenceFixture.address,
-      testArgs: { seq: 1025n },
+      contractAddress: sequenceFixture.address,
+      args: { seq: 1025n },
       inputAssets: inputAsset
     })
     expect(testResult.returns).toEqual(true)
@@ -81,8 +81,8 @@ describe('test sequence', () => {
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: ONE_ALPH * 2n },
-      address: sequenceFixture.address,
-      testArgs: { seq: 768n },
+      contractAddress: sequenceFixture.address,
+      args: { seq: 768n },
       inputAssets: inputAsset,
       existingContracts: sequenceFixture.dependencies
     })
@@ -111,8 +111,8 @@ describe('test sequence', () => {
       await expectAssertionFailed(async () => {
         return await SequenceTest.tests.check({
           initialFields: sequenceFixture.selfState.fields,
-          address: sequenceFixture.address,
-          testArgs: { seq: seq },
+          contractAddress: sequenceFixture.address,
+          args: { seq: seq },
           existingContracts: sequenceFixture.dependencies,
           inputAssets: inputAsset
         })
@@ -128,8 +128,8 @@ describe('test sequence', () => {
             secondNext256: allExecuted,
             unexecutedSequenceTemplateId: unexecutedSequenceTemplateId
           },
-          address: sequenceFixture.address,
-          testArgs: { seq: seq },
+          contractAddress: sequenceFixture.address,
+          args: { seq: seq },
           existingContracts: sequenceFixture.dependencies,
           inputAssets: inputAsset
         })
@@ -144,8 +144,8 @@ describe('test sequence', () => {
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: ONE_ALPH * 2n },
-      address: sequenceFixture.address,
-      testArgs: { seq: start + 513n },
+      contractAddress: sequenceFixture.address,
+      args: { seq: start + 513n },
       existingContracts: sequenceFixture.dependencies,
       inputAssets: inputAsset
     })
@@ -176,8 +176,8 @@ describe('test sequence', () => {
       const testResult = await SequenceTest.tests.check({
         initialFields: sequenceFixture.selfState.fields,
         initialAsset: { alphAmount: ONE_ALPH * 10n },
-        address: sequenceFixture.address,
-        testArgs: { seq: 256n + seq },
+        contractAddress: sequenceFixture.address,
+        args: { seq: 256n + seq },
         existingContracts: Array.prototype.concat(sequenceFixture.dependencies, unexecutedSequenceFixture.states()),
         inputAssets: inputAsset
       })
@@ -203,8 +203,8 @@ describe('test sequence', () => {
         await SequenceTest.tests.check({
           initialFields: sequenceInfo.selfState.fields,
           initialAsset: { alphAmount: ONE_ALPH * 10n },
-          address: sequenceInfo.address,
-          testArgs: { seq: 256n + seq },
+          contractAddress: sequenceInfo.address,
+          args: { seq: 256n + seq },
           existingContracts: Array.prototype.concat(sequenceInfo.dependencies, unexecutedSequenceInfo.states()),
           inputAssets: inputAsset
         })
@@ -221,8 +221,8 @@ describe('test sequence', () => {
     const testResult = await SequenceTest.tests.check({
       initialFields: sequenceFixture.selfState.fields,
       initialAsset: { alphAmount: ONE_ALPH },
-      address: sequenceFixture.address,
-      testArgs: { seq: 256n },
+      contractAddress: sequenceFixture.address,
+      args: { seq: 256n },
       existingContracts: Array.prototype.concat(sequenceFixture.dependencies, unexecutedSequenceInfo.states()),
       inputAssets: inputAsset
     })
@@ -236,6 +236,6 @@ describe('test sequence', () => {
     expect(destroyEvent.name).toEqual('ContractDestroyed')
     expect(destroyEvent.fields.address).toEqual(unexecutedSequenceInfo.address)
     const assetOutput = testResult.txOutputs[1]
-    expect(assetOutput.alphAmount).toEqual(ONE_ALPH - defaultGasFee)
+    expect(assetOutput.alphAmount).toEqual(ONE_ALPH)
   })
 })

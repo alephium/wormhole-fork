@@ -1,20 +1,8 @@
 import { ALPH_TOKEN_ID, DUST_AMOUNT, ExecuteScriptResult, SignerProvider } from "@alephium/web3";
 import { ethers, Overrides, PayableOverrides } from "ethers";
 import { TransferLocal, TransferRemote } from "../alephium-contracts/ts/scripts";
-import {
-  Bridge__factory,
-  TokenImplementation__factory,
-} from "../ethers-contracts";
-import {
-  ChainId,
-  ChainName,
-  CHAIN_ID_ALEPHIUM,
-  coalesceChainId,
-  createNonce,
-  hexToUint8Array,
-  textToUint8Array
-} from "../utils";
-import { safeBigIntToNumber } from "../utils/bigint";
+import { Bridge__factory, TokenImplementation__factory } from "../ethers-contracts";
+import { ChainId, ChainName, CHAIN_ID_ALEPHIUM, coalesceChainId, createNonce } from "../utils";
 
 export async function transferLocalTokenFromAlph(
   signerProvider: SignerProvider,
@@ -30,7 +18,8 @@ export async function transferLocalTokenFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return TransferLocal.execute(signerProvider, {
+  return TransferLocal.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
@@ -66,7 +55,8 @@ export async function transferRemoteTokenFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return TransferRemote.execute(signerProvider, {
+  return TransferRemote.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
