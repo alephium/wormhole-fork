@@ -12,7 +12,8 @@ export async function redeemOnAlphWithReward(
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return CompleteTransferWithReward.execute(signerProvider, {
+  return CompleteTransferWithReward.execute({
+    signer: signerProvider,
     initialFields: {
       bridgeRewardRouter: bridgeRewardRouterId,
       tokenBridgeForChain: tokenBridgeForChainId,
@@ -27,7 +28,8 @@ export async function redeemOnAlph(
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return CompleteTransfer.execute(signerProvider, {
+  return CompleteTransfer.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
       vaa: binToHex(signedVAA)

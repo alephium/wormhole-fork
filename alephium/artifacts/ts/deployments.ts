@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { RunScriptResult, DeployContractExecutionResult } from "@alephium/cli";
+import { RunScriptResult, DeployContractExecutionResult } from "@alephium/web3";
 import { NetworkId } from "@alephium/web3";
 import {
   LocalTokenPool,

@@ -23,6 +23,8 @@ import {
   TokenBridgeInstance,
   BridgeRewardRouter,
   BridgeRewardRouterInstance,
+  BridgeRewardRouterV2,
+  BridgeRewardRouterV2Instance,
   TestToken,
   TestTokenInstance,
 } from ".";
@@ -42,6 +44,7 @@ export type Deployments = {
     Governance: DeployContractExecutionResult<GovernanceInstance>;
     TokenBridge: DeployContractExecutionResult<TokenBridgeInstance>;
     BridgeRewardRouter: DeployContractExecutionResult<BridgeRewardRouterInstance>;
+    BridgeRewardRouterV2: DeployContractExecutionResult<BridgeRewardRouterV2Instance>;
     TestToken?: DeployContractExecutionResult<TestTokenInstance>;
   };
   scripts: {
@@ -104,6 +107,12 @@ function toDeployments(json: any): Deployments {
       ...json.contracts["BridgeRewardRouter"],
       contractInstance: BridgeRewardRouter.at(
         json.contracts["BridgeRewardRouter"].contractInstance.address
+      ),
+    },
+    BridgeRewardRouterV2: {
+      ...json.contracts["BridgeRewardRouterV2"],
+      contractInstance: BridgeRewardRouterV2.at(
+        json.contracts["BridgeRewardRouterV2"].contractInstance.address
       ),
     },
     TestToken:

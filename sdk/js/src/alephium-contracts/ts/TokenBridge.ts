@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as TokenBridgeContractJson } from "../token_bridge/TokenBridge.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace TokenBridgeTypes {
@@ -491,7 +491,7 @@ class Factory extends ContractFactory<
     getRefundAddress: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<Address>> => {
       return testMethod(
@@ -517,7 +517,7 @@ class Factory extends ContractFactory<
     getMessageFee: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<bigint>> => {
       return testMethod(this, "getMessageFee", params, getContractByCodeHash);
@@ -541,7 +541,7 @@ class Factory extends ContractFactory<
     nextSendSequence: async (
       params: Omit<
         TestContractParamsWithoutMaps<TokenBridgeTypes.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<bigint>> => {
       return testMethod(
@@ -649,6 +649,7 @@ export const TokenBridge = new Factory(
     []
   )
 );
+registerContract(TokenBridge);
 
 // Use this class to interact with the blockchain
 export class TokenBridgeInstance extends ContractInstance {

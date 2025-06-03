@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as MathTestContractJson } from "../tests/MathTest.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace MathTestTypes {
@@ -141,6 +141,7 @@ export const MathTest = new Factory(
     []
   )
 );
+registerContract(MathTest);
 
 // Use this class to interact with the blockchain
 export class MathTestInstance extends ContractInstance {

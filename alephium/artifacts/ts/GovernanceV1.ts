@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as GovernanceV1ContractJson } from "../tests/GovernanceV1.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace GovernanceV1Types {
@@ -106,7 +106,7 @@ class Factory extends ContractFactory<
     foo: async (
       params: Omit<
         TestContractParamsWithoutMaps<GovernanceV1Types.Fields, never>,
-        "testArgs"
+        "args"
       >
     ): Promise<TestContractResultWithoutMaps<null>> => {
       return testMethod(this, "foo", params, getContractByCodeHash);
@@ -131,6 +131,7 @@ export const GovernanceV1 = new Factory(
     []
   )
 );
+registerContract(GovernanceV1);
 
 // Use this class to interact with the blockchain
 export class GovernanceV1Instance extends ContractInstance {

@@ -34,7 +34,7 @@ import {
   Narrow,
 } from "@alephium/web3";
 import { default as AttestTokenHandlerContractJson } from "../token_bridge/AttestTokenHandler.ral.json";
-import { getContractByCodeHash } from "./contracts";
+import { getContractByCodeHash, registerContract } from "./contracts";
 
 // Custom types for the contract
 export namespace AttestTokenHandlerTypes {
@@ -290,6 +290,7 @@ export const AttestTokenHandler = new Factory(
     []
   )
 );
+registerContract(AttestTokenHandler);
 
 // Use this class to interact with the blockchain
 export class AttestTokenHandlerInstance extends ContractInstance {

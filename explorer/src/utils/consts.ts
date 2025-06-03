@@ -1,7 +1,6 @@
 import {
   ChainId,
   getEmitterAddressEth,
-  getEmitterAddressSolana,
   getEmitterAddressTerra,
 } from "@alephium/wormhole-sdk";
 import { default as alephiumDevnetConfig } from '../../../configs/alephium/devnet.json'
@@ -129,7 +128,6 @@ const getEmitterAddressAlephium = (address: string) =>
 const getEmitterAddress: {
   [chainName: string]: (address: string) => Promise<string>;
 } = {
-  solana: getEmitterAddressSolana,
   ethereum: getEmitterAddressEVM,
   terra: getEmitterAddressTerra,
   bsc: getEmitterAddressEVM,

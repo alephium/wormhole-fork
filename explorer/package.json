@@ -10,8 +10,8 @@
     "clean": "gatsby clean"
   },
   "dependencies": {
-    "@alephium/web3": "^0.22.0",
-    "@alephium/wormhole-sdk": "0.2.0",
+    "@alephium/web3": "^2.0.0-rc.1",
+    "@alephium/wormhole-sdk": "^0.5.1",
     "@cosmjs/encoding": "^0.27.0",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",

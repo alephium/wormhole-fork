@@ -19,4 +19,5 @@ export * from "./TokenBridgeForChain";
 export * from "./TokenBridgeV1";
 export * from "./UnexecutedSequence";
 export * from "./UnexecutedSequenceTest";
+export * from "./contracts";
 export * from "./scripts";

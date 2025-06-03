@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v3.7.0",
+  "fullNodeVersion": "v3.15.1",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": true,
     "ignoreUnusedVariablesWarnings": false,
@@ -7,7 +7,9 @@
     "ignoreUnusedPrivateFunctionsWarnings": false,
     "ignoreUpdateFieldsCheckWarnings": false,
     "ignoreCheckExternalCallerWarnings": false,
-    "ignoreUnusedFunctionReturnWarnings": true
+    "ignoreUnusedFunctionReturnWarnings": true,
+    "skipAbstractContractCheck": false,
+    "skipTests": false
   },
   "infos": {
     "AddRewards": {
@@ -204,7 +206,7 @@
     },
     "TokenBridgeGovernance": {
       "sourceFile": "token_bridge/token_bridge_governance.ral",
-      "sourceCodeHash": "48d066c4b7dd426e8babd0d1b8535a4b4cee87167335da5caa3b00361032a345",
+      "sourceCodeHash": "c4c31cf3d470d9fb5df7c20d0c6b977554302f07f878eab35d4245347d0550e9",
       "bytecodeDebugPatch": "",
       "codeHashDebug": ""
     },

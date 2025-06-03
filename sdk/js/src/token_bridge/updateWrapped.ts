@@ -8,7 +8,8 @@ export async function updateRemoteTokenPoolOnAlph(
   attestTokenHandlerId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return UpdateRemoteTokenPool.execute(signerProvider, {
+  return UpdateRemoteTokenPool.execute({
+    signer: signerProvider,
     initialFields: {
       attestTokenHandler: attestTokenHandlerId,
       vaa: binToHex(signedVAA)
