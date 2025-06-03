@@ -4,7 +4,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import {
-  setDefaultWasm,
   getSignedVAAWithRetry,
   ChainId,
   VAA,
@@ -34,8 +33,6 @@ import {
 import { deposit, executeGovernanceAlph, getNextGovernanceSequence, topupRewards } from "./alph";
 import { default as guardianDevnetConfig } from '../../configs/guardian/devnet.json'
 import { CONFIGS, NetworkType } from "./configs";
-
-setDefaultWasm("node");
 
 const GOVERNANCE_CHAIN = guardianDevnetConfig.governanceChainId
 const GOVERNANCE_EMITTER = guardianDevnetConfig.governanceEmitterAddress

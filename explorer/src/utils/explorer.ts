@@ -5,8 +5,6 @@ import {
   isEVMChain,
   uint8ArrayToHex,
 } from "@alephium/wormhole-sdk";
-import { fromHex } from "@cosmjs/encoding";
-import { PublicKey } from "@solana/web3.js";
 import { ActiveNetwork, useNetworkContext } from "../contexts/NetworkContext";
 import { ChainID, chainIDs } from "./consts";
 import { addressFromContractId } from '@alephium/web3'
@@ -63,24 +61,6 @@ const getNativeAddress = (
     nativeAddress = (
       hexToNativeString(emitterAddress, CHAIN_ID_TERRA) || ""
     ).toLowerCase();
-  } else if (chainId === chainIDs["solana"]) {
-    if (!activeNetwork) {
-      activeNetwork = useNetworkContext().activeNetwork;
-    }
-    const chainName = ChainID[chainId].toLowerCase();
-
-    // use the "chains" map of hex: nativeAdress first
-    if (emitterAddress in activeNetwork.chains[chainName]) {
-      let desc = activeNetwork.chains[chainName][emitterAddress];
-      if (desc in activeNetwork.chains[chainName]) {
-        // lookup the contract address
-        nativeAddress = activeNetwork.chains[chainName][desc];
-      }
-    } else {
-      let hex = fromHex(emitterAddress);
-      let pubKey = new PublicKey(hex);
-      nativeAddress = pubKey.toString();
-    }
   }
   return nativeAddress;
 };

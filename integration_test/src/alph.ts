@@ -8,7 +8,7 @@ import {
   ALPH_TOKEN_ID,
   binToHex,
   ContractState,
-  encodeI256,
+  codec,
   Fields,
   groupOfAddress,
   node,
@@ -380,11 +380,11 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const genMultiSigAddress = (): Uint8Array => {
     const n = Math.floor(Math.random() * 7) + 3
     const m = Math.floor(Math.random() * n) + 1
-    let hex: string = '01' + binToHex(encodeI256(BigInt(n)))
+    let hex: string = '01' + binToHex(codec.i32Codec.encode(n))
     for (let i = 0; i < n; i += 1) {
       hex += Buffer.from(randomBytes(32)).toString('hex')
     }
-    const address = Buffer.from(hex + binToHex(encodeI256(BigInt(m))), 'hex')
+    const address = Buffer.from(hex + binToHex(codec.i32Codec.encode(m)), 'hex')
     const addressBase58 = base58.encode(address)
     const group = groupOfAddress(addressBase58)
     if (group === groupIndex) {
@@ -396,7 +396,7 @@ export async function createAlephium(): Promise<AlephiumBridgeChain> {
   const getWrappedTokenTotalSupply = async (tokenChainId: ChainId, tokenId: string): Promise<bigint> => {
     const tokenPoolId = getTokenPoolId(tokenBridgeContractId, tokenChainId, tokenId, groupIndex)
     const tokenPoolInstance = alephium_contracts.RemoteTokenPool.at(addressFromContractId(tokenPoolId))
-    return (await tokenPoolInstance.methods.getTotalSupply()).returns
+    return (await tokenPoolInstance.view.getTotalSupply()).returns
   }
 
   return {

@@ -8,7 +8,6 @@ import ExplorerSummary from './ExplorerSummary';
 import { useNetworkContext } from '../../contexts/NetworkContext';
 import {
     ChainId,
-    getEmitterAddressSolana,
     isEVMChain,
     deserializeVAA,
     uint8ArrayToHex,
@@ -17,7 +16,6 @@ import {
     coalesceChainId
 } from "@alephium/wormhole-sdk";
 import { ChainIDs, chainIDs } from '../../utils/consts';
-import { PublicKey } from '@solana/web3.js';
 
 export interface VAA {
     Version: number | string,
@@ -134,17 +132,7 @@ const ExplorerQuery = (props: ExplorerQuery) => {
         let url = ""
 
         if ((emitterChain !== undefined) && emitterAddress && (targetChain !== undefined) && sequence) {
-            if (emitterChain === chainIDs["solana"]) {
-                if (emitterAddress.length < 64) {
-                    try {
-                        paddedAddress = await getEmitterAddressSolana(emitterAddress)
-                    } catch (_) {
-                        // do nothing
-                    }
-                } else {
-                    paddedAddress = emitterAddress
-                }
-            } else if (isEVMChain(emitterChain as ChainId)) {
+            if (isEVMChain(emitterChain as ChainId)) {
                 if (isHexString(emitterAddress)) {
 
                     let paddedAddressArray = zeroPad(arrayify(emitterAddress, { hexPad: "left" }), 32);

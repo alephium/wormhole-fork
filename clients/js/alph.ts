@@ -25,7 +25,8 @@ export async function deposit(
   const signer = getSignerProvider(network, nodeUrl)
   const amount = alphAmount * ONE_ALPH
   const tokenBridgeForChainId = getTokenBridgeForChainId(network.tokenBridgeAddress, remoteChainId, network.groupIndex)
-  const result = await Deposit.execute(signer, {
+  const result = await Deposit.execute({
+    signer,
     initialFields: {
       payer: signer.address,
       amount: amount,
@@ -44,7 +45,8 @@ export async function topupRewards(
   const network = CONFIGS[networkType]['alephium']
   const signer = getSignerProvider(network, nodeUrl)
   const amount = alphAmount * ONE_ALPH
-  const result = await AddRewards.execute(signer, {
+  const result = await AddRewards.execute({
+    signer,
     initialFields: {
       bridgeRewardRouter: network.bridgeRewardRouter,
       amount: amount
@@ -88,7 +90,8 @@ export async function executeGovernanceAlph(
   const vaaHex = binToHex(vaa)
 
   const executeGovernanceScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
-    return executableScript.execute(wallet, {
+    return executableScript.execute({
+      signer: wallet,
       initialFields: {
         'governance': network.governanceAddress,
         'vaa': vaa.toString('hex')
@@ -97,7 +100,8 @@ export async function executeGovernanceAlph(
   }
 
   const executeTokenBridgeScript = async (executableScript: ExecutableScript): Promise<ExecuteScriptResult> => {
-    return executableScript.execute(wallet, {
+    return executableScript.execute({
+      signer: wallet,
       initialFields: {
         'tokenBridge': network.tokenBridgeAddress,
         'vaa': vaa.toString('hex')
@@ -122,7 +126,8 @@ export async function executeGovernanceAlph(
         case 'TransferFee':
           console.log('Submitting transfer fee')
           const alphAmount = deserializeTransferFeeVAA(vaa).body.payload.amount
-          const result = await alephium_contracts.TransferFee.execute(wallet, {
+          const result = await alephium_contracts.TransferFee.execute({
+            signer: wallet,
             initialFields: {
               governance: network.governanceAddress,
               vaa: vaaHex

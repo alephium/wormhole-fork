@@ -34,9 +34,6 @@ export function encodeEmitterAddress(
   if (wormholeSdk.isEVMChain(chainId)) {
     return wormholeSdk.getEmitterAddressEth(emitterAddressStr);
   }
-  if (wormholeSdk.CHAIN_ID_ALGORAND === chainId) {
-    return wormholeSdk.getEmitterAddressAlgorand(BigInt(emitterAddressStr));
-  }
   if (wormholeSdk.CHAIN_ID_ALEPHIUM === chainId) {
     return emitterAddressStr
   }
