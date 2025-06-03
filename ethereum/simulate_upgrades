@@ -11,7 +11,7 @@ function clean_up () {
 trap clean_up EXIT
 
 echo "🍴 Forking mainnet..."
-anvil --base-fee 0 --fork-url "https://rpc.ankr.com/eth" --mnemonic "myth like bonus scare over problem client lizard pioneer submit female collect" > /dev/null &
+anvil --base-fee 0 --fork-url "https://eth-mainnet.public.blastapi.io" --mnemonic "myth like bonus scare over problem client lizard pioneer submit female collect" > /dev/null &
 ANVIL_PID=$!
 
 sleep 10
