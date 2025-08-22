@@ -172,8 +172,8 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	go w.fetchEvents(ctx, logger, w.client, errC, eventsC)
 	go w.handleObsvRequest(ctx, logger, w.client)
-	go w.fetchHeight(ctx, logger, w.client, errC, heightC)
-	go w.handleEvents(ctx, logger, w.client, errC, eventsC, heightC)
+	go w.fetchHeight(ctx, logger, w.client, heightC)
+	go w.handleEvents(ctx, logger, w.client, eventsC, heightC)
 
 	select {
 	case <-ctx.Done():
@@ -220,8 +220,8 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 			count, err := client.GetContractEventsCount(ctx, contractAddress)
 			if err != nil {
 				logger.Error("failed to get contract event count", zap.String("contractAddress", contractAddress), zap.Error(err))
-				errC <- err
-				return
+				// It’s safe to ignore this error, since we will refetch the event count on the next timer tick
+				continue
 			}
 			logger.Info("alephium contract event count", zap.Int32("count", *count), zap.Int32("fromIndex", fromIndex))
 
@@ -234,14 +234,11 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 				events, err := client.GetContractEvents(ctx, contractAddress, fromIndex, w.chainIndex.FromGroup)
 				if err != nil {
 					logger.Error("failed to get contract events", zap.Int32("fromIndex", fromIndex), zap.Error(err))
-					errC <- err
-					return
+					// It’s safe to ignore this error, since we will refetch the events from `fromIndex` in the next timer tick
+					break
 				}
 
-				unconfirmed, err := w.handleUnconfirmedEvents(ctx, logger, events)
-				if err != nil {
-					errC <- err
-				}
+				unconfirmed := w.handleUnconfirmedEvents(ctx, logger, events)
 				unconfirmedEvents = append(unconfirmedEvents, unconfirmed...)
 
 				fromIndex = events.NextStart
@@ -250,20 +247,22 @@ func (w *Watcher) fetchEvents(ctx context.Context, logger *zap.Logger, client *C
 				}
 			}
 
-			alphMessagesObserved.Add(float64(len(unconfirmedEvents)))
-			eventsC <- unconfirmedEvents
+			if len(unconfirmedEvents) > 0 {
+				alphMessagesObserved.Add(float64(len(unconfirmedEvents)))
+				eventsC <- unconfirmedEvents
+			}
 		}
 	}
 }
 
-func (w *Watcher) handleUnconfirmedEvents(ctx context.Context, logger *zap.Logger, events *sdk.ContractEvents) ([]*UnconfirmedEvent, error) {
+func (w *Watcher) handleUnconfirmedEvents(ctx context.Context, logger *zap.Logger, events *sdk.ContractEvents) []*UnconfirmedEvent {
 	unconfirmedEvents := make([]*UnconfirmedEvent, 0)
 	for _, event := range events.Events {
 		contractEvent := event
 		unconfirmed, err := w.toUnconfirmedEvent(&contractEvent)
 		if err != nil {
-			logger.Error("failed to convert to unconfirmed event", zap.Error(err))
-			return nil, err
+			logger.Error("ignore invalid wormhole event", zap.Error(err), zap.String("event", marshalContractEvent(&contractEvent)))
+			continue
 		}
 		if unconfirmed.msg.IsAttestTokenVAA() {
 			logger.Info("received a message", zap.String("txId", unconfirmed.TxId), zap.String("blockHash", unconfirmed.BlockHash), zap.String("type", "attest"))
@@ -276,17 +275,17 @@ func (w *Watcher) handleUnconfirmedEvents(ctx context.Context, logger *zap.Logge
 		}
 		unconfirmedEvents = append(unconfirmedEvents, unconfirmed)
 	}
-	return unconfirmedEvents, nil
+	return unconfirmedEvents
 }
 
-func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, heightC chan<- int32) {
+func (w *Watcher) fetchHeight(ctx context.Context, logger *zap.Logger, client *Client, heightC chan<- int32) {
 	getCurrentHeight := func() (*int32, error) {
 		return client.GetCurrentHeight(ctx, w.chainIndex)
 	}
-	w._fetchHeight(ctx, logger, getCurrentHeight, errC, heightC)
+	w._fetchHeight(ctx, logger, getCurrentHeight, heightC)
 }
 
-func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurrentHeight func() (*int32, error), errC chan<- error, heightC chan<- int32) {
+func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurrentHeight func() (*int32, error), heightC chan<- int32) {
 	t := time.NewTicker(time.Duration(w.pollIntervalMs) * time.Millisecond)
 	defer t.Stop()
 
@@ -303,8 +302,7 @@ func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurre
 			latestHeight, err := getCurrentHeight()
 			if err != nil {
 				logger.Error("failed to get current height", zap.Error(err))
-				errC <- err
-				return
+				continue
 			}
 
 			previousHeight := w.currentHeight
@@ -324,9 +322,9 @@ func (w *Watcher) _fetchHeight(ctx context.Context, logger *zap.Logger, getCurre
 	}
 }
 
-func (w *Watcher) handleConfirmedEvents(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
+func (w *Watcher) handleConfirmedEvents(logger *zap.Logger, confirmed []*ConfirmedEvent) {
 	if len(confirmed) == 0 {
-		return nil
+		return
 	}
 
 	alphMessagesConfirmed.Add(float64(len(confirmed)))
@@ -342,10 +340,9 @@ func (w *Watcher) handleConfirmedEvents(logger *zap.Logger, confirmed []*Confirm
 			w.msgChan <- e.event.msg.toMessagePublication(e.header)
 
 		default:
-			return fmt.Errorf("unknown event index %v", e.event.EventIndex)
+			logger.Error("ignore unknown event", zap.String("event", marshalContractEvent(e.event.ContractEvent)))
 		}
 	}
-	return nil
 }
 
 func (w *Watcher) toUnconfirmedEvent(event *sdk.ContractEvent) (*UnconfirmedEvent, error) {
@@ -360,7 +357,7 @@ func (w *Watcher) toUnconfirmedEvent(event *sdk.ContractEvent) (*UnconfirmedEven
 	return &UnconfirmedEvent{event, msg}, err
 }
 
-func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *Client, errC chan<- error, eventsC <-chan []*UnconfirmedEvent, heightC <-chan int32) {
+func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *Client, eventsC <-chan []*UnconfirmedEvent, heightC <-chan int32) {
 	isBlockInMainChain := func(hash string) (*bool, error) {
 		return client.IsBlockInMainChain(ctx, hash)
 	}
@@ -368,7 +365,7 @@ func (w *Watcher) handleEvents(ctx context.Context, logger *zap.Logger, client *
 		return client.GetBlockHeader(ctx, hash)
 	}
 
-	w.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, w.handleConfirmedEvents, errC, eventsC, heightC)
+	w.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, w.handleConfirmedEvents, eventsC, heightC)
 }
 
 func (w *Watcher) handleEvents_(
@@ -376,8 +373,7 @@ func (w *Watcher) handleEvents_(
 	logger *zap.Logger,
 	isBlockInMainChain func(string) (*bool, error),
 	getBlockHeader func(string) (*sdk.BlockHeaderEntry, error),
-	handler func(*zap.Logger, []*ConfirmedEvent) error,
-	errC chan<- error,
+	handler func(*zap.Logger, []*ConfirmedEvent),
 	eventsC <-chan []*UnconfirmedEvent,
 	heightC <-chan int32,
 ) {
@@ -440,10 +436,7 @@ func (w *Watcher) handleEvents_(
 		if len(confirmedEvents) == 0 {
 			return nil
 		}
-		if err := handler(logger, confirmedEvents); err != nil {
-			logger.Error("failed to handle confirmed events", zap.Error(err))
-			return err
-		}
+		handler(logger, confirmedEvents)
 		return nil
 	}
 
@@ -469,8 +462,8 @@ func (w *Watcher) handleEvents_(
 
 		case height := <-heightC:
 			if err := process(height); err != nil {
-				errC <- err
-				return
+				logger.Error("failed to process events due to a full node request error, will retry on the next tick", zap.Error(err))
+				continue
 			}
 		}
 	}
