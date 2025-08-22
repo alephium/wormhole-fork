@@ -40,9 +40,8 @@ func TestSubscribeEvents(t *testing.T) {
 	}
 
 	confirmedEvents := make([]*ConfirmedEvent, 0)
-	handler := func(logger *zap.Logger, confirmed []*ConfirmedEvent) error {
+	handler := func(logger *zap.Logger, confirmed []*ConfirmedEvent) {
 		confirmedEvents = append(confirmedEvents, confirmed...)
-		return nil
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -50,7 +49,6 @@ func TestSubscribeEvents(t *testing.T) {
 
 	logger, err := zap.NewDevelopment()
 	assert.Nil(t, err)
-	errC := make(chan error)
 	eventsC := make(chan []*UnconfirmedEvent)
 	heightC := make(chan int32)
 
@@ -81,7 +79,7 @@ func TestSubscribeEvents(t *testing.T) {
 		}, nil
 	}
 
-	go watcher.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, handler, errC, eventsC, heightC)
+	go watcher.handleEvents_(ctx, logger, isBlockInMainChain, getBlockHeader, handler, eventsC, heightC)
 
 	sendEventsAtHeight := func(height int32, unconfirmedEvents []*UnconfirmedEvent) {
 		atomic.StoreInt32(&watcher.currentHeight, height)
@@ -148,7 +146,6 @@ func TestDisableBlockPoller(t *testing.T) {
 	logger, err := zap.NewDevelopment()
 	assert.Nil(t, err)
 
-	errC := make(chan error)
 	heightC := make(chan int32, 32)
 	_currentHeight := int32(0)
 
@@ -168,7 +165,7 @@ func TestDisableBlockPoller(t *testing.T) {
 		return currentHeight
 	}
 
-	go watcher._fetchHeight(ctx, logger, getCurrentHeight, errC, heightC)
+	go watcher._fetchHeight(ctx, logger, getCurrentHeight, heightC)
 
 	assertCurrentHeightEqual(0)
 	time.Sleep(1 * time.Second)
@@ -177,6 +174,7 @@ func TestDisableBlockPoller(t *testing.T) {
 	watcher.EnableBlockPoller()
 	time.Sleep(1 * time.Second)
 	watcher.DisableBlockPoller()
+	time.Sleep(200 * time.Millisecond)
 	currentHeight := assertCurrentHeightNotLessThan(9)
 
 	time.Sleep(1 * time.Second)
@@ -289,6 +287,12 @@ func TestHandleUnconfirmedEvents(t *testing.T) {
 	}
 
 	events := make([]sdk.ContractEvent, 0)
+	events = append(events, sdk.ContractEvent{
+		BlockHash:  randomByte32().ToHex(),
+		TxId:       randomByte32().ToHex(),
+		EventIndex: 1,
+		Fields:     fields,
+	})
 	for i := 0; i < 10; i++ {
 		events = append(events, sdk.ContractEvent{
 			BlockHash:  randomByte32().ToHex(),
@@ -298,15 +302,15 @@ func TestHandleUnconfirmedEvents(t *testing.T) {
 		})
 	}
 
-	unconfirmedEvents, err := watcher.handleUnconfirmedEvents(context.Background(), logger, &sdk.ContractEvents{Events: events})
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Equal(t, len(events), 11)
+	unconfirmedEvents := watcher.handleUnconfirmedEvents(context.Background(), logger, &sdk.ContractEvents{Events: events})
+	assert.Equal(t, 10, len(unconfirmedEvents))
 
 	blockHashes := make(map[string]bool, 0)
-	assert.Equal(t, 10, len(unconfirmedEvents))
 	for i := 0; i < 10; i++ {
 		blockHashes[unconfirmedEvents[i].BlockHash] = true
 	}
 	assert.Equal(t, 10, len(blockHashes))
+	_, ok := blockHashes[events[0].BlockHash]
+	assert.Equal(t, ok, false)
 }
