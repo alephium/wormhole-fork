@@ -298,5 +298,9 @@
   "Token {{ tokenAddress }} does not exist in the token list": "Token {{ tokenAddress }} does not exist in the token list",
   "Failed to get tokens": "Failed to get tokens",
   "response status": "response status",
-  "Invalid response, expect a token list": "Invalid response, expect a token list"
+  "Invalid response, expect a token list": "Invalid response, expect a token list",
+  "From": "From",
+  "To": "To",
+  "Disconnect {{ chainName }} wallet": "Disconnect {{ chainName }} wallet",
+  "Connect {{ chainName }} wallet": "Connect {{ chainName }} wallet"
 }
