@@ -23,7 +23,7 @@ import { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { balancePretty } from "../../utils/balancePretty";
 import { getIsTokenTransferDisabled } from "../../utils/consts";
 import { shortenAddress } from "../../utils/solana";
-import NFTViewer from "./NFTViewer";
+import NFTViewer from "../TokenSelectors/NFTViewer";
 import { useDispatch, useSelector } from "react-redux";
 import { selectTransferAmount } from "../../store/selectors";
 import { setAmount } from "../../store/transferSlice";
@@ -132,7 +132,7 @@ const useStyles = makeStyles((theme) =>
       display: "flex",
       flexDirection: "column",
       gap: "5px",
-      padding: "21px 14px",
+      padding: "14px",
       backgroundColor: "rgba(255, 255, 255, 0.05)",
       borderRadius: "20px",
       marginTop: "10px",

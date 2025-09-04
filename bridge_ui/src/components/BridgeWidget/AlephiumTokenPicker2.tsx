@@ -5,7 +5,7 @@ import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAcc
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { ParsedTokenAccount } from "../../store/transferSlice";
 import { getAlephiumTokenLogoAndSymbol, tryGetContractId } from "../../utils/alephium";
-import TokenPicker, { BasicAccountRender } from "./TokenPicker";
+import TokenPicker, { BasicAccountRender } from "../TokenSelectors/TokenPicker";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 import TokenPicker2 from "./TokenPicker2";

@@ -18,7 +18,7 @@ import {
 import { setSourceChain, setStep, setTargetChain } from "../../store/transferSlice";
 import { CHAINS_BY_ID } from "../../utils/consts";
 import ChainSelect from "../ChainSelect";
-import Source2 from "../Transfer/Source2";
+import Source2 from "./Source2";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import EvmConnectWalletDialog from "../EvmConnectWalletDialog";
 import { AlephiumConnectButton } from "@alephium/web3-react";
