@@ -162,8 +162,8 @@ const useStyles = makeStyles((theme) => ({
   stack: {
     display: "flex",
     flexDirection: "column",
-    gap: "4px",
     position: "relative",
+    gap: "25px",
   },
   confirmButton: {
     backgroundColor: "#080808",
@@ -194,7 +194,6 @@ const useConnectButtonStyles = makeStyles((theme) => ({
     backgroundColor: "#bd75f01a",
     textTransform: "none",
     borderRadius: "14px",
-    boxShadow: "0 8px 15px rgba(0, 0, 0, 1)",
     height: "44px",
     display: "flex",
     alignItems: "center",
