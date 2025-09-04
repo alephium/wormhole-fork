@@ -27,11 +27,11 @@ import {
   setSourceParsedTokenAccount as setTransferSourceParsedTokenAccount,
   setSourceWalletAddress as setTransferSourceWalletAddress,
 } from "../../store/transferSlice";
-import AlephiumTokenPicker from "./AlephiumTokenPicker";
-import AlgoTokenPicker from "./AlgoTokenPicker";
-import EvmTokenPicker from "./EvmTokenPicker";
-import RefreshButtonWrapper from "./RefreshButtonWrapper";
-import SolanaTokenPicker from "./SolanaTokenPicker";
+import AlephiumTokenPicker from "../TokenSelectors/AlephiumTokenPicker";
+import AlgoTokenPicker from "../TokenSelectors/AlgoTokenPicker";
+import EvmTokenPicker from "../TokenSelectors/EvmTokenPicker";
+import RefreshButtonWrapper from "../TokenSelectors/RefreshButtonWrapper";
+import SolanaTokenPicker from "../TokenSelectors/SolanaTokenPicker";
 import EvmTokenPicker2 from "./EvmTokenPicker2";
 import AlephiumTokenPicker2 from "./AlephiumTokenPicker2";
 
