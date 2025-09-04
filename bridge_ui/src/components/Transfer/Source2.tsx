@@ -10,11 +10,13 @@ import { getAddress } from "@ethersproject/address";
 import { Button, makeStyles, Typography, Popover, List, ListItem, ListItemText, IconButton } from "@material-ui/core";
 import { VerifiedUser, Close } from "@material-ui/icons";
 import { useCallback, useMemo, useState } from "react";
+import useGetSourceParsedTokens from "../../hooks/useGetSourceParsedTokenAccounts";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";
 import { Link } from "react-router-dom";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
+import { setSourceParsedTokenAccount, setSourceWalletAddress } from "../../store/nftSlice";
 import {
   selectTransferAmount,
   selectTransferIsSourceComplete,
@@ -25,7 +27,13 @@ import {
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetChain,
 } from "../../store/selectors";
-import { incrementStep, setAmount, setSourceChain, setTargetChain } from "../../store/transferSlice";
+import {
+  incrementStep,
+  ParsedTokenAccount,
+  setAmount,
+  setSourceChain,
+  setTargetChain,
+} from "../../store/transferSlice";
 import {
   BSC_MIGRATION_ASSET_MAP,
   CHAINS,
@@ -48,6 +56,9 @@ import ChainWarningMessage from "../ChainWarningMessage";
 import { useTranslation } from "react-i18next";
 import { AlephiumConnectButton } from "@alephium/web3-react";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
+import EvmTokenPicker2 from "../TokenSelectors/EvmTokenPicker2";
+import AlephiumTokenPicker2 from "../TokenSelectors/AlephiumTokenPicker2";
+import { TokenSelector2 } from "../TokenSelectors/SourceTokenSelector2";
 
 const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
@@ -163,7 +174,7 @@ function Source2() {
 
   return (
     <>
-      <div className={classes.chainSelectWrapper} style={{ marginBottom: "25px" }}>
+      <div className={classes.chainSelectWrapper}>
         <div className={classes.chainSelectContainer}>
           <div className={classes.chainSelectLabelRow}>
             <Label>{t("From")}</Label>
@@ -205,11 +216,15 @@ function Source2() {
       </div>
 
       {/* <KeyAndBalance chainId={sourceChain} /> */}
-      {/* {isReady || uiAmountString ? (
-        <div className={classes.transferField}>
-          <TokenSelector disabled={shouldLockFields} />
-        </div>
-      ) : null} */}
+
+      {isReady || uiAmountString ? (
+        // <div className={classes.transferField}>
+        //   <TokenSelector disabled={shouldLockFields} />
+        // </div>
+        <TokenSelector2 disabled={shouldLockFields} />
+      ) : // <TokenAmountInput disabled={shouldLockFields} />
+      null}
+
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
           {t("Go to Migration Page")}
@@ -219,7 +234,7 @@ function Source2() {
           <LowBalanceWarning chainId={sourceChain} />
           {sourceChain === CHAIN_ID_SOLANA && CLUSTER === "mainnet" && <SolanaTPSWarning />}
           <SourceAssetWarning sourceChain={sourceChain} sourceAsset={parsedTokenAccount?.mintKey} />
-          {hasParsedTokenAccount ? (
+          {/* {hasParsedTokenAccount ? (
             <NumberTextField
               variant="outlined"
               label={t("Amount")}
@@ -230,7 +245,7 @@ function Source2() {
               disabled={shouldLockFields}
               onMaxClick={uiAmountString && !parsedTokenAccount.isNativeAsset ? handleMaxClick : undefined}
             />
-          ) : null}
+          ) : null} */}
           <ChainWarningMessage chainId={sourceChain} />
           <ChainWarningMessage chainId={targetChain} />
           {/* <ButtonWithLoader
@@ -248,6 +263,57 @@ function Source2() {
 }
 
 export default Source2;
+
+const TokenAmountInput = ({ disabled }: { disabled: boolean }) => {
+  const classes = useStyles();
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  const lookupChain = useSelector(selectTransferSourceChain);
+  const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount);
+  const walletIsReady = useIsWalletReady(lookupChain);
+
+  const handleOnChange = useCallback(
+    (newTokenAccount: ParsedTokenAccount | null) => {
+      if (!newTokenAccount) {
+        dispatch(setSourceParsedTokenAccount(undefined));
+        dispatch(setSourceWalletAddress(undefined));
+      } else if (newTokenAccount !== undefined && walletIsReady.walletAddress) {
+        console.log("handleOnChange newTokenAccount", newTokenAccount);
+        dispatch(setSourceParsedTokenAccount(newTokenAccount));
+        dispatch(setSourceWalletAddress(walletIsReady.walletAddress));
+      }
+    },
+    [dispatch, walletIsReady]
+  );
+
+  const maps = useGetSourceParsedTokens();
+  const resetAccountWrapper = maps?.resetAccounts || (() => {}); //This should never happen.
+
+  //This is only for errors so bad that we shouldn't even mount the component
+  const fatalError = !isEVMChain(lookupChain) && maps?.tokenAccounts?.error; //Terra & ETH can proceed because it has advanced mode
+
+  return isEVMChain(lookupChain) ? (
+    <EvmTokenPicker2
+      value={sourceParsedTokenAccount || null}
+      disabled={disabled}
+      onChange={handleOnChange}
+      tokenAccounts={maps?.tokenAccounts}
+      resetAccounts={maps?.resetAccounts}
+      chainId={lookupChain}
+    />
+  ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
+    <AlephiumTokenPicker2
+      value={sourceParsedTokenAccount || null}
+      disabled={disabled}
+      onChange={handleOnChange}
+      resetAccounts={maps?.resetAccounts}
+      tokens={maps?.tokens}
+      isFetching={maps?.isFetching || false}
+      balances={maps?.balances || new Map<string, bigint>()}
+    />
+  ) : null;
+};
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <Typography style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.5)", marginBottom: "8px" }}>
