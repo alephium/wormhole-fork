@@ -132,7 +132,7 @@ const useStyles = makeStyles((theme) =>
       display: "flex",
       flexDirection: "column",
       gap: "5px",
-      padding: "15px 10px",
+      padding: "21px 14px",
       backgroundColor: "rgba(255, 255, 255, 0.05)",
       borderRadius: "20px",
       marginTop: "10px",

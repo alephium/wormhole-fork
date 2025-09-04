@@ -59,6 +59,7 @@ import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import EvmTokenPicker2 from "../TokenSelectors/EvmTokenPicker2";
 import AlephiumTokenPicker2 from "../TokenSelectors/AlephiumTokenPicker2";
 import { TokenSelector2 } from "../TokenSelectors/SourceTokenSelector2";
+import ChainSelect2 from "../ChainSelect2";
 
 const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
@@ -180,7 +181,7 @@ function Source2() {
             <Label>{t("From")}</Label>
             <ConnectedChainAccount chainId={sourceChain} />
           </div>
-          <ChainSelect
+          <ChainSelect2
             select
             variant="outlined"
             fullWidth
@@ -203,7 +204,7 @@ function Source2() {
             <Label>{t("To")}</Label>
             <ConnectedChainAccount chainId={targetChain} />
           </div>
-          <ChainSelect
+          <ChainSelect2
             variant="outlined"
             select
             fullWidth
@@ -263,57 +264,6 @@ function Source2() {
 }
 
 export default Source2;
-
-const TokenAmountInput = ({ disabled }: { disabled: boolean }) => {
-  const classes = useStyles();
-  const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const lookupChain = useSelector(selectTransferSourceChain);
-  const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount);
-  const walletIsReady = useIsWalletReady(lookupChain);
-
-  const handleOnChange = useCallback(
-    (newTokenAccount: ParsedTokenAccount | null) => {
-      if (!newTokenAccount) {
-        dispatch(setSourceParsedTokenAccount(undefined));
-        dispatch(setSourceWalletAddress(undefined));
-      } else if (newTokenAccount !== undefined && walletIsReady.walletAddress) {
-        console.log("handleOnChange newTokenAccount", newTokenAccount);
-        dispatch(setSourceParsedTokenAccount(newTokenAccount));
-        dispatch(setSourceWalletAddress(walletIsReady.walletAddress));
-      }
-    },
-    [dispatch, walletIsReady]
-  );
-
-  const maps = useGetSourceParsedTokens();
-  const resetAccountWrapper = maps?.resetAccounts || (() => {}); //This should never happen.
-
-  //This is only for errors so bad that we shouldn't even mount the component
-  const fatalError = !isEVMChain(lookupChain) && maps?.tokenAccounts?.error; //Terra & ETH can proceed because it has advanced mode
-
-  return isEVMChain(lookupChain) ? (
-    <EvmTokenPicker2
-      value={sourceParsedTokenAccount || null}
-      disabled={disabled}
-      onChange={handleOnChange}
-      tokenAccounts={maps?.tokenAccounts}
-      resetAccounts={maps?.resetAccounts}
-      chainId={lookupChain}
-    />
-  ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
-    <AlephiumTokenPicker2
-      value={sourceParsedTokenAccount || null}
-      disabled={disabled}
-      onChange={handleOnChange}
-      resetAccounts={maps?.resetAccounts}
-      tokens={maps?.tokens}
-      isFetching={maps?.isFetching || false}
-      balances={maps?.balances || new Map<string, bigint>()}
-    />
-  ) : null;
-};
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <Typography style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.5)", marginBottom: "8px" }}>

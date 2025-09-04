@@ -149,9 +149,9 @@ const ConnectButtonStyled = (props: ButtonProps) => {
 
 const useStyles = makeStyles((theme) => ({
   mainBox: {
-    backgroundColor: "rgba(14, 13, 18, 0.2)",
-    borderRadius: "8px",
-    padding: "20px 16px",
+    backgroundColor: "rgba(22, 22, 22, 0.5)",
+    borderRadius: "20px",
+    padding: "20px",
     display: "flex",
     flexDirection: "column",
     width: "452px",
