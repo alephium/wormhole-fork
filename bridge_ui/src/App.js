@@ -147,7 +147,7 @@ function App() {
       <div className={classes.topGradient} />
       <AppBar position="static" color="inherit" className={classes.appBar} elevation={0}>
         <Toolbar>
-          <Link component={RouterLink} to="/transfer" className={classes.brandLink}>
+          <Link component={RouterLink} to="/bridge" className={classes.brandLink}>
             <img src={Alephium} alt={t("Alephium")} className={classes.alephiumLogo} />
           </Link>
           <div className={classes.spacer} />
@@ -254,7 +254,7 @@ function App() {
           <CustodyAddresses />
         </Route>
         <Route>
-          <Redirect to="/transfer" />
+          <Redirect to="/bridge" />
         </Route>
       </Switch>
       <div className={classes.spacer} />
