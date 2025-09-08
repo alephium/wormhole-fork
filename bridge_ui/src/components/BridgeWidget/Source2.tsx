@@ -114,20 +114,6 @@ function Source2() {
     },
     [dispatch]
   );
-  const handleAmountChange = useCallback(
-    (event: any) => {
-      dispatch(setAmount(event.target.value));
-    },
-    [dispatch]
-  );
-  const handleMaxClick = useCallback(() => {
-    if (uiAmountString) {
-      dispatch(setAmount(uiAmountString));
-    }
-  }, [dispatch, uiAmountString]);
-  const handleNextClick = useCallback(() => {
-    dispatch(incrementStep());
-  }, [dispatch]);
 
   return (
     <>

@@ -90,8 +90,8 @@ export default BridgeWidget;
 const NextActionButton = () => {
   const sourceChain = useSelector(selectTransferSourceChain);
   const targetChain = useSelector(selectTransferTargetChain);
-  const { isReady: isSourceReady, statusMessage: sourceStatusMessage } = useIsWalletReady(sourceChain);
-  const { isReady: isTargetReady, statusMessage: targetStatusMessage } = useIsWalletReady(targetChain);
+  const { isReady: isSourceReady } = useIsWalletReady(sourceChain);
+  const { isReady: isTargetReady } = useIsWalletReady(targetChain);
 
   if (!isSourceReady) {
     return <ConnectButton chainId={sourceChain} />;

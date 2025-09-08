@@ -25,7 +25,7 @@ import { getIsTokenTransferDisabled } from "../../utils/consts";
 import { shortenAddress } from "../../utils/solana";
 import NFTViewer from "../TokenSelectors/NFTViewer";
 import { useDispatch, useSelector } from "react-redux";
-import { selectTransferAmount } from "../../store/selectors";
+import { selectTransferAmount, selectTransferSourceError } from "../../store/selectors";
 import { setAmount } from "../../store/transferSlice";
 
 const useStyles = makeStyles((theme) =>
@@ -290,7 +290,6 @@ export default function TokenPicker2({
   resetAccounts,
   nft,
   chainId,
-  error,
   showLoader,
   useTokenId,
 }: {
@@ -316,6 +315,7 @@ export default function TokenPicker2({
   const [isLocalLoading, setLocalLoading] = useState(false);
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
   const [selectionError, setSelectionError] = useState("");
+  const error = useSelector(selectTransferSourceError);
 
   const openDialog = useCallback(() => {
     setHolderString("");
@@ -525,10 +525,9 @@ export default function TokenPicker2({
     </Dialog>
   );
 
-  console.log("value", value);
-
   const amount = useSelector(selectTransferAmount);
   const dispatch = useDispatch();
+  const hasError = amount && parseFloat(amount) > 0 && error;
 
   return (
     <>
@@ -551,6 +550,7 @@ export default function TokenPicker2({
             value={amount}
             name="amount"
             onChange={(event) => dispatch(setAmount(event.target.value))}
+            style={{ color: hasError ? "#ed4a34" : "white" }}
           />
 
           <button className={classes.tokenPicker} onClick={openDialog}>
@@ -576,6 +576,8 @@ export default function TokenPicker2({
             )}
           </div>
         </div>
+
+        {hasError && <div style={{ color: "#ed4a34" }}>{error}</div>}
       </div>
     </>
   );
