@@ -1,6 +1,6 @@
 import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from "@alephium/wormhole-sdk";
 import { Button, ButtonProps, Container, makeStyles, Step, StepButton, StepContent, Stepper } from "@material-ui/core";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";
@@ -12,11 +12,13 @@ import {
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
   selectTransferIsSending,
+  selectTransferIsSourceComplete,
   selectTransferSourceChain,
+  selectTransferSourceError,
   selectTransferTargetChain,
 } from "../../store/selectors";
 import { setSourceChain, setStep, setTargetChain } from "../../store/transferSlice";
-import { CHAINS_BY_ID } from "../../utils/consts";
+import { CHAINS_BY_ID, getIsTransferDisabled } from "../../utils/consts";
 import ChainSelect from "../ChainSelect";
 import Source2 from "./Source2";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
@@ -88,10 +90,22 @@ function BridgeWidget() {
 export default BridgeWidget;
 
 const NextActionButton = () => {
+  const { t } = useTranslation();
   const sourceChain = useSelector(selectTransferSourceChain);
   const targetChain = useSelector(selectTransferTargetChain);
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain);
   const { isReady: isTargetReady } = useIsWalletReady(targetChain);
+  const isSourceComplete = useSelector(selectTransferIsSourceComplete);
+  const isSourceTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(sourceChain, true);
+  }, [sourceChain]);
+  const isTargetTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(targetChain, false);
+  }, [targetChain]);
+
+  const handleNextClick = useCallback(() => {
+    console.log("handleNextClick");
+  }, []);
 
   if (!isSourceReady) {
     return <ConnectButton chainId={sourceChain} />;
@@ -101,7 +115,17 @@ const NextActionButton = () => {
     return <ConnectButton chainId={targetChain} />;
   }
 
-  return null;
+  return (
+    <ConnectButtonStyled
+      disabled={!isSourceComplete || isSourceTransferDisabled || isTargetTransferDisabled}
+      onClick={handleNextClick}
+      variant="contained"
+      color="primary"
+      fullWidth
+    >
+      {t("Next")}
+    </ConnectButtonStyled>
+  );
 };
 
 const ConnectButton = ({ chainId }: { chainId: ChainId }) => {
@@ -191,19 +215,21 @@ const useStyles = makeStyles((theme) => ({
 
 const useConnectButtonStyles = makeStyles((theme) => ({
   connectButton: {
-    backgroundColor: "#bd75f01a",
+    backgroundColor: "#f2f2f2",
+    boxShadow: "0 8px 15px rgba(0, 0, 0, 1)",
     textTransform: "none",
-    borderRadius: "14px",
+    borderRadius: "100px",
     height: "44px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#bd75f0",
+    color: "rgba(0, 0, 0, 1)",
     fontFamily: "Inter, sans-serif",
+    fontWeight: 600,
     fontSize: "14px",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
-      backgroundColor: "#bd75f033",
+      backgroundColor: "rgba(242, 242, 242, 0.8)",
     },
   },
 }));

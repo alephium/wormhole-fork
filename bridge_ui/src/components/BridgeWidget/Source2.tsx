@@ -36,6 +36,8 @@ import { useTranslation } from "react-i18next";
 import { TokenSelector2 } from "./SourceTokenSelector2";
 import ChainSelect2 from "../ChainSelect2";
 import ChainSelectArrow2 from "./ChainSelectArrow2";
+import useSyncTargetAddress from "../../hooks/useSyncTargetAddress";
+import useGetTargetParsedTokenAccounts from "../../hooks/useGetTargetParsedTokenAccounts";
 
 const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
@@ -108,6 +110,8 @@ function Source2() {
     },
     [dispatch]
   );
+  useGetTargetParsedTokenAccounts();
+  useSyncTargetAddress(!shouldLockFields);
   const handleTargetChange = useCallback(
     (event: any) => {
       dispatch(setTargetChain(event.target.value));
