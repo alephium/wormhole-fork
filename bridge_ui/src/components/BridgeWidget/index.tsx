@@ -1,50 +1,48 @@
-import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, ButtonProps, Container, makeStyles, Step, StepButton, StepContent, Stepper } from "@material-ui/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { ChainId } from "@alephium/wormhole-sdk";
+import { Container, makeStyles } from "@material-ui/core";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";
 import useCheckIfWormholeWrapped from "../../hooks/useCheckIfWormholeWrapped";
 import useFetchTargetAsset from "../../hooks/useFetchTargetAsset";
 import {
-  selectTransferActiveStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
   selectTransferIsSending,
-  selectTransferIsSourceComplete,
-  selectTransferSourceChain,
-  selectTransferSourceError,
-  selectTransferTargetChain,
 } from "../../store/selectors";
-import { setSourceChain, setStep, setTargetChain } from "../../store/transferSlice";
-import { CHAINS_BY_ID, getIsTransferDisabled } from "../../utils/consts";
-import ChainSelect from "../ChainSelect";
-import Source2 from "./Source2";
-import useIsWalletReady from "../../hooks/useIsWalletReady";
-import EvmConnectWalletDialog from "../EvmConnectWalletDialog";
-import { AlephiumConnectButton } from "@alephium/web3-react";
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
+import { setSourceChain, setTargetChain } from "../../store/transferSlice";
+import { CHAINS_BY_ID } from "../../utils/consts";
+import BridgeWidgetSteps from "./BridgeWidgetSteps";
 
-function BridgeWidget() {
-  const { t } = useTranslation();
+const BridgeWidget = () => {
   useCheckIfWormholeWrapped();
   useFetchTargetAsset();
-  const dispatch = useDispatch();
-  const activeStep = useSelector(selectTransferActiveStep);
-  const isSending = useSelector(selectTransferIsSending);
-  const isSendComplete = useSelector(selectTransferIsSendComplete);
-  const isRedeeming = useSelector(selectTransferIsRedeeming);
-  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete);
-  const preventNavigation = (isSending || isSendComplete || isRedeeming) && !isRedeemComplete;
+  useUrlPathParams();
+  usePreventNavigation();
+
   const classes = useStyles();
 
+  return (
+    <Container maxWidth="md" style={{ margin: "0 auto" }}>
+      <div className={classes.mainBox}>
+        <div className={classes.stack}>
+          <BridgeWidgetSteps />
+        </div>
+      </div>
+    </Container>
+  );
+};
+
+export default BridgeWidget;
+
+const useUrlPathParams = () => {
+  const dispatch = useDispatch();
   const { search } = useLocation();
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const pathSourceChain = query.get("sourceChain");
   const pathTargetChain = query.get("targetChain");
 
-  //This effect initializes the state based on the path params
   useEffect(() => {
     if (!pathSourceChain && !pathTargetChain) {
       return;
@@ -66,6 +64,14 @@ function BridgeWidget() {
       console.error("Invalid path params specified.");
     }
   }, [pathSourceChain, pathTargetChain, dispatch]);
+};
+
+const usePreventNavigation = () => {
+  const isSending = useSelector(selectTransferIsSending);
+  const isSendComplete = useSelector(selectTransferIsSendComplete);
+  const isRedeeming = useSelector(selectTransferIsRedeeming);
+  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete);
+  const preventNavigation = (isSending || isSendComplete || isRedeeming) && !isRedeemComplete;
 
   useEffect(() => {
     if (preventNavigation) {
@@ -75,100 +81,6 @@ function BridgeWidget() {
       };
     }
   }, [preventNavigation]);
-  return (
-    <Container maxWidth="md" style={{ margin: "0 auto" }}>
-      <div className={classes.mainBox}>
-        <div className={classes.stack}>
-          <Source2 />
-          <NextActionButton />
-        </div>
-      </div>
-    </Container>
-  );
-}
-
-export default BridgeWidget;
-
-const NextActionButton = () => {
-  const { t } = useTranslation();
-  const sourceChain = useSelector(selectTransferSourceChain);
-  const targetChain = useSelector(selectTransferTargetChain);
-  const { isReady: isSourceReady } = useIsWalletReady(sourceChain);
-  const { isReady: isTargetReady } = useIsWalletReady(targetChain);
-  const isSourceComplete = useSelector(selectTransferIsSourceComplete);
-  const isSourceTransferDisabled = useMemo(() => {
-    return getIsTransferDisabled(sourceChain, true);
-  }, [sourceChain]);
-  const isTargetTransferDisabled = useMemo(() => {
-    return getIsTransferDisabled(targetChain, false);
-  }, [targetChain]);
-
-  const handleNextClick = useCallback(() => {
-    console.log("handleNextClick");
-  }, []);
-
-  if (!isSourceReady) {
-    return <ConnectButton chainId={sourceChain} />;
-  }
-
-  if (!isTargetReady) {
-    return <ConnectButton chainId={targetChain} />;
-  }
-
-  return (
-    <ConnectButtonStyled
-      disabled={!isSourceComplete || isSourceTransferDisabled || isTargetTransferDisabled}
-      onClick={handleNextClick}
-      variant="contained"
-      color="primary"
-      fullWidth
-    >
-      {t("Next")}
-    </ConnectButtonStyled>
-  );
-};
-
-const ConnectButton = ({ chainId }: { chainId: ChainId }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const openDialog = () => {
-    setIsOpen(true);
-  };
-  const closeDialog = () => {
-    setIsOpen(false);
-  };
-
-  if (isEVMChain(chainId)) {
-    return (
-      <>
-        <ConnectButtonStyled variant="contained" color="primary" fullWidth onClick={openDialog}>
-          Connect {CHAINS_BY_ID[chainId].name} wallet
-        </ConnectButtonStyled>
-        <EvmConnectWalletDialog isOpen={isOpen} onClose={closeDialog} chainId={chainId} />
-      </>
-    );
-  }
-
-  if (chainId === CHAIN_ID_ALEPHIUM) {
-    return (
-      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
-        {({ show }) => {
-          return (
-            <ConnectButtonStyled variant="contained" color="primary" fullWidth onClick={show}>
-              Connect Alephium wallet
-            </ConnectButtonStyled>
-          );
-        }}
-      </AlephiumConnectButton.Custom>
-    );
-  }
-
-  return null;
-};
-
-const ConnectButtonStyled = (props: ButtonProps) => {
-  const classes = useConnectButtonStyles();
-  return <Button {...props} className={classes.connectButton} />;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -210,26 +122,5 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
     cursor: "pointer",
     backdropFilter: "blur(20px) saturate(180%) brightness(115%)",
-  },
-}));
-
-const useConnectButtonStyles = makeStyles((theme) => ({
-  connectButton: {
-    backgroundColor: "#f2f2f2",
-    boxShadow: "0 8px 15px rgba(0, 0, 0, 1)",
-    textTransform: "none",
-    borderRadius: "100px",
-    height: "44px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "rgba(0, 0, 0, 1)",
-    fontFamily: "Inter, sans-serif",
-    fontWeight: 600,
-    fontSize: "14px",
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      backgroundColor: "rgba(242, 242, 242, 0.8)",
-    },
   },
 }));

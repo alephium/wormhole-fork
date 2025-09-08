@@ -1,8 +1,15 @@
-import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
+import {
+  CHAIN_ID_ALEPHIUM,
+  CHAIN_ID_BSC,
+  CHAIN_ID_ETH,
+  CHAIN_ID_SOLANA,
+  ChainId,
+  isEVMChain,
+} from "@alephium/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
-import { Button, makeStyles, Typography } from "@material-ui/core";
+import { Button, makeStyles } from "@material-ui/core";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";
@@ -10,26 +17,22 @@ import { useHistory } from "react-router";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 
 import {
-  selectTransferAmount,
   selectTransferIsSourceComplete,
   selectTransferShouldLockFields,
   selectTransferSourceBalanceString,
   selectTransferSourceChain,
-  selectTransferSourceError,
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetChain,
 } from "../../store/selectors";
-import { incrementStep, setAmount, setSourceChain, setTargetChain } from "../../store/transferSlice";
+import { setSourceChain, setTargetChain } from "../../store/transferSlice";
 import {
   BSC_MIGRATION_ASSET_MAP,
   CHAINS,
-  CLUSTER,
+  CHAINS_BY_ID,
   ETH_MIGRATION_ASSET_MAP,
   getIsTransferDisabled,
-  MIGRATION_ASSET_MAP,
 } from "../../utils/consts";
 import LowBalanceWarning from "../LowBalanceWarning";
-import SolanaTPSWarning from "../SolanaTPSWarning";
 import SourceAssetWarning from "../Transfer/SourceAssetWarning";
 import ChainWarningMessage from "../ChainWarningMessage";
 import { useTranslation } from "react-i18next";
@@ -38,31 +41,17 @@ import ChainSelect2 from "../ChainSelect2";
 import ChainSelectArrow2 from "./ChainSelectArrow2";
 import useSyncTargetAddress from "../../hooks/useSyncTargetAddress";
 import useGetTargetParsedTokenAccounts from "../../hooks/useGetTargetParsedTokenAccounts";
+import EvmConnectWalletDialog from "../EvmConnectWalletDialog";
+import { AlephiumConnectButton } from "@alephium/web3-react";
+import BridgeWidgetButton from "./BridgeWidgetButton";
 
-const useStyles = makeStyles((theme) => ({
-  chainSelectWrapper: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    position: "relative",
-    gap: "5px",
-  },
-  chainSelectContainer: {
-    flexBasis: "100%",
-    width: "100%",
-  },
+// Copied from Source.tsx
 
-  chainSelectArrow: {
-    position: "absolute",
-    top: "calc(50% - 23px)",
-    transform: "rotate(90deg)",
-  },
-  transferField: {
-    marginTop: theme.spacing(5),
-  },
-}));
+interface EnterDataStepProps {
+  onNext: () => void;
+}
 
-function Source2() {
+const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const { t } = useTranslation();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -70,16 +59,7 @@ function Source2() {
   const sourceChain = useSelector(selectTransferSourceChain);
   const targetChain = useSelector(selectTransferTargetChain);
   const targetChainOptions = useMemo(() => CHAINS.filter((c) => c.id !== sourceChain), [sourceChain]);
-  const isSourceTransferDisabled = useMemo(() => {
-    return getIsTransferDisabled(sourceChain, true);
-  }, [sourceChain]);
-  const isTargetTransferDisabled = useMemo(() => {
-    return getIsTransferDisabled(targetChain, false);
-  }, [targetChain]);
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount);
-  const hasParsedTokenAccount = !!parsedTokenAccount;
-  const isSolanaMigration =
-    sourceChain === CHAIN_ID_SOLANA && !!parsedTokenAccount && !!MIGRATION_ASSET_MAP.get(parsedTokenAccount.mintKey);
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
     !!parsedTokenAccount &&
@@ -88,13 +68,14 @@ function Source2() {
     sourceChain === CHAIN_ID_BSC &&
     !!parsedTokenAccount &&
     !!BSC_MIGRATION_ASSET_MAP.get(getAddress(parsedTokenAccount.mintKey));
-  const isMigrationAsset = isSolanaMigration || isEthereumMigration || isBscMigration;
+  const isMigrationAsset = isEthereumMigration || isBscMigration;
   const uiAmountString = useSelector(selectTransferSourceBalanceString);
-  const amount = useSelector(selectTransferAmount);
-  const error = useSelector(selectTransferSourceError);
-  const isSourceComplete = useSelector(selectTransferIsSourceComplete);
   const shouldLockFields = useSelector(selectTransferShouldLockFields);
-  const { isReady, statusMessage } = useIsWalletReady(sourceChain);
+  const { isReady } = useIsWalletReady(sourceChain);
+
+  useGetTargetParsedTokenAccounts();
+  useSyncTargetAddress(!shouldLockFields);
+
   const handleMigrationClick = useCallback(() => {
     if (sourceChain === CHAIN_ID_SOLANA) {
       history.push(`/migrate/Solana/${parsedTokenAccount?.mintKey}/${parsedTokenAccount?.publicKey}`);
@@ -104,14 +85,14 @@ function Source2() {
       history.push(`/migrate/BinanceSmartChain/${parsedTokenAccount?.mintKey}`);
     }
   }, [history, parsedTokenAccount, sourceChain]);
+
   const handleSourceChange = useCallback(
     (event: any) => {
       dispatch(setSourceChain(event.target.value));
     },
     [dispatch]
   );
-  useGetTargetParsedTokenAccounts();
-  useSyncTargetAddress(!shouldLockFields);
+
   const handleTargetChange = useCallback(
     (event: any) => {
       dispatch(setTargetChain(event.target.value));
@@ -166,38 +147,98 @@ function Source2() {
         <>
           <LowBalanceWarning chainId={sourceChain} />
           <SourceAssetWarning sourceChain={sourceChain} sourceAsset={parsedTokenAccount?.mintKey} />
-          {/* {hasParsedTokenAccount ? (
-            <NumberTextField
-              variant="outlined"
-              label={t("Amount")}
-              fullWidth
-              className={classes.transferField}
-              value={amount}
-              onChange={handleAmountChange}
-              disabled={shouldLockFields}
-              onMaxClick={uiAmountString && !parsedTokenAccount.isNativeAsset ? handleMaxClick : undefined}
-            />
-          ) : null} */}
           <ChainWarningMessage chainId={sourceChain} />
           <ChainWarningMessage chainId={targetChain} />
-          {/* <ButtonWithLoader
-            disabled={!isSourceComplete || isSourceTransferDisabled || isTargetTransferDisabled}
-            onClick={handleNextClick}
-            showLoader={false}
-            error={statusMessage || error}
-          >
-            {t("Next")}
-          </ButtonWithLoader> */}
         </>
       )}
+
+      <NextActionButton onNext={onNext} />
     </>
   );
-}
+};
 
-export default Source2;
+export default EnterDataStep;
 
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <Typography style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.5)", marginBottom: "8px" }}>
-    {children}
-  </Typography>
-);
+const NextActionButton = ({ onNext }: EnterDataStepProps) => {
+  const { t } = useTranslation();
+  const sourceChain = useSelector(selectTransferSourceChain);
+  const targetChain = useSelector(selectTransferTargetChain);
+  const { isReady: isSourceReady } = useIsWalletReady(sourceChain);
+  const { isReady: isTargetReady } = useIsWalletReady(targetChain);
+  const isSourceComplete = useSelector(selectTransferIsSourceComplete);
+  const isSourceTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(sourceChain, true);
+  }, [sourceChain]);
+  const isTargetTransferDisabled = useMemo(() => {
+    return getIsTransferDisabled(targetChain, false);
+  }, [targetChain]);
+
+  if (!isSourceReady) {
+    return <ConnectButton chainId={sourceChain} />;
+  }
+
+  if (!isTargetReady) {
+    return <ConnectButton chainId={targetChain} />;
+  }
+
+  return (
+    <BridgeWidgetButton
+      disabled={!isSourceComplete || isSourceTransferDisabled || isTargetTransferDisabled}
+      onClick={onNext}
+    >
+      {t("Next")}
+    </BridgeWidgetButton>
+  );
+};
+
+const ConnectButton = ({ chainId }: { chainId: ChainId }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const openDialog = () => {
+    setIsOpen(true);
+  };
+  const closeDialog = () => {
+    setIsOpen(false);
+  };
+
+  if (isEVMChain(chainId)) {
+    return (
+      <>
+        <BridgeWidgetButton onClick={openDialog}>Connect {CHAINS_BY_ID[chainId].name} wallet</BridgeWidgetButton>
+        <EvmConnectWalletDialog isOpen={isOpen} onClose={closeDialog} chainId={chainId} />
+      </>
+    );
+  }
+
+  if (chainId === CHAIN_ID_ALEPHIUM) {
+    return (
+      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
+        {({ show }) => {
+          return <BridgeWidgetButton onClick={show}>Connect Alephium wallet</BridgeWidgetButton>;
+        }}
+      </AlephiumConnectButton.Custom>
+    );
+  }
+
+  return null;
+};
+
+const useStyles = makeStyles((theme) => ({
+  chainSelectWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    position: "relative",
+    gap: "5px",
+  },
+  chainSelectContainer: {
+    flexBasis: "100%",
+    width: "100%",
+  },
+
+  chainSelectArrow: {
+    position: "absolute",
+    top: "calc(50% - 23px)",
+    transform: "rotate(90deg)",
+  },
+}));

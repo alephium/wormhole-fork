@@ -27,6 +27,8 @@ import NFTViewer from "../TokenSelectors/NFTViewer";
 import { useDispatch, useSelector } from "react-redux";
 import { selectTransferAmount, selectTransferSourceError } from "../../store/selectors";
 import { setAmount } from "../../store/transferSlice";
+import SmartAddress from "../SmartAddress";
+import { useTargetInfo } from "../Transfer/Target";
 
 const useStyles = makeStyles((theme) =>
   createStyles({
