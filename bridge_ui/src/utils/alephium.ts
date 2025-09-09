@@ -172,6 +172,11 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     return ALPHTokenInfo
   }
 
+  const tokenInfo = await getTokenFromTokenList(tokenId)
+  if (tokenInfo !== undefined) {
+    return tokenInfo
+  }
+
   const tokenAddress = addressFromContractId(tokenId)
   try {
     const state = await provider.contracts.getContractsAddressState(tokenAddress)
@@ -186,7 +191,7 @@ export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: stri
     if (CLUSTER === 'devnet') {
       return await getLocalTokenInfo(provider, tokenId)
     }
-    return await getTokenFromTokenList(tokenId)
+    return undefined
   } catch (error) {
     console.log(`${i18n.t('Failed to get alephium token info')}, ${i18n.t('Error')}: ${error}`)
     return undefined

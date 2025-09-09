@@ -630,13 +630,13 @@ export const getEVMAccounts = async (
       if (tokenAccounts.find((t) => t.contract_address.toLowerCase() === result.tokenId.toLowerCase()) !== undefined) {
         continue
       }
-      const info = await getTokenLogoAndSymbol(token.tokenChain, token.nativeAddress)
+      const logoURI = (await getTokenLogoAndSymbol(token.tokenChain, token.nativeAddress))?.logoURI
       tokenAccounts.push({
         contract_decimals: token.decimals,
-        contract_ticker_symbol: info?.symbol ?? token.symbol,
+        contract_ticker_symbol: token.symbol,
         contract_name: token.name,
         contract_address: result.tokenId,
-        logo_url: info?.logoURI ?? token.logo,
+        logo_url: logoURI ?? token.logo,
         balance: result.balance.toString(),
         quote: undefined,
         quote_rate: undefined
