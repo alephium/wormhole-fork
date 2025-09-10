@@ -39,14 +39,13 @@ import ShowTx from "../ShowTx";
 import TransactionProgress from "../TransactionProgress";
 import useTransferSignedVAA from "../../hooks/useTransferSignedVAA";
 
-interface ReviewStepProps {
+interface TransferStepProps {
   onBack: () => void;
-  onNext: () => void;
 }
 
 const GRAY = "rgba(255, 255, 255, 0.5)";
 
-const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
+const TransferStep = ({ onBack }: TransferStepProps) => {
   const classes = useStyles();
   const { t } = useTranslation();
 
@@ -93,12 +92,6 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const { isReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain);
   const isWrongWallet = sourceWalletAddress && walletAddress && sourceWalletAddress !== walletAddress;
   const { handleClick, disabled, showLoader } = useHandleTransfer();
-  const isSending = useSelector(selectTransferIsSending);
-
-  const handleTransferClick = useCallback(() => {
-    handleClick();
-    onNext();
-  }, [handleClick, onNext]);
 
   const isDisabled = !isReady || isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing;
 
@@ -132,114 +125,88 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         >
           <ArrowBack />
         </IconButton>
-        <h1 style={{ margin: 0 }}>Review</h1>
+        <h1 style={{ margin: 0 }}>Bridging</h1>
       </div>
 
       <div className={classes.chainSelectContainer}>
-        {sourceParsedTokenAccount && (
-          <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Sending</Typography>
-              <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{sourceAmount}</span>{" "}
-                  <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
-                  {sourceParsedTokenAccount.logo && (
-                    <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />
-                  )}
-                </Typography>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {sourceParsedTokenAccount && (
-          <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>From</Typography>
-              <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px", color: GRAY }}>
-                  <img src={sourceChainInfo.logo} alt={sourceChainInfo.name} className={classes.networkIcon} />
-                  {sourceChainInfo.name} address
-                </Typography>
-                <SmartAddress chainId={sourceChain} address={sourceWalletAddress} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className={classes.tokenRow}>
-          <Typography style={{ fontWeight: "bold" }}>To</Typography>
-          <div className={classes.networkAddressText}>
-            <Typography style={{ display: "flex", alignItems: "center", gap: "5px", color: GRAY }}>
-              <img src={targetChainInfo.logo} alt={targetChainInfo.name} className={classes.networkIcon} />
-              {targetChainInfo.name} address
-            </Typography>
-            <SmartAddress
-              chainId={targetChain}
-              address={
-                targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress
-              }
-            />
-          </div>
-        </div>
-
-        {targetAsset && (
-          <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Receiving</Typography>
-              <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{sourceAmount}</span>{" "}
-                  <SmartAddress
-                    chainId={targetChain}
-                    address={targetAsset}
-                    symbol={symbol}
-                    tokenName={tokenName}
-                    logo={logo}
-                    isAsset
-                  />
-                  {logo && <img alt="" className={classes.networkIcon} src={logo} />}
-                </Typography>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {relayerFee && sourceParsedTokenAccount && (
-          <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Relayer Fee</Typography>
-              <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{numeral(relayerFee).format("0.00")}</span>{" "}
-                  <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
-                  {sourceParsedTokenAccount.logo && (
-                    <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />
-                  )}
-                </Typography>
-              </div>
-            </div>
-          </div>
-        )}
+        <Typography style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255, 255, 255, 0.5)" }}>
+          Transferring tokens from your {sourceChainInfo.name} wallet to the Alephium bridge:
+        </Typography>
+        <TransferProgress />
       </div>
 
-      {approveButtonNeeded ? (
-        <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>
-          {t("approveTokens", { count: tokensAmount })}
-        </BridgeWidgetButton>
-      ) : isSending ? (
-        <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
-      ) : (
-        <BridgeWidgetButton disabled={isDisabled} onClick={handleTransferClick}>
-          {t("Transfer")}
-        </BridgeWidgetButton>
-      )}
+      <div className={classes.chainSelectContainer}>
+        <Typography style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255, 255, 255, 0.5)" }}>
+          Redeeming tokens on the Alephium bridge to your {targetChainInfo.name} wallet:
+        </Typography>
+        {/* <TransferProgress /> */}
+      </div>
+
+      <WaitingForWalletMessage />
+      {transferTx ? <ShowTx chainId={sourceChain} tx={transferTx} /> : null}
+      <TransactionProgress chainId={sourceChain} tx={transferTx} isSendComplete={isSendComplete} />
     </>
   );
 };
 
-export default ReviewStep;
+const TransferProgress = () => {
+  const classes = useStyles();
+  const transferTx = useSelector(selectTransferTransferTx);
+  const isSendComplete = useSelector(selectTransferIsSendComplete);
+  const signedVAA = useTransferSignedVAA();
+  const isSending = useSelector(selectTransferIsSending);
+  const sourceChain = useSelector(selectTransferSourceChain);
+
+  const isWalletApproved = useSelector(selectTransferIsWalletApproved);
+
+  const step3Completed = !!signedVAA;
+  const step2Completed = !!transferTx;
+  const step1Completed = isWalletApproved || step2Completed;
+
+  return (
+    <div>
+      <div className={classes.transferProgressRow}>
+        <div className={classes.transferProgressIcon}>
+          {step1Completed ? <CheckCircleOutlineRounded /> : <RadioButtonUncheckedRounded />}
+        </div>
+        <div className={classes.transferProgressContent}>
+          <Typography>{step1Completed ? "Got wallet approval!" : "Waiting for wallet approval..."}</Typography>
+        </div>
+      </div>
+
+      <div className={classes.transferProgressRow} style={{ color: step1Completed ? "inherit" : GRAY }}>
+        <div className={classes.transferProgressIcon}>
+          {step2Completed ? <CheckCircleOutlineRounded /> : <RadioButtonUncheckedRounded />}
+        </div>
+        <div className={classes.transferProgressContent}>
+          {step2Completed ? (
+            <>
+              <Typography>Transaction confirmed:</Typography>
+              <SmartAddress chainId={sourceChain} transactionAddress={transferTx.id} />
+            </>
+          ) : (
+            <Typography>Waiting for transaction confirmation...</Typography>
+          )}
+        </div>
+      </div>
+
+      <div className={classes.transferProgressRow} style={{ color: step2Completed ? "inherit" : GRAY }}>
+        <div className={classes.transferProgressIcon}>
+          {step3Completed ? <CheckCircleOutlineRounded /> : <RadioButtonUncheckedRounded />}
+        </div>
+        <div className={classes.transferProgressContent}>
+          {step3Completed ? (
+            <Typography>The tokens have entered the bridge!</Typography>
+          ) : (
+            <Typography>Waiting for VAA confirmation...</Typography>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TransferStep;
 
 const useStyles = makeStyles((theme) => ({
   header: {
