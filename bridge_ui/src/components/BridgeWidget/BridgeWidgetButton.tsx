@@ -23,6 +23,7 @@ const useStyles = makeStyles(() => ({
     fontWeight: 600,
     fontSize: "14px",
     transition: "all 0.2s ease-in-out",
+    letterSpacing: "normal",
     "&:hover": {
       backgroundColor: "rgba(242, 242, 242, 0.8)",
     },
