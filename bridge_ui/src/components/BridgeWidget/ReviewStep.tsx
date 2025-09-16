@@ -1,13 +1,6 @@
-import { IconButton, makeStyles, Typography } from "@material-ui/core";
-import {
-  ArrowBack,
-  CheckBoxOutlineBlankRounded,
-  CheckBoxRounded,
-  CheckCircleOutlineRounded,
-  CheckCircle,
-  RadioButtonUncheckedRounded,
-} from "@material-ui/icons";
-import { useSelector } from "react-redux";
+import { IconButton, Typography } from '@material-ui/core'
+import { ArrowBack } from '@material-ui/icons'
+import { useSelector } from 'react-redux'
 import {
   selectTransferAmount,
   selectTransferSourceParsedTokenAccount,
@@ -15,118 +8,107 @@ import {
   selectSourceWalletAddress,
   selectTransferRelayerFee,
   selectTransferSourceAsset,
-  selectTransferIsSendComplete,
-  selectTransferTransferTx,
-  selectTransferIsWalletApproved,
-  selectTransferIsSending,
-} from "../../store/selectors";
-import SmartAddress from "./SmartAddress";
-import { CHAINS_BY_ID } from "../../utils/consts";
-import { useCallback, useMemo, useState } from "react";
-import { CHAIN_ID_ALEPHIUM, isEVMChain } from "@alephium/wormhole-sdk";
-import { hexToALPHAddress } from "../../utils/alephium";
-import { useTargetInfo } from "../Transfer/Target";
-import numeral from "numeral";
-import useAllowance from "../../hooks/useAllowance";
-import { formatUnits, parseUnits } from "ethers/lib/utils";
-import { useTranslation } from "react-i18next";
-import useIsWalletReady from "../../hooks/useIsWalletReady";
-import { useHandleTransfer } from "../../hooks/useHandleTransfer";
-import BridgeWidgetButton from "./BridgeWidgetButton";
-import SendConfirmationDialog from "../Transfer/SendConfirmationDialog";
-import WaitingForWalletMessage from "../Transfer/WaitingForWalletMessage";
-import ShowTx from "../ShowTx";
-import TransactionProgress from "../TransactionProgress";
-import useTransferSignedVAA from "../../hooks/useTransferSignedVAA";
+  selectTransferIsSending
+} from '../../store/selectors'
+import SmartAddress from './SmartAddress'
+import { CHAINS_BY_ID } from '../../utils/consts'
+import { useCallback, useMemo, useState } from 'react'
+import { CHAIN_ID_ALEPHIUM, isEVMChain } from '@alephium/wormhole-sdk'
+import { hexToALPHAddress } from '../../utils/alephium'
+import { useTargetInfo } from '../Transfer/Target'
+import numeral from 'numeral'
+import useAllowance from '../../hooks/useAllowance'
+import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { useTranslation } from 'react-i18next'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+import { useHandleTransfer } from '../../hooks/useHandleTransfer'
+import BridgeWidgetButton from './BridgeWidgetButton'
+import SendingAmount from './SendingAmount'
+import SendingAddress from './SendingAddress'
+import { useWidgetStyles } from './styles'
 
 interface ReviewStepProps {
-  onBack: () => void;
-  onNext: () => void;
+  onBack: () => void
+  onNext: () => void
 }
 
-const GRAY = "rgba(255, 255, 255, 0.5)";
+const GRAY = 'rgba(255, 255, 255, 0.5)'
 
 const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
-  const classes = useStyles();
-  const { t } = useTranslation();
+  const classes = useWidgetStyles()
+  const { t } = useTranslation()
 
-  const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount);
-  const sourceAmount = useSelector(selectTransferAmount);
+  const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
+  const sourceAmount = useSelector(selectTransferAmount)
 
-  const sourceChain = useSelector(selectTransferSourceChain);
-  const sourceWalletAddress = useSelector(selectSourceWalletAddress);
-  const sourceAsset = useSelector(selectTransferSourceAsset);
-  const sourceChainInfo = useMemo(() => CHAINS_BY_ID[sourceChain], [sourceChain]);
-  const relayerFee = useSelector(selectTransferRelayerFee);
-  const sourceDecimals = sourceParsedTokenAccount?.decimals;
-  const sourceIsNative = sourceParsedTokenAccount?.isNativeAsset;
+  const sourceChain = useSelector(selectTransferSourceChain)
+  const sourceWalletAddress = useSelector(selectSourceWalletAddress)
+  const sourceAsset = useSelector(selectTransferSourceAsset)
+  const relayerFee = useSelector(selectTransferRelayerFee)
+  const sourceDecimals = sourceParsedTokenAccount?.decimals
+  const sourceIsNative = sourceParsedTokenAccount?.isNativeAsset
   const baseAmountParsed =
-    sourceDecimals !== undefined && sourceDecimals !== null && sourceAmount && parseUnits(sourceAmount, sourceDecimals);
-  const feeParsed = sourceDecimals !== undefined ? parseUnits(relayerFee || "0", sourceDecimals) : 0;
-  const transferAmountParsed = baseAmountParsed && baseAmountParsed.add(feeParsed).toBigInt();
+    sourceDecimals !== undefined && sourceDecimals !== null && sourceAmount && parseUnits(sourceAmount, sourceDecimals)
+  const feeParsed = sourceDecimals !== undefined ? parseUnits(relayerFee || '0', sourceDecimals) : 0
+  const transferAmountParsed = baseAmountParsed && baseAmountParsed.add(feeParsed).toBigInt()
 
-  const { targetChain, readableTargetAddress, targetAsset, symbol, tokenName, logo } = useTargetInfo();
-  const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain]);
+  const { targetChain, readableTargetAddress, targetAsset, symbol, tokenName, logo } = useTargetInfo()
+  const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
 
   const { sufficientAllowance, isAllowanceFetching, isApproveProcessing, approveAmount } = useAllowance(
     sourceChain,
     sourceAsset,
     transferAmountParsed || undefined,
     sourceIsNative
-  );
+  )
 
-  const approveButtonNeeded = isEVMChain(sourceChain) && !sufficientAllowance;
-  const [allowanceError, setAllowanceError] = useState("");
+  const approveButtonNeeded = isEVMChain(sourceChain) && !sufficientAllowance
+  const [allowanceError, setAllowanceError] = useState('')
 
   const approveExactAmount = useMemo(() => {
     return () => {
-      setAllowanceError("");
+      setAllowanceError('')
       approveAmount(BigInt(transferAmountParsed)).then(
         () => {
-          setAllowanceError("");
+          setAllowanceError('')
         },
-        (error) => setAllowanceError(t("Failed to approve the token transfer."))
-      );
-    };
-  }, [approveAmount, transferAmountParsed, t]);
+        (error) => setAllowanceError(t('Failed to approve the token transfer.'))
+      )
+    }
+  }, [approveAmount, transferAmountParsed, t])
 
-  const { isReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain);
-  const isWrongWallet = sourceWalletAddress && walletAddress && sourceWalletAddress !== walletAddress;
-  const { handleClick, disabled, showLoader } = useHandleTransfer();
-  const isSending = useSelector(selectTransferIsSending);
+  const { isReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain)
+  const isWrongWallet = sourceWalletAddress && walletAddress && sourceWalletAddress !== walletAddress
+  const { handleClick, disabled, showLoader } = useHandleTransfer()
+  const isSending = useSelector(selectTransferIsSending)
 
   const handleTransferClick = useCallback(() => {
-    handleClick();
-    onNext();
-  }, [handleClick, onNext]);
+    handleClick()
+    onNext()
+  }, [handleClick, onNext])
 
-  const isDisabled = !isReady || isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing;
+  const isDisabled = !isReady || isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing
 
   const humanReadableTransferAmount =
     sourceDecimals !== undefined &&
     sourceDecimals !== null &&
     transferAmountParsed &&
-    formatUnits(transferAmountParsed, sourceDecimals);
-  let tokensAmount = 0;
+    formatUnits(transferAmountParsed, sourceDecimals)
+  let tokensAmount = 0
   try {
-    tokensAmount = parseInt((humanReadableTransferAmount || sourceAmount).toString());
+    tokensAmount = parseInt((humanReadableTransferAmount || sourceAmount).toString())
   } catch (e) {
-    console.error(e);
+    console.error(e)
   }
-
-  const transferTx = useSelector(selectTransferTransferTx);
-  const isSendComplete = useSelector(selectTransferIsSendComplete);
-
-  const isWalletApproved = useSelector(selectTransferIsWalletApproved);
 
   return (
     <>
-      <div className={classes.header}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <IconButton
           size="small"
           style={{
             color: GRAY,
-            backgroundColor: "rgb(30 30 31)",
+            backgroundColor: 'rgb(30 30 31)'
           }}
           onClick={onBack}
         >
@@ -135,19 +117,13 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         <h1 style={{ margin: 0 }}>Review</h1>
       </div>
 
-      <div className={classes.chainSelectContainer}>
+      <div className={classes.grayRoundedBox}>
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Sending</Typography>
+            <div className={classes.spaceBetween}>
+              <Typography style={{ fontWeight: 'bold' }}>Sending</Typography>
               <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{sourceAmount}</span>{" "}
-                  <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
-                  {sourceParsedTokenAccount.logo && (
-                    <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />
-                  )}
-                </Typography>
+                <SendingAmount />
               </div>
             </div>
           </div>
@@ -155,23 +131,19 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>From</Typography>
+            <div className={classes.spaceBetween}>
+              <Typography style={{ fontWeight: 'bold' }}>From</Typography>
               <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px", color: GRAY }}>
-                  <img src={sourceChainInfo.logo} alt={sourceChainInfo.name} className={classes.networkIcon} />
-                  {sourceChainInfo.name} address
-                </Typography>
-                <SmartAddress chainId={sourceChain} address={sourceWalletAddress} />
+                <SendingAddress showIcon />
               </div>
             </div>
           </div>
         )}
 
-        <div className={classes.tokenRow}>
-          <Typography style={{ fontWeight: "bold" }}>To</Typography>
+        <div className={classes.spaceBetween}>
+          <Typography style={{ fontWeight: 'bold' }}>To</Typography>
           <div className={classes.networkAddressText}>
-            <Typography style={{ display: "flex", alignItems: "center", gap: "5px", color: GRAY }}>
+            <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px', color: GRAY }}>
               <img src={targetChainInfo.logo} alt={targetChainInfo.name} className={classes.networkIcon} />
               {targetChainInfo.name} address
             </Typography>
@@ -186,11 +158,11 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
         {targetAsset && (
           <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Receiving</Typography>
+            <div className={classes.spaceBetween}>
+              <Typography style={{ fontWeight: 'bold' }}>Receiving</Typography>
               <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{sourceAmount}</span>{" "}
+                <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{sourceAmount}</span>{' '}
                   <SmartAddress
                     chainId={targetChain}
                     address={targetAsset}
@@ -208,11 +180,11 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
         {relayerFee && sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
-            <div className={classes.tokenRow}>
-              <Typography style={{ fontWeight: "bold" }}>Relayer Fee</Typography>
+            <div className={classes.spaceBetween}>
+              <Typography style={{ fontWeight: 'bold' }}>Relayer Fee</Typography>
               <div className={classes.networkAddressText}>
-                <Typography style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ fontWeight: "bold" }}>{numeral(relayerFee).format("0.00")}</span>{" "}
+                <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{numeral(relayerFee).format('0.00')}</span>{' '}
                   <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
                   {sourceParsedTokenAccount.logo && (
                     <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />
@@ -226,86 +198,17 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
       {approveButtonNeeded ? (
         <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>
-          {t("approveTokens", { count: tokensAmount })}
+          {t('approveTokens', { count: tokensAmount })}
         </BridgeWidgetButton>
       ) : isSending ? (
         <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
       ) : (
         <BridgeWidgetButton disabled={isDisabled} onClick={handleTransferClick}>
-          {t("Transfer")}
+          {t('Transfer')}
         </BridgeWidgetButton>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ReviewStep;
-
-const useStyles = makeStyles((theme) => ({
-  header: {
-    display: "flex",
-    alignItems: "center",
-    gap: "20px",
-  },
-  preview: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  // TODO: DRY
-  chainSelectContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    padding: "14px",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderRadius: "20px",
-  },
-  tokenImageContainer2: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 20,
-  },
-  tokenIconSymbolContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "5px",
-  },
-  tokenImage2: {
-    maxHeight: "2rem",
-    maxWidth: "100%",
-  },
-  tokenRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-  },
-  networkAddressText: {
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-  },
-  networkIcon: {
-    height: "1rem",
-    width: "1rem",
-  },
-  transferProgressRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
-  transferProgressIcon: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "24px",
-    height: "24px",
-  },
-  transferProgressContent: {
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-  },
-}));
+export default ReviewStep

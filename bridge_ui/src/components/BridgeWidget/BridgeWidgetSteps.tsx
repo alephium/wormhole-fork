@@ -1,21 +1,26 @@
-import { useCallback, useState } from "react";
-import EnterDataStep from "./EnterDataStep";
-import ReviewStep from "./ReviewStep";
-import TransferStep from "./TransferStep";
+import { useCallback } from 'react'
+import EnterDataStep from './EnterDataStep'
+import ReviewStep from './ReviewStep'
+import TransferStep from './TransferStep/TransferStep'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectTransferActiveBridgeWidgetStep } from '../../store/selectors'
+import { setBridgeWidgetStep } from '../../store/transferSlice'
 
 const BridgeWidgetSteps = () => {
-  const [step, setStep] = useState(0);
+  const dispatch = useDispatch()
+  const step = useSelector(selectTransferActiveBridgeWidgetStep)
 
-  const handleNext = useCallback(() => setStep((prev) => prev + 1), []);
-  const handleBack = useCallback(() => setStep((prev) => prev - 1), []);
+  const goToEnterData = useCallback(() => dispatch(setBridgeWidgetStep(0)), [dispatch])
+  const goToReview = useCallback(() => dispatch(setBridgeWidgetStep(1)), [dispatch])
+  const goToTransferOverview = useCallback(() => dispatch(setBridgeWidgetStep(2)), [dispatch])
 
   return step === 0 ? (
-    <EnterDataStep onNext={handleNext} />
+    <EnterDataStep onNext={goToReview} />
   ) : step === 1 ? (
-    <ReviewStep onNext={handleNext} onBack={handleBack} />
+    <ReviewStep onNext={goToTransferOverview} onBack={goToEnterData} />
   ) : (
-    <TransferStep onBack={handleBack} />
-  );
-};
+    <TransferStep />
+  )
+}
 
-export default BridgeWidgetSteps;
+export default BridgeWidgetSteps

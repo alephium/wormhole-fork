@@ -1,126 +1,126 @@
-import { ChainId } from "@alephium/wormhole-sdk";
-import { Container, makeStyles } from "@material-ui/core";
-import { useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router";
-import useCheckIfWormholeWrapped from "../../hooks/useCheckIfWormholeWrapped";
-import useFetchTargetAsset from "../../hooks/useFetchTargetAsset";
+import { ChainId } from '@alephium/wormhole-sdk'
+import { Container, makeStyles } from '@material-ui/core'
+import { useEffect, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useLocation } from 'react-router'
+import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
+import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
-  selectTransferIsSending,
-} from "../../store/selectors";
-import { setSourceChain, setTargetChain } from "../../store/transferSlice";
-import { CHAINS_BY_ID } from "../../utils/consts";
-import BridgeWidgetSteps from "./BridgeWidgetSteps";
+  selectTransferIsSending
+} from '../../store/selectors'
+import { setSourceChain, setTargetChain } from '../../store/transferSlice'
+import { CHAINS_BY_ID } from '../../utils/consts'
+import BridgeWidgetSteps from './BridgeWidgetSteps'
 
 const BridgeWidget = () => {
-  useCheckIfWormholeWrapped();
-  useFetchTargetAsset();
-  useUrlPathParams();
-  usePreventNavigation();
+  useCheckIfWormholeWrapped()
+  useFetchTargetAsset()
+  useUrlPathParams()
+  usePreventNavigation()
 
-  const classes = useStyles();
+  const classes = useStyles()
 
   return (
-    <Container maxWidth="md" style={{ margin: "0 auto" }}>
+    <Container maxWidth="md" style={{ margin: '0 auto' }}>
       <div className={classes.mainBox}>
         <div className={classes.stack}>
           <BridgeWidgetSteps />
         </div>
       </div>
     </Container>
-  );
-};
+  )
+}
 
-export default BridgeWidget;
+export default BridgeWidget
 
 const useUrlPathParams = () => {
-  const dispatch = useDispatch();
-  const { search } = useLocation();
-  const query = useMemo(() => new URLSearchParams(search), [search]);
-  const pathSourceChain = query.get("sourceChain");
-  const pathTargetChain = query.get("targetChain");
+  const dispatch = useDispatch()
+  const { search } = useLocation()
+  const query = useMemo(() => new URLSearchParams(search), [search])
+  const pathSourceChain = query.get('sourceChain')
+  const pathTargetChain = query.get('targetChain')
 
   useEffect(() => {
     if (!pathSourceChain && !pathTargetChain) {
-      return;
+      return
     }
     try {
-      const sourceChain: ChainId = CHAINS_BY_ID[parseFloat(pathSourceChain || "") as ChainId]?.id;
-      const targetChain: ChainId = CHAINS_BY_ID[parseFloat(pathTargetChain || "") as ChainId]?.id;
+      const sourceChain: ChainId = CHAINS_BY_ID[parseFloat(pathSourceChain || '') as ChainId]?.id
+      const targetChain: ChainId = CHAINS_BY_ID[parseFloat(pathTargetChain || '') as ChainId]?.id
 
       if (sourceChain === targetChain) {
-        return;
+        return
       }
       if (sourceChain) {
-        dispatch(setSourceChain(sourceChain));
+        dispatch(setSourceChain(sourceChain))
       }
       if (targetChain) {
-        dispatch(setTargetChain(targetChain));
+        dispatch(setTargetChain(targetChain))
       }
     } catch (e) {
-      console.error("Invalid path params specified.");
+      console.error('Invalid path params specified.')
     }
-  }, [pathSourceChain, pathTargetChain, dispatch]);
-};
+  }, [pathSourceChain, pathTargetChain, dispatch])
+}
 
 const usePreventNavigation = () => {
-  const isSending = useSelector(selectTransferIsSending);
-  const isSendComplete = useSelector(selectTransferIsSendComplete);
-  const isRedeeming = useSelector(selectTransferIsRedeeming);
-  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete);
-  const preventNavigation = (isSending || isSendComplete || isRedeeming) && !isRedeemComplete;
+  const isSending = useSelector(selectTransferIsSending)
+  const isSendComplete = useSelector(selectTransferIsSendComplete)
+  const isRedeeming = useSelector(selectTransferIsRedeeming)
+  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
+  const preventNavigation = (isSending || isSendComplete || isRedeeming) && !isRedeemComplete
 
   useEffect(() => {
     if (preventNavigation) {
-      window.onbeforeunload = () => true;
+      window.onbeforeunload = () => true
       return () => {
-        window.onbeforeunload = null;
-      };
+        window.onbeforeunload = null
+      }
     }
-  }, [preventNavigation]);
-};
+  }, [preventNavigation])
+}
 
 const useStyles = makeStyles((theme) => ({
   mainBox: {
-    backgroundColor: "rgba(22, 22, 22, 0.5)",
-    borderRadius: "20px",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    width: "452px",
-    gap: "16px",
-    backdropFilter: "blur(4px)",
-    margin: "0 auto",
+    backgroundColor: 'rgba(22, 22, 22, 0.5)',
+    borderRadius: '20px',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    width: '452px',
+    gap: '16px',
+    backdropFilter: 'blur(4px)',
+    margin: '0 auto'
   },
   stack: {
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    gap: "25px",
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    gap: '25px'
   },
   confirmButton: {
-    backgroundColor: "#080808",
-    color: "rgba(255, 255, 255, 1)",
-    boxShadow: "0 8px 15px rgba(0, 0, 0, 0.2)",
-    position: "relative",
-    gap: "10px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "44px",
-    width: "80%",
-    maxWidth: "250px",
-    borderRadius: "100px",
+    backgroundColor: '#080808',
+    color: 'rgba(255, 255, 255, 1)',
+    boxShadow: '0 8px 15px rgba(0, 0, 0, 0.2)',
+    position: 'relative',
+    gap: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '44px',
+    width: '80%',
+    maxWidth: '250px',
+    borderRadius: '100px',
     fontWeight: 600,
-    fontSize: "14px",
-    margin: "10px 0",
-    padding: "0 14px",
-    minWidth: "60px",
-    textAlign: "center",
-    cursor: "pointer",
-    backdropFilter: "blur(20px) saturate(180%) brightness(115%)",
-  },
-}));
+    fontSize: '14px',
+    margin: '10px 0',
+    padding: '0 14px',
+    minWidth: '60px',
+    textAlign: 'center',
+    cursor: 'pointer',
+    backdropFilter: 'blur(20px) saturate(180%) brightness(115%)'
+  }
+}))

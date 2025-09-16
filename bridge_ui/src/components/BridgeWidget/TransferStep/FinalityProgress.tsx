@@ -1,0 +1,217 @@
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  selectTransferIsBlockFinalized,
+  selectTransferIsSendComplete,
+  selectTransferSourceChain,
+  selectTransferTransferTx
+} from '../../../store/selectors'
+import { BLUE, GRAY, GREEN, useWidgetStyles } from '../styles'
+import { useEffect, useState } from 'react'
+import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
+import { setIsBlockFinalized } from '../../../store/transferSlice'
+import { CheckCircleOutlineRounded, RadioButtonUncheckedRounded } from '@material-ui/icons'
+import { LinearProgress, styled, Typography } from '@material-ui/core'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
+import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../utils/consts'
+import {
+  DefaultEVMChainConfirmations,
+  EpochDuration,
+  getEVMCurrentBlockNumber,
+  getEvmJsonRpcProvider
+} from '../../../utils/evm'
+import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
+import { useWallet } from '@alephium/web3-react'
+import { ethers } from 'ethers'
+
+const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
+  const classes = useWidgetStyles()
+  const tx = useSelector(selectTransferTransferTx)
+  const sourceChain = useSelector(selectTransferSourceChain)
+  const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
+  const dispatch = useDispatch()
+
+  const remainingBlocksForFinality = useRemainingBlocksForFinality()
+
+  const [initialRemainingBlocks, setInitialRemainingBlocks] = useState<number>()
+
+  useEffect(() => {
+    if (initialRemainingBlocks || !remainingBlocksForFinality) return
+
+    setInitialRemainingBlocks(remainingBlocksForFinality)
+  }, [initialRemainingBlocks, remainingBlocksForFinality])
+
+  const showProgress = tx && remainingBlocksForFinality !== undefined && initialRemainingBlocks !== undefined
+  const signedVAA = useTransferSignedVAA()
+  const isCompleted = remainingBlocksForFinality === 0 || !!signedVAA || isBlockFinalized
+
+  useEffect(() => {
+    if (isCompleted) {
+      dispatch(setIsBlockFinalized(true))
+    }
+  }, [dispatch, isCompleted])
+
+  const [progress, setProgress] = useState<number>(0)
+
+  // Fake progress bar
+  useEffect(() => {
+    if (!isActive || !showProgress || isCompleted) return
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) {
+          return prev
+        }
+
+        const newProgress = prev + 0.1
+
+        return newProgress
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isActive, isCompleted, showProgress])
+
+  useEffect(() => {
+    if (isActive && showProgress) {
+      setProgress(100 - (remainingBlocksForFinality / initialRemainingBlocks) * 100)
+    }
+  }, [isActive, showProgress, remainingBlocksForFinality, initialRemainingBlocks])
+
+  return (
+    <div style={{ marginTop: '10px' }}>
+      <div className={classes.bridgingProgressRow} style={{ color: isActive ? 'inherit' : GRAY }}>
+        <div className={classes.bridgingProgressIcon}>
+          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded />}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
+          {isCompleted ? (
+            <Typography>Block has been finalized!</Typography>
+          ) : isActive && showProgress ? (
+            <div className={classes.spaceBetween}>
+              <Typography>Remaining blocks for finality:</Typography>
+              <Typography style={{ fontWeight: 600 }}>{remainingBlocksForFinality}</Typography>
+            </div>
+          ) : (
+            <div className={classes.spaceBetween}>
+              <Typography>Waiting for block finality...</Typography>
+            </div>
+          )}
+          {!isCompleted && isActive && showProgress && (
+            <div>
+              <BorderLinearProgress value={progress} variant="determinate" style={{ marginBottom: 5 }} />
+              {sourceChain === CHAIN_ID_ETH && (
+                <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee &nbsp; ☕️</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default FinalityProgress
+
+const BorderLinearProgress = styled(LinearProgress)(() => ({
+  height: 10,
+  borderRadius: 5,
+  [`&.MuiLinearProgress-colorPrimary`]: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  [`& .MuiLinearProgress-barColorPrimary`]: {
+    borderRadius: 5,
+    backgroundColor: BLUE
+  }
+}))
+
+const useRemainingBlocksForFinality = () => {
+  const currentBlockHeight = useFetchCurrentBlockNumber()
+  const sourceChain = useSelector(selectTransferSourceChain)
+  const tx = useSelector(selectTransferTransferTx)
+
+  const isEthereum = sourceChain === CHAIN_ID_ETH && CLUSTER !== 'devnet'
+  const isAlephium = sourceChain === CHAIN_ID_ALEPHIUM
+
+  if (!tx || !currentBlockHeight) return undefined
+
+  const remainingBlocksUntilTxBlock = tx.blockHeight - currentBlockHeight
+  const remainingBlocksForFinality = isEthereum
+    ? remainingBlocksUntilTxBlock
+    : isAlephium
+    ? remainingBlocksUntilTxBlock + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    : remainingBlocksUntilTxBlock + DefaultEVMChainConfirmations
+
+  return remainingBlocksForFinality > 0 ? remainingBlocksForFinality : 0
+}
+
+const useFetchCurrentBlockNumber = () => {
+  const { provider } = useEthereumProvider()
+  const alphWallet = useWallet()
+  const [currentBlock, setCurrentBlock] = useState<number>()
+  const [evmProvider, setEvmProvider] = useState<ethers.providers.Provider | undefined>(provider)
+  const [lastBlockUpdatedTs, setLastBlockUpdatedTs] = useState(Date.now())
+
+  const isSendComplete = useSelector(selectTransferIsSendComplete)
+  const tx = useSelector(selectTransferTransferTx)
+  const sourceChain = useSelector(selectTransferSourceChain)
+
+  useEffect(() => {
+    if (isSendComplete || !tx) return
+
+    if (isEVMChain(sourceChain) && evmProvider) {
+      let cancelled = false
+      ;(async () => {
+        while (!cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 3000))
+          try {
+            const newBlock = await getEVMCurrentBlockNumber(evmProvider, sourceChain)
+
+            if (!cancelled) {
+              setCurrentBlock((prev) => {
+                const now = Date.now()
+                if (prev === newBlock && now - lastBlockUpdatedTs > EpochDuration && evmProvider === provider) {
+                  setEvmProvider(getEvmJsonRpcProvider(sourceChain))
+                } else if (prev !== newBlock) {
+                  setLastBlockUpdatedTs(now)
+                }
+                return newBlock
+              })
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      })()
+
+      return () => {
+        cancelled = true
+      }
+    }
+
+    if (sourceChain === CHAIN_ID_ALEPHIUM && alphWallet?.nodeProvider !== undefined) {
+      let cancelled = false
+      ;(async (nodeProvider) => {
+        while (!cancelled) {
+          const timeout = CLUSTER === 'devnet' ? 1000 : 10000
+          await new Promise((resolve) => setTimeout(resolve, timeout))
+          try {
+            const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
+              fromGroup: alphWallet.account.group,
+              toGroup: alphWallet.account.group
+            })
+            if (!cancelled) {
+              setCurrentBlock(chainInfo.currentHeight)
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      })(alphWallet.nodeProvider)
+      return () => {
+        cancelled = true
+      }
+    }
+  }, [isSendComplete, sourceChain, provider, alphWallet, tx, lastBlockUpdatedTs, evmProvider])
+
+  return currentBlock
+}
