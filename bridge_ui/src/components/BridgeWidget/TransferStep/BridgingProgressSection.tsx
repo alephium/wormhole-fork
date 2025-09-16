@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { selectTransferTransferTx } from '../../../store/selectors'
+import { selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
 import { selectTransferIsRedeemComplete } from '../../../store/selectors'
 import { selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
 import { selectTransferIsBlockFinalized } from '../../../store/selectors'
@@ -19,9 +19,12 @@ const BridgingProgressSection = () => {
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
+  const redeemTx = useSelector(selectTransferRedeemTx)
+
+  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   useEffect(() => {
-    if (isRedeemComplete || isRedeemedViaRelayer) {
+    if (isRedeemed) {
       setStep(4)
 
       const timeout = setTimeout(() => setStep(5), 8000)
@@ -32,7 +35,7 @@ const BridgingProgressSection = () => {
     } else if (isBlockFinalized) {
       setStep(2)
     }
-  }, [isBlockFinalized, isRedeemComplete, isRedeemedViaRelayer, signedVAA])
+  }, [isBlockFinalized, isRedeemed, signedVAA])
 
   useEffect(() => {
     if (step === 5) {

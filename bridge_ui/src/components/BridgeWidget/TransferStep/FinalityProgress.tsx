@@ -22,6 +22,7 @@ import {
 import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import { useWallet } from '@alephium/web3-react'
 import { ethers } from 'ethers'
+import { AlephiumBlockTime } from '../../../utils/alephium'
 
 const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const classes = useWidgetStyles()
@@ -33,6 +34,10 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const remainingBlocksForFinality = useRemainingBlocksForFinality()
 
   const [initialRemainingBlocks, setInitialRemainingBlocks] = useState<number>()
+  const [initialRemainingSeconds, setInitialRemainingSeconds] = useState<number>()
+  const alphTxConfirmsAt = tx?.blockTimestamp
+    ? tx.blockTimestamp + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL * AlephiumBlockTime
+    : undefined
 
   useEffect(() => {
     if (initialRemainingBlocks || !remainingBlocksForFinality) return
@@ -40,9 +45,15 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
     setInitialRemainingBlocks(remainingBlocksForFinality)
   }, [initialRemainingBlocks, remainingBlocksForFinality])
 
+  const [alphTxConfirmed, setAlphTxConfirmed] = useState<boolean>(false)
+  const [remainingSeconds, setRemainingSeconds] = useState<number>()
+
   const showProgress = tx && remainingBlocksForFinality !== undefined && initialRemainingBlocks !== undefined
   const signedVAA = useTransferSignedVAA()
-  const isCompleted = remainingBlocksForFinality === 0 || !!signedVAA || isBlockFinalized
+
+  const isCompleted =
+    !!signedVAA ||
+    ((remainingBlocksForFinality === 0 || isBlockFinalized) && (sourceChain !== CHAIN_ID_ALEPHIUM || alphTxConfirmed))
 
   useEffect(() => {
     if (isCompleted) {
@@ -51,6 +62,53 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   }, [dispatch, isCompleted])
 
   const [progress, setProgress] = useState<number>(0)
+
+  useEffect(() => {
+    if (isActive && showProgress && remainingBlocksForFinality >= 0) {
+      setProgress(100 - (remainingBlocksForFinality / initialRemainingBlocks) * 100)
+    }
+  }, [isActive, showProgress, remainingBlocksForFinality, initialRemainingBlocks])
+
+  useEffect(() => {
+    if (
+      sourceChain === CHAIN_ID_ALEPHIUM &&
+      isActive &&
+      showProgress &&
+      remainingBlocksForFinality === 0 &&
+      alphTxConfirmsAt
+    ) {
+      setInitialRemainingSeconds((alphTxConfirmsAt - Date.now()) / 1000)
+    }
+  }, [isActive, showProgress, remainingBlocksForFinality, alphTxConfirmsAt, sourceChain])
+
+  useEffect(() => {
+    if (remainingSeconds !== undefined && remainingSeconds >= 0 && initialRemainingSeconds) {
+      const newProgress = 100 - (remainingSeconds / initialRemainingSeconds) * 100
+
+      setProgress(newProgress)
+
+      if (newProgress >= 100) {
+        setAlphTxConfirmed(true)
+      }
+    }
+  }, [initialRemainingSeconds, remainingSeconds])
+
+  useEffect(() => {
+    if (sourceChain === CHAIN_ID_ALEPHIUM && initialRemainingSeconds) {
+      const interval = setInterval(() => {
+        const now = Date.now()
+        const remaining = alphTxConfirmsAt ? Math.max(0, alphTxConfirmsAt - now) / 1000 : 0
+
+        setRemainingSeconds(remaining)
+
+        if (remaining <= 0) {
+          clearInterval(interval)
+        }
+      }, 1000)
+
+      return () => clearInterval(interval)
+    }
+  }, [alphTxConfirmsAt, initialRemainingSeconds, sourceChain])
 
   // Fake progress bar
   useEffect(() => {
@@ -71,12 +129,6 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
     return () => clearInterval(interval)
   }, [isActive, isCompleted, showProgress])
 
-  useEffect(() => {
-    if (isActive && showProgress) {
-      setProgress(100 - (remainingBlocksForFinality / initialRemainingBlocks) * 100)
-    }
-  }, [isActive, showProgress, remainingBlocksForFinality, initialRemainingBlocks])
-
   return (
     <div style={{ marginTop: '10px' }}>
       <div className={classes.bridgingProgressRow} style={{ color: isActive ? 'inherit' : GRAY }}>
@@ -87,10 +139,16 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
           {isCompleted ? (
             <Typography>Block has been finalized!</Typography>
           ) : isActive && showProgress ? (
-            <div className={classes.spaceBetween}>
-              <Typography>Remaining blocks for finality:</Typography>
-              <Typography style={{ fontWeight: 600 }}>{remainingBlocksForFinality}</Typography>
-            </div>
+            remainingBlocksForFinality > 0 ? (
+              <div className={classes.spaceBetween}>
+                <Typography>Remaining blocks for finality:</Typography>
+                <Typography style={{ fontWeight: 600 }}>{remainingBlocksForFinality}</Typography>
+              </div>
+            ) : (
+              <div className={classes.spaceBetween}>
+                <Typography>Waiting for confirmations...</Typography>
+              </div>
+            )
           ) : (
             <div className={classes.spaceBetween}>
               <Typography>Waiting for block finality...</Typography>
