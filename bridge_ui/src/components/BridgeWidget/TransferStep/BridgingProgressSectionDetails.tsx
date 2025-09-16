@@ -44,13 +44,18 @@ const BridgingProgressSectionDetails = () => {
 
   const [hasSentTokens, setHasSentTokens] = useState(false)
 
+  const signedVAAExists = !!signedVAA || isTransferCompleted
+  const userSentTransaction = !!transferTx
+  const isFinalized = isBlockFinalized || isTransferCompleted
+  const isRedeemed = isTransferCompleted || isRedeemComplete || isRedeemedViaRelayer || redeemTx
+
   useEffect(() => {
-    if (isTransferCompleted) {
+    if (isRedeemed) {
       setTimeout(() => {
         setHasSentTokens(true)
       }, 8000)
     }
-  }, [isTransferCompleted])
+  }, [isRedeemed])
 
   useEffect(() => {
     if (checkTransferCompletedError) {
@@ -60,11 +65,6 @@ const BridgingProgressSectionDetails = () => {
       })
     }
   }, [checkTransferCompletedError, enqueueSnackbar])
-
-  const signedVAAExists = !!signedVAA || isTransferCompleted
-  const userSentTransaction = !!transferTx
-  const isFinalized = isBlockFinalized || isTransferCompleted
-  const isRedeemed = isTransferCompleted && (isRedeemComplete || isRedeemedViaRelayer)
 
   return (
     <div className={classes.progressDetails}>

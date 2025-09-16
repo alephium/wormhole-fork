@@ -1,5 +1,5 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
-import { Checkbox, FormControlLabel, makeStyles, Typography } from '@material-ui/core'
+import { Checkbox, FormControlLabel, Typography } from '@material-ui/core'
 import { useCallback, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
@@ -11,7 +11,8 @@ import {
   selectTransferIsRedeemedViaRelayer,
   selectTransferTargetAsset,
   selectTransferTargetChain,
-  selectTransferUseRelayer
+  selectTransferUseRelayer,
+  selectTransferRedeemTx
 } from '../../../store/selectors'
 import { ROPSTEN_WETH_ADDRESS, WBNB_ADDRESS, WETH_ADDRESS } from '../../../utils/consts'
 import { useSnackbar } from 'notistack'
@@ -69,8 +70,11 @@ const ManualRedeemSection = () => {
     (isRecovery && (isTransferCompletedLoading || isTransferCompleted)) ||
     checkTransferCompletedError !== undefined
 
-  const isRedeemedComplete = useSelector(selectTransferIsRedeemComplete)
+  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
+  const redeemTx = useSelector(selectTransferRedeemTx)
+
+  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   const [relayerIsUnresponsive, setRelayerIsUnresponsive] = useState(false)
 
@@ -80,7 +84,7 @@ const ManualRedeemSection = () => {
     }
   }, [signedVAA])
 
-  if (!isRedeemedComplete && !isRedeemedViaRelayer && relayerIsUnresponsive) {
+  if (!isRedeemed && relayerIsUnresponsive) {
     return (
       <>
         <div className={widgetClasses.grayRoundedBox}>
