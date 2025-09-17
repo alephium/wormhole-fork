@@ -1,19 +1,22 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
-import { Button, makeStyles } from '@material-ui/core'
-import { useCallback, useEffect, useMemo } from 'react'
+import { Button, makeStyles, Typography } from '@material-ui/core'
+import { useCallback, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import {
   selectTransferShouldLockFields,
+  selectTransferSourceAssetInfoWrapper,
   selectTransferSourceBalanceString,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount,
-  selectTransferTargetChain
+  selectTransferTargetAssetWrapper,
+  selectTransferTargetChain,
+  selectTransferTargetError
 } from '../../store/selectors'
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
-import { BSC_MIGRATION_ASSET_MAP, CHAINS, ETH_MIGRATION_ASSET_MAP } from '../../utils/consts'
+import { BSC_MIGRATION_ASSET_MAP, CHAINS, CHAINS_BY_ID, ETH_MIGRATION_ASSET_MAP } from '../../utils/consts'
 import LowBalanceWarning from '../LowBalanceWarning'
 import SourceAssetWarning from '../Transfer/SourceAssetWarning'
 import ChainWarningMessage from '../ChainWarningMessage'
@@ -24,6 +27,9 @@ import ChainSelectArrow2 from './ChainSelectArrow2'
 import useSyncTargetAddress from '../../hooks/useSyncTargetAddress'
 import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedTokenAccounts'
 import ConnectWalletsButtons from './ConnectWalletsButtons'
+import WarningBox from './WarningBox'
+import RegisterNowButton2 from './RegisterNowButton2'
+import { GRAY } from './styles'
 
 // Copied from Source.tsx
 
@@ -43,6 +49,11 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     [sourceChain]
   )
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
+  const { error: targetAssetError, data } = useSelector(selectTransferTargetAssetWrapper)
+  const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
+  const { isFetching: isFetchingSourceAssetInfo, error: fetchSourceAssetInfoError } = useSelector(
+    selectTransferSourceAssetInfoWrapper
+  )
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
     !!parsedTokenAccount &&
@@ -55,6 +66,8 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const uiAmountString = useSelector(selectTransferSourceBalanceString)
   const shouldLockFields = useSelector(selectTransferShouldLockFields)
   const { isReady } = useIsWalletReady(sourceChain)
+  const { statusMessage } = useIsWalletReady(targetChain)
+  const targetError = useSelector(selectTransferTargetError)
 
   useGetTargetParsedTokenAccounts()
   useSyncTargetAddress(!shouldLockFields)
@@ -82,6 +95,8 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     },
     [dispatch]
   )
+
+  // const error = statusMessage || fetchSourceAssetInfoError || targetError || targetAssetError
 
   return (
     <>
@@ -132,6 +147,29 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
           <SourceAssetWarning sourceChain={sourceChain} sourceAsset={parsedTokenAccount?.mintKey} />
           <ChainWarningMessage chainId={sourceChain} />
           <ChainWarningMessage chainId={targetChain} />
+
+          {!statusMessage && data && !data.doesExist && (
+            <WarningBox>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '20px',
+                  width: '100%'
+                }}
+              >
+                <div>
+                  <Typography style={{ fontWeight: 600 }}>
+                    {parsedTokenAccount?.symbol} is not registered on {targetChainInfo.name}.
+                  </Typography>
+                  <Typography style={{ color: GRAY, fontSize: '14px' }}>Please register it now.</Typography>
+                </div>
+
+                <RegisterNowButton2 />
+              </div>
+            </WarningBox>
+          )}
         </>
       )}
 

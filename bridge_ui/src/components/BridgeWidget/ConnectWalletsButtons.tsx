@@ -1,7 +1,11 @@
 import { useSelector } from 'react-redux'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import { useTranslation } from 'react-i18next'
-import { selectTransferIsSourceComplete, selectTransferSourceChain } from '../../store/selectors'
+import {
+  selectTransferIsSourceComplete,
+  selectTransferIsTargetComplete,
+  selectTransferSourceChain
+} from '../../store/selectors'
 import { selectTransferTargetChain } from '../../store/selectors'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import { useMemo, useState } from 'react'
@@ -17,6 +21,7 @@ const ConnectWalletsButtons = ({ onNext }: { onNext?: () => void }) => {
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
   const { isReady: isTargetReady } = useIsWalletReady(targetChain)
   const isSourceComplete = useSelector(selectTransferIsSourceComplete)
+  const isTargetComplete = useSelector(selectTransferIsTargetComplete)
   const isSourceTransferDisabled = useMemo(() => {
     return getIsTransferDisabled(sourceChain, true)
   }, [sourceChain])
@@ -38,7 +43,7 @@ const ConnectWalletsButtons = ({ onNext }: { onNext?: () => void }) => {
 
   return (
     <BridgeWidgetButton
-      disabled={!isSourceComplete || isSourceTransferDisabled || isTargetTransferDisabled}
+      disabled={!isSourceComplete || !isTargetComplete || isSourceTransferDisabled || isTargetTransferDisabled}
       onClick={onNext}
     >
       {t('Next')}

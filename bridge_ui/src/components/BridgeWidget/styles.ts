@@ -4,6 +4,8 @@ export const GRAY = 'rgba(255, 255, 255, 0.5)'
 export const RED = '#ed4a34'
 export const GREEN = '#189b3c'
 export const BLUE = '#0045ff'
+export const YELLOW = '#f0d590'
+export const YELLOW_BG = 'rgba(240, 213, 144, 0.1)'
 
 export const useWidgetStyles = makeStyles((theme) => ({
   grayRoundedBox: {
