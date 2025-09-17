@@ -18,7 +18,7 @@ import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import { AlephiumConnectButton } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
-import { useWidgetStyles } from './styles'
+import { GRAY, useWidgetStyles } from './styles'
 
 const useStyles = makeStyles((theme) => ({
   select: {
@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
   },
   accountAddress: {
     fontSize: '14px',
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: GRAY,
     fontWeight: 600,
     cursor: 'pointer',
     '&:hover': {
@@ -110,7 +110,7 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
 }
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <Typography style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)' }}>{children}</Typography>
+  <Typography style={{ fontSize: '12px', fontWeight: 600, color: GRAY }}>{children}</Typography>
 )
 
 const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {

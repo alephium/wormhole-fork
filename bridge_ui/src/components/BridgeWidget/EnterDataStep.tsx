@@ -1,7 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -51,9 +51,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
   const { error: targetAssetError, data } = useSelector(selectTransferTargetAssetWrapper)
   const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
-  const { isFetching: isFetchingSourceAssetInfo, error: fetchSourceAssetInfoError } = useSelector(
-    selectTransferSourceAssetInfoWrapper
-  )
+  const { error: fetchSourceAssetInfoError } = useSelector(selectTransferSourceAssetInfoWrapper)
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
     !!parsedTokenAccount &&
@@ -96,7 +94,19 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     [dispatch]
   )
 
-  // const error = statusMessage || fetchSourceAssetInfoError || targetError || targetAssetError
+  const error = statusMessage || fetchSourceAssetInfoError || targetError || targetAssetError
+
+  useEffect(() => {
+    if (error) {
+      // These errors are not useful in the UI. Examples:
+      // Error in source: Select a token
+      // Error in source: Enter an amount
+      // Wallet is not connected
+      // The UI is already handling these by showing the right button as the next step.
+      // Keeping this here in case I missed something and we need it.
+      console.log(error)
+    }
+  }, [error])
 
   return (
     <>

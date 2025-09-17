@@ -101,7 +101,9 @@ const ManualRedeemSection = () => {
           <div>
             <Typography style={{ fontWeight: 600 }}>The wait is over, you can now claim your tokens!</Typography>
             <Typography>
-              <span style={{ color: GRAY }}>Redeem below and the tokens will be sent to your wallet.</span>
+              <span style={{ color: GRAY, fontSize: '14px' }}>
+                Redeem below and the tokens will be sent to your wallet.
+              </span>
             </Typography>
           </div>
         )}

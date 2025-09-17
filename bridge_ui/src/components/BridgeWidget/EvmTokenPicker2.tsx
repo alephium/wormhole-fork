@@ -16,7 +16,6 @@ import {
   getEthereumToken,
   isValidEthereumAddress
 } from '../../utils/evm'
-import TokenPicker, { BasicAccountRender } from '../TokenSelectors/TokenPicker'
 import { getTokenLogoAndSymbol } from '../../utils/tokens'
 import TokenPicker2, { BasicAccountRender2 } from './TokenPicker2'
 

@@ -9,7 +9,6 @@ import {
   selectTransferTransferTx,
   selectTransferUseRelayer
 } from '../../../store/selectors'
-import { selectTransferIsSendComplete } from '../../../store/selectors'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { RadioButtonUncheckedRounded } from '@material-ui/icons'
 import { CheckCircleOutlineRounded } from '@material-ui/icons'

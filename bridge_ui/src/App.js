@@ -38,11 +38,13 @@ import { useTranslation } from "react-i18next";
 const useStyles = makeStyles((theme) => ({
   appBar: {
     background: "transparent",
+    flexDirection: "row",
     marginTop: theme.spacing(2),
     "& > .MuiToolbar-root": {
       margin: "auto",
       marginBottom: theme.spacing(10),
       maxWidth: 960,
+      minWidth: 0,
     },
   },
   spacer: {
@@ -151,47 +153,33 @@ function App() {
             <img src={Alephium} alt={t("Alephium")} className={classes.alephiumLogo} />
           </Link>
           <div className={classes.spacer} />
-          <Hidden implementation="css" xsDown>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Link component={NavLink} to="/bridge" color="inherit" className={classes.link}>
-                {t("Bridge")}
-              </Link>
-              <Link component={NavLink} to="/transfer" color="inherit" className={classes.link}>
-                {t("Legacy tools")}
-              </Link>
-              <Link
-                href="https://explorer.bridge.alephium.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                {t("Explorer")}
-              </Link>
-              <Link
-                href="https://alephium.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                {t("Alephium")}
-              </Link>
-            </div>
-          </Hidden>
-          <Hidden implementation="css" smUp>
-            <Tooltip title={t("View the FAQ")}>
-              <IconButton
-                href="https://docs.wormholenetwork.com/wormhole/faqs"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                className={classes.link}
-              >
-                <HelpOutline />
-              </IconButton>
-            </Tooltip>
-          </Hidden>
+
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Link component={NavLink} to="/bridge" color="inherit" className={classes.link}>
+              {t("Bridge")}
+            </Link>
+            <Link component={NavLink} to="/transfer" color="inherit" className={classes.link}>
+              {t("Legacy tools")}
+            </Link>
+            <Link
+              href="https://explorer.bridge.alephium.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              className={classes.link}
+            >
+              {t("Explorer")}
+            </Link>
+            <Link
+              href="https://alephium.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              className={classes.link}
+            >
+              {t("Alephium")}
+            </Link>
+          </div>
         </Toolbar>
       </AppBar>
       {isBeta ? (
