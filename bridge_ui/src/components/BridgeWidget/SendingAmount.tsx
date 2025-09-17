@@ -14,13 +14,13 @@ const SendingAmount = () => {
   const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
 
   return (
-    <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-      <span style={{ fontWeight: 'bold' }}>{sourceAmount}</span>{' '}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+      <Typography style={{ fontWeight: 'bold' }}>{sourceAmount}</Typography>{' '}
       <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
       {sourceParsedTokenAccount?.logo && (
         <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount?.logo} />
       )}
-    </Typography>
+    </div>
   )
 }
 

@@ -26,6 +26,7 @@ import BridgeWidgetButton from './BridgeWidgetButton'
 import SendingAmount from './SendingAmount'
 import SendingAddress from './SendingAddress'
 import { useWidgetStyles } from './styles'
+import WarningBox from './WarningBox'
 
 interface ReviewStepProps {
   onBack: () => void
@@ -79,7 +80,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
   const { isReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain)
   const isWrongWallet = sourceWalletAddress && walletAddress && sourceWalletAddress !== walletAddress
-  const { handleClick, disabled, showLoader } = useHandleTransfer()
+  const { handleClick, disabled } = useHandleTransfer()
   const isSending = useSelector(selectTransferIsSending)
 
   const handleTransferClick = useCallback(() => {
@@ -195,6 +196,8 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
           </div>
         )}
       </div>
+
+      {(statusMessage || allowanceError) && <WarningBox>{statusMessage || allowanceError}</WarningBox>}
 
       {approveButtonNeeded ? (
         <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>

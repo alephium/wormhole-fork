@@ -1,16 +1,30 @@
-import { useSelector } from 'react-redux'
-import { selectTransferIsWalletApproved, selectTransferTransferTx } from '../../../store/selectors'
-import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  selectTransferIsSending,
+  selectTransferIsWalletApproved,
+  selectTransferTransferTx
+} from '../../../store/selectors'
+import { useCallback, useEffect, useState } from 'react'
 import { CheckCircleOutlineRounded, ThumbUp, UnfoldMoreOutlined } from '@material-ui/icons'
 import { CircularProgress, IconButton } from '@material-ui/core'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import SendTransactionSectionDetails from './SendTransactionSectionDetails'
+import { setBridgeWidgetStep } from '../../../store/transferSlice'
 
 const SendTransactionSection = () => {
   const classes = useWidgetStyles()
 
   const isWalletApproved = useSelector(selectTransferIsWalletApproved)
   const transferTx = useSelector(selectTransferTransferTx)
+  const isSending = useSelector(selectTransferIsSending)
+  const dispatch = useDispatch()
+  const goToReview = useCallback(() => dispatch(setBridgeWidgetStep(1)), [dispatch])
+
+  useEffect(() => {
+    if (!isSending && !isWalletApproved && !transferTx) {
+      goToReview()
+    }
+  }, [isSending, isWalletApproved, goToReview, transferTx])
 
   if (transferTx) {
     return <ConfirmedTransactionExpandableButton />
