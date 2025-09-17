@@ -27,9 +27,7 @@ import {
   setSourceParsedTokenAccount as setTransferSourceParsedTokenAccount,
   setSourceWalletAddress as setTransferSourceWalletAddress
 } from '../../store/transferSlice'
-import AlephiumTokenPicker from '../TokenSelectors/AlephiumTokenPicker'
 import AlgoTokenPicker from '../TokenSelectors/AlgoTokenPicker'
-import EvmTokenPicker from '../TokenSelectors/EvmTokenPicker'
 import RefreshButtonWrapper from '../TokenSelectors/RefreshButtonWrapper'
 import SolanaTokenPicker from '../TokenSelectors/SolanaTokenPicker'
 import EvmTokenPicker2 from './EvmTokenPicker2'

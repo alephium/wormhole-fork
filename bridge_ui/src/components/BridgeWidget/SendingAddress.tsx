@@ -4,8 +4,7 @@ import { useMemo } from 'react'
 import { selectSourceWalletAddress, selectTransferSourceChain } from '../../store/selectors'
 import { useSelector } from 'react-redux'
 import { CHAINS_BY_ID } from '../../utils/consts'
-
-const GRAY = 'rgba(255, 255, 255, 0.5)'
+import { GRAY } from './styles'
 
 const SendingAddress = ({ showIcon = false }: { showIcon?: boolean }) => {
   const classes = useStyles()

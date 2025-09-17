@@ -25,15 +25,13 @@ import { useHandleTransfer } from '../../hooks/useHandleTransfer'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import SendingAmount from './SendingAmount'
 import SendingAddress from './SendingAddress'
-import { useWidgetStyles } from './styles'
+import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
 
 interface ReviewStepProps {
   onBack: () => void
   onNext: () => void
 }
-
-const GRAY = 'rgba(255, 255, 255, 0.5)'
 
 const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const classes = useWidgetStyles()
