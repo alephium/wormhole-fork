@@ -27,7 +27,7 @@ const BridgingProgressSection = () => {
     if (isRedeemed) {
       setStep(4)
 
-      const timeout = setTimeout(() => setStep(5), 8000)
+      const timeout = setTimeout(() => setStep(5), 5000)
 
       return () => clearTimeout(timeout)
     } else if (!!signedVAA) {
