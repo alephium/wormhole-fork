@@ -147,6 +147,9 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
             ) : (
               <div className={classes.spaceBetween}>
                 <Typography>Waiting for confirmations...</Typography>
+                {remainingSeconds && (
+                  <Typography style={{ fontWeight: 600 }}>{Math.floor(remainingSeconds)}s</Typography>
+                )}
               </div>
             )
           ) : (

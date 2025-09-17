@@ -46,7 +46,7 @@ const BridgingProgressSectionDetails = () => {
 
   const signedVAAExists = !!signedVAA || isTransferCompleted
   const userSentTransaction = !!transferTx
-  const isFinalized = isBlockFinalized || isTransferCompleted
+  const isFinalized = isBlockFinalized || isTransferCompleted || redeemTx
   const isRedeemed = isTransferCompleted || isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   useEffect(() => {
