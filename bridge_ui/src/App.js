@@ -14,13 +14,7 @@ import {
 import { HelpOutline } from "@material-ui/icons";
 import { useCallback } from "react";
 import { useHistory, useLocation } from "react-router";
-import {
-  Link as RouterLink,
-  NavLink,
-  Redirect,
-  Route,
-  Switch,
-} from "react-router-dom";
+import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
 import Attest from "./components/Attest";
 import Footer from "./components/Footer";
 import HeaderText from "./components/HeaderText";
@@ -30,6 +24,7 @@ import CustodyAddresses from "./components/Stats/CustodyAddresses";
 import TokenOriginVerifier from "./components/TokenOriginVerifier";
 import Transactions from "./components/Transactions";
 import Transfer from "./components/Transfer";
+import BridgeWidget from "./components/BridgeWidget";
 import UnwrapNative from "./components/UnwrapNative";
 import { useBetaContext } from "./contexts/BetaContext";
 import Alephium from "./icons/alephium.svg";
@@ -43,11 +38,13 @@ import { useTranslation } from "react-i18next";
 const useStyles = makeStyles((theme) => ({
   appBar: {
     background: "transparent",
+    flexDirection: "row",
     marginTop: theme.spacing(2),
     "& > .MuiToolbar-root": {
       margin: "auto",
       marginBottom: theme.spacing(10),
       maxWidth: 960,
+      minWidth: 0,
     },
   },
   spacer: {
@@ -150,68 +147,39 @@ function App() {
         </AppBar>
       )}
       <div className={classes.topGradient} />
-      <AppBar
-        position="static"
-        color="inherit"
-        className={classes.appBar}
-        elevation={0}
-      >
+      <AppBar position="static" color="inherit" className={classes.appBar} elevation={0}>
         <Toolbar>
-          <Link
-            component={RouterLink}
-            to="/transfer"
-            className={classes.brandLink}
-          >
-            <img
-              src={Alephium}
-              alt={t("Alephium")}
-              className={classes.alephiumLogo}
-            />
+          <Link component={RouterLink} to="/bridge" className={classes.brandLink}>
+            <img src={Alephium} alt={t("Alephium")} className={classes.alephiumLogo} />
           </Link>
           <div className={classes.spacer} />
-          <Hidden implementation="css" xsDown>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Link
-                component={NavLink}
-                to="/transfer"
-                color="inherit"
-                className={classes.link}
-              >
-                {t("Bridge")}
-              </Link>
-              <Link
-                href="https://explorer.bridge.alephium.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                {t("Explorer")}
-              </Link>
-              <Link
-                href="https://alephium.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                color="inherit"
-                className={classes.link}
-              >
-                {t("Alephium")}
-              </Link>
-            </div>
-          </Hidden>
-          <Hidden implementation="css" smUp>
-            <Tooltip title={t("View the FAQ")}>
-              <IconButton
-                href="https://docs.wormholenetwork.com/wormhole/faqs"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                className={classes.link}
-              >
-                <HelpOutline />
-              </IconButton>
-            </Tooltip>
-          </Hidden>
+
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Link component={NavLink} to="/bridge" color="inherit" className={classes.link}>
+              {t("Bridge")}
+            </Link>
+            <Link component={NavLink} to="/transfer" color="inherit" className={classes.link}>
+              {t("Legacy tools")}
+            </Link>
+            <Link
+              href="https://explorer.bridge.alephium.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              className={classes.link}
+            >
+              {t("Explorer")}
+            </Link>
+            <Link
+              href="https://alephium.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              className={classes.link}
+            >
+              {t("Alephium")}
+            </Link>
+          </div>
         </Toolbar>
       </AppBar>
       {isBeta ? (
@@ -235,25 +203,18 @@ function App() {
           >
             {t("Token Bridge")} 🌉
           </HeaderText>
-          <Tabs
-            value={pathname}
-            variant="fullWidth"
-            onChange={handleTabChange}
-            indicatorColor="primary"
-          >
+          <Tabs value={pathname} variant="fullWidth" onChange={handleTabChange} indicatorColor="primary">
             <Tab label={t("Tokens_other")} value="/transfer" disableRipple />
             {/* <Tab label="NFTs" value="/nft" /> */}
             <Tab label={t("Redeem")} value="/redeem" to="/redeem" disableRipple />
-            <Tab
-              label={t("Transactions")}
-              value="/transactions"
-              to="/transactions"
-              disableRipple
-            />
+            <Tab label={t("Transactions")} value="/transactions" to="/transactions" disableRipple />
           </Tabs>
         </Container>
       ) : null}
       <Switch>
+        <Route exact path="/bridge">
+          <BridgeWidget />
+        </Route>
         <Route exact path="/transfer">
           <Transfer />
         </Route>
@@ -281,11 +242,11 @@ function App() {
           <CustodyAddresses />
         </Route>
         <Route>
-          <Redirect to="/transfer" />
+          <Redirect to="/bridge" />
         </Route>
       </Switch>
       <div className={classes.spacer} />
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

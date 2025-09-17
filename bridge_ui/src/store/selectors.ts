@@ -170,6 +170,8 @@ export const selectNFTIsRecovery = (state: RootState) => state.nft.isRecovery;
 
 export const selectTransferActiveStep = (state: RootState) =>
   state.transfer.activeStep;
+export const selectTransferActiveBridgeWidgetStep = (state: RootState) =>
+  state.transfer.activeBridgeWidgetStep;
 export const selectTransferSourceChain = (state: RootState) =>
   state.transfer.sourceChain;
 export const selectTransferSourceAsset = (state: RootState) => {
@@ -356,6 +358,8 @@ export const selectTransferIsTargetComplete = (state: RootState) =>
   !selectTransferTargetError(state);
 export const selectTransferIsSendComplete = (state: RootState) =>
   !!selectTransferSignedVAAHex(state);
+export const selectTransferIsBlockFinalized = (state: RootState) =>
+  state.transfer.isBlockFinalized;
 export const selectTransferIsRedeemComplete = (state: RootState) =>
   !!selectTransferRedeemTx(state) || state.transfer.isRedeemCompleted;
 export const selectTransferShouldLockFields = (state: RootState) =>
