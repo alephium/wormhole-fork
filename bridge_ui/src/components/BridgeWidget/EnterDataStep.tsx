@@ -1,7 +1,7 @@
-import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles } from '@material-ui/core'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -38,7 +38,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const history = useHistory()
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
-  const targetChainOptions = useMemo(() => CHAINS.filter((c) => c.id !== sourceChain), [sourceChain])
+  const targetChainOptions = useMemo(
+    () => CHAINS.filter((c) => (sourceChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== sourceChain)),
+    [sourceChain]
+  )
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
   const isEthereumMigration =
     sourceChain === CHAIN_ID_ETH &&
