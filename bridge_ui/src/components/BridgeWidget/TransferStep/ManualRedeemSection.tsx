@@ -79,38 +79,48 @@ const ManualRedeemSection = () => {
   const [relayerIsUnresponsive, setRelayerIsUnresponsive] = useState(false)
 
   useEffect(() => {
-    if (signedVAA) {
+    if (signedVAA && targetChain === CHAIN_ID_ALEPHIUM) {
       setTimeout(() => setRelayerIsUnresponsive(true), 10000)
     }
-  }, [signedVAA])
+  }, [signedVAA, targetChain])
 
-  if (!isRedeemed && relayerIsUnresponsive) {
+  const manualRedeemToAlephiumRequired = !isRedeemed && targetChain === CHAIN_ID_ALEPHIUM && relayerIsUnresponsive
+  const manualRedeemToEvmRequired = !isRedeemed && targetChain !== CHAIN_ID_ALEPHIUM && signedVAA
+
+  if (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) {
     return (
-      <>
-        <div className={widgetClasses.grayRoundedBox}>
+      <div className={widgetClasses.grayRoundedBox}>
+        {manualRedeemToAlephiumRequired ? (
           <div>
-            <Typography style={{ fontWeight: 600 }}>The relayer is busy at the moment. </Typography>
+            <Typography style={{ fontWeight: 600 }}>The relayer is busy at the moment.</Typography>
             <Typography>
               <span style={{ color: GRAY }}>No worries. Redeem manually. We'll refund your fees.</span> 🤝
             </Typography>
           </div>
+        ) : (
           <div>
-            {isNativeEligible && (
-              <FormControlLabel
-                control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} color="primary" />}
-                label={t('Automatically unwrap to native currency')}
-              />
-            )}
+            <Typography style={{ fontWeight: 600 }}>The wait is over, you can now claim your tokens!</Typography>
+            <Typography>
+              <span style={{ color: GRAY }}>Redeem below and the tokens will be sent to your wallet.</span>
+            </Typography>
           </div>
-          <BridgeWidgetButton
-            style={{ marginTop: '10px' }}
-            disabled={isRedeemDisabled}
-            onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
-          >
-            Redeem manually
-          </BridgeWidgetButton>
+        )}
+        <div>
+          {isNativeEligible && (
+            <FormControlLabel
+              control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} color="primary" />}
+              label={t('Automatically unwrap to native currency')}
+            />
+          )}
         </div>
-      </>
+        <BridgeWidgetButton
+          style={{ marginTop: '10px' }}
+          disabled={isRedeemDisabled}
+          onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
+        >
+          Redeem
+        </BridgeWidgetButton>
+      </div>
     )
   } else {
     return null
