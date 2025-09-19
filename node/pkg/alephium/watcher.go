@@ -51,7 +51,7 @@ var (
 		}, []string{"operation"})
 )
 
-const BlockTimeMs = 16000
+const BlockTimeMs = 8000
 const MinimalConsistencyLevel uint8 = 205
 
 type Watcher struct {
