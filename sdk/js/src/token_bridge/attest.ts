@@ -26,7 +26,8 @@ export async function attestFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return AttestToken.execute(signerProvider, {
+  return AttestToken.execute({
+    signer: signerProvider,
     initialFields: {
       payer: payer,
       tokenBridge: tokenBridgeId,
