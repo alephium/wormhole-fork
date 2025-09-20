@@ -30,7 +30,8 @@ export async function transferLocalTokenFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return TransferLocal.execute(signerProvider, {
+  return TransferLocal.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
@@ -66,7 +67,8 @@ export async function transferRemoteTokenFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return TransferRemote.execute(signerProvider, {
+  return TransferRemote.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridge: tokenBridgeId,
       fromAddress: fromAddress,
