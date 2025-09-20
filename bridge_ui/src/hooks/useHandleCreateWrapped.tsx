@@ -7,7 +7,9 @@ import {
   isEVMChain,
   createRemoteTokenPoolOnAlph,
   updateRemoteTokenPoolOnAlph,
-  getAttestTokenHandlerId
+  getAttestTokenHandlerId,
+  updateWrappedOnEth,
+  createWrappedOnEth
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { Signer } from "ethers";
@@ -32,7 +34,6 @@ import { getKaruraGasParams } from "../utils/karura";
 import parseError from "../utils/parseError";
 import { waitALPHTxConfirmed } from "../utils/alephium";
 import useAttestSignedVAA from "./useAttestSignedVAA";
-import { createWrappedOnEthWithoutWait, updateWrappedOnEthWithoutWait } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import { MINIMAL_CONTRACT_DEPOSIT } from "@alephium/web3";
 import i18n from "../i18n";
@@ -58,13 +59,13 @@ async function evm(
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
     const result = shouldUpdate
-      ? await updateWrappedOnEthWithoutWait(
+      ? await updateWrappedOnEth(
           getTokenBridgeAddressForChain(chainId),
           signer,
           signedVAA,
           overrides
         )
-      : await createWrappedOnEthWithoutWait(
+      : await createWrappedOnEth(
           getTokenBridgeAddressForChain(chainId),
           signer,
           signedVAA,

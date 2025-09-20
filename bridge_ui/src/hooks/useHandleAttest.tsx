@@ -9,7 +9,8 @@ import {
   uint8ArrayToHex,
   parseTargetChainFromLogEth,
   CHAIN_ID_ETH,
-  CHAIN_ID_BSC
+  CHAIN_ID_BSC,
+  attestFromEth
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { Signer } from "ethers";
@@ -40,7 +41,7 @@ import {
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
-import { attestFromEthWithoutWait, waitEVMTxConfirmed, checkETHToken, checkBSCToken } from "../utils/evm";
+import { waitEVMTxConfirmed, checkETHToken, checkBSCToken } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import i18n from "../i18n";
 
@@ -64,7 +65,7 @@ async function evm(
       chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const result = await attestFromEthWithoutWait(
+    const result = await attestFromEth(
       getTokenBridgeAddressForChain(chainId),
       signer,
       sourceAsset,

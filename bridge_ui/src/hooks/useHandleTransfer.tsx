@@ -7,7 +7,10 @@ import {
   parseSequenceFromLogEth,
   uint8ArrayToHex,
   transferRemoteTokenFromAlph,
-  transferLocalTokenFromAlph
+  transferLocalTokenFromAlph,
+  transferFromEth,
+  transferFromEthNative,
+  checkRecipientAddress
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import { Signer } from "ethers";
@@ -42,15 +45,14 @@ import {
   alphArbiterFee,
   ALEPHIUM_MESSAGE_FEE,
   getBridgeAddressForChain,
-  getTokenBridgeAddressForChain,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
+  getTokenBridgeAddressForChain
 } from "../utils/consts";
 import { getSignedVAAWithRetry } from "../utils/getSignedVAAWithRetry";
 import parseError from "../utils/parseError";
 import useTransferTargetAddressHex from "./useTransferTargetAddress";
-import { validateAlephiumRecipientAddress, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
+import { getAlephiumRecipientAddrss, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import { ExecuteScriptResult } from "@alephium/web3";
-import { transferFromEthNativeWithoutWait, transferFromEthWithoutWait, waitEVMTxConfirmed } from "../utils/evm";
+import { waitEVMTxConfirmed } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import i18n from "../i18n";
 
@@ -69,6 +71,10 @@ async function evm(
 ) {
   dispatch(setIsSending(true));
   try {
+    const recipient = recipientChain === CHAIN_ID_ALEPHIUM
+      ? getAlephiumRecipientAddrss(recipientAddress)
+      : recipientAddress
+
     const baseAmountParsed = parseUnits(amount, decimals);
     const feeParsed = parseUnits(relayerFee || "0", decimals);
     const transferAmountParsed = baseAmountParsed.add(feeParsed);
@@ -80,31 +86,29 @@ async function evm(
       "total",
       transferAmountParsed
     );
-    if (recipientChain === CHAIN_ID_ALEPHIUM && !validateAlephiumRecipientAddress(recipientAddress)) {
-      throw new Error(`Invalid recipient address, please connect to an address on group ${ALEPHIUM_BRIDGE_GROUP_INDEX}`)
-    }
+    checkRecipientAddress(recipientChain, recipient)
     // Klaytn requires specifying gasPrice
     const overrides =
       chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
     const result = isNative
-      ? await transferFromEthNativeWithoutWait(
+      ? await transferFromEthNative(
           getTokenBridgeAddressForChain(chainId),
           signer,
           transferAmountParsed,
           recipientChain,
-          recipientAddress,
+          recipient,
           feeParsed,
           overrides
         )
-      : await transferFromEthWithoutWait(
+      : await transferFromEth(
           getTokenBridgeAddressForChain(chainId),
           signer,
           tokenAddress,
           transferAmountParsed,
           recipientChain,
-          recipientAddress,
+          recipient,
           feeParsed,
           overrides
         );

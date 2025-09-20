@@ -3,6 +3,7 @@ import {
   CHAIN_ID_KLAYTN,
   getAllowanceEth,
   isEVMChain,
+  approveEth,
 } from "@alephium/wormhole-sdk";
 import { BigNumber } from "ethers";
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +12,6 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { selectTransferIsApproving } from "../store/selectors";
 import { setIsApproving, setIsWalletApproved } from "../store/transferSlice";
 import { getTokenBridgeAddressForChain } from "../utils/consts";
-import { approveEthWithoutWait } from "../utils/evm";
 
 export default function useAllowance(
   chainId: ChainId,
@@ -72,7 +72,7 @@ export default function useAllowance(
               : Promise.resolve(undefined);
           return gasPricePromise.then(
             (gasPrice) =>
-              approveEthWithoutWait(
+              approveEth(
                 getTokenBridgeAddressForChain(chainId),
                 tokenAddress,
                 signer,

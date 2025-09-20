@@ -38,12 +38,13 @@ async function evm(
         chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
-    const receipt = await redeemOnEth(
+    const tx = await redeemOnEth(
       getNFTBridgeAddressForChain(chainId),
       signer,
       signedVAA,
       overrides
     );
+    const receipt = await tx.wait()
     dispatch(
       setRedeemTx({ id: receipt.transactionHash, blockHeight: receipt.blockNumber })
     );
