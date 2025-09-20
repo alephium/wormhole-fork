@@ -1482,7 +1482,7 @@ describe('test token bridge', () => {
     const contractState0 = testResult0.contracts.find((c) => c.address === fixture.tokenBridgeForChain.address)!
     expect(contractState0.asset).toEqual({ alphAmount: alph(4), tokens: [] })
     const payerOutput = testResult0.txOutputs.find((c) => c.address === payer)!
-    expect(payerOutput.alphAmount).toEqual(ONE_ALPH - defaultGasFee)
+    expect(payerOutput.alphAmount).toEqual(ONE_ALPH)
 
     const refundAddress = fixture.tokenBridge.selfState.fields.refundAddress
     const testResult1 = await TokenBridgeForChain.tests.withdraw({
@@ -1499,7 +1499,7 @@ describe('test token bridge', () => {
     )
     expect(contractState1.asset).toEqual({ alphAmount: ONE_ALPH, tokens: [] })
     const refundAddressOutput = testResult1.txOutputs.find((c) => c.address === refundAddress)!
-    expect(refundAddressOutput.alphAmount).toEqual(alph(4) - defaultGasFee)
+    expect(refundAddressOutput.alphAmount).toEqual(alph(4))
   })
 
   it('should topup rewards', async () => {

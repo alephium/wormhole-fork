@@ -105,7 +105,7 @@ async function transferFromEvmChainToAlph(chainId: ChainId, amount: bigint = ONE
     const provider = newEVMProvider(getNodeUrl(config.networkId, chainId))
     const wallet = new ethers.Wallet(config.privateKeys[chainId]![0], provider)
     const recipientAddress = bs58.decode(alphWallet.address)
-    const receipt = await transferFromEthNative(
+    const tx = await transferFromEthNative(
       tokenBridgeAddress,
       wallet,
       amount,
@@ -114,6 +114,7 @@ async function transferFromEvmChainToAlph(chainId: ChainId, amount: bigint = ONE
       undefined,
       evmTxOptions
     )
+    const receipt = await tx.wait()
     // get the sequence from the logs (needed to fetch the vaa)
     sequence = parseSequenceFromLogEth(receipt, getGovernanceAddress(config.networkId, chainId))
     console.log(`Transfer token sequence: ${sequence}`)

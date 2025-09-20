@@ -7,7 +7,7 @@
       "signature": "f54a949fd8d49f4fd52adcd55d0b26ac55c5287ec79807dd7a70a05c38c28bf0026b8b9da6c78809958e873ae6110b980f84a62619f0e7135b847d4300119e6f",
       "gasPrice": "100000000000",
       "gasAmount": 57919,
-      "blockHash": "42e00fc9dcb421e1871b933e3da11aa2dc1b5d39bb68335c849b55ff92f8a690",
+      "blockHash": "add9aa51e0c1a3edcda69c5ed0586212c044e6277d0a70e28ead2f0868e91620",
       "codeHash": "1fe28b45549ce9d2ec4216af57bab8833bf6d80ee12ebafd9ce26515fabf4494",
       "contractInstance": {
         "address": "2B8wrzgeQXQ38b55igaQXb9Y1Ev1eQMS9hrhRc5Hnf61D",
@@ -21,7 +21,7 @@
       "signature": "f98a685fa1dbc00d1daa8eb4bb0f25f0dc2e0943e87a78ac80e5a156c4039ae67b150b87107957de1a55cb01e8dab20744bc1cb927e1c13cc2764e016556c716",
       "gasPrice": "100000000000",
       "gasAmount": 58053,
-      "blockHash": "1c4b1b674f6b9dbf0f028b75a1db9486cf2631dd2a7acd366e703a4ca2ae08a0",
+      "blockHash": "8a06b07bdc30a933afd1f8e328311b5a47a45ec282055e1153b81a106b3540e0",
       "codeHash": "3f8c4a0d32504a9a51f59c020e53b637cb062870413715c8226bce3251ade221",
       "contractInstance": {
         "address": "24z1FhMr74FYGvW2zLQKijaFCu6yTbkkx3Qdjn6WKwfdH",
@@ -35,7 +35,7 @@
       "signature": "11fb16c20534ce9e0bc5a4b84357af4d61b4d41c271ba556dd08d2a4ab4b6e5204f90a8a4962514c6fe7b4b6ca7e7da4754f50875f2ef8fdb250ca8648af466f",
       "gasPrice": "100000000000",
       "gasAmount": 58479,
-      "blockHash": "bce04cfefdabb7b10dece441ebae2176f5cdea2629c98cbc0273abc15cf14390",
+      "blockHash": "e6bdb88e4ab7bdaab9242a7bc108f7fb57dc45aa0840f7ed7d12cb663dc16aa0",
       "codeHash": "aa373a72fc20f97eb84a8c2cf2aae520a9a2bd89a218e3529c99b4cb7ab779c7",
       "contractInstance": {
         "address": "2A1k9PK5m6WvtqrQMviXT3QqvC5ao9pk5gMV2Mz6sZMHH",
@@ -49,7 +49,7 @@
       "signature": "fd41a4f19b09f46956f73f57c4eb5ddcc49263f7fae1c31d22cbc723ec964fc32b75e57995996db341406fbefb1f2ddbd23396d546083027f52546474328e23a",
       "gasPrice": "100000000000",
       "gasAmount": 57786,
-      "blockHash": "8b294c4ee173691881e30af2ce6f36b0fe0ad8c98828355873ba5c529cc5a450",
+      "blockHash": "1fc595babe84feef8ce067cd96ea780b823a47c6cfb1bed924d496b2f2ec6f00",
       "codeHash": "54360922965cf998e03dad9bda9a1860e1e0d52d30ce6f6b251b846dcd6e2bca",
       "contractInstance": {
         "address": "yYfwvrB9mKUEiVkq6Sj98THNtBnZ97F29hM67PTdoG47",
@@ -63,7 +63,7 @@
       "signature": "efbd8d8a51816bf4741408f91e937ff9bd0a157a0b2060cc7de80dad26b00e5464b3c437a92a8e7e79e3533b427468f903016bed149fd73a6904f4c5dd8d7cb9",
       "gasPrice": "100000000000",
       "gasAmount": 57257,
-      "blockHash": "4b098a624ea9aa519991d05a07cd7991dcd8cb3b59087378169b5fd2375cf1e0",
+      "blockHash": "59e868bf3b0163063acb51da74fe99325956276528168cd08eac08aae09c6a70",
       "codeHash": "44b1c46e96f5ef7da094c816824b565e3a9ad062a337ed2d4168efc63b6491ef",
       "contractInstance": {
         "address": "27JzA5eXm6gFHD9Egn9iDeSCd4hpv9TyanYG2xj1xQihd",
@@ -77,7 +77,7 @@
       "signature": "66b55c9a20a98a4e8da5b76efee8201aef4b134fc50f31e70288a7ddbd05f8eb1174eb39d905670256d1502079768f49a883c4292ae82406c83419f4cc4bc140",
       "gasPrice": "100000000000",
       "gasAmount": 57779,
-      "blockHash": "2f91e07f1c327a6229f62c8e8df9c447b374b226e12fa823855cf9402163d440",
+      "blockHash": "ccc624ac0c380eec961e77c2c515290dd2c5f3cddeaee723119273dba45cbef0",
       "codeHash": "34d3ff33a570babbf62287b28552cfa780bc3fe672726f530ffbe2a30c65b6c2",
       "contractInstance": {
         "address": "vRrJdDsqLAAYKvffZLJtnSVnSjZo7QuAWNKuX68bNFm9",
@@ -91,7 +91,7 @@
       "signature": "101ada8659ef5183b698d8644265055f7debcee5997c68f0ab59c059976a630237d74e381355de0a8d33efc5251552afbb2f54430bdf5f16f7efe3fe79b235a5",
       "gasPrice": "100000000000",
       "gasAmount": 59127,
-      "blockHash": "d7b58708f8075b7006685ee5d9510def629a3c86d4a283b765cc2eeb71374650",
+      "blockHash": "50e86255dce02c23da3ff7d2b5f54f64a6c02251e7f32ce0111b44d258b3c650",
       "codeHash": "20d46a56986d4de515eb1fbe32b66454d1725b0e66666acf71f978f41e4aea20",
       "contractInstance": {
         "address": "2AQynxxmUZTM5XAc8moRefkNgnGrKgUeA5pSCvyfGgSvs",
@@ -105,7 +105,7 @@
       "signature": "15c6a98a3c2cf750f7af2986c44cae0e400359dce69962d32a77fc7eb0b26c150d89cb105719b85ccb49437d68564e10926f1561ea83025c92bf077e7cc8eca1",
       "gasPrice": "100000000000",
       "gasAmount": 59598,
-      "blockHash": "61b2585ef1f5c81f6b834f4b8c120c5bfb1da4f7564a6ce71f31f23395ed4c70",
+      "blockHash": "2544917368012db19000d2e9966dde9d6a824a3726260dec2ce3c7eef5dbea90",
       "codeHash": "9121d076f9759ece091a313e98c8dd2b3757fb69d789174175abae14bda15927",
       "contractInstance": {
         "address": "xknGRWmSqJAYr6XbJ7yARaHHfXSQvM8pDi1H8ubr4dxs",
@@ -119,7 +119,7 @@
       "signature": "593a6254b6832b30ab0b8079b70db1e684bb7ff9653125d5196cae5657b0cd9f09222b9bdb01d57dc148249409fb810e26bc54d79e40030e188f24c27a2b781f",
       "gasPrice": "100000000000",
       "gasAmount": 57320,
-      "blockHash": "a3b3fef86757cc71a7230e808d3cbcb775650d509252938ee81ee53164034b50",
+      "blockHash": "f797c711d3ee8d62953a3f475e782f2e165a61ef4d507e0336a75f60312ffad0",
       "codeHash": "e60ab4f6ebdbb2e7526892df65c394002e6f418af8dae0561635199119ad05d6",
       "contractInstance": {
         "address": "25tRAPhkXWRpztnGtGLUDoDe9hoJtYojMRp56pNyRitF1",
@@ -149,7 +149,7 @@
       "signature": "ce128dbb4e042f422f85f77b29341f87b6530a34464f708056290a0d68a9383a00f6a54579ac3ee19589024c37883dbbd7dd31e4c42c5e2c69d2dff119e18220",
       "gasPrice": "100000000000",
       "gasAmount": 57551,
-      "blockHash": "ca95cd050a9d3f5d8f3fae87dfacca0f644c862698315fad61ee0a5f5e02bda0",
+      "blockHash": "b3bd1fc4b99a0aacbec63deadc0b9ad355c51a18f546b18f9329df8a608cad60",
       "codeHash": "c916cf2d874a30ed61027fcc06f85542886b5329cec742e54ad379aa8b18e82d",
       "attoAlphAmount": "1024100000000000000000",
       "contractInstance": {
@@ -162,27 +162,75 @@
   "scripts": {
     "CreateLocalAttestTokenHandler": {
       "signature": "459a04d8d647ea4c6cb4d0911b85c3e55d46e3ef32b6f79abf07bac738bb3fca420dfbe32dd77bc15e18ca99f4f4cc772421be8df7f249498cd7b3a2aca03a8d",
+      "type": "BuildSimpleExecuteScriptTxResult",
       "fromGroup": 0,
       "toGroup": 0,
       "unsignedTx": "000401010103000000091500bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a13c40de0b6b3a7640000a21500bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a13c40de0b6b3a76400000e0c1440203c69f024ff0a7978c0e5608fe5df698dfba5ef9134a947dc189f4a5443a4860001028000cdcdc1174876e8000137a4444783fe3476fc3922759c9bb8b2644bcd91a884683ec3de158639e5ecbb0779b29a000381818e63bd9e35a5489b52a430accefc608fd60aa2c7c0d1b393b5239aedf6b001c6d3c2021ba48560b1880000bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a00000000000000000000",
       "gasAmount": 52685,
       "gasPrice": "100000000000",
       "txId": "492617b0b6d23fb35f67d2a5b6189b870985b3a1f7dbbee6a2cb7a8fff37ba59",
+      "simulationResult": {
+        "contractInputs": [],
+        "generatedOutputs": [
+          {
+            "address": "24HTbhe6SaTGK5a12fPiPKumKeVP17R2AQBzdibrxVbWw",
+            "attoAlphAmount": "1000000000000000000",
+            "tokens": []
+          }
+        ]
+      },
       "groupIndex": 0,
-      "blockHash": "9b005f773a927c7dbb934adc8ab161fe88fce8beae6935a538d593285ebb8650",
+      "blockHash": "f6114cd10cf4394ee8d064d4745c5326ce5739dec48f49ee5b74b4321b96eca0",
       "codeHash": "2f9f6c7bc29c5f98c3d58a50ce85b9075c4aa7c4a9675e3c875416230382aafe",
       "attoAlphAmount": "1000000000000000000"
     },
     "GetToken": {
       "signature": "225f7642ae424a0c499f17ac1f0b606fba5c965020d19fbee7db358ef9812bf5263cc6225b9c6d96d4b7afc2c88fcc11fdc5e6e75a109147c676c005a98c6d44",
+      "type": "BuildSimpleExecuteScriptTxResult",
       "fromGroup": 0,
       "toGroup": 0,
       "unsignedTx": "0004010101030000000a1500bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a13c40de0b6b3a7640000a21500bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a13c40de0b6b3a76400001385f5e1000f0c144020a66087d9db0f50bd87c78c6fd30be97407805df31abc8908a403d632fa868000010480009081c1174876e8000137a44447acbd817117d7393f0fd0e878c58dc01a786ab7a62525d1576b06e1e0b58919ff000381818e63bd9e35a5489b52a430accefc608fd60aa2c7c0d1b393b5239aedf6b001c6d3c1f2b2992310b7e00000bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a00000000000000000000",
       "gasAmount": 36993,
       "gasPrice": "100000000000",
       "txId": "b7b3d7588b0d956f3726870cddd90ad94e92bdddb7c89eeb376fa17cc0e9af3e",
+      "simulationResult": {
+        "contractInputs": [
+          {
+            "address": "25tRAPhkXWRpztnGtGLUDoDe9hoJtYojMRp56pNyRitF1",
+            "attoAlphAmount": "100000000000000000",
+            "tokens": [
+              {
+                "id": "a66087d9db0f50bd87c78c6fd30be97407805df31abc8908a403d632fa868000",
+                "amount": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+              }
+            ]
+          }
+        ],
+        "generatedOutputs": [
+          {
+            "address": "25tRAPhkXWRpztnGtGLUDoDe9hoJtYojMRp56pNyRitF1",
+            "attoAlphAmount": "1100000000000000000",
+            "tokens": [
+              {
+                "id": "a66087d9db0f50bd87c78c6fd30be97407805df31abc8908a403d632fa868000",
+                "amount": "115792089237316195423570985008687907853269984665640464039457584007913129639935"
+              }
+            ]
+          },
+          {
+            "address": "1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH",
+            "attoAlphAmount": "1000000000000000",
+            "tokens": [
+              {
+                "id": "a66087d9db0f50bd87c78c6fd30be97407805df31abc8908a403d632fa868000",
+                "amount": "100000000000000000000000000"
+              }
+            ]
+          }
+        ]
+      },
       "groupIndex": 0,
-      "blockHash": "d28a99719c839a019d2b82c8fde008d9cbe91390a3cce8ff8f0cdd46c09f5ba0",
+      "blockHash": "527d1349f5df0f0e29138f3478445f799d824c2a254d30d5d0396f3f074b51f0",
       "codeHash": "7dec313eae9c2db19a1c6e36baac93fac121c6e92469ee8aa79bb82729cb1166",
       "attoAlphAmount": "1001000000000000000"
     }
