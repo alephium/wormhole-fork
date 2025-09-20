@@ -24,7 +24,5 @@ export async function updateWrappedOnEth(
   overrides: Overrides & { from?: string | Promise<string> } = {}
 ) {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.updateWrapped(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.updateWrapped(signedVAA, overrides);
 }

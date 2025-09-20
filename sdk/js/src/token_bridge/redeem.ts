@@ -71,9 +71,7 @@ export async function redeemOnEth(
   overrides: Overrides & { from?: string | Promise<string> } = {}
 ) {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.completeTransfer(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.completeTransfer(signedVAA, overrides);
 }
 
 export async function redeemOnEthNative(
@@ -83,7 +81,5 @@ export async function redeemOnEthNative(
   overrides: Overrides & { from?: string | Promise<string> } = {}
 ) {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
 }
