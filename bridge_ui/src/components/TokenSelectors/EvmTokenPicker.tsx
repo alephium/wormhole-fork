@@ -89,7 +89,7 @@ export default function EvmTokenPicker(
               signerAddress
             );
           } else {
-            const logoAndSymbol = await getTokenLogoAndSymbol(chainId, tokenAccount.address)
+            const logoURI = (await getTokenLogoAndSymbol(chainId, tokenAccount.address))?.logoURI
             const tokenInfo = await evmTokenToParsedTokenAccount(
               chainId,
               tokenAccount as ethers_contracts.TokenImplementation,
@@ -97,8 +97,8 @@ export default function EvmTokenPicker(
             );
             return {
               ...tokenInfo,
-              symbol: logoAndSymbol?.symbol ?? tokenInfo.symbol,
-              logo: logoAndSymbol?.logoURI ?? tokenInfo.logo
+              symbol: tokenInfo.symbol,
+              logo: logoURI ?? tokenInfo.logo
             }
           }
         } catch (e) {
