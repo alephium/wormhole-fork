@@ -9,12 +9,14 @@ export const YELLOW_BG = 'rgba(240, 213, 144, 0.1)'
 
 export const useWidgetStyles = makeStyles((theme) => ({
   grayRoundedBox: {
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
     padding: '14px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '20px'
+    backgroundColor: 'rgb(30, 30, 30)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: '16px'
   },
   sendStep: {
     display: 'flex',

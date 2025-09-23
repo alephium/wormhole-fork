@@ -116,11 +116,21 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             label="From"
             select
             variant="outlined"
-            fullWidth
             value={sourceChain}
             onChange={handleSourceChange}
             disabled={shouldLockFields}
             chains={CHAINS}
+          />
+        </div>
+        <div className={classes.chainSelectContainer}>
+          <ChainSelect2
+            label="To"
+            variant="outlined"
+            select
+            value={targetChain}
+            onChange={handleTargetChange}
+            disabled={shouldLockFields}
+            chains={targetChainOptions}
           />
         </div>
         <div className={classes.chainSelectArrow}>
@@ -131,21 +141,9 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             disabled={shouldLockFields}
           />
         </div>
-        <div className={classes.chainSelectContainer}>
-          <ChainSelect2
-            label="To"
-            variant="outlined"
-            select
-            fullWidth
-            value={targetChain}
-            onChange={handleTargetChange}
-            disabled={shouldLockFields}
-            chains={targetChainOptions}
-          />
-        </div>
       </div>
 
-      {isReady || uiAmountString ? <TokenSelector2 disabled={shouldLockFields} /> : null}
+      <TokenSelector2 disabled={shouldLockFields} />
 
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
@@ -196,7 +194,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '5px'
+    gap: '4px'
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -204,7 +202,7 @@ const useStyles = makeStyles((theme) => ({
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 23px)',
+    top: 'calc(50% - 16px)',
     transform: 'rotate(90deg)'
   }
 }))

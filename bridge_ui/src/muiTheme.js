@@ -1,5 +1,5 @@
 import { createTheme, responsiveFontSizes } from "@material-ui/core";
-import Switzer from "./fonts/Switzer-Variable.ttf";
+import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
   blue: "#2f8cef",
@@ -9,7 +9,7 @@ export const COLORS = {
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
-  nearBlack: "#0e0e10",
+  nearBlack: "#101010",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   red: "#aa0818",
   darkRed: "#810612",
@@ -17,12 +17,12 @@ export const COLORS = {
   whiteWithTransparency: "rgba(255,255,255,.06)",
 };
 
-const switzer = {
-  fontFamily: "Switzer",
+const inter = {
+  fontFamily: "Inter Variable",
   fontStyle: "normal",
   fontDisplay: "swap",
   fontWeight: "100 1000",
-  src: `url(${Switzer}) format('truetype')`,
+  src: `url(${Inter}) format('truetype')`,
 };
 
 export const theme = responsiveFontSizes(
@@ -35,7 +35,7 @@ export const theme = responsiveFontSizes(
       },
       divider: COLORS.white,
       text: {
-        primary: COLORS.white,
+        primary: 'rgba(255, 255, 255, 0.9)',
       },
       primary: {
         main: COLORS.blue, // #0074FF
@@ -51,10 +51,10 @@ export const theme = responsiveFontSizes(
     },
 
     typography: {
-      fontFamily: "'Switzer', sans-serif",
-      fontSize: 13,
+      fontFamily: "'Inter', sans-serif",
+      fontSize: 14,
       h1: {
-        fontFamily: "Switzer, sans-serif",
+        fontFamily: "Inter, sans-serif",
         lineHeight: 0.9,
         fontWeight: 600,
         fontSize: "62px",
@@ -64,20 +64,14 @@ export const theme = responsiveFontSizes(
       },
       h4: {
         fontWeight: "600",
-        fontFamily: "Switzer, sans-serif",
+        fontFamily: "Inter, sans-serif",
         letterSpacing: -1.02,
       },
     },
     overrides: {
       MuiCssBaseline: {
         "@global": {
-          "@font-face": [switzer],
-          body: {
-            overscrollBehaviorY: "none",
-            backgroundPosition: "top center",
-            backgroundRepeat: "repeat-y",
-            backgroundSize: "120%",
-          },
+          "@font-face": [inter],
           "*": {
             scrollbarWidth: "thin",
             scrollbarColor: `${COLORS.gray} ${COLORS.nearBlackWithMinorTransparency}`,
@@ -193,7 +187,7 @@ export const theme = responsiveFontSizes(
       MuiTab: {
         root: {
           color: COLORS.white,
-          fontFamily: "Switzer, sans-serif",
+          fontFamily: "Inter, sans-serif",
           fontWeight: 500,
           fontSize: 18,
           padding: 12,

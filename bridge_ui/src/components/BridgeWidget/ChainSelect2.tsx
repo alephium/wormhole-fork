@@ -8,13 +8,14 @@ import {
   OutlinedTextFieldProps,
   Popover,
   TextField,
-  Typography
+  Typography,
 } from '@material-ui/core'
+import { AccountBalanceWalletOutlined } from "@material-ui/icons";
 import clsx from 'clsx'
-import { useMemo, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
 import { BETA_CHAINS, ChainInfo } from '../../utils/consts'
-import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
 import { AlephiumConnectButton } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
@@ -33,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
     },
 
     '& .MuiSelect-iconOutlined': {
-      right: '-5px'
+      display: 'none'
     },
 
     '& .MuiSelect-selectMenu:focus': {
@@ -45,16 +46,29 @@ const useStyles = makeStyles((theme) => ({
     }
   },
   listItemIcon: {
-    minWidth: 40
+    width: 40,
+    height: 40,
+    minWidth: 40,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '12px',
+    marginRight: theme.spacing(2)
   },
   icon: {
     height: 24,
     width: 24
   },
+  listItemTextContainer: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  listItemValue: {
+    margin: 0
+  },
   accountAddress: {
     fontSize: '14px',
-    color: GRAY,
-    fontWeight: 600,
+    fontWeight: 500,
     cursor: 'pointer',
     '&:hover': {
       color: 'rgba(255, 255, 255, 0.7)'
@@ -68,21 +82,42 @@ const useStyles = makeStyles((theme) => ({
   modalContent: {
     minWidth: '200px'
   },
-  chainSelectLabelRow: {
+  chainSelectLabelButton: {
+    position: 'absolute',
+    right: theme.spacing(2),
+    transform: 'translateY(-50%)',
+    top: '50%',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    gap: theme.spacing(1),
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    padding: '5px 10px',
+    borderRadius: 30,
+    color: theme.palette.grey[300]
   }
 }))
 
-const createChainMenuItem = ({ id, name, logo }: ChainInfo, classes: any) => (
-  <MenuItem key={id} value={id}>
-    <ListItemIcon className={classes.listItemIcon}>
-      <img src={logo} alt={name} className={classes.icon} />
-    </ListItemIcon>
-    <ListItemText>{name}</ListItemText>
-  </MenuItem>
-)
+const chainColors: Partial<Record<ChainName, string>> = {
+  alephium: '#000000',
+  ethereum: '#4628df',
+  bsc: '#deb440',
+}
+
+const createChainMenuItem = ({ id, name, logo }: ChainInfo, label: ReactNode, selected: boolean, classes: any) => {
+  const backgroundColor = chainColors[toChainName(id)]
+
+  return (
+    <MenuItem key={id} value={id}>
+      <ListItemIcon className={classes.listItemIcon} style={{ backgroundColor }}>
+        <img src={logo} alt={name} className={classes.icon} />
+      </ListItemIcon>
+      <div className={classes.listItemTextContainer}>
+        {selected && <Label>{label}</Label>}
+        <ListItemText className={classes.listItemValue}>{name}</ListItemText>
+      </div>
+    </MenuItem>
+  )
+}
 
 interface ChainSelectProps extends OutlinedTextFieldProps {
   chains: ChainInfo[]
@@ -98,13 +133,13 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
   )
   return (
     <div className={widgetClasses.grayRoundedBox}>
-      <div className={classes.chainSelectLabelRow}>
-        <Label>{rest.label}</Label>
+      <TextField {...rest} className={clsx(classes.select, rest.className)}>
+        {filteredChains.map((chain) => createChainMenuItem(chain, rest.label, rest.value === chain.id, classes))}
+      </TextField>
+      <div className={classes.chainSelectLabelButton}>
+        <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
         <ConnectedChainAccount chainId={rest.value as ChainId} />
       </div>
-      <TextField {...rest} className={clsx(classes.select, rest.className)}>
-        {filteredChains.map((chain) => createChainMenuItem(chain, classes))}
-      </TextField>
     </div>
   )
 }

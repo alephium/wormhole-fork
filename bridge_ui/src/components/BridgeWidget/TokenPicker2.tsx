@@ -127,8 +127,7 @@ const useStyles = makeStyles((theme) =>
       gap: '5px',
       padding: '14px',
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px',
-      marginTop: '10px'
+      borderRadius: '20px'
     },
     tokenAmountControls: {
       display: 'flex',
@@ -557,7 +556,6 @@ export default function TokenPicker2({
           </button>
         </div>
         <div className={classes.tokenAmountControls}>
-          <div></div>
           <div className={classes.tokenAvailableMaxContainer}>
             {value?.uiAmountString && (
               <button
