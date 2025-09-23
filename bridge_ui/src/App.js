@@ -1,22 +1,17 @@
 import {
   AppBar,
   Container,
-  Hidden,
-  IconButton,
   Link,
   makeStyles,
   Tab,
   Tabs,
   Toolbar,
-  Tooltip,
   Typography,
 } from "@material-ui/core";
-import { HelpOutline } from "@material-ui/icons";
 import { useCallback } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
 import Attest from "./components/Attest";
-import Footer from "./components/Footer";
 import HeaderText from "./components/HeaderText";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
@@ -27,12 +22,11 @@ import Transfer from "./components/Transfer";
 import BridgeWidget from "./components/BridgeWidget";
 import UnwrapNative from "./components/UnwrapNative";
 import { useBetaContext } from "./contexts/BetaContext";
-import Alephium from "./icons/alephium.svg";
+import AlephiumLogo from "./icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { useEffect } from "react";
 import { web3 } from "@alephium/web3";
-import backgroundGradient from "./images/top-gradient.png";
 import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
@@ -41,9 +35,8 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "row",
     marginTop: theme.spacing(2),
     "& > .MuiToolbar-root": {
-      margin: "auto",
-      marginBottom: theme.spacing(10),
-      maxWidth: 960,
+      margin: "0 20px",
+      marginBottom: theme.spacing(6),
       minWidth: 0,
     },
   },
@@ -53,19 +46,23 @@ const useStyles = makeStyles((theme) => ({
   },
   link: {
     ...theme.typography.body2,
-    fontWeight: 600,
-    fontFamily: "Switzer, sans-serif",
+    opacity: 0.6,
+    fontWeight: 500,
+    fontFamily: "Inter, sans-serif",
     color: "white",
     marginLeft: theme.spacing(4),
-    textUnderlineOffset: "6px",
     [theme.breakpoints.down("sm")]: {
       marginLeft: theme.spacing(2.5),
     },
     [theme.breakpoints.down("xs")]: {
       marginLeft: theme.spacing(1),
     },
+    "&:hover": {
+      opacity: 1,
+      textDecoration: "none",
+    },
     "&.active": {
-      textDecoration: "underline",
+      opacity: 1,
     },
   },
   bg: {
@@ -74,6 +71,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: "100vh",
     position: "relative",
     overflow: "hidden",
+    background: "radial-gradient(circle at 50% 100%,rgb(32, 32, 32) 25%, transparent 70%)"
   },
   brandLink: {
     display: "inline-flex",
@@ -98,23 +96,25 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1, 0),
   },
   alephiumLogo: {
-    height: 50,
-    "&:hover": {
-      filter: "contrast(1)",
-    },
+    height: 30,
     verticalAlign: "middle",
     marginRight: theme.spacing(1),
     display: "inline-block",
   },
-  topGradient: {
-    position: "absolute",
-    height: 300,
-    width: "100%",
-    backgroundImage: `url(${backgroundGradient})`,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "top center",
-    backgroundSize: "contain",
+  alephiumLogoText1: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "rgba(255, 255, 255, 0.5)",
+    marginLeft: theme.spacing(1),
+    lineHeight: 1.1
   },
+  alephiumLogoText2: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginLeft: theme.spacing(1),
+    lineHeight: 1.1
+  }
 }));
 
 function App() {
@@ -146,11 +146,14 @@ function App() {
           </Typography>
         </AppBar>
       )}
-      <div className={classes.topGradient} />
       <AppBar position="static" color="inherit" className={classes.appBar} elevation={0}>
         <Toolbar>
           <Link component={RouterLink} to="/bridge" className={classes.brandLink}>
-            <img src={Alephium} alt={t("Alephium")} className={classes.alephiumLogo} />
+            <img src={AlephiumLogo} alt={t("Alephium")} className={classes.alephiumLogo} />
+            <div className={classes.alephiumLogoTextContainer}>
+              <Typography className={classes.alephiumLogoText1}>Alephium</Typography>
+              <Typography className={classes.alephiumLogoText2}>Bridge</Typography>
+            </div>
           </Link>
           <div className={classes.spacer} />
 

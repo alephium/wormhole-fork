@@ -13,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
   button: {
     fontSize: "inherit",
     display: "flex",
-    fontFamily: "Switzer, sans-serif",
+    fontFamily: "Inter, sans-serif",
   },
   pageNumber: {
     display: "flex",
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
     padding: "0 20px",
     textAlign: "center",
     fontSize: "inherit",
-    fontFamily: "Switzer, sans-serif",
+    fontFamily: "Inter, sans-serif",
   },
 }));
 
