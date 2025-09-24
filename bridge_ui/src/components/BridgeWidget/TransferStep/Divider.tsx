@@ -1,5 +1,7 @@
+import { COLORS } from "../../../muiTheme"
+
 const Divider = () => {
-  return <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+  return <div style={{ width: '100%', height: '1px', backgroundColor: COLORS.whiteWithTransparency }} />
 }
 
 export default Divider

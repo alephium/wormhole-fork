@@ -23,6 +23,7 @@ import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import { useWallet } from '@alephium/web3-react'
 import { ethers } from 'ethers'
 import { AlephiumBlockTime } from '../../../utils/alephium'
+import { COLORS } from '../../../muiTheme'
 
 const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const classes = useWidgetStyles()
@@ -177,7 +178,7 @@ const BorderLinearProgress = styled(LinearProgress)(() => ({
   height: 10,
   borderRadius: 5,
   [`&.MuiLinearProgress-colorPrimary`]: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)'
+    backgroundColor: COLORS.whiteWithTransparency
   },
   [`& .MuiLinearProgress-barColorPrimary`]: {
     borderRadius: 5,

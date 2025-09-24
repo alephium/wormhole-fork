@@ -20,9 +20,14 @@ import { AlephiumConnectButton } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { GRAY, useWidgetStyles } from './styles'
+import { COLORS } from '../../muiTheme';
 
 const useStyles = makeStyles((theme) => ({
   select: {
+    '& .MuiInputBase-root': {
+      border: 'none',
+    },
+
     '& .MuiSelect-root': {
       display: 'flex',
       alignItems: 'center',
@@ -90,7 +95,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1),
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: COLORS.whiteWithTransparency,
     padding: '5px 10px',
     borderRadius: 30,
     color: theme.palette.grey[300]

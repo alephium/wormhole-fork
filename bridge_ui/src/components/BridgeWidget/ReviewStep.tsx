@@ -27,6 +27,7 @@ import SendingAmount from './SendingAmount'
 import SendingAddress from './SendingAddress'
 import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
+import Divider from './TransferStep/Divider'
 
 interface ReviewStepProps {
   onBack: () => void
@@ -128,6 +129,8 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
           </div>
         )}
 
+        <Divider />
+
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
             <div className={classes.spaceBetween}>
@@ -138,6 +141,8 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
             </div>
           </div>
         )}
+
+        <Divider />
 
         <div className={classes.spaceBetween}>
           <Typography style={{ fontWeight: 'bold' }}>To</Typography>
@@ -154,6 +159,8 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
             />
           </div>
         </div>
+
+        <Divider />
 
         {targetAsset && (
           <div className={classes.tokenIconSymbolContainer}>

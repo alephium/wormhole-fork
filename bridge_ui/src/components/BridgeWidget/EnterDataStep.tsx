@@ -202,7 +202,7 @@ const useStyles = makeStyles((theme) => ({
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 16px)',
+    top: 'calc(50% - 13px)',
     transform: 'rotate(90deg)'
   }
 }))
