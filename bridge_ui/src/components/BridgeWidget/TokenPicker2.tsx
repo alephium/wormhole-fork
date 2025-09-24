@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { selectTransferAmount, selectTransferSourceError } from '../../store/selectors'
 import { setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
+import { COLORS } from '../../muiTheme'
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -185,7 +186,7 @@ const useStyles = makeStyles((theme) =>
     },
     tokenPicker: {
       flexGrow: 1,
-      backgroundColor: 'rgba(255,255,255,.06)',
+      backgroundColor: COLORS.whiteWithTransparency,
       padding: '8px 12px',
       borderRadius: '20px',
       border: 'none',
@@ -471,10 +472,10 @@ export default function TokenPicker2({
       <DialogContent className={classes.dialogContent}>
         <TextField
           variant="outlined"
-          label={t('Search name or paste address')}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
+          placeholder={t('Search name or paste address')}
           margin="normal"
         />
         {useTokenId ? (

@@ -4,13 +4,14 @@ import Inter from "./fonts/Inter-Variable.ttf";
 export const COLORS = {
   blue: "#2f8cef",
   blueWithTransparency: "rgba(25, 117, 230, 0.8)",
-  gray: "#4e4e54",
+  gray: "rgb(70, 70, 70)",
   green: "#0ac2af",
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearBlack: "#101010",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
+  darkGrey: 'rgb(30, 30, 30)',
   red: "#aa0818",
   darkRed: "#810612",
   white: "#FFFFFF",
@@ -89,6 +90,17 @@ export const theme = responsiveFontSizes(
             // this hides an annoying white box which appears when both scrollbars are present
             backgroundColor: "transparent",
           },
+          // Override the ripple keyframe animation
+          "@keyframes MuiTouchRipple-keyframes-enter": {
+            "0%": {
+              transform: "scale(0)",
+              opacity: 0.1,
+            },
+            "100%": {
+              transform: "scale(1)",
+              opacity: 0.3,
+            },
+          },
         },
       },
       MuiAccordion: {
@@ -125,6 +137,11 @@ export const theme = responsiveFontSizes(
           fontSize: "0.70rem",
         },
       },
+      MuiDialog: {
+        paper: {
+          border: `1px solid ${COLORS.whiteWithTransparency}`
+        }
+      },
       MuiLink: {
         root: {
           color: COLORS.lightBlue,
@@ -133,8 +150,18 @@ export const theme = responsiveFontSizes(
       MuiPaper: {
         rounded: {
           borderRadius: "12px",
-          backdropFilter: "blur(4px)",
+          backdropFilter: "blur(4px)"
         },
+      },
+      MuiPopover: {
+        paper: {
+          backgroundColor: COLORS.darkGrey,
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+
+          "& .MuiList-padding": {
+            padding: "0px"
+          }
+        }
       },
       MuiStepper: {
         root: {
@@ -208,6 +235,45 @@ export const theme = responsiveFontSizes(
           borderBottom: "none",
         },
       },
+      MuiInputBase: {
+        root: {
+          backgroundColor: COLORS.darkGrey,
+          '& fieldset': {
+            borderRadius: "12px",
+            border: `1px solid ${COLORS.whiteWithTransparency}`,
+          },
+        }
+      },
+      MuiOutlinedInput: {
+        root: {
+          borderRadius: "12px",
+          '&:hover fieldset': {
+            border: `1px solid ${COLORS.gray} !important`,
+          }
+        }
+      },
+      MuiTooltip: {
+        tooltip: {
+          backgroundColor: COLORS.darkGrey,
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "12px",
+          backdropFilter: "blur(4px)",
+          boxShadow: "0 0 30px 0 rgba(0, 0, 0, 0.15)",
+          padding: '6px'
+        }
+      },
+       MuiTouchRipple: {
+         root: {
+           "& .MuiTouchRipple-ripple": {
+             filter: "blur(8px)",
+             animation: "MuiTouchRipple-keyframes-enter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+           },
+           "& .MuiTouchRipple-rippleVisible": {
+             filter: "blur(12px) brightness(1.2)",
+             backgroundColor: "rgba(255, 255, 255, 0.1)",
+           },
+         }
+       }
     },
   })
 );

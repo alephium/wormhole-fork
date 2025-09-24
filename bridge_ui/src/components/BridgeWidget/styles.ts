@@ -1,4 +1,5 @@
 import { makeStyles } from '@material-ui/core'
+import { COLORS } from '../../muiTheme'
 
 export const GRAY = 'rgba(255, 255, 255, 0.5)'
 export const RED = '#ed4a34'
@@ -14,8 +15,8 @@ export const useWidgetStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     gap: '10px',
     padding: '14px',
-    backgroundColor: 'rgb(30, 30, 30)',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    backgroundColor: COLORS.darkGrey,
+    border: `1px solid ${COLORS.whiteWithTransparency}`,
     borderRadius: '16px'
   },
   sendStep: {
