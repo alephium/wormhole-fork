@@ -3,7 +3,7 @@ import SendTransactionSection from './SendTransactionSection'
 import BridgingProgressSection from './BridgingProgressSection'
 import ManualRedeemSection from './ManualRedeemSection'
 import TransferMoreTokensButton from './TransferMoreTokensButton'
-import ConnectWalletsButtons from '../ConnectWalletsButtons'
+import MainActionButton from '../MainActionButton'
 
 const TransferStep = () => {
   return (
@@ -20,7 +20,7 @@ const TransferStep = () => {
 
       <ManualRedeemSection />
 
-      <ConnectWalletsButtons />
+      <MainActionButton />
     </div>
   )
 }

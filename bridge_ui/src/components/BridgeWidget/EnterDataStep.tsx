@@ -26,7 +26,7 @@ import ChainSelect2 from './ChainSelect2'
 import ChainSelectArrow2 from './ChainSelectArrow2'
 import useSyncTargetAddress from '../../hooks/useSyncTargetAddress'
 import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedTokenAccounts'
-import ConnectWalletsButtons from './ConnectWalletsButtons'
+import MainActionButton from './MainActionButton'
 import WarningBox from './WarningBox'
 import RegisterNowButton2 from './RegisterNowButton2'
 import { GRAY } from './styles'
@@ -181,7 +181,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </>
       )}
 
-      <ConnectWalletsButtons onNext={onNext} />
+      <MainActionButton onNext={onNext} />
     </>
   )
 }
