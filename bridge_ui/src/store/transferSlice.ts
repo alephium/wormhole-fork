@@ -131,12 +131,30 @@ export const transferSlice = createSlice({
       state.sourceWalletAddress = action.payload
     },
     setSourceParsedTokenAccount: (state, action: PayloadAction<ParsedTokenAccount | undefined>) => {
-      state.sourceParsedTokenAccount = action.payload
-      // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset = getEmptyDataWrapper()
-      state.targetParsedTokenAccount = undefined
-      state.targetAddressHex = undefined
-      state.sourceAssetInfo = getEmptyDataWrapper()
+      const buildAccountKey = (account: ParsedTokenAccount | undefined) => {
+        if (!account) {
+          return undefined
+        }
+        const maybeTokenId = (account as typeof account & { tokenId?: string }).tokenId ?? ''
+        return `${account.mintKey}:${maybeTokenId}`
+      }
+
+      const previousAccount = state.sourceParsedTokenAccount
+      const nextAccount = action.payload
+
+      state.sourceParsedTokenAccount = nextAccount
+
+      const previousKey = buildAccountKey(previousAccount)
+      const nextKey = buildAccountKey(nextAccount)
+      const didChange = previousKey !== nextKey
+
+      if (didChange) {
+        // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
+        state.targetAsset = getEmptyDataWrapper()
+        state.targetParsedTokenAccount = undefined
+        state.targetAddressHex = undefined
+        state.sourceAssetInfo = getEmptyDataWrapper()
+      }
     },
     setSourceParsedTokenAccounts: (state, action: PayloadAction<ParsedTokenAccount[] | undefined>) => {
       state.sourceParsedTokenAccounts = action.payload ? receiveDataWrapper(action.payload) : getEmptyDataWrapper()
