@@ -17,7 +17,8 @@ export const useWidgetStyles = makeStyles((theme) => ({
     padding: '14px',
     backgroundColor: COLORS.darkGrey,
     border: `1px solid ${COLORS.whiteWithTransparency}`,
-    borderRadius: '16px'
+    borderRadius: '16px',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   sendStep: {
     display: 'flex',
@@ -105,5 +106,26 @@ export const useWidgetStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     gap: '5px',
     marginTop: '10px'
+  },
+  boxHoverAnimation: {
+    '&:hover': {
+      transform: 'scale(1.005)',
+      filter: 'brightness(1.02)'
+    }
+  },
+  compactRoundedButton: {
+    display: 'flex',
+    border: 'none',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    backgroundColor: COLORS.whiteWithTransparency,
+    padding: '5px 10px',
+    borderRadius: 30,
+    cursor: 'pointer',
+    color: theme.palette.grey[300],
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    '&:hover': {
+      filter: 'brightness(1.2)'
+    }
   }
 }))

@@ -14,7 +14,7 @@ import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
 import { AlephiumConnectButton } from '@alephium/web3-react'
 
-const ConnectWalletsButtons = ({ onNext }: { onNext?: () => void }) => {
+const MainActionButton = ({ onNext }: { onNext?: () => void }) => {
   const { t } = useTranslation()
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
@@ -51,7 +51,7 @@ const ConnectWalletsButtons = ({ onNext }: { onNext?: () => void }) => {
   )
 }
 
-export default ConnectWalletsButtons
+export default MainActionButton
 
 const ConnectButton = ({ chainId }: { chainId: ChainId }) => {
   const [isOpen, setIsOpen] = useState(false)

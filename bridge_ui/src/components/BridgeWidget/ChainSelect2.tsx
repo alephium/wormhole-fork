@@ -21,11 +21,15 @@ import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { GRAY, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme';
+import useIsWalletReady from '../../hooks/useIsWalletReady';
 
 const useStyles = makeStyles((theme) => ({
   select: {
     '& .MuiInputBase-root': {
       border: 'none',
+      '&:hover fieldset': {
+        border: 'none !important'
+      },
     },
 
     '& .MuiSelect-root': {
@@ -34,8 +38,9 @@ const useStyles = makeStyles((theme) => ({
       padding: 0
     },
 
+
     '& fieldset': {
-      border: 'none'
+      border: 'none',
     },
 
     '& .MuiSelect-iconOutlined': {
@@ -73,11 +78,7 @@ const useStyles = makeStyles((theme) => ({
   },
   accountAddress: {
     fontSize: '14px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    '&:hover': {
-      color: 'rgba(255, 255, 255, 0.7)'
-    }
+    fontWeight: 500
   },
   modalTitle: {
     display: 'flex',
@@ -92,13 +93,6 @@ const useStyles = makeStyles((theme) => ({
     right: theme.spacing(2),
     transform: 'translateY(-50%)',
     top: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-    backgroundColor: COLORS.whiteWithTransparency,
-    padding: '5px 10px',
-    borderRadius: 30,
-    color: theme.palette.grey[300]
   }
 }))
 
@@ -136,15 +130,20 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
     () => chains.filter(({ id }) => (isBeta ? true : !BETA_CHAINS.includes(id))),
     [chains, isBeta]
   )
+  const chainId = rest.value as ChainId
+  const { isReady } = useIsWalletReady(chainId)
+
   return (
-    <div className={widgetClasses.grayRoundedBox}>
+    <div className={clsx(widgetClasses.grayRoundedBox, widgetClasses.boxHoverAnimation)}>
       <TextField {...rest} className={clsx(classes.select, rest.className)}>
         {filteredChains.map((chain) => createChainMenuItem(chain, rest.label, rest.value === chain.id, classes))}
       </TextField>
-      <div className={classes.chainSelectLabelButton}>
-        <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
-        <ConnectedChainAccount chainId={rest.value as ChainId} />
-      </div>
+      {isReady && (
+        <button className={clsx(classes.chainSelectLabelButton, widgetClasses.compactRoundedButton)}>
+          <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
+          <ConnectedChainAccount chainId={chainId} />
+        </button>
+      )}
     </div>
   )
 }

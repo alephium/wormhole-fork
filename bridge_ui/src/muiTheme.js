@@ -9,11 +9,12 @@ export const COLORS = {
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
-  nearBlack: "#101010",
+  nearWhite: "#f0f0f0",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   darkGrey: 'rgb(30, 30, 30)',
   red: "#aa0818",
   darkRed: "#810612",
+  nearBlack: "#101010",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
 };
@@ -131,6 +132,11 @@ export const theme = responsiveFontSizes(
         root: {
           borderRadius: "9px",
           letterSpacing: ".1em",
+          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          '&:hover': {
+            transform: 'scale(1.005)',
+            filter: 'brightness(1.02)'
+          }
         },
         outlinedSizeSmall: {
           padding: "6px 9px",
@@ -139,7 +145,14 @@ export const theme = responsiveFontSizes(
       },
       MuiDialog: {
         paper: {
-          border: `1px solid ${COLORS.whiteWithTransparency}`
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "16px"
+        }
+      },
+      MuiDialogTitle: {
+        root: {
+          padding: "6px 16px",
+          borderBottom: `1px solid ${COLORS.whiteWithTransparency}`,
         }
       },
       MuiLink: {
@@ -249,6 +262,10 @@ export const theme = responsiveFontSizes(
           borderRadius: "12px",
           '&:hover fieldset': {
             border: `1px solid ${COLORS.gray} !important`,
+          },
+
+          '& fieldset': {
+            transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
           }
         }
       },

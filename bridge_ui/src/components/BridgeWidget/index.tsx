@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
     padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    width: '480px',
+    width: '520px',
     gap: '10px',
     backdropFilter: 'blur(4px)',
     margin: '0 auto'

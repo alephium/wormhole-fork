@@ -1,4 +1,5 @@
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
+import { COLORS } from '../../muiTheme'
 
 const BridgeWidgetButton = (props: ButtonProps) => {
   const classes = useStyles()
@@ -10,7 +11,7 @@ export default BridgeWidgetButton
 
 const useStyles = makeStyles(() => ({
   button: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: COLORS.nearWhite,
     textTransform: 'none',
     borderRadius: '16px',
     height: '52px',
@@ -24,7 +25,7 @@ const useStyles = makeStyles(() => ({
     transition: 'all 0.2s ease-in-out',
     letterSpacing: 'normal',
     '&:hover': {
-      backgroundColor: 'rgba(242, 242, 242, 0.8)'
+      backgroundColor: COLORS.white
     }
   }
 }))

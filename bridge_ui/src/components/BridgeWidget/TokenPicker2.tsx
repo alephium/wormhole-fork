@@ -1,5 +1,6 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
+  Button,
   CircularProgress,
   createStyles,
   Dialog,
@@ -23,10 +24,12 @@ import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
 import { shortenAddress } from '../../utils/solana'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTransferAmount, selectTransferSourceError } from '../../store/selectors'
+import { selectTransferAmount, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
 import { setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
+import clsx from 'clsx'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -121,7 +124,13 @@ const useStyles = makeStyles((theme) =>
     grower: {
       flexGrow: 1
     },
-
+    emptyPlaceholder: {
+      padding: theme.spacing(2),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.gray
+    },
     tokenAmountInputContainer: {
       display: 'flex',
       flexDirection: 'column',
@@ -183,22 +192,6 @@ const useStyles = makeStyles((theme) =>
       },
       color: '#fff',
       fontFeatureSettings: 'tnum'
-    },
-    tokenPicker: {
-      flexGrow: 1,
-      backgroundColor: COLORS.whiteWithTransparency,
-      padding: '8px 12px',
-      borderRadius: '20px',
-      border: 'none',
-      color: '#fff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '5px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      }
     }
   })
 )
@@ -309,6 +302,10 @@ export default function TokenPicker2({
   const [dialogIsOpen, setDialogIsOpen] = useState(false)
   const [selectionError, setSelectionError] = useState('')
   const error = useSelector(selectTransferSourceError)
+  const sourceChain = useSelector(selectTransferSourceChain)
+  const targetChain = useSelector(selectTransferTargetChain)
+  const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
+  const { isReady: isTargetReady } = useIsWalletReady(targetChain)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -507,8 +504,9 @@ export default function TokenPicker2({
                 </ListItem>
               )
             })}
+
             {nonFeaturedOptions.length ? null : (
-              <div className={classes.alignCenter}>
+              <div className={classes.emptyPlaceholder}>
                 <Typography>{t('No results found')}</Typography>
               </div>
             )}
@@ -520,57 +518,60 @@ export default function TokenPicker2({
 
   const amount = useSelector(selectTransferAmount)
   const dispatch = useDispatch()
+  const widgetClasses = useWidgetStyles()
   const hasError = amount && parseFloat(amount) > 0 && error
 
   return (
     <>
       {dialog}
 
-      <div className={classes.tokenAmountInputContainer}>
-        <div className={classes.tokenAmountInput}>
-          <input
-            className={classes.tokenAmountValueInput}
-            inputMode="decimal"
-            minLength={1}
-            maxLength={79}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            pattern="^[0-9]*[.,]?[0-9]*$"
-            id="amount"
-            placeholder="0"
-            type="text"
-            value={amount}
-            name="amount"
-            onChange={(event) => dispatch(setAmount(event.target.value))}
-            style={{ color: hasError ? RED : 'white' }}
-          />
+      {isSourceReady && isTargetReady && 
+        <div className={classes.tokenAmountInputContainer}>
+          <div className={classes.tokenAmountInput}>
+            <input
+              className={classes.tokenAmountValueInput}
+              inputMode="decimal"
+              minLength={1}
+              maxLength={79}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              pattern="^[0-9]*[.,]?[0-9]*$"
+              id="amount"
+              placeholder="0"
+              type="text"
+              value={amount}
+              name="amount"
+              onChange={(event) => dispatch(setAmount(event.target.value))}
+              style={{ color: hasError ? RED : 'white' }}
+              disabled={!isSourceReady || !isTargetReady}
+            />
 
-          <button className={classes.tokenPicker} onClick={openDialog}>
-            {value ? (
-              <TokenIconSymbol account={value} />
-            ) : (
-              <>
-                Select <KeyboardArrowDownIcon />
-              </>
-            )}
-          </button>
-        </div>
-        <div className={classes.tokenAmountControls}>
-          <div className={classes.tokenAvailableMaxContainer}>
-            {value?.uiAmountString && (
-              <button
-                onClick={() => dispatch(setAmount(value?.uiAmountString))}
-                className={classes.tokenAvailableBalance}
-              >
-                max: {balancePretty(value?.uiAmountString)}
-              </button>
-            )}
+            {isSourceReady && isTargetReady && <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+              {value ? (
+                <TokenIconSymbol account={value} />
+              ) : (
+                <>
+                  {t('Select token')} <KeyboardArrowDownIcon />
+                </>
+              )}
+            </button>}
           </div>
+          <div className={classes.tokenAmountControls}>
+            <div className={classes.tokenAvailableMaxContainer}>
+              {value?.uiAmountString && (
+                <button
+                  onClick={() => dispatch(setAmount(value?.uiAmountString))}
+                  className={classes.tokenAvailableBalance}
+                >
+                  Max: {balancePretty(value?.uiAmountString)}
+                </button>
+              )}
+            </div>
+          </div>
+          {hasError && <div style={{ color: RED }}>{error}</div>}
         </div>
-
-        {hasError && <div style={{ color: RED }}>{error}</div>}
-      </div>
+    }
     </>
   )
 }
