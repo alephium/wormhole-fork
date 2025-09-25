@@ -113,6 +113,26 @@ export const useWidgetStyles = makeStyles((theme) => ({
       filter: 'brightness(1.02)'
     }
   },
+
+  pulseWrapper: {
+    position: 'relative',
+    display: 'flex',
+    width: '100%'
+  },
+  pulseWrapperAnimated: {
+    animation: '$successWrapperScale 260ms ease-out'
+  },
+  '@keyframes successWrapperScale': {
+    '0%': {
+      transform: 'scale(0.96)'
+    },
+    '60%': {
+      transform: 'scale(1.01)'
+    },
+    '100%': {
+      transform: 'scale(1)'
+    }
+  },
   compactRoundedButton: {
     display: 'flex',
     border: 'none',
