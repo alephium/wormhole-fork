@@ -3,8 +3,11 @@ import BridgeWidgetButton from '../BridgeWidgetButton'
 import { useCallback } from 'react'
 import { reset } from '../../../store/transferSlice'
 import { selectTransferIsRedeemComplete, selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
+import { UseGetIsTransferCompletedReturnType } from '../../../hooks/useGetIsTransferCompleted'
 
-const TransferMoreTokensButton = () => {
+const TransferMoreTokensButton = ({
+  isTransferCompleted
+}: Pick<UseGetIsTransferCompletedReturnType, 'isTransferCompleted'>) => {
   const dispatch = useDispatch()
 
   const handleResetClick = useCallback(() => {
@@ -14,7 +17,7 @@ const TransferMoreTokensButton = () => {
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
-  if (isRedeemComplete || isRedeemedViaRelayer) {
+  if (isRedeemComplete || isRedeemedViaRelayer || isTransferCompleted) {
     return <BridgeWidgetButton onClick={handleResetClick}>Transfer more tokens!</BridgeWidgetButton>
   }
 
