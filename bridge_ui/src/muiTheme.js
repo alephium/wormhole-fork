@@ -9,7 +9,7 @@ export const COLORS = {
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
-  nearWhite: "#f0f0f0",
+  nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   darkGrey: 'rgb(30, 30, 30)',
   red: "#aa0818",
@@ -17,6 +17,7 @@ export const COLORS = {
   nearBlack: "#101010",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
+  whiteWithMoreTransparency: "rgba(255,255,255,.03)"
 };
 
 const inter = {
