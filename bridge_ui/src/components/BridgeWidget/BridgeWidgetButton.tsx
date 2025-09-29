@@ -1,10 +1,19 @@
 import { Button, ButtonProps, makeStyles } from '@material-ui/core'
+import clsx from 'clsx'
 import { COLORS } from '../../muiTheme'
 
-const BridgeWidgetButton = (props: ButtonProps) => {
+const BridgeWidgetButton = ({ className, ...props }: ButtonProps) => {
   const classes = useStyles()
 
-  return <Button className={classes.button} variant="contained" color="primary" fullWidth {...props} />
+  return (
+    <Button
+      className={clsx(classes.button, className)}
+      variant="contained"
+      color="primary"
+      fullWidth
+      {...props}
+    />
+  )
 }
 
 export default BridgeWidgetButton

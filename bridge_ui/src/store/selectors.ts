@@ -377,6 +377,8 @@ export const selectAcalaRelayerInfo = (state: RootState) =>
 export const selectSolanaTokenMap = (state: RootState) => {
   return state.tokens.solanaTokenMap;
 };
+export const selectTransferIsTokenPickerDialogOpen = (state: RootState) =>
+  state.transfer.isTokenPickerDialogOpen;
 
 export const selectTerraTokenMap = (state: RootState) => {
   return state.tokens.terraTokenMap;

@@ -1,7 +1,7 @@
 import { ChainId, CHAIN_ID_ETH, ethers_contracts } from '@alephium/wormhole-sdk'
 import { WormholeAbi__factory } from '@alephium/wormhole-sdk/lib/esm/ethers-contracts/abi'
 import { getAddress as getEthAddress } from '@ethersproject/address'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -17,7 +17,7 @@ import {
   isValidEthereumAddress
 } from '../../utils/evm'
 import { getTokenLogoAndSymbol } from '../../utils/tokens'
-import TokenPicker2, { BasicAccountRender2, TokenPickerHandle } from './TokenPicker2'
+import TokenPicker2, { BasicAccountRender2 } from './TokenPicker2'
 
 const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
   if (chainId !== CHAIN_ID_ETH) {
@@ -35,7 +35,6 @@ type EthereumSourceTokenSelectorProps = {
   resetAccounts: (() => void) | undefined
   chainId: ChainId
   nft?: boolean
-  tokenPickerRef?: React.Ref<TokenPickerHandle>
 }
 
 export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps) {
@@ -47,8 +46,7 @@ export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps)
     disabled,
     resetAccounts,
     chainId,
-    nft,
-    tokenPickerRef
+    nft
   } = props
   const { provider, signerAddress } = useEthereumProvider()
   const { isReady } = useIsWalletReady(chainId)
@@ -132,7 +130,6 @@ export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps)
 
   return (
     <TokenPicker2
-      ref={tokenPickerRef}
       value={value}
       options={tokenAccounts?.data || []}
       RenderOption={RenderComp}
