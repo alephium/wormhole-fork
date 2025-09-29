@@ -1,7 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -22,11 +22,12 @@ import SourceAssetWarning from '../Transfer/SourceAssetWarning'
 import ChainWarningMessage from '../ChainWarningMessage'
 import { useTranslation } from 'react-i18next'
 import { TokenSelector2 } from './SourceTokenSelector2'
+import { TokenPickerHandle } from './TokenPicker2'
 import ChainSelect2 from './ChainSelect2'
 import ChainSelectArrow2 from './ChainSelectArrow2'
 import useSyncTargetAddress from '../../hooks/useSyncTargetAddress'
 import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedTokenAccounts'
-import ConnectWalletsButtons from './ConnectWalletsButtons'
+import MainActionButton from './MainActionButton'
 import WarningBox from './WarningBox'
 import RegisterNowButton2 from './RegisterNowButton2'
 import { GRAY } from './styles'
@@ -49,6 +50,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     [sourceChain]
   )
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
+  const tokenPickerRef = useRef<TokenPickerHandle | null>(null)
   const { error: targetAssetError, data } = useSelector(selectTransferTargetAssetWrapper)
   const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
   const { error: fetchSourceAssetInfoError } = useSelector(selectTransferSourceAssetInfoWrapper)
@@ -116,11 +118,21 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             label="From"
             select
             variant="outlined"
-            fullWidth
             value={sourceChain}
             onChange={handleSourceChange}
             disabled={shouldLockFields}
             chains={CHAINS}
+          />
+        </div>
+        <div className={classes.chainSelectContainer}>
+          <ChainSelect2
+            label="To"
+            variant="outlined"
+            select
+            value={targetChain}
+            onChange={handleTargetChange}
+            disabled={shouldLockFields}
+            chains={targetChainOptions}
           />
         </div>
         <div className={classes.chainSelectArrow}>
@@ -131,21 +143,12 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             disabled={shouldLockFields}
           />
         </div>
-        <div className={classes.chainSelectContainer}>
-          <ChainSelect2
-            label="To"
-            variant="outlined"
-            select
-            fullWidth
-            value={targetChain}
-            onChange={handleTargetChange}
-            disabled={shouldLockFields}
-            chains={targetChainOptions}
-          />
-        </div>
       </div>
 
-      {isReady || uiAmountString ? <TokenSelector2 disabled={shouldLockFields} /> : null}
+      <TokenSelector2
+        disabled={shouldLockFields}
+        tokenPickerRef={tokenPickerRef}
+      />
 
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
@@ -183,7 +186,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </>
       )}
 
-      <ConnectWalletsButtons onNext={onNext} />
+      <MainActionButton
+        onNext={onNext}
+        onSelectToken={() => tokenPickerRef.current?.openDialog()}
+      />
     </>
   )
 }
@@ -196,7 +202,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '5px'
+    gap: '4px'
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -204,7 +210,7 @@ const useStyles = makeStyles((theme) => ({
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 23px)',
+    top: 'calc(50% - 13px)',
     transform: 'rotate(90deg)'
   }
 }))

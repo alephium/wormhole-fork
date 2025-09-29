@@ -1,28 +1,30 @@
 import { createTheme, responsiveFontSizes } from "@material-ui/core";
-import Switzer from "./fonts/Switzer-Variable.ttf";
+import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
   blue: "#2f8cef",
   blueWithTransparency: "rgba(25, 117, 230, 0.8)",
-  gray: "#4e4e54",
+  gray: "rgb(70, 70, 70)",
   green: "#0ac2af",
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
-  nearBlack: "#0e0e10",
+  nearWhite: "#f0f0f0",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
+  darkGrey: 'rgb(30, 30, 30)',
   red: "#aa0818",
   darkRed: "#810612",
+  nearBlack: "#101010",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
 };
 
-const switzer = {
-  fontFamily: "Switzer",
+const inter = {
+  fontFamily: "Inter Variable",
   fontStyle: "normal",
   fontDisplay: "swap",
   fontWeight: "100 1000",
-  src: `url(${Switzer}) format('truetype')`,
+  src: `url(${Inter}) format('truetype')`,
 };
 
 export const theme = responsiveFontSizes(
@@ -35,7 +37,7 @@ export const theme = responsiveFontSizes(
       },
       divider: COLORS.white,
       text: {
-        primary: COLORS.white,
+        primary: 'rgba(255, 255, 255, 0.9)',
       },
       primary: {
         main: COLORS.blue, // #0074FF
@@ -51,10 +53,10 @@ export const theme = responsiveFontSizes(
     },
 
     typography: {
-      fontFamily: "'Switzer', sans-serif",
-      fontSize: 13,
+      fontFamily: "'Inter', sans-serif",
+      fontSize: 14,
       h1: {
-        fontFamily: "Switzer, sans-serif",
+        fontFamily: "Inter, sans-serif",
         lineHeight: 0.9,
         fontWeight: 600,
         fontSize: "62px",
@@ -64,20 +66,14 @@ export const theme = responsiveFontSizes(
       },
       h4: {
         fontWeight: "600",
-        fontFamily: "Switzer, sans-serif",
+        fontFamily: "Inter, sans-serif",
         letterSpacing: -1.02,
       },
     },
     overrides: {
       MuiCssBaseline: {
         "@global": {
-          "@font-face": [switzer],
-          body: {
-            overscrollBehaviorY: "none",
-            backgroundPosition: "top center",
-            backgroundRepeat: "repeat-y",
-            backgroundSize: "120%",
-          },
+          "@font-face": [inter],
           "*": {
             scrollbarWidth: "thin",
             scrollbarColor: `${COLORS.gray} ${COLORS.nearBlackWithMinorTransparency}`,
@@ -94,6 +90,17 @@ export const theme = responsiveFontSizes(
           "*::-webkit-scrollbar-corner": {
             // this hides an annoying white box which appears when both scrollbars are present
             backgroundColor: "transparent",
+          },
+          // Override the ripple keyframe animation
+          "@keyframes MuiTouchRipple-keyframes-enter": {
+            "0%": {
+              transform: "scale(0)",
+              opacity: 0.1,
+            },
+            "100%": {
+              transform: "scale(1)",
+              opacity: 0.3,
+            },
           },
         },
       },
@@ -125,11 +132,28 @@ export const theme = responsiveFontSizes(
         root: {
           borderRadius: "9px",
           letterSpacing: ".1em",
+          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          '&:hover': {
+            transform: 'scale(1.005)',
+            filter: 'brightness(1.02)'
+          }
         },
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
         },
+      },
+      MuiDialog: {
+        paper: {
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "16px"
+        }
+      },
+      MuiDialogTitle: {
+        root: {
+          padding: "6px 16px",
+          borderBottom: `1px solid ${COLORS.whiteWithTransparency}`,
+        }
       },
       MuiLink: {
         root: {
@@ -139,8 +163,18 @@ export const theme = responsiveFontSizes(
       MuiPaper: {
         rounded: {
           borderRadius: "12px",
-          backdropFilter: "blur(4px)",
+          backdropFilter: "blur(4px)"
         },
+      },
+      MuiPopover: {
+        paper: {
+          backgroundColor: COLORS.darkGrey,
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+
+          "& .MuiList-padding": {
+            padding: "0px"
+          }
+        }
       },
       MuiStepper: {
         root: {
@@ -193,7 +227,7 @@ export const theme = responsiveFontSizes(
       MuiTab: {
         root: {
           color: COLORS.white,
-          fontFamily: "Switzer, sans-serif",
+          fontFamily: "Inter, sans-serif",
           fontWeight: 500,
           fontSize: 18,
           padding: 12,
@@ -214,6 +248,49 @@ export const theme = responsiveFontSizes(
           borderBottom: "none",
         },
       },
+      MuiInputBase: {
+        root: {
+          backgroundColor: COLORS.darkGrey,
+          '& fieldset': {
+            borderRadius: "12px",
+            border: `1px solid ${COLORS.whiteWithTransparency}`,
+          },
+        }
+      },
+      MuiOutlinedInput: {
+        root: {
+          borderRadius: "12px",
+          '&:hover fieldset': {
+            border: `1px solid ${COLORS.gray} !important`,
+          },
+
+          '& fieldset': {
+            transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+          }
+        }
+      },
+      MuiTooltip: {
+        tooltip: {
+          backgroundColor: COLORS.darkGrey,
+          border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "12px",
+          backdropFilter: "blur(4px)",
+          boxShadow: "0 0 30px 0 rgba(0, 0, 0, 0.15)",
+          padding: '6px'
+        }
+      },
+       MuiTouchRipple: {
+         root: {
+           "& .MuiTouchRipple-ripple": {
+             filter: "blur(8px)",
+             animation: "MuiTouchRipple-keyframes-enter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+           },
+           "& .MuiTouchRipple-rippleVisible": {
+             filter: "blur(12px) brightness(1.2)",
+             backgroundColor: "rgba(255, 255, 255, 0.1)",
+           },
+         }
+       }
     },
   })
 );

@@ -11,7 +11,7 @@ import { NetworkContextProvider } from "../../src/contexts/NetworkContext";
 import bg from "../../src/images/bg.svg";
 import { Helmet } from "react-helmet";
 
-import Switzer from "../../src/fonts/Switzer-Variable.ttf";
+import Inter from "../../src/fonts/Inter-Variable.ttf";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -33,21 +33,21 @@ let theme = createTheme({
     },
     h1: {
       fontWeight: "bold",
-      fontFamily: ["Switzer", "Arial"],
+      fontFamily: ["Inter", "Arial"],
       lineHeight: 0.9,
       letterSpacing: -2.7,
     },
     h3: {
       fontSize: 49,
       fontWeight: "bold",
-      fontFamily: "Switzer",
+      fontFamily: "Inter",
       lineHeight: 0.9,
       letterSpacing: -1.47,
     },
     h4: {
       fontSize: 40,
       fontWeight: "bold",
-      fontFamily: "Switzer",
+      fontFamily: "Inter",
       letterSpacing: -1.2,
       lineHeight: 0.9,
     },
@@ -55,7 +55,7 @@ let theme = createTheme({
       textTransform: "uppercase",
       fontSize: 8,
       letterSpacing: 2,
-      fontFamily: "Switzer",
+      fontFamily: "Inter",
       fontWeight: 400,
       display: "block",
       marginTop: 10,
@@ -149,7 +149,7 @@ const TopLayout = ({ children }) => (
       <link
         rel="preload"
         as="font"
-        href={Switzer}
+        href={Inter}
         type="font/ttf"
         crossOrigin="anonymous"
       />

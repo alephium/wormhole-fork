@@ -85,13 +85,11 @@ const usePreventNavigation = () => {
 
 const useStyles = makeStyles((theme) => ({
   mainBox: {
-    backgroundColor: 'rgba(22, 22, 22, 0.5)',
-    borderRadius: '20px',
     padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    width: '452px',
-    gap: '16px',
+    maxWidth: '520px',
+    gap: '10px',
     backdropFilter: 'blur(4px)',
     margin: '0 auto'
   },
@@ -99,7 +97,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    gap: '25px'
+    gap: '16px'
   },
   confirmButton: {
     backgroundColor: '#080808',

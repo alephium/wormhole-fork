@@ -17,7 +17,7 @@ import {
   isValidEthereumAddress
 } from '../../utils/evm'
 import { getTokenLogoAndSymbol } from '../../utils/tokens'
-import TokenPicker2, { BasicAccountRender2 } from './TokenPicker2'
+import TokenPicker2, { BasicAccountRender2, TokenPickerHandle } from './TokenPicker2'
 
 const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
   if (chainId !== CHAIN_ID_ETH) {
@@ -35,11 +35,21 @@ type EthereumSourceTokenSelectorProps = {
   resetAccounts: (() => void) | undefined
   chainId: ChainId
   nft?: boolean
+  tokenPickerRef?: React.Ref<TokenPickerHandle>
 }
 
 export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps) {
   const { t } = useTranslation()
-  const { value, onChange, tokenAccounts, disabled, resetAccounts, chainId, nft } = props
+  const {
+    value,
+    onChange,
+    tokenAccounts,
+    disabled,
+    resetAccounts,
+    chainId,
+    nft,
+    tokenPickerRef
+  } = props
   const { provider, signerAddress } = useEthereumProvider()
   const { isReady } = useIsWalletReady(chainId)
 
@@ -122,6 +132,7 @@ export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps)
 
   return (
     <TokenPicker2
+      ref={tokenPickerRef}
       value={value}
       options={tokenAccounts?.data || []}
       RenderOption={RenderComp}
@@ -131,7 +142,6 @@ export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps)
       getAddress={getAddress}
       disabled={disabled}
       resetAccounts={resetAccounts}
-      error={''}
       showLoader={tokenAccounts?.isFetching}
       nft={nft || false}
       chainId={chainId}

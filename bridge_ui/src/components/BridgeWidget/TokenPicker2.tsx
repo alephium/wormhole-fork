@@ -1,5 +1,6 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
+  Button,
   CircularProgress,
   createStyles,
   Dialog,
@@ -16,16 +17,32 @@ import {
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import { Alert } from '@material-ui/lab'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
 import { shortenAddress } from '../../utils/solana'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTransferAmount, selectTransferSourceError } from '../../store/selectors'
+import { selectTransferAmount, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
 import { setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
+import { COLORS } from '../../muiTheme'
+import clsx from 'clsx'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+
+export type TokenPickerHandle = {
+  openDialog: () => void
+}
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -120,15 +137,20 @@ const useStyles = makeStyles((theme) =>
     grower: {
       flexGrow: 1
     },
-
+    emptyPlaceholder: {
+      padding: theme.spacing(2),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.gray
+    },
     tokenAmountInputContainer: {
       display: 'flex',
       flexDirection: 'column',
       gap: '5px',
       padding: '14px',
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px',
-      marginTop: '10px'
+      borderRadius: '20px'
     },
     tokenAmountControls: {
       display: 'flex',
@@ -183,22 +205,6 @@ const useStyles = makeStyles((theme) =>
       },
       color: '#fff',
       fontFeatureSettings: 'tnum'
-    },
-    tokenPicker: {
-      flexGrow: 1,
-      backgroundColor: 'rgba(255,255,255,.06)',
-      padding: '8px 12px',
-      borderRadius: '20px',
-      border: 'none',
-      color: '#fff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '5px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      }
     }
   })
 )
@@ -272,20 +278,7 @@ interface MarketParsedTokenAccount extends NFTParsedTokenAccount {
   markets?: string[]
 }
 
-export default function TokenPicker2({
-  value,
-  options,
-  RenderOption,
-  onChange,
-  isValidAddress,
-  getAddress,
-  disabled,
-  resetAccounts,
-  nft,
-  chainId,
-  showLoader,
-  useTokenId
-}: {
+type TokenPicker2Props = {
   value: NFTParsedTokenAccount | null
   options: NFTParsedTokenAccount[]
   RenderOption: ({ account }: { account: NFTParsedTokenAccount }) => JSX.Element
@@ -299,7 +292,26 @@ export default function TokenPicker2({
   error?: string
   showLoader?: boolean
   useTokenId?: boolean
-}) {
+}
+
+const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function TokenPicker2(
+  {
+    value,
+    options,
+    RenderOption,
+    onChange,
+    isValidAddress,
+    getAddress,
+    disabled,
+    resetAccounts,
+    nft,
+    chainId,
+    error: externalError,
+    showLoader,
+    useTokenId
+  },
+  ref
+) {
   const { t } = useTranslation()
   const classes = useStyles()
   const [holderString, setHolderString] = useState('')
@@ -308,7 +320,12 @@ export default function TokenPicker2({
   const [isLocalLoading, setLocalLoading] = useState(false)
   const [dialogIsOpen, setDialogIsOpen] = useState(false)
   const [selectionError, setSelectionError] = useState('')
-  const error = useSelector(selectTransferSourceError)
+  const transferSourceError = useSelector(selectTransferSourceError)
+  const sourceChain = useSelector(selectTransferSourceChain)
+  const targetChain = useSelector(selectTransferTargetChain)
+  const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
+  const { isReady: isTargetReady } = useIsWalletReady(targetChain)
+  const amountInputRef = useRef<HTMLInputElement | null>(null)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -316,9 +333,29 @@ export default function TokenPicker2({
     setDialogIsOpen(true)
   }, [])
 
+  useImperativeHandle(ref, () => ({ openDialog }), [openDialog])
+
   const closeDialog = useCallback(() => {
     setDialogIsOpen(false)
   }, [])
+
+  const walletsReady = isSourceReady && isTargetReady
+  const selectedToken = value
+
+  useLayoutEffect(() => {
+    if (!walletsReady || !selectedToken || dialogIsOpen || typeof window === 'undefined') {
+      return
+    }
+
+    const input = amountInputRef.current
+    if (!input) {
+      return
+    }
+
+    const frame = window.requestAnimationFrame(() => input.focus({ preventScroll: true }))
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [walletsReady, selectedToken?.mintKey, dialogIsOpen])
 
   const handleSelectOption = useCallback(
     async (option: NFTParsedTokenAccount) => {
@@ -472,10 +509,10 @@ export default function TokenPicker2({
       <DialogContent className={classes.dialogContent}>
         <TextField
           variant="outlined"
-          label={t('Search name or paste address')}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
+          placeholder={t('Search name or paste address')}
           margin="normal"
         />
         {useTokenId ? (
@@ -507,8 +544,9 @@ export default function TokenPicker2({
                 </ListItem>
               )
             })}
+
             {nonFeaturedOptions.length ? null : (
-              <div className={classes.alignCenter}>
+              <div className={classes.emptyPlaceholder}>
                 <Typography>{t('No results found')}</Typography>
               </div>
             )}
@@ -520,63 +558,67 @@ export default function TokenPicker2({
 
   const amount = useSelector(selectTransferAmount)
   const dispatch = useDispatch()
-  const hasError = amount && parseFloat(amount) > 0 && error
+  const widgetClasses = useWidgetStyles()
+  const activeErrorMessage = transferSourceError || externalError
+  const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
+  const hasError = amountGreaterThanZero && !!activeErrorMessage
+  const canShowAmountInput = walletsReady && !!selectedToken
 
   return (
     <>
       {dialog}
 
-      <div className={classes.tokenAmountInputContainer}>
-        <div className={classes.tokenAmountInput}>
-          <input
-            className={classes.tokenAmountValueInput}
-            inputMode="decimal"
-            minLength={1}
-            maxLength={79}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            pattern="^[0-9]*[.,]?[0-9]*$"
-            id="amount"
-            placeholder="0"
-            type="text"
-            value={amount}
-            name="amount"
-            onChange={(event) => dispatch(setAmount(event.target.value))}
-            style={{ color: hasError ? RED : 'white' }}
-          />
+      {canShowAmountInput && selectedToken && (
+        <div className={classes.tokenAmountInputContainer}>
+          <div className={classes.tokenAmountInput}>
+            <input
+              ref={amountInputRef}
+              className={classes.tokenAmountValueInput}
+              inputMode="decimal"
+              minLength={1}
+              maxLength={79}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              pattern="^[0-9]*[.,]?[0-9]*$"
+              id="amount"
+              placeholder="0"
+              type="text"
+              value={amount}
+              name="amount"
+              onChange={(event) => dispatch(setAmount(event.target.value))}
+              style={{ color: hasError ? RED : 'white' }}
+              disabled={!walletsReady}
+            />
 
-          <button className={classes.tokenPicker} onClick={openDialog}>
-            {value ? (
-              <TokenIconSymbol account={value} />
-            ) : (
-              <>
-                Select <KeyboardArrowDownIcon />
-              </>
-            )}
-          </button>
-        </div>
-        <div className={classes.tokenAmountControls}>
-          <div></div>
-          <div className={classes.tokenAvailableMaxContainer}>
-            {value?.uiAmountString && (
-              <button
-                onClick={() => dispatch(setAmount(value?.uiAmountString))}
-                className={classes.tokenAvailableBalance}
-              >
-                max: {balancePretty(value?.uiAmountString)}
-              </button>
-            )}
+            <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+              <TokenIconSymbol account={selectedToken} />
+            </button>
           </div>
+          <div className={classes.tokenAmountControls}>
+            <div className={classes.tokenAvailableMaxContainer}>
+              {selectedToken.uiAmountString && (
+                <button
+                  onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
+                  className={classes.tokenAvailableBalance}
+                >
+                  Max: {balancePretty(selectedToken.uiAmountString)}
+                </button>
+              )}
+            </div>
+          </div>
+          {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
         </div>
-
-        {hasError && <div style={{ color: RED }}>{error}</div>}
-      </div>
+      )}
     </>
   )
-}
+})
 
-const TokenIconSymbol = ({ account }: { account: NFTParsedTokenAccount }) => {
+export const TokenIconSymbol = ({
+  account
+}: {
+  account: { logo?: string | null; uri?: string | null; symbol?: string | null }
+}) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
@@ -595,3 +637,5 @@ const TokenIconSymbol = ({ account }: { account: NFTParsedTokenAccount }) => {
     </div>
   )
 }
+
+export default TokenPicker2
