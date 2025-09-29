@@ -123,14 +123,8 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
         isActive
         activationKey={activationKey}
         className={classes.statusPulse}
-        icon={<CheckCircleIcon />}
-        iconClassName={classes.statusIcon}
-        iconVisibleClassName={classes.statusIconVisible}
-        contentClassName={classes.statusContent}
-        contentVisibleClassName={classes.statusContentVisible}
-        contentEnteringClassName={classes.statusContentEntering}
       >
-        <div className={classes.statusWallet}>
+        <div className={classes.statusWalletContent}>
           <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
           <ConnectedChainAccount chainId={chainId} />
         </div>
@@ -285,48 +279,9 @@ const useStyles = makeStyles((theme) => ({
     minHeight: '24px',
     overflow: 'visible'
   },
-  statusContent: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    maxWidth: 0,
-    gap: '6px',
-    transition:
-      'max-width 520ms cubic-bezier(0.25, 1, 0.5, 1), transform 520ms cubic-bezier(0.25, 1, 0.5, 1), opacity 320ms ease, filter 320ms ease'
-  },
-  statusContentVisible: {
-    maxWidth: '220px',
-    '& $statusWallet': {
-      opacity: 1,
-      transform: 'scale(1)',
-      filter: 'blur(0)'
-    }
-  },
-  statusContentEntering: {
-    '& $statusWallet': {
-      opacity: 1
-    }
-  },
-  statusWallet: {
+  statusWalletContent: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    opacity: 0,
-    transform: 'scale(0.86)',
-    filter: 'blur(8px)',
-    transition: 'transform 520ms cubic-bezier(0.25, 1, 0.5, 1), opacity 320ms ease, filter 320ms ease'
-  },
-  statusIcon: {
-    color: GREEN,
-    background: 'radial-gradient(circle, rgba(76, 217, 137, 0.4) 0%, rgba(76, 217, 137, 0) 70%)',
-    borderRadius: '999px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    '& svg': {
-      fontSize: '20px'
-    }
-  },
-  statusIconVisible: {}
+    gap: '6px'
+  }
 }))

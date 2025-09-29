@@ -137,17 +137,7 @@ const useStyles = makeStyles(() => ({
   button: {
     position: 'relative',
     overflow: 'hidden',
-    padding: 0,
-    backgroundColor: '#fff',
-    color: '#000',
-    transition: 'background-color 420ms cubic-bezier(0.25, 1, 0.5, 1), color 320ms ease',
-    '&:hover': {
-      backgroundColor: '#fff'
-    },
-    '&.Mui-disabled': {
-      backgroundColor: 'rgba(255, 255, 255, 0.65)',
-      color: 'rgba(0, 0, 0, 0.35)'
-    }
+    padding: 0
   },
   content: {
     position: 'relative',

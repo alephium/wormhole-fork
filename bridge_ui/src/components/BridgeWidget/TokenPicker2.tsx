@@ -560,7 +560,7 @@ const TokenPicker2 = function TokenPicker2(
   return (
     <>
       {dialog}
-      {selectedToken && (
+      {walletsReady && selectedToken && (
         <Grow in={walletsReady}>
           <div className={classes.tokenAmountInputContainer}>
           <div className={classes.tokenAmountInput}>

@@ -129,15 +129,6 @@ export const theme = responsiveFontSizes(
         },
       },
       MuiButton: {
-        root: {
-          borderRadius: "9px",
-          letterSpacing: ".1em",
-          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          '&:hover': {
-            transform: 'scale(1.005)',
-            filter: 'brightness(1.02)'
-          }
-        },
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
