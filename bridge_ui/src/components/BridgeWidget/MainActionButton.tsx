@@ -17,14 +17,8 @@ import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
 import { useConnect } from '@alephium/web3-react'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import { openTokenPickerDialog } from '../../store/transferSlice'
-import CheckCircleIcon from '@material-ui/icons/CheckCircle'
-import { GREEN } from './styles'
-import {
-  ActionConfig,
-  ActionKey,
-  LABEL_ANIMATION_DURATION,
-  useMainActionTransition
-} from './useMainActionTransition'
+import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
+import SuccessPulse from './SuccessPulse'
 
 interface MainActionButtonProps {
   onNext?: () => void
@@ -103,7 +97,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const currentAction = actionConfigs[currentActionKey]
 
-  const { renderedAction, isShowingCheck, isLabelEntering, isButtonDisabled } = useMainActionTransition({
+  const { renderedAction, advanceToken, isButtonDisabled } = useMainActionTransition({
     currentActionKey,
     currentAction,
     actionConfigs
@@ -117,24 +111,16 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   return (
     <>
-      <BridgeWidgetButton
-        onClick={handleClick}
-        disabled={isButtonDisabled}
-        className={clsx(classes.button, { [classes.buttonChecking]: isShowingCheck })}
-      >
+      <BridgeWidgetButton onClick={handleClick} disabled={isButtonDisabled} className={classes.button}>
         <div className={classes.content}>
-          <span
-            className={clsx(classes.label, {
-              [classes.labelHidden]: isShowingCheck,
-              [classes.labelEntering]: isLabelEntering
-            })}
+          <SuccessPulse
+            isActive
+            activationKey={advanceToken}
+            hideIcon
+            contentClassName={classes.label}
           >
             {renderedAction.label}
-          </span>
-
-          <div className={clsx(classes.check, { [classes.checkVisible]: isShowingCheck })}>
-            <CheckCircleIcon className={classes.checkIcon} />
-          </div>
+          </SuccessPulse>
         </div>
       </BridgeWidgetButton>
 
@@ -163,17 +149,6 @@ const useStyles = makeStyles(() => ({
       color: 'rgba(0, 0, 0, 0.35)'
     }
   },
-  buttonChecking: {
-    backgroundColor: GREEN,
-    color: '#fff',
-    '&:hover': {
-      backgroundColor: GREEN
-    },
-    '&.Mui-disabled': {
-      backgroundColor: GREEN,
-      color: '#fff'
-    }
-  },
   content: {
     position: 'relative',
     display: 'flex',
@@ -185,55 +160,8 @@ const useStyles = makeStyles(() => ({
     overflow: 'hidden'
   },
   label: {
-    position: 'relative',
     fontSize: '16px',
     color: 'rgba(0, 0, 0, 0.92)',
-    whiteSpace: 'nowrap',
-    transition: 'transform 640ms cubic-bezier(0.25, 1, 0.5, 1), opacity 480ms ease, filter 480ms ease'
-  },
-  labelHidden: {
-    opacity: 0,
-    transform: 'scale(0.94)',
-    filter: 'blur(6px)'
-  },
-  labelEntering: {
-    animation: `$labelEnter ${LABEL_ANIMATION_DURATION}ms cubic-bezier(0.25, 1, 0.5, 1) forwards`
-  },
-  check: {
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0,
-    transform: 'scale(0.8)',
-    filter: 'blur(8px)',
-    transition: 'transform 640ms cubic-bezier(0.25, 1, 0.5, 1), opacity 480ms ease, filter 480ms ease'
-  },
-  checkVisible: {
-    opacity: 1,
-    transform: 'scale(1)',
-    filter: 'blur(0)'
-  },
-  checkIcon: {
-    fontSize: '26px',
-    color: '#fff'
-  },
-  '@keyframes labelEnter': {
-    '0%': {
-      opacity: 0,
-      transform: 'scale(0.9)',
-      filter: 'blur(8px)'
-    },
-    '50%': {
-      opacity: 1,
-      transform: 'scale(1.05)',
-      filter: 'blur(0)'
-    },
-    '100%': {
-      opacity: 1,
-      transform: 'scale(1)',
-      filter: 'blur(0)'
-    }
+    whiteSpace: 'nowrap'
   }
 }))
