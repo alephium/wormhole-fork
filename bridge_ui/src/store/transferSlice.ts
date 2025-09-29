@@ -60,6 +60,7 @@ export interface TransferState {
   relayerFee: string | undefined
   acalaRelayerInfo: DataWrapper<AcalaRelayerInfo>
   isBlockFinalized: boolean
+  isTokenPickerDialogOpen: boolean
 }
 
 const initialState: TransferState = {
@@ -91,7 +92,8 @@ const initialState: TransferState = {
   useRelayer: false,
   relayerFee: undefined,
   acalaRelayerInfo: getEmptyDataWrapper(),
-  isBlockFinalized: false
+  isBlockFinalized: false,
+  isTokenPickerDialogOpen: false
 }
 
 export const transferSlice = createSlice({
@@ -109,6 +111,12 @@ export const transferSlice = createSlice({
     },
     setBridgeWidgetStep: (state, action: PayloadAction<BridgeWidgetSteps>) => {
       state.activeBridgeWidgetStep = action.payload
+    },
+    openTokenPickerDialog: (state) => {
+      state.isTokenPickerDialogOpen = true
+    },
+    closeTokenPickerDialog: (state) => {
+      state.isTokenPickerDialogOpen = false
     },
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
       const prevSourceChain = state.sourceChain
@@ -315,6 +323,8 @@ export const {
   decrementStep,
   setStep,
   setBridgeWidgetStep,
+  openTokenPickerDialog,
+  closeTokenPickerDialog,
   setSourceChain,
   setSourceWormholeWrappedInfo,
   setSourceWalletAddress,

@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Grow,
   IconButton,
   List,
   ListItem,
@@ -17,32 +18,19 @@ import {
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import { Alert } from '@material-ui/lab'
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
 import { shortenAddress } from '../../utils/solana'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTransferAmount, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
-import { setAmount } from '../../store/transferSlice'
+import { selectTransferAmount, selectTransferIsTokenPickerDialogOpen, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
+import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
 import clsx from 'clsx'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
-
-export type TokenPickerHandle = {
-  openDialog: () => void
-}
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -294,7 +282,7 @@ type TokenPicker2Props = {
   useTokenId?: boolean
 }
 
-const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function TokenPicker2(
+const TokenPicker2 = function TokenPicker2(
   {
     value,
     options,
@@ -309,9 +297,7 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     error: externalError,
     showLoader,
     useTokenId
-  },
-  ref
-) {
+  }: TokenPicker2Props) {
   const { t } = useTranslation()
   const classes = useStyles()
   const [holderString, setHolderString] = useState('')
@@ -326,6 +312,8 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
   const { isReady: isTargetReady } = useIsWalletReady(targetChain)
   const amountInputRef = useRef<HTMLInputElement | null>(null)
+  const dispatch = useDispatch()
+  const dialogRequest = useSelector(selectTransferIsTokenPickerDialogOpen)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -333,14 +321,21 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     setDialogIsOpen(true)
   }, [])
 
-  useImperativeHandle(ref, () => ({ openDialog }), [openDialog])
 
   const closeDialog = useCallback(() => {
     setDialogIsOpen(false)
-  }, [])
+    dispatch(closeTokenPickerDialog())
+  }, [dispatch])
 
   const walletsReady = isSourceReady && isTargetReady
   const selectedToken = value
+
+  useEffect(() => {
+    if (dialogRequest && !dialogIsOpen) {
+      openDialog()
+      dispatch(closeTokenPickerDialog())
+    }
+  }, [dialogRequest, dialogIsOpen, openDialog, dispatch])
 
   useLayoutEffect(() => {
     if (!walletsReady || !selectedToken || dialogIsOpen || typeof window === 'undefined') {
@@ -355,7 +350,7 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     const frame = window.requestAnimationFrame(() => input.focus({ preventScroll: true }))
 
     return () => window.cancelAnimationFrame(frame)
-  }, [walletsReady, selectedToken?.mintKey, dialogIsOpen])
+  }, [walletsReady, dialogIsOpen, selectedToken])
 
   const handleSelectOption = useCallback(
     async (option: NFTParsedTokenAccount) => {
@@ -557,19 +552,17 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
   )
 
   const amount = useSelector(selectTransferAmount)
-  const dispatch = useDispatch()
   const widgetClasses = useWidgetStyles()
   const activeErrorMessage = transferSourceError || externalError
   const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
   const hasError = amountGreaterThanZero && !!activeErrorMessage
-  const canShowAmountInput = walletsReady && !!selectedToken
 
   return (
     <>
       {dialog}
-
-      {canShowAmountInput && selectedToken && (
-        <div className={classes.tokenAmountInputContainer}>
+      {selectedToken && (
+        <Grow in={walletsReady}>
+          <div className={classes.tokenAmountInputContainer}>
           <div className={classes.tokenAmountInput}>
             <input
               ref={amountInputRef}
@@ -609,10 +602,11 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
           </div>
           {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
         </div>
+        </Grow>
       )}
     </>
   )
-})
+}
 
 export const TokenIconSymbol = ({
   account
