@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
 import { makeStyles } from '@material-ui/core'
-import clsx from 'clsx'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   selectTransferIsSourceComplete,
   selectTransferIsTargetComplete,
   selectTransferSourceChain,
-  selectTransferSourceParsedTokenAccount
+  selectTransferSourceParsedTokenAccount,
+  selectTransferActiveBridgeWidgetStep
 } from '../../store/selectors'
 import { selectTransferTargetChain } from '../../store/selectors'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -19,6 +19,7 @@ import BridgeWidgetButton from './BridgeWidgetButton'
 import { openTokenPickerDialog } from '../../store/transferSlice'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
+import { setBridgeWidgetStep } from '../../store/transferSlice'
 
 interface MainActionButtonProps {
   onNext?: () => void
@@ -30,6 +31,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const dispatch = useDispatch()
   const { connect: connectAlephium } = useConnect()
 
+  const activeBridgeWidgetStep = useSelector(selectTransferActiveBridgeWidgetStep)
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
   const isSourceComplete = useSelector(selectTransferIsSourceComplete)
@@ -59,6 +61,10 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const handleEvmConnect = useCallback((chainId: ChainId) => {
     setEvmChain(chainId)
   }, [])
+
+  const handleBackToReview = useCallback(() => {
+    dispatch(setBridgeWidgetStep(1))
+  }, [dispatch])
 
   const actionConfigs = useMemo<Record<ActionKey, ActionConfig>>(() => {
     const connectLabel = (chainId: ChainId, fallback: string) =>
@@ -97,7 +103,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const currentAction = actionConfigs[currentActionKey]
 
-  const { renderedAction, advanceToken, isButtonDisabled } = useMainActionTransition({
+  const { renderedAction, renderedActionKey, advanceToken, isButtonDisabled } = useMainActionTransition({
     currentActionKey,
     currentAction,
     actionConfigs
@@ -109,17 +115,23 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     currentAction?.onClick?.()
   }, [currentAction, isButtonDisabled])
 
+
   return (
     <>
-      <BridgeWidgetButton onClick={handleClick} disabled={isButtonDisabled} className={classes.button}>
+      <BridgeWidgetButton
+        onClick={activeBridgeWidgetStep === 2 ? handleBackToReview : handleClick}
+        disabled={isButtonDisabled}
+        className={classes.button}
+        variant={activeBridgeWidgetStep === 2 ? 'outlined' : 'contained'}
+        tone={renderedActionKey === 'next' && !isNextDisabled ? 'primaryNext' : 'default'}
+      >
         <div className={classes.content}>
           <SuccessPulse
             isActive
             activationKey={advanceToken}
             hideIcon
-            contentClassName={classes.label}
           >
-            {renderedAction.label}
+            {activeBridgeWidgetStep === 2 ? 'Back' : renderedAction.label}
           </SuccessPulse>
         </div>
       </BridgeWidgetButton>
@@ -148,10 +160,5 @@ const useStyles = makeStyles(() => ({
     minHeight: '52px',
     width: '100%',
     overflow: 'hidden'
-  },
-  label: {
-    fontSize: '16px',
-    color: 'rgba(0, 0, 0, 0.92)',
-    whiteSpace: 'nowrap'
   }
 }))
