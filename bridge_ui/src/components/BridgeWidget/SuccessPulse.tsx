@@ -15,9 +15,9 @@ interface SuccessPulseProps {
   children: ReactNode
 }
 
-const ICON_SIZE = 20
-const SUCCESS_PULSE_ICON_DURATION = 680
-const SUCCESS_PULSE_ENTER_DURATION = 400
+const ICON_SIZE = 24
+const SUCCESS_PULSE_ICON_DURATION = 1100
+const SUCCESS_PULSE_ENTER_DURATION = 900
 
 const SuccessPulse = ({
   isActive,
@@ -63,28 +63,33 @@ const SuccessPulse = ({
 
     if (shouldTrigger) {
       clearTimers()
-      const shouldShowIcon = !hideIcon
-      setIsShowingIcon(shouldShowIcon)
-      setIsContentVisible(!shouldShowIcon)
-      setCanExpandContent(!shouldShowIcon)
-      setIsContentEntering(false)
 
-      const startContent = () => {
-        setIsShowingIcon(false)
-        setIsContentVisible(true)
-        setCanExpandContent(true)
-        setIsContentEntering(true)
+      const begin = () => {
+        const shouldShowIcon = !hideIcon
+        setIsShowingIcon(shouldShowIcon)
+        setIsContentVisible(!shouldShowIcon)
+        setCanExpandContent(!shouldShowIcon)
+        setIsContentEntering(false)
 
-        enterTimerRef.current = window.setTimeout(() => {
-          setIsContentEntering(false)
-        }, SUCCESS_PULSE_ENTER_DURATION)
+        const startContent = () => {
+          setIsShowingIcon(false)
+          setIsContentVisible(true)
+          setCanExpandContent(true)
+          setIsContentEntering(true)
+
+          enterTimerRef.current = window.setTimeout(() => {
+            setIsContentEntering(false)
+          }, SUCCESS_PULSE_ENTER_DURATION)
+        }
+
+        if (shouldShowIcon) {
+          iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
+        } else {
+          startContent()
+        }
       }
 
-      if (shouldShowIcon) {
-        iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
-      } else {
-        startContent()
-      }
+      begin()
     } else if (isActive === false) {
       clearTimers()
       setIsShowingIcon(false)
@@ -103,10 +108,10 @@ const SuccessPulse = ({
 
   return (
     <span className={clsx(classes.root, className)}>
-      {!hideIcon && (
+      {!hideIcon && isShowingIcon && (
         <span
           className={clsx(
-            classes.icon,
+            classes.successIcon,
             iconClassName,
             isShowingIcon && classes.iconVisible,
             isShowingIcon && classes.iconEntering
@@ -142,7 +147,7 @@ const useStyles = makeStyles(() => ({
     minHeight: ICON_SIZE,
     overflow: 'visible'
   },
-  icon: {
+  successIcon: {
     position: 'absolute',
     width: ICON_SIZE,
     height: ICON_SIZE,
@@ -155,8 +160,23 @@ const useStyles = makeStyles(() => ({
     transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
     zIndex: 1,
     pointerEvents: 'none',
-    backgroundColor: COLORS.white,
-    borderRadius: '100px'
+    backgroundColor: COLORS.nearBlack,
+    borderRadius: '100px',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      width: ICON_SIZE,
+      height: ICON_SIZE,
+      transform: 'translate(-50%, -50%) scale(0.8)',
+      borderRadius: '100px',
+      border: `4px solid ${COLORS.green}`,
+      filter: 'blur(8px)',
+      opacity: 1,
+      zIndex: 0,
+      pointerEvents: 'none'
+    }
   },
   iconVisible: {
     opacity: 1,
@@ -164,10 +184,13 @@ const useStyles = makeStyles(() => ({
     filter: 'blur(0)'
   },
   iconEntering: {
-    animation: `$pulseEnter ${SUCCESS_PULSE_ENTER_DURATION}ms cubic-bezier(0.25, 1, 0.5, 1) forwards`
+    animation: `$pulseEnter ${SUCCESS_PULSE_ENTER_DURATION}ms cubic-bezier(0.25, 1, 0.5, 1) forwards`,
+    '&::after': {
+      animation: `$shockwave ${SUCCESS_PULSE_ENTER_DURATION * 2}ms cubic-bezier(0.25, 1, 0.5, 1) forwards`
+    }
   },
   iconDefault: {
-    fontSize: '20px'
+    fontSize: '24px'
   },
   content: {
     display: 'inline-flex',
@@ -197,13 +220,39 @@ const useStyles = makeStyles(() => ({
       transform: 'scale(0.92)',
       filter: 'blur(4px)'
     },
-    '40%': {
+    '20%': {
       transform: 'scale(1.04)',
+      filter: 'blur(0)'
+    },
+    '60%': {
+      transform: 'scale(1)',
       filter: 'blur(0)'
     },
     '100%': {
       transform: 'scale(1)',
       filter: 'blur(0)'
+    }
+  },
+  '@keyframes shockwave': {
+    '0%': {
+      transform: 'translate(-50%, -50%) scale(0.9)',
+      opacity: 1,
+      filter: 'blur(1px)'
+    },
+    '60%': {
+      transform: 'translate(-50%, -50%) scale(1.3)',
+      opacity: 0.15,
+      filter: 'blur(18px)'
+    },
+    '80%': {
+      transform: 'translate(-50%, -50%) scale(1.4)',
+      opacity: 0.1,
+      filter: 'blur(24px)'
+    },
+    '100%': {
+      transform: 'translate(-50%, -50%) scale(1.5)',
+      opacity: 0,
+      filter: 'blur(24px)'
     }
   }
 }))

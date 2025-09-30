@@ -135,17 +135,21 @@ export const useWidgetStyles = makeStyles((theme) => ({
   },
   compactRoundedButton: {
     display: 'flex',
-    border: 'none',
+    background: COLORS.whiteWithMoreTransparency,
     alignItems: 'center',
     gap: theme.spacing(1),
-    backgroundColor: COLORS.whiteWithTransparency,
-    padding: '5px 10px',
+    border: `1px solid ${COLORS.whiteWithTransparency}`,
+    padding: '2px 6px',
     borderRadius: 30,
     cursor: 'pointer',
     color: theme.palette.grey[300],
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     '&:hover': {
       filter: 'brightness(1.2)'
+    },
+    '&:has([class*="successIcon"])': {
+      background: 'transparent',
+      borderColor: 'transparent'
     }
   }
 }))

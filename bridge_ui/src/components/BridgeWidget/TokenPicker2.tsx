@@ -29,7 +29,6 @@ import { selectTransferAmount, selectTransferIsTokenPickerDialogOpen, selectTran
 import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
-import clsx from 'clsx'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 
 const useStyles = makeStyles((theme) =>
@@ -138,7 +137,14 @@ const useStyles = makeStyles((theme) =>
       gap: '5px',
       padding: '14px',
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px'
+      borderRadius: '20px',
+      outline: '2px solid transparent',
+      transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+
+      '&:has(input:focus)': {
+        outline: `1px solid ${COLORS.blue}`,
+        background: 'transparent'
+      },
     },
     tokenAmountControls: {
       display: 'flex',
@@ -562,46 +568,48 @@ const TokenPicker2 = function TokenPicker2(
       {dialog}
       {walletsReady && selectedToken && (
         <Grow in={walletsReady}>
-          <div className={classes.tokenAmountInputContainer}>
-          <div className={classes.tokenAmountInput}>
-            <input
-              ref={amountInputRef}
-              className={classes.tokenAmountValueInput}
-              inputMode="decimal"
-              minLength={1}
-              maxLength={79}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck="false"
-              pattern="^[0-9]*[.,]?[0-9]*$"
-              id="amount"
-              placeholder="0"
-              type="text"
-              value={amount}
-              name="amount"
-              onChange={(event) => dispatch(setAmount(event.target.value))}
-              style={{ color: hasError ? RED : 'white' }}
-              disabled={!walletsReady}
-            />
+          <div>
+            <div className={classes.tokenAmountInputContainer}>
+              <div className={classes.tokenAmountInput}>
+                <input
+                  ref={amountInputRef}
+                  className={classes.tokenAmountValueInput}
+                  inputMode="decimal"
+                  minLength={1}
+                  maxLength={79}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  pattern="^[0-9]*[.,]?[0-9]*$"
+                  id="amount"
+                  placeholder="0"
+                  type="text"
+                  value={amount}
+                  name="amount"
+                  onChange={(event) => dispatch(setAmount(event.target.value))}
+                  style={{ color: hasError ? RED : 'white' }}
+                  disabled={!walletsReady}
+                />
 
-            <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
-              <TokenIconSymbol account={selectedToken} />
-            </button>
-          </div>
-          <div className={classes.tokenAmountControls}>
-            <div className={classes.tokenAvailableMaxContainer}>
-              {selectedToken.uiAmountString && (
-                <button
-                  onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
-                  className={classes.tokenAvailableBalance}
-                >
-                  Max: {balancePretty(selectedToken.uiAmountString)}
+                <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+                  <TokenIconSymbol account={selectedToken} />
                 </button>
-              )}
+              </div>
+              <div className={classes.tokenAmountControls}>
+                <div className={classes.tokenAvailableMaxContainer}>
+                  {selectedToken.uiAmountString && (
+                    <button
+                      onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
+                      className={classes.tokenAvailableBalance}
+                    >
+                      Max: {balancePretty(selectedToken.uiAmountString)}
+                    </button>
+                  )}
+                </div>
+              </div>
+              {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
             </div>
           </div>
-          {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
-        </div>
         </Grow>
       )}
     </>

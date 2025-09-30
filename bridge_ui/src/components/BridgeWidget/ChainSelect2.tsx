@@ -11,7 +11,6 @@ import {
   Typography,
 } from '@material-ui/core'
 import { AccountBalanceWalletOutlined } from '@material-ui/icons'
-import CheckCircleIcon from '@material-ui/icons/CheckCircle'
 import clsx from 'clsx'
 import { ReactNode, useMemo, useRef, useState } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
@@ -20,7 +19,7 @@ import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '
 import { AlephiumConnectButton } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
-import { GRAY, GREEN, useWidgetStyles } from './styles'
+import { GRAY, useWidgetStyles } from './styles'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import SuccessPulse from './SuccessPulse'
 
@@ -117,7 +116,7 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
   return (
     <button
       type="button"
-      className={clsx(classes.chainSelectLabelButton, widgetClasses.compactRoundedButton, classes.statusButton)}
+      className={clsx(classes.activeWalletButton, widgetClasses.compactRoundedButton)}
     >
       <SuccessPulse
         isActive
@@ -225,9 +224,9 @@ const useStyles = makeStyles((theme) => ({
     }
   },
   listItemIcon: {
-    width: 40,
-    height: 40,
-    minWidth: 40,
+    width: 50,
+    height: 50,
+    minWidth: 50,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -235,8 +234,8 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(2)
   },
   icon: {
-    height: 24,
-    width: 24
+    height: 30,
+    width: 30
   },
   listItemTextContainer: {
     display: 'flex',
@@ -257,19 +256,14 @@ const useStyles = makeStyles((theme) => ({
   modalContent: {
     minWidth: '200px'
   },
-  chainSelectLabelButton: {
+  activeWalletButton: {
     position: 'absolute',
     right: theme.spacing(2),
     transform: 'translateY(-50%)',
-    top: '50%'
-  },
-  statusButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '6px 12px',
+    top: '50%',
     gap: '8px',
-    overflow: 'visible'
+    padding: '2px 9px',
+    color: theme.palette.grey[500]
   },
   statusPulse: {
     position: 'relative',
