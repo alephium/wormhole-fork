@@ -2,20 +2,23 @@ import { useSelector } from 'react-redux'
 import { selectTransferTransferTx } from '../../../store/selectors'
 import { CircularProgress, makeStyles } from '@material-ui/core'
 import { COLORS } from '../../../muiTheme'
+import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
 
 const OngoingBridgingBadge = () => {
   const transferTx = useSelector(selectTransferTransferTx)
   const classes = useStyles()
-
+  const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
+  const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
+  
   if (!transferTx) return null
 
   return (
     <div
       className={classes.container}
     >
-      <div className={classes.badge}>
-        <CircularProgress size={20} style={{ color: COLORS.white }} />
-        Bridging...</div>
+      <div className={classes.badge} style={{ backgroundColor: isManualRedeemRequired ? COLORS.darkGrey : COLORS.blue }}>
+        <CircularProgress size={20} style={{ color: isManualRedeemRequired ? COLORS.gray : COLORS.white }} />
+        {isManualRedeemRequired ? 'Waiting for manual redeem...' : 'Bridging...'}</div>
     </div>
   )
 }
@@ -42,13 +45,13 @@ const useStyles = makeStyles((theme) => ({
   },
   '@keyframes badgePulse': {
     '0%': {
-      filter: 'brightness(0.96)'
+      filter: 'brightness(0.9)'
     },
     '50%': {
       filter: 'brightness(1.2)'
     },
     '100%': {
-      filter: 'brightness(0.96)'
+      filter: 'brightness(0.9)'
     }
   }
 }));

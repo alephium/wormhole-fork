@@ -55,42 +55,37 @@ export const useWidgetStyles = makeStyles((theme) => ({
   expandButton: {
     color: GRAY,
     padding: '4px',
+    width: '32px',
+    height: '32px',
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       color: 'rgba(255, 255, 255, 0.8)'
     }
   },
   expandIconWrapper: {
-    position: 'relative',
-    width: '24px',
-    height: '24px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    width: '24px',
+    height: '24px',
   },
   expandIcon: {
     position: 'absolute',
     top: 0,
     left: 0,
-    transition: 'opacity 200ms ease, transform 200ms ease, filter 200ms ease',
-    willChange: 'opacity, transform, filter'
+    right: 0,
+    bottom: 0,
+    margin: 'auto'
   },
-  expandIconPulse: {
-    animation: '$expandIconPulseKeyframes 220ms ease-out'
+  expandIconVisible: {
+    opacity: 1,
+    filter: 'blur(0)',
+    animation: '$expandIconIn 180ms ease-out'
   },
-  '@keyframes expandIconPulseKeyframes': {
-    '0%': {
-      transform: 'scale(1)'
-    },
-    '40%': {
-      transform: 'scale(0.9)'
-    },
-    '70%': {
-      transform: 'scale(1.08)'
-    },
-    '100%': {
-      transform: 'scale(1)'
-    }
+  expandIconHidden: {
+    opacity: 0,
+    filter: 'blur(2px)',
+    animation: '$expandIconOut 180ms ease-in'
   },
   expandableContainer: {
     overflow: 'hidden',
@@ -167,6 +162,40 @@ export const useWidgetStyles = makeStyles((theme) => ({
     },
     '100%': {
       transform: 'scale(1)'
+    }
+  },
+  '@keyframes expandIconIn': {
+    '0%': {
+      transform: 'scale(0.8)',
+      filter: 'blur(2px)',
+      opacity: 0
+    },
+    '50%': {
+      transform: 'scale(1.2)',
+      filter: 'blur(1px)',
+      opacity: 0.5
+    },
+    '100%': {
+      transform: 'scale(1)',
+      filter: 'blur(0)',
+      opacity: 1
+    }
+  },
+  '@keyframes expandIconOut': {
+    '0%': {
+      transform: 'scale(1)',
+      filter: 'blur(0)',
+      opacity: 1
+    },
+    '50%': {
+      transform: 'scale(0.8)',
+      filter: 'blur(1px)',
+      opacity: 0.5
+    },
+    '100%': {
+      transform: 'scale(1)',
+      filter: 'blur(2px)',
+      opacity: 0
     }
   },
   compactRoundedButton: {
