@@ -2,12 +2,12 @@ import { Typography } from '@material-ui/core'
 import SmartAddress from '../SmartAddress'
 import SendingAddress from '../SendingAddress'
 import SendingAmount from '../SendingAmount'
-import Divider from './Divider'
 import { useSelector } from 'react-redux'
 import { useWidgetStyles } from '../styles'
 import { selectTransferSourceChain } from '../../../store/selectors'
 import { selectTransferTransferTx } from '../../../store/selectors'
 import { selectTransferSourceParsedTokenAccount } from '../../../store/selectors'
+import Divider from './Divider'
 
 const SendTransactionSectionDetails = () => {
   const classes = useWidgetStyles()
@@ -18,13 +18,11 @@ const SendTransactionSectionDetails = () => {
   if (!transferTx) return null
 
   return (
-    <div className={classes.progressDetails} style={{ gap: '10px' }}>
-      <Divider />
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {sourceParsedTokenAccount && (
         <div className={classes.tokenIconSymbolContainer}>
           <div className={classes.spaceBetween}>
-            <Typography style={{ fontWeight: 'bold' }}>You sent:</Typography>
+            <Typography>You sent</Typography>
             <div className={classes.networkAddressText}>
               <SendingAmount />
             </div>
@@ -32,10 +30,12 @@ const SendTransactionSectionDetails = () => {
         </div>
       )}
 
+      <Divider />
+
       {sourceParsedTokenAccount && (
         <div className={classes.tokenIconSymbolContainer}>
           <div className={classes.spaceBetween}>
-            <Typography style={{ fontWeight: 'bold' }}>from:</Typography>
+            <Typography>From</Typography>
             <div className={classes.networkAddressText}>
               <SendingAddress />
             </div>
@@ -43,18 +43,22 @@ const SendTransactionSectionDetails = () => {
         </div>
       )}
 
+      <Divider />
+
       <div className={classes.tokenIconSymbolContainer}>
         <div className={classes.spaceBetween}>
-          <Typography style={{ fontWeight: 'bold' }}>to:</Typography>
+          <Typography>To</Typography>
           <div className={classes.networkAddressText}>
             <Typography style={{ fontWeight: 'bold' }}>Alephium Bridge</Typography>
           </div>
         </div>
       </div>
 
+      <Divider />
+
       <div className={classes.tokenIconSymbolContainer}>
         <div className={classes.spaceBetween}>
-          <Typography style={{ fontWeight: 'bold' }}>in transaction:</Typography>
+          <Typography>In transaction</Typography>
           <div className={classes.networkAddressText}>
             <SmartAddress chainId={sourceChain} transactionAddress={transferTx.id} />
           </div>

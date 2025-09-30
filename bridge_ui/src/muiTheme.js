@@ -2,11 +2,11 @@ import { createTheme, responsiveFontSizes } from "@material-ui/core";
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
-  blue: "#0989F1",
+  blue: "rgb(9, 137, 241)",
   blueWithTransparency: "rgba(9, 137, 241, 0.8)",
   gray: "rgb(70, 70, 70)",
-  green: "#0ac2af",
-  greenWithTransparency: "rgba(10, 194, 175, 0.8)",
+  green: "rgb(82, 223, 119)",
+  greenWithTransparency: "rgba(82, 223, 119, 0.8)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
@@ -21,7 +21,7 @@ export const COLORS = {
 };
 
 const inter = {
-  fontFamily: "Inter Variable",
+  fontFamily: "Inter",
   fontStyle: "normal",
   fontDisplay: "swap",
   fontWeight: "100 1000",
@@ -55,7 +55,7 @@ export const theme = responsiveFontSizes(
 
     typography: {
       fontFamily: "'Inter', sans-serif",
-      fontSize: 14,
+      fontSize: 15,
       h1: {
         fontFamily: "Inter, sans-serif",
         lineHeight: 0.9,
@@ -125,8 +125,8 @@ export const theme = responsiveFontSizes(
       },
       MuiAlert: {
         root: {
-          borderRadius: "8px",
-          border: "1px solid",
+          borderRadius: "16px",
+          border: "none",
         },
       },
       MuiButton: {
@@ -152,9 +152,26 @@ export const theme = responsiveFontSizes(
           color: COLORS.lightBlue,
         },
       },
+      MuiList: {
+        root: {
+          padding: 8
+        }
+      },
       MuiListItem: {
         root: {
           borderRadius: "12px",
+          gap: 14
+        }
+      },
+      MuiListItemIcon: {
+        root: {
+          minWidth: 'auto'
+        }
+      },
+      MuiListItemText: {
+        root: {
+          fontSize: "16px",
+          fontWeight: 600
         }
       },
       MuiPaper: {
