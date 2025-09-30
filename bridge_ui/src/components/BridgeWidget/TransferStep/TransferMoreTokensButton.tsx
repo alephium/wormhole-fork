@@ -15,7 +15,7 @@ const TransferMoreTokensButton = () => {
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
   if (isRedeemComplete || isRedeemedViaRelayer) {
-    return <BridgeWidgetButton onClick={handleResetClick}>Transfer more tokens!</BridgeWidgetButton>
+    return <BridgeWidgetButton onClick={handleResetClick}>Back to the homepage</BridgeWidgetButton>
   }
 
   return null
