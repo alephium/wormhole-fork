@@ -2,8 +2,8 @@ import { createTheme, responsiveFontSizes } from "@material-ui/core";
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
-  blue: "#2f8cef",
-  blueWithTransparency: "rgba(25, 117, 230, 0.8)",
+  blue: "#0989F1",
+  blueWithTransparency: "rgba(9, 137, 241, 0.8)",
   gray: "rgb(70, 70, 70)",
   green: "#0ac2af",
   greenWithTransparency: "rgba(10, 194, 175, 0.8)",
@@ -11,7 +11,7 @@ export const COLORS = {
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
-  darkGrey: 'rgb(30, 30, 30)',
+  darkGrey: 'rgb(24, 24, 24)',
   red: "#aa0818",
   darkRed: "#810612",
   nearBlack: "#101010",
@@ -152,6 +152,11 @@ export const theme = responsiveFontSizes(
           color: COLORS.lightBlue,
         },
       },
+      MuiListItem: {
+        root: {
+          borderRadius: "12px",
+        }
+      },
       MuiPaper: {
         rounded: {
           borderRadius: "12px",
@@ -162,6 +167,7 @@ export const theme = responsiveFontSizes(
         paper: {
           backgroundColor: COLORS.darkGrey,
           border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "12px",
 
           "& .MuiList-padding": {
             padding: "0px"

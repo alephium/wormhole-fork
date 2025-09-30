@@ -194,7 +194,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '4px'
+    gap: '5px'
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -202,7 +202,7 @@ const useStyles = makeStyles((theme) => ({
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 13px)',
+    top: 'calc(50% - 15px)',
     transform: 'rotate(90deg)'
   }
 }))
