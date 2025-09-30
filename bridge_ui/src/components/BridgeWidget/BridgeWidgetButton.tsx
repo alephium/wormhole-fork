@@ -29,7 +29,7 @@ const useStyles = makeStyles(() => ({
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: 'Inter, sans-serif',
-    fontWeight: 500,
+    fontWeight: 550,
     fontSize: '16px',
     letterSpacing: 'normal',
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -39,12 +39,12 @@ const useStyles = makeStyles(() => ({
       '&:hover': {
         transform: 'scale(1.005)',
         backgroundColor: COLORS.white,
-        filter: 'brightness(1.02)'
+        filter: 'brightness(1.1)'
       }
     },
     '&.MuiButton-outlinedPrimary': {
       backgroundColor: COLORS.whiteWithMoreTransparency,
-      borderColor: COLORS.whiteWithTransparency,
+      borderColor: COLORS.whiteWithMoreTransparency,
       color: COLORS.nearWhite,
       '&:hover': {
         transform: 'scale(1.005)',
@@ -59,9 +59,10 @@ const useStyles = makeStyles(() => ({
   },
   primaryNext: {
     '&.MuiButton-containedPrimary': {
-      backgroundColor: COLORS.blueWithTransparency,
+      backgroundColor: COLORS.blue,
       color: COLORS.white,
       '&:hover': {
+        filter: 'brightness(1.1)',
         backgroundColor: COLORS.blue,
         color: COLORS.white
       }

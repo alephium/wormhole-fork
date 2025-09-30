@@ -116,9 +116,9 @@ const ManualRedeemSection = () => {
           )}
         </div>
         <BridgeWidgetButton
-          style={{ marginTop: '10px' }}
           disabled={isRedeemDisabled}
           onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
+          tone="primaryNext"
         >
           Redeem
         </BridgeWidgetButton>

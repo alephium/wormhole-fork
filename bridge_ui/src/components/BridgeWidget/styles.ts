@@ -14,16 +14,21 @@ export const useWidgetStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    padding: '14px',
+    padding: '20px',
     backgroundColor: COLORS.darkGrey,
     border: `1px solid ${COLORS.whiteWithTransparency}`,
-    borderRadius: '16px',
-    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    borderRadius: '20px',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+
+    '&.secondary': {
+      backgroundColor: COLORS.whiteWithMoreTransparency,
+      border: `transparent`
+    }
   },
   sendStep: {
     display: 'flex',
     alignItems: 'center',
-    gap: '14px'
+    gap: '20px'
   },
   sendStepContent: {
     fontSize: '16px',
@@ -32,8 +37,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
   },
   sendStepContentSuccess: {
     fontSize: '16px',
-    fontWeight: 600,
-    color: 'rgba(255, 255, 255, 0.9)'
+    color: 'rgba(255, 255, 255, 0.5)'
   },
   sendStepIcon: {
     display: 'flex',
@@ -54,6 +58,38 @@ export const useWidgetStyles = makeStyles((theme) => ({
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
       color: 'rgba(255, 255, 255, 0.8)'
+    }
+  },
+  expandIconWrapper: {
+    position: 'relative',
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  expandIcon: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    transition: 'opacity 200ms ease, transform 200ms ease, filter 200ms ease',
+    willChange: 'opacity, transform, filter'
+  },
+  expandIconPulse: {
+    animation: '$expandIconPulseKeyframes 220ms ease-out'
+  },
+  '@keyframes expandIconPulseKeyframes': {
+    '0%': {
+      transform: 'scale(1)'
+    },
+    '40%': {
+      transform: 'scale(0.9)'
+    },
+    '70%': {
+      transform: 'scale(1.08)'
+    },
+    '100%': {
+      transform: 'scale(1)'
     }
   },
   expandableContainer: {
@@ -86,7 +122,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
   bridgingProgressRow: {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: '14px'
+    gap: '10px'
   },
   bridgingProgressIcon: {
     display: 'flex',
@@ -105,7 +141,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '5px',
-    marginTop: '10px'
+    marginTop: theme.spacing(2)
   },
   boxHoverAnimation: {
     '&:hover': {

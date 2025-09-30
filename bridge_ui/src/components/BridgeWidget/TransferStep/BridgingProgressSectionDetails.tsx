@@ -73,7 +73,7 @@ const BridgingProgressSectionDetails = () => {
 
       <div className={classes.bridgingProgressRow} style={{ color: isFinalized ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {signedVAAExists ? <CheckCircleOutlineRounded style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded />}
+          {signedVAAExists ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
         </div>
         <div className={classes.bridgingProgressContent}>
           {signedVAAExists ? <Typography>Received proof!</Typography> : <Typography>Waiting for proof...</Typography>}
@@ -82,7 +82,7 @@ const BridgingProgressSectionDetails = () => {
 
       <div className={classes.bridgingProgressRow} style={{ color: signedVAAExists ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {isRedeemed ? <CheckCircleOutlineRounded style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded />}
+          {isRedeemed ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
         </div>
         <div className={classes.bridgingProgressContent}>
           {isRedeemed ? (
@@ -98,7 +98,7 @@ const BridgingProgressSectionDetails = () => {
 
       <div className={classes.bridgingProgressRow} style={{ color: isRedeemed ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {hasSentTokens ? <CheckCircleOutlineRounded style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded />}
+          {hasSentTokens ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
         </div>
         <div className={classes.bridgingProgressContent}>
           {hasSentTokens ? (

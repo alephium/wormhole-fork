@@ -40,7 +40,7 @@ const createChainMenuItem = ({ id, name, logo }: ChainInfo, label: ReactNode, se
       </ListItemIcon>
       <div className={classes.listItemTextContainer}>
         {selected && <Label>{label}</Label>}
-        <ListItemText className={classes.listItemValue}>{name}</ListItemText>
+        <ListItemText className={classes.listItemValue} primary={name} />
       </div>
     </MenuItem>
   )
@@ -72,7 +72,7 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
 }
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <Typography style={{ fontSize: '12px', fontWeight: 600, color: GRAY }}>{children}</Typography>
+  <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
 )
 
 const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {

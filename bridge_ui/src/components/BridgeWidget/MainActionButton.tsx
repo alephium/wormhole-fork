@@ -7,7 +7,9 @@ import {
   selectTransferIsTargetComplete,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount,
-  selectTransferActiveBridgeWidgetStep
+  selectTransferActiveBridgeWidgetStep,
+  selectTransferIsRedeemComplete,
+  selectTransferIsRedeemedViaRelayer
 } from '../../store/selectors'
 import { selectTransferTargetChain } from '../../store/selectors'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -37,6 +39,8 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const isSourceComplete = useSelector(selectTransferIsSourceComplete)
   const isTargetComplete = useSelector(selectTransferIsTargetComplete)
   const selectedToken = useSelector(selectTransferSourceParsedTokenAccount)
+  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
+  const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
   const { isReady: isTargetReady } = useIsWalletReady(targetChain)
@@ -114,6 +118,10 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
     currentAction?.onClick?.()
   }, [currentAction, isButtonDisabled])
+
+  if (isRedeemComplete || isRedeemedViaRelayer) {
+    return null
+  }
 
 
   return (

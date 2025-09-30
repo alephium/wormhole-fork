@@ -5,12 +5,12 @@ import {
   selectTransferSourceChain,
   selectTransferTransferTx
 } from '../../../store/selectors'
-import { BLUE, GRAY, GREEN, useWidgetStyles } from '../styles'
+import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { useEffect, useState } from 'react'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
 import { setIsBlockFinalized } from '../../../store/transferSlice'
-import { CheckCircleOutlineRounded, RadioButtonUncheckedRounded } from '@material-ui/icons'
-import { LinearProgress, styled, Typography } from '@material-ui/core'
+import { CheckCircleOutlineRounded } from '@material-ui/icons'
+import { CircularProgress, LinearProgress, styled, Typography } from '@material-ui/core'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../utils/consts'
 import {
@@ -134,7 +134,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
     <div style={{ marginTop: '10px' }}>
       <div className={classes.bridgingProgressRow} style={{ color: isActive ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded />}
+          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} fontSize="small" /> : <CircularProgress size={20} style={{ color: GRAY }} />}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
           {isCompleted ? (
@@ -175,14 +175,14 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
 export default FinalityProgress
 
 const BorderLinearProgress = styled(LinearProgress)(() => ({
-  height: 10,
+  height: 8,
   borderRadius: 5,
   [`&.MuiLinearProgress-colorPrimary`]: {
     backgroundColor: COLORS.whiteWithTransparency
   },
   [`& .MuiLinearProgress-barColorPrimary`]: {
     borderRadius: 5,
-    backgroundColor: BLUE
+    backgroundColor: COLORS.blue
   }
 }))
 

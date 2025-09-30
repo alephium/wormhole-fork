@@ -121,7 +121,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
             <div className={classes.spaceBetween}>
-              <Typography style={{ fontWeight: 'bold' }}>Sending</Typography>
+              <Typography>Sending</Typography>
               <div className={classes.networkAddressText}>
                 <SendingAmount />
               </div>
@@ -134,7 +134,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>
             <div className={classes.spaceBetween}>
-              <Typography style={{ fontWeight: 'bold' }}>From</Typography>
+              <Typography>From</Typography>
               <div className={classes.networkAddressText}>
                 <SendingAddress showIcon />
               </div>
@@ -145,7 +145,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         <Divider />
 
         <div className={classes.spaceBetween}>
-          <Typography style={{ fontWeight: 'bold' }}>To</Typography>
+          <Typography>To</Typography>
           <div className={classes.networkAddressText}>
             <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px', color: GRAY }}>
               <img src={targetChainInfo.logo} alt={targetChainInfo.name} className={classes.networkIcon} />
@@ -165,7 +165,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         {targetAsset && (
           <div className={classes.tokenIconSymbolContainer}>
             <div className={classes.spaceBetween}>
-              <Typography style={{ fontWeight: 'bold' }}>Receiving</Typography>
+              <Typography>Receiving</Typography>
               <div className={classes.networkAddressText}>
                 <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ fontWeight: 'bold' }}>{sourceAmount}</span>{' '}
