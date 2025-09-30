@@ -11,18 +11,20 @@ import { CheckCircleOutlineRounded, UnfoldLessOutlined, UnfoldMoreOutlined } fro
 import BridgingProgressSectionDetails from './BridgingProgressSectionDetails'
 import OngoingBridgingBadge from './OngoingBridgingBadge'
 import { COLORS } from '../../../muiTheme'
+import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
 
 const BridgingProgressSection = () => {
   const classes = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
-  const [isIconPulsing, setIsIconPulsing] = useState<boolean>(false)
   const transferTx = useSelector(selectTransferTransferTx)
   const signedVAA = useTransferSignedVAA()
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
+  const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
+  const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
 
   const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
@@ -51,10 +53,6 @@ const BridgingProgressSection = () => {
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded)
-
-    // retrigger pulse animation on each click
-    setIsIconPulsing(false)
-    requestAnimationFrame(() => setIsIconPulsing(true))
   }
 
   return (
@@ -63,43 +61,30 @@ const BridgingProgressSection = () => {
         <div className={classes.sendStep}>
           {step === 5 && (
             <div className={classes.sendStepIcon}>
-              <CheckCircleOutlineRounded fontSize="small" style={{ color: COLORS.green }} />
+                <CheckCircleOutlineRounded style={{ color: COLORS.green }} />
             </div>
           )}
           <div className={classes.spaceBetween}>
             <OngoingBridgingBadge />
-            <div className={classes.sendStepContentSuccess}>
+            {!isManualRedeemRequired && <div className={classes.sendStepContentSuccess}>
               {step === 1 && 'Finalizing block... (1/4)'}
               {step === 2 && 'Waiting for proof... (2/4)'}
               {step === 3 && 'Redeeming proof... (3/4)'}
               {step === 4 && 'Sending tokens... (4/4)'}
               {step === 5 && 'Bridging completed!'}
-            </div>
+            </div>}
             <IconButton
               onClick={handleExpandClick}
               className={classes.expandButton}
             >
-              <span
-                className={`${classes.expandIconWrapper} ${isIconPulsing ? classes.expandIconPulse : ''}`}
-                onAnimationEnd={() => setIsIconPulsing(false)}
-              >
+              <div className={classes.expandIconWrapper}>
                 <UnfoldMoreOutlined
-                  className={classes.expandIcon}
-                  fontSize="small"
-                  style={{
-                    opacity: isExpanded ? 0 : 1,
-                    filter: isExpanded ? 'blur(2px)' : 'blur(0)'
-                  }}
+                  className={`${classes.expandIcon} ${!isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
                 />
                 <UnfoldLessOutlined
-                  className={classes.expandIcon}
-                  fontSize="small"
-                  style={{
-                    opacity: isExpanded ? 1 : 0,
-                    filter: isExpanded ? 'blur(0)' : 'blur(2px)'
-                  }}
+                  className={`${classes.expandIcon} ${isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
                 />
-              </span>
+              </div>
             </IconButton>
           </div>
         </div>

@@ -6,20 +6,16 @@ import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import {
-  selectTransferIsRedeemComplete,
   selectTransferIsRecovery,
-  selectTransferIsRedeemedViaRelayer,
   selectTransferTargetAsset,
   selectTransferTargetChain,
-  selectTransferUseRelayer,
-  selectTransferRedeemTx
-} from '../../../store/selectors'
+  selectTransferUseRelayer} from '../../../store/selectors'
 import { ROPSTEN_WETH_ADDRESS, WBNB_ADDRESS, WETH_ADDRESS } from '../../../utils/consts'
 import { useSnackbar } from 'notistack'
 import { useTranslation } from 'react-i18next'
 import { GRAY, useWidgetStyles } from '../styles'
 import BridgeWidgetButton from '../BridgeWidgetButton'
-import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
+import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
 
 const ManualRedeemSection = () => {
   const widgetClasses = useWidgetStyles()
@@ -31,7 +27,7 @@ const ManualRedeemSection = () => {
   const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
   const targetAsset = useSelector(selectTransferTargetAsset)
   const isRecovery = useSelector(selectTransferIsRecovery)
-  const signedVAA = useTransferSignedVAA()
+
   const shouldCheckCompletion = useRelayer || useAutoRelayer
   const {
     isTransferCompletedLoading,
@@ -70,22 +66,7 @@ const ManualRedeemSection = () => {
     (isRecovery && (isTransferCompletedLoading || isTransferCompleted)) ||
     checkTransferCompletedError !== undefined
 
-  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
-  const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
-  const redeemTx = useSelector(selectTransferRedeemTx)
-
-  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
-
-  const [relayerIsUnresponsive, setRelayerIsUnresponsive] = useState(false)
-
-  useEffect(() => {
-    if (signedVAA && targetChain === CHAIN_ID_ALEPHIUM) {
-      setTimeout(() => setRelayerIsUnresponsive(true), 10000)
-    }
-  }, [signedVAA, targetChain])
-
-  const manualRedeemToAlephiumRequired = !isRedeemed && targetChain === CHAIN_ID_ALEPHIUM && relayerIsUnresponsive
-  const manualRedeemToEvmRequired = !isRedeemed && targetChain !== CHAIN_ID_ALEPHIUM && signedVAA
+    const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 
   if (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) {
     return (
