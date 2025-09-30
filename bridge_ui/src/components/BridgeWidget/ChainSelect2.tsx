@@ -23,7 +23,6 @@ import { GRAY, useWidgetStyles } from './styles'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import SuccessPulse from './SuccessPulse'
 
-
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
   ethereum: '#4628df',

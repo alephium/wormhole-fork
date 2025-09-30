@@ -45,13 +45,16 @@ const useStyles = makeStyles((theme) => ({
   },
   '@keyframes badgePulse': {
     '0%': {
-      filter: 'brightness(0.9)'
+      filter: 'brightness(0.9)',
+      boxShadow: '0 0 0px 0 rgba(9, 137, 241, 0.2)'
     },
     '50%': {
-      filter: 'brightness(1.2)'
+      filter: 'brightness(1.2)',
+      boxShadow: '0 0 10px 0 rgba(9, 137, 241, 0.4)'
     },
     '100%': {
-      filter: 'brightness(0.9)'
+      filter: 'brightness(0.9)',
+      boxShadow: '0 0 0px 0 rgba(9, 137, 241, 0.2)'
     }
   }
 }));

@@ -20,6 +20,7 @@ import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { useEffect, useState } from 'react'
 import { useSnackbar } from 'notistack'
 import SmartAddress from '../SmartAddress'
+import ConfettiExplosion from 'react-confetti-explosion'
 
 const BridgingProgressSectionDetails = () => {
   const classes = useWidgetStyles()
@@ -98,6 +99,7 @@ const BridgingProgressSectionDetails = () => {
 
       <div className={classes.bridgingProgressRow} style={{ color: isRedeemed ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
+          {hasSentTokens && <ConfettiExplosion force={0.4} duration={2200} particleCount={30} width={400} />}
           {hasSentTokens ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
         </div>
         <div className={classes.bridgingProgressContent}>
