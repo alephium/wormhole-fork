@@ -134,7 +134,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
     <div style={{ marginTop: '10px' }}>
       <div className={classes.bridgingProgressRow} style={{ color: isActive ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} fontSize="small" /> : <CircularProgress size={20} style={{ color: GRAY }} />}
+          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} fontSize="small" /> : <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
           {isCompleted ? (
@@ -162,7 +162,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
             <div>
               <BorderLinearProgress value={progress} variant="determinate" style={{ marginBottom: 5 }} />
               {sourceChain === CHAIN_ID_ETH && (
-                <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee &nbsp; ☕️</div>
+                <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee&nbsp; ☕️</div>
               )}
             </div>
           )}

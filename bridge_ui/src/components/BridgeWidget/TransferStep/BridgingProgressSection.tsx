@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { useWidgetStyles } from '../styles'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
+import { selectTransferHasSentTokens, selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
 import { selectTransferIsRedeemComplete } from '../../../store/selectors'
 import { selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
 import { selectTransferIsBlockFinalized } from '../../../store/selectors'
@@ -25,22 +25,21 @@ const BridgingProgressSection = () => {
   const redeemTx = useSelector(selectTransferRedeemTx)
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
   const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
+  const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
   const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   useEffect(() => {
-    if (isRedeemed) {
+    if (hasSentTokens) {
+      setStep(5)
+    } else if (isRedeemed) {
       setStep(4)
-
-      const timeout = setTimeout(() => setStep(5), 5000)
-
-      return () => clearTimeout(timeout)
     } else if (!!signedVAA) {
       setStep(3)
     } else if (isBlockFinalized) {
       setStep(2)
     }
-  }, [isBlockFinalized, isRedeemed, signedVAA])
+  }, [hasSentTokens, isBlockFinalized, isRedeemed, signedVAA])
 
   useEffect(() => {
     if (step === 5) {
@@ -56,7 +55,7 @@ const BridgingProgressSection = () => {
   }
 
   return (
-    <div className={classes.grayRoundedBox}>
+    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithTransparency : 'inherit' }}>
       <div>
         <div className={classes.sendStep}>
           {step === 5 && (
@@ -65,8 +64,8 @@ const BridgingProgressSection = () => {
             </div>
           )}
           <div className={classes.spaceBetween}>
-            <OngoingBridgingBadge />
-            {!isManualRedeemRequired && <div className={classes.sendStepContentSuccess}>
+            {!hasSentTokens && <OngoingBridgingBadge />}
+            {!isManualRedeemRequired && <div className={classes.sendStepContentSuccess} style={{ color: step === 5 ? COLORS.green : 'inherit' }}>
               {step === 1 && 'Finalizing block... (1/4)'}
               {step === 2 && 'Waiting for proof... (2/4)'}
               {step === 3 && 'Redeeming proof... (3/4)'}
@@ -89,7 +88,7 @@ const BridgingProgressSection = () => {
           </div>
         </div>
         <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <BridgingProgressSectionDetails />
+          <BridgingProgressSectionDetails currentStep={step} />
         </div>
       </div>
     </div>

@@ -60,6 +60,7 @@ export interface TransferState {
   relayerFee: string | undefined
   acalaRelayerInfo: DataWrapper<AcalaRelayerInfo>
   isBlockFinalized: boolean
+  hasSentTokens: boolean
   isTokenPickerDialogOpen: boolean
 }
 
@@ -93,6 +94,7 @@ const initialState: TransferState = {
   relayerFee: undefined,
   acalaRelayerInfo: getEmptyDataWrapper(),
   isBlockFinalized: false,
+  hasSentTokens: false,
   isTokenPickerDialogOpen: false
 }
 
@@ -314,6 +316,9 @@ export const transferSlice = createSlice({
     },
     setIsBlockFinalized: (state, action: PayloadAction<boolean>) => {
       state.isBlockFinalized = action.payload
+    },
+    setHasSentTokens: (state, action: PayloadAction<boolean>) => {
+      state.hasSentTokens = action.payload
     }
   }
 })
@@ -358,7 +363,8 @@ export const {
   fetchAcalaRelayerInfo,
   errorAcalaRelayerInfo,
   receiveAcalaRelayerInfo,
-  setIsBlockFinalized
+  setIsBlockFinalized,
+  setHasSentTokens
 } = transferSlice.actions
 
 export default transferSlice.reducer

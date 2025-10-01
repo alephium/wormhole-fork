@@ -104,16 +104,6 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <IconButton
-          size="small"
-          style={{
-            color: GRAY,
-            backgroundColor: 'rgb(30 30 31)'
-          }}
-          onClick={onBack}
-        >
-          <ArrowBack />
-        </IconButton>
         <h1 style={{ margin: 0 }}>Review</h1>
       </div>
 
@@ -204,6 +194,8 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
       {(statusMessage || allowanceError) && <WarningBox>{statusMessage || allowanceError}</WarningBox>}
 
+      <BridgeWidgetButton onClick={onBack} variant="outlined">Back</BridgeWidgetButton>
+      
       {approveButtonNeeded ? (
         <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>
           {t('approveTokens', { count: tokensAmount })}

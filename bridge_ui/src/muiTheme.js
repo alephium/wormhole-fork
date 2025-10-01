@@ -6,7 +6,7 @@ export const COLORS = {
   blueWithTransparency: "rgba(9, 137, 241, 0.8)",
   gray: "rgb(70, 70, 70)",
   green: "rgb(33, 201, 94)",
-  greenWithTransparency: "rgba(33, 201, 94, 0.8)",
+  greenWithTransparency: "rgba(33, 201, 94, 0.1)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
@@ -133,6 +133,14 @@ export const theme = responsiveFontSizes(
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
+        },
+      },
+      MuiCircularProgress: {
+        svg: {
+          overflow: 'visible',
+        },
+        circle: {
+          strokeWidth: 5
         },
       },
       MuiDialog: {

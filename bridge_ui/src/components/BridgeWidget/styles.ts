@@ -80,16 +80,16 @@ export const useWidgetStyles = makeStyles((theme) => ({
   expandIconVisible: {
     opacity: 1,
     filter: 'blur(0)',
-    animation: '$expandIconIn 180ms ease-out'
+    animation: '$expandIconIn 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   expandIconHidden: {
     opacity: 0,
     filter: 'blur(2px)',
-    animation: '$expandIconOut 180ms ease-in'
+    animation: '$expandIconOut 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   expandableContainer: {
     overflow: 'hidden',
-    transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out'
+    transition: 'max-height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   expanded: {
     maxHeight: '1000px',
