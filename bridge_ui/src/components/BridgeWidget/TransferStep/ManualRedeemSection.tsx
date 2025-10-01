@@ -70,7 +70,7 @@ const ManualRedeemSection = () => {
 
     const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 
-  if (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) {
+  if (!isRedeemDisabled && (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired)) {
     return (
       <div className={widgetClasses.grayRoundedBox}>
         {manualRedeemToAlephiumRequired ? (
@@ -99,7 +99,6 @@ const ManualRedeemSection = () => {
           )}
         </div>
         <BridgeWidgetButton
-          disabled={isRedeemDisabled}
           onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
           tone="primaryNext"
           isLoading={isRedeeming}
