@@ -9,11 +9,8 @@ import { selectTransferIsBlockFinalized } from '../../../store/selectors'
 import { CircularProgress, IconButton } from '@material-ui/core'
 import { CheckCircleOutlineRounded, UnfoldMoreOutlined } from '@material-ui/icons'
 import BridgingProgressSectionDetails from './BridgingProgressSectionDetails'
-import { UseGetIsTransferCompletedReturnType } from '../../../hooks/useGetIsTransferCompleted'
 
-const BridgingProgressSection = ({
-  isTransferCompleted
-}: Pick<UseGetIsTransferCompletedReturnType, 'isTransferCompleted'>) => {
+const BridgingProgressSection = () => {
   const classes = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
@@ -85,7 +82,7 @@ const BridgingProgressSection = ({
           </div>
         </div>
         <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <BridgingProgressSectionDetails isTransferCompleted={isTransferCompleted} />
+          <BridgingProgressSectionDetails />
         </div>
       </div>
     </div>
