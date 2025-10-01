@@ -6,7 +6,8 @@ import {
   selectTransferIsRedeemedViaRelayer,
   selectTransferRedeemTx,
   selectTransferTargetChain,
-  selectTransferTransferTx
+  selectTransferTransferTx,
+  selectTransferUseRelayer
 } from '../../../store/selectors'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { RadioButtonUncheckedRounded } from '@material-ui/icons'
@@ -14,20 +15,28 @@ import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
 import FinalityProgress from './FinalityProgress'
 import Divider from './Divider'
-import { UseGetIsTransferCompletedReturnType } from '../../../hooks/useGetIsTransferCompleted'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
+import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { useEffect, useState } from 'react'
+import { useSnackbar } from 'notistack'
 import SmartAddress from '../SmartAddress'
 
-const BridgingProgressSectionDetails = ({
-  isTransferCompleted
-}: Pick<UseGetIsTransferCompletedReturnType, 'isTransferCompleted'>) => {
+const BridgingProgressSectionDetails = () => {
   const classes = useWidgetStyles()
   const transferTx = useSelector(selectTransferTransferTx)
   const signedVAA = useTransferSignedVAA()
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
+  const { enqueueSnackbar } = useSnackbar()
 
+  const useRelayer = useSelector(selectTransferUseRelayer)
   const targetChain = useSelector(selectTransferTargetChain)
+  const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
+  const shouldCheckCompletion = useRelayer || useAutoRelayer
+  const { isTransferCompleted, error: checkTransferCompletedError } = useGetIsTransferCompleted(
+    !shouldCheckCompletion,
+    shouldCheckCompletion ? 5000 : undefined
+  )
 
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
@@ -46,6 +55,15 @@ const BridgingProgressSectionDetails = ({
       }, 8000)
     }
   }, [isRedeemed])
+
+  useEffect(() => {
+    if (checkTransferCompletedError) {
+      enqueueSnackbar(checkTransferCompletedError, {
+        variant: 'error',
+        preventDuplicate: true
+      })
+    }
+  }, [checkTransferCompletedError, enqueueSnackbar])
 
   return (
     <div className={classes.progressDetails}>
