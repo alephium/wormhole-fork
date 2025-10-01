@@ -84,7 +84,7 @@ const BridgingProgressSectionDetails = ({ currentStep }: BridgingProgressSection
           {currentStep > 2 ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : currentStep === 2 ? <CircularProgress size={18} style={{ color: COLORS.nearWhite }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
         </div>
         <div className={classes.bridgingProgressContent}>
-          {currentStep > 2 ? <Typography>Received Action Approval!</Typography> : currentStep === 2 ? <Typography>Waiting for Action Approval...</Typography> : <Typography>Get Action Approval</Typography>}
+          {currentStep > 2 ? <Typography>Received action approval!</Typography> : currentStep === 2 ? <Typography>Waiting for action approval...</Typography> : <Typography>Get verified action approval (VAA)</Typography>}
         </div>
       </div>
 
