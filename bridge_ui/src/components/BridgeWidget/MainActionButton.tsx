@@ -21,7 +21,6 @@ import BridgeWidgetButton from './BridgeWidgetButton'
 import { openTokenPickerDialog } from '../../store/transferSlice'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
-import { setBridgeWidgetStep } from '../../store/transferSlice'
 
 interface MainActionButtonProps {
   onNext?: () => void
@@ -66,9 +65,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     setEvmChain(chainId)
   }, [])
 
-  const handleBackToReview = useCallback(() => {
-    dispatch(setBridgeWidgetStep(1))
-  }, [dispatch])
 
   const actionConfigs = useMemo<Record<ActionKey, ActionConfig>>(() => {
     const connectLabel = (chainId: ChainId, fallback: string) =>
@@ -119,7 +115,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     currentAction?.onClick?.()
   }, [currentAction, isButtonDisabled])
 
-  if (isRedeemComplete || isRedeemedViaRelayer) {
+  if (activeBridgeWidgetStep === 2 || isRedeemComplete || isRedeemedViaRelayer) {
     return null
   }
 
@@ -127,10 +123,10 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   return (
     <>
       <BridgeWidgetButton
-        onClick={activeBridgeWidgetStep === 2 ? handleBackToReview : handleClick}
+        onClick={handleClick}
         disabled={isButtonDisabled}
         className={classes.button}
-        variant={activeBridgeWidgetStep === 2 ? 'outlined' : 'contained'}
+        variant={'contained'}
         tone={renderedActionKey === 'next' && !isNextDisabled ? 'primaryNext' : 'default'}
       >
         <div className={classes.content}>
@@ -139,7 +135,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
             activationKey={advanceToken}
             hideIcon
           >
-            {activeBridgeWidgetStep === 2 ? 'Back' : renderedAction.label}
+            {renderedAction.label}
           </SuccessPulse>
         </div>
       </BridgeWidgetButton>

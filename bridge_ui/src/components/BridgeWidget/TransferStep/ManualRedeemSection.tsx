@@ -7,6 +7,7 @@ import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import {
   selectTransferIsRecovery,
+  selectTransferIsRedeeming,
   selectTransferTargetAsset,
   selectTransferTargetChain,
   selectTransferUseRelayer} from '../../../store/selectors'
@@ -27,7 +28,8 @@ const ManualRedeemSection = () => {
   const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
   const targetAsset = useSelector(selectTransferTargetAsset)
   const isRecovery = useSelector(selectTransferIsRecovery)
-
+  const isRedeeming = useSelector(selectTransferIsRedeeming)
+  
   const shouldCheckCompletion = useRelayer || useAutoRelayer
   const {
     isTransferCompletedLoading,
@@ -100,6 +102,7 @@ const ManualRedeemSection = () => {
           disabled={isRedeemDisabled}
           onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
           tone="primaryNext"
+          isLoading={isRedeeming}
         >
           Redeem
         </BridgeWidgetButton>

@@ -1,10 +1,10 @@
-import { Button, ButtonProps, makeStyles } from '@material-ui/core'
+import { Button, ButtonProps, CircularProgress, makeStyles } from '@material-ui/core'
 import clsx from 'clsx'
 import { COLORS } from '../../muiTheme'
 
-type BridgeWidgetButtonProps = ButtonProps & { tone?: 'default' | 'primaryNext' }
+type BridgeWidgetButtonProps = ButtonProps & { tone?: 'default' | 'primaryNext', isLoading?: boolean }
 
-const BridgeWidgetButton = ({ className, variant = 'contained', tone = 'default', ...props }: BridgeWidgetButtonProps) => {
+const BridgeWidgetButton = ({ className, variant = 'contained', tone = 'default', isLoading = false, ...props }: BridgeWidgetButtonProps) => {
   const classes = useStyles()
 
   return (
@@ -14,7 +14,9 @@ const BridgeWidgetButton = ({ className, variant = 'contained', tone = 'default'
       color="primary"
       fullWidth
       {...props}
-    />
+    >
+      {isLoading ? <CircularProgress size={20} color="inherit" /> : props.children}
+    </Button>
   )
 }
 
