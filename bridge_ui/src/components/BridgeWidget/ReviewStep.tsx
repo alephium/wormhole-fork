@@ -96,7 +96,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     formatUnits(transferAmountParsed, sourceDecimals)
   let tokensAmount = 0
   try {
-    tokensAmount = parseInt((humanReadableTransferAmount || sourceAmount).toString())
+    tokensAmount = Number(humanReadableTransferAmount || sourceAmount)
   } catch (e) {
     console.error(e)
   }
@@ -198,7 +198,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
       
       {approveButtonNeeded ? (
         <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>
-          {t('approveTokens', { count: tokensAmount })}
+          {t('approveTokens', { count: tokensAmount, symbol: sourceParsedTokenAccount?.symbol || '' })}
         </BridgeWidgetButton>
       ) : isSending ? (
         <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
