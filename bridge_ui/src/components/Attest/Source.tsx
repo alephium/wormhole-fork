@@ -1,3 +1,4 @@
+import { ChainId } from "@alephium/wormhole-sdk"
 import { makeStyles, TextField } from "@material-ui/core"
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
@@ -21,27 +22,53 @@ import LowBalanceWarning from "../LowBalanceWarning"
 
 interface SourceProps {
   showNextButton?: boolean
+  sourceChain?: ChainId
+  sourceAsset?: string
+  onSourceChainChange?: (chainId: ChainId) => void
+  onSourceAssetChange?: (asset: string) => void
 }
 
-function Source({ showNextButton = true }: SourceProps) {
+function Source({
+  showNextButton = true,
+  sourceChain: sourceChainOverride,
+  sourceAsset: sourceAssetOverride,
+  onSourceChainChange,
+  onSourceAssetChange
+}: SourceProps) {
   const { t } = useTranslation()
   const classes = useStyles()
   const dispatch = useDispatch()
-  const sourceChain = useSelector(selectAttestSourceChain)
-  const sourceAsset = useSelector(selectAttestSourceAsset)
-  const isSourceComplete = useSelector(selectAttestIsSourceComplete)
+  const storeSourceChain = useSelector(selectAttestSourceChain)
+  const storeSourceAsset = useSelector(selectAttestSourceAsset)
+  const storeIsSourceComplete = useSelector(selectAttestIsSourceComplete)
   const shouldLockFields = useSelector(selectAttestShouldLockFields)
+  const sourceChain = sourceChainOverride ?? storeSourceChain
+  const sourceAsset = sourceAssetOverride ?? storeSourceAsset
+  const isSourceComplete =
+    sourceChainOverride !== undefined || sourceAssetOverride !== undefined
+      ? Boolean(sourceChain) && sourceAsset.trim().length > 0
+      : storeIsSourceComplete
   const handleSourceChange = useCallback(
     (event: any) => {
-      dispatch(setSourceChain(event.target.value))
+      const nextChain = Number(event.target.value) as ChainId
+      if (onSourceChainChange) {
+        onSourceChainChange(nextChain)
+        return
+      }
+      dispatch(setSourceChain(nextChain))
     },
-    [dispatch]
+    [dispatch, onSourceChainChange]
   )
   const handleAssetChange = useCallback(
     (event: any) => {
-      dispatch(setSourceAsset(event.target.value))
+      const nextAsset = event.target.value as string
+      if (onSourceAssetChange) {
+        onSourceAssetChange(nextAsset)
+        return
+      }
+      dispatch(setSourceAsset(nextAsset))
     },
-    [dispatch]
+    [dispatch, onSourceAssetChange]
   )
   const handleNextClick = useCallback(() => {
     dispatch(incrementStep())
@@ -70,6 +97,7 @@ function Source({ showNextButton = true }: SourceProps) {
       <LowBalanceWarning chainId={sourceChain} />
       {showNextButton && (
         <BridgeWidgetButton
+          short
           disabled={!isSourceComplete}
           onClick={handleNextClick}
           className={classes.nextButton}

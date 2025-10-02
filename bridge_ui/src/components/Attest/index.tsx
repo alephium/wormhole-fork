@@ -13,6 +13,7 @@ import { Alert } from "@material-ui/lab"
 import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@material-ui/icons"
 import clsx from "clsx"
 import { Fragment, KeyboardEvent, MouseEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { ChainId } from "@alephium/wormhole-sdk"
 import { useTranslation } from "react-i18next"
 import { useDispatch, useSelector } from "react-redux"
 import {
@@ -43,7 +44,7 @@ import Send from "./Send"
 import SendPreview from "./SendPreview"
 import Create from "./Create"
 import CreatePreview from "./CreatePreview"
-import { setStep } from "../../store/attestSlice"
+import { setStep, setSourceChain, setSourceAsset, setTargetChain } from "../../store/attestSlice"
 
 type AttestStepId = 0 | 1 | 2 | 3
 
@@ -78,6 +79,9 @@ function Attest() {
   const attestTx = useSelector(selectAttestAttestTx)
   const createTx = useSelector(selectAttestCreateTx)
   const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
+  const [draftSourceChain, setDraftSourceChain] = useState(sourceChain)
+  const [draftSourceAsset, setDraftSourceAsset] = useState(sourceAsset)
+  const [draftTargetChain, setDraftTargetChain] = useState(targetChain)
   const classes = useStyles()
 
   const derivedActiveStep = useMemo<AttestStepId>(() => {
@@ -103,6 +107,15 @@ function Attest() {
       dispatch(setStep(derivedActiveStep))
     }
   }, [activeStep, derivedActiveStep, dispatch])
+
+  useEffect(() => {
+    if (editDialogStep === 0) {
+      setDraftSourceChain(sourceChain)
+      setDraftSourceAsset(sourceAsset)
+    } else if (editDialogStep === 1) {
+      setDraftTargetChain(targetChain)
+    }
+  }, [editDialogStep, sourceChain, sourceAsset, targetChain])
 
   const renderStatusIcon = useCallback((status: StepStatus) => {
     if (status === "complete") return <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
@@ -308,26 +321,67 @@ function Attest() {
 
   const dialogStepDefinition = steps.find((step) => step.id === editDialogStep)
 
+  const handleDraftSourceChainChange = useCallback((chainId: ChainId) => {
+    setDraftSourceChain(chainId)
+    setDraftSourceAsset("")
+  }, [])
+
+  const handleDraftSourceAssetChange = useCallback((asset: string) => {
+    setDraftSourceAsset(asset)
+  }, [])
+
+  const handleDraftTargetChainChange = useCallback((chainId: ChainId) => {
+    setDraftTargetChain(chainId)
+  }, [])
+
   const renderDialogContent = () => {
     if (editDialogStep === 0) {
-      return <Source showNextButton={false} />
+      return (
+        <Source
+          showNextButton={false}
+          sourceChain={draftSourceChain}
+          sourceAsset={draftSourceAsset}
+          onSourceChainChange={handleDraftSourceChainChange}
+          onSourceAssetChange={handleDraftSourceAssetChange}
+        />
+      )
     }
     if (editDialogStep === 1) {
-      return <Target showNextButton={false} />
+      return (
+        <Target
+          showNextButton={false}
+          targetChain={draftTargetChain}
+          onTargetChainChange={handleDraftTargetChainChange}
+        />
+      )
     }
     return null
   }
 
   const dialogCanSave = editDialogStep === 0
-    ? isSourceComplete
+    ? Boolean(draftSourceChain) && draftSourceAsset.trim().length > 0
     : editDialogStep === 1
-      ? isTargetComplete
+      ? Boolean(draftTargetChain)
       : true
 
   const handleCloseDialog = () => setEditDialogStep(null)
 
   const handleSaveDialog = () => {
-    if (!dialogCanSave) return
+    if (!dialogCanSave || editDialogStep === null) return
+
+    if (editDialogStep === 0) {
+      if (draftSourceChain !== sourceChain) {
+        dispatch(setSourceChain(draftSourceChain))
+      }
+      if (draftSourceAsset !== sourceAsset) {
+        dispatch(setSourceAsset(draftSourceAsset))
+      }
+    } else if (editDialogStep === 1) {
+      if (draftTargetChain !== targetChain) {
+        dispatch(setTargetChain(draftTargetChain))
+      }
+    }
+
     setEditDialogStep(null)
   }
 
@@ -371,7 +425,7 @@ function Attest() {
         open={editDialogStep !== null}
         onClose={handleCloseDialog}
         fullWidth
-        maxWidth="sm"
+        maxWidth="xs"
       >
         <DialogTitle>{dialogStepDefinition?.title}</DialogTitle>
         <DialogContent>{renderDialogContent()}</DialogContent>

@@ -1,6 +1,6 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
-import { Link, makeStyles } from "@material-ui/core";
+import { Link, Typography, makeStyles } from "@material-ui/core";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHandleAttest } from "../../hooks/useHandleAttest";
@@ -13,8 +13,6 @@ import {
   selectAttestSourceAsset,
   selectAttestSourceChain
 } from "../../store/selectors";
-import ButtonWithLoader from "../ButtonWithLoader";
-import KeyAndBalance from "../KeyAndBalance";
 import TransactionProgress from "../TransactionProgress";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 import { ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL, SOLANA_TOKEN_METADATA_PROGRAM_URL } from "../../utils/consts";
@@ -23,10 +21,15 @@ import { useWallet } from "@alephium/web3-react";
 import { useSnackbar } from "notistack";
 import { setStep } from "../../store/attestSlice";
 import { Trans, useTranslation } from "react-i18next";
+import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 
 const useStyles = makeStyles((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
+  },
+  statusMessage: {
+    marginTop: theme.spacing(1),
+    textAlign: "center",
   },
 }));
 
@@ -66,6 +69,7 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
   const signedVAAHex = useSelector(selectAttestSignedVAAHex)
   const [isSending, setIsSending] = useState<boolean>(false)
   const [error, setError] = useState<string | undefined>()
+  const classes = useStyles()
   const onClick = useCallback(async () => {
     if (signedVAAHex !== undefined && alphWallet?.nodeProvider !== undefined) {
       try {
@@ -100,14 +104,19 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
 
   return (
     <>
-      <ButtonWithLoader
+      <BridgeWidgetButton
+        short
         disabled={!isReady}
         onClick={onClick}
-        showLoader={isSending}
-        error={error}
+        isLoading={isSending}
       >
         {isSending ? `${t('Waiting for transaction confirmation')}...` : t('Create Local Token Pool')}
-      </ButtonWithLoader>
+      </BridgeWidgetButton>
+      {error ? (
+        <Typography variant="body2" color="error" className={classes.statusMessage}>
+          {error}
+        </Typography>
+      ) : null}
     </>
   )
 }
@@ -116,22 +125,26 @@ function Send() {
   const { t } = useTranslation();
   const { handleClick, disabled, showLoader } = useHandleAttest();
   const sourceChain = useSelector(selectAttestSourceChain);
-  const sourceAsset = useSelector(selectAttestSourceAsset);
   const attestTx = useSelector(selectAttestAttestTx);
   const isSendComplete = useSelector(selectAttestIsSendComplete);
   const { isReady, statusMessage } = useIsWalletReady(sourceChain);
+  const classes = useStyles();
 
   return (
     <>
-      <KeyAndBalance chainId={sourceChain} />
-      <ButtonWithLoader
+      <BridgeWidgetButton
+        short
         disabled={!isReady || disabled}
         onClick={handleClick}
-        showLoader={showLoader}
-        error={statusMessage}
+        isLoading={showLoader}
       >
         {t("Attest")}
-      </ButtonWithLoader>
+      </BridgeWidgetButton>
+      {statusMessage ? (
+        <Typography variant="body2" color="error" className={classes.statusMessage}>
+          {statusMessage}
+        </Typography>
+      ) : null}
       {sourceChain === CHAIN_ID_SOLANA && <SolanaTokenMetadataWarning />}
       <WaitingForWalletMessage />
       <TransactionProgress
@@ -140,7 +153,8 @@ function Send() {
         isSendComplete={isSendComplete}
         consistencyLevel={sourceChain === CHAIN_ID_ALEPHIUM ? ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL : undefined}
       />
-      { sourceChain === CHAIN_ID_ALEPHIUM && <CreateLocalTokenPool localTokenId={sourceAsset}/> }
+      {/* TODO: Support later? */}
+      {/* {sourceChain === CHAIN_ID_ALEPHIUM && <CreateLocalTokenPool localTokenId={sourceAsset} />} */}
     </>
   );
 }

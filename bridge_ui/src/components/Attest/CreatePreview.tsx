@@ -6,12 +6,12 @@ import {
   selectAttestTargetChain,
 } from "../../store/selectors";
 import { reset } from "../../store/attestSlice";
-import ButtonWithLoader from "../ButtonWithLoader";
 import ShowTx from "../ShowTx";
 import { useHistory } from "react-router";
 import { getHowToAddToTokenListUrl } from "../../utils/consts";
 import { Alert } from "@material-ui/lab";
 import { Trans, useTranslation } from "react-i18next";
+import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 
 const useStyles = makeStyles((theme) => ({
   description: {
@@ -19,6 +19,9 @@ const useStyles = makeStyles((theme) => ({
   },
   alert: {
     marginTop: theme.spacing(1),
+  },
+  actionButton: {
+    marginTop: theme.spacing(2),
   },
 }));
 
@@ -64,12 +67,12 @@ export default function CreatePreview() {
           </Trans>
         </Alert>
       ) : null}
-      <ButtonWithLoader onClick={handleResetClick}>
+      <BridgeWidgetButton short className={classes.actionButton} onClick={handleResetClick}>
         {t("Attest Another Token!")}
-      </ButtonWithLoader>
-      <ButtonWithLoader onClick={handleReturnClick}>
+      </BridgeWidgetButton>
+      <BridgeWidgetButton short className={classes.actionButton} onClick={handleReturnClick}>
         {t("Return to Transfer")}
-      </ButtonWithLoader>
+      </BridgeWidgetButton>
     </>
   );
 }
