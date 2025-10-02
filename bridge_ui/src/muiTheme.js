@@ -225,6 +225,11 @@ export const theme = responsiveFontSizes(
           }
         }
       },
+      MuiSelect: {
+        select: {
+          backgroundColor: 'transparent'
+        }
+      },
       MuiStepper: {
         root: {
           backgroundColor: "transparent",
@@ -299,7 +304,7 @@ export const theme = responsiveFontSizes(
       },
       MuiInputBase: {
         root: {
-          backgroundColor: COLORS.darkGrey,
+          backgroundColor: 'transparent',
           '& fieldset': {
             borderRadius: "12px",
             border: `1px solid ${COLORS.whiteWithTransparency}`,

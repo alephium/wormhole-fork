@@ -139,9 +139,19 @@ export const useWidgetStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2)
   },
   boxHoverAnimation: {
+    position: 'relative',
     '&:hover': {
       transform: 'scale(1.005)',
-      filter: 'brightness(1.02)'
+      filter: 'brightness(1.2)',
+      cursor: 'pointer',
+      '&:after': {
+        content: '""',
+        position: 'absolute',
+        inset: 0,
+        margin: -10,
+        backgroundColor: COLORS.whiteWithMoreTransparency,
+        borderRadius: 16
+      }
     }
   },
 
