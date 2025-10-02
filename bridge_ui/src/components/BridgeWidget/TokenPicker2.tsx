@@ -329,7 +329,7 @@ const TokenPicker2 = function TokenPicker2(
     <Dialog onClose={closeDialog} aria-labelledby="simple-dialog-title" open={dialogIsOpen} maxWidth="sm" fullWidth>
       <DialogTitle>
         <div id="simple-dialog-title" className={classes.flexTitle}>
-          <Typography variant="h5">{t('Available tokens')}</Typography>
+          <Typography variant="h6">{t('Available tokens')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
             <IconButton onClick={resetAccountsWrapper}>
