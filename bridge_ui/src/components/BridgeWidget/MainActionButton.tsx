@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { makeStyles } from '@material-ui/core'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import {
   selectTransferIsSourceComplete,
   selectTransferIsTargetComplete,
@@ -18,7 +18,6 @@ import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
 import { useConnect } from '@alephium/web3-react'
 import BridgeWidgetButton from './BridgeWidgetButton'
-import { openTokenPickerDialog } from '../../store/transferSlice'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
 
@@ -29,7 +28,6 @@ interface MainActionButtonProps {
 const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const classes = useStyles()
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const { connect: connectAlephium } = useConnect()
 
   const activeBridgeWidgetStep = useSelector(selectTransferActiveBridgeWidgetStep)
@@ -52,10 +50,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const isNextDisabled =
     !isSourceComplete || !isTargetComplete || isSourceTransferDisabled || isTargetTransferDisabled
-
-  const handleOpenTokenPicker = useCallback(() => {
-    dispatch(openTokenPickerDialog())
-  }, [dispatch])
 
   const handleAlephiumConnect = useCallback(() => {
     connectAlephium()
@@ -80,26 +74,15 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     return {
       'connect-source': connectAction(sourceChain, 'Source'),
       'connect-target': connectAction(targetChain, 'Target'),
-      'select-token': { label: t('Select token'), onClick: handleOpenTokenPicker, disabled: false },
       next: { label: t('Next'), onClick: onNext, disabled: !onNext || isNextDisabled }
     }
-  }, [
-    handleAlephiumConnect,
-    handleEvmConnect,
-    handleOpenTokenPicker,
-    isNextDisabled,
-    onNext,
-    sourceChain,
-    targetChain,
-    t
-  ])
+  }, [handleAlephiumConnect, handleEvmConnect, isNextDisabled, onNext, sourceChain, targetChain, t])
 
   const currentActionKey = useMemo<ActionKey>(() => {
     if (!isSourceReady) return 'connect-source'
     if (!isTargetReady) return 'connect-target'
-    if (!onNext || !hasSelectedToken) return 'select-token'
     return 'next'
-  }, [hasSelectedToken, isSourceReady, isTargetReady, onNext])
+  }, [isSourceReady, isTargetReady])
 
   const currentAction = actionConfigs[currentActionKey]
 

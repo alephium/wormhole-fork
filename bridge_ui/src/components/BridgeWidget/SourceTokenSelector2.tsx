@@ -7,7 +7,7 @@ import {
   isEVMChain
 } from '@alephium/wormhole-sdk'
 import { TextField, Typography } from '@material-ui/core'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import useGetSourceParsedTokens from '../../hooks/useGetSourceParsedTokenAccounts'
@@ -67,6 +67,45 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
 
   const maps = useGetSourceParsedTokens(nft)
   const resetAccountWrapper = maps?.resetAccounts || (() => {}) //This should never happen.
+
+  useEffect(() => {
+    if (nft) return // TODO: Handle NFTs?
+    if (sourceParsedTokenAccount) return
+    const walletAddress = walletIsReady.walletAddress
+    if (!walletAddress) return
+
+    let availableAccounts: ParsedTokenAccount[] | undefined
+
+    if (lookupChain === CHAIN_ID_ALEPHIUM) {
+      availableAccounts = maps?.tokens || undefined
+    } else if (
+      lookupChain === CHAIN_ID_SOLANA ||
+      lookupChain === CHAIN_ID_ALGORAND ||
+      isEVMChain(lookupChain)
+    ) {
+      availableAccounts = maps?.tokenAccounts?.data || undefined
+    }
+
+    if (!availableAccounts || availableAccounts.length === 0) {
+      return
+    }
+
+    const defaultAccount =
+      availableAccounts.find((account) => account?.isNativeAsset) || availableAccounts[0]
+
+    if (!defaultAccount) {
+      return
+    }
+
+    handleOnChange(defaultAccount)
+  }, [
+    handleOnChange,
+    lookupChain,
+    maps,
+    nft,
+    sourceParsedTokenAccount,
+    walletIsReady.walletAddress
+  ])
 
   //This is only for errors so bad that we shouldn't even mount the component
   const fatalError = !isEVMChain(lookupChain) && lookupChain !== CHAIN_ID_TERRA && maps?.tokenAccounts?.error //Terra & ETH can proceed because it has advanced mode

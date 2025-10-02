@@ -303,5 +303,6 @@
   "To": "To",
   "Disconnect {{ chainName }} wallet": "Disconnect {{ chainName }} wallet",
   "Connect {{ chainName }} wallet": "Connect {{ chainName }} wallet",
-  "Select token": "Select token"
+  "Select token": "Select token",
+  "Available tokens": "Available tokens"
 }

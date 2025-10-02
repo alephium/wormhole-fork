@@ -498,7 +498,7 @@ const TokenPicker2 = function TokenPicker2(
     <Dialog onClose={closeDialog} aria-labelledby="simple-dialog-title" open={dialogIsOpen} maxWidth="sm" fullWidth>
       <DialogTitle>
         <div id="simple-dialog-title" className={classes.flexTitle}>
-          <Typography variant="h5">{t('Select a token')}</Typography>
+          <Typography variant="h5">{t('Available tokens')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
             <IconButton onClick={resetAccountsWrapper}>
@@ -562,11 +562,12 @@ const TokenPicker2 = function TokenPicker2(
   const activeErrorMessage = transferSourceError || externalError
   const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
   const hasError = amountGreaterThanZero && !!activeErrorMessage
+  const selectedTokenAmount = selectedToken?.uiAmountString
 
   return (
     <>
       {dialog}
-      {walletsReady && selectedToken && (
+      {walletsReady && (
         <Grow in={walletsReady}>
           <div>
             <div className={classes.tokenAmountInputContainer}>
@@ -597,14 +598,14 @@ const TokenPicker2 = function TokenPicker2(
               </div>
               <div className={classes.tokenAmountControls}>
                 <div className={classes.tokenAvailableMaxContainer}>
-                  {selectedToken.uiAmountString && (
+                  {selectedTokenAmount ? (
                     <button
-                      onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
+                      onClick={() => dispatch(setAmount(selectedTokenAmount))}
                       className={classes.tokenAvailableBalance}
                     >
-                      Max: {balancePretty(selectedToken.uiAmountString)}
+                      Max: {balancePretty(selectedTokenAmount)}
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
               {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
@@ -619,13 +620,13 @@ const TokenPicker2 = function TokenPicker2(
 export const TokenIconSymbol = ({
   account
 }: {
-  account: { logo?: string | null; uri?: string | null; symbol?: string | null }
+  account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
 }) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
-  const uri = account.logo || account.uri
-  const symbol = account.symbol || t('Unknown')
+  const uri = account?.logo || account?.uri
+  const symbol = account?.symbol || t('Unknown')
 
   return (
     <div className={widgetClasses.tokenIconSymbolContainer}>
