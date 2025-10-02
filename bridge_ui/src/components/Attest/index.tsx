@@ -1,111 +1,510 @@
 import {
+  CircularProgress,
   Container,
-  makeStyles,
-  Step,
-  StepButton,
-  StepContent,
-  Stepper,
-} from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
-import { setStep } from "../../store/attestSlice";
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Typography,
+  makeStyles
+} from "@material-ui/core"
+import { Alert } from "@material-ui/lab"
+import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@material-ui/icons"
+import clsx from "clsx"
+import { Fragment, KeyboardEvent, MouseEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useDispatch, useSelector } from "react-redux"
 import {
   selectAttestActiveStep,
   selectAttestIsCreateComplete,
   selectAttestIsCreating,
   selectAttestIsSendComplete,
   selectAttestIsSending,
-} from "../../store/selectors";
-import HeaderText from "../HeaderText";
-import Create from "./Create";
-import CreatePreview from "./CreatePreview";
-import Send from "./Send";
-import SendPreview from "./SendPreview";
-import Source from "./Source";
-import SourcePreview from "./SourcePreview";
-import Target from "./Target";
-import TargetPreview from "./TargetPreview";
+  selectAttestIsSourceComplete,
+  selectAttestIsTargetComplete,
+  selectAttestIsWalletApproved,
+  selectAttestAttestTx,
+  selectAttestCreateTx,
+  selectAttestSourceAsset,
+  selectAttestSourceChain,
+  selectAttestTargetChain
+} from "../../store/selectors"
+import { CHAINS_BY_ID } from "../../utils/consts"
+import { useWidgetStyles } from "../BridgeWidget/styles"
+import Source from "./Source"
+import Target from "./Target"
+import SmartAddress from "../SmartAddress"
+import { GRAY, GREEN } from "../BridgeWidget/styles"
+import { COLORS } from "../../muiTheme"
+import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
+import ShowTx from "../ShowTx"
+import Send from "./Send"
+import SendPreview from "./SendPreview"
+import Create from "./Create"
+import CreatePreview from "./CreatePreview"
+import { setStep } from "../../store/attestSlice"
 
-const useStyles = makeStyles((theme) => ({
-  spacer: { height: theme.spacing(2) },
-}));
+type AttestStepId = 0 | 1 | 2 | 3
+
+type StepStatus = "pending" | "active" | "inProgress" | "complete"
+
+interface StepDefinition {
+  id: AttestStepId
+  title: string
+  description: string
+  value?: ReactNode
+  subLabel?: string
+  isEditable?: boolean
+  status: StepStatus
+  disabled: boolean
+}
 
 function Attest() {
   const { t } = useTranslation()
-  const classes = useStyles();
-  const dispatch = useDispatch();
-  const activeStep = useSelector(selectAttestActiveStep);
-  const isSending = useSelector(selectAttestIsSending);
-  const isSendComplete = useSelector(selectAttestIsSendComplete);
-  const isCreating = useSelector(selectAttestIsCreating);
-  const isCreateComplete = useSelector(selectAttestIsCreateComplete);
+  const widgetClasses = useWidgetStyles()
+  const dispatch = useDispatch()
+  const activeStep = useSelector(selectAttestActiveStep)
+  const isSending = useSelector(selectAttestIsSending)
+  const isSendComplete = useSelector(selectAttestIsSendComplete)
+  const isCreating = useSelector(selectAttestIsCreating)
+  const isCreateComplete = useSelector(selectAttestIsCreateComplete)
+  const isSourceComplete = useSelector(selectAttestIsSourceComplete)
+  const isTargetComplete = useSelector(selectAttestIsTargetComplete)
+  const isWalletApproved = useSelector(selectAttestIsWalletApproved)
+  const sourceChain = useSelector(selectAttestSourceChain)
+  const sourceAsset = useSelector(selectAttestSourceAsset)
+  const targetChain = useSelector(selectAttestTargetChain)
+  const attestTx = useSelector(selectAttestAttestTx)
+  const createTx = useSelector(selectAttestCreateTx)
+  const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
+  const classes = useStyles()
+
+  const derivedActiveStep = useMemo<AttestStepId>(() => {
+    if (!isSourceComplete) return 0
+    if (!isTargetComplete) return 1
+    if (!isSendComplete) return 2
+    return 3
+  }, [isSourceComplete, isTargetComplete, isSendComplete])
+
   const preventNavigation =
-    (isSending || isSendComplete || isCreating) && !isCreateComplete;
+    (isSending || isSendComplete || isCreating) && !isCreateComplete
   useEffect(() => {
     if (preventNavigation) {
-      window.onbeforeunload = () => true;
+      window.onbeforeunload = () => true
       return () => {
-        window.onbeforeunload = null;
-      };
+        window.onbeforeunload = null
+      }
     }
-  }, [preventNavigation]);
+  }, [preventNavigation])
+
+  useEffect(() => {
+    if (activeStep !== derivedActiveStep) {
+      dispatch(setStep(derivedActiveStep))
+    }
+  }, [activeStep, derivedActiveStep, dispatch])
+
+  const renderStatusIcon = useCallback((status: StepStatus) => {
+    if (status === "complete") return <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
+    if (status === "inProgress") return <CircularProgress size={18} style={{ color: COLORS.white }} />
+    return (
+      <RadioButtonUncheckedRounded
+        fontSize="small"
+        style={{ color: COLORS.white }}
+      />
+    )
+  }, [])
+
+  const sourceDescription = t("Source chain and token to attest")
+  const targetDescription = t("Chain where the wrapped token will live")
+  const sendDescription = t("Attestation transaction details")
+  const createDescription = t("Wrapped token creation details")
+
+  const sourceValue = isSourceComplete && sourceAsset
+    ? <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset />
+    : undefined
+  const sourceSubLabel = isSourceComplete
+    ? t("Will be attested on {{ chainName }}", {
+        chainName: CHAINS_BY_ID[sourceChain]?.name ?? t("Unknown chain")
+      })
+    : undefined
+
+  const targetValue = isTargetComplete
+    ? <span>{CHAINS_BY_ID[targetChain]?.name ?? t("Unknown chain")}</span>
+    : undefined
+
+  const sendValue = attestTx
+    ? <ShowTx chainId={sourceChain} tx={attestTx} />
+    : undefined
+  const sendSubLabel = attestTx ? t("Transaction hash") : undefined
+
+  const createValue = createTx
+    ? <ShowTx chainId={targetChain} tx={createTx} />
+    : undefined
+  const createSubLabel = createTx ? t("Wrapped token transaction") : undefined
+
+  const canEditStep = (stepId: AttestStepId) => stepId === 0 || stepId === 1
+
+  const getStatus = (id: AttestStepId): StepStatus => {
+    if (id === 0) return isSourceComplete ? "complete" : derivedActiveStep === 0 ? "active" : "pending"
+    if (id === 1) return isTargetComplete ? "complete" : derivedActiveStep === 1 ? "active" : "pending"
+    if (id === 2) {
+      if (isSendComplete) return "complete"
+      if (isSending || isWalletApproved) return "inProgress"
+      return derivedActiveStep === 2 ? "active" : "pending"
+    }
+    if (isCreateComplete) return "complete"
+    if (isCreating) return "inProgress"
+    return derivedActiveStep === 3 ? "active" : "pending"
+  }
+
+  const steps: StepDefinition[] = [
+    {
+      id: 0,
+      title: t("Source"),
+      description: sourceDescription,
+      value: sourceValue,
+      subLabel: sourceSubLabel,
+      isEditable: true,
+      status: getStatus(0),
+      disabled: preventNavigation || isCreateComplete
+    },
+    {
+      id: 1,
+      title: t("Target"),
+      description: targetDescription,
+      value: targetValue,
+      isEditable: true,
+      status: getStatus(1),
+      disabled: preventNavigation || isCreateComplete
+    },
+    {
+      id: 2,
+      title: t("Send attestation"),
+      description: sendDescription,
+      value: sendValue,
+      subLabel: sendSubLabel,
+      status: getStatus(2),
+      disabled: isSendComplete,
+    },
+    {
+      id: 3,
+      title: t("Create wrapped token"),
+      description: createDescription,
+      value: createValue,
+      subLabel: createSubLabel,
+      status: getStatus(3),
+      disabled: !isSendComplete,
+    },
+  ]
+
+  const handleEditClick = useCallback(
+    (event: MouseEvent<HTMLElement>, stepId: AttestStepId, disabled: boolean) => {
+      event.stopPropagation()
+      if (disabled || !canEditStep(stepId)) {
+        return
+      }
+      setEditDialogStep(stepId)
+    },
+    []
+  )
+
+  const handleEditKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>, stepId: AttestStepId, disabled: boolean) => {
+      if (disabled || !canEditStep(stepId)) {
+        return
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault()
+        setEditDialogStep(stepId)
+      }
+    },
+    []
+  )
+
+  const renderStepValue = (step: StepDefinition) => {
+    const isEditable = step.isEditable ?? canEditStep(step.id)
+    const hasValue = step.value !== undefined && step.value !== null
+    const isStepDisabled = step.disabled || step.status === 'pending'
+    const shouldShowSelect = isEditable && step.id === derivedActiveStep && !hasValue && !isStepDisabled
+
+    if (step.id === 2) {
+      if (step.status === 'complete') {
+        return sendValue ? (
+          <div className={classes.stepValueStatic}>
+            <div>{sendValue}</div>
+            {sendSubLabel && <div className={classes.stepSubLabel}>{sendSubLabel}</div>}
+          </div>
+        ) : <SendPreview />
+      }
+      if (step.status === 'inProgress' || step.status === 'active') {
+        return <Send />
+      }
+    }
+
+    if (step.id === 3) {
+      if (step.status === 'complete') {
+        return createValue ? (
+          <div className={classes.stepValueStatic}>
+            <div>{createValue}</div>
+            {createSubLabel && <div className={classes.stepSubLabel}>{createSubLabel}</div>}
+          </div>
+        ) : <CreatePreview />
+      }
+      if (step.status === 'inProgress' || step.status === 'active') {
+        return <Create />
+      }
+    }
+
+    if (shouldShowSelect) {
+      return (
+        <div className={classes.selectButtonWrapper}>
+          <BridgeWidgetButton
+            onClick={() => setEditDialogStep(step.id)}
+            className={classes.selectButton}
+            short
+          >
+            {t("Select")}
+          </BridgeWidgetButton>
+        </div>
+      )
+    }
+
+    if (isEditable) {
+      const isDisabled = isStepDisabled
+      if (!hasValue) {
+        return (
+          <div className={clsx(classes.stepValue, classes.stepValuePlaceholder)}>
+            —
+          </div>
+        )
+      }
+      return (
+        <div
+          role="button"
+          tabIndex={isDisabled ? -1 : 0}
+          className={clsx(
+            classes.stepValue,
+            !isDisabled && classes.stepValueInteractive,
+            isDisabled && classes.stepValueDisabled
+          )}
+          onClick={(event) => handleEditClick(event, step.id, isDisabled)}
+          onKeyDown={(event) => handleEditKeyDown(event, step.id, isDisabled)}
+          aria-disabled={isDisabled}
+        >
+          <div>{step.value}</div>
+          {step.subLabel && <div className={classes.stepSubLabel}>{step.subLabel}</div>}
+        </div>
+      )
+    }
+
+    return (
+      <div className={clsx(classes.stepValue, classes.stepValueStatic)}>
+        <div>{hasValue ? step.value : '—'}</div>
+        {hasValue && step.subLabel && <div className={classes.stepSubLabel}>{step.subLabel}</div>}
+      </div>
+    )
+  }
+
+  const dialogStepDefinition = steps.find((step) => step.id === editDialogStep)
+
+  const renderDialogContent = () => {
+    if (editDialogStep === 0) {
+      return <Source showNextButton={false} />
+    }
+    if (editDialogStep === 1) {
+      return <Target showNextButton={false} />
+    }
+    return null
+  }
+
+  const dialogCanSave = editDialogStep === 0
+    ? isSourceComplete
+    : editDialogStep === 1
+      ? isTargetComplete
+      : true
+
+  const handleCloseDialog = () => setEditDialogStep(null)
+
+  const handleSaveDialog = () => {
+    if (!dialogCanSave) return
+    setEditDialogStep(null)
+  }
+
   return (
-    <Container maxWidth="md">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+    <Container maxWidth="sm" className={classes.pageContainer}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <h1 style={{ margin: 0 }}>Token registration</h1>
       </div>
       <Alert severity="info">
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>
-      <div className={classes.spacer} />
-      <Stepper activeStep={activeStep} orientation="vertical">
-        <Step
-          expanded={activeStep >= 0}
-          disabled={preventNavigation || isCreateComplete}
-        >
-          <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. {t("Source")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 0 ? <Source /> : <SourcePreview />}
-          </StepContent>
-        </Step>
-        <Step
-          expanded={activeStep >= 1}
-          disabled={preventNavigation || isCreateComplete}
-        >
-          <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. {t("Target")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 1 ? <Target /> : <TargetPreview />}
-          </StepContent>
-        </Step>
-        <Step expanded={activeStep >= 2} disabled={isSendComplete}>
-          <StepButton onClick={() => dispatch(setStep(2))} icon={null}>
-            3. {t("Send attestation")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 2 ? <Send /> : <SendPreview />}
-          </StepContent>
-        </Step>
-        <Step expanded={activeStep >= 3}>
-          <StepButton
-            onClick={() => dispatch(setStep(3))}
-            disabled={!isSendComplete}
-            icon={null}
+      <div className={clsx(widgetClasses.grayRoundedBox, classes.stepsWrapper)}>
+        <div className={classes.stepsContainer}>
+        {steps.map((step, index) => {
+          const isRowDisabled = step.status === 'pending'
+          return (
+            <Fragment key={step.id}>
+              <div
+                className={clsx(
+                  classes.stepRow,
+                  step.status === "active" && classes.stepRowActive,
+                  isRowDisabled && classes.stepRowDisabled
+                )}
+              >
+                <div className={classes.stepIcon}>{renderStatusIcon(step.status)}</div>
+                <div className={classes.stepMainColumn}>
+                  <Typography className={classes.stepTitle}>
+                    {step.title}
+                  </Typography>
+                  <Typography className={classes.stepDescription}>{step.description}</Typography>
+                </div>
+                <div className={classes.stepValueWrapper}>{renderStepValue(step)}</div>
+              </div>
+              {index < steps.length - 1 && <Divider className={classes.stepDivider} />}
+            </Fragment>
+          )})}
+      </div>
+      </div>
+
+      <Dialog
+        open={editDialogStep !== null}
+        onClose={handleCloseDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>{dialogStepDefinition?.title}</DialogTitle>
+        <DialogContent>{renderDialogContent()}</DialogContent>
+        <DialogActions>
+          <BridgeWidgetButton
+            onClick={handleSaveDialog}
+            disabled={!dialogCanSave}
           >
-            4. {t("Create wrapped token")}
-          </StepButton>
-          <StepContent>
-            {isCreateComplete ? <CreatePreview /> : <Create />}
-          </StepContent>
-        </Step>
-      </Stepper>
+            {t("Save")}
+          </BridgeWidgetButton>
+        </DialogActions>
+      </Dialog>
     </Container>
-  );
+  )
 }
 
-export default Attest;
+export default Attest
+
+const useStyles = makeStyles((theme) => ({
+  pageContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(2),
+    paddingBottom: theme.spacing(4)
+  },
+  spacer: { height: theme.spacing(2) },
+  stepsWrapper: {
+    padding: theme.spacing(2.5),
+    borderRadius: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(1.5)
+  },
+  stepsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.spacing(2),
+  },
+  stepRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(2),
+    cursor: "default",
+  },
+  stepRowActive: {
+    opacity: 1,
+  },
+  stepRowDisabled: {
+    opacity: 0.5,
+  },
+  stepIcon: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 28,
+    height: 28,
+  },
+  stepTitle: {
+    color: COLORS.white,
+    minWidth: 140,
+  },
+  stepMainColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+  },
+  stepDescription: {
+    flex: 1,
+    color: GRAY,
+    fontSize: '12px',
+    fontWeight: 400,
+    lineHeight: '1.2',
+    maxWidth: '65%',
+  },
+  stepValueWrapper: {
+    display: "flex",
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  stepValue: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    fontWeight: 600,
+    color: COLORS.nearWhite,
+    padding: theme.spacing(1, 1.5),
+    backgroundColor: COLORS.whiteWithMoreTransparency,
+    borderRadius: '12px',
+    border: "1px solid transparent",
+    textAlign: "right",
+    alignSelf: "flex-end",
+    transition: "border-color 0.2s ease, background-color 0.2s ease",
+  },
+  stepValueStatic: {
+    padding: theme.spacing(1, 0),
+    backgroundColor: 'transparent'
+  },
+  stepValuePlaceholder: {
+    color: GRAY,
+    fontStyle: "italic",
+  },
+  stepSubLabel: {
+    width: "100%",
+    textAlign: "right",
+    color: GRAY,
+    fontSize: '14px',
+    fontWeight: 400,
+  },
+  stepValueInteractive: {
+    cursor: "pointer",
+    '&:hover': {
+      borderColor: COLORS.whiteWithTransparency,
+      backgroundColor: COLORS.whiteWithMoreTransparency,
+    },
+    '&:focus-visible': {
+      outline: `1px solid ${COLORS.whiteWithTransparency}`,
+    },
+  },
+  stepValueDisabled: {
+    cursor: "not-allowed",
+    pointerEvents: "none",
+    opacity: 0.6
+  },
+  selectButtonWrapper: {
+    minWidth: 140,
+    maxWidth: 160,
+  },
+  selectButton: {
+    width: "100%",
+  },
+  stepDivider: {
+    backgroundColor: COLORS.whiteWithTransparency,
+  }
+}))

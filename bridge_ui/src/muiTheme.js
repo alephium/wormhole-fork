@@ -165,10 +165,20 @@ export const theme = responsiveFontSizes(
           borderRadius: "16px"
         }
       },
+      MuiDialogContent: {
+        root: {
+          padding: "16px"
+        }
+      },
       MuiDialogTitle: {
         root: {
           padding: "6px 16px",
           borderBottom: `1px solid ${COLORS.whiteWithTransparency}`,
+        }
+      },
+      MuiDialogActions: {
+        root: {
+          padding: "16px"
         }
       },
       MuiLink: {
