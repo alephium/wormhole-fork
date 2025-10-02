@@ -55,7 +55,7 @@ const BridgingProgressSection = () => {
   }
 
   return (
-    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithTransparency : 'inherit' }}>
+    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithMoreTransparency : undefined }}>
       <div>
         <div className={classes.sendStep}>
           {step === 5 && (
