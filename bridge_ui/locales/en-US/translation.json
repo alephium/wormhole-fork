@@ -327,5 +327,7 @@
   "Close": "Close",
   "Save": "Save",
   "Available tokens": "Available tokens",
-  "Select": "Select"
+  "Select": "Select",
+  "Connect wallet": "Connect wallet",
+  "Connected wallet": "Connected wallet"
 }
