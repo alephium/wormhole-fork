@@ -29,179 +29,6 @@ import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    alignCenter: {
-      textAlign: 'center'
-    },
-    optionContainer: {
-      padding: 0
-    },
-    optionContent: {
-      padding: theme.spacing(1)
-    },
-    tokenList: {
-      maxHeight: theme.spacing(80), //TODO smarter
-      height: theme.spacing(80),
-      overflow: 'auto'
-    },
-    dialogContent: {
-      overflowX: 'hidden'
-    },
-    selectionButtonContainer: {
-      //display: "flex",
-      textAlign: 'center',
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(2)
-    },
-    selectionButton: {
-      maxWidth: '100%',
-      width: theme.breakpoints.values.sm
-    },
-    tokenOverviewContainer: {
-      display: 'flex',
-      width: '100%',
-      alignItems: 'center',
-      '& div': {
-        margin: theme.spacing(1),
-        flexBasis: '25%',
-        '&$tokenImageContainer': {
-          maxWidth: 40
-        },
-        '&$tokenMarketsList': {
-          marginTop: theme.spacing(-0.5),
-          marginLeft: 0,
-          flexBasis: '100%'
-        },
-        '&:last-child': {
-          textAlign: 'right'
-        },
-        flexShrink: 1
-      },
-      flexWrap: 'wrap'
-    },
-    tokenImageContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 40
-    },
-    tokenImageContainer2: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 20
-    },
-    tokenImage: {
-      maxHeight: '2.5rem'
-    },
-    tokenImage2: {
-      maxHeight: '1rem',
-      maxWidth: '100%'
-    },
-    tokenMarketsList: {
-      order: 1,
-      textAlign: 'left',
-      width: '100%',
-      '& > .MuiButton-root': {
-        marginTop: theme.spacing(1),
-        marginRight: theme.spacing(1)
-      }
-    },
-    migrationAlert: {
-      width: '100%',
-      '& .MuiAlert-message': {
-        width: '100%'
-      }
-    },
-    flexTitle: {
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center'
-    },
-    grower: {
-      flexGrow: 1
-    },
-    emptyPlaceholder: {
-      padding: theme.spacing(2),
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: COLORS.gray
-    },
-    tokenAmountInputContainer: {
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '5px',
-      padding: '14px',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px',
-      outline: '2px solid transparent',
-
-      '&:has(input:focus)': {
-        outline: `1px solid ${COLORS.blue}`,
-        background: 'transparent'
-      },
-    },
-    tokenAmountControls: {
-      display: 'flex',
-      gap: '10px',
-      justifyContent: 'space-between'
-    },
-    tokenAvailableMaxContainer: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center',
-      justifyContent: 'flex-end'
-    },
-    tokenAvailableBalance: {
-      fontSize: '0.875rem',
-      color: 'rgba(255, 255, 255, 0.5)',
-      padding: '8px 12px',
-      border: 'none',
-      backgroundColor: 'transparent',
-      borderRadius: '20px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      }
-    },
-    useMaxButton: {
-      fontSize: '0.875rem'
-    },
-    tokenAmountInput: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center'
-    },
-    tokenAmountValue: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-    },
-    tokenAmountValueInput: {
-      marginLeft: '0.125rem',
-      display: 'block',
-      width: '100%',
-      boxShadow: 'none',
-      backgroundColor: 'transparent',
-      fontSize: '2.25rem',
-      lineHeight: 1,
-      border: 'none',
-      outline: 'none',
-      '&:focus': {
-        outline: 'none'
-      },
-      '&:hover': {
-        outline: 'none'
-      },
-      color: '#fff',
-      fontFeatureSettings: 'tnum'
-    }
-  })
-)
-
 export const BasicAccountRender2 = (
   account: MarketParsedTokenAccount,
   isMigrationEligible: (address: string) => boolean,
@@ -241,12 +68,12 @@ export const BasicAccountRender2 = (
       <div>
         <Typography variant="subtitle1">{symbol}</Typography>
       </div>
-      <div>{<Typography variant="body1">{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
+      <div>{<Typography variant="body1" style={{ opacity: 0.5 }}>{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
       <div>
         {shouldDisplayBalance ? (
           <>
-            <Typography variant="body2">{'Balance'}</Typography>
-            <Typography variant="h6">{balancePretty(account.uiAmountString)}</Typography>
+            <Typography variant="body2" style={{ opacity: 0.5 }}>{'Balance'}</Typography>
+            <Typography variant="body1">{balancePretty(account.uiAmountString)}</Typography>
           </>
         ) : (
           <div />
@@ -633,3 +460,179 @@ export const TokenIconSymbol = ({
 }
 
 export default TokenPicker2
+
+const useStyles = makeStyles((theme) =>
+  createStyles({
+    alignCenter: {
+      textAlign: 'center'
+    },
+    optionContainer: {
+      padding: 0
+    },
+    optionContent: {
+      padding: theme.spacing(1)
+    },
+    tokenList: {
+      maxHeight: theme.spacing(80), //TODO smarter
+      height: theme.spacing(80),
+      overflow: 'auto',
+      padding: 0
+    },
+    dialogContent: {
+      overflowX: 'hidden'
+    },
+    selectionButtonContainer: {
+      //display: "flex",
+      textAlign: 'center',
+      marginTop: theme.spacing(2),
+      marginBottom: theme.spacing(2)
+    },
+    selectionButton: {
+      maxWidth: '100%',
+      width: theme.breakpoints.values.sm
+    },
+    tokenOverviewContainer: {
+      display: 'flex',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      '& div': {
+        margin: theme.spacing(1),
+        flexBasis: '25%',
+        '&$tokenMarketsList': {
+          marginTop: theme.spacing(-0.5),
+          marginLeft: 0,
+          flexBasis: '100%'
+        },
+        '&:last-child': {
+          textAlign: 'right'
+        },
+        flexShrink: 1
+      }
+    },
+    tokenImageContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 40,
+      height: 40,
+      maxWidth: 40,
+      borderRadius: '50%',
+      padding: 6,
+      border: `1px solid ${COLORS.whiteWithTransparency}`
+    },
+    tokenImageContainer2: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 20
+    },
+    tokenImage: {
+      maxHeight: '2.5rem'
+    },
+    tokenImage2: {
+      maxHeight: '1rem',
+      maxWidth: '100%'
+    },
+    tokenMarketsList: {
+      order: 1,
+      textAlign: 'left',
+      width: '100%',
+      '& > .MuiButton-root': {
+        marginTop: theme.spacing(1),
+        marginRight: theme.spacing(1)
+      }
+    },
+    migrationAlert: {
+      width: '100%',
+      '& .MuiAlert-message': {
+        width: '100%'
+      }
+    },
+    flexTitle: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center'
+    },
+    grower: {
+      flexGrow: 1
+    },
+    emptyPlaceholder: {
+      padding: theme.spacing(2),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.gray
+    },
+    tokenAmountInputContainer: {
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '5px',
+      padding: '14px',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '20px',
+      outline: '2px solid transparent',
+
+      '&:has(input:focus)': {
+        outline: `1px solid ${COLORS.blue}`,
+        background: 'transparent'
+      },
+    },
+    tokenAmountControls: {
+      display: 'flex',
+      gap: '10px',
+      justifyContent: 'space-between'
+    },
+    tokenAvailableMaxContainer: {
+      display: 'flex',
+      gap: '10px',
+      alignItems: 'center',
+      justifyContent: 'flex-end'
+    },
+    tokenAvailableBalance: {
+      fontSize: '0.875rem',
+      color: 'rgba(255, 255, 255, 0.5)',
+      padding: '8px 12px',
+      border: 'none',
+      backgroundColor: 'transparent',
+      borderRadius: '20px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+      }
+    },
+    useMaxButton: {
+      fontSize: '0.875rem'
+    },
+    tokenAmountInput: {
+      display: 'flex',
+      gap: '10px',
+      alignItems: 'center'
+    },
+    tokenAmountValue: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    },
+    tokenAmountValueInput: {
+      marginLeft: '0.125rem',
+      display: 'block',
+      width: '100%',
+      boxShadow: 'none',
+      backgroundColor: 'transparent',
+      fontSize: '2.25rem',
+      lineHeight: 1,
+      border: 'none',
+      outline: 'none',
+      '&:focus': {
+        outline: 'none'
+      },
+      '&:hover': {
+        outline: 'none'
+      },
+      color: '#fff',
+      fontFeatureSettings: 'tnum'
+    }
+  })
+)
