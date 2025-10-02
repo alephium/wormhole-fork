@@ -175,6 +175,7 @@ export const theme = responsiveFontSizes(
       },
       MuiDialogTitle: {
         root: {
+          fontSize: "18px",
           padding: "6px 16px",
           borderBottom: `1px solid ${COLORS.whiteWithTransparency}`,
         }

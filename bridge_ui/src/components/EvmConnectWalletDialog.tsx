@@ -28,6 +28,7 @@ const useStyles = makeStyles((theme) => ({
     "& > div": {
       flexGrow: 1,
       marginRight: theme.spacing(4),
+      fontSize: '20px'
     },
     "& > button": {
       marginRight: theme.spacing(-1),
