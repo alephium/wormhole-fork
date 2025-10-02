@@ -197,13 +197,13 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
       <BridgeWidgetButton onClick={onBack} variant="outlined">Back</BridgeWidgetButton>
       
       {approveButtonNeeded ? (
-        <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount}>
+        <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount} isLoading={isApproveProcessing}>
           {t('approveTokens', { count: tokensAmount, symbol: sourceParsedTokenAccount?.symbol || '' })}
         </BridgeWidgetButton>
       ) : isSending ? (
         <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
       ) : (
-        <BridgeWidgetButton disabled={isDisabled} onClick={handleTransferClick}>
+        <BridgeWidgetButton disabled={isDisabled} onClick={handleTransferClick} tone="primaryNext">
           {t('Transfer')}
         </BridgeWidgetButton>
       )}
