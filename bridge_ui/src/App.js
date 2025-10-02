@@ -78,7 +78,7 @@ const useStyles = makeStyles((theme) => ({
     left: 0,
     width: "100%",
     height: "40%",
-    background: "radial-gradient(ellipse at 50% 100%,rgb(32, 32, 32) 25%, transparent 70%)"
+    background: "radial-gradient(ellipse at 50% 100%,rgb(28, 28, 28) 25%, transparent 60%)"
   },
   brandLink: {
     display: "inline-flex",

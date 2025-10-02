@@ -4,20 +4,24 @@ import Inter from "./fonts/Inter-Variable.ttf";
 export const COLORS = {
   blue: "rgb(9, 137, 241)",
   blueWithTransparency: "rgba(9, 137, 241, 0.8)",
+  blueWithMoreTransparency: "rgba(9, 137, 241, 0.1)",
   gray: "rgb(70, 70, 70)",
   green: "rgb(33, 201, 94)",
-  greenWithTransparency: "rgba(33, 201, 94, 0.1)",
+  greenWithTransparency: "rgba(33, 201, 94, 0.8)",
+  greenWithMoreTransparency: "rgba(33, 201, 94, 0.1)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   darkGrey: 'rgb(24, 24, 24)',
-  red: "#aa0818",
+  red: "rgb(237, 74, 52)",
+  redWithTransparency: "rgba(237, 74, 52, 0.8)",
+  redWithMoreTransparency: "rgba(237, 74, 52, 0.1)",
   darkRed: "#810612",
   nearBlack: "#101010",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
-  whiteWithMoreTransparency: "rgba(255,255,255,.03)"
+  whiteWithMoreTransparency: "rgba(255,255,255,.02)"
 };
 
 const inter = {
@@ -128,6 +132,18 @@ export const theme = responsiveFontSizes(
           borderRadius: "16px",
           border: "none",
         },
+        standardInfo: {
+          backgroundColor: COLORS.blueWithMoreTransparency,
+          border: `1px solid ${COLORS.blueWithMoreTransparency}`
+        },
+        standardError: {
+          backgroundColor: COLORS.redWithMoreTransparency,
+          border: `1px solid ${COLORS.redWithMoreTransparency}`
+        },
+        standardSuccess: {
+          backgroundColor: COLORS.greenWithMoreTransparency,
+          border: `1px solid ${COLORS.greenWithMoreTransparency}`
+        }
       },
       MuiButton: {
         outlinedSizeSmall: {

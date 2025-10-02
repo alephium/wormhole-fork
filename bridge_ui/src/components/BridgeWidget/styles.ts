@@ -14,7 +14,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    padding: '20px',
+    padding: '16px',
     backgroundColor: COLORS.darkGrey,
     border: `1px solid ${COLORS.whiteWithTransparency}`,
     borderRadius: '20px',
