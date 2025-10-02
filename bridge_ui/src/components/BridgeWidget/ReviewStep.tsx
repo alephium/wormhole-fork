@@ -27,7 +27,7 @@ import SendingAmount from './SendingAmount'
 import SendingAddress from './SendingAddress'
 import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
-import Divider from './TransferStep/Divider'
+import Divider from './Divider'
 
 interface ReviewStepProps {
   onBack: () => void

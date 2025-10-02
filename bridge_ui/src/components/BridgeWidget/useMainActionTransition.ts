@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export type ActionKey = 'connect-source' | 'connect-target' | 'select-token' | 'next'
+export type ActionKey = 'connect-source' | 'connect-target' | 'next'
 
 export type ActionConfig = {
   label: string
@@ -8,7 +8,7 @@ export type ActionConfig = {
   disabled: boolean
 }
 
-const ACTION_FLOW: readonly ActionKey[] = ['connect-source', 'connect-target', 'select-token', 'next'] as const
+const ACTION_FLOW: readonly ActionKey[] = ['connect-source', 'connect-target', 'next'] as const
 const ACTION_INDEX: Record<ActionKey, number> = ACTION_FLOW.reduce(
   (acc, key, index) => ({ ...acc, [key]: index }),
   {} as Record<ActionKey, number>

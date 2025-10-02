@@ -7,7 +7,7 @@ import { useWidgetStyles } from '../styles'
 import { selectTransferSourceChain } from '../../../store/selectors'
 import { selectTransferTransferTx } from '../../../store/selectors'
 import { selectTransferSourceParsedTokenAccount } from '../../../store/selectors'
-import Divider from './Divider'
+import Divider from '../Divider'
 
 const SendTransactionSectionDetails = () => {
   const classes = useWidgetStyles()
