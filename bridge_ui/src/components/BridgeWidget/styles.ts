@@ -150,7 +150,8 @@ export const useWidgetStyles = makeStyles((theme) => ({
         inset: 0,
         margin: -10,
         backgroundColor: COLORS.whiteWithMoreTransparency,
-        borderRadius: 16
+        borderRadius: 16,
+        pointerEvents: 'none'
       }
     }
   },

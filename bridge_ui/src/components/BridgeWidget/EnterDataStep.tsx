@@ -1,7 +1,8 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -68,6 +69,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const { statusMessage, isReady: isTargetChainReady } = useIsWalletReady(targetChain)
   const { isReady: isSourceChainReady } = useIsWalletReady(sourceChain)
   const targetError = useSelector(selectTransferTargetError)
+  const [showAmountInput, setShowAmountInput] = useState(false)
 
   useGetTargetParsedTokenAccounts()
   useSyncTargetAddress(!shouldLockFields)
@@ -110,6 +112,17 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     }
   }, [error])
 
+  useEffect(() => {
+    if (!isTargetChainReady || !isSourceChainReady) {
+      setShowAmountInput(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => setShowAmountInput(true), 600)
+
+    return () => window.clearTimeout(timeout)
+  }, [isTargetChainReady, isSourceChainReady])
+
   return (
     <>
       <div className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)} style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}>
@@ -146,7 +159,18 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </div>
       </div>
 
-      <TokenSelector2 disabled={shouldLockFields} />
+      <AnimatePresence>
+        {showAmountInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto'}}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20}}
+          >
+            <TokenSelector2 disabled={shouldLockFields} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
