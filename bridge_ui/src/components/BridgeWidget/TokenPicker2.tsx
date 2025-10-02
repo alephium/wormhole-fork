@@ -1,12 +1,10 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
-  Button,
   CircularProgress,
   createStyles,
   Dialog,
   DialogContent,
   DialogTitle,
-  Grow,
   IconButton,
   List,
   ListItem,
@@ -132,6 +130,7 @@ const useStyles = makeStyles((theme) =>
       color: COLORS.gray
     },
     tokenAmountInputContainer: {
+      overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
       gap: '5px',
@@ -139,7 +138,6 @@ const useStyles = makeStyles((theme) =>
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
       borderRadius: '20px',
       outline: '2px solid transparent',
-      transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
 
       '&:has(input:focus)': {
         outline: `1px solid ${COLORS.blue}`,
@@ -154,7 +152,8 @@ const useStyles = makeStyles((theme) =>
     tokenAvailableMaxContainer: {
       display: 'flex',
       gap: '10px',
-      alignItems: 'center'
+      alignItems: 'center',
+      justifyContent: 'flex-end'
     },
     tokenAvailableBalance: {
       fontSize: '0.875rem',
@@ -320,6 +319,7 @@ const TokenPicker2 = function TokenPicker2(
   const amountInputRef = useRef<HTMLInputElement | null>(null)
   const dispatch = useDispatch()
   const dialogRequest = useSelector(selectTransferIsTokenPickerDialogOpen)
+  const amount = useSelector(selectTransferAmount)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -335,6 +335,10 @@ const TokenPicker2 = function TokenPicker2(
 
   const walletsReady = isSourceReady && isTargetReady
   const selectedToken = value
+  const selectedTokenAmount = selectedToken?.uiAmountString
+  const activeErrorMessage = transferSourceError || externalError
+  const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
+  const hasError = amountGreaterThanZero && !!activeErrorMessage
 
   useEffect(() => {
     if (dialogRequest && !dialogIsOpen) {
@@ -557,62 +561,49 @@ const TokenPicker2 = function TokenPicker2(
     </Dialog>
   )
 
-  const amount = useSelector(selectTransferAmount)
   const widgetClasses = useWidgetStyles()
-  const activeErrorMessage = transferSourceError || externalError
-  const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
-  const hasError = amountGreaterThanZero && !!activeErrorMessage
-  const selectedTokenAmount = selectedToken?.uiAmountString
 
   return (
     <>
       {dialog}
-      {walletsReady && (
-        <Grow in={walletsReady}>
-          <div>
-            <div className={classes.tokenAmountInputContainer}>
-              <div className={classes.tokenAmountInput}>
-                <input
-                  ref={amountInputRef}
-                  className={classes.tokenAmountValueInput}
-                  inputMode="decimal"
-                  minLength={1}
-                  maxLength={79}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  id="amount"
-                  placeholder="0"
-                  type="text"
-                  value={amount}
-                  name="amount"
-                  onChange={(event) => dispatch(setAmount(event.target.value))}
-                  style={{ color: hasError ? RED : 'white' }}
-                  disabled={!walletsReady}
-                />
+      <div className={classes.tokenAmountInputContainer}>
+        <div className={classes.tokenAmountInput}>
+          <input
+            ref={amountInputRef}
+            className={classes.tokenAmountValueInput}
+            inputMode="decimal"
+            minLength={1}
+            maxLength={79}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            pattern="^[0-9]*[.,]?[0-9]*$"
+            id="amount"
+            placeholder="0"
+            type="text"
+            value={amount}
+            name="amount"
+            onChange={(event) => dispatch(setAmount(event.target.value))}
+            style={{ color: hasError ? RED : 'white' }}
+            disabled={!walletsReady}
+          />
 
-                <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
-                  <TokenIconSymbol account={selectedToken} />
-                </button>
-              </div>
-              <div className={classes.tokenAmountControls}>
-                <div className={classes.tokenAvailableMaxContainer}>
-                  {selectedTokenAmount ? (
-                    <button
-                      onClick={() => dispatch(setAmount(selectedTokenAmount))}
-                      className={classes.tokenAvailableBalance}
-                    >
-                      Max: {balancePretty(selectedTokenAmount)}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
-            </div>
+          <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+            <TokenIconSymbol account={selectedToken} />
+          </button>
+        </div>
+        <div className={classes.tokenAmountControls}>
+          <div className={classes.tokenAvailableMaxContainer}>
+            <button
+              onClick={() => dispatch(setAmount(selectedTokenAmount || ''))}
+              className={classes.tokenAvailableBalance}
+            >
+              Max: {balancePretty(selectedTokenAmount || '')}
+            </button>
           </div>
-        </Grow>
-      )}
+        </div>
+        {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
+      </div>
     </>
   )
 }
