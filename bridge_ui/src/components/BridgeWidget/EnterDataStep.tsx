@@ -8,7 +8,6 @@ import useIsWalletReady from '../../hooks/useIsWalletReady'
 import {
   selectTransferShouldLockFields,
   selectTransferSourceAssetInfoWrapper,
-  selectTransferSourceBalanceString,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetAssetWrapper,
@@ -29,7 +28,10 @@ import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedToken
 import MainActionButton from './MainActionButton'
 import WarningBox from './WarningBox'
 import RegisterNowButton2 from './RegisterNowButton2'
-import { GRAY } from './styles'
+import { GRAY, useWidgetStyles } from './styles'
+import { COLORS } from '../../muiTheme'
+import clsx from 'clsx'
+import Divider from './Divider'
 
 // Copied from Source.tsx
 
@@ -40,6 +42,7 @@ interface EnterDataStepProps {
 const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
+  const widgetClasses = useWidgetStyles()
   const dispatch = useDispatch()
   const history = useHistory()
   const sourceChain = useSelector(selectTransferSourceChain)
@@ -61,10 +64,9 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     !!parsedTokenAccount &&
     !!BSC_MIGRATION_ASSET_MAP.get(getAddress(parsedTokenAccount.mintKey))
   const isMigrationAsset = isEthereumMigration || isBscMigration
-  const uiAmountString = useSelector(selectTransferSourceBalanceString)
   const shouldLockFields = useSelector(selectTransferShouldLockFields)
-  const { isReady } = useIsWalletReady(sourceChain)
-  const { statusMessage } = useIsWalletReady(targetChain)
+  const { statusMessage, isReady: isTargetChainReady } = useIsWalletReady(targetChain)
+  const { isReady: isSourceChainReady } = useIsWalletReady(sourceChain)
   const targetError = useSelector(selectTransferTargetError)
 
   useGetTargetParsedTokenAccounts()
@@ -110,7 +112,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
 
   return (
     <>
-      <div className={classes.chainSelectWrapper}>
+      <div className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)} style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}>
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="From"
@@ -122,6 +124,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             chains={CHAINS}
           />
         </div>
+        <Divider />
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="To"
@@ -194,7 +197,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '5px'
+    gap: '18px'
   },
   chainSelectContainer: {
     flexBasis: '100%',

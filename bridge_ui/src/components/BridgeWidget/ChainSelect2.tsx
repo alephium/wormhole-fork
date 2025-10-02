@@ -22,6 +22,7 @@ import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { GRAY, useWidgetStyles } from './styles'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import SuccessPulse from './SuccessPulse'
+import { COLORS } from '../../muiTheme'
 
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
@@ -61,7 +62,7 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
   const { isReady } = useIsWalletReady(chainId)
 
   return (
-    <div className={clsx(widgetClasses.grayRoundedBox, widgetClasses.boxHoverAnimation)}>
+    <div className={clsx(classes.selectWrapper, widgetClasses.boxHoverAnimation)}>
       <TextField {...rest} className={clsx(classes.select, rest.className)}>
         {filteredChains.map((chain) => createChainMenuItem(chain, rest.label, rest.value === chain.id, classes))}
       </TextField>
@@ -191,6 +192,12 @@ const AccountAddress = ({ address, disconnect }: { address: string; disconnect: 
 }
 
 const useStyles = makeStyles((theme) => ({
+  selectWrapper: {
+    position: 'relative',
+    background: 'transparent',
+    borderRadius: '16px',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+  },
   select: {
     '& .MuiInputBase-root': {
       border: 'none',
@@ -257,7 +264,7 @@ const useStyles = makeStyles((theme) => ({
   },
   activeWalletButton: {
     position: 'absolute',
-    right: theme.spacing(2),
+    right: 0,
     transform: 'translateY(-50%)',
     top: '50%',
     gap: '8px',
