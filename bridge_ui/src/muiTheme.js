@@ -167,7 +167,10 @@ export const theme = responsiveFontSizes(
       },
       MuiDialogContent: {
         root: {
-          padding: "16px"
+          display: "flex",
+          flexDirection: "column",
+          padding: "16px",
+          gap: 10
         }
       },
       MuiDialogTitle: {
@@ -181,6 +184,11 @@ export const theme = responsiveFontSizes(
           padding: "16px"
         }
       },
+      MuiFormControl: {
+        marginNormal: {
+          marginTop: 0
+        }
+      },
       MuiLink: {
         root: {
           color: COLORS.lightBlue,
@@ -188,13 +196,17 @@ export const theme = responsiveFontSizes(
       },
       MuiList: {
         root: {
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
           padding: 8
         }
       },
       MuiListItem: {
         root: {
           borderRadius: "12px",
-          gap: 14
+          gap: 14,
+          backgroundColor: COLORS.whiteWithMoreTransparency,
         }
       },
       MuiListItemIcon: {
@@ -218,11 +230,7 @@ export const theme = responsiveFontSizes(
         paper: {
           backgroundColor: COLORS.darkGrey,
           border: `1px solid ${COLORS.whiteWithTransparency}`,
-          borderRadius: "12px",
-
-          "& .MuiList-padding": {
-            padding: "0px"
-          }
+          borderRadius: "16px"
         }
       },
       MuiSelect: {
