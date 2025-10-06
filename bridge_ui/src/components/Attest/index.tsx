@@ -45,6 +45,8 @@ import SendPreview from "./SendPreview"
 import Create from "./Create"
 import CreatePreview from "./CreatePreview"
 import { setStep, setSourceChain, setSourceAsset, setTargetChain } from "../../store/attestSlice"
+import useIsWalletReady from "../../hooks/useIsWalletReady"
+import KeyAndBalance from "../KeyAndBalance"
 
 type AttestStepId = 0 | 1 | 2 | 3
 
@@ -59,6 +61,7 @@ interface StepDefinition {
   isEditable?: boolean
   status: StepStatus
   disabled: boolean
+  renderRawValue?: boolean
 }
 
 function Attest() {
@@ -83,13 +86,17 @@ function Attest() {
   const [draftSourceAsset, setDraftSourceAsset] = useState(sourceAsset)
   const [draftTargetChain, setDraftTargetChain] = useState(targetChain)
   const classes = useStyles()
+  const { isReady: isTargetWalletReady } = useIsWalletReady(targetChain)
+  const { isReady: isDraftSourceWalletReady } = useIsWalletReady(draftSourceChain, false)
+  const { isReady: isDraftTargetWalletReady } = useIsWalletReady(draftTargetChain, false)
+  const isTargetStepComplete = isTargetComplete && isTargetWalletReady
 
   const derivedActiveStep = useMemo<AttestStepId>(() => {
     if (!isSourceComplete) return 0
-    if (!isTargetComplete) return 1
+    if (!isTargetStepComplete) return 1
     if (!isSendComplete) return 2
     return 3
-  }, [isSourceComplete, isTargetComplete, isSendComplete])
+  }, [isSourceComplete, isTargetStepComplete, isSendComplete])
 
   const preventNavigation =
     (isSending || isSendComplete || isCreating) && !isCreateComplete
@@ -142,9 +149,15 @@ function Attest() {
       })
     : undefined
 
-  const targetValue = isTargetComplete
+  const hasTargetChainInfo = Boolean(CHAINS_BY_ID[targetChain])
+  const shouldShowTargetConnectButton = hasTargetChainInfo && !isTargetWalletReady
+  const targetValue = isTargetStepComplete
     ? <span>{CHAINS_BY_ID[targetChain]?.name ?? t("Unknown chain")}</span>
-    : undefined
+    : shouldShowTargetConnectButton
+      ? (
+        <KeyAndBalance chainId={targetChain} />
+      )
+      : undefined
 
   const sendValue = attestTx
     ? <ShowTx chainId={sourceChain} tx={attestTx} />
@@ -160,7 +173,7 @@ function Attest() {
 
   const getStatus = (id: AttestStepId): StepStatus => {
     if (id === 0) return isSourceComplete ? "complete" : derivedActiveStep === 0 ? "active" : "pending"
-    if (id === 1) return isTargetComplete ? "complete" : derivedActiveStep === 1 ? "active" : "pending"
+    if (id === 1) return isTargetStepComplete ? "complete" : derivedActiveStep === 1 ? "active" : "pending"
     if (id === 2) {
       if (isSendComplete) return "complete"
       if (isSending || isWalletApproved) return "inProgress"
@@ -189,7 +202,8 @@ function Attest() {
       value: targetValue,
       isEditable: true,
       status: getStatus(1),
-      disabled: preventNavigation || isCreateComplete
+      disabled: preventNavigation || isCreateComplete,
+      renderRawValue: shouldShowTargetConnectButton
     },
     {
       id: 2,
@@ -235,11 +249,22 @@ function Attest() {
     []
   )
 
+  const shouldIgnoreStepInteraction = useCallback((target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) {
+      return false
+    }
+    return Boolean(target.closest('button'))
+  }, [])
+
   const renderStepValue = (step: StepDefinition) => {
     const isEditable = step.isEditable ?? canEditStep(step.id)
     const hasValue = step.value !== undefined && step.value !== null
     const isStepDisabled = step.disabled || step.status === 'pending'
     const shouldShowSelect = isEditable && step.id === derivedActiveStep && !hasValue && !isStepDisabled
+
+    if (step.renderRawValue) {
+      return <>{step.value}</>
+    }
 
     if (step.id === 2) {
       if (step.status === 'complete') {
@@ -301,8 +326,18 @@ function Attest() {
             !isDisabled && classes.stepValueInteractive,
             isDisabled && classes.stepValueDisabled
           )}
-          onClick={(event) => handleEditClick(event, step.id, isDisabled)}
-          onKeyDown={(event) => handleEditKeyDown(event, step.id, isDisabled)}
+          onClick={(event) => {
+            if (shouldIgnoreStepInteraction(event.target)) {
+              return
+            }
+            handleEditClick(event, step.id, isDisabled)
+          }}
+          onKeyDown={(event) => {
+            if (shouldIgnoreStepInteraction(event.target)) {
+              return
+            }
+            handleEditKeyDown(event, step.id, isDisabled)
+          }}
           aria-disabled={isDisabled}
         >
           <div>{step.value}</div>
@@ -359,9 +394,9 @@ function Attest() {
   }
 
   const dialogCanSave = editDialogStep === 0
-    ? Boolean(draftSourceChain) && draftSourceAsset.trim().length > 0
+    ? Boolean(draftSourceChain) && draftSourceAsset.trim().length > 0 && isDraftSourceWalletReady
     : editDialogStep === 1
-      ? Boolean(draftTargetChain)
+      ? Boolean(draftTargetChain) && isDraftTargetWalletReady
       : true
 
   const handleCloseDialog = () => setEditDialogStep(null)
@@ -514,7 +549,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 600,
     color: COLORS.nearWhite,
     padding: theme.spacing(1, 1.5),
-    backgroundColor: COLORS.whiteWithMoreTransparency,
+    backgroundColor: COLORS.whiteWithStrongTransparency,
     borderRadius: '12px',
     border: "1px solid transparent",
     textAlign: "right",
@@ -540,7 +575,7 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     '&:hover': {
       borderColor: COLORS.whiteWithTransparency,
-      backgroundColor: COLORS.whiteWithMoreTransparency,
+      backgroundColor: COLORS.whiteWithStrongTransparency,
     },
     '&:focus-visible': {
       outline: `1px solid ${COLORS.whiteWithTransparency}`,

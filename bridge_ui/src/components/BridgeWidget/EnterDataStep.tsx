@@ -221,7 +221,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '18px'
+    gap: '24px'
   },
   chainSelectContainer: {
     flexBasis: '100%',

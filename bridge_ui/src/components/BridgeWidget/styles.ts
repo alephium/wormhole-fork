@@ -21,7 +21,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
 
     '&.secondary': {
-      backgroundColor: COLORS.whiteWithMoreTransparency,
+      backgroundColor: COLORS.whiteWithStrongTransparency,
       border: `transparent`
     }
   },
@@ -149,7 +149,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
         position: 'absolute',
         inset: 0,
         margin: -10,
-        backgroundColor: COLORS.whiteWithMoreTransparency,
+        backgroundColor: COLORS.whiteWithStrongTransparency,
         borderRadius: 16,
         pointerEvents: 'none'
       }
@@ -211,12 +211,12 @@ export const useWidgetStyles = makeStyles((theme) => ({
   },
   compactRoundedButton: {
     display: 'flex',
-    background: COLORS.whiteWithMoreTransparency,
+    background: COLORS.whiteWithStrongTransparency,
     alignItems: 'center',
     gap: theme.spacing(1),
     border: `1px solid ${COLORS.whiteWithTransparency}`,
     padding: '2px 6px',
-    borderRadius: 30,
+    borderRadius: 12,
     cursor: 'pointer',
     color: theme.palette.grey[300],
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',

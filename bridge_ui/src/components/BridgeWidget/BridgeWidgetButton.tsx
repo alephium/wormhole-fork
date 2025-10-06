@@ -45,8 +45,8 @@ const useStyles = makeStyles(() => ({
       }
     },
     '&.MuiButton-outlinedPrimary': {
-      backgroundColor: COLORS.whiteWithMoreTransparency,
-      borderColor: COLORS.whiteWithMoreTransparency,
+      backgroundColor: COLORS.whiteWithStrongTransparency,
+      borderColor: COLORS.whiteWithStrongTransparency,
       color: COLORS.nearWhite,
       '&:hover': {
         transform: 'scale(1.005)',

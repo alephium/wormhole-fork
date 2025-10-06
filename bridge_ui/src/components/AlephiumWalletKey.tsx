@@ -24,7 +24,7 @@ const AlephiumWalletKey = () => {
         }
         return (
           <Typography variant="body2" style={{ textAlign: "right", opacity: 0.75 }}>
-            {`${t("Connected wallet")}: ${shortenAddress(address)}`}
+            {`${t("Connected wallets", { count: 1 })}: ${shortenAddress(address)}`}
           </Typography>
         )
       }}

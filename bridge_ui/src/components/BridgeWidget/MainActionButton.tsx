@@ -35,7 +35,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const targetChain = useSelector(selectTransferTargetChain)
   const isSourceComplete = useSelector(selectTransferIsSourceComplete)
   const isTargetComplete = useSelector(selectTransferIsTargetComplete)
-  const selectedToken = useSelector(selectTransferSourceParsedTokenAccount)
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
@@ -44,7 +43,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const [evmChain, setEvmChain] = useState<ChainId | null>(null)
 
-  const hasSelectedToken = !!selectedToken
   const isSourceTransferDisabled = getIsTransferDisabled(sourceChain, true)
   const isTargetTransferDisabled = getIsTransferDisabled(targetChain, false)
 
