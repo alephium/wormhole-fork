@@ -263,3 +263,170 @@ function App() {
 }
 
 export default App;
+
+const useStyles = makeStyles((theme) => ({
+  appBar: {
+    background: "transparent",
+    flexDirection: "row",
+    marginTop: theme.spacing(2),
+    "& > .MuiToolbar-root": {
+      margin: "0 20px",
+      marginBottom: theme.spacing(8),
+      minWidth: 0,
+    },
+  },
+  spacer: {
+    flex: 1,
+    width: "100vw",
+  },
+  link: {
+    ...theme.typography.body2,
+    opacity: 0.6,
+    fontWeight: 500,
+    fontFamily: "Inter, sans-serif",
+    color: "white",
+    "&:hover": {
+      opacity: 1,
+      textDecoration: "none",
+    },
+    "&.active": {
+      opacity: 1,
+    },
+  },
+  bg: {
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100vh",
+    position: "relative",
+    overflow: "hidden"
+  },
+    bgGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "42%",
+    background: `radial-gradient(ellipse at 50% 0%, rgb(17, 17, 17) 0%, transparent 60%)`,
+    zIndex: -1,
+
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      inset: 0,
+      backgroundImage: `url(${noise})`,
+      backgroundRepeat: "repeat",
+      backgroundSize: "auto",
+      pointerEvents: "none",
+      WebkitMaskImage: `radial-gradient(ellipse at 50% 0%, #000 0%, transparent 60%)`,
+      WebkitMaskRepeat: "no-repeat",
+      WebkitMaskSize: "cover",
+      maskImage: `radial-gradient(ellipse at 50% 0%, #000 0%, transparent 60%)`,
+      maskRepeat: "no-repeat",
+      maskSize: "cover",
+      opacity: 0.5
+    },
+  },
+  brandLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    "&:hover": {
+      textDecoration: "none",
+    },
+  },
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    width: "100%",
+    minHeight: "inherit",
+  },
+  toolbarLeft: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: theme.spacing(3),
+  },
+  toolbarRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1.5),
+  },
+  navLinks: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(4),
+    marginLeft: theme.spacing(4),
+    [theme.breakpoints.down("sm")]: {
+      display: "none",
+    },
+    [theme.breakpoints.down("xs")]: {
+      display: "none",
+    },
+    flexWrap: "wrap",
+  },
+  toolbarGrow: {
+    flexGrow: 1,
+  },
+  iconButton: {
+    [theme.breakpoints.up("md")]: {
+      marginRight: theme.spacing(2.5),
+    },
+    [theme.breakpoints.down("sm")]: {
+      marginRight: theme.spacing(2.5),
+    },
+    [theme.breakpoints.down("xs")]: {
+      marginRight: theme.spacing(1),
+    },
+  },
+  betaBanner: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    padding: theme.spacing(1, 0),
+  },
+  alephiumLogo: {
+    height: 30,
+    verticalAlign: "middle",
+    marginRight: theme.spacing(1),
+    display: "inline-block",
+  },
+  alephiumLogoText1: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "rgba(255, 255, 255, 0.5)",
+    marginLeft: theme.spacing(1),
+    lineHeight: 1.1
+  },
+  alephiumLogoText2: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginLeft: theme.spacing(1),
+    lineHeight: 1.1,
+  },
+  mobileNavTrigger: {
+    color: "white",
+    [theme.breakpoints.up("md")]: {
+      display: "none",
+    },
+  },
+  mobileMenuPaper: {
+    backgroundColor: "rgba(18, 18, 18, 0.95)",
+    border: "1px solid rgba(255, 255, 255, 0.12)",
+    borderRadius: 12,
+    marginTop: theme.spacing(1),
+    minWidth: 220,
+    padding: theme.spacing(1),
+  },
+  mobileMenuItem: {
+    color: "white",
+    fontFamily: "Inter, sans-serif",
+    fontSize: 14,
+    fontWeight: 500,
+    borderRadius: theme.spacing(1),
+    justifyContent: "flex-start",
+    "&:hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.08)",
+    },
+    "&.Mui-selected": {
+      backgroundColor: "rgba(255, 255, 255, 0.12)",
+    },
+  },
+}));
