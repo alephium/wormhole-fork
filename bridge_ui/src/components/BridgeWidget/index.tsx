@@ -14,6 +14,7 @@ import {
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
+import { COLORS } from '../../muiTheme'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
@@ -24,7 +25,7 @@ const BridgeWidget = () => {
   const classes = useStyles()
 
   return (
-    <Container maxWidth="md" style={{ margin: '0 auto' }}>
+    <Container maxWidth="md" className={classes.mainContainer}>
       <div className={classes.mainBox}>
         <div className={classes.stack}>
           <BridgeWidgetSteps />
@@ -84,20 +85,30 @@ const usePreventNavigation = () => {
 }
 
 const useStyles = makeStyles((theme) => ({
-  mainBox: {
-    padding: '20px',
+  mainContainer: {
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  mainBox: {
+    padding: '24px',
+    display: 'flex',
+    flex: 1,
     flexDirection: 'column',
     maxWidth: '520px',
     gap: '10px',
-    backdropFilter: 'blur(4px)',
-    margin: '0 auto'
+    margin: 'auto',
+    background: 'rgba(23, 23, 23, 0.25)',
+    border: `1px solid ${COLORS.whiteWithStrongTransparency}`,
+    borderRadius: '30px',
+    boxShadow: '0 20px 20px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(100px) brightness(1.2)',
   },
   stack: {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    gap: '16px'
+    gap: '24px'
   },
   confirmButton: {
     backgroundColor: '#080808',
