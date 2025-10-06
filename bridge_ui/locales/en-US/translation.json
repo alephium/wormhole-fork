@@ -328,5 +328,7 @@
   "Available tokens": "Available tokens",
   "Select": "Select",
   "Connect wallet": "Connect wallet",
-  "Connected wallet": "Connected wallet"
+  "Connected wallets_one": "Connected wallet",
+  "Connected wallets_other": "Connected wallets",
+  "Open wallet menu": "Open wallet menu"
 }

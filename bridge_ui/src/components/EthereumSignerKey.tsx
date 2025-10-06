@@ -22,7 +22,7 @@ const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {
     <>
       {isConnected ? (
         <Typography variant="body2" style={{ textAlign: "right", opacity: 0.75 }}>
-          {`${t("Connected wallet")}: ${truncatedAddress}`}
+          {`${t("Connected wallets", { count: 1 })}: ${truncatedAddress}`}
         </Typography>
       ) : (
         <BridgeWidgetButton short onClick={openDialog}>

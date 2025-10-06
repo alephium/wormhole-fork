@@ -97,12 +97,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     maxWidth: '520px',
     gap: '10px',
-    margin: 'auto',
-    background: 'rgba(23, 23, 23, 0.25)',
-    border: `1px solid ${COLORS.whiteWithStrongTransparency}`,
-    borderRadius: '30px',
-    boxShadow: '0 20px 20px rgba(0, 0, 0, 0.2)',
-    backdropFilter: 'blur(100px) brightness(1.2)',
+    margin: 'auto'
   },
   stack: {
     display: 'flex',

@@ -4,11 +4,11 @@ import Inter from "./fonts/Inter-Variable.ttf";
 export const COLORS = {
   blue: "rgb(9, 137, 241)",
   blueWithTransparency: "rgba(9, 137, 241, 0.8)",
-  blueWithMoreTransparency: "rgba(9, 137, 241, 0.1)",
+  blueWithStrongTransparency: "rgba(9, 137, 241, 0.1)",
   gray: "rgb(70, 70, 70)",
   green: "rgb(33, 201, 94)",
   greenWithTransparency: "rgba(33, 201, 94, 0.8)",
-  greenWithMoreTransparency: "rgba(33, 201, 94, 0.1)",
+  greenWithStrongTransparency: "rgba(33, 201, 94, 0.1)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
@@ -16,12 +16,13 @@ export const COLORS = {
   darkGrey: 'rgb(24, 24, 24)',
   red: "rgb(237, 74, 52)",
   redWithTransparency: "rgba(237, 74, 52, 0.8)",
-  redWithMoreTransparency: "rgba(237, 74, 52, 0.1)",
+  redWithStrongTransparency: "rgba(237, 74, 52, 0.1)",
   darkRed: "#810612",
-  nearBlack: "#101010",
+  nearBlack: "#0f0f0fff",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
-  whiteWithMoreTransparency: "rgba(255,255,255,.02)"
+  whiteWithMediumTransparency: "rgba(255,255,255,.7)",
+  whiteWithStrongTransparency: "rgba(255,255,255,.02)"
 };
 
 const inter = {
@@ -133,16 +134,16 @@ export const theme = responsiveFontSizes(
           border: "none",
         },
         standardInfo: {
-          backgroundColor: COLORS.blueWithMoreTransparency,
-          border: `1px solid ${COLORS.blueWithMoreTransparency}`
+          backgroundColor: COLORS.blueWithStrongTransparency,
+          border: `1px solid ${COLORS.blueWithStrongTransparency}`
         },
         standardError: {
-          backgroundColor: COLORS.redWithMoreTransparency,
-          border: `1px solid ${COLORS.redWithMoreTransparency}`
+          backgroundColor: COLORS.redWithStrongTransparency,
+          border: `1px solid ${COLORS.redWithStrongTransparency}`
         },
         standardSuccess: {
-          backgroundColor: COLORS.greenWithMoreTransparency,
-          border: `1px solid ${COLORS.greenWithMoreTransparency}`
+          backgroundColor: COLORS.greenWithStrongTransparency,
+          border: `1px solid ${COLORS.greenWithStrongTransparency}`
         }
       },
       MuiButton: {
@@ -186,6 +187,9 @@ export const theme = responsiveFontSizes(
         }
       },
       MuiFormControl: {
+        root: {
+          width: "100%"
+        },
         marginNormal: {
           marginTop: 0
         }
@@ -207,7 +211,8 @@ export const theme = responsiveFontSizes(
         root: {
           borderRadius: "12px",
           gap: 14,
-          backgroundColor: COLORS.whiteWithMoreTransparency,
+          backgroundColor: COLORS.whiteWithStrongTransparency,
+          minHeight: 52
         }
       },
       MuiListItemIcon: {
@@ -229,14 +234,25 @@ export const theme = responsiveFontSizes(
       },
       MuiPopover: {
         paper: {
+          display: "flex",
+          flexDirection: "column",
           backgroundColor: COLORS.darkGrey,
           border: `1px solid ${COLORS.whiteWithTransparency}`,
-          borderRadius: "16px"
+          borderRadius: "16px",
+          padding: 10,
+          gap: 10,
+          boxShadow: "0 30px 70px 10px rgba(0, 0, 0, 1)",
+        },
+        root: {
+          '& .MuiList-root': {
+            padding: 0
+          }
         }
       },
       MuiSelect: {
         select: {
-          backgroundColor: 'transparent'
+          backgroundColor: 'transparent',
+          gap: "16px"
         }
       },
       MuiStepper: {
