@@ -103,10 +103,6 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <h1 style={{ margin: 0 }}>Review</h1>
-      </div>
-
       <div className={classes.grayRoundedBox}>
         {sourceParsedTokenAccount && (
           <div className={classes.tokenIconSymbolContainer}>

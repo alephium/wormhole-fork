@@ -19,6 +19,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
     border: `1px solid ${COLORS.whiteWithTransparency}`,
     borderRadius: '20px',
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    backdropFilter: 'blur(20px)',
 
     '&.secondary': {
       backgroundColor: COLORS.whiteWithStrongTransparency,

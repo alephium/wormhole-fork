@@ -61,11 +61,11 @@ export const theme = responsiveFontSizes(
     typography: {
       fontFamily: "'Inter', sans-serif",
       fontSize: 15,
+      color: COLORS.nearWhite,
       h1: {
         fontFamily: "Inter, sans-serif",
-        lineHeight: 0.9,
-        fontWeight: 600,
-        fontSize: "62px",
+        fontWeight: 500,
+        fontSize: "28px"
       },
       h2: {
         fontWeight: "200",
