@@ -12,7 +12,7 @@ import {
 } from '@material-ui/core'
 import { AccountBalanceWalletOutlined } from '@material-ui/icons'
 import clsx from 'clsx'
-import { ReactNode, useMemo, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
 import { BETA_CHAINS, ChainInfo } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
@@ -101,16 +101,16 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
   const activationKeyRef = useRef(0)
   const wasReadyRef = useRef(isReady)
 
-  if (isReady && !wasReadyRef.current) {
-    activationKeyRef.current += 1
-  }
-  wasReadyRef.current = isReady
+  useEffect(() => {
+    if (isReady && !wasReadyRef.current) {
+      activationKeyRef.current += 1
+    }
+    wasReadyRef.current = isReady
+  }, [isReady])
 
   if (!isReady) {
     return null
   }
-
-  const activationKey = activationKeyRef.current
 
   return (
     <button
@@ -119,11 +119,11 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
     >
       <SuccessPulse
         isActive
-        activationKey={activationKey}
+        activationKey={activationKeyRef.current}
         className={classes.statusPulse}
       >
         <div className={classes.statusWalletContent}>
-          <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
+          <AccountBalanceWalletOutlined style={{ fontSize: 16 }} color="inherit" />
           <ConnectedChainAccount chainId={chainId} />
         </div>
       </SuccessPulse>
