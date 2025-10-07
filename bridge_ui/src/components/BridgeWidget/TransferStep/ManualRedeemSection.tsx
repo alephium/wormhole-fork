@@ -1,41 +1,40 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
+import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
 import { Checkbox, FormControlLabel, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useSelector } from 'react-redux'
-import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import {
   selectTransferIsRecovery,
   selectTransferIsRedeeming,
   selectTransferTargetAsset,
-  selectTransferTargetChain,
-  selectTransferUseRelayer} from '../../../store/selectors'
+  selectTransferTargetChain
+} from '../../../store/selectors'
 import { ROPSTEN_WETH_ADDRESS, WBNB_ADDRESS, WETH_ADDRESS } from '../../../utils/consts'
-import { useSnackbar } from 'notistack'
 import { useTranslation } from 'react-i18next'
 import { GRAY, useWidgetStyles } from '../styles'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
-const ManualRedeemSection = () => {
+interface ManualRedeemSectionProps {
+  isTransferCompleted: TransferCompletionState
+}
+
+const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) => {
   const widgetClasses = useWidgetStyles()
   const { t } = useTranslation()
-  const { enqueueSnackbar } = useSnackbar()
   const { handleClick, handleNativeClick, disabled } = useHandleRedeem()
-  const useRelayer = useSelector(selectTransferUseRelayer)
   const targetChain = useSelector(selectTransferTargetChain)
-  const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
   const targetAsset = useSelector(selectTransferTargetAsset)
   const isRecovery = useSelector(selectTransferIsRecovery)
   const isRedeeming = useSelector(selectTransferIsRedeeming)
   
-  const shouldCheckCompletion = useRelayer || useAutoRelayer
   const {
     isTransferCompletedLoading,
-    isTransferCompleted,
+    isTransferCompleted: isTransferCompletedFlag,
     error: checkTransferCompletedError
-  } = useGetIsTransferCompleted(!shouldCheckCompletion, shouldCheckCompletion ? 5000 : undefined)
+  } = isTransferCompleted
 
   const { isReady } = useIsWalletReady(targetChain)
   //TODO better check, probably involving a hook & the VAA
@@ -53,22 +52,13 @@ const ManualRedeemSection = () => {
     setUseNativeRedeem(!useNativeRedeem)
   }, [useNativeRedeem])
 
-  useEffect(() => {
-    if (checkTransferCompletedError) {
-      enqueueSnackbar(checkTransferCompletedError, {
-        variant: 'error',
-        preventDuplicate: true
-      })
-    }
-  }, [checkTransferCompletedError, enqueueSnackbar])
-
   const isRedeemDisabled =
     !isReady ||
     disabled ||
-    (isRecovery && (isTransferCompletedLoading || isTransferCompleted)) ||
+    (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag)) ||
     checkTransferCompletedError !== undefined
 
-    const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
+  const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 
   if (!isRedeemDisabled && (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired)) {
     return (

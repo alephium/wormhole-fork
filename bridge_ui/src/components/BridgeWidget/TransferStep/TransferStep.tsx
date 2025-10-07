@@ -1,22 +1,49 @@
+import { useEffect } from 'react'
 import SendTransactionSection from './SendTransactionSection'
 import BridgingProgressSection from './BridgingProgressSection'
 import ManualRedeemSection from './ManualRedeemSection'
 import TransferMoreTokensButton from './TransferMoreTokensButton'
 import MainActionButton from '../MainActionButton'
 import { useSelector } from 'react-redux'
-import { selectTransferHasSentTokens } from '../../../store/selectors'
+import {
+  selectTransferHasSentTokens,
+  selectTransferTargetChain,
+  selectTransferUseRelayer
+} from '../../../store/selectors'
+import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
+import { useSnackbar } from 'notistack'
 
 const TransferStep = () => {
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
+  const useRelayer = useSelector(selectTransferUseRelayer)
+  const targetChain = useSelector(selectTransferTargetChain)
+  const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
+  const shouldCheckCompletion = useRelayer || useAutoRelayer
+  const isTransferCompleted = useGetIsTransferCompleted(
+    !shouldCheckCompletion,
+    shouldCheckCompletion ? 5000 : undefined
+  )
+  const { error } = isTransferCompleted
+  const { enqueueSnackbar } = useSnackbar()
+
+  useEffect(() => {
+    if (error) {
+      enqueueSnackbar(error, {
+        variant: 'error',
+        preventDuplicate: true
+      })
+    }
+  }, [error, enqueueSnackbar])
   return (
     <div style={{ display: 'flex', gap: '20px', width: '100%', flexDirection: 'column' }}>
       <div style={{ display: 'flex', gap: '20px', width: '100%', flexDirection: 'column' }}>
         <SendTransactionSection />
 
-        <BridgingProgressSection />
+        <BridgingProgressSection isTransferCompleted={isTransferCompleted} />
       </div>
 
-      <ManualRedeemSection />
+      <ManualRedeemSection isTransferCompleted={isTransferCompleted} />
 
       <MainActionButton />
 

@@ -1,14 +1,12 @@
 import { CircularProgress, Typography } from '@material-ui/core'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  selectTransferHasSentTokens,
   selectTransferIsBlockFinalized,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeemedViaRelayer,
   selectTransferRedeemTx,
   selectTransferTargetChain,
-  selectTransferTransferTx,
-  selectTransferUseRelayer
+  selectTransferTransferTx
 } from '../../../store/selectors'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { RadioButtonUncheckedRounded } from '@material-ui/icons'
@@ -16,45 +14,38 @@ import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
 import FinalityProgress from './FinalityProgress'
 import Divider from './Divider'
-import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
-import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { useEffect } from 'react'
-import { useSnackbar } from 'notistack'
 import SmartAddress from '../SmartAddress'
 import ConfettiExplosion from 'react-confetti-explosion'
 import { setHasSentTokens } from '../../../store/transferSlice'
 import { COLORS } from '../../../muiTheme'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
 interface BridgingProgressSectionDetailsProps {
   currentStep: number
+  isTransferCompleted: TransferCompletionState
 }
 
-const BridgingProgressSectionDetails = ({ currentStep }: BridgingProgressSectionDetailsProps) => {
+const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: BridgingProgressSectionDetailsProps) => {
   const classes = useWidgetStyles()
   const dispatch = useDispatch()
   const transferTx = useSelector(selectTransferTransferTx)
   const signedVAA = useTransferSignedVAA()
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
-  const { enqueueSnackbar } = useSnackbar()
 
-  const useRelayer = useSelector(selectTransferUseRelayer)
   const targetChain = useSelector(selectTransferTargetChain)
-  const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
-  const shouldCheckCompletion = useRelayer || useAutoRelayer
-  const { isTransferCompleted, error: checkTransferCompletedError } = useGetIsTransferCompleted(
-    !shouldCheckCompletion,
-    shouldCheckCompletion ? 5000 : undefined
-  )
+  const {
+    isTransferCompleted: isTransferCompletedFlag
+  } = isTransferCompleted
 
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
-  const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
-  const signedVAAExists = !!signedVAA || isTransferCompleted
+  const signedVAAExists = !!signedVAA || isTransferCompletedFlag
   const userSentTransaction = !!transferTx
-  const isFinalized = isBlockFinalized || isTransferCompleted || redeemTx
-  const isRedeemed = isTransferCompleted || isRedeemComplete || isRedeemedViaRelayer || redeemTx
+  const isFinalized = isBlockFinalized || isTransferCompletedFlag || redeemTx
+  const isRedeemed = isTransferCompletedFlag || isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   useEffect(() => {
     if (isRedeemed) {
@@ -63,15 +54,6 @@ const BridgingProgressSectionDetails = ({ currentStep }: BridgingProgressSection
       }, 8000)
     }
   }, [dispatch, isRedeemed])
-
-  useEffect(() => {
-    if (checkTransferCompletedError) {
-      enqueueSnackbar(checkTransferCompletedError, {
-        variant: 'error',
-        preventDuplicate: true
-      })
-    }
-  }, [checkTransferCompletedError, enqueueSnackbar])
 
   return (
     <div className={classes.progressDetails}>

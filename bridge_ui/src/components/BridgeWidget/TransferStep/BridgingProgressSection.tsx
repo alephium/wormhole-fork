@@ -12,8 +12,13 @@ import BridgingProgressSectionDetails from './BridgingProgressSectionDetails'
 import OngoingBridgingBadge from './OngoingBridgingBadge'
 import { COLORS } from '../../../muiTheme'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
-const BridgingProgressSection = () => {
+interface BridgingProgressSectionProps {
+  isTransferCompleted: TransferCompletionState
+}
+
+const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectionProps) => {
   const classes = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
@@ -27,7 +32,7 @@ const BridgingProgressSection = () => {
   const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
-  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
+  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx || isTransferCompleted.isTransferCompleted
 
   useEffect(() => {
     if (hasSentTokens) {
@@ -88,7 +93,10 @@ const BridgingProgressSection = () => {
           </div>
         </div>
         <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <BridgingProgressSectionDetails currentStep={step} />
+          <BridgingProgressSectionDetails
+            currentStep={step}
+            isTransferCompleted={isTransferCompleted}
+          />
         </div>
       </div>
     </div>
