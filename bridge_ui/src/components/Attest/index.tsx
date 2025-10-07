@@ -422,9 +422,7 @@ function Attest() {
 
   return (
     <Container maxWidth="sm" className={classes.pageContainer}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>Token registration</h1>
-      </div>
+      <Typography variant='h1' style={{ margin: 0 }}>Token registration</Typography>
       <Alert severity="info">
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>

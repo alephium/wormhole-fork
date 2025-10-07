@@ -292,14 +292,17 @@ const useStyles = makeStyles((theme) => ({
     top: 0,
     left: 0,
     width: "100%",
-    height: "50%",
-    background: `radial-gradient(ellipse at 50% 0%, rgba(12, 12, 12, 1) 0%, transparent 100%)`,
+    height: "100%",
+    background: `radial-gradient(ellipse at 50% 0%, rgba(12, 12, 12, 1) 0%, transparent 50%)`,
     zIndex: -1,
 
     "&::after": {
       content: '""',
       position: "absolute",
       inset: 0,
+      width: 2000,
+      transform: "translateX(-50%)",
+      marginLeft: "50%",
       backgroundImage: `url(${noise})`,
       backgroundRepeat: "repeat",
       backgroundSize: "auto",
@@ -368,7 +371,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1, 0),
   },
   alephiumLogo: {
-    height: 30,
+    height: 24,
     verticalAlign: "middle",
     marginRight: theme.spacing(1),
     display: "inline-block",
