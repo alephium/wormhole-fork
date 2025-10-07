@@ -32,8 +32,8 @@ const SuccessPulse = ({
   const classes = useStyles()
 
   const [isShowingIcon, setIsShowingIcon] = useState(false)
-  const [isContentVisible, setIsContentVisible] = useState(() => hideIcon)
-  const [canExpandContent, setCanExpandContent] = useState(() => hideIcon)
+  const [isContentVisible, setIsContentVisible] = useState(hideIcon)
+  const [canExpandContent, setCanExpandContent] = useState(hideIcon)
   const [isContentEntering, setIsContentEntering] = useState(false)
   const prevActiveRef = useRef(Boolean(isActive))
   const prevActivationKeyRef = useRef(activationKey)
