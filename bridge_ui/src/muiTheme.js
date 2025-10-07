@@ -13,16 +13,16 @@ export const COLORS = {
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
-  darkGrey: 'rgb(24, 24, 24)',
+  darkGrey: 'rgb(31, 31, 31)',
   red: "rgb(237, 74, 52)",
   redWithTransparency: "rgba(237, 74, 52, 0.8)",
   redWithStrongTransparency: "rgba(237, 74, 52, 0.1)",
   darkRed: "#810612",
-  nearBlack: "#0f0f0fff",
+  nearBlack: "#101010",
   white: "#FFFFFF",
-  whiteWithTransparency: "rgba(255,255,255,.06)",
+  whiteWithTransparency: "rgba(255,255,255,.08)",
   whiteWithMediumTransparency: "rgba(255,255,255,.7)",
-  whiteWithStrongTransparency: "rgba(255,255,255,.02)"
+  whiteWithStrongTransparency: "rgba(255,255,255,.04)"
 };
 
 const inter = {
