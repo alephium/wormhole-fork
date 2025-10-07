@@ -1,7 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -22,7 +22,6 @@ import SourceAssetWarning from '../Transfer/SourceAssetWarning'
 import ChainWarningMessage from '../ChainWarningMessage'
 import { useTranslation } from 'react-i18next'
 import { TokenSelector2 } from './SourceTokenSelector2'
-import { TokenPickerHandle } from './TokenPicker2'
 import ChainSelect2 from './ChainSelect2'
 import ChainSelectArrow2 from './ChainSelectArrow2'
 import useSyncTargetAddress from '../../hooks/useSyncTargetAddress'
@@ -50,7 +49,6 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     [sourceChain]
   )
   const parsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
-  const tokenPickerRef = useRef<TokenPickerHandle | null>(null)
   const { error: targetAssetError, data } = useSelector(selectTransferTargetAssetWrapper)
   const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
   const { error: fetchSourceAssetInfoError } = useSelector(selectTransferSourceAssetInfoWrapper)
@@ -145,10 +143,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </div>
       </div>
 
-      <TokenSelector2
-        disabled={shouldLockFields}
-        tokenPickerRef={tokenPickerRef}
-      />
+      <TokenSelector2 disabled={shouldLockFields} />
 
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
@@ -186,10 +181,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </>
       )}
 
-      <MainActionButton
-        onNext={onNext}
-        onSelectToken={() => tokenPickerRef.current?.openDialog()}
-      />
+      <MainActionButton onNext={onNext} />
     </>
   )
 }
@@ -202,7 +194,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '4px'
+    gap: '5px'
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -210,7 +202,7 @@ const useStyles = makeStyles((theme) => ({
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 13px)',
+    top: 'calc(50% - 15px)',
     transform: 'rotate(90deg)'
   }
 }))

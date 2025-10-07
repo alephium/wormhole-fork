@@ -53,7 +53,9 @@ function Attest() {
   }, [preventNavigation]);
   return (
     <Container maxWidth="md">
-      <HeaderText white>{t("Token Registration")}</HeaderText>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <h1 style={{ margin: 0 }}>Token registration</h1>
+      </div>
       <Alert severity="info">
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>

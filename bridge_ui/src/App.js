@@ -70,8 +70,15 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     minHeight: "100vh",
     position: "relative",
-    overflow: "hidden",
-    background: "radial-gradient(circle at 50% 100%,rgb(32, 32, 32) 25%, transparent 70%)"
+    overflow: "hidden"
+  },
+  bgGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    height: "40%",
+    background: "radial-gradient(ellipse at 50% 100%,rgb(28, 28, 28) 25%, transparent 60%)"
   },
   brandLink: {
     display: "inline-flex",
@@ -139,6 +146,7 @@ function App() {
 
   return (
     <div className={classes.bg}>
+      <div className={classes.bgGradient} />
       {CLUSTER === "mainnet" ? null : (
         <AppBar position="static" className={classes.betaBanner} elevation={0}>
           <Typography style={{ textAlign: "center" }}>

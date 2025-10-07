@@ -7,7 +7,7 @@ import {
   isEVMChain
 } from '@alephium/wormhole-sdk'
 import { TextField, Typography } from '@material-ui/core'
-import { Ref, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import useGetSourceParsedTokens from '../../hooks/useGetSourceParsedTokenAccounts'
@@ -32,17 +32,15 @@ import RefreshButtonWrapper from '../TokenSelectors/RefreshButtonWrapper'
 import SolanaTokenPicker from '../TokenSelectors/SolanaTokenPicker'
 import EvmTokenPicker2 from './EvmTokenPicker2'
 import AlephiumTokenPicker2 from './AlephiumTokenPicker2'
-import { TokenPickerHandle } from './TokenPicker2'
 
 type TokenSelectorProps = {
   disabled: boolean
   nft?: boolean
-  tokenPickerRef?: Ref<TokenPickerHandle>
 }
 
 export const TokenSelector2 = (props: TokenSelectorProps) => {
   const { t } = useTranslation()
-  const { disabled, nft, tokenPickerRef } = props
+  const { disabled, nft } = props
   const dispatch = useDispatch()
 
   const lookupChain = useSelector(nft ? selectNFTSourceChain : selectTransferSourceChain)
@@ -96,7 +94,6 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
       resetAccounts={maps?.resetAccounts}
       chainId={lookupChain}
       nft={nft}
-      tokenPickerRef={tokenPickerRef}
     />
   ) : lookupChain === CHAIN_ID_ALEPHIUM ? (
     <AlephiumTokenPicker2
@@ -107,7 +104,6 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
       tokens={maps?.tokens}
       isFetching={maps?.isFetching || false}
       balances={maps?.balances || new Map<string, bigint>()}
-      tokenPickerRef={tokenPickerRef}
     />
   ) : lookupChain === CHAIN_ID_ALGORAND ? (
     <AlgoTokenPicker

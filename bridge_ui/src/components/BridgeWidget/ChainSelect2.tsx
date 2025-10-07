@@ -10,9 +10,9 @@ import {
   TextField,
   Typography,
 } from '@material-ui/core'
-import { AccountBalanceWalletOutlined } from "@material-ui/icons";
+import { AccountBalanceWalletOutlined } from '@material-ui/icons'
 import clsx from 'clsx'
-import { ReactNode, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
 import { BETA_CHAINS, ChainInfo } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
@@ -20,81 +20,8 @@ import { AlephiumConnectButton } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { GRAY, useWidgetStyles } from './styles'
-import { COLORS } from '../../muiTheme';
-import useIsWalletReady from '../../hooks/useIsWalletReady';
-
-const useStyles = makeStyles((theme) => ({
-  select: {
-    '& .MuiInputBase-root': {
-      border: 'none',
-      '&:hover fieldset': {
-        border: 'none !important'
-      },
-    },
-
-    '& .MuiSelect-root': {
-      display: 'flex',
-      alignItems: 'center',
-      padding: 0
-    },
-
-
-    '& fieldset': {
-      border: 'none',
-    },
-
-    '& .MuiSelect-iconOutlined': {
-      display: 'none'
-    },
-
-    '& .MuiSelect-selectMenu:focus': {
-      backgroundColor: 'transparent'
-    },
-
-    '& label': {
-      display: 'none'
-    }
-  },
-  listItemIcon: {
-    width: 40,
-    height: 40,
-    minWidth: 40,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '12px',
-    marginRight: theme.spacing(2)
-  },
-  icon: {
-    height: 24,
-    width: 24
-  },
-  listItemTextContainer: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  listItemValue: {
-    margin: 0
-  },
-  accountAddress: {
-    fontSize: '14px',
-    fontWeight: 500
-  },
-  modalTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  modalContent: {
-    minWidth: '200px'
-  },
-  chainSelectLabelButton: {
-    position: 'absolute',
-    right: theme.spacing(2),
-    transform: 'translateY(-50%)',
-    top: '50%',
-  }
-}))
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+import SuccessPulse from './SuccessPulse'
 
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
@@ -112,7 +39,7 @@ const createChainMenuItem = ({ id, name, logo }: ChainInfo, label: ReactNode, se
       </ListItemIcon>
       <div className={classes.listItemTextContainer}>
         {selected && <Label>{label}</Label>}
-        <ListItemText className={classes.listItemValue}>{name}</ListItemText>
+        <ListItemText className={classes.listItemValue} primary={name} />
       </div>
     </MenuItem>
   )
@@ -138,18 +65,13 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
       <TextField {...rest} className={clsx(classes.select, rest.className)}>
         {filteredChains.map((chain) => createChainMenuItem(chain, rest.label, rest.value === chain.id, classes))}
       </TextField>
-      {isReady && (
-        <button className={clsx(classes.chainSelectLabelButton, widgetClasses.compactRoundedButton)}>
-          <AccountBalanceWalletOutlined style={{ fontSize: '16px' }} color="inherit" />
-          <ConnectedChainAccount chainId={chainId} />
-        </button>
-      )}
+      <WalletStatusButton chainId={chainId} isReady={isReady} />
     </div>
   )
 }
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <Typography style={{ fontSize: '12px', fontWeight: 600, color: GRAY }}>{children}</Typography>
+  <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
 )
 
 const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {
@@ -171,6 +93,42 @@ const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {
   }
 
   return null
+}
+
+const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: boolean }) => {
+  const classes = useStyles()
+  const widgetClasses = useWidgetStyles()
+  const activationKeyRef = useRef(0)
+  const wasReadyRef = useRef(isReady)
+
+  useEffect(() => {
+    if (isReady && !wasReadyRef.current) {
+      activationKeyRef.current += 1
+    }
+    wasReadyRef.current = isReady
+  }, [isReady])
+
+  if (!isReady) {
+    return null
+  }
+
+  return (
+    <button
+      type="button"
+      className={clsx(classes.activeWalletButton, widgetClasses.compactRoundedButton)}
+    >
+      <SuccessPulse
+        isActive
+        activationKey={activationKeyRef.current}
+        className={classes.statusPulse}
+      >
+        <div className={classes.statusWalletContent}>
+          <AccountBalanceWalletOutlined style={{ fontSize: 16 }} color="inherit" />
+          <ConnectedChainAccount chainId={chainId} />
+        </div>
+      </SuccessPulse>
+    </button>
+  )
 }
 
 const CurrentlyConnectedEVMAccount = () => {
@@ -231,3 +189,92 @@ const AccountAddress = ({ address, disconnect }: { address: string; disconnect: 
     </>
   )
 }
+
+const useStyles = makeStyles((theme) => ({
+  select: {
+    '& .MuiInputBase-root': {
+      border: 'none',
+      '&:hover fieldset': {
+        border: 'none !important'
+      },
+    },
+
+    '& .MuiSelect-root': {
+      display: 'flex',
+      alignItems: 'center',
+      padding: 0
+    },
+
+
+    '& fieldset': {
+      border: 'none',
+    },
+
+    '& .MuiSelect-iconOutlined': {
+      display: 'none'
+    },
+
+    '& .MuiSelect-selectMenu:focus': {
+      backgroundColor: 'transparent'
+    },
+
+    '& label': {
+      display: 'none'
+    }
+  },
+  listItemIcon: {
+    width: 50,
+    height: 50,
+    minWidth: 50,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '12px',
+    marginRight: theme.spacing(2)
+  },
+  icon: {
+    height: 30,
+    width: 30
+  },
+  listItemTextContainer: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  listItemValue: {
+    margin: 0
+  },
+  accountAddress: {
+    fontSize: '14px',
+    fontWeight: 500
+  },
+  modalTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  modalContent: {
+    minWidth: '200px'
+  },
+  activeWalletButton: {
+    position: 'absolute',
+    right: theme.spacing(2),
+    transform: 'translateY(-50%)',
+    top: '50%',
+    gap: '8px',
+    padding: '2px 9px',
+    color: theme.palette.grey[500]
+  },
+  statusPulse: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '24px',
+    overflow: 'visible'
+  },
+  statusWalletContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  }
+}))

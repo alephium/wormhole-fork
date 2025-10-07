@@ -2,25 +2,30 @@ import { createTheme, responsiveFontSizes } from "@material-ui/core";
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
-  blue: "#2f8cef",
-  blueWithTransparency: "rgba(25, 117, 230, 0.8)",
+  blue: "rgb(9, 137, 241)",
+  blueWithTransparency: "rgba(9, 137, 241, 0.8)",
+  blueWithMoreTransparency: "rgba(9, 137, 241, 0.1)",
   gray: "rgb(70, 70, 70)",
-  green: "#0ac2af",
-  greenWithTransparency: "rgba(10, 194, 175, 0.8)",
+  green: "rgb(33, 201, 94)",
+  greenWithTransparency: "rgba(33, 201, 94, 0.8)",
+  greenWithMoreTransparency: "rgba(33, 201, 94, 0.1)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
-  nearWhite: "#f0f0f0",
+  nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
-  darkGrey: 'rgb(30, 30, 30)',
-  red: "#aa0818",
+  darkGrey: 'rgb(24, 24, 24)',
+  red: "rgb(237, 74, 52)",
+  redWithTransparency: "rgba(237, 74, 52, 0.8)",
+  redWithMoreTransparency: "rgba(237, 74, 52, 0.1)",
   darkRed: "#810612",
   nearBlack: "#101010",
   white: "#FFFFFF",
   whiteWithTransparency: "rgba(255,255,255,.06)",
+  whiteWithMoreTransparency: "rgba(255,255,255,.02)"
 };
 
 const inter = {
-  fontFamily: "Inter Variable",
+  fontFamily: "Inter",
   fontStyle: "normal",
   fontDisplay: "swap",
   fontWeight: "100 1000",
@@ -54,7 +59,7 @@ export const theme = responsiveFontSizes(
 
     typography: {
       fontFamily: "'Inter', sans-serif",
-      fontSize: 14,
+      fontSize: 15,
       h1: {
         fontFamily: "Inter, sans-serif",
         lineHeight: 0.9,
@@ -124,23 +129,34 @@ export const theme = responsiveFontSizes(
       },
       MuiAlert: {
         root: {
-          borderRadius: "8px",
-          border: "1px solid",
+          borderRadius: "16px",
+          border: "none",
         },
+        standardInfo: {
+          backgroundColor: COLORS.blueWithMoreTransparency,
+          border: `1px solid ${COLORS.blueWithMoreTransparency}`
+        },
+        standardError: {
+          backgroundColor: COLORS.redWithMoreTransparency,
+          border: `1px solid ${COLORS.redWithMoreTransparency}`
+        },
+        standardSuccess: {
+          backgroundColor: COLORS.greenWithMoreTransparency,
+          border: `1px solid ${COLORS.greenWithMoreTransparency}`
+        }
       },
       MuiButton: {
-        root: {
-          borderRadius: "9px",
-          letterSpacing: ".1em",
-          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          '&:hover': {
-            transform: 'scale(1.005)',
-            filter: 'brightness(1.02)'
-          }
-        },
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
+        },
+      },
+      MuiCircularProgress: {
+        svg: {
+          overflow: 'visible',
+        },
+        circle: {
+          strokeWidth: 5
         },
       },
       MuiDialog: {
@@ -160,6 +176,28 @@ export const theme = responsiveFontSizes(
           color: COLORS.lightBlue,
         },
       },
+      MuiList: {
+        root: {
+          padding: 8
+        }
+      },
+      MuiListItem: {
+        root: {
+          borderRadius: "12px",
+          gap: 14
+        }
+      },
+      MuiListItemIcon: {
+        root: {
+          minWidth: 'auto'
+        }
+      },
+      MuiListItemText: {
+        root: {
+          fontSize: "16px",
+          fontWeight: 600
+        }
+      },
       MuiPaper: {
         rounded: {
           borderRadius: "12px",
@@ -170,6 +208,7 @@ export const theme = responsiveFontSizes(
         paper: {
           backgroundColor: COLORS.darkGrey,
           border: `1px solid ${COLORS.whiteWithTransparency}`,
+          borderRadius: "12px",
 
           "& .MuiList-padding": {
             padding: "0px"

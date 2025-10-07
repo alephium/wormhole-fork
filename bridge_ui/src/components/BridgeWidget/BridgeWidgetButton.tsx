@@ -1,31 +1,73 @@
-import { Button, ButtonProps, makeStyles } from '@material-ui/core'
+import { Button, ButtonProps, CircularProgress, makeStyles } from '@material-ui/core'
+import clsx from 'clsx'
 import { COLORS } from '../../muiTheme'
 
-const BridgeWidgetButton = (props: ButtonProps) => {
+type BridgeWidgetButtonProps = ButtonProps & { tone?: 'default' | 'primaryNext', isLoading?: boolean }
+
+const BridgeWidgetButton = ({ className, variant = 'contained', tone = 'default', isLoading = false, ...props }: BridgeWidgetButtonProps) => {
   const classes = useStyles()
 
-  return <Button className={classes.button} variant="contained" color="primary" fullWidth {...props} />
+  return (
+    <Button
+      className={clsx(classes.button, tone === 'primaryNext' && classes.primaryNext, className)}
+      variant={variant}
+      color="primary"
+      fullWidth
+      {...props}
+    >
+      {isLoading ? <CircularProgress size={20} color="inherit" /> : props.children}
+    </Button>
+  )
 }
 
 export default BridgeWidgetButton
 
 const useStyles = makeStyles(() => ({
   button: {
-    backgroundColor: COLORS.nearWhite,
     textTransform: 'none',
     borderRadius: '16px',
     height: '52px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'rgba(0, 0, 0, 1)',
     fontFamily: 'Inter, sans-serif',
-    fontWeight: 500,
+    fontWeight: 550,
     fontSize: '16px',
-    transition: 'all 0.2s ease-in-out',
     letterSpacing: 'normal',
-    '&:hover': {
-      backgroundColor: COLORS.white
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    '&.MuiButton-containedPrimary': {
+      backgroundColor: COLORS.nearWhite,
+      color: COLORS.nearBlack,
+      '&:hover': {
+        transform: 'scale(1.005)',
+        backgroundColor: COLORS.white,
+        filter: 'brightness(1.1)'
+      }
+    },
+    '&.MuiButton-outlinedPrimary': {
+      backgroundColor: COLORS.whiteWithMoreTransparency,
+      borderColor: COLORS.whiteWithMoreTransparency,
+      color: COLORS.nearWhite,
+      '&:hover': {
+        transform: 'scale(1.005)',
+        color: COLORS.white,
+        backgroundColor: COLORS.whiteWithTransparency
+      }
+    },
+    '&.Mui-disabled': {
+      backgroundColor: 'rgba(255, 255, 255, 0.65)',
+      color: 'rgba(0, 0, 0, 0.35)'
+    }
+  },
+  primaryNext: {
+    '&.MuiButton-containedPrimary': {
+      backgroundColor: COLORS.blue,
+      color: COLORS.white,
+      '&:hover': {
+        filter: 'brightness(1.1)',
+        backgroundColor: COLORS.blue,
+        color: COLORS.white
+      }
     }
   }
 }))

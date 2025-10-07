@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@alephium/token-list": "0.0.12",
+    "@alephium/walletconnect-qrcode-modal": "0.1.0",
     "@alephium/web3": "^1.11.1",
     "@alephium/web3-react": "^1.11.1",
     "@alephium/wormhole-sdk": "^0.4.0",
@@ -22,7 +23,6 @@
     "@solana/wallet-adapter-wallets": "^0.16.1",
     "@solana/web3.js": "^1.35.1",
     "@terra-money/wallet-provider": "^3.8.0",
-    "@alephium/walletconnect-qrcode-modal": "0.1.0",
     "@walletconnect/ethereum-provider": "2.17.2",
     "algosdk": "2.4.0",
     "axios": "^0.21.1",
@@ -41,6 +41,7 @@
     "numeral": "^2.0.6",
     "qrcode.react": "^3.0.1",
     "react": "^17.0.2",
+    "react-confetti-explosion": "^3.0.3",
     "react-dom": "^17.0.2",
     "react-i18next": "^14.1.2",
     "react-modal": "^3.15.1",

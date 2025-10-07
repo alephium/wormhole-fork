@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Grow,
   IconButton,
   List,
   ListItem,
@@ -17,32 +18,18 @@ import {
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import { Alert } from '@material-ui/lab'
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
 import { shortenAddress } from '../../utils/solana'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTransferAmount, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
-import { setAmount } from '../../store/transferSlice'
+import { selectTransferAmount, selectTransferIsTokenPickerDialogOpen, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
+import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
-import clsx from 'clsx'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
-
-export type TokenPickerHandle = {
-  openDialog: () => void
-}
 
 const useStyles = makeStyles((theme) =>
   createStyles({
@@ -150,7 +137,14 @@ const useStyles = makeStyles((theme) =>
       gap: '5px',
       padding: '14px',
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px'
+      borderRadius: '20px',
+      outline: '2px solid transparent',
+      transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+
+      '&:has(input:focus)': {
+        outline: `1px solid ${COLORS.blue}`,
+        background: 'transparent'
+      },
     },
     tokenAmountControls: {
       display: 'flex',
@@ -294,7 +288,7 @@ type TokenPicker2Props = {
   useTokenId?: boolean
 }
 
-const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function TokenPicker2(
+const TokenPicker2 = function TokenPicker2(
   {
     value,
     options,
@@ -309,9 +303,7 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     error: externalError,
     showLoader,
     useTokenId
-  },
-  ref
-) {
+  }: TokenPicker2Props) {
   const { t } = useTranslation()
   const classes = useStyles()
   const [holderString, setHolderString] = useState('')
@@ -326,6 +318,8 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
   const { isReady: isTargetReady } = useIsWalletReady(targetChain)
   const amountInputRef = useRef<HTMLInputElement | null>(null)
+  const dispatch = useDispatch()
+  const dialogRequest = useSelector(selectTransferIsTokenPickerDialogOpen)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -333,14 +327,21 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     setDialogIsOpen(true)
   }, [])
 
-  useImperativeHandle(ref, () => ({ openDialog }), [openDialog])
 
   const closeDialog = useCallback(() => {
     setDialogIsOpen(false)
-  }, [])
+    dispatch(closeTokenPickerDialog())
+  }, [dispatch])
 
   const walletsReady = isSourceReady && isTargetReady
   const selectedToken = value
+
+  useEffect(() => {
+    if (dialogRequest && !dialogIsOpen) {
+      openDialog()
+      dispatch(closeTokenPickerDialog())
+    }
+  }, [dialogRequest, dialogIsOpen, openDialog, dispatch])
 
   useLayoutEffect(() => {
     if (!walletsReady || !selectedToken || dialogIsOpen || typeof window === 'undefined') {
@@ -355,7 +356,7 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
     const frame = window.requestAnimationFrame(() => input.focus({ preventScroll: true }))
 
     return () => window.cancelAnimationFrame(frame)
-  }, [walletsReady, selectedToken?.mintKey, dialogIsOpen])
+  }, [walletsReady, dialogIsOpen, selectedToken])
 
   const handleSelectOption = useCallback(
     async (option: NFTParsedTokenAccount) => {
@@ -557,62 +558,63 @@ const TokenPicker2 = forwardRef<TokenPickerHandle, TokenPicker2Props>(function T
   )
 
   const amount = useSelector(selectTransferAmount)
-  const dispatch = useDispatch()
   const widgetClasses = useWidgetStyles()
   const activeErrorMessage = transferSourceError || externalError
   const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
   const hasError = amountGreaterThanZero && !!activeErrorMessage
-  const canShowAmountInput = walletsReady && !!selectedToken
 
   return (
     <>
       {dialog}
+      {walletsReady && selectedToken && (
+        <Grow in={walletsReady}>
+          <div>
+            <div className={classes.tokenAmountInputContainer}>
+              <div className={classes.tokenAmountInput}>
+                <input
+                  ref={amountInputRef}
+                  className={classes.tokenAmountValueInput}
+                  inputMode="decimal"
+                  minLength={1}
+                  maxLength={79}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  pattern="^[0-9]*[.,]?[0-9]*$"
+                  id="amount"
+                  placeholder="0"
+                  type="text"
+                  value={amount}
+                  name="amount"
+                  onChange={(event) => dispatch(setAmount(event.target.value))}
+                  style={{ color: hasError ? RED : 'white' }}
+                  disabled={!walletsReady}
+                />
 
-      {canShowAmountInput && selectedToken && (
-        <div className={classes.tokenAmountInputContainer}>
-          <div className={classes.tokenAmountInput}>
-            <input
-              ref={amountInputRef}
-              className={classes.tokenAmountValueInput}
-              inputMode="decimal"
-              minLength={1}
-              maxLength={79}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck="false"
-              pattern="^[0-9]*[.,]?[0-9]*$"
-              id="amount"
-              placeholder="0"
-              type="text"
-              value={amount}
-              name="amount"
-              onChange={(event) => dispatch(setAmount(event.target.value))}
-              style={{ color: hasError ? RED : 'white' }}
-              disabled={!walletsReady}
-            />
-
-            <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
-              <TokenIconSymbol account={selectedToken} />
-            </button>
-          </div>
-          <div className={classes.tokenAmountControls}>
-            <div className={classes.tokenAvailableMaxContainer}>
-              {selectedToken.uiAmountString && (
-                <button
-                  onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
-                  className={classes.tokenAvailableBalance}
-                >
-                  Max: {balancePretty(selectedToken.uiAmountString)}
+                <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+                  <TokenIconSymbol account={selectedToken} />
                 </button>
-              )}
+              </div>
+              <div className={classes.tokenAmountControls}>
+                <div className={classes.tokenAvailableMaxContainer}>
+                  {selectedToken.uiAmountString && (
+                    <button
+                      onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
+                      className={classes.tokenAvailableBalance}
+                    >
+                      Max: {balancePretty(selectedToken.uiAmountString)}
+                    </button>
+                  )}
+                </div>
+              </div>
+              {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
             </div>
           </div>
-          {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
-        </div>
+        </Grow>
       )}
     </>
   )
-})
+}
 
 export const TokenIconSymbol = ({
   account

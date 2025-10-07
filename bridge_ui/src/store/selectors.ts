@@ -360,6 +360,8 @@ export const selectTransferIsSendComplete = (state: RootState) =>
   !!selectTransferSignedVAAHex(state);
 export const selectTransferIsBlockFinalized = (state: RootState) =>
   state.transfer.isBlockFinalized;
+export const selectTransferHasSentTokens = (state: RootState) =>
+  state.transfer.hasSentTokens;
 export const selectTransferIsRedeemComplete = (state: RootState) =>
   !!selectTransferRedeemTx(state) || state.transfer.isRedeemCompleted;
 export const selectTransferShouldLockFields = (state: RootState) =>
@@ -377,6 +379,8 @@ export const selectAcalaRelayerInfo = (state: RootState) =>
 export const selectSolanaTokenMap = (state: RootState) => {
   return state.tokens.solanaTokenMap;
 };
+export const selectTransferIsTokenPickerDialogOpen = (state: RootState) =>
+  state.transfer.isTokenPickerDialogOpen;
 
 export const selectTerraTokenMap = (state: RootState) => {
   return state.tokens.terraTokenMap;

@@ -4,12 +4,13 @@ import {
   selectTransferIsWalletApproved,
   selectTransferTransferTx
 } from '../../../store/selectors'
-import { useCallback, useEffect, useState } from 'react'
-import { CheckCircleOutlineRounded, ThumbUp, UnfoldMoreOutlined } from '@material-ui/icons'
-import { CircularProgress, IconButton } from '@material-ui/core'
-import { GRAY, GREEN, useWidgetStyles } from '../styles'
+import { useCallback, useEffect } from 'react'
+import { ThumbUp } from '@material-ui/icons'
+import { CircularProgress } from '@material-ui/core'
+import { GRAY, useWidgetStyles } from '../styles'
 import SendTransactionSectionDetails from './SendTransactionSectionDetails'
 import { setBridgeWidgetStep } from '../../../store/transferSlice'
+import clsx from 'clsx'
 
 const SendTransactionSection = () => {
   const classes = useWidgetStyles()
@@ -65,37 +66,10 @@ export default SendTransactionSection
 
 const ConfirmedTransactionExpandableButton = () => {
   const classes = useWidgetStyles()
-  const [isExpanded, setIsExpanded] = useState<boolean>(false)
-
-  const handleExpandClick = () => {
-    setIsExpanded(!isExpanded)
-  }
 
   return (
-    <div className={classes.grayRoundedBox}>
-      <div>
-        <div className={classes.sendStep}>
-          <div className={classes.sendStepIcon}>
-            <CheckCircleOutlineRounded style={{ color: GREEN }} />
-          </div>
-          <div className={classes.spaceBetween}>
-            <div className={classes.sendStepContentSuccess}>The transaction has confirmed!</div>
-            <IconButton
-              onClick={handleExpandClick}
-              className={classes.expandButton}
-              style={{
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s ease-in-out'
-              }}
-            >
-              <UnfoldMoreOutlined />
-            </IconButton>
-          </div>
-        </div>
-        <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <SendTransactionSectionDetails />
-        </div>
-      </div>
+    <div className={clsx(classes.grayRoundedBox, 'secondary')}>
+      <SendTransactionSectionDetails />
     </div>
   )
 }

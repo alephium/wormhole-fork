@@ -1,19 +1,24 @@
 import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
-import { GRAY, GREEN, useWidgetStyles } from '../styles'
+import { useWidgetStyles } from '../styles'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
+import { selectTransferHasSentTokens, selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
 import { selectTransferIsRedeemComplete } from '../../../store/selectors'
 import { selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
 import { selectTransferIsBlockFinalized } from '../../../store/selectors'
-import { CircularProgress, IconButton } from '@material-ui/core'
-import { CheckCircleOutlineRounded, UnfoldMoreOutlined } from '@material-ui/icons'
+import { IconButton } from '@material-ui/core'
+import { CheckCircleOutlineRounded, UnfoldLessOutlined, UnfoldMoreOutlined } from '@material-ui/icons'
 import BridgingProgressSectionDetails from './BridgingProgressSectionDetails'
-import { UseGetIsTransferCompletedReturnType } from '../../../hooks/useGetIsTransferCompleted'
+import OngoingBridgingBadge from './OngoingBridgingBadge'
+import { COLORS } from '../../../muiTheme'
+import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
-const BridgingProgressSection = ({
-  isTransferCompleted
-}: Pick<UseGetIsTransferCompletedReturnType, 'isTransferCompleted'>) => {
+interface BridgingProgressSectionProps {
+  isTransferCompleted: TransferCompletionState
+}
+
+const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectionProps) => {
   const classes = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
@@ -23,22 +28,23 @@ const BridgingProgressSection = ({
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
+  const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
+  const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
+  const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
-  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
+  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx || isTransferCompleted.isTransferCompleted
 
   useEffect(() => {
-    if (isRedeemed) {
+    if (hasSentTokens) {
+      setStep(5)
+    } else if (isRedeemed) {
       setStep(4)
-
-      const timeout = setTimeout(() => setStep(5), 5000)
-
-      return () => clearTimeout(timeout)
     } else if (!!signedVAA) {
       setStep(3)
     } else if (isBlockFinalized) {
       setStep(2)
     }
-  }, [isBlockFinalized, isRedeemed, signedVAA])
+  }, [hasSentTokens, isBlockFinalized, isRedeemed, signedVAA])
 
   useEffect(() => {
     if (step === 5) {
@@ -54,38 +60,43 @@ const BridgingProgressSection = ({
   }
 
   return (
-    <div className={classes.grayRoundedBox}>
+    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithMoreTransparency : undefined }}>
       <div>
         <div className={classes.sendStep}>
-          <div className={classes.sendStepIcon}>
-            {step === 5 ? (
-              <CheckCircleOutlineRounded style={{ color: GREEN }} />
-            ) : (
-              <CircularProgress size={20} style={{ color: GRAY }} />
-            )}
-          </div>
+          {step === 5 && (
+            <div className={classes.sendStepIcon}>
+                <CheckCircleOutlineRounded style={{ color: COLORS.green }} />
+            </div>
+          )}
           <div className={classes.spaceBetween}>
-            <div className={classes.sendStepContentSuccess}>
+            {!hasSentTokens && <OngoingBridgingBadge />}
+            {!isManualRedeemRequired && <div className={classes.sendStepContentSuccess} style={{ color: step === 5 ? COLORS.green : 'inherit' }}>
               {step === 1 && 'Finalizing block... (1/4)'}
               {step === 2 && 'Waiting for proof... (2/4)'}
               {step === 3 && 'Redeeming proof... (3/4)'}
               {step === 4 && 'Sending tokens... (4/4)'}
               {step === 5 && 'Bridging completed!'}
-            </div>
+            </div>}
             <IconButton
               onClick={handleExpandClick}
               className={classes.expandButton}
-              style={{
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s ease-in-out'
-              }}
             >
-              <UnfoldMoreOutlined />
+              <div className={classes.expandIconWrapper}>
+                <UnfoldMoreOutlined
+                  className={`${classes.expandIcon} ${!isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
+                />
+                <UnfoldLessOutlined
+                  className={`${classes.expandIcon} ${isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
+                />
+              </div>
             </IconButton>
           </div>
         </div>
         <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <BridgingProgressSectionDetails isTransferCompleted={isTransferCompleted} />
+          <BridgingProgressSectionDetails
+            currentStep={step}
+            isTransferCompleted={isTransferCompleted}
+          />
         </div>
       </div>
     </div>

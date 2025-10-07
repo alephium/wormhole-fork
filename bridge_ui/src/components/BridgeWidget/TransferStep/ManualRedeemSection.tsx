@@ -1,35 +1,40 @@
-import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
+import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
 import { Checkbox, FormControlLabel, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { UseGetIsTransferCompletedReturnType } from '../../../hooks/useGetIsTransferCompleted'
 import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import {
-  selectTransferIsRedeemComplete,
   selectTransferIsRecovery,
-  selectTransferIsRedeemedViaRelayer,
+  selectTransferIsRedeeming,
   selectTransferTargetAsset,
-  selectTransferTargetChain,
-  selectTransferRedeemTx
+  selectTransferTargetChain
 } from '../../../store/selectors'
 import { ROPSTEN_WETH_ADDRESS, WBNB_ADDRESS, WETH_ADDRESS } from '../../../utils/consts'
 import { useTranslation } from 'react-i18next'
 import { GRAY, useWidgetStyles } from '../styles'
 import BridgeWidgetButton from '../BridgeWidgetButton'
-import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
+import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
-const ManualRedeemSection = ({
-  isTransferCompletedLoading,
-  error: checkTransferCompletedError
-}: Pick<UseGetIsTransferCompletedReturnType, 'isTransferCompletedLoading' | 'error'>) => {
+interface ManualRedeemSectionProps {
+  isTransferCompleted: TransferCompletionState
+}
+
+const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) => {
   const widgetClasses = useWidgetStyles()
   const { t } = useTranslation()
   const { handleClick, handleNativeClick, disabled } = useHandleRedeem()
   const targetChain = useSelector(selectTransferTargetChain)
   const targetAsset = useSelector(selectTransferTargetAsset)
   const isRecovery = useSelector(selectTransferIsRecovery)
-  const signedVAA = useTransferSignedVAA()
+  const isRedeeming = useSelector(selectTransferIsRedeeming)
+  
+  const {
+    isTransferCompletedLoading,
+    isTransferCompleted: isTransferCompletedFlag,
+    error: checkTransferCompletedError
+  } = isTransferCompleted
 
   const { isReady } = useIsWalletReady(targetChain)
   //TODO better check, probably involving a hook & the VAA
@@ -48,26 +53,14 @@ const ManualRedeemSection = ({
   }, [useNativeRedeem])
 
   const isRedeemDisabled =
-    !isReady || disabled || (isRecovery && isTransferCompletedLoading) || checkTransferCompletedError !== undefined
+    !isReady ||
+    disabled ||
+    (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag)) ||
+    checkTransferCompletedError !== undefined
 
-  const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
-  const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
-  const redeemTx = useSelector(selectTransferRedeemTx)
+  const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 
-  const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx
-
-  const [relayerIsUnresponsive, setRelayerIsUnresponsive] = useState(false)
-
-  useEffect(() => {
-    if (signedVAA && targetChain === CHAIN_ID_ALEPHIUM) {
-      setTimeout(() => setRelayerIsUnresponsive(true), 10000)
-    }
-  }, [signedVAA, targetChain])
-
-  const manualRedeemToAlephiumRequired = !isRedeemed && targetChain === CHAIN_ID_ALEPHIUM && relayerIsUnresponsive
-  const manualRedeemToEvmRequired = !isRedeemed && targetChain !== CHAIN_ID_ALEPHIUM && signedVAA
-
-  if (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) {
+  if (!isRedeemDisabled && (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired)) {
     return (
       <div className={widgetClasses.grayRoundedBox}>
         {manualRedeemToAlephiumRequired ? (
@@ -96,9 +89,9 @@ const ManualRedeemSection = ({
           )}
         </div>
         <BridgeWidgetButton
-          style={{ marginTop: '10px' }}
-          disabled={isRedeemDisabled}
           onClick={isNativeEligible && useNativeRedeem ? handleNativeClick : handleClick}
+          tone="primaryNext"
+          isLoading={isRedeeming}
         >
           Redeem
         </BridgeWidgetButton>

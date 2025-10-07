@@ -25,7 +25,7 @@ import useTransferSignedVAA from "./useTransferSignedVAA";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 
-export type UseGetIsTransferCompletedReturnType = {
+export interface TransferCompletionState {
   isTransferCompletedLoading: boolean;
   isTransferCompleted: boolean;
   error: string | undefined;
@@ -37,7 +37,7 @@ export type UseGetIsTransferCompletedReturnType = {
 export default function useGetIsTransferCompleted(
   recoveryOnly: boolean,
   pollFrequency?: number
-): UseGetIsTransferCompletedReturnType {
+): TransferCompletionState {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isTransferCompleted, setIsTransferCompleted] = useState(false);
