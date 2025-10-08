@@ -35,6 +35,7 @@ import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { web3 } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
+import AttestLegacy from "./components/AttestLegacy";
 
 function App() {
   const { t } = useTranslation();
@@ -227,6 +228,9 @@ function App() {
         {/* <Route exact path="/nft-origin-verifier"> <NFTOriginVerifier /> </Route> */}
         <Route exact path="/token-origin-verifier">
           <TokenOriginVerifier />
+        </Route>
+        <Route exact path="/register-legacy">
+          <AttestLegacy />
         </Route>
         <Route exact path="/register">
           <Attest />

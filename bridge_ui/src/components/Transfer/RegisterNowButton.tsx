@@ -40,7 +40,7 @@ export function RegisterNowButtonCore({
       dispatch(setSourceAsset(nativeAsset));
       dispatch(setTargetChain(targetChain));
       dispatch(setStep(2));
-      history.push("/register");
+      history.push("/register-legacy");
     }
   }, [dispatch, canSwitch, originChain, originAsset, targetChain, history]);
   if (!canSwitch) return null;
