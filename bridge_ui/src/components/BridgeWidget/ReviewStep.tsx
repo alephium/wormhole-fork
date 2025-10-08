@@ -1,5 +1,4 @@
-import { IconButton, Typography } from '@material-ui/core'
-import { ArrowBack } from '@material-ui/icons'
+import { Typography } from '@material-ui/core'
 import { useSelector } from 'react-redux'
 import {
   selectTransferAmount,
@@ -12,8 +11,8 @@ import {
 } from '../../store/selectors'
 import SmartAddress from './SmartAddress'
 import { CHAINS_BY_ID } from '../../utils/consts'
-import { useCallback, useMemo, useState } from 'react'
-import { CHAIN_ID_ALEPHIUM, isEVMChain } from '@alephium/wormhole-sdk'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import { hexToALPHAddress } from '../../utils/alephium'
 import { useTargetInfo } from '../Transfer/Target'
 import numeral from 'numeral'
@@ -28,6 +27,10 @@ import SendingAddress from './SendingAddress'
 import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
 import Divider from './Divider'
+import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
+import { useConnect } from '@alephium/web3-react'
+import { useSnackbar } from 'notistack'
+import { Alert } from '@material-ui/lab'
 
 interface ReviewStepProps {
   onBack: () => void
@@ -37,6 +40,8 @@ interface ReviewStepProps {
 const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const classes = useWidgetStyles()
   const { t } = useTranslation()
+  const { connect: connectAlephium } = useConnect()
+  const { enqueueSnackbar } = useSnackbar()
 
   const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
   const sourceAmount = useSelector(selectTransferAmount)
@@ -55,6 +60,9 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const { targetChain, readableTargetAddress, targetAsset, symbol, tokenName, logo } = useTargetInfo()
   const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
 
+  const { isReady: isSourceWalletReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain)
+  const { isReady: isTargetWalletReady, statusMessage: targetStatusMessage } = useIsWalletReady(targetChain)
+
   const { sufficientAllowance, isAllowanceFetching, isApproveProcessing, approveAmount } = useAllowance(
     sourceChain,
     sourceAsset,
@@ -62,8 +70,11 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     sourceIsNative
   )
 
-  const approveButtonNeeded = isEVMChain(sourceChain) && !sufficientAllowance
+  const approveButtonNeeded = isSourceWalletReady && isEVMChain(sourceChain) && !sufficientAllowance
   const [allowanceError, setAllowanceError] = useState('')
+  const [evmChain, setEvmChain] = useState<ChainId | null>(null)
+  const lastSourceStatusRef = useRef<string | null>(null)
+  const lastTargetStatusRef = useRef<string | null>(null)
 
   const approveExactAmount = useMemo(() => {
     return () => {
@@ -72,22 +83,94 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         () => {
           setAllowanceError('')
         },
-        (error) => setAllowanceError(t('Failed to approve the token transfer.'))
+        () => setAllowanceError(t('Failed to approve the token transfer.'))
       )
     }
   }, [approveAmount, transferAmountParsed, t])
 
-  const { isReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain)
   const isWrongWallet = sourceWalletAddress && walletAddress && sourceWalletAddress !== walletAddress
   const { handleClick, disabled } = useHandleTransfer()
   const isSending = useSelector(selectTransferIsSending)
+
+  const connectChainId = useMemo<ChainId | null>(() => {
+    if (!isSourceWalletReady) return sourceChain
+    if (!isTargetWalletReady) return targetChain
+    return null
+  }, [isSourceWalletReady, sourceChain, isTargetWalletReady, targetChain])
+
+  const isConnectAction = connectChainId !== null
+  const isConnectSupported =
+    connectChainId !== null && (isEVMChain(connectChainId) || connectChainId === CHAIN_ID_ALEPHIUM)
+
+  useEffect(() => {
+    if (!statusMessage) {
+      lastSourceStatusRef.current = null
+      return
+    }
+    if (connectChainId !== sourceChain) {
+      lastSourceStatusRef.current = null
+      return
+    }
+    if (lastSourceStatusRef.current === statusMessage) {
+      return
+    }
+    enqueueSnackbar(null, { content: <Alert severity="warning">{statusMessage}</Alert>})
+    lastSourceStatusRef.current = statusMessage
+  }, [connectChainId, enqueueSnackbar, sourceChain, statusMessage])
+
+  useEffect(() => {
+    if (!targetStatusMessage) {
+      lastTargetStatusRef.current = null
+      return
+    }
+    if (connectChainId !== targetChain) {
+      lastTargetStatusRef.current = null
+      return
+    }
+    if (lastTargetStatusRef.current === targetStatusMessage) {
+      return
+    }
+    enqueueSnackbar(null, { content: <Alert severity="warning">{targetStatusMessage}</Alert>})
+    lastTargetStatusRef.current = targetStatusMessage
+  }, [connectChainId, enqueueSnackbar, targetChain, targetStatusMessage])
 
   const handleTransferClick = useCallback(() => {
     handleClick()
     onNext()
   }, [handleClick, onNext])
 
-  const isDisabled = !isReady || isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing
+  const handlePrimaryClick = useCallback(() => {
+    if (isConnectAction) {
+      if (!connectChainId || !isConnectSupported) {
+        return
+      }
+
+      if (isEVMChain(connectChainId)) {
+        setEvmChain(connectChainId)
+      } else if (connectChainId === CHAIN_ID_ALEPHIUM) {
+        connectAlephium()
+      }
+      return
+    }
+
+    handleTransferClick()
+  }, [connectAlephium, connectChainId, handleTransferClick, isConnectAction, isConnectSupported])
+
+  const isButtonDisabled = isConnectAction
+    ? !isConnectSupported
+    : isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing
+
+  const connectWalletLabel = useMemo(() => {
+    if (!isConnectAction || connectChainId === null) {
+      return t('Connect wallet')
+    }
+
+    const chainName = CHAINS_BY_ID[connectChainId]?.name
+    return chainName ? `Connect ${chainName} wallet` : t('Connect wallet')
+  }, [connectChainId, isConnectAction, t])
+
+  const primaryButtonLabel = isConnectAction ? connectWalletLabel : t('Transfer')
+  const primaryButtonTone: 'default' | 'primaryNext' = isConnectAction ? 'default' : 'primaryNext'
 
   const humanReadableTransferAmount =
     sourceDecimals !== undefined &&
@@ -188,20 +271,28 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         )}
       </div>
 
-      {(statusMessage || allowanceError) && <WarningBox>{statusMessage || allowanceError}</WarningBox>}
+      {allowanceError && <WarningBox>{allowanceError}</WarningBox>}
 
       <BridgeWidgetButton onClick={onBack} variant="outlined">Back</BridgeWidgetButton>
       
       {approveButtonNeeded ? (
-        <BridgeWidgetButton disabled={isDisabled} onClick={approveExactAmount} isLoading={isApproveProcessing}>
+        <BridgeWidgetButton
+          disabled={isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing}
+          onClick={approveExactAmount}
+          isLoading={isApproveProcessing}
+        >
           {t('approveTokens', { count: tokensAmount, symbol: sourceParsedTokenAccount?.symbol || '' })}
         </BridgeWidgetButton>
       ) : isSending ? (
         <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
       ) : (
-        <BridgeWidgetButton disabled={isDisabled} onClick={handleTransferClick} tone="primaryNext">
-          {t('Transfer')}
+        <BridgeWidgetButton disabled={isButtonDisabled} onClick={handlePrimaryClick} tone={primaryButtonTone}>
+          {primaryButtonLabel}
         </BridgeWidgetButton>
+      )}
+
+      {evmChain !== null && (
+        <EvmConnectWalletDialog isOpen onClose={() => setEvmChain(null)} chainId={evmChain} />
       )}
     </>
   )

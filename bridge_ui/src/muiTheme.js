@@ -17,6 +17,9 @@ export const COLORS = {
   red: "rgb(237, 74, 52)",
   redWithTransparency: "rgba(237, 74, 52, 0.8)",
   redWithStrongTransparency: "rgba(237, 74, 52, 0.1)",
+  orange: "rgb(255, 160, 44)",
+  orangeWithTransparency: "rgba(255, 160, 44, 0.8)",
+  orangeWithStrongTransparency: "rgba(255, 140, 0, 0.1)",
   darkRed: "#810612",
   nearBlack: "#101010",
   white: "#FFFFFF",
@@ -140,6 +143,10 @@ export const theme = responsiveFontSizes(
         standardError: {
           backgroundColor: COLORS.redWithStrongTransparency,
           border: `1px solid ${COLORS.redWithStrongTransparency}`
+        },
+        standardWarning: {
+          backgroundColor: COLORS.orangeWithStrongTransparency,
+          border: `1px solid ${COLORS.orangeWithStrongTransparency}`
         },
         standardSuccess: {
           backgroundColor: COLORS.greenWithStrongTransparency,
