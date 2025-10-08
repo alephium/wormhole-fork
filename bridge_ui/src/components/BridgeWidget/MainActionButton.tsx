@@ -112,7 +112,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
       >
         <div className={classes.content}>
           <SuccessPulse
-            isActive
             activationKey={advanceToken}
             hideIcon
           >

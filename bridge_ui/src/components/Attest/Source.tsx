@@ -46,7 +46,7 @@ function Source({
   const sourceAsset = sourceAssetOverride ?? storeSourceAsset
   const isSourceComplete =
     sourceChainOverride !== undefined || sourceAssetOverride !== undefined
-      ? Boolean(sourceChain) && sourceAsset.trim().length > 0
+      ? !!sourceChain && sourceAsset.trim().length > 0
       : storeIsSourceComplete
   const handleSourceChange = useCallback(
     (event: any) => {
