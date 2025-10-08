@@ -27,6 +27,7 @@ type WalletAddressButtonProps = {
   children: ReactNode
   buttonClassName?: string
   onlyShowChainIcon?: boolean
+  disableDisconnect?: boolean
 }
 
 const WalletAddressButton = ({
@@ -37,6 +38,7 @@ const WalletAddressButton = ({
   children,
   buttonClassName,
   onlyShowChainIcon = false,
+  disableDisconnect = false,
 }: WalletAddressButtonProps) => {
   const classes = useStyles()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
@@ -57,6 +59,9 @@ const WalletAddressButton = ({
   }
 
   const handleDisconnect = () => {
+    if (disableDisconnect) {
+      return
+    }
     Promise.resolve(onDisconnect())
       .catch(() => undefined)
       .finally(handleClose)
@@ -129,8 +134,15 @@ const WalletAddressButton = ({
           <ListItem button onClick={handleCopy}>
             <ListItemText primary="Copy address" />
           </ListItem>
-          <ListItem button onClick={handleDisconnect}>
-            <ListItemText primary="Disconnect" />
+          <ListItem
+            button
+            disabled={disableDisconnect}
+            onClick={disableDisconnect ? undefined : handleDisconnect}
+          >
+            <ListItemText
+              primary="Disconnect"
+              secondary={disableDisconnect ? "Complete bridging to disconnect." : undefined}
+            />
           </ListItem>
         </List>
       </Popover>

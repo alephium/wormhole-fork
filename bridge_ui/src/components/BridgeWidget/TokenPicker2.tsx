@@ -444,7 +444,7 @@ export const TokenIconSymbol = ({
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const uri = account?.logo || account?.uri
-  const symbol = account?.symbol || t('Unknown')
+  const symbol = account?.symbol || '-'
 
   return (
     <div className={widgetClasses.tokenIconSymbolContainer}>
