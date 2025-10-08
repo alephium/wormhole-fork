@@ -150,7 +150,8 @@ function Attest() {
     : undefined
 
   const hasTargetChainInfo = Boolean(CHAINS_BY_ID[targetChain])
-  const shouldShowTargetConnectButton = hasTargetChainInfo && !isTargetWalletReady
+  const shouldShowTargetConnectButton =
+    isSourceComplete && hasTargetChainInfo && !isTargetWalletReady
   const targetValue = isTargetStepComplete
     ? <span>{CHAINS_BY_ID[targetChain]?.name ?? t("Unknown chain")}</span>
     : shouldShowTargetConnectButton
@@ -311,6 +312,17 @@ function Attest() {
     if (isEditable) {
       const isDisabled = isStepDisabled
       if (!hasValue) {
+        if (step.status === 'pending') {
+          return (
+            <div className={clsx(
+              classes.stepValue,
+              classes.stepValueStatic,
+              classes.stepValuePlaceholder
+            )}>
+              —
+            </div>
+          )
+        }
         return (
           <div className={clsx(classes.stepValue, classes.stepValuePlaceholder)}>
             —
@@ -347,7 +359,13 @@ function Attest() {
     }
 
     return (
-      <div className={clsx(classes.stepValue, classes.stepValueStatic)}>
+      <div
+        className={clsx(
+          classes.stepValue,
+          classes.stepValueStatic,
+          !hasValue && classes.stepValuePlaceholder
+        )}
+      >
         <div>{hasValue ? step.value : '—'}</div>
         {hasValue && step.subLabel && <div className={classes.stepSubLabel}>{step.subLabel}</div>}
       </div>
