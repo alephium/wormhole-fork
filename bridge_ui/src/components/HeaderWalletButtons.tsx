@@ -42,7 +42,7 @@ const HeaderWalletButtons = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const [walletAnchorEl, setWalletAnchorEl] = useState<null | HTMLElement>(null)
   const walletMenuId = "app-wallet-menu"
-  const walletMenuOpen = Boolean(walletAnchorEl)
+  const walletMenuOpen = !!walletAnchorEl
   const evmChainInfo = useMemo(() => getEvmChainInfo(chainId), [chainId])
 
   const walletEntries = useMemo(() => {

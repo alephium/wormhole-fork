@@ -43,7 +43,7 @@ function Target({
   const targetChain = targetChainOverride ?? storeTargetChain
   const isTargetComplete =
     targetChainOverride !== undefined
-      ? Boolean(targetChain)
+      ? !!targetChain
       : storeIsTargetComplete
   const handleTargetChange = useCallback(
     (event: any) => {

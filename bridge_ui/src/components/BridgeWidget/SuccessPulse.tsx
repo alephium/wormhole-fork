@@ -5,7 +5,6 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { COLORS } from '../../muiTheme'
 
 interface SuccessPulseProps {
-  isActive?: boolean
   activationKey?: unknown
   hideIcon?: boolean
   icon?: ReactNode
@@ -20,7 +19,6 @@ const SUCCESS_PULSE_ICON_DURATION = 1100
 const SUCCESS_PULSE_ENTER_DURATION = 900
 
 const SuccessPulse = ({
-  isActive,
   activationKey,
   hideIcon = false,
   icon,
@@ -35,9 +33,6 @@ const SuccessPulse = ({
   const [isContentVisible, setIsContentVisible] = useState(hideIcon)
   const [canExpandContent, setCanExpandContent] = useState(hideIcon)
   const [isContentEntering, setIsContentEntering] = useState(false)
-  const prevActiveRef = useRef(Boolean(isActive))
-  const prevActivationKeyRef = useRef(activationKey)
-  const isFirstRenderRef = useRef(true)
   const iconTimerRef = useRef<number | null>(null)
   const enterTimerRef = useRef<number | null>(null)
 
@@ -53,58 +48,37 @@ const SuccessPulse = ({
   }, [])
 
   useEffect(() => {
-    const wasActive = prevActiveRef.current
-    const active = Boolean(isActive)
-    const previousKey = prevActivationKeyRef.current
-    const keyChanged = activationKey !== undefined && activationKey !== previousKey
-    const shouldTriggerOnFirstRender =
-      isFirstRenderRef.current && activationKey !== undefined && active
-    const shouldTrigger = shouldTriggerOnFirstRender || keyChanged || (isActive === true && !wasActive)
+    clearTimers()
 
-    if (shouldTrigger) {
-      clearTimers()
-
-      const begin = () => {
-        const shouldShowIcon = !hideIcon
-        setIsShowingIcon(shouldShowIcon)
-        setIsContentVisible(!shouldShowIcon)
-        setCanExpandContent(!shouldShowIcon)
-        setIsContentEntering(false)
-
-        const startContent = () => {
-          setIsShowingIcon(false)
-          setIsContentVisible(true)
-          setCanExpandContent(true)
-          setIsContentEntering(true)
-
-          enterTimerRef.current = window.setTimeout(() => {
-            setIsContentEntering(false)
-          }, SUCCESS_PULSE_ENTER_DURATION)
-        }
-
-        if (shouldShowIcon) {
-          iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
-        } else {
-          startContent()
-        }
-      }
-
-      begin()
-    } else if (isActive === false) {
-      clearTimers()
-      setIsShowingIcon(false)
-      if (!hideIcon) {
-        setIsContentVisible(false)
-        setCanExpandContent(false)
-      }
+    const begin = () => {
+      const shouldShowIcon = !hideIcon
+      setIsShowingIcon(shouldShowIcon)
+      setIsContentVisible(!shouldShowIcon)
+      setCanExpandContent(!shouldShowIcon)
       setIsContentEntering(false)
+
+      const startContent = () => {
+        setIsShowingIcon(false)
+        setIsContentVisible(true)
+        setCanExpandContent(true)
+        setIsContentEntering(true)
+
+        enterTimerRef.current = window.setTimeout(() => {
+          setIsContentEntering(false)
+        }, SUCCESS_PULSE_ENTER_DURATION)
+      }
+
+      if (shouldShowIcon) {
+        iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
+      } else {
+        startContent()
+      }
     }
 
-    prevActiveRef.current = active
-    prevActivationKeyRef.current = activationKey
-    isFirstRenderRef.current = false
+    begin()
+
     return clearTimers
-  }, [activationKey, clearTimers, isActive, hideIcon])
+  }, [activationKey, clearTimers, hideIcon])
 
   return (
     <span className={clsx(classes.root, className)}>

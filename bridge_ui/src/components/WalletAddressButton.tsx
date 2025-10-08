@@ -41,7 +41,7 @@ const WalletAddressButton = ({
   const classes = useStyles()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const copyToClipboard = useCopyToClipboard(address)
-  const open = Boolean(anchorEl)
+  const open = !!anchorEl
 
   const handleOpen = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)

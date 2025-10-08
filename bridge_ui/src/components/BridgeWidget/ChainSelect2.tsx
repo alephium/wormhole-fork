@@ -115,7 +115,6 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
   return (
     <div className={classes.activeWalletButton}>
       <SuccessPulse
-        isActive
         activationKey={activationKeyRef.current}
         className={classes.statusPulse}
         contentClassName={classes.statusContent}

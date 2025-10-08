@@ -48,7 +48,7 @@ function App() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [navAnchorEl, setNavAnchorEl] = useState(null);
   const navMenuId = "app-navigation-menu";
-  const navMenuOpen = Boolean(navAnchorEl);
+  const navMenuOpen = !!navAnchorEl
   const handleTabChange = useCallback(
     (event, value) => {
       push(value);
