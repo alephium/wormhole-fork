@@ -6,7 +6,6 @@ import {
   selectTransferIsSourceComplete,
   selectTransferIsTargetComplete,
   selectTransferSourceChain,
-  selectTransferSourceParsedTokenAccount,
   selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeemedViaRelayer
