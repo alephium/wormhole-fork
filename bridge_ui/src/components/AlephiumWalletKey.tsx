@@ -1,7 +1,7 @@
 import { Typography } from "@material-ui/core"
 import { AlephiumConnectButton } from "@alephium/web3-react"
 import { useTranslation } from "react-i18next"
-import { shortenAddress } from "../utils/solana"
+import { shortenAddress } from "../utils/addresses"
 import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton"
 
 const AlephiumWalletKey = () => {

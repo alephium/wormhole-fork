@@ -33,7 +33,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
+interface CreateLocalTokenPoolProps {
+  localTokenId: string
+}
+
+const CreateLocalTokenPool = ({ localTokenId }: CreateLocalTokenPoolProps) => {
   const { t } = useTranslation()
   const alephiumWallet = useAlephiumWallet()
   const dispatch = useDispatch()
@@ -93,7 +97,7 @@ function CreateLocalTokenPool({ localTokenId }: { localTokenId: string }) {
   )
 }
 
-function Send() {
+const Send = () => {
   const { t } = useTranslation()
   const { handleClick, disabled, showLoader } = useHandleAttest()
   const { signer } = useEthereumProvider()

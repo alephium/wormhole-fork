@@ -28,13 +28,13 @@ interface SourceProps {
   onSourceAssetChange?: (asset: string) => void
 }
 
-function Source({
+const Source = ({
   showNextButton = true,
   sourceChain: sourceChainOverride,
   sourceAsset: sourceAssetOverride,
   onSourceChainChange,
   onSourceAssetChange
-}: SourceProps) {
+}: SourceProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const dispatch = useDispatch()

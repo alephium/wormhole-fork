@@ -11,15 +11,17 @@ import {
 import { ChainId, hexToNativeAssetString } from '@alephium/wormhole-sdk'
 import BridgeWidgetButton from './BridgeWidgetButton'
 
-export function RegisterNowButtonCore({
-  originChain,
-  originAsset,
-  targetChain
-}: {
+interface RegisterNowButtonCoreProps {
   originChain: ChainId | undefined
   originAsset: string | undefined
   targetChain: ChainId
-}) {
+}
+
+export const RegisterNowButtonCore = ({
+  originChain,
+  originAsset,
+  targetChain
+}: RegisterNowButtonCoreProps) => {
   const dispatch = useDispatch()
   const history = useHistory()
   // user might be in the middle of a different attest
@@ -48,9 +50,11 @@ export function RegisterNowButtonCore({
   )
 }
 
-export default function RegisterNowButton2() {
+const RegisterNowButton2 = () => {
   const originChain = useSelector(selectTransferOriginChain)
   const originAsset = useSelector(selectTransferOriginAsset)
   const targetChain = useSelector(selectTransferTargetChain)
   return <RegisterNowButtonCore originChain={originChain} originAsset={originAsset} targetChain={targetChain} />
 }
+
+export default RegisterNowButton2

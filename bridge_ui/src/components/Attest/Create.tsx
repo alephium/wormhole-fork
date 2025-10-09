@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function Create() {
+const Create = () => {
   const { t } = useTranslation();
   const classes = useStyles();
   const targetChain = useSelector(selectAttestTargetChain);
@@ -74,6 +74,6 @@ function Create() {
       )}
     </>
   );
-}
+};
 
 export default Create;

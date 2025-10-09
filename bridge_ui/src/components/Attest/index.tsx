@@ -15,7 +15,7 @@ import SourceDialog from "./SourceDialog"
 import TargetDialog from "./TargetDialog"
 import AttestStep from "./AttestStep"
 
-function Attest() {
+const Attest = () => {
   const { t } = useTranslation()
   const widgetClasses = useWidgetStyles()
   const {
@@ -29,23 +29,16 @@ function Attest() {
   const selectLabel = t("Select")
 
   useEffect(() => {
-    if (!preventNavigation) {
-      window.onbeforeunload = null
-      return () => {
-        window.onbeforeunload = null
-      }
-    }
-
-    window.onbeforeunload = () => true
+    window.onbeforeunload = preventNavigation ? () => true : null
+    
     return () => {
       window.onbeforeunload = null
     }
   }, [preventNavigation])
+  
   const handleOpenDialog = useCallback(
     (stepId: AttestStepId) => {
-      if (!canEditStep(stepId)) {
-        return
-      }
+      if (!canEditStep(stepId)) return
       setEditDialogStep(stepId)
     },
     [canEditStep]

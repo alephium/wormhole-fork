@@ -18,11 +18,9 @@ import { COLORS } from "../muiTheme"
 import Divider from "./BridgeWidget/Divider"
 import { useSelector } from "react-redux"
 import { selectTransferHasSentTokens, selectTransferIsSending, selectTransferTransferTx } from "../store/selectors"
+import { shortenAddress } from "../utils/addresses"
 
 const ALEPHIUM_CHAIN_INFO = CHAINS_BY_ID[CHAIN_ID_ALEPHIUM]
-
-const shortenAddress = (address: string) =>
-  address.length > 10 ? `${address.slice(0, 6)}...${address.slice(-4)}` : address
 
 const getEvmChainInfo = (evmChainId: number | undefined): ChainInfo | undefined => {
   if (evmChainId === undefined) {

@@ -24,7 +24,7 @@ import { ReactChild } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from '../../utils/consts'
-import { shortenAddress } from '../../utils/solana'
+import { shortenAddress } from '../../utils/addresses'
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from '@alephium/web3'
 import { useTranslation } from 'react-i18next'
 
@@ -74,17 +74,7 @@ const tooltipStyles = {
 // @ts-ignore
 const StyledTooltip = withStyles(tooltipStyles)(Tooltip)
 
-export default function SmartAddress({
-  chainId,
-  parsedTokenAccount,
-  transactionAddress,
-  address,
-  symbol,
-  tokenName,
-  variant,
-  extraContent,
-  isAsset
-}: {
+interface SmartAddressProps {
   chainId: ChainId
   transactionAddress?: string
   parsedTokenAccount?: ParsedTokenAccount
@@ -97,7 +87,19 @@ export default function SmartAddress({
   noUnderline?: boolean
   extraContent?: ReactChild
   isAsset?: boolean
-}) {
+}
+
+const SmartAddress = ({
+  chainId,
+  parsedTokenAccount,
+  transactionAddress,
+  address,
+  symbol,
+  tokenName,
+  variant,
+  extraContent,
+  isAsset
+}: SmartAddressProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const isNativeETH = chainId === CHAIN_ID_ETH && address?.toLowerCase() === WETH_ADDRESS.toLowerCase()
@@ -241,6 +243,8 @@ export default function SmartAddress({
     </StyledTooltip>
   )
 }
+
+export default SmartAddress
 
 function toALPHAddress(idOrAddress: string): string {
   return isBase58(idOrAddress) ? idOrAddress : addressFromContractId(idOrAddress)

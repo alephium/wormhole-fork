@@ -16,7 +16,7 @@ interface TargetDialogProps {
   onClose: () => void
 }
 
-function TargetDialog({ open, title, onClose }: TargetDialogProps) {
+const TargetDialog = ({ open, title, onClose }: TargetDialogProps) => {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const storeTargetChain = useSelector(selectAttestTargetChain)
@@ -24,9 +24,7 @@ function TargetDialog({ open, title, onClose }: TargetDialogProps) {
   const { isReady: isDraftTargetWalletReady } = useIsWalletReady(draftTargetChain, false)
 
   useEffect(() => {
-    if (!open) {
-      return
-    }
+    if (!open) return
     setDraftTargetChain(storeTargetChain)
   }, [open, storeTargetChain])
 
@@ -37,9 +35,7 @@ function TargetDialog({ open, title, onClose }: TargetDialogProps) {
   const canSave = !!draftTargetChain && isDraftTargetWalletReady
 
   const handleSave = useCallback(() => {
-    if (!canSave) {
-      return
-    }
+    if (!canSave) return
 
     if (draftTargetChain !== storeTargetChain) {
       dispatch(setTargetChain(draftTargetChain))
