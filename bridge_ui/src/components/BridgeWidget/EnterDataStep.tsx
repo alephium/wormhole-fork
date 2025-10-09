@@ -2,7 +2,8 @@ import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -73,7 +74,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const { statusMessage, isReady: isTargetChainReady } = useIsWalletReady(targetChain)
   const { isReady: isSourceChainReady } = useIsWalletReady(sourceChain)
   const targetError = useSelector(selectTransferTargetError)
-  const [showAmountInput, setShowAmountInput] = useState(false)
+  const walletsReady = isSourceChainReady && isTargetChainReady
 
   useGetTargetParsedTokenAccounts()
   useSyncTargetAddress(!shouldLockFields)
@@ -116,16 +117,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     }
   }, [error])
 
-  useEffect(() => {
-    if (!isTargetChainReady || !isSourceChainReady) {
-      setShowAmountInput(false)
-      return
-    }
-
-    const timeout = window.setTimeout(() => setShowAmountInput(true), 600)
-
-    return () => window.clearTimeout(timeout)
-  }, [isTargetChainReady, isSourceChainReady])
+  const shouldShowTransferWarnings = walletsReady && !!parsedTokenAccount
 
   return (
     <>
@@ -163,15 +155,15 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {showAmountInput && (
+      <AnimatePresence initial={false}>
+        {walletsReady && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto'}}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20}}
+            initial={{ opacity: 0, height: 0, filter: 'blur(20px)' }}
+            animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
+            exit={{ opacity: 0, height: 0, filter: 'blur(20px)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 23 }}
           >
-            <TokenSelector2 disabled={shouldLockFields} />
+            <TokenSelector2 key={sourceChain} disabled={shouldLockFields} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -181,35 +173,37 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
           {t('Go to Migration Page')}
         </Button>
       ) : (
-        <>
-          <LowBalanceWarning chainId={sourceChain} />
-          <SourceAssetWarning sourceChain={sourceChain} sourceAsset={parsedTokenAccount?.mintKey} />
-          <ChainWarningMessage chainId={sourceChain} />
-          <ChainWarningMessage chainId={targetChain} />
+        shouldShowTransferWarnings && (
+          <>
+            <LowBalanceWarning chainId={sourceChain} />
+            <SourceAssetWarning sourceChain={sourceChain} sourceAsset={parsedTokenAccount?.mintKey} />
+            <ChainWarningMessage chainId={sourceChain} />
+            <ChainWarningMessage chainId={targetChain} />
 
-          {!statusMessage && data && !data.doesExist && (
-            <WarningBox>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '20px',
-                  width: '100%'
-                }}
-              >
-                <div>
-                  <Typography style={{ fontWeight: 600 }}>
-                    {parsedTokenAccount?.symbol} is not registered on {targetChainInfo.name}.
-                  </Typography>
-                  <Typography style={{ color: GRAY, fontSize: '14px' }}>Please register it now.</Typography>
+            {!statusMessage && data && !data.doesExist && (
+              <WarningBox>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '20px',
+                    width: '100%'
+                  }}
+                >
+                  <div>
+                    <Typography style={{ fontWeight: 600 }}>
+                      {parsedTokenAccount?.symbol} is not registered on {targetChainInfo.name}.
+                    </Typography>
+                    <Typography style={{ color: GRAY, fontSize: '14px' }}>Please register it now.</Typography>
+                  </div>
+
+                  <RegisterNowButton2 />
                 </div>
-
-                <RegisterNowButton2 />
-              </div>
-            </WarningBox>
-          )}
-        </>
+              </WarningBox>
+            )}
+          </>
+        )
       )}
 
       <MainActionButton onNext={onNext} />

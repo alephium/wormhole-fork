@@ -55,7 +55,7 @@ function MultichainWarning({
   const { t } = useTranslation();
   const classes = useStyles();
   return (
-    <Alert severity="warning" variant="outlined" className={classes.alert}>
+    <Alert severity="warning" className={classes.alert}>
       <Typography
         variant="h6"
         className={classes.line}
@@ -75,7 +75,7 @@ function RewardsWarning() {
   const { t } = useTranslation();
   const classes = useStyles();
   return (
-    <Alert severity="warning" variant="outlined" className={classes.alert}>
+    <Alert severity="warning" className={classes.alert}>
       {t("Lido stETH rewards can only be received on Ethereum. Use the value accruing wrapper token wstETH instead.")}
     </Alert>
   );
@@ -85,7 +85,7 @@ function LiquidityWarning() {
   const { t } = useTranslation();
   const classes = useStyles();
   return (
-    <Alert severity="info" variant="outlined" className={classes.alert}>
+    <Alert severity="info" className={classes.alert}>
       <Typography component="div" className={classes.line}>
         <Trans
           t={t}
