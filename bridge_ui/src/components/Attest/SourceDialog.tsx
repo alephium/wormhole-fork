@@ -16,7 +16,7 @@ interface SourceDialogProps {
   onClose: () => void
 }
 
-function SourceDialog({ open, title, onClose }: SourceDialogProps) {
+const SourceDialog = ({ open, title, onClose }: SourceDialogProps) => {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const storeSourceChain = useSelector(selectAttestSourceChain)
@@ -26,9 +26,7 @@ function SourceDialog({ open, title, onClose }: SourceDialogProps) {
   const { isReady: isDraftSourceWalletReady } = useIsWalletReady(draftSourceChain, false)
 
   useEffect(() => {
-    if (!open) {
-      return
-    }
+    if (!open) return
     setDraftSourceChain(storeSourceChain)
     setDraftSourceAsset(storeSourceAsset)
   }, [open, storeSourceAsset, storeSourceChain])
@@ -48,9 +46,7 @@ function SourceDialog({ open, title, onClose }: SourceDialogProps) {
     isDraftSourceWalletReady
 
   const handleSave = useCallback(() => {
-    if (!canSave) {
-      return
-    }
+    if (!canSave) return
 
     if (draftSourceChain !== storeSourceChain) {
       dispatch(setSourceChain(draftSourceChain))

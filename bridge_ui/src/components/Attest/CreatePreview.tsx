@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function CreatePreview() {
+const CreatePreview = () => {
   const { t } = useTranslation();
   const { push } = useHistory();
   const classes = useStyles();
@@ -75,4 +75,6 @@ export default function CreatePreview() {
       </BridgeWidgetButton>
     </>
   );
-}
+};
+
+export default CreatePreview

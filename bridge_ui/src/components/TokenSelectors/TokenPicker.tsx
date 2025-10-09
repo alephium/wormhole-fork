@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { balancePretty } from "../../utils/balancePretty";
 import { getIsTokenTransferDisabled } from "../../utils/consts";
-import { shortenAddress } from "../../utils/solana";
+import { shortenAddress } from "../../utils/addresses";
 import NFTViewer from "./NFTViewer";
 
 const useStyles = makeStyles((theme) =>

@@ -37,7 +37,7 @@ type EthereumSourceTokenSelectorProps = {
   nft?: boolean
 }
 
-export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps) {
+const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
   const { t } = useTranslation()
   const {
     value,
@@ -145,3 +145,5 @@ export default function EvmTokenPicker2(props: EthereumSourceTokenSelectorProps)
     />
   )
 }
+
+export default EvmTokenPicker2

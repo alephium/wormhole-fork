@@ -39,13 +39,13 @@ const renderStatusIcon = (status: StepStatus) => {
   )
 }
 
-function AttestStep({
+const AttestStep = ({
   step,
   derivedActiveStep,
   canEditStep,
   onOpenDialog,
   selectLabel
-}: AttestStepProps) {
+}: AttestStepProps) => {
   const classes = useStyles()
   const isEditable = step.isEditable ?? canEditStep(step.id)
   const hasValue = step.value !== undefined && step.value !== null
@@ -59,9 +59,7 @@ function AttestStep({
 
   const handleValueClick = useCallback(
     (event: MouseEvent<HTMLElement>) => {
-      if (isStepDisabled || !isEditable) {
-        return
-      }
+      if (isStepDisabled || !isEditable) return
       event.stopPropagation()
       onOpenDialog(step.id)
     },
@@ -70,9 +68,7 @@ function AttestStep({
 
   const handleValueKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (isStepDisabled || !isEditable) {
-        return
-      }
+      if (isStepDisabled || !isEditable) return
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault()
         onOpenDialog(step.id)

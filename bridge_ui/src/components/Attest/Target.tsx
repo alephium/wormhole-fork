@@ -24,11 +24,11 @@ interface TargetProps {
   onTargetChainChange?: (chainId: ChainId) => void
 }
 
-function Target({
+const Target = ({
   showNextButton = true,
   targetChain: targetChainOverride,
   onTargetChainChange
-}: TargetProps) {
+}: TargetProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const dispatch = useDispatch()

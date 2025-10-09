@@ -25,7 +25,7 @@ import { ReactChild } from "react";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from "../utils/consts";
-import { shortenAddress } from "../utils/solana";
+import { shortenAddress } from "../utils/addresses";
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
 

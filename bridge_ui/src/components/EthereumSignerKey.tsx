@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Typography } from "@material-ui/core";
 import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { shortenAddress } from "../utils/solana";
+import { shortenAddress } from "../utils/addresses";
 import { ChainId } from "@alephium/wormhole-sdk";
 import { getEvmChainId } from "../utils/consts";
 import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton";

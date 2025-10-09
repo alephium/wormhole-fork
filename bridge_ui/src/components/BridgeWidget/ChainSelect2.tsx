@@ -45,7 +45,7 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
   chains: ChainInfo[]
 }
 
-export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
+const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const isBeta = useBetaContext()
@@ -65,6 +65,8 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
     </div>
   )
 }
+
+export default ChainSelect2
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
@@ -108,9 +110,7 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
     wasReadyRef.current = isReady
   }, [isReady])
 
-  if (!isReady) {
-    return null
-  }
+  if (!isReady) return null
 
   return (
     <div className={classes.activeWalletButton}>
