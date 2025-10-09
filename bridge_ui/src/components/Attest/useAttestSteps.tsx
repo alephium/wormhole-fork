@@ -21,6 +21,7 @@ import {
 import { setStep } from "../../store/attestSlice"
 import { CHAINS_BY_ID } from "../../utils/consts"
 import SmartAddress from "../SmartAddress"
+import SmartAddress2 from "../BridgeWidget/SmartAddress"
 import ShowTx from "../ShowTx"
 import KeyAndBalance from "../KeyAndBalance"
 import useIsWalletReady from "../../hooks/useIsWalletReady"
@@ -180,11 +181,11 @@ export function useAttestSteps(): UseAttestStepsResult {
       : undefined
 
   const sendValue = attestTx
-    ? <ShowTx chainId={sourceChain} tx={attestTx} />
+    ? <SmartAddress2 chainId={sourceChain} transactionAddress={attestTx.id} />
     : undefined
 
   const createValue = createTx
-    ? <ShowTx chainId={targetChain} tx={createTx} />
+    ? <SmartAddress2 chainId={targetChain} transactionAddress={createTx.id} />
     : undefined
 
   const steps: StepDefinition[] = [

@@ -86,7 +86,7 @@ const AttestStep = ({
       if (step.status === "complete") {
         return step.value ? (
           <div className={classes.stepValueStatic}>
-            <div>{step.value}</div>
+            <div style={{textAlign: 'right'}}>{step.value}</div>
             {step.subLabel && <div className={classes.stepSubLabel}>{step.subLabel}</div>}
           </div>
         ) : <SendPreview />
@@ -100,7 +100,7 @@ const AttestStep = ({
       if (step.status === "complete") {
         return step.value ? (
           <div className={classes.stepValueStatic}>
-            <div>{step.value}</div>
+            <div style={{textAlign: 'right'}}>{step.value}</div>
             {step.subLabel && <div className={classes.stepSubLabel}>{step.subLabel}</div>}
           </div>
         ) : <CreatePreview />
