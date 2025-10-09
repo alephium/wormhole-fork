@@ -19,6 +19,7 @@ import Divider from "./BridgeWidget/Divider"
 import { useSelector } from "react-redux"
 import { selectTransferHasSentTokens, selectTransferIsSending, selectTransferTransferTx } from "../store/selectors"
 import { shortenAddress } from "../utils/addresses"
+import SuccessPulse from "./BridgeWidget/SuccessPulse"
 
 const ALEPHIUM_CHAIN_INFO = CHAINS_BY_ID[CHAIN_ID_ALEPHIUM]
 
@@ -96,28 +97,19 @@ const HeaderWalletButtons = () => {
     setWalletAnchorEl(null)
   }
 
-  const renderWalletButton = (
-    { key, address, chainName, disconnect }: (typeof walletEntries)[number],
-    { onlyIcon, className }: { onlyIcon: boolean; className?: string }
-  ) => (
-    <WalletAddressButton
-      key={key}
-      address={address}
-      chainName={chainName}
-      onDisconnect={disconnect}
-      iconType="chainLogo"
-      onlyShowChainIcon={onlyIcon}
-      disableDisconnect={isDisconnectDisabled}
-    >
-      <Typography className={classes.addressText}>{shortenAddress(address)}</Typography>
-    </WalletAddressButton>
-  )
-
-  const desktopButtons = walletEntries.map((entry) =>
-    renderWalletButton(entry, { onlyIcon: true, className: classes.iconOnlyWalletButton })
-  )
-  const menuButtons = walletEntries.map((entry) =>
-    renderWalletButton(entry, { onlyIcon: false, className: classes.menuWalletButton })
+  const walletButtons = walletEntries.map(({ address, chainName, disconnect}) =>
+    <SuccessPulse>
+      <WalletAddressButton
+        key={address}
+        address={address}
+        chainName={chainName}
+        onDisconnect={disconnect}
+        iconType="chainLogo"
+        disableDisconnect={isDisconnectDisabled}
+      >
+        <Typography className={classes.addressText}>{shortenAddress(address)}</Typography>
+      </WalletAddressButton>
+    </SuccessPulse>
   )
 
   if (isMobile) {
@@ -153,13 +145,21 @@ const HeaderWalletButtons = () => {
             {t("Connected wallets", { count: connectedCount })}
           </Typography>
           <Divider />
-          <div className={classes.walletMenuContent}>{menuButtons}</div>
+          <div className={classes.walletMenuContent}>{walletButtons}</div>
         </Menu>
       </>
     )
   }
 
-  return <div className={classes.container}>{desktopButtons}</div>
+  return (
+    <div className={classes.container}>
+      <div className={classes.walletButtonsLabelContainer}>
+        <AccountBalanceWalletOutlined style={{ opacity: 0.5 }} fontSize="small" />
+        <span className={classes.walletButtonsLabel}>{t("Connected wallets")}</span>
+      </div>
+      {walletButtons}
+    </div>
+  )
 }
 
 export default HeaderWalletButtons
@@ -169,6 +169,28 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     gap: theme.spacing(1),
+    border: `1px solid ${COLORS.whiteWithStrongTransparency}`,
+    padding: theme.spacing(0.5),
+    borderRadius: 13,
+    '&:hover $walletButtonsLabel': {
+      maxWidth: 400,
+      paddingLeft: theme.spacing(1)
+    },
+  },
+  walletButtonsLabelContainer: {
+    display: "flex",
+    alignItems: "center",
+    borderRight: `1px solid ${COLORS.whiteWithStrongTransparency}`,
+    paddingRight: theme.spacing(1),
+    paddingLeft: theme.spacing(1),
+  },
+  walletButtonsLabel: {
+    maxWidth: 0,
+    fontSize: 13,
+    color: COLORS.whiteWithMediumTransparency,
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
   },
   mobileWalletTrigger: {
     color: "white",

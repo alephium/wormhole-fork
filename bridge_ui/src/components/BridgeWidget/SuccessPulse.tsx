@@ -5,7 +5,6 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { COLORS } from '../../muiTheme'
 
 interface SuccessPulseProps {
-  activationKey?: unknown
   hideIcon?: boolean
   icon?: ReactNode
   className?: string
@@ -14,12 +13,11 @@ interface SuccessPulseProps {
   children: ReactNode
 }
 
-const ICON_SIZE = 24
+const ICON_SIZE = 20
 const SUCCESS_PULSE_ICON_DURATION = 1100
 const SUCCESS_PULSE_ENTER_DURATION = 900
 
 const SuccessPulse = ({
-  activationKey,
   hideIcon = false,
   icon,
   className,
@@ -35,6 +33,7 @@ const SuccessPulse = ({
   const [isContentEntering, setIsContentEntering] = useState(false)
   const iconTimerRef = useRef<number | null>(null)
   const enterTimerRef = useRef<number | null>(null)
+  const hasAnimatedRef = useRef(false)
 
   const clearTimers = useCallback(() => {
     if (iconTimerRef.current !== null) {
@@ -50,35 +49,42 @@ const SuccessPulse = ({
   useEffect(() => {
     clearTimers()
 
-    const begin = () => {
-      const shouldShowIcon = !hideIcon
-      setIsShowingIcon(shouldShowIcon)
-      setIsContentVisible(!shouldShowIcon)
-      setCanExpandContent(!shouldShowIcon)
-      setIsContentEntering(false)
+    const startContent = (withAnimation: boolean) => {
+      setIsShowingIcon(false)
+      setIsContentVisible(true)
+      setCanExpandContent(true)
+      setIsContentEntering(withAnimation)
 
-      const startContent = () => {
-        setIsShowingIcon(false)
-        setIsContentVisible(true)
-        setCanExpandContent(true)
-        setIsContentEntering(true)
-
+      if (withAnimation) {
         enterTimerRef.current = window.setTimeout(() => {
           setIsContentEntering(false)
         }, SUCCESS_PULSE_ENTER_DURATION)
       }
-
-      if (shouldShowIcon) {
-        iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
-      } else {
-        startContent()
-      }
     }
 
-    begin()
+    if (hideIcon) {
+      hasAnimatedRef.current = true
+      startContent(false)
+      return clearTimers
+    }
+
+    if (hasAnimatedRef.current) {
+      startContent(false)
+      return clearTimers
+    }
+
+    hasAnimatedRef.current = true
+    setIsShowingIcon(true)
+    setIsContentVisible(false)
+    setCanExpandContent(false)
+    setIsContentEntering(false)
+
+    iconTimerRef.current = window.setTimeout(() => {
+      startContent(true)
+    }, SUCCESS_PULSE_ICON_DURATION)
 
     return clearTimers
-  }, [activationKey, clearTimers, hideIcon])
+  }, [clearTimers, hideIcon])
 
   return (
     <span className={clsx(classes.root, className)}>
@@ -164,7 +170,7 @@ const useStyles = makeStyles(() => ({
     }
   },
   iconDefault: {
-    fontSize: '24px'
+    fontSize: ICON_SIZE
   },
   content: {
     display: 'inline-flex',

@@ -263,6 +263,7 @@ const useStyles = makeStyles((theme) => ({
     "& > .MuiToolbar-root": {
       margin: "0 20px",
       marginBottom: theme.spacing(9),
+      height: 52,
       minWidth: 0,
     },
   },
