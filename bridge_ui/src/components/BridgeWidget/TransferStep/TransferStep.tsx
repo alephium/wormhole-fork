@@ -13,6 +13,7 @@ import {
 import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
 import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { useSnackbar } from 'notistack'
+import WalletReconnectSection from './WalletReconnectSection'
 
 const TransferStep = () => {
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
@@ -42,6 +43,8 @@ const TransferStep = () => {
 
         <BridgingProgressSection isTransferCompleted={isTransferCompleted} />
       </div>
+
+      <WalletReconnectSection isTransferCompleted={isTransferCompleted} />
 
       <ManualRedeemSection isTransferCompleted={isTransferCompleted} />
 
