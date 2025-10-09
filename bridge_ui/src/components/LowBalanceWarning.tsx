@@ -34,7 +34,7 @@ function LowBalanceWarning({ chainId }: { chainId: ChainId }) {
       : t("This wallet has a very low {{ token }} balance and may not be able to pay for the upcoming transaction fees.", { token: getDefaultNativeCurrencySymbol(chainId)});
 
   const content = (
-    <Alert severity="warning" variant="outlined" className={classes.alert}>
+    <Alert severity="warning" className={classes.alert}>
       <Typography variant="body1">{warningMessage}</Typography>
       {chainId !== CHAIN_ID_TERRA ? (
         <Typography variant="body1">

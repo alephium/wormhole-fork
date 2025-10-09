@@ -71,6 +71,7 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
   useEffect(() => {
     if (nft) return // TODO: Handle NFTs?
     if (sourceParsedTokenAccount) return
+
     const walletAddress = walletIsReady.walletAddress
     if (!walletAddress) return
 

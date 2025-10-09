@@ -440,7 +440,6 @@ export const TokenIconSymbol = ({
 }: {
   account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
 }) => {
-  const { t } = useTranslation()
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const uri = account?.logo || account?.uri
