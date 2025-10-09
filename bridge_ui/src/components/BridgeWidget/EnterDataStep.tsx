@@ -48,6 +48,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const history = useHistory()
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
+  const sourceChainOptions = useMemo(
+    () => CHAINS.filter((c) => (targetChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== targetChain)),
+    [targetChain]
+  )
   const targetChainOptions = useMemo(
     () => CHAINS.filter((c) => (sourceChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== sourceChain)),
     [sourceChain]
@@ -134,7 +138,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             value={sourceChain}
             onChange={handleSourceChange}
             disabled={shouldLockFields}
-            chains={CHAINS}
+            chains={sourceChainOptions}
           />
         </div>
         <Divider />
