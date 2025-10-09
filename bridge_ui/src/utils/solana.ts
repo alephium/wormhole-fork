@@ -71,9 +71,3 @@ export function chunks<T>(array: T[], size: number): T[][] {
     new Array(Math.ceil(array.length / size))
   ).map((_, index) => array.slice(index * size, (index + 1) * size));
 }
-
-export function shortenAddress(address: string) {
-  return address.length > 10
-    ? `${address.slice(0, 4)}...${address.slice(-4)}`
-    : address;
-}
