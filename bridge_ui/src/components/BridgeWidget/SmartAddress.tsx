@@ -187,7 +187,7 @@ const SmartAddress = ({
       : chainId === CHAIN_ID_ALEPHIUM
       ? `https://${CLUSTER === 'testnet' ? 'testnet.' : 'explorer.'}alephium.org/${
           transactionAddress ? 'transactions' : 'addresses'
-        }/${toALPHAddress(useableAddress)}`
+        }/${transactionAddress || toALPHAddress(useableAddress)}`
       : undefined
   const explorerName = getExplorerName(chainId)
 

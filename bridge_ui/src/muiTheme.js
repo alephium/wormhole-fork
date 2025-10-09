@@ -154,6 +154,7 @@ export const theme = responsiveFontSizes(
         }
       },
       MuiButton: {
+        fontSize: "1.2rem",
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
