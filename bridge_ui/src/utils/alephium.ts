@@ -28,7 +28,6 @@ import {
   NodeProvider,
   node,
   addressFromContractId,
-  groupOfAddress,
   ALPH_TOKEN_ID,
   isHexString,
   SignerProvider,
@@ -36,7 +35,10 @@ import {
   binToHex,
   contractIdFromAddress,
   sleep,
-  MINIMAL_CONTRACT_DEPOSIT
+  MINIMAL_CONTRACT_DEPOSIT,
+  isGrouplessAddress,
+  addressWithoutExplicitGroupIndex,
+  addressToBytes
 } from '@alephium/web3';
 import * as base58 from 'bs58'
 import i18n from "../i18n";
@@ -274,9 +276,15 @@ export function tryGetContractId(idOrAddress: string): string {
   throw new Error(`${i18n.t('Invalid contract id or contract address')}: ${idOrAddress}`)
 }
 
-export function validateAlephiumRecipientAddress(recipient: Uint8Array): boolean {
+export function getAlephiumRecipientAddrss(recipient: Uint8Array): Uint8Array {
   const address = base58.encode(recipient)
-  return groupOfAddress(address) === ALEPHIUM_BRIDGE_GROUP_INDEX
+  if (isGrouplessAddress(address)) {
+    const addr = addressWithoutExplicitGroupIndex(address)
+    const addrWithGroup = `${addr}:${ALEPHIUM_BRIDGE_GROUP_INDEX}`
+    return addressToBytes(addrWithGroup)
+  } else {
+    return recipient
+  }
 }
 
 export function isValidAlephiumTokenId(tokenId: string): boolean {

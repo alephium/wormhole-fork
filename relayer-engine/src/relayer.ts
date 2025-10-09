@@ -50,9 +50,10 @@ async function relayEVM(chainId: EVMChainId, ctx: WalletContext, next: Next) {
     const wrappedNative = getWrappedNativeAddress(ctx.networkId, chainId)
     const isNative = payload.originChain === chainId &&
       tryHexToNativeString(uint8ArrayToHex(payload.originAddress), payload.originChain).toLowerCase() === wrappedNative.toLowerCase()
-    const receipt = isNative
+    const tx = isNative
       ? (await redeemOnEthNative(tokenBridgeAddress, wallet.wallet, ctx.vaa.bytes))
       : (await redeemOnEth(tokenBridgeAddress, wallet.wallet, ctx.vaa.bytes))
+    const receipt = await tx.wait()
     await ctx.onTxSubmitted(vaaId, receipt.transactionHash)
     ctx.logger.info(`submitted complete transfer to ${coalesceChainName(chainId)} with tx id ${receipt.transactionHash}, vaa id: ${vaaId}`)
   })

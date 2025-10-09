@@ -12,7 +12,8 @@ export async function redeemOnAlphWithReward(
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return CompleteTransferWithReward.execute(signerProvider, {
+  return CompleteTransferWithReward.execute({
+    signer: signerProvider,
     initialFields: {
       bridgeRewardRouter: bridgeRewardRouterId,
       tokenBridgeForChain: tokenBridgeForChainId,
@@ -27,7 +28,8 @@ export async function redeemOnAlph(
   tokenBridgeForChainId: string,
   signedVAA: Uint8Array
 ): Promise<ExecuteScriptResult> {
-  return CompleteTransfer.execute(signerProvider, {
+  return CompleteTransfer.execute({
+    signer: signerProvider,
     initialFields: {
       tokenBridgeForChain: tokenBridgeForChainId,
       vaa: binToHex(signedVAA)
@@ -69,9 +71,7 @@ export async function redeemOnEth(
   overrides: Overrides & { from?: string | Promise<string> } = {}
 ) {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.completeTransfer(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.completeTransfer(signedVAA, overrides);
 }
 
 export async function redeemOnEthNative(
@@ -81,7 +81,5 @@ export async function redeemOnEthNative(
   overrides: Overrides & { from?: string | Promise<string> } = {}
 ) {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.completeTransferAndUnwrapETH(signedVAA, overrides);
 }

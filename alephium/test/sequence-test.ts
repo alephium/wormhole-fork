@@ -236,6 +236,6 @@ describe('test sequence', () => {
     expect(destroyEvent.name).toEqual('ContractDestroyed')
     expect(destroyEvent.fields.address).toEqual(unexecutedSequenceInfo.address)
     const assetOutput = testResult.txOutputs[1]
-    expect(assetOutput.alphAmount).toEqual(ONE_ALPH - defaultGasFee)
+    expect(assetOutput.alphAmount).toEqual(ONE_ALPH)
   })
 })
