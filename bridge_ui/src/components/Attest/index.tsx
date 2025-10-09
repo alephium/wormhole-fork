@@ -14,6 +14,8 @@ import { AttestStepId, useAttestSteps } from "./useAttestSteps"
 import SourceDialog from "./SourceDialog"
 import TargetDialog from "./TargetDialog"
 import AttestStep from "./AttestStep"
+import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
+import { useHistory } from "react-router-dom"
 
 const Attest = () => {
   const { t } = useTranslation()
@@ -27,15 +29,16 @@ const Attest = () => {
   const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
   const classes = useStyles()
   const selectLabel = t("Select")
+  const { push } = useHistory();
 
   useEffect(() => {
     window.onbeforeunload = preventNavigation ? () => true : null
-    
+
     return () => {
       window.onbeforeunload = null
     }
   }, [preventNavigation])
-  
+
   const handleOpenDialog = useCallback(
     (stepId: AttestStepId) => {
       if (!canEditStep(stepId)) return
@@ -48,6 +51,7 @@ const Attest = () => {
 
   const sourceStep = steps.find((step) => step.id === 0)
   const targetStep = steps.find((step) => step.id === 1)
+  const isCompleted = steps.every((step) => step.status === "complete")
 
   return (
     <Container maxWidth="sm" className={classes.pageContainer}>
@@ -71,6 +75,10 @@ const Attest = () => {
           ))}
         </div>
       </div>
+
+      {isCompleted && (
+        <BridgeWidgetButton onClick={() => push("/")}>Back to the homepage</BridgeWidgetButton>
+      )}
 
       {sourceStep && (
         <SourceDialog
