@@ -77,13 +77,13 @@ const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: Br
         <div className={classes.bridgingProgressContent}>
           {currentStep > 3 ? (
             <div className={classes.spaceBetween}>
-              <Typography>Proof redeemed!</Typography>
+              <Typography>VAA submitted!</Typography>
               {redeemTx && <SmartAddress chainId={targetChain} transactionAddress={redeemTx.id} />}
             </div>
           ) : currentStep === 3 ? (
-            <Typography>Redeeming proof...</Typography>
+            <Typography>Submitting VAA...</Typography>
           ) : (
-            <Typography>Get proof</Typography>
+            <Typography>Submit VAA</Typography>
           )}
         </div>
       </div>
