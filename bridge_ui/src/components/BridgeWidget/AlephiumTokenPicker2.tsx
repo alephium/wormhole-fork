@@ -22,7 +22,7 @@ type AlephiumTokenPickerProps = {
 
 const returnsFalse = () => false
 
-export default function AlephiumTokenPicker2(props: AlephiumTokenPickerProps) {
+const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
   const { t } = useTranslation()
   const {
     value,
@@ -113,3 +113,5 @@ export default function AlephiumTokenPicker2(props: AlephiumTokenPickerProps) {
     />
   )
 }
+
+export default AlephiumTokenPicker2

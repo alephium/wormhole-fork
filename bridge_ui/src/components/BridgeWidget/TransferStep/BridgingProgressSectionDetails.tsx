@@ -13,7 +13,7 @@ import { RadioButtonUncheckedRounded } from '@material-ui/icons'
 import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
 import FinalityProgress from './FinalityProgress'
-import Divider from './Divider'
+import Divider from '../Divider'
 import { useEffect } from 'react'
 import SmartAddress from '../SmartAddress'
 import ConfettiExplosion from 'react-confetti-explosion'
@@ -77,13 +77,13 @@ const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: Br
         <div className={classes.bridgingProgressContent}>
           {currentStep > 3 ? (
             <div className={classes.spaceBetween}>
-              <Typography>Proof redeemed!</Typography>
+              <Typography>VAA submitted!</Typography>
               {redeemTx && <SmartAddress chainId={targetChain} transactionAddress={redeemTx.id} />}
             </div>
           ) : currentStep === 3 ? (
-            <Typography>Redeeming proof...</Typography>
+            <Typography>Submitting VAA...</Typography>
           ) : (
-            <Typography>Get proof</Typography>
+            <Typography>Submit VAA</Typography>
           )}
         </div>
       </div>

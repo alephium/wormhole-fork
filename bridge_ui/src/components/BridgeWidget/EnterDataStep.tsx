@@ -1,14 +1,14 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
-import { useCallback, useEffect, useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import {
   selectTransferShouldLockFields,
   selectTransferSourceAssetInfoWrapper,
-  selectTransferSourceBalanceString,
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetAssetWrapper,
@@ -29,7 +29,10 @@ import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedToken
 import MainActionButton from './MainActionButton'
 import WarningBox from './WarningBox'
 import RegisterNowButton2 from './RegisterNowButton2'
-import { GRAY } from './styles'
+import { GRAY, useWidgetStyles } from './styles'
+import { COLORS } from '../../muiTheme'
+import clsx from 'clsx'
+import Divider from './Divider'
 
 // Copied from Source.tsx
 
@@ -40,10 +43,15 @@ interface EnterDataStepProps {
 const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
+  const widgetClasses = useWidgetStyles()
   const dispatch = useDispatch()
   const history = useHistory()
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
+  const sourceChainOptions = useMemo(
+    () => CHAINS.filter((c) => (targetChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== targetChain)),
+    [targetChain]
+  )
   const targetChainOptions = useMemo(
     () => CHAINS.filter((c) => (sourceChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== sourceChain)),
     [sourceChain]
@@ -61,11 +69,11 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     !!parsedTokenAccount &&
     !!BSC_MIGRATION_ASSET_MAP.get(getAddress(parsedTokenAccount.mintKey))
   const isMigrationAsset = isEthereumMigration || isBscMigration
-  const uiAmountString = useSelector(selectTransferSourceBalanceString)
   const shouldLockFields = useSelector(selectTransferShouldLockFields)
-  const { isReady } = useIsWalletReady(sourceChain)
-  const { statusMessage } = useIsWalletReady(targetChain)
+  const { statusMessage, isReady: isTargetChainReady } = useIsWalletReady(targetChain)
+  const { isReady: isSourceChainReady } = useIsWalletReady(sourceChain)
   const targetError = useSelector(selectTransferTargetError)
+  const [showAmountInput, setShowAmountInput] = useState(false)
 
   useGetTargetParsedTokenAccounts()
   useSyncTargetAddress(!shouldLockFields)
@@ -108,9 +116,20 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
     }
   }, [error])
 
+  useEffect(() => {
+    if (!isTargetChainReady || !isSourceChainReady) {
+      setShowAmountInput(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => setShowAmountInput(true), 600)
+
+    return () => window.clearTimeout(timeout)
+  }, [isTargetChainReady, isSourceChainReady])
+
   return (
     <>
-      <div className={classes.chainSelectWrapper}>
+      <div className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)} style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}>
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="From"
@@ -119,9 +138,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             value={sourceChain}
             onChange={handleSourceChange}
             disabled={shouldLockFields}
-            chains={CHAINS}
+            chains={sourceChainOptions}
           />
         </div>
+        <Divider />
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="To"
@@ -143,7 +163,18 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         </div>
       </div>
 
-      <TokenSelector2 disabled={shouldLockFields} />
+      <AnimatePresence>
+        {showAmountInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto'}}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20}}
+          >
+            <TokenSelector2 disabled={shouldLockFields} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isMigrationAsset ? (
         <Button variant="contained" color="primary" fullWidth onClick={handleMigrationClick}>
@@ -194,7 +225,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
-    gap: '5px'
+    gap: '24px'
   },
   chainSelectContainer: {
     flexBasis: '100%',

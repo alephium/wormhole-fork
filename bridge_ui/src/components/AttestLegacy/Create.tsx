@@ -1,4 +1,4 @@
-import { CircularProgress, Typography, makeStyles } from "@material-ui/core";
+import { CircularProgress, makeStyles } from "@material-ui/core";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
@@ -9,9 +9,9 @@ import {
   selectAttestSourceChain,
   selectAttestTargetChain,
 } from "../../store/selectors";
+import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
-import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 
 const useStyles = makeStyles((theme) => ({
   alignCenter: {
@@ -22,13 +22,9 @@ const useStyles = makeStyles((theme) => ({
   spacer: {
     height: theme.spacing(2),
   },
-  statusMessage: {
-    marginTop: theme.spacing(1),
-    textAlign: "center",
-  },
 }));
 
-const Create = () => {
+function Create() {
   const { t } = useTranslation();
   const classes = useStyles();
   const targetChain = useSelector(selectAttestTargetChain);
@@ -56,24 +52,19 @@ const Create = () => {
         </>
       ) : (
         <>
-          <BridgeWidgetButton
-            short
+          <ButtonWithLoader
             disabled={!isReady || disabled}
             onClick={handleClick}
-            isLoading={showLoader}
+            showLoader={showLoader}
+            error={error}
           >
             {shouldUpdate ? t("Update") : t("Create")}
-          </BridgeWidgetButton>
-          {error ? (
-            <Typography variant="body2" color="error" className={classes.statusMessage}>
-              {error}
-            </Typography>
-          ) : null}
+          </ButtonWithLoader>
           <WaitingForWalletMessage />
         </>
       )}
     </>
   );
-};
+}
 
 export default Create;

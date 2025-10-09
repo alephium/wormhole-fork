@@ -9,7 +9,7 @@ import { withStyles } from "@material-ui/styles";
 import clsx from "clsx";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { CLUSTER } from "../utils/consts";
-import { shortenAddress } from "../utils/solana";
+import { shortenAddress } from "../utils/addresses";
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {

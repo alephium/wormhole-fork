@@ -5,8 +5,6 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { COLORS } from '../../muiTheme'
 
 interface SuccessPulseProps {
-  isActive?: boolean
-  activationKey?: unknown
   hideIcon?: boolean
   icon?: ReactNode
   className?: string
@@ -15,13 +13,11 @@ interface SuccessPulseProps {
   children: ReactNode
 }
 
-const ICON_SIZE = 24
+const ICON_SIZE = 20
 const SUCCESS_PULSE_ICON_DURATION = 1100
 const SUCCESS_PULSE_ENTER_DURATION = 900
 
 const SuccessPulse = ({
-  isActive,
-  activationKey,
   hideIcon = false,
   icon,
   className,
@@ -35,11 +31,9 @@ const SuccessPulse = ({
   const [isContentVisible, setIsContentVisible] = useState(hideIcon)
   const [canExpandContent, setCanExpandContent] = useState(hideIcon)
   const [isContentEntering, setIsContentEntering] = useState(false)
-  const prevActiveRef = useRef(Boolean(isActive))
-  const prevActivationKeyRef = useRef(activationKey)
-  const isFirstRenderRef = useRef(true)
   const iconTimerRef = useRef<number | null>(null)
   const enterTimerRef = useRef<number | null>(null)
+  const hasAnimatedRef = useRef(false)
 
   const clearTimers = useCallback(() => {
     if (iconTimerRef.current !== null) {
@@ -53,58 +47,44 @@ const SuccessPulse = ({
   }, [])
 
   useEffect(() => {
-    const wasActive = prevActiveRef.current
-    const active = Boolean(isActive)
-    const previousKey = prevActivationKeyRef.current
-    const keyChanged = activationKey !== undefined && activationKey !== previousKey
-    const shouldTriggerOnFirstRender =
-      isFirstRenderRef.current && activationKey !== undefined && active
-    const shouldTrigger = shouldTriggerOnFirstRender || keyChanged || (isActive === true && !wasActive)
+    clearTimers()
 
-    if (shouldTrigger) {
-      clearTimers()
-
-      const begin = () => {
-        const shouldShowIcon = !hideIcon
-        setIsShowingIcon(shouldShowIcon)
-        setIsContentVisible(!shouldShowIcon)
-        setCanExpandContent(!shouldShowIcon)
-        setIsContentEntering(false)
-
-        const startContent = () => {
-          setIsShowingIcon(false)
-          setIsContentVisible(true)
-          setCanExpandContent(true)
-          setIsContentEntering(true)
-
-          enterTimerRef.current = window.setTimeout(() => {
-            setIsContentEntering(false)
-          }, SUCCESS_PULSE_ENTER_DURATION)
-        }
-
-        if (shouldShowIcon) {
-          iconTimerRef.current = window.setTimeout(startContent, SUCCESS_PULSE_ICON_DURATION)
-        } else {
-          startContent()
-        }
-      }
-
-      begin()
-    } else if (isActive === false) {
-      clearTimers()
+    const startContent = (withAnimation: boolean) => {
       setIsShowingIcon(false)
-      if (!hideIcon) {
-        setIsContentVisible(false)
-        setCanExpandContent(false)
+      setIsContentVisible(true)
+      setCanExpandContent(true)
+      setIsContentEntering(withAnimation)
+
+      if (withAnimation) {
+        enterTimerRef.current = window.setTimeout(() => {
+          setIsContentEntering(false)
+        }, SUCCESS_PULSE_ENTER_DURATION)
       }
-      setIsContentEntering(false)
     }
 
-    prevActiveRef.current = active
-    prevActivationKeyRef.current = activationKey
-    isFirstRenderRef.current = false
+    if (hideIcon) {
+      hasAnimatedRef.current = true
+      startContent(false)
+      return clearTimers
+    }
+
+    if (hasAnimatedRef.current) {
+      startContent(false)
+      return clearTimers
+    }
+
+    hasAnimatedRef.current = true
+    setIsShowingIcon(true)
+    setIsContentVisible(false)
+    setCanExpandContent(false)
+    setIsContentEntering(false)
+
+    iconTimerRef.current = window.setTimeout(() => {
+      startContent(true)
+    }, SUCCESS_PULSE_ICON_DURATION)
+
     return clearTimers
-  }, [activationKey, clearTimers, isActive, hideIcon])
+  }, [clearTimers, hideIcon])
 
   return (
     <span className={clsx(classes.root, className)}>
@@ -190,7 +170,7 @@ const useStyles = makeStyles(() => ({
     }
   },
   iconDefault: {
-    fontSize: '24px'
+    fontSize: ICON_SIZE
   },
   content: {
     display: 'inline-flex',

@@ -1,11 +1,12 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, makeStyles } from '@material-ui/core'
+import { Container, makeStyles, Typography } from '@material-ui/core'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
+  selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
@@ -20,14 +21,22 @@ const BridgeWidget = () => {
   useFetchTargetAsset()
   useUrlPathParams()
   usePreventNavigation()
-
+  
+  const step = useSelector(selectTransferActiveBridgeWidgetStep)
   const classes = useStyles()
 
+  const title = step === 0 ? 'Bridge' : step === 1 ? 'Review' : ''
+
   return (
-    <Container maxWidth="md" style={{ margin: '0 auto' }}>
-      <div className={classes.mainBox}>
-        <div className={classes.stack}>
-          <BridgeWidgetSteps />
+    <Container maxWidth="md" className={classes.mainContainer}>
+      <div className={classes.innerContainer}>
+        <div>
+          <Typography variant='h1' style={{ margin: 0 }}>{title}</Typography>
+        </div>
+        <div className={classes.mainBox}>
+          <div className={classes.stack}>
+            <BridgeWidgetSteps />
+          </div>
         </div>
       </div>
     </Container>
@@ -84,20 +93,30 @@ const usePreventNavigation = () => {
 }
 
 const useStyles = makeStyles((theme) => ({
-  mainBox: {
-    padding: '20px',
+  mainContainer: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  innerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+    width: 460
+  },
+  mainBox: {
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'column',
     maxWidth: '520px',
-    gap: '10px',
-    backdropFilter: 'blur(4px)',
-    margin: '0 auto'
+    gap: '10px'
   },
   stack: {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    gap: '16px'
+    gap: '24px'
   },
   confirmButton: {
     backgroundColor: '#080808',

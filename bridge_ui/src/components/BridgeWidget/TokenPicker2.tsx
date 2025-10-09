@@ -1,12 +1,10 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
-  Button,
   CircularProgress,
   createStyles,
   Dialog,
   DialogContent,
   DialogTitle,
-  Grow,
   IconButton,
   List,
   ListItem,
@@ -23,185 +21,13 @@ import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
-import { shortenAddress } from '../../utils/solana'
+import { shortenAddress } from '../../utils/addresses'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectTransferAmount, selectTransferIsTokenPickerDialogOpen, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
 import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
-
-const useStyles = makeStyles((theme) =>
-  createStyles({
-    alignCenter: {
-      textAlign: 'center'
-    },
-    optionContainer: {
-      padding: 0
-    },
-    optionContent: {
-      padding: theme.spacing(1)
-    },
-    tokenList: {
-      maxHeight: theme.spacing(80), //TODO smarter
-      height: theme.spacing(80),
-      overflow: 'auto'
-    },
-    dialogContent: {
-      overflowX: 'hidden'
-    },
-    selectionButtonContainer: {
-      //display: "flex",
-      textAlign: 'center',
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(2)
-    },
-    selectionButton: {
-      maxWidth: '100%',
-      width: theme.breakpoints.values.sm
-    },
-    tokenOverviewContainer: {
-      display: 'flex',
-      width: '100%',
-      alignItems: 'center',
-      '& div': {
-        margin: theme.spacing(1),
-        flexBasis: '25%',
-        '&$tokenImageContainer': {
-          maxWidth: 40
-        },
-        '&$tokenMarketsList': {
-          marginTop: theme.spacing(-0.5),
-          marginLeft: 0,
-          flexBasis: '100%'
-        },
-        '&:last-child': {
-          textAlign: 'right'
-        },
-        flexShrink: 1
-      },
-      flexWrap: 'wrap'
-    },
-    tokenImageContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 40
-    },
-    tokenImageContainer2: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 20
-    },
-    tokenImage: {
-      maxHeight: '2.5rem'
-    },
-    tokenImage2: {
-      maxHeight: '1rem',
-      maxWidth: '100%'
-    },
-    tokenMarketsList: {
-      order: 1,
-      textAlign: 'left',
-      width: '100%',
-      '& > .MuiButton-root': {
-        marginTop: theme.spacing(1),
-        marginRight: theme.spacing(1)
-      }
-    },
-    migrationAlert: {
-      width: '100%',
-      '& .MuiAlert-message': {
-        width: '100%'
-      }
-    },
-    flexTitle: {
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center'
-    },
-    grower: {
-      flexGrow: 1
-    },
-    emptyPlaceholder: {
-      padding: theme.spacing(2),
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: COLORS.gray
-    },
-    tokenAmountInputContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '5px',
-      padding: '14px',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px',
-      outline: '2px solid transparent',
-      transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-
-      '&:has(input:focus)': {
-        outline: `1px solid ${COLORS.blue}`,
-        background: 'transparent'
-      },
-    },
-    tokenAmountControls: {
-      display: 'flex',
-      gap: '10px',
-      justifyContent: 'space-between'
-    },
-    tokenAvailableMaxContainer: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center'
-    },
-    tokenAvailableBalance: {
-      fontSize: '0.875rem',
-      color: 'rgba(255, 255, 255, 0.5)',
-      padding: '8px 12px',
-      border: 'none',
-      backgroundColor: 'transparent',
-      borderRadius: '20px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      }
-    },
-    useMaxButton: {
-      fontSize: '0.875rem'
-    },
-    tokenAmountInput: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center'
-    },
-    tokenAmountValue: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-    },
-    tokenAmountValueInput: {
-      marginLeft: '0.125rem',
-      display: 'block',
-      width: '100%',
-      boxShadow: 'none',
-      backgroundColor: 'transparent',
-      fontSize: '2.25rem',
-      lineHeight: 1,
-      border: 'none',
-      outline: 'none',
-      '&:focus': {
-        outline: 'none'
-      },
-      '&:hover': {
-        outline: 'none'
-      },
-      color: '#fff',
-      fontFeatureSettings: 'tnum'
-    }
-  })
-)
 
 export const BasicAccountRender2 = (
   account: MarketParsedTokenAccount,
@@ -242,12 +68,12 @@ export const BasicAccountRender2 = (
       <div>
         <Typography variant="subtitle1">{symbol}</Typography>
       </div>
-      <div>{<Typography variant="body1">{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
+      <div>{<Typography variant="body1" style={{ opacity: 0.5 }}>{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
       <div>
         {shouldDisplayBalance ? (
           <>
-            <Typography variant="body2">{'Balance'}</Typography>
-            <Typography variant="h6">{balancePretty(account.uiAmountString)}</Typography>
+            <Typography variant="body2" style={{ opacity: 0.5 }}>{'Balance'}</Typography>
+            <Typography variant="body1">{balancePretty(account.uiAmountString)}</Typography>
           </>
         ) : (
           <div />
@@ -320,6 +146,7 @@ const TokenPicker2 = function TokenPicker2(
   const amountInputRef = useRef<HTMLInputElement | null>(null)
   const dispatch = useDispatch()
   const dialogRequest = useSelector(selectTransferIsTokenPickerDialogOpen)
+  const amount = useSelector(selectTransferAmount)
 
   const openDialog = useCallback(() => {
     setHolderString('')
@@ -335,6 +162,10 @@ const TokenPicker2 = function TokenPicker2(
 
   const walletsReady = isSourceReady && isTargetReady
   const selectedToken = value
+  const selectedTokenAmount = selectedToken?.uiAmountString
+  const activeErrorMessage = transferSourceError || externalError
+  const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
+  const hasError = amountGreaterThanZero && !!activeErrorMessage
 
   useEffect(() => {
     if (dialogRequest && !dialogIsOpen) {
@@ -498,7 +329,7 @@ const TokenPicker2 = function TokenPicker2(
     <Dialog onClose={closeDialog} aria-labelledby="simple-dialog-title" open={dialogIsOpen} maxWidth="sm" fullWidth>
       <DialogTitle>
         <div id="simple-dialog-title" className={classes.flexTitle}>
-          <Typography variant="h5">{t('Select a token')}</Typography>
+          <Typography variant="h6">{t('Available tokens')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
             <IconButton onClick={resetAccountsWrapper}>
@@ -557,61 +388,49 @@ const TokenPicker2 = function TokenPicker2(
     </Dialog>
   )
 
-  const amount = useSelector(selectTransferAmount)
   const widgetClasses = useWidgetStyles()
-  const activeErrorMessage = transferSourceError || externalError
-  const amountGreaterThanZero = !!amount && parseFloat(amount) > 0
-  const hasError = amountGreaterThanZero && !!activeErrorMessage
 
   return (
     <>
       {dialog}
-      {walletsReady && selectedToken && (
-        <Grow in={walletsReady}>
-          <div>
-            <div className={classes.tokenAmountInputContainer}>
-              <div className={classes.tokenAmountInput}>
-                <input
-                  ref={amountInputRef}
-                  className={classes.tokenAmountValueInput}
-                  inputMode="decimal"
-                  minLength={1}
-                  maxLength={79}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  id="amount"
-                  placeholder="0"
-                  type="text"
-                  value={amount}
-                  name="amount"
-                  onChange={(event) => dispatch(setAmount(event.target.value))}
-                  style={{ color: hasError ? RED : 'white' }}
-                  disabled={!walletsReady}
-                />
+      <div className={classes.tokenAmountInputContainer}>
+        <div className={classes.tokenAmountInput}>
+          <input
+            ref={amountInputRef}
+            className={classes.tokenAmountValueInput}
+            inputMode="decimal"
+            minLength={1}
+            maxLength={79}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            pattern="^[0-9]*[.,]?[0-9]*$"
+            id="amount"
+            placeholder="0"
+            type="text"
+            value={amount}
+            name="amount"
+            onChange={(event) => dispatch(setAmount(event.target.value))}
+            style={{ color: hasError ? RED : 'white' }}
+            disabled={!walletsReady}
+          />
 
-                <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
-                  <TokenIconSymbol account={selectedToken} />
-                </button>
-              </div>
-              <div className={classes.tokenAmountControls}>
-                <div className={classes.tokenAvailableMaxContainer}>
-                  {selectedToken.uiAmountString && (
-                    <button
-                      onClick={() => dispatch(setAmount(selectedToken.uiAmountString))}
-                      className={classes.tokenAvailableBalance}
-                    >
-                      Max: {balancePretty(selectedToken.uiAmountString)}
-                    </button>
-                  )}
-                </div>
-              </div>
-              {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
-            </div>
+          <button className={widgetClasses.compactRoundedButton} onClick={openDialog}>
+            <TokenIconSymbol account={selectedToken} />
+          </button>
+        </div>
+        <div className={classes.tokenAmountControls}>
+          <div className={classes.tokenAvailableMaxContainer}>
+            <button
+              onClick={() => dispatch(setAmount(selectedTokenAmount || ''))}
+              className={classes.tokenAvailableBalance}
+            >
+              Max: {balancePretty(selectedTokenAmount || '')}
+            </button>
           </div>
-        </Grow>
-      )}
+        </div>
+        {hasError && <div style={{ color: RED }}>{activeErrorMessage}</div>}
+      </div>
     </>
   )
 }
@@ -619,13 +438,13 @@ const TokenPicker2 = function TokenPicker2(
 export const TokenIconSymbol = ({
   account
 }: {
-  account: { logo?: string | null; uri?: string | null; symbol?: string | null }
+  account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
 }) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
-  const uri = account.logo || account.uri
-  const symbol = account.symbol || t('Unknown')
+  const uri = account?.logo || account?.uri
+  const symbol = account?.symbol || '-'
 
   return (
     <div className={widgetClasses.tokenIconSymbolContainer}>
@@ -641,3 +460,179 @@ export const TokenIconSymbol = ({
 }
 
 export default TokenPicker2
+
+const useStyles = makeStyles((theme) =>
+  createStyles({
+    alignCenter: {
+      textAlign: 'center'
+    },
+    optionContainer: {
+      padding: 0
+    },
+    optionContent: {
+      padding: theme.spacing(1)
+    },
+    tokenList: {
+      maxHeight: theme.spacing(80), //TODO smarter
+      height: theme.spacing(80),
+      overflow: 'auto',
+      padding: 0
+    },
+    dialogContent: {
+      overflowX: 'hidden'
+    },
+    selectionButtonContainer: {
+      //display: "flex",
+      textAlign: 'center',
+      marginTop: theme.spacing(2),
+      marginBottom: theme.spacing(2)
+    },
+    selectionButton: {
+      maxWidth: '100%',
+      width: theme.breakpoints.values.sm
+    },
+    tokenOverviewContainer: {
+      display: 'flex',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      '& div': {
+        margin: theme.spacing(1),
+        flexBasis: '25%',
+        '&$tokenMarketsList': {
+          marginTop: theme.spacing(-0.5),
+          marginLeft: 0,
+          flexBasis: '100%'
+        },
+        '&:last-child': {
+          textAlign: 'right'
+        },
+        flexShrink: 1
+      }
+    },
+    tokenImageContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 40,
+      height: 40,
+      maxWidth: 40,
+      borderRadius: '50%',
+      padding: 6,
+      border: `1px solid ${COLORS.whiteWithTransparency}`
+    },
+    tokenImageContainer2: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 20
+    },
+    tokenImage: {
+      maxHeight: '2.5rem'
+    },
+    tokenImage2: {
+      maxHeight: '1rem',
+      maxWidth: '100%'
+    },
+    tokenMarketsList: {
+      order: 1,
+      textAlign: 'left',
+      width: '100%',
+      '& > .MuiButton-root': {
+        marginTop: theme.spacing(1),
+        marginRight: theme.spacing(1)
+      }
+    },
+    migrationAlert: {
+      width: '100%',
+      '& .MuiAlert-message': {
+        width: '100%'
+      }
+    },
+    flexTitle: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center'
+    },
+    grower: {
+      flexGrow: 1
+    },
+    emptyPlaceholder: {
+      padding: theme.spacing(2),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: COLORS.gray
+    },
+    tokenAmountInputContainer: {
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '5px',
+      padding: '14px',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '20px',
+      outline: '2px solid transparent',
+
+      '&:has(input:focus)': {
+        outline: `1px solid ${COLORS.blue}`,
+        background: 'transparent'
+      },
+    },
+    tokenAmountControls: {
+      display: 'flex',
+      gap: '10px',
+      justifyContent: 'space-between'
+    },
+    tokenAvailableMaxContainer: {
+      display: 'flex',
+      gap: '10px',
+      alignItems: 'center',
+      justifyContent: 'flex-end'
+    },
+    tokenAvailableBalance: {
+      fontSize: '0.875rem',
+      color: 'rgba(255, 255, 255, 0.5)',
+      padding: '8px 12px',
+      border: 'none',
+      backgroundColor: 'transparent',
+      borderRadius: '20px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+      }
+    },
+    useMaxButton: {
+      fontSize: '0.875rem'
+    },
+    tokenAmountInput: {
+      display: 'flex',
+      gap: '10px',
+      alignItems: 'center'
+    },
+    tokenAmountValue: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    },
+    tokenAmountValueInput: {
+      marginLeft: '0.125rem',
+      display: 'block',
+      width: '100%',
+      boxShadow: 'none',
+      backgroundColor: 'transparent',
+      fontSize: '2.25rem',
+      lineHeight: 1,
+      border: 'none',
+      outline: 'none',
+      '&:focus': {
+        outline: 'none'
+      },
+      '&:hover': {
+        outline: 'none'
+      },
+      color: '#fff',
+      fontFeatureSettings: 'tnum'
+    }
+  })
+)

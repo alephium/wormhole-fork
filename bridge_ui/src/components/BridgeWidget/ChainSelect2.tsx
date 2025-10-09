@@ -1,27 +1,23 @@
 import {
-  List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   makeStyles,
   MenuItem,
   OutlinedTextFieldProps,
-  Popover,
   TextField,
   Typography,
 } from '@material-ui/core'
-import { AccountBalanceWalletOutlined } from '@material-ui/icons'
 import clsx from 'clsx'
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
-import { BETA_CHAINS, ChainInfo } from '../../utils/consts'
+import { BETA_CHAINS, ChainInfo, CHAINS_BY_ID } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
-import { AlephiumConnectButton } from '@alephium/web3-react'
+import { useConnect, useWallet } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
-import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { GRAY, useWidgetStyles } from './styles'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import SuccessPulse from './SuccessPulse'
+import WalletAddressButton from '../WalletAddressButton'
 
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
@@ -49,7 +45,7 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
   chains: ChainInfo[]
 }
 
-export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
+const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const isBeta = useBetaContext()
@@ -61,7 +57,7 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
   const { isReady } = useIsWalletReady(chainId)
 
   return (
-    <div className={clsx(widgetClasses.grayRoundedBox, widgetClasses.boxHoverAnimation)}>
+    <div className={clsx(classes.selectWrapper, widgetClasses.boxHoverAnimation)}>
       <TextField {...rest} className={clsx(classes.select, rest.className)}>
         {filteredChains.map((chain) => createChainMenuItem(chain, rest.label, rest.value === chain.id, classes))}
       </TextField>
@@ -70,26 +66,33 @@ export default function ChainSelect2({ chains, ...rest }: ChainSelectProps) {
   )
 }
 
+export default ChainSelect2
+
 const Label = ({ children }: { children: React.ReactNode }) => (
   <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
 )
 
-const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {
+type ConnectedAccountStyles = {
+  labelClassName?: string
+}
+
+type ConnectedAccountProps = ConnectedAccountStyles & {
+  chainName: string
+}
+
+const ConnectedChainAccount = ({ chainId, labelClassName }: { chainId: ChainId } & ConnectedAccountStyles) => {
+  const chainName = CHAINS_BY_ID[chainId]?.name ?? 'Wallet'
+  const accountProps: ConnectedAccountProps = {
+    labelClassName,
+    chainName
+  }
+
   if (isEVMChain(chainId)) {
-    return <CurrentlyConnectedEVMAccount />
+    return <CurrentlyConnectedEVMAccount {...accountProps} />
   }
 
   if (chainId === CHAIN_ID_ALEPHIUM) {
-    return (
-      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
-        {({ isConnected, show, disconnect, account }) => {
-          return (
-            // `show` and `hide` will never be undefined. TODO: Fix the types in web3-react
-            account?.address && <AccountAddress address={account.address} disconnect={disconnect} />
-          )
-        }}
-      </AlephiumConnectButton.Custom>
-    )
+    return <CurrentlyConnectedAlephiumAccount {...accountProps} />
   }
 
   return null
@@ -97,100 +100,75 @@ const ConnectedChainAccount = ({ chainId }: { chainId: ChainId }) => {
 
 const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: boolean }) => {
   const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
-  const activationKeyRef = useRef(0)
-  const wasReadyRef = useRef(isReady)
-
-  useEffect(() => {
-    if (isReady && !wasReadyRef.current) {
-      activationKeyRef.current += 1
-    }
-    wasReadyRef.current = isReady
-  }, [isReady])
-
-  if (!isReady) {
-    return null
-  }
+  if (!isReady) return null
 
   return (
-    <button
-      type="button"
-      className={clsx(classes.activeWalletButton, widgetClasses.compactRoundedButton)}
-    >
+    <div className={classes.activeWalletButton}>
       <SuccessPulse
-        isActive
-        activationKey={activationKeyRef.current}
         className={classes.statusPulse}
+        contentClassName={classes.statusContent}
       >
-        <div className={classes.statusWalletContent}>
-          <AccountBalanceWalletOutlined style={{ fontSize: 16 }} color="inherit" />
-          <ConnectedChainAccount chainId={chainId} />
-        </div>
+        <ConnectedChainAccount
+          chainId={chainId}
+          labelClassName={classes.accountAddress}
+        />
       </SuccessPulse>
-    </button>
+    </div>
   )
 }
 
-const CurrentlyConnectedEVMAccount = () => {
+const CurrentlyConnectedEVMAccount = (props: ConnectedAccountProps) => {
   const { signerAddress, disconnect } = useEthereumProvider()
-  return signerAddress ? <AccountAddress address={signerAddress} disconnect={disconnect} /> : null
+  return signerAddress ? (
+    <AccountAddress address={signerAddress} disconnect={disconnect} {...props} />
+  ) : null
 }
 
-const AccountAddress = ({ address, disconnect }: { address: string; disconnect: () => void }) => {
+const CurrentlyConnectedAlephiumAccount = (props: ConnectedAccountProps) => {
+  const wallet = useWallet()
+  const { disconnect } = useConnect()
+
+  if (wallet.connectionStatus !== 'connected' || !wallet.account?.address) {
+    return null
+  }
+
+  const handleDisconnect = () => disconnect()
+
+  return <AccountAddress address={wallet.account.address} disconnect={handleDisconnect} {...props} />
+}
+
+const AccountAddress = ({
+  address,
+  disconnect,
+  labelClassName,
+  chainName
+}: {
+  address: string
+  disconnect: () => void | Promise<void>
+} & ConnectedAccountProps) => {
   const classes = useStyles()
-
-  const [open, setOpen] = useState(false)
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
-  const copyToClipboard = useCopyToClipboard(address)
-
-  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-    setOpen(true)
-  }
-
-  const handleClose = () => {
-    setOpen(false)
-    setAnchorEl(null)
-  }
-
-  const handleCopy = () => {
-    copyToClipboard()
-    handleClose()
-  }
+  const shortAddress = `${address.slice(0, 5)}...${address.slice(-5)}`
+  const resolvedLabelClassName = labelClassName ?? classes.accountAddress
 
   return (
-    <>
-      <Typography className={classes.accountAddress} onClick={handleOpen}>
-        {address.slice(0, 5) + '...' + address.slice(-5)}
-      </Typography>
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        classes={{ paper: classes.modalContent }}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left'
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left'
-        }}
-      >
-        <List>
-          <ListItem button onClick={handleCopy}>
-            <ListItemText primary="Copy address" />
-          </ListItem>
-          <ListItem button onClick={disconnect}>
-            <ListItemText primary="Disconnect" />
-          </ListItem>
-        </List>
-      </Popover>
-    </>
+    <WalletAddressButton
+      address={address}
+      onDisconnect={disconnect}
+      chainName={chainName}
+      iconType="generic"
+    >
+      <Typography className={resolvedLabelClassName}>{shortAddress}</Typography>
+    </WalletAddressButton>
   )
 }
 
 const useStyles = makeStyles((theme) => ({
+  selectWrapper: {
+    position: 'relative',
+    background: 'transparent',
+    borderRadius: '16px',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+  },
   select: {
     '& .MuiInputBase-root': {
       border: 'none',
@@ -229,8 +207,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '12px',
-    marginRight: theme.spacing(2)
+    borderRadius: '12px'
   },
   icon: {
     height: 30,
@@ -252,17 +229,11 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between'
   },
-  modalContent: {
-    minWidth: '200px'
-  },
   activeWalletButton: {
     position: 'absolute',
-    right: theme.spacing(2),
+    right: 0,
     transform: 'translateY(-50%)',
-    top: '50%',
-    gap: '8px',
-    padding: '2px 9px',
-    color: theme.palette.grey[500]
+    top: '50%'
   },
   statusPulse: {
     position: 'relative',
@@ -272,9 +243,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: '24px',
     overflow: 'visible'
   },
-  statusWalletContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
+  statusContent: {
+    display: 'inline-flex'
   }
 }))

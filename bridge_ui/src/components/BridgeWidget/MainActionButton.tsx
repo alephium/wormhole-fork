@@ -1,12 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { makeStyles } from '@material-ui/core'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import {
   selectTransferIsSourceComplete,
   selectTransferIsTargetComplete,
   selectTransferSourceChain,
-  selectTransferSourceParsedTokenAccount,
   selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeemedViaRelayer
@@ -18,7 +17,6 @@ import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
 import { useConnect } from '@alephium/web3-react'
 import BridgeWidgetButton from './BridgeWidgetButton'
-import { openTokenPickerDialog } from '../../store/transferSlice'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
 
@@ -29,7 +27,6 @@ interface MainActionButtonProps {
 const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const classes = useStyles()
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const { connect: connectAlephium } = useConnect()
 
   const activeBridgeWidgetStep = useSelector(selectTransferActiveBridgeWidgetStep)
@@ -37,7 +34,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const targetChain = useSelector(selectTransferTargetChain)
   const isSourceComplete = useSelector(selectTransferIsSourceComplete)
   const isTargetComplete = useSelector(selectTransferIsTargetComplete)
-  const selectedToken = useSelector(selectTransferSourceParsedTokenAccount)
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
@@ -46,16 +42,11 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const [evmChain, setEvmChain] = useState<ChainId | null>(null)
 
-  const hasSelectedToken = !!selectedToken
   const isSourceTransferDisabled = getIsTransferDisabled(sourceChain, true)
   const isTargetTransferDisabled = getIsTransferDisabled(targetChain, false)
 
   const isNextDisabled =
     !isSourceComplete || !isTargetComplete || isSourceTransferDisabled || isTargetTransferDisabled
-
-  const handleOpenTokenPicker = useCallback(() => {
-    dispatch(openTokenPickerDialog())
-  }, [dispatch])
 
   const handleAlephiumConnect = useCallback(() => {
     connectAlephium()
@@ -80,30 +71,19 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     return {
       'connect-source': connectAction(sourceChain, 'Source'),
       'connect-target': connectAction(targetChain, 'Target'),
-      'select-token': { label: t('Select token'), onClick: handleOpenTokenPicker, disabled: false },
       next: { label: t('Next'), onClick: onNext, disabled: !onNext || isNextDisabled }
     }
-  }, [
-    handleAlephiumConnect,
-    handleEvmConnect,
-    handleOpenTokenPicker,
-    isNextDisabled,
-    onNext,
-    sourceChain,
-    targetChain,
-    t
-  ])
+  }, [handleAlephiumConnect, handleEvmConnect, isNextDisabled, onNext, sourceChain, targetChain, t])
 
   const currentActionKey = useMemo<ActionKey>(() => {
     if (!isSourceReady) return 'connect-source'
     if (!isTargetReady) return 'connect-target'
-    if (!onNext || !hasSelectedToken) return 'select-token'
     return 'next'
-  }, [hasSelectedToken, isSourceReady, isTargetReady, onNext])
+  }, [isSourceReady, isTargetReady])
 
   const currentAction = actionConfigs[currentActionKey]
 
-  const { renderedAction, renderedActionKey, advanceToken, isButtonDisabled } = useMainActionTransition({
+  const { renderedAction, renderedActionKey, isButtonDisabled } = useMainActionTransition({
     currentActionKey,
     currentAction,
     actionConfigs
@@ -131,8 +111,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
       >
         <div className={classes.content}>
           <SuccessPulse
-            isActive
-            activationKey={advanceToken}
             hideIcon
           >
             {renderedAction.label}

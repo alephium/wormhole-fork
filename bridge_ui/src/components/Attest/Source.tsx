@@ -1,53 +1,78 @@
-import { makeStyles, TextField } from "@material-ui/core";
-import { useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
+import { ChainId } from "@alephium/wormhole-sdk"
+import { makeStyles, TextField } from "@material-ui/core"
+import { useCallback } from "react"
+import { useTranslation } from "react-i18next"
+import { useDispatch, useSelector } from "react-redux"
 import {
   incrementStep,
   setSourceAsset,
   setSourceChain,
-} from "../../store/attestSlice";
+} from "../../store/attestSlice"
 import {
   selectAttestIsSourceComplete,
   selectAttestShouldLockFields,
   selectAttestSourceAsset,
   selectAttestSourceChain,
-} from "../../store/selectors";
-import { CHAINS } from "../../utils/consts";
-import ButtonWithLoader from "../ButtonWithLoader";
-import ChainSelect from "../ChainSelect";
-import KeyAndBalance from "../KeyAndBalance";
-import LowBalanceWarning from "../LowBalanceWarning";
+} from "../../store/selectors"
+import { CHAINS } from "../../utils/consts"
+import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
+import ChainSelect from "../ChainSelect"
+import KeyAndBalance from "../KeyAndBalance"
+import LowBalanceWarning from "../LowBalanceWarning"
 
-const useStyles = makeStyles((theme) => ({
-  transferField: {
-    marginTop: theme.spacing(5),
-  },
-}));
+interface SourceProps {
+  showNextButton?: boolean
+  sourceChain?: ChainId
+  sourceAsset?: string
+  onSourceChainChange?: (chainId: ChainId) => void
+  onSourceAssetChange?: (asset: string) => void
+}
 
-function Source() {
-  const { t } = useTranslation();
-  const classes = useStyles();
-  const dispatch = useDispatch();
-  const sourceChain = useSelector(selectAttestSourceChain);
-  const sourceAsset = useSelector(selectAttestSourceAsset);
-  const isSourceComplete = useSelector(selectAttestIsSourceComplete);
-  const shouldLockFields = useSelector(selectAttestShouldLockFields);
+const Source = ({
+  showNextButton = true,
+  sourceChain: sourceChainOverride,
+  sourceAsset: sourceAssetOverride,
+  onSourceChainChange,
+  onSourceAssetChange
+}: SourceProps) => {
+  const { t } = useTranslation()
+  const classes = useStyles()
+  const dispatch = useDispatch()
+  const storeSourceChain = useSelector(selectAttestSourceChain)
+  const storeSourceAsset = useSelector(selectAttestSourceAsset)
+  const storeIsSourceComplete = useSelector(selectAttestIsSourceComplete)
+  const shouldLockFields = useSelector(selectAttestShouldLockFields)
+  const sourceChain = sourceChainOverride ?? storeSourceChain
+  const sourceAsset = sourceAssetOverride ?? storeSourceAsset
+  const isSourceComplete =
+    sourceChainOverride !== undefined || sourceAssetOverride !== undefined
+      ? !!sourceChain && sourceAsset.trim().length > 0
+      : storeIsSourceComplete
   const handleSourceChange = useCallback(
     (event: any) => {
-      dispatch(setSourceChain(event.target.value));
+      const nextChain = Number(event.target.value) as ChainId
+      if (onSourceChainChange) {
+        onSourceChainChange(nextChain)
+        return
+      }
+      dispatch(setSourceChain(nextChain))
     },
-    [dispatch]
-  );
+    [dispatch, onSourceChainChange]
+  )
   const handleAssetChange = useCallback(
     (event: any) => {
-      dispatch(setSourceAsset(event.target.value));
+      const nextAsset = event.target.value as string
+      if (onSourceAssetChange) {
+        onSourceAssetChange(nextAsset)
+        return
+      }
+      dispatch(setSourceAsset(nextAsset))
     },
-    [dispatch]
-  );
+    [dispatch, onSourceAssetChange]
+  )
   const handleNextClick = useCallback(() => {
-    dispatch(incrementStep());
-  }, [dispatch]);
+    dispatch(incrementStep())
+  }, [dispatch])
   return (
     <>
       <ChainSelect
@@ -70,15 +95,27 @@ function Source() {
         disabled={shouldLockFields}
       />
       <LowBalanceWarning chainId={sourceChain} />
-      <ButtonWithLoader
-        disabled={!isSourceComplete}
-        onClick={handleNextClick}
-        showLoader={false}
-      >
-        {t("Next")}
-      </ButtonWithLoader>
+      {showNextButton && (
+        <BridgeWidgetButton
+          short
+          disabled={!isSourceComplete}
+          onClick={handleNextClick}
+          className={classes.nextButton}
+        >
+          {t("Next")}
+        </BridgeWidgetButton>
+      )}
     </>
-  );
+  )
 }
 
-export default Source;
+export default Source
+
+const useStyles = makeStyles((theme) => ({
+  transferField: {
+    marginTop: theme.spacing(5),
+  },
+  nextButton: {
+    marginTop: theme.spacing(4),
+  },
+}))

@@ -3,7 +3,12 @@ import { ArrowForward, SwapHoriz } from '@material-ui/icons'
 import { useState } from 'react'
 import { COLORS, theme } from '../../muiTheme';
 
-export default function ChainSelectArrow2({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+interface ChainSelectArrow2Props {
+  onClick: () => void
+  disabled: boolean
+}
+
+const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
   const [showSwap, setShowSwap] = useState(false)
 
   return (
@@ -11,7 +16,7 @@ export default function ChainSelectArrow2({ onClick, disabled }: { onClick: () =
       style={{
         color: theme.palette.grey[600],
         border: `1px solid ${COLORS.whiteWithTransparency}`,
-        outline: '5px solid #101010',
+        outline: `6px solid ${COLORS.darkGrey}`,
         backgroundColor: COLORS.darkGrey,
         width: '30px',
         height: '30px',
@@ -29,3 +34,5 @@ export default function ChainSelectArrow2({ onClick, disabled }: { onClick: () =
     </IconButton>
   )
 }
+
+export default ChainSelectArrow2

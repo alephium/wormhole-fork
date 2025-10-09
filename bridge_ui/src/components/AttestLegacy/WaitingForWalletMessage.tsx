@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const WaitingForWalletMessage = () => {
+export default function WaitingForWalletMessage() {
   const { t } = useTranslation();
   const classes = useStyles();
   const isSending = useSelector(selectAttestIsSending);
@@ -38,6 +38,4 @@ const WaitingForWalletMessage = () => {
         : null}
     </Typography>
   ) : null;
-};
-
-export default WaitingForWalletMessage
+}

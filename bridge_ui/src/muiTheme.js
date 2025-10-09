@@ -4,24 +4,28 @@ import Inter from "./fonts/Inter-Variable.ttf";
 export const COLORS = {
   blue: "rgb(9, 137, 241)",
   blueWithTransparency: "rgba(9, 137, 241, 0.8)",
-  blueWithMoreTransparency: "rgba(9, 137, 241, 0.1)",
+  blueWithStrongTransparency: "rgba(9, 137, 241, 0.1)",
   gray: "rgb(70, 70, 70)",
   green: "rgb(33, 201, 94)",
   greenWithTransparency: "rgba(33, 201, 94, 0.8)",
-  greenWithMoreTransparency: "rgba(33, 201, 94, 0.1)",
+  greenWithStrongTransparency: "rgba(33, 201, 94, 0.1)",
   lightGreen: "rgba(51, 242, 223, 1)",
   lightBlue: "#909ed3",
   nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
-  darkGrey: 'rgb(24, 24, 24)',
+  darkGrey: 'rgb(31, 31, 31)',
   red: "rgb(237, 74, 52)",
   redWithTransparency: "rgba(237, 74, 52, 0.8)",
-  redWithMoreTransparency: "rgba(237, 74, 52, 0.1)",
+  redWithStrongTransparency: "rgba(237, 74, 52, 0.1)",
+  orange: "rgb(255, 160, 44)",
+  orangeWithTransparency: "rgba(255, 160, 44, 0.8)",
+  orangeWithStrongTransparency: "rgba(255, 140, 0, 0.1)",
   darkRed: "#810612",
   nearBlack: "#101010",
   white: "#FFFFFF",
-  whiteWithTransparency: "rgba(255,255,255,.06)",
-  whiteWithMoreTransparency: "rgba(255,255,255,.02)"
+  whiteWithTransparency: "rgba(255,255,255,.08)",
+  whiteWithMediumTransparency: "rgba(255,255,255,.7)",
+  whiteWithStrongTransparency: "rgba(255,255,255,.04)"
 };
 
 const inter = {
@@ -60,11 +64,11 @@ export const theme = responsiveFontSizes(
     typography: {
       fontFamily: "'Inter', sans-serif",
       fontSize: 15,
+      color: COLORS.nearWhite,
       h1: {
         fontFamily: "Inter, sans-serif",
-        lineHeight: 0.9,
-        fontWeight: 600,
-        fontSize: "62px",
+        fontWeight: 500,
+        fontSize: "28px"
       },
       h2: {
         fontWeight: "200",
@@ -133,19 +137,24 @@ export const theme = responsiveFontSizes(
           border: "none",
         },
         standardInfo: {
-          backgroundColor: COLORS.blueWithMoreTransparency,
-          border: `1px solid ${COLORS.blueWithMoreTransparency}`
+          backgroundColor: COLORS.blueWithStrongTransparency,
+          border: `1px solid ${COLORS.blueWithStrongTransparency}`
         },
         standardError: {
-          backgroundColor: COLORS.redWithMoreTransparency,
-          border: `1px solid ${COLORS.redWithMoreTransparency}`
+          backgroundColor: COLORS.redWithStrongTransparency,
+          border: `1px solid ${COLORS.redWithStrongTransparency}`
+        },
+        standardWarning: {
+          backgroundColor: COLORS.orangeWithStrongTransparency,
+          border: `1px solid ${COLORS.orangeWithStrongTransparency}`
         },
         standardSuccess: {
-          backgroundColor: COLORS.greenWithMoreTransparency,
-          border: `1px solid ${COLORS.greenWithMoreTransparency}`
+          backgroundColor: COLORS.greenWithStrongTransparency,
+          border: `1px solid ${COLORS.greenWithStrongTransparency}`
         }
       },
       MuiButton: {
+        fontSize: "1.2rem",
         outlinedSizeSmall: {
           padding: "6px 9px",
           fontSize: "0.70rem",
@@ -165,10 +174,32 @@ export const theme = responsiveFontSizes(
           borderRadius: "16px"
         }
       },
+      MuiDialogContent: {
+        root: {
+          display: "flex",
+          flexDirection: "column",
+          padding: "16px",
+          gap: 10
+        }
+      },
       MuiDialogTitle: {
         root: {
+          fontSize: "18px",
           padding: "6px 16px",
           borderBottom: `1px solid ${COLORS.whiteWithTransparency}`,
+        }
+      },
+      MuiDialogActions: {
+        root: {
+          padding: "16px"
+        }
+      },
+      MuiFormControl: {
+        root: {
+          width: "100%"
+        },
+        marginNormal: {
+          marginTop: 0
         }
       },
       MuiLink: {
@@ -178,13 +209,18 @@ export const theme = responsiveFontSizes(
       },
       MuiList: {
         root: {
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
           padding: 8
         }
       },
       MuiListItem: {
         root: {
           borderRadius: "12px",
-          gap: 14
+          gap: 14,
+          backgroundColor: COLORS.whiteWithStrongTransparency,
+          minHeight: 52
         }
       },
       MuiListItemIcon: {
@@ -206,13 +242,25 @@ export const theme = responsiveFontSizes(
       },
       MuiPopover: {
         paper: {
+          display: "flex",
+          flexDirection: "column",
           backgroundColor: COLORS.darkGrey,
           border: `1px solid ${COLORS.whiteWithTransparency}`,
-          borderRadius: "12px",
-
-          "& .MuiList-padding": {
-            padding: "0px"
+          borderRadius: "16px",
+          padding: 10,
+          gap: 10,
+          boxShadow: "0 30px 70px 10px rgba(0, 0, 0, 1)",
+        },
+        root: {
+          '& .MuiList-root': {
+            padding: 0
           }
+        }
+      },
+      MuiSelect: {
+        select: {
+          backgroundColor: 'transparent',
+          gap: "16px"
         }
       },
       MuiStepper: {
@@ -289,7 +337,7 @@ export const theme = responsiveFontSizes(
       },
       MuiInputBase: {
         root: {
-          backgroundColor: COLORS.darkGrey,
+          backgroundColor: 'transparent',
           '& fieldset': {
             borderRadius: "12px",
             border: `1px solid ${COLORS.whiteWithTransparency}`,

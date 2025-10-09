@@ -1,111 +1,117 @@
 import {
   Container,
-  makeStyles,
-  Step,
-  StepButton,
-  StepContent,
-  Stepper,
-} from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
-import { setStep } from "../../store/attestSlice";
-import {
-  selectAttestActiveStep,
-  selectAttestIsCreateComplete,
-  selectAttestIsCreating,
-  selectAttestIsSendComplete,
-  selectAttestIsSending,
-} from "../../store/selectors";
-import HeaderText from "../HeaderText";
-import Create from "./Create";
-import CreatePreview from "./CreatePreview";
-import Send from "./Send";
-import SendPreview from "./SendPreview";
-import Source from "./Source";
-import SourcePreview from "./SourcePreview";
-import Target from "./Target";
-import TargetPreview from "./TargetPreview";
+  Divider,
+  Typography,
+  makeStyles
+} from "@material-ui/core"
+import { Alert } from "@material-ui/lab"
+import clsx from "clsx"
+import { Fragment, useCallback, useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useWidgetStyles } from "../BridgeWidget/styles"
+import { COLORS } from "../../muiTheme"
+import { AttestStepId, useAttestSteps } from "./useAttestSteps"
+import SourceDialog from "./SourceDialog"
+import TargetDialog from "./TargetDialog"
+import AttestStep from "./AttestStep"
 
-const useStyles = makeStyles((theme) => ({
-  spacer: { height: theme.spacing(2) },
-}));
-
-function Attest() {
+const Attest = () => {
   const { t } = useTranslation()
-  const classes = useStyles();
-  const dispatch = useDispatch();
-  const activeStep = useSelector(selectAttestActiveStep);
-  const isSending = useSelector(selectAttestIsSending);
-  const isSendComplete = useSelector(selectAttestIsSendComplete);
-  const isCreating = useSelector(selectAttestIsCreating);
-  const isCreateComplete = useSelector(selectAttestIsCreateComplete);
-  const preventNavigation =
-    (isSending || isSendComplete || isCreating) && !isCreateComplete;
+  const widgetClasses = useWidgetStyles()
+  const {
+    steps,
+    derivedActiveStep,
+    preventNavigation,
+    canEditStep
+  } = useAttestSteps()
+  const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
+  const classes = useStyles()
+  const selectLabel = t("Select")
+
   useEffect(() => {
-    if (preventNavigation) {
-      window.onbeforeunload = () => true;
-      return () => {
-        window.onbeforeunload = null;
-      };
+    window.onbeforeunload = preventNavigation ? () => true : null
+    
+    return () => {
+      window.onbeforeunload = null
     }
-  }, [preventNavigation]);
+  }, [preventNavigation])
+  
+  const handleOpenDialog = useCallback(
+    (stepId: AttestStepId) => {
+      if (!canEditStep(stepId)) return
+      setEditDialogStep(stepId)
+    },
+    [canEditStep]
+  )
+
+  const handleCloseDialog = () => setEditDialogStep(null)
+
+  const sourceStep = steps.find((step) => step.id === 0)
+  const targetStep = steps.find((step) => step.id === 1)
+
   return (
-    <Container maxWidth="md">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <h1 style={{ margin: 0 }}>Token registration</h1>
-      </div>
+    <Container maxWidth="sm" className={classes.pageContainer}>
+      <Typography variant='h1' style={{ margin: 0 }}>{t("Token Registration")}</Typography>
       <Alert severity="info">
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>
-      <div className={classes.spacer} />
-      <Stepper activeStep={activeStep} orientation="vertical">
-        <Step
-          expanded={activeStep >= 0}
-          disabled={preventNavigation || isCreateComplete}
-        >
-          <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. {t("Source")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 0 ? <Source /> : <SourcePreview />}
-          </StepContent>
-        </Step>
-        <Step
-          expanded={activeStep >= 1}
-          disabled={preventNavigation || isCreateComplete}
-        >
-          <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. {t("Target")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 1 ? <Target /> : <TargetPreview />}
-          </StepContent>
-        </Step>
-        <Step expanded={activeStep >= 2} disabled={isSendComplete}>
-          <StepButton onClick={() => dispatch(setStep(2))} icon={null}>
-            3. {t("Send attestation")}
-          </StepButton>
-          <StepContent>
-            {activeStep === 2 ? <Send /> : <SendPreview />}
-          </StepContent>
-        </Step>
-        <Step expanded={activeStep >= 3}>
-          <StepButton
-            onClick={() => dispatch(setStep(3))}
-            disabled={!isSendComplete}
-            icon={null}
-          >
-            4. {t("Create wrapped token")}
-          </StepButton>
-          <StepContent>
-            {isCreateComplete ? <CreatePreview /> : <Create />}
-          </StepContent>
-        </Step>
-      </Stepper>
+      <div className={clsx(widgetClasses.grayRoundedBox, classes.stepsWrapper)}>
+        <div className={classes.stepsContainer}>
+          {steps.map((step, index) => (
+            <Fragment key={step.id}>
+              <AttestStep
+                step={step}
+                derivedActiveStep={derivedActiveStep}
+                canEditStep={canEditStep}
+                onOpenDialog={handleOpenDialog}
+                selectLabel={selectLabel}
+              />
+              {index < steps.length - 1 && <Divider className={classes.stepDivider} />}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+
+      {sourceStep && (
+        <SourceDialog
+          open={editDialogStep === 0}
+          title={sourceStep.title}
+          onClose={handleCloseDialog}
+        />
+      )}
+      {targetStep && (
+        <TargetDialog
+          open={editDialogStep === 1}
+          title={targetStep.title}
+          onClose={handleCloseDialog}
+        />
+      )}
     </Container>
-  );
+  )
 }
 
-export default Attest;
+export default Attest
+
+const useStyles = makeStyles((theme) => ({
+  pageContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(2),
+    paddingBottom: theme.spacing(4)
+  },
+  stepsWrapper: {
+    padding: theme.spacing(2.5),
+    borderRadius: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(1.5)
+  },
+  stepsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.spacing(2),
+  },
+  stepDivider: {
+    backgroundColor: COLORS.whiteWithTransparency,
+  }
+}))
