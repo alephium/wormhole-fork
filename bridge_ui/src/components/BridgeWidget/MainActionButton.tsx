@@ -83,7 +83,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const currentAction = actionConfigs[currentActionKey]
 
-  const { renderedAction, renderedActionKey, advanceToken, isButtonDisabled } = useMainActionTransition({
+  const { renderedAction, renderedActionKey, isButtonDisabled } = useMainActionTransition({
     currentActionKey,
     currentAction,
     actionConfigs
@@ -111,7 +111,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
       >
         <div className={classes.content}>
           <SuccessPulse
-            activationKey={advanceToken}
             hideIcon
           >
             {renderedAction.label}

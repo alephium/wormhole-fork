@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@material-ui/core'
 import clsx from 'clsx'
-import { ReactNode, useEffect, useMemo, useRef } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
 import { BETA_CHAINS, ChainInfo, CHAINS_BY_ID } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
@@ -100,22 +100,11 @@ const ConnectedChainAccount = ({ chainId, labelClassName }: { chainId: ChainId }
 
 const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: boolean }) => {
   const classes = useStyles()
-  const activationKeyRef = useRef(0)
-  const wasReadyRef = useRef(isReady)
-
-  useEffect(() => {
-    if (isReady && !wasReadyRef.current) {
-      activationKeyRef.current += 1
-    }
-    wasReadyRef.current = isReady
-  }, [isReady])
-
   if (!isReady) return null
 
   return (
     <div className={classes.activeWalletButton}>
       <SuccessPulse
-        activationKey={activationKeyRef.current}
         className={classes.statusPulse}
         contentClassName={classes.statusContent}
       >
