@@ -49,6 +49,10 @@ export const AlephiumBlockTime = 16000 // 16 seconds in ms
 let tokenListCache: TokenList | undefined = undefined
 
 async function fetchTokenList(): Promise<TokenList> {
+  if (CLUSTER === 'devnet') {
+    return { networkId: 2, tokens: [] }
+  }
+
   const file = CLUSTER === 'mainnet' ? 'mainnet.json' : 'testnet.json'
   const url = `https://raw.githubusercontent.com/alephium/token-list/master/tokens/${file}`
   const response = await fetch(url)
@@ -62,12 +66,7 @@ async function fetchTokenList(): Promise<TokenList> {
 
 async function getTokenFromTokenList(tokenId: string): Promise<TokenInfo & { nameOnChain?: string; symbolOnChain?: string } | undefined> {
   if (tokenListCache !== undefined) {
-    let result = tokenListCache.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
-    if (result === undefined) { // update the cache
-      const tokenList = await fetchTokenList()
-      result = tokenList.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
-    }
-    return result
+    return tokenListCache.tokens.find((t) => t.id.toLowerCase() === tokenId.toLowerCase())
   }
 
   const tokenList = await fetchTokenList()
@@ -169,7 +168,7 @@ export const ALPHTokenInfo: TokenInfo = {
   logoURI: alephiumIcon
 }
 
-export async function getAlephiumTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
+export async function getAlephiumBridgedTokenInfo(provider: NodeProvider, tokenId: string): Promise<TokenInfo | undefined> {
   if (tokenId === ALPH_TOKEN_ID) {
     return ALPHTokenInfo
   }
@@ -264,6 +263,47 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
         }
       }
     })
+}
+
+export async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo & TokenInfo> {
+  if (tokenId === ALPH_TOKEN_ID) {
+    return {
+      ...ALPHTokenInfo,
+      isWrapped: false,
+      chainId: CHAIN_ID_ALEPHIUM,
+      assetAddress: Buffer.from(tokenId, 'hex')
+    }
+  }
+
+  // If a user has many tokens, fetching each token’s info from the chain one by one would result
+  // in a long loading time. Therefore, we use the github token list to reduce RPC calls.
+  const remoteTokenPostfix = '(AlphBridge)'
+  const tokenInfo = await getTokenFromTokenList(tokenId)
+  if ((tokenInfo?.nameOnChain && tokenInfo?.nameOnChain.endsWith(remoteTokenPostfix)) ||
+    tokenInfo?.name.endsWith(remoteTokenPostfix)
+  ) {
+    const tokenAddress = addressFromContractId(tokenId)
+    const state = await provider.contracts.getContractsAddressState(tokenAddress)
+    if (state.codeHash !== ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH) {
+      throw new Error(`invalid wrapped token: ${tokenId}`)
+    }
+    const tokenInfo = getRemoteTokenInfoFromContractState(state)
+    const originalAsset = Buffer.from(tokenInfo.id, 'hex')
+    return {
+      ...tokenInfo,
+      isWrapped: true,
+      chainId: tokenInfo.tokenChainId,
+      assetAddress: originalAsset,
+    }
+  }
+
+  const localTokenInfo = tokenInfo ?? (await getLocalTokenInfo(provider, tokenId))
+  return {
+    ...localTokenInfo,
+    isWrapped: false,
+    chainId: CHAIN_ID_ALEPHIUM,
+    assetAddress: Buffer.from(tokenId, 'hex'),
+  }
 }
 
 export function tryGetContractId(idOrAddress: string): string {
