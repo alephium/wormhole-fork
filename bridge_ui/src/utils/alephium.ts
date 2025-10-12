@@ -42,7 +42,7 @@ import * as base58 from 'bs58'
 import i18n from "../i18n";
 
 const WormholeMessageEventIndex = 0
-export const AlephiumBlockTime = 16000 // 16 seconds in ms
+export const AlephiumBlockTime = 8000 // 8 seconds in ms
 
 let tokenListCache: TokenList | undefined = undefined
 
