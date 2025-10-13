@@ -27,7 +27,7 @@ services:
       timeout: 45s
 
   alph-deploy-contracts:
-    image: eu.gcr.io/alephium-org/alephium-contracts:latest
+    image: gcr.io/alephium-org/alephium-contracts:latest
     environment:
       NODE_URL: http://alephium:22973
     depends_on:
@@ -83,7 +83,7 @@ services:
       - EXPLORER_READONLY=false
 
   eth-devnet:
-    image: eu.gcr.io/alephium-org/eth-node:latest
+    image: gcr.io/alephium-org/eth-node:latest
     restart: unless-stopped
     user: root
     ports:
@@ -101,14 +101,14 @@ services:
       - --chainId=1338
 
   eth-devnet-deploy-contracts:
-    image: eu.gcr.io/alephium-org/eth-node:latest
+    image: gcr.io/alephium-org/eth-node:latest
     command:
       - /bin/sh
       - -c
       - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=ethereum npm run migrate -- --network ethDocker && npx truffle exec mine.js --network ethDocker"
 
   bsc-devnet:
-    image: eu.gcr.io/alephium-org/eth-node:latest
+    image: gcr.io/alephium-org/eth-node:latest
     restart: unless-stopped
     user: root
     ports:
@@ -126,14 +126,14 @@ services:
       - --chainId=1397
 
   bsc-devnet-deploy-contracts:
-    image: eu.gcr.io/alephium-org/eth-node:latest
+    image: gcr.io/alephium-org/eth-node:latest
     command:
       - /bin/sh
       - -c
       - "cd .. && git apply ./ethereum/1conf.patch && cd ethereum && CHAIN_NAME=bsc npm run migrate -- --network bscDocker && npx truffle exec mine.js --network bscDocker"
 
   devnet-init:
-    image: eu.gcr.io/alephium-org/devnet-init:latest
+    image: gcr.io/alephium-org/devnet-init:latest
     environment:
       - NUM_OF_GUARDIANS=${NUM_OF_GUARDIANS:-1}
     command:
@@ -142,7 +142,7 @@ services:
       - "/scripts/devnet-init.sh"
 
   guardian-0:
-    image: eu.gcr.io/alephium-org/guardiand:latest
+    image: gcr.io/alephium-org/guardiand:latest
     hostname: guardian-0
     restart: unless-stopped
     ports:
@@ -181,7 +181,7 @@ services:
       - --logLevel=debug
 
   guardian-1:
-    image: eu.gcr.io/alephium-org/guardiand:latest
+    image: gcr.io/alephium-org/guardiand:latest
     hostname: guardian-1
     restart: unless-stopped
     ports:
@@ -222,7 +222,7 @@ services:
       - --logLevel=debug
 
   guardian-2:
-    image: eu.gcr.io/alephium-org/guardiand:latest
+    image: gcr.io/alephium-org/guardiand:latest
     hostname: guardian-2
     restart: unless-stopped
     ports:
@@ -263,7 +263,7 @@ services:
       - --logLevel=debug
 
   spy:
-    image: eu.gcr.io/alephium-org/guardiand:latest
+    image: gcr.io/alephium-org/guardiand:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:7072:7072
@@ -284,7 +284,7 @@ services:
       - 6379:6379
 
   relayer-engine:
-    image: eu.gcr.io/alephium-org/relayer-engine:latest
+    image: gcr.io/alephium-org/relayer-engine:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:31000:31000
@@ -334,7 +334,7 @@ services:
       ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL:-mongodb://mongo:27017/?directConnection=true}
 
   wormhole-explorer-backend:
-    image: eu.gcr.io/alephium-org/wormhole-explorer-backend:latest
+    image: gcr.io/alephium-org/wormhole-explorer-backend:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:8101:8101
@@ -370,7 +370,7 @@ services:
       - ws://eth-devnet:8545
 
   wormhole-explorer-api-server:
-    image: eu.gcr.io/alephium-org/wormhole-explorer-api-server:latest
+    image: gcr.io/alephium-org/wormhole-explorer-api-server:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:8100:8100
@@ -390,13 +390,13 @@ services:
       - --enableStackTrace=true
 
   bridge-ui:
-    image: eu.gcr.io/alephium-org/bridge-ui-devnet:latest
+    image: gcr.io/alephium-org/bridge-ui-devnet:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:30001:3000
 
   wormhole-exporer:
-    image: eu.gcr.io/alephium-org/wormhole-explorer:latest
+    image: gcr.io/alephium-org/wormhole-explorer:latest
     restart: unless-stopped
     ports:
       - 0.0.0.0:30002:8000

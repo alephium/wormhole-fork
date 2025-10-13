@@ -63,16 +63,18 @@ const useRelayersAvailable = (
 
 const getRelayersAvailable = (dispatch: Dispatch) => {
   dispatch(fetchRelayerTokenInfo());
-  axios.get(RELAYER_INFO_URL).then(
-    (response) => {
-      dispatch(receiveRelayerTokenInfo(response.data as RelayerTokenInfo));
-    },
-    (error) => {
-      dispatch(
-        errorRelayerTokenInfo(i18n.t("Failed to retrieve the relayer token info."))
-      );
-    }
-  );
+  if (RELAYER_INFO_URL !== '') {
+    axios.get(RELAYER_INFO_URL).then(
+      (response) => {
+        dispatch(receiveRelayerTokenInfo(response.data as RelayerTokenInfo));
+      },
+      (error) => {
+        dispatch(
+          errorRelayerTokenInfo(i18n.t("Failed to retrieve the relayer token info."))
+        );
+      }
+    );
+  }
 };
 
 export default useRelayersAvailable;

@@ -1348,7 +1348,7 @@ export const getCoinGeckoURL = (coinGeckoId: string) =>
 
 export const RELAYER_INFO_URL =
   CLUSTER === "mainnet"
-    ? "https://raw.githubusercontent.com/certusone/wormhole-relayer-list/main/relayer.json"
+    ? ""
     : CLUSTER === "testnet"
     ? ""
     : "/relayerExample.json";
