@@ -293,7 +293,7 @@ export async function getAlephiumTokenInfoWithRetry(tokenId: string, provider: N
   }
 }
 
-async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo & TokenInfo> {
+async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Promise<(WormholeWrappedInfo & TokenInfo) | undefined> {
   if (tokenId === ALPH_TOKEN_ID) {
     return {
       ...ALPHTokenInfo,
@@ -307,6 +307,10 @@ async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Pr
   // in a long loading time. Therefore, we use the github token list to reduce RPC calls.
   const remoteTokenPostfix = '(AlphBridge)'
   const tokenInfo = await getTokenFromTokenList(tokenId)
+  if (CLUSTER !== 'devnet' && tokenInfo === undefined) {
+    return undefined
+  }
+
   if ((tokenInfo?.nameOnChain && tokenInfo?.nameOnChain.endsWith(remoteTokenPostfix)) ||
     tokenInfo?.name.endsWith(remoteTokenPostfix)
   ) {
