@@ -265,7 +265,35 @@ export async function getAlephiumTokenWrappedInfo(tokenId: string, provider: Nod
     })
 }
 
-export async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo & TokenInfo> {
+async function fetchRetry<T>(
+  fn: () => Promise<T>,
+  retries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: any
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      if (i < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+      }
+    }
+  }
+  throw lastError
+}
+
+export async function getAlephiumTokenInfoWithRetry(tokenId: string, provider: NodeProvider): Promise<(WormholeWrappedInfo & TokenInfo) | undefined> {
+  try {
+    return await fetchRetry(() => getAlephiumTokenInfo(tokenId, provider))
+  } catch (error) {
+    console.error(`failed to get token info: ${tokenId}, ${error}`)
+    return undefined
+  }
+}
+
+async function getAlephiumTokenInfo(tokenId: string, provider: NodeProvider): Promise<WormholeWrappedInfo & TokenInfo> {
   if (tokenId === ALPH_TOKEN_ID) {
     return {
       ...ALPHTokenInfo,

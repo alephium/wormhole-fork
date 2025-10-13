@@ -125,7 +125,7 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
+import { getAlephiumTokenInfoWithRetry, getAvailableBalances } from "../utils/alephium";
 import { getRegisteredTokens, getTokenLogoAndSymbol } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
 import { Alert } from "@material-ui/lab";
@@ -770,14 +770,22 @@ const getAlgorandParsedTokenAccounts = async (
 
 const getAlephiumParsedTokenAccounts = async (targetChainId: ChainId, address: string, provider: NodeProvider) => {
   try {
+    const batchSize = 5
     const balances = await getAvailableBalances(provider, address)
+    const allTokens = Array.from(balances)
     const tokenAccounts: ParsedTokenAccount[] = []
-    for (const [localTokenId, amount] of balances) {
-      try {
-        const tokenInfo = await getAlephiumTokenInfo(localTokenId, provider)
+    for (let i = 0; i < allTokens.length; i += batchSize) {
+      const batch = allTokens.slice(i, i + batchSize)
+      const tokenInfos = await Promise.all(batch.map(([localTokenId]) => getAlephiumTokenInfoWithRetry(localTokenId, provider)))
+      for (let j = 0; j < tokenInfos.length; j += 1) {
+        const tokenInfo = tokenInfos[j]
+        if (tokenInfo === undefined) {
+          continue
+        }
         if (tokenInfo.isWrapped && tokenInfo.chainId !== targetChainId) {
           continue
         }
+        const [localTokenId, amount] = batch[j]
         const nativeAddress = tryUint8ArrayToNative(tokenInfo.assetAddress, tokenInfo.chainId)
         const uiInfo = await getTokenLogoAndSymbol(tokenInfo.chainId, nativeAddress)
         const uiAmount = formatUnits(amount, tokenInfo.decimals)
@@ -793,8 +801,6 @@ const getAlephiumParsedTokenAccounts = async (targetChainId: ChainId, address: s
           uiInfo?.logoURI ?? tokenInfo.logoURI,
           localTokenId === ALPH_TOKEN_ID
         ))
-      } catch (error) {
-        console.error(`failed to get token info: ${localTokenId}, ${error}`)
       }
     }
     return { tokenAccounts, balances}
