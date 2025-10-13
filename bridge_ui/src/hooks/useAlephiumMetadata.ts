@@ -3,8 +3,7 @@ import { NodeProvider } from '@alephium/web3'
 import { getLocalTokenInfo } from '@alephium/wormhole-sdk'
 import { useEffect, useMemo, useState } from 'react'
 import { DataWrapper } from '../store/helpers'
-import { getAvailableBalances } from '../utils/alephium'
-import { ALEPHIUM_TOKEN_LIST } from '../utils/consts'
+import { getAlephiumBridgedTokenInfo, getAvailableBalances } from '../utils/alephium'
 import { useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,12 +18,10 @@ const fetchAlphMetadata = async (nodeProvider: NodeProvider, tokenIds: string[],
   }
   const promises: Promise<TokenInfo>[] = []
   tokenIds.forEach((tokenId) => {
-    const tokenInfo = ALEPHIUM_TOKEN_LIST.find((t) => t.id === tokenId)
-    if (tokenInfo !== undefined) {
-      promises.push(Promise.resolve(tokenInfo))
-    } else {
-      promises.push(getLocalTokenInfo(nodeProvider, tokenId))
-    }
+    promises.push(getAlephiumBridgedTokenInfo(nodeProvider, tokenId).then((result) => {
+      if (result !== undefined) return result
+      return getLocalTokenInfo(nodeProvider, tokenId)
+    }))
   });
   const resultsArray = await Promise.all(promises)
   tokenIds.forEach((address, index) => {

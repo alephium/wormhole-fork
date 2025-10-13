@@ -8,14 +8,14 @@ volumes:
 
 services:
   alephium:
-    image: alephium/alephium:v3.7.0
+    image: alephium/alephium:v4.2.4
     restart: "no"
     ports:
       - 19973:19973/tcp
       - 19973:19973/udp
-      - 127.0.0.1:20973:20973
-      - 127.0.0.1:21973:21973
-      - 127.0.0.1:22973:22973
+      - 0.0.0.0:20973:20973
+      - 0.0.0.0:21973:21973
+      - 0.0.0.0:22973:22973
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -58,7 +58,7 @@ services:
 
   alephium-explorer-backend:
     container_name: alephium_explorer_backend
-    image: alephium/explorer-backend:v2.2.3
+    image: alephium/explorer-backend:v3.3.2
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
     user: root
     ports:
-      - 127.0.0.1:8545:8545
+      - 0.0.0.0:8545:8545
     volumes:
       - eth-full-node:/eth-full-node/
     command:
@@ -112,7 +112,7 @@ services:
     restart: unless-stopped
     user: root
     ports:
-      - 127.0.0.1:8546:8545
+      - 0.0.0.0:8546:8545
     volumes:
       - bsc-full-node:/bsc-full-node/
     command:
@@ -146,10 +146,10 @@ services:
     hostname: guardian-0
     restart: unless-stopped
     ports:
-      - 127.0.0.1:8999:8999/udp
-      - 127.0.0.1:7070:7070
-      - 127.0.0.1:7071:7071
-      - 127.0.0.1:6060:6060
+      - 0.0.0.0:8999:8999/udp
+      - 0.0.0.0:7070:7070
+      - 0.0.0.0:7071:7071
+      - 0.0.0.0:6060:6060
     volumes:
       - guardian-node:/run/node/data
     entrypoint:
@@ -185,10 +185,10 @@ services:
     hostname: guardian-1
     restart: unless-stopped
     ports:
-      - 127.0.0.1:9999:8999/udp
-      - 127.0.0.1:8070:7070
-      - 127.0.0.1:8071:7071
-      - 127.0.0.1:7060:6060
+      - 0.0.0.0:9999:8999/udp
+      - 0.0.0.0:8070:7070
+      - 0.0.0.0:8071:7071
+      - 0.0.0.0:7060:6060
     volumes:
       - guardian-node:/run/node/data
     entrypoint:
@@ -226,10 +226,10 @@ services:
     hostname: guardian-2
     restart: unless-stopped
     ports:
-      - 127.0.0.1:10999:8999/udp
-      - 127.0.0.1:9070:7070
-      - 127.0.0.1:9071:7071
-      - 127.0.0.1:8060:6060
+      - 0.0.0.0:10999:8999/udp
+      - 0.0.0.0:9070:7070
+      - 0.0.0.0:9071:7071
+      - 0.0.0.0:8060:6060
     volumes:
       - guardian-node:/run/node/data
     entrypoint:
@@ -266,7 +266,7 @@ services:
     image: gcr.io/alephium-org/guardiand:latest
     restart: unless-stopped
     ports:
-      - 127.0.0.1:7072:7072
+      - 0.0.0.0:7072:7072
     entrypoint:
       - /guardiand
       - spy
@@ -282,6 +282,23 @@ services:
     image: redis:6-alpine
     ports:
       - 6379:6379
+
+  relayer-engine:
+    image: eu.gcr.io/alephium-org/relayer-engine:latest
+    restart: unless-stopped
+    ports:
+      - 0.0.0.0:31000:31000
+    command:
+      - /bin/sh
+      - -c
+      - "npx ts-node src/main.ts"
+    environment:
+      NETWORK: ${NETWORK:-devnet}
+      ALEPHIUM_PRIVATE_KEYS: ${ALEPHIUM_PRIVATE_KEYS:-a642942e67258589cd2b1822c631506632db5a12aabcf413604e785300d762a5}
+      SPY_URL: ${SPY_URL:-spy:7072}
+      REDIS_URL: ${REDIS_URL:-redis:6379}
+      ALEPHIUM_NODE_URL: ${ALEPHIUM_NODE_URL:-http://alephium:22973}
+    profiles: ["relayer"]
 
   mongo:
     image: mongo:6.0.6
@@ -320,7 +337,7 @@ services:
     image: gcr.io/alephium-org/wormhole-explorer-backend:latest
     restart: unless-stopped
     ports:
-      - 127.0.0.1:8101:8101
+      - 0.0.0.0:8101:8101
     depends_on:
       mongo:
         condition: service_healthy
@@ -356,7 +373,7 @@ services:
     image: gcr.io/alephium-org/wormhole-explorer-api-server:latest
     restart: unless-stopped
     ports:
-      - 127.0.0.1:8100:8100
+      - 0.0.0.0:8100:8100
     depends_on:
       mongo:
         condition: service_healthy
@@ -376,13 +393,13 @@ services:
     image: gcr.io/alephium-org/bridge-ui-devnet:latest
     restart: unless-stopped
     ports:
-      - 127.0.0.1:30001:3000
+      - 0.0.0.0:30001:3000
 
   wormhole-exporer:
     image: gcr.io/alephium-org/wormhole-explorer:latest
     restart: unless-stopped
     ports:
-      - 127.0.0.1:30002:8000
+      - 0.0.0.0:30002:8000
     command:
       - /bin/sh
       - -c

@@ -14,7 +14,8 @@ import {
   CHAINS,
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
   ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_POLLING_INTERVAL
+  ALEPHIUM_POLLING_INTERVAL,
+  ALEPHIUM_BRIDGE_GROUP_INDEX
 } from "../../utils/consts";
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
@@ -215,7 +216,7 @@ export default function Transactions() {
     if (chainId === CHAIN_ID_ALEPHIUM) {
       return alphWallet.connectionStatus !== 'connected'
         ? undefined
-        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, alphWallet.account.group)
+        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, ALEPHIUM_BRIDGE_GROUP_INDEX)
     }
     if (bothAreEvmChain) {
       if (chainId === txSourceChain && sourceChainReady) {
@@ -236,7 +237,7 @@ export default function Transactions() {
 
   const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
     if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
-      const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, alphWallet.account.group)
+      const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
       return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
     }
     const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
