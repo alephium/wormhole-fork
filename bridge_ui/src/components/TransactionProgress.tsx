@@ -18,7 +18,7 @@ import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST } from "../utils/consts";
+import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST, ALEPHIUM_BRIDGE_GROUP_INDEX } from "../utils/consts";
 import SmartBlock from "./SmartBlock";
 import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from "../utils/evm";
 import { useWallet } from "@alephium/web3-react";
@@ -116,8 +116,8 @@ export default function TransactionProgress({
           await new Promise((resolve) => setTimeout(resolve, timeout));
           try {
             const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: alphWallet.account.group,
-              toGroup: alphWallet.account.group
+              fromGroup: ALEPHIUM_BRIDGE_GROUP_INDEX,
+              toGroup: ALEPHIUM_BRIDGE_GROUP_INDEX
             });
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight);

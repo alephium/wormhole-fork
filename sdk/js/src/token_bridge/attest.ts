@@ -26,7 +26,8 @@ export async function attestFromAlph(
   nonce?: string
 ): Promise<ExecuteScriptResult> {
   const nonceHex = (typeof nonce !== "undefined") ? nonce : createNonce().toString('hex')
-  return AttestToken.execute(signerProvider, {
+  return AttestToken.execute({
+    signer: signerProvider,
     initialFields: {
       payer: payer,
       tokenBridge: tokenBridgeId,
@@ -47,9 +48,7 @@ export async function attestFromEth(
   signer: ethers.Signer,
   tokenAddress: string,
   overrides: PayableOverrides & { from?: string | Promise<string> } = {}
-): Promise<ethers.ContractReceipt> {
+): Promise<ethers.ContractTransaction> {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.attestToken(tokenAddress, createNonce(), overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.attestToken(tokenAddress, createNonce(), overrides);
 }

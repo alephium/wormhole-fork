@@ -113,7 +113,7 @@ export default function useGetIsTransferCompleted(
             const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
             transferCompleted = await getIsTransferCompletedAlph(
               tokenBridgeForChainId,
-              alphWallet.account.group,
+              ALEPHIUM_BRIDGE_GROUP_INDEX,
               signedVAA
             )
           } catch (error) {

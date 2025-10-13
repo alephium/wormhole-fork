@@ -34,7 +34,7 @@ Abstract Contract TokenBridgeGovernance(
     ) -> () {
         let (encodedImmutableFields, encodedMutableFields) = AttestTokenHandler.encodeFields!(
             governance,
-            selfContract!(),
+            TokenBridge(selfContractId!()),
             targetChainId,
             targetTokenBridgeId,
             0,
@@ -85,7 +85,7 @@ Abstract Contract TokenBridgeGovernance(
         let (encodedImmutableFields, encodedMutableFields) = TokenBridgeForChain.encodeFields!(
             governance,
             localChainId,
-            selfContract!(),
+            TokenBridge(selfContractId!()),
             remoteChainId,
             remoteTokenBridgeId,
             0,

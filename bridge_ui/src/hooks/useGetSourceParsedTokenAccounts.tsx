@@ -22,7 +22,7 @@ import {
   WSOL_ADDRESS,
   WSOL_DECIMALS,
   hexToUint8Array,
-  getTokenPoolId
+  tryUint8ArrayToNative
 } from "@alephium/wormhole-sdk";
 import { Dispatch } from "@reduxjs/toolkit";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -116,9 +116,7 @@ import {
   WNEON_DECIMALS,
   WROSE_ADDRESS,
   WROSE_DECIMALS,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
   getTokenBridgeAddressForChain,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -127,7 +125,7 @@ import {
 } from "../utils/solana";
 import { fetchSingleMetadata } from "./useAlgoMetadata";
 import { ALPH_TOKEN_ID, NodeProvider } from "@alephium/web3";
-import { getAvailableBalances } from "../utils/alephium";
+import { getAlephiumTokenInfo, getAvailableBalances } from "../utils/alephium";
 import { getRegisteredTokens, getTokenLogoAndSymbol } from "../utils/tokens";
 import { useWallet } from "@alephium/web3-react";
 import { Alert } from "@material-ui/lab";
@@ -773,30 +771,31 @@ const getAlgorandParsedTokenAccounts = async (
 const getAlephiumParsedTokenAccounts = async (targetChainId: ChainId, address: string, provider: NodeProvider) => {
   try {
     const balances = await getAvailableBalances(provider, address)
-    const registeredTokens = await getRegisteredTokens()
-    const filteredTokens = registeredTokens.filter((t) => t.tokenChain === CHAIN_ID_ALEPHIUM || t.tokenChain === targetChainId)
     const tokenAccounts: ParsedTokenAccount[] = []
-    for (const token of filteredTokens) {
-      const localTokenId = token.tokenChain === CHAIN_ID_ALEPHIUM
-        ? token.nativeAddress
-        : getTokenPoolId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, token.tokenChain, token.tokenAddress, ALEPHIUM_BRIDGE_GROUP_INDEX)
-      const amount = balances.get(localTokenId.toLowerCase())
-      if (amount === undefined) continue
-
-      const info = await getTokenLogoAndSymbol(token.tokenChain, token.nativeAddress)
-      const uiAmount = formatUnits(amount, token.decimals)
-      tokenAccounts.push(createParsedTokenAccount(
-        address,
-        localTokenId,
-        amount.toString(),
-        token.decimals,
-        parseFloat(uiAmount),
-        uiAmount,
-        info?.symbol ?? token.symbol,
-        token.name,
-        info?.logoURI ?? token.logo,
-        localTokenId === ALPH_TOKEN_ID
-      ))
+    for (const [localTokenId, amount] of balances) {
+      try {
+        const tokenInfo = await getAlephiumTokenInfo(localTokenId, provider)
+        if (tokenInfo.isWrapped && tokenInfo.chainId !== targetChainId) {
+          continue
+        }
+        const nativeAddress = tryUint8ArrayToNative(tokenInfo.assetAddress, tokenInfo.chainId)
+        const uiInfo = await getTokenLogoAndSymbol(tokenInfo.chainId, nativeAddress)
+        const uiAmount = formatUnits(amount, tokenInfo.decimals)
+        tokenAccounts.push(createParsedTokenAccount(
+          address,
+          localTokenId,
+          amount.toString(),
+          tokenInfo.decimals,
+          parseFloat(uiAmount),
+          uiAmount,
+          uiInfo?.symbol ?? tokenInfo.symbol,
+          tokenInfo.name,
+          uiInfo?.logoURI ?? tokenInfo.logoURI,
+          localTokenId === ALPH_TOKEN_ID
+        ))
+      } catch (error) {
+        console.error(`failed to get token info: ${localTokenId}, ${error}`)
+      }
     }
     return { tokenAccounts, balances}
   } catch (error) {

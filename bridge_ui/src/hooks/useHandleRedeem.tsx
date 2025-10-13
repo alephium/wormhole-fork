@@ -10,7 +10,9 @@ import {
   deserializeVAA,
   needToReward,
   deserializeTransferTokenVAA,
-  redeemOnAlph
+  redeemOnAlph,
+  redeemOnEthNative,
+  redeemOnEth
 } from "@alephium/wormhole-sdk";
 import { Alert } from "@material-ui/lab";
 import axios from "axios";
@@ -34,7 +36,6 @@ import {
 import parseError from "../utils/parseError";
 import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
 import useTransferSignedVAA from "./useTransferSignedVAA";
-import { redeemOnEthNativeWithoutWait, redeemOnEthWithoutWait } from "../utils/evm";
 import { useWallet, Wallet as AlephiumWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
 import i18n from "../i18n";
@@ -55,13 +56,13 @@ async function evm(
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
     const result = isNative
-      ? await redeemOnEthNativeWithoutWait(
+      ? await redeemOnEthNative(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,
           overrides
         )
-      : await redeemOnEthWithoutWait(
+      : await redeemOnEth(
           getTokenBridgeAddressForChain(targetChainId),
           signer,
           signedVAA,

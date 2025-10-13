@@ -10,7 +10,8 @@ export async function createRemoteTokenPoolOnAlph(
   payer: string,
   alphAmount: bigint
 ): Promise<ExecuteScriptResult> {
-  return CreateRemoteTokenPool.execute(signerProvider, {
+  return CreateRemoteTokenPool.execute({
+    signer: signerProvider,
     initialFields: {
       payer: payer,
       attestTokenHandler: attestTokenHandlerId,
@@ -29,7 +30,8 @@ export async function createLocalTokenPoolOnAlph(
   payer: string,
   alphAmount: bigint
 ): Promise<ExecuteScriptResult> {
-  return CreateLocalTokenPool.execute(signerProvider, {
+  return CreateLocalTokenPool.execute({
+    signer: signerProvider,
     initialFields: {
       payer: payer,
       attestTokenHandler: attestTokenHandlerId,
@@ -47,9 +49,7 @@ export async function createWrappedOnEth(
   signer: ethers.Signer,
   signedVAA: Uint8Array,
   overrides: Overrides & { from?: string | Promise<string> } = {}
-): Promise<ethers.ContractReceipt> {
+): Promise<ethers.ContractTransaction> {
   const bridge = Bridge__factory.connect(tokenBridgeAddress, signer);
-  const v = await bridge.createWrapped(signedVAA, overrides);
-  const receipt = await v.wait();
-  return receipt;
+  return await bridge.createWrapped(signedVAA, overrides);
 }
