@@ -42,7 +42,7 @@ export type MethodType = "nft" | "createWrapped" | "transfer";
 //Still it would be good to calculate a reasonable value at runtime based off current gas prices,
 //rather than a hardcoded value.
 const SOLANA_THRESHOLD_LAMPORTS: bigint = BigInt(300000);
-const ETHEREUM_THRESHOLD_WEI: bigint = BigInt(35000000000000000);
+const ETHEREUM_THRESHOLD_WEI: bigint = BigInt(10000000000000000);
 const TERRA_THRESHOLD_ULUNA: bigint = BigInt(100000);
 const TERRA_THRESHOLD_UUSD: bigint = BigInt(10000000);
 const ALEPHIUM_THRESHOLD: bigint = BigInt(1000000000000);
