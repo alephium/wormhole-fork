@@ -133,7 +133,16 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             chains={sourceChainOptions}
           />
         </div>
-        <Divider />
+        <Divider className={classes.chainDivider}>
+          <div className={classes.chainSelectArrow}>
+            <ChainSelectArrow2
+              onClick={() => {
+                dispatch(setSourceChain(targetChain))
+              }}
+              disabled={shouldLockFields}
+            />
+          </div>
+        </Divider>
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="To"
@@ -143,14 +152,6 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             onChange={handleTargetChange}
             disabled={shouldLockFields}
             chains={targetChainOptions}
-          />
-        </div>
-        <div className={classes.chainSelectArrow}>
-          <ChainSelectArrow2
-            onClick={() => {
-              dispatch(setSourceChain(targetChain))
-            }}
-            disabled={shouldLockFields}
           />
         </div>
       </div>
@@ -221,13 +222,22 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     gap: '24px'
   },
+  chainDivider: {
+    width: '100%',
+    position: 'relative',
+    height: 1
+  },
   chainSelectContainer: {
     flexBasis: '100%',
     width: '100%'
   },
   chainSelectArrow: {
     position: 'absolute',
-    top: 'calc(50% - 15px)',
-    transform: 'rotate(90deg)'
+    top: '50%',
+    right: theme.spacing(1.5),
+    transform: 'translateY(-50%) rotate(90deg)',
+    [theme.breakpoints.down('xs')]: {
+      right: theme.spacing(1),
+    }
   }
 }))
