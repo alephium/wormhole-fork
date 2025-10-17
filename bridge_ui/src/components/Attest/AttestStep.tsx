@@ -204,6 +204,11 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     gap: theme.spacing(2),
     cursor: "default",
+    [theme.breakpoints.down('xs')]: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: theme.spacing(1.5)
+    }
   },
   stepRowActive: {
     opacity: 1,
@@ -222,10 +227,16 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     flex: 1,
+    [theme.breakpoints.down('xs')]: {
+      width: "100%"
+    }
   },
   stepTitle: {
     color: COLORS.white,
     minWidth: 140,
+    [theme.breakpoints.down('xs')]: {
+      minWidth: "auto"
+    }
   },
   stepDescription: {
     flex: 1,
@@ -234,6 +245,11 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 400,
     lineHeight: "1.2",
     maxWidth: "65%",
+    [theme.breakpoints.down('xs')]: {
+      maxWidth: "100%",
+      marginTop: theme.spacing(0.5),
+      textAlign: "left"
+    }
   },
   stepValueWrapper: {
     display: "flex",
@@ -241,6 +257,10 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     justifyContent: "flex-end",
     alignItems: "flex-end",
+    [theme.breakpoints.down('xs')]: {
+      width: "100%",
+      alignItems: "stretch"
+    }
   },
   stepValue: {
     display: "inline-flex",
@@ -256,6 +276,12 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
     alignSelf: "flex-end",
     transition: "border-color 0.2s ease, background-color 0.2s ease",
+    [theme.breakpoints.down('xs')]: {
+      width: "100%",
+      justifyContent: "flex-start",
+      textAlign: "left",
+      alignSelf: "stretch"
+    }
   },
   stepValueStatic: {
     padding: theme.spacing(1, 0),
@@ -271,6 +297,9 @@ const useStyles = makeStyles((theme) => ({
     color: GRAY,
     fontSize: "14px",
     fontWeight: 400,
+    [theme.breakpoints.down('xs')]: {
+      textAlign: "left"
+    }
   },
   stepValueInteractive: {
     cursor: "pointer",
@@ -290,6 +319,11 @@ const useStyles = makeStyles((theme) => ({
   selectButtonWrapper: {
     minWidth: 140,
     maxWidth: 160,
+    [theme.breakpoints.down('xs')]: {
+      width: "100%",
+      minWidth: 0,
+      maxWidth: "none"
+    }
   },
   selectButton: {
     width: "100%",

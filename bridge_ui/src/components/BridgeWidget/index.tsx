@@ -97,26 +97,45 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '16px'
+    gap: '16px',
+    padding: theme.spacing(3, 2),
+    [theme.breakpoints.down('xs')]: {
+      width: '100%',
+      padding: theme.spacing(2, 1.5),
+      alignItems: 'stretch'
+    }
   },
   innerContainer: {
     display: 'flex',
     flexDirection: 'column',
     gap: '24px',
-    width: 460
+    width: '100%',
+    maxWidth: 520,
+    margin: '0 auto',
+    [theme.breakpoints.down('xs')]: {
+      gap: theme.spacing(2.5),
+      maxWidth: '100%'
+    }
   },
   mainBox: {
     display: 'flex',
     flex: 1,
     flexDirection: 'column',
-    maxWidth: '520px',
-    gap: '10px'
+    maxWidth: 520,
+    width: '100%',
+    gap: '10px',
+    [theme.breakpoints.down('xs')]: {
+      maxWidth: '100%'
+    }
   },
   stack: {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    gap: '24px'
+    gap: '24px',
+    [theme.breakpoints.down('xs')]: {
+      gap: theme.spacing(2)
+    }
   },
   confirmButton: {
     backgroundColor: '#080808',

@@ -105,14 +105,24 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing(2),
-    paddingBottom: theme.spacing(4)
+    paddingBottom: theme.spacing(4),
+    [theme.breakpoints.down('xs')]: {
+      gap: theme.spacing(1.5),
+      paddingBottom: theme.spacing(3),
+      paddingLeft: theme.spacing(1.5),
+      paddingRight: theme.spacing(1.5)
+    }
   },
   stepsWrapper: {
     padding: theme.spacing(2.5),
     borderRadius: '20px',
     display: 'flex',
     flexDirection: 'column',
-    gap: theme.spacing(1.5)
+    gap: theme.spacing(1.5),
+    width: '100%',
+    [theme.breakpoints.down('xs')]: {
+      padding: theme.spacing(2)
+    }
   },
   stepsContainer: {
     display: "flex",

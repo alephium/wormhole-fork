@@ -222,7 +222,10 @@ const useStyles = makeStyles((theme) => ({
   },
   accountAddress: {
     fontSize: '14px',
-    fontWeight: 500
+    fontWeight: 500,
+    [theme.breakpoints.down('xs')]: {
+      display: 'none'
+    }
   },
   modalTitle: {
     display: 'flex',

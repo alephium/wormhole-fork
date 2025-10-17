@@ -1,7 +1,7 @@
-import { IconButton } from '@material-ui/core'
+import { IconButton, makeStyles } from '@material-ui/core'
 import { ArrowForward, SwapHoriz } from '@material-ui/icons'
 import { useState } from 'react'
-import { COLORS, theme } from '../../muiTheme';
+import { COLORS } from '../../muiTheme';
 
 interface ChainSelectArrow2Props {
   onClick: () => void
@@ -10,17 +10,11 @@ interface ChainSelectArrow2Props {
 
 const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
   const [showSwap, setShowSwap] = useState(false)
+  const classes = useStyles()
 
   return (
     <IconButton
-      style={{
-        color: theme.palette.grey[600],
-        border: `1px solid ${COLORS.whiteWithTransparency}`,
-        outline: `6px solid ${COLORS.darkGrey}`,
-        backgroundColor: COLORS.darkGrey,
-        width: '30px',
-        height: '30px',
-      }}
+      className={classes.button}
       onClick={onClick}
       onMouseEnter={() => {
         setShowSwap(true)
@@ -36,3 +30,16 @@ const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
 }
 
 export default ChainSelectArrow2
+
+const useStyles = makeStyles((theme) => ({
+  button: {
+    color: theme.palette.grey[600],
+    border: `1px solid ${COLORS.whiteWithTransparency}`,
+    outline: `6px solid ${COLORS.darkGrey}`,
+    backgroundColor: COLORS.darkGrey,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    transition: 'border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, outline-width 0.2s ease'
+  }
+}))
