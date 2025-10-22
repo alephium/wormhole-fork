@@ -12,7 +12,7 @@ import { setIsBlockFinalized } from '../../../store/transferSlice'
 import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import { CircularProgress, LinearProgress, styled, Typography } from '@material-ui/core'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
-import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../utils/consts'
+import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../utils/consts'
 import {
   DefaultEVMChainConfirmations,
   EpochDuration,
@@ -258,8 +258,8 @@ const useFetchCurrentBlockNumber = () => {
           await new Promise((resolve) => setTimeout(resolve, timeout))
           try {
             const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: alphWallet.account.group,
-              toGroup: alphWallet.account.group
+              fromGroup: ALEPHIUM_BRIDGE_GROUP_INDEX,
+              toGroup: ALEPHIUM_BRIDGE_GROUP_INDEX
             })
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight)
