@@ -397,3 +397,11 @@ export const selectTerraFeeDenom = (state: RootState) => {
 export const selectRelayerTokenInfo = (state: RootState) => {
   return state.tokens.relayerTokenInfo;
 };
+
+export const selectFinalityProgressInitialRemainingBlocks = (state: RootState) => {
+  return state.transfer.finalityProgressInitialRemainingBlocks;
+}
+
+export const selectFinalityProgressInitialRemainingSeconds = (state: RootState) => {
+  return state.transfer.finalityProgressInitialRemainingSeconds;
+}

@@ -62,6 +62,8 @@ export interface TransferState {
   isBlockFinalized: boolean
   hasSentTokens: boolean
   isTokenPickerDialogOpen: boolean
+  finalityProgressInitialRemainingBlocks: number | undefined
+  finalityProgressInitialRemainingSeconds: number | undefined
 }
 
 const initialState: TransferState = {
@@ -95,7 +97,9 @@ const initialState: TransferState = {
   acalaRelayerInfo: getEmptyDataWrapper(),
   isBlockFinalized: false,
   hasSentTokens: false,
-  isTokenPickerDialogOpen: false
+  isTokenPickerDialogOpen: false,
+  finalityProgressInitialRemainingBlocks: undefined,
+  finalityProgressInitialRemainingSeconds: undefined
 }
 
 export const transferSlice = createSlice({
@@ -319,6 +323,12 @@ export const transferSlice = createSlice({
     },
     setHasSentTokens: (state, action: PayloadAction<boolean>) => {
       state.hasSentTokens = action.payload
+    },
+    setFinalityProgressInitialRemainingBlocks: (state, action: PayloadAction<number | undefined>) => {
+      state.finalityProgressInitialRemainingBlocks = action.payload
+    },
+    setFinalityProgressInitialRemainingSeconds: (state, action: PayloadAction<number | undefined>) => {
+      state.finalityProgressInitialRemainingSeconds = action.payload
     }
   }
 })
@@ -364,7 +374,9 @@ export const {
   errorAcalaRelayerInfo,
   receiveAcalaRelayerInfo,
   setIsBlockFinalized,
-  setHasSentTokens
+  setHasSentTokens,
+  setFinalityProgressInitialRemainingBlocks,
+  setFinalityProgressInitialRemainingSeconds
 } = transferSlice.actions
 
 export default transferSlice.reducer

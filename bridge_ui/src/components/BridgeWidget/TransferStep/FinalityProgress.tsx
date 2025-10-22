@@ -1,5 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
+  selectFinalityProgressInitialRemainingBlocks,
+  selectFinalityProgressInitialRemainingSeconds,
   selectTransferIsBlockFinalized,
   selectTransferIsSendComplete,
   selectTransferSourceChain,
@@ -8,7 +10,7 @@ import {
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { useEffect, useState } from 'react'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { setIsBlockFinalized } from '../../../store/transferSlice'
+import { setFinalityProgressInitialRemainingBlocks, setFinalityProgressInitialRemainingSeconds, setIsBlockFinalized } from '../../../store/transferSlice'
 import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import { CircularProgress, LinearProgress, styled, Typography } from '@material-ui/core'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
@@ -30,12 +32,13 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const tx = useSelector(selectTransferTransferTx)
   const sourceChain = useSelector(selectTransferSourceChain)
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
+  const signedVAA = useTransferSignedVAA()
   const dispatch = useDispatch()
 
   const remainingBlocksForFinality = useRemainingBlocksForFinality()
 
-  const [initialRemainingBlocks, setInitialRemainingBlocks] = useState<number>()
-  const [initialRemainingSeconds, setInitialRemainingSeconds] = useState<number>()
+  const initialRemainingBlocks = useSelector(selectFinalityProgressInitialRemainingBlocks)
+  const initialRemainingSeconds = useSelector(selectFinalityProgressInitialRemainingSeconds)
   const alphTxConfirmsAt = tx?.blockTimestamp
     ? tx.blockTimestamp + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL * AlephiumBlockTime
     : undefined
@@ -43,14 +46,13 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   useEffect(() => {
     if (initialRemainingBlocks || !remainingBlocksForFinality) return
 
-    setInitialRemainingBlocks(remainingBlocksForFinality)
-  }, [initialRemainingBlocks, remainingBlocksForFinality])
+    dispatch(setFinalityProgressInitialRemainingBlocks(remainingBlocksForFinality))
+  }, [dispatch, initialRemainingBlocks, remainingBlocksForFinality])
 
-  const [alphTxConfirmed, setAlphTxConfirmed] = useState<boolean>(false)
+  const [alphTxConfirmed, setAlphTxConfirmed] = useState<boolean>(!!signedVAA)
   const [remainingSeconds, setRemainingSeconds] = useState<number>()
 
   const showProgress = tx && remainingBlocksForFinality !== undefined && initialRemainingBlocks !== undefined
-  const signedVAA = useTransferSignedVAA()
 
   const isCompleted =
     !!signedVAA ||
@@ -78,9 +80,9 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
       remainingBlocksForFinality === 0 &&
       alphTxConfirmsAt
     ) {
-      setInitialRemainingSeconds((alphTxConfirmsAt - Date.now()) / 1000)
+      dispatch(setFinalityProgressInitialRemainingSeconds((alphTxConfirmsAt - Date.now()) / 1000))
     }
-  }, [isActive, showProgress, remainingBlocksForFinality, alphTxConfirmsAt, sourceChain])
+  }, [isActive, showProgress, remainingBlocksForFinality, alphTxConfirmsAt, sourceChain, dispatch])
 
   useEffect(() => {
     if (remainingSeconds !== undefined && remainingSeconds >= 0 && initialRemainingSeconds) {
