@@ -40,6 +40,9 @@ const useStyles = makeStyles((theme) => ({
     width: 32,
     height: 32,
     borderRadius: 10,
-    transition: 'border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, outline-width 0.2s ease'
+    transition: 'border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, outline-width 0.2s ease',
+    "&:hover": {
+      backgroundColor: COLORS.darkGrey2,
+    },
   }
 }))

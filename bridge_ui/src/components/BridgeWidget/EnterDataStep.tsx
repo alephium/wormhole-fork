@@ -225,7 +225,11 @@ const useStyles = makeStyles((theme) => ({
   chainDivider: {
     width: '100%',
     position: 'relative',
-    height: 1
+    height: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -234,7 +238,6 @@ const useStyles = makeStyles((theme) => ({
   chainSelectArrow: {
     position: 'absolute',
     top: '50%',
-    right: theme.spacing(1.5),
     transform: 'translateY(-50%) rotate(90deg)',
     [theme.breakpoints.down('xs')]: {
       right: theme.spacing(1),

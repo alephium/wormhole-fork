@@ -14,6 +14,7 @@ export const COLORS = {
   nearWhite: "#ebebeb",
   nearBlackWithMinorTransparency: "rgba(0,0,0,.25)",
   darkGrey: 'rgb(31, 31, 31)',
+  darkGrey2: 'rgb(49, 49, 49)',
   red: "rgb(237, 74, 52)",
   redWithTransparency: "rgba(237, 74, 52, 0.8)",
   redWithStrongTransparency: "rgba(237, 74, 52, 0.1)",
