@@ -29,7 +29,7 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
   const targetAsset = useSelector(selectTransferTargetAsset)
   const isRecovery = useSelector(selectTransferIsRecovery)
   const isRedeeming = useSelector(selectTransferIsRedeeming)
-  
+
   const {
     isTransferCompletedLoading,
     isTransferCompleted: isTransferCompletedFlag,
@@ -60,7 +60,11 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
 
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 
-  if (!isRedeemDisabled && (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired)) {
+  if (
+    !isRedeemDisabled &&
+    !isTransferCompleted.isTransferCompleted &&
+    (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired)
+  ) {
     return (
       <div className={widgetClasses.grayRoundedBox}>
         {manualRedeemToAlephiumRequired ? (

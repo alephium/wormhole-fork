@@ -50,7 +50,9 @@ const TransferStep = () => {
 
       <MainActionButton />
 
-      {hasSentTokens && <TransferMoreTokensButton />}
+      {(hasSentTokens || isTransferCompleted.isTransferCompleted) && (
+        <TransferMoreTokensButton isTransferCompleted={isTransferCompleted} />
+      )}
     </div>
   )
 }

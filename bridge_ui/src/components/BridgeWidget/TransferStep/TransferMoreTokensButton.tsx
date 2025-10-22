@@ -3,8 +3,13 @@ import BridgeWidgetButton from '../BridgeWidgetButton'
 import { useCallback } from 'react'
 import { reset } from '../../../store/transferSlice'
 import { selectTransferIsRedeemComplete, selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
+import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 
-const TransferMoreTokensButton = () => {
+interface TransferMoreTokensButtonProps {
+  isTransferCompleted: TransferCompletionState
+}
+
+const TransferMoreTokensButton = ({ isTransferCompleted }: TransferMoreTokensButtonProps) => {
   const dispatch = useDispatch()
 
   const handleResetClick = useCallback(() => {
@@ -14,7 +19,7 @@ const TransferMoreTokensButton = () => {
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
-  if (isRedeemComplete || isRedeemedViaRelayer) {
+  if (isRedeemComplete || isRedeemedViaRelayer || isTransferCompleted.isTransferCompleted) {
     return <BridgeWidgetButton onClick={handleResetClick}>Back to the homepage</BridgeWidgetButton>
   }
 
