@@ -130,7 +130,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
           return prev
         }
 
-        const newProgress = prev + 0.1
+        const newProgress = prev + 0.05
 
         return newProgress
       })
