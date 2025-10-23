@@ -31,6 +31,8 @@ export const selectAttestIsWalletApproved = (state: RootState) =>
 export const selectAttestIsCreating = (state: RootState) =>
   state.attest.isCreating;
 export const selectAttestCreateTx = (state: RootState) => state.attest.createTx;
+export const selectAttestIsAlphPoolCreated = (state: RootState) =>
+  state.attest.isAlphPoolCreated;
 export const selectAttestIsSourceComplete = (state: RootState) =>
   !!state.attest.sourceChain && !!state.attest.sourceAsset;
 // TODO: check wrapped asset exists or is native attest
