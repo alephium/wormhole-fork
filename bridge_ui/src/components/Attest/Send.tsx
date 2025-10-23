@@ -102,7 +102,6 @@ const Send = () => {
   const { handleClick, disabled, showLoader } = useHandleAttest()
   const { signer } = useEthereumProvider()
   const alephiumWallet = useAlephiumWallet()
-  const { connect: connectAlephium } = useAlephiumConnect()
   const sourceChain = useSelector(selectAttestSourceChain)
   const attestTx = useSelector(selectAttestAttestTx)
   const isSendComplete = useSelector(selectAttestIsSendComplete)
@@ -146,26 +145,24 @@ const Send = () => {
       setIsEvmDialogOpen(true)
       return
     }
-    if (sourceChain === CHAIN_ID_ALEPHIUM) {
-      connectAlephium()
-      return
-    }
-  }, [
-    connectAlephium,
-    shouldShowConnectButton,
-    sourceChain
-  ])
+  }, [shouldShowConnectButton, sourceChain])
 
   return (
     <>
-      <BridgeWidgetButton
-        short
-        disabled={shouldShowConnectButton ? !isConnectActionAvailable : !isReady || disabled}
-        onClick={shouldShowConnectButton ? handleConnectClick : handleClick}
-        isLoading={shouldShowConnectButton ? false : showLoader}
-      >
-        {shouldShowConnectButton ? t("Connect wallet") : t("Attest")}
-      </BridgeWidgetButton>
+      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
+        {({ show }) => (
+          <BridgeWidgetButton
+            short
+            disabled={shouldShowConnectButton ? !isConnectActionAvailable : !isReady || disabled}
+            onClick={
+              shouldShowConnectButton ? (sourceChain === CHAIN_ID_ALEPHIUM ? show : handleConnectClick) : handleClick
+            }
+            isLoading={shouldShowConnectButton ? false : showLoader}
+          >
+            {shouldShowConnectButton ? t('Connect wallet') : t('Attest')}
+          </BridgeWidgetButton>
+        )}
+      </AlephiumConnectButton.Custom>
       {!shouldShowConnectButton && statusMessage ? (
         <Typography variant="body2" color="error" className={classes.statusMessage}>
           {statusMessage}
