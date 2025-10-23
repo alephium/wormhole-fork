@@ -10,7 +10,11 @@ import {
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { useEffect, useState } from 'react'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { setFinalityProgressInitialRemainingBlocks, setFinalityProgressInitialRemainingSeconds, setIsBlockFinalized } from '../../../store/transferSlice'
+import {
+  setFinalityProgressInitialRemainingBlocks,
+  setFinalityProgressInitialRemainingSeconds,
+  setIsBlockFinalized
+} from '../../../store/transferSlice'
 import { CheckCircleOutlineRounded } from '@material-ui/icons'
 import { CircularProgress, LinearProgress, styled, Typography } from '@material-ui/core'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
@@ -36,6 +40,9 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const dispatch = useDispatch()
 
   const remainingBlocksForFinality = useRemainingBlocksForFinality()
+  const avgAlphBlockTime = useFetchAvgBlockTime()
+  const remainingSecondsForAlphFinality =
+    avgAlphBlockTime && remainingBlocksForFinality ? remainingBlocksForFinality * (avgAlphBlockTime / 1000) : undefined
 
   const initialRemainingBlocks = useSelector(selectFinalityProgressInitialRemainingBlocks)
   const initialRemainingSeconds = useSelector(selectFinalityProgressInitialRemainingSeconds)
@@ -136,7 +143,11 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
     <div style={{ marginTop: '10px' }}>
       <div className={classes.bridgingProgressRow} style={{ color: isActive ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {isCompleted ? <CheckCircleOutlineRounded style={{ color: GREEN }} fontSize="small" /> : <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />}
+          {isCompleted ? (
+            <CheckCircleOutlineRounded style={{ color: GREEN }} fontSize="small" />
+          ) : (
+            <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
           {isCompleted ? (
@@ -151,9 +162,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
               <div className={classes.spaceBetween}>
                 <Typography>Waiting for confirmations...</Typography>
                 {remainingSeconds && (
-                  <Typography style={{ fontWeight: 600 }}>
-                    {`${Math.floor(remainingSeconds / 60)}m ${String(Math.floor(remainingSeconds % 60)).padStart(2, '0')}s`}
-                  </Typography>
+                  <Typography style={{ fontWeight: 600 }}>{secondsToTime(remainingSeconds)}</Typography>
                 )}
               </div>
             )
@@ -168,6 +177,11 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
               {sourceChain === CHAIN_ID_ETH && (
                 <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee&nbsp; ☕️</div>
               )}
+              {sourceChain === CHAIN_ID_ALEPHIUM && remainingSecondsForAlphFinality && (
+                <div style={{ color: GRAY, textAlign: 'right' }}>
+                  {secondsToTime(remainingSecondsForAlphFinality, true)}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -177,6 +191,13 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
 }
 
 export default FinalityProgress
+
+const secondsToTime = (seconds: number, onlyMinutes: boolean = false) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+
+  return onlyMinutes ? (mins > 0 ? `~ ${mins}min` : 'less than a minute') : `${mins}m ${String(secs).padStart(2, '0')}s`
+}
 
 const BorderLinearProgress = styled(LinearProgress)(() => ({
   height: 8,
@@ -208,6 +229,20 @@ const useRemainingBlocksForFinality = () => {
     : remainingBlocksUntilTxBlock + DefaultEVMChainConfirmations
 
   return remainingBlocksForFinality > 0 ? remainingBlocksForFinality : 0
+}
+
+const useFetchAvgBlockTime = () => {
+  const alphWallet = useWallet()
+  const [avgBlockTime, setAvgBlockTime] = useState<number>(0)
+
+  useEffect(() => {
+    alphWallet?.explorerProvider?.infos.getInfosAverageBlockTimes().then((data) => {
+      if (data && data.length > 0)
+        setAvgBlockTime(data.reduce((acc: number, { value }) => acc + value, 0.0) / data.length)
+    })
+  }, [alphWallet])
+
+  return avgBlockTime
 }
 
 const useFetchCurrentBlockNumber = () => {
