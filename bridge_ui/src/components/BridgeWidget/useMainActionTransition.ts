@@ -1,3 +1,4 @@
+import { ChainId } from '@alephium/wormhole-sdk'
 import { useEffect, useRef, useState } from 'react'
 
 export type ActionKey = 'connect-source' | 'connect-target' | 'next'
@@ -6,6 +7,7 @@ export type ActionConfig = {
   label: string
   onClick?: () => void
   disabled: boolean
+  chainId?: ChainId
 }
 
 interface UseMainActionTransitionArgs {
