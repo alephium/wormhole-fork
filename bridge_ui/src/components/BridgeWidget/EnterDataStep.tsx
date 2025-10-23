@@ -3,7 +3,7 @@ import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -121,7 +121,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
 
   return (
     <>
-      <div className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)} style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}>
+      <div
+        className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)}
+        style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}
+      >
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="From"
@@ -240,7 +243,7 @@ const useStyles = makeStyles((theme) => ({
     top: '50%',
     transform: 'translateY(-50%) rotate(90deg)',
     [theme.breakpoints.down('xs')]: {
-      right: theme.spacing(1),
+      right: theme.spacing(1)
     }
   }
 }))
