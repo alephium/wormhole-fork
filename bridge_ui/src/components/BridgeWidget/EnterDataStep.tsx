@@ -3,7 +3,7 @@ import { getAddress } from '@ethersproject/address'
 import { Button, makeStyles, Typography } from '@material-ui/core'
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -121,7 +121,10 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
 
   return (
     <>
-      <div className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)} style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}>
+      <div
+        className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)}
+        style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}
+      >
         <div className={classes.chainSelectContainer}>
           <ChainSelect2
             label="From"
@@ -225,7 +228,11 @@ const useStyles = makeStyles((theme) => ({
   chainDivider: {
     width: '100%',
     position: 'relative',
-    height: 1
+    height: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1
   },
   chainSelectContainer: {
     flexBasis: '100%',
@@ -234,10 +241,9 @@ const useStyles = makeStyles((theme) => ({
   chainSelectArrow: {
     position: 'absolute',
     top: '50%',
-    right: theme.spacing(1.5),
     transform: 'translateY(-50%) rotate(90deg)',
     [theme.breakpoints.down('xs')]: {
-      right: theme.spacing(1),
+      right: theme.spacing(1)
     }
   }
 }))

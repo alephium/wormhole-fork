@@ -1,36 +1,35 @@
-import { CHAIN_ID_ALEPHIUM, isEVMChain, waitAlphTxConfirmed } from "@alephium/wormhole-sdk"
-import { Alert } from "@material-ui/lab"
-import { Typography, makeStyles } from "@material-ui/core"
-import { useCallback, useMemo, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { useHandleAttest } from "../../hooks/useHandleAttest"
-import useIsWalletReady from "../../hooks/useIsWalletReady"
+import { CHAIN_ID_ALEPHIUM, isEVMChain, waitAlphTxConfirmed } from '@alephium/wormhole-sdk'
+import { Alert } from '@material-ui/lab'
+import { Typography, makeStyles } from '@material-ui/core'
+import { useCallback, useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useHandleAttest } from '../../hooks/useHandleAttest'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
 import {
   selectAttestAttestTx,
+  selectAttestIsAlphPoolCreated,
   selectAttestIsSendComplete,
   selectAttestSignedVAAHex,
+  selectAttestSourceAsset,
   selectAttestSourceChain
-} from "../../store/selectors"
-import TransactionProgress from "../TransactionProgress"
-import WaitingForWalletMessage from "./WaitingForWalletMessage"
-import { ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL } from "../../utils/consts"
-import { createLocalTokenPool } from "../../utils/alephium"
-import {
-  useConnect as useAlephiumConnect,
-  useWallet as useAlephiumWallet
-} from "@alephium/web3-react"
-import { useSnackbar } from "notistack"
-import { setStep } from "../../store/attestSlice"
-import { useTranslation } from "react-i18next"
-import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext"
-import EvmConnectWalletDialog from "../EvmConnectWalletDialog"
+} from '../../store/selectors'
+import TransactionProgress from '../TransactionProgress'
+import WaitingForWalletMessage from './WaitingForWalletMessage'
+import { ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL } from '../../utils/consts'
+import { createLocalTokenPool } from '../../utils/alephium'
+import { AlephiumConnectButton, useWallet as useAlephiumWallet } from '@alephium/web3-react'
+import { useSnackbar } from 'notistack'
+import { setIsAlphPoolCreated, setStep } from '../../store/attestSlice'
+import { useTranslation } from 'react-i18next'
+import BridgeWidgetButton from '../BridgeWidget/BridgeWidgetButton'
+import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
+import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
 
 const useStyles = makeStyles((theme) => ({
   statusMessage: {
     marginTop: theme.spacing(1),
-    textAlign: "center",
-  },
+    textAlign: 'center'
+  }
 }))
 
 interface CreateLocalTokenPoolProps {
@@ -43,6 +42,7 @@ const CreateLocalTokenPool = ({ localTokenId }: CreateLocalTokenPoolProps) => {
   const dispatch = useDispatch()
   const { enqueueSnackbar } = useSnackbar()
   const signedVAAHex = useSelector(selectAttestSignedVAAHex)
+  const isAlphPoolCreated = useSelector(selectAttestIsAlphPoolCreated)
   const [isSending, setIsSending] = useState<boolean>(false)
   const [error, setError] = useState<string | undefined>()
   const classes = useStyles()
@@ -59,33 +59,29 @@ const CreateLocalTokenPool = ({ localTokenId }: CreateLocalTokenPoolProps) => {
         )
         if (createLocalTokenPoolTxId !== undefined) {
           await waitAlphTxConfirmed(alephiumWallet.nodeProvider, createLocalTokenPoolTxId, 1)
-          console.log(`create local token pool tx id: ${createLocalTokenPoolTxId}`)
           enqueueSnackbar(null, {
-            content: <Alert severity="success">{t("Transaction confirmed")}</Alert>
+            content: <Alert severity="success">{t('Transaction confirmed')}</Alert>
           })
         } else {
           enqueueSnackbar(null, {
-            content: <Alert severity="info">{t("Local token pool already exists")}</Alert>
+            content: <Alert severity="info">{t('Local token pool already exists')}</Alert>
           })
         }
+
+        dispatch(setStep(3))
+        dispatch(setIsAlphPoolCreated(true))
       } catch (error) {
         setError(`${error}`)
       }
 
       setIsSending(false)
-      dispatch(setStep(3))
     }
   }, [alephiumWallet, signedVAAHex, enqueueSnackbar, localTokenId, dispatch, t])
-  const isReady = signedVAAHex !== undefined && alephiumWallet !== undefined && !isSending
+  const isReady = signedVAAHex !== undefined && alephiumWallet !== undefined && !isSending && !isAlphPoolCreated
 
   return (
     <>
-      <BridgeWidgetButton
-        short
-        disabled={!isReady}
-        onClick={onClick}
-        isLoading={isSending}
-      >
+      <BridgeWidgetButton short disabled={!isReady} onClick={onClick} isLoading={isSending} style={{ marginTop: 10 }}>
         {isSending ? `${t('Waiting for transaction confirmation')}...` : t('Create Local Token Pool')}
       </BridgeWidgetButton>
       {error ? (
@@ -102,17 +98,15 @@ const Send = () => {
   const { handleClick, disabled, showLoader } = useHandleAttest()
   const { signer } = useEthereumProvider()
   const alephiumWallet = useAlephiumWallet()
-  const { connect: connectAlephium } = useAlephiumConnect()
   const sourceChain = useSelector(selectAttestSourceChain)
+  const sourceAsset = useSelector(selectAttestSourceAsset)
   const attestTx = useSelector(selectAttestAttestTx)
   const isSendComplete = useSelector(selectAttestIsSendComplete)
   const { isReady, statusMessage } = useIsWalletReady(sourceChain)
   const classes = useStyles()
   const [isEvmDialogOpen, setIsEvmDialogOpen] = useState(false)
 
-  const isAlephiumConnected =
-    alephiumWallet?.connectionStatus === "connected" &&
-    !!alephiumWallet?.account?.address
+  const isAlephiumConnected = alephiumWallet?.connectionStatus === 'connected' && !!alephiumWallet?.account?.address
   const isEvmConnected = isEVMChain(sourceChain) ? !!signer : false
 
   const isWalletConnected = useMemo(() => {
@@ -123,12 +117,7 @@ const Send = () => {
       return isAlephiumConnected
     }
     return isReady
-  }, [
-    isAlephiumConnected,
-    isEvmConnected,
-    isReady,
-    sourceChain
-  ])
+  }, [isAlephiumConnected, isEvmConnected, isReady, sourceChain])
 
   const shouldShowConnectButton = !isWalletConnected
 
@@ -146,26 +135,24 @@ const Send = () => {
       setIsEvmDialogOpen(true)
       return
     }
-    if (sourceChain === CHAIN_ID_ALEPHIUM) {
-      connectAlephium()
-      return
-    }
-  }, [
-    connectAlephium,
-    shouldShowConnectButton,
-    sourceChain
-  ])
+  }, [shouldShowConnectButton, sourceChain])
 
   return (
     <>
-      <BridgeWidgetButton
-        short
-        disabled={shouldShowConnectButton ? !isConnectActionAvailable : !isReady || disabled}
-        onClick={shouldShowConnectButton ? handleConnectClick : handleClick}
-        isLoading={shouldShowConnectButton ? false : showLoader}
-      >
-        {shouldShowConnectButton ? t("Connect wallet") : t("Attest")}
-      </BridgeWidgetButton>
+      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
+        {({ show }) => (
+          <BridgeWidgetButton
+            short
+            disabled={shouldShowConnectButton ? !isConnectActionAvailable : !isReady || disabled}
+            onClick={
+              shouldShowConnectButton ? (sourceChain === CHAIN_ID_ALEPHIUM ? show : handleConnectClick) : handleClick
+            }
+            isLoading={shouldShowConnectButton ? false : showLoader}
+          >
+            {shouldShowConnectButton ? t('Connect wallet') : t('Attest')}
+          </BridgeWidgetButton>
+        )}
+      </AlephiumConnectButton.Custom>
       {!shouldShowConnectButton && statusMessage ? (
         <Typography variant="body2" color="error" className={classes.statusMessage}>
           {statusMessage}
@@ -178,8 +165,7 @@ const Send = () => {
         isSendComplete={isSendComplete}
         consistencyLevel={sourceChain === CHAIN_ID_ALEPHIUM ? ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL : undefined}
       />
-      {/* TODO: Support later? */}
-      {/* {sourceChain === CHAIN_ID_ALEPHIUM && <CreateLocalTokenPool localTokenId={sourceAsset} />} */}
+      {sourceChain === CHAIN_ID_ALEPHIUM && <CreateLocalTokenPool localTokenId={sourceAsset} />}
       {isEVMChain(sourceChain) && (
         <EvmConnectWalletDialog
           isOpen={isEvmDialogOpen}

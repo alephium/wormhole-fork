@@ -29,7 +29,8 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
-  const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
+  const isManualRedeemRequired =
+    (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) && !isTransferCompleted.isTransferCompleted
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
   const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx || isTransferCompleted.isTransferCompleted
@@ -60,43 +61,46 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
   }
 
   return (
-    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithStrongTransparency : undefined }}>
+    <div
+      className={classes.grayRoundedBox}
+      style={{ backgroundColor: step === 5 ? COLORS.greenWithStrongTransparency : undefined }}
+    >
       <div>
         <div className={classes.sendStep}>
           {step === 5 && (
             <div className={classes.sendStepIcon}>
-                <CheckCircleOutlineRounded style={{ color: COLORS.green }} />
+              <CheckCircleOutlineRounded style={{ color: COLORS.green }} />
             </div>
           )}
           <div className={classes.spaceBetween}>
             {!hasSentTokens && <OngoingBridgingBadge />}
-            {!isManualRedeemRequired && <div className={classes.sendStepContentSuccess} style={{ color: step === 5 ? COLORS.green : 'inherit' }}>
-              {step === 1 && 'Finalizing block... (1/4)'}
-              {step === 2 && 'Waiting for proof... (2/4)'}
-              {step === 3 && 'Redeeming proof... (3/4)'}
-              {step === 4 && 'Sending tokens... (4/4)'}
-              {step === 5 && 'Bridging completed!'}
-            </div>}
-            <IconButton
-              onClick={handleExpandClick}
-              className={classes.expandButton}
-            >
+            {!isManualRedeemRequired && (
+              <div className={classes.sendStepContentSuccess} style={{ color: step === 5 ? COLORS.green : 'inherit' }}>
+                {step === 1 && 'Finalizing block... (1/4)'}
+                {step === 2 && 'Waiting for proof... (2/4)'}
+                {step === 3 && 'Redeeming proof... (3/4)'}
+                {step === 4 && 'Sending tokens... (4/4)'}
+                {step === 5 && 'Bridging completed!'}
+              </div>
+            )}
+            <IconButton onClick={handleExpandClick} className={classes.expandButton}>
               <div className={classes.expandIconWrapper}>
                 <UnfoldMoreOutlined
-                  className={`${classes.expandIcon} ${!isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
+                  className={`${classes.expandIcon} ${
+                    !isExpanded ? classes.expandIconVisible : classes.expandIconHidden
+                  }`}
                 />
                 <UnfoldLessOutlined
-                  className={`${classes.expandIcon} ${isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
+                  className={`${classes.expandIcon} ${
+                    isExpanded ? classes.expandIconVisible : classes.expandIconHidden
+                  }`}
                 />
               </div>
             </IconButton>
           </div>
         </div>
         <div className={`${classes.expandableContainer} ${isExpanded ? classes.expanded : classes.collapsed}`}>
-          <BridgingProgressSectionDetails
-            currentStep={step}
-            isTransferCompleted={isTransferCompleted}
-          />
+          <BridgingProgressSectionDetails currentStep={step} isTransferCompleted={isTransferCompleted} />
         </div>
       </div>
     </div>

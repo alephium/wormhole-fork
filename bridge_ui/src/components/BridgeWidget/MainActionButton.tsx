@@ -15,7 +15,7 @@ import useIsWalletReady from '../../hooks/useIsWalletReady'
 import { CHAINS_BY_ID, getIsTransferDisabled } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
-import { useConnect } from '@alephium/web3-react'
+import { AlephiumConnectButton } from '@alephium/web3-react'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
@@ -27,7 +27,6 @@ interface MainActionButtonProps {
 const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const classes = useStyles()
   const { t } = useTranslation()
-  const { connect: connectAlephium } = useConnect()
 
   const activeBridgeWidgetStep = useSelector(selectTransferActiveBridgeWidgetStep)
   const sourceChain = useSelector(selectTransferSourceChain)
@@ -45,35 +44,22 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const isSourceTransferDisabled = getIsTransferDisabled(sourceChain, true)
   const isTargetTransferDisabled = getIsTransferDisabled(targetChain, false)
 
-  const isNextDisabled =
-    !isSourceComplete || !isTargetComplete || isSourceTransferDisabled || isTargetTransferDisabled
-
-  const handleAlephiumConnect = useCallback(() => {
-    connectAlephium()
-  }, [connectAlephium])
-
-  const handleEvmConnect = useCallback((chainId: ChainId) => {
-    setEvmChain(chainId)
-  }, [])
-
+  const isNextDisabled = !isSourceComplete || !isTargetComplete || isSourceTransferDisabled || isTargetTransferDisabled
 
   const actionConfigs = useMemo<Record<ActionKey, ActionConfig>>(() => {
-    const connectLabel = (chainId: ChainId, fallback: string) =>
-      `Connect ${CHAINS_BY_ID[chainId]?.name ?? fallback} wallet`
-
-    const connectAction = (chainId: ChainId, fallback: string): ActionConfig => {
-      const label = connectLabel(chainId, fallback)
-      if (isEVMChain(chainId)) return { label, onClick: () => handleEvmConnect(chainId), disabled: false }
-      if (chainId === CHAIN_ID_ALEPHIUM) return { label, onClick: handleAlephiumConnect, disabled: false }
-      return { label, disabled: true }
-    }
+    const connectAction = (chainId: ChainId, fallbackLabel: string): ActionConfig => ({
+      label: `Connect ${CHAINS_BY_ID[chainId]?.name ?? fallbackLabel} wallet`,
+      onClick: isEVMChain(chainId) ? () => setEvmChain(chainId) : undefined,
+      disabled: !isEVMChain(chainId) && chainId !== CHAIN_ID_ALEPHIUM,
+      chainId
+    })
 
     return {
       'connect-source': connectAction(sourceChain, 'Source'),
       'connect-target': connectAction(targetChain, 'Target'),
       next: { label: t('Next'), onClick: onNext, disabled: !onNext || isNextDisabled }
     }
-  }, [handleAlephiumConnect, handleEvmConnect, isNextDisabled, onNext, sourceChain, targetChain, t])
+  }, [isNextDisabled, onNext, sourceChain, targetChain, t])
 
   const currentActionKey = useMemo<ActionKey>(() => {
     if (!isSourceReady) return 'connect-source'
@@ -99,28 +85,25 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     return null
   }
 
-
   return (
     <>
-      <BridgeWidgetButton
-        onClick={handleClick}
-        disabled={isButtonDisabled}
-        className={classes.button}
-        variant={'contained'}
-        tone={renderedActionKey === 'next' && !isNextDisabled ? 'primaryNext' : 'default'}
-      >
-        <div className={classes.content}>
-          <SuccessPulse
-            hideIcon
+      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
+        {({ show }) => (
+          <BridgeWidgetButton
+            onClick={currentAction.chainId === CHAIN_ID_ALEPHIUM ? show : handleClick}
+            disabled={isButtonDisabled}
+            className={classes.button}
+            variant={'contained'}
+            tone={renderedActionKey === 'next' && !isNextDisabled ? 'primaryNext' : 'default'}
           >
-            {renderedAction.label}
-          </SuccessPulse>
-        </div>
-      </BridgeWidgetButton>
+            <div className={classes.content}>
+              <SuccessPulse hideIcon>{renderedAction.label}</SuccessPulse>
+            </div>
+          </BridgeWidgetButton>
+        )}
+      </AlephiumConnectButton.Custom>
 
-      {evmChain !== null && (
-        <EvmConnectWalletDialog isOpen onClose={() => setEvmChain(null)} chainId={evmChain} />
-      )}
+      {evmChain !== null && <EvmConnectWalletDialog isOpen onClose={() => setEvmChain(null)} chainId={evmChain} />}
     </>
   )
 }
