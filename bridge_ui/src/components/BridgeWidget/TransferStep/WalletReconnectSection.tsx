@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Alert } from '@material-ui/lab'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
@@ -9,12 +9,10 @@ import {
   selectTransferTransferTx
 } from '../../../store/selectors'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
-import { useConnect } from '@alephium/web3-react'
 import { CHAINS_BY_ID } from '../../../utils/consts'
 import { useWidgetStyles } from '../styles'
-import BridgeWidgetButton from '../BridgeWidgetButton'
-import EvmConnectWalletDialog from '../../EvmConnectWalletDialog'
 import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
+import ConnectWalletButton from '../ConnectWalletButton'
 
 const SUPPORTED_CHAINS: ChainId[] = [CHAIN_ID_ETH, CHAIN_ID_BSC, CHAIN_ID_ALEPHIUM] // TODO: Update when more chains are supported
 
@@ -28,8 +26,6 @@ const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionP
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
-  const { connect: connectAlephium } = useConnect()
-  const [evmChainToConnect, setEvmChainToConnect] = useState<ChainId | null>(null)
 
   const { isReady: isSourceWalletReady } = useIsWalletReady(sourceChain, false)
   const { isReady: isTargetWalletReady } = useIsWalletReady(targetChain, false)
@@ -39,20 +35,9 @@ const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionP
 
     return [
       !isSourceWalletReady && SUPPORTED_CHAINS.includes(sourceChain) && sourceChain,
-      !isTargetWalletReady && SUPPORTED_CHAINS.includes(targetChain) && targetChain,
+      !isTargetWalletReady && SUPPORTED_CHAINS.includes(targetChain) && targetChain
     ].filter(Boolean) as ChainId[]
   }, [hasSentTokens, isSourceWalletReady, isTargetWalletReady, sourceChain, targetChain, transferTx])
-
-  const handleReconnect = useCallback((chainId: ChainId) => {
-    if (chainId === CHAIN_ID_ALEPHIUM) {
-      connectAlephium()
-      return
-    }
-
-    if (chainId === CHAIN_ID_ETH || chainId === CHAIN_ID_BSC) {
-      setEvmChainToConnect(chainId)
-    }
-  }, [connectAlephium])
 
   if (disconnectedChains.length === 0) return null
 
@@ -67,23 +52,12 @@ const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionP
               Wallet for {chainName} is disconnected
             </Alert>
 
-            <BridgeWidgetButton
-              onClick={() => handleReconnect(chainId)}
-              tone="primaryNext"
-            >
+            <ConnectWalletButton chainId={chainId} tone="primaryNext">
               Reconnect {chainName} wallet
-            </BridgeWidgetButton>
+            </ConnectWalletButton>
           </div>
         )
       })}
-
-      {evmChainToConnect !== null && (
-        <EvmConnectWalletDialog
-          isOpen
-          onClose={() => setEvmChainToConnect(null)}
-          chainId={evmChainToConnect}
-        />
-      )}
     </>
   )
 }

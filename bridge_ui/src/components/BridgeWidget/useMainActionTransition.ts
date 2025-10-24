@@ -5,7 +5,6 @@ export type ActionKey = 'connect-source' | 'connect-target' | 'next'
 
 export type ActionConfig = {
   label: string
-  onClick?: () => void
   disabled: boolean
   chainId?: ChainId
 }

@@ -27,10 +27,9 @@ import SendingAddress from './SendingAddress'
 import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
 import Divider from './Divider'
-import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
-import { useConnect } from '@alephium/web3-react'
 import { useSnackbar } from 'notistack'
 import { Alert } from '@material-ui/lab'
+import ConnectWalletButton from './ConnectWalletButton'
 
 interface ReviewStepProps {
   onBack: () => void
@@ -40,7 +39,6 @@ interface ReviewStepProps {
 const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const classes = useWidgetStyles()
   const { t } = useTranslation()
-  const { connect: connectAlephium } = useConnect()
   const { enqueueSnackbar } = useSnackbar()
 
   const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
@@ -72,7 +70,6 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
   const approveButtonNeeded = isSourceWalletReady && isEVMChain(sourceChain) && !sufficientAllowance
   const [allowanceError, setAllowanceError] = useState('')
-  const [evmChain, setEvmChain] = useState<ChainId | null>(null)
   const lastSourceStatusRef = useRef<string | null>(null)
   const lastTargetStatusRef = useRef<string | null>(null)
 
@@ -98,9 +95,10 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     return null
   }, [isSourceWalletReady, sourceChain, isTargetWalletReady, targetChain])
 
+  const isEvmChain = connectChainId && isEVMChain(connectChainId)
+  const isAlephiumChain = connectChainId === CHAIN_ID_ALEPHIUM
   const isConnectAction = connectChainId !== null
-  const isConnectSupported =
-    connectChainId !== null && (isEVMChain(connectChainId) || connectChainId === CHAIN_ID_ALEPHIUM)
+  const isConnectSupported = isEvmChain || isAlephiumChain
 
   useEffect(() => {
     if (!statusMessage) {
@@ -114,7 +112,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     if (lastSourceStatusRef.current === statusMessage) {
       return
     }
-    enqueueSnackbar(null, { content: <Alert severity="warning">{statusMessage}</Alert>})
+    enqueueSnackbar(null, { content: <Alert severity="warning">{statusMessage}</Alert> })
     lastSourceStatusRef.current = statusMessage
   }, [connectChainId, enqueueSnackbar, sourceChain, statusMessage])
 
@@ -130,7 +128,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     if (lastTargetStatusRef.current === targetStatusMessage) {
       return
     }
-    enqueueSnackbar(null, { content: <Alert severity="warning">{targetStatusMessage}</Alert>})
+    enqueueSnackbar(null, { content: <Alert severity="warning">{targetStatusMessage}</Alert> })
     lastTargetStatusRef.current = targetStatusMessage
   }, [connectChainId, enqueueSnackbar, targetChain, targetStatusMessage])
 
@@ -138,23 +136,6 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     handleClick()
     onNext()
   }, [handleClick, onNext])
-
-  const handlePrimaryClick = useCallback(() => {
-    if (isConnectAction) {
-      if (!connectChainId || !isConnectSupported) {
-        return
-      }
-
-      if (isEVMChain(connectChainId)) {
-        setEvmChain(connectChainId)
-      } else if (connectChainId === CHAIN_ID_ALEPHIUM) {
-        connectAlephium()
-      }
-      return
-    }
-
-    handleTransferClick()
-  }, [connectAlephium, connectChainId, handleTransferClick, isConnectAction, isConnectSupported])
 
   const isButtonDisabled = isConnectAction
     ? !isConnectSupported
@@ -273,8 +254,10 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
 
       {allowanceError && <WarningBox>{allowanceError}</WarningBox>}
 
-      <BridgeWidgetButton onClick={onBack} variant="outlined">Back</BridgeWidgetButton>
-      
+      <BridgeWidgetButton onClick={onBack} variant="outlined">
+        Back
+      </BridgeWidgetButton>
+
       {approveButtonNeeded ? (
         <BridgeWidgetButton
           disabled={isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing}
@@ -285,14 +268,14 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
         </BridgeWidgetButton>
       ) : isSending ? (
         <BridgeWidgetButton onClick={onNext}>View current transfer progress</BridgeWidgetButton>
+      ) : isConnectAction ? (
+        <ConnectWalletButton chainId={connectChainId} disabled={isButtonDisabled} tone={primaryButtonTone}>
+          {primaryButtonLabel}
+        </ConnectWalletButton>
       ) : (
-        <BridgeWidgetButton disabled={isButtonDisabled} onClick={handlePrimaryClick} tone={primaryButtonTone}>
+        <BridgeWidgetButton onClick={handleTransferClick} disabled={isButtonDisabled} tone={primaryButtonTone}>
           {primaryButtonLabel}
         </BridgeWidgetButton>
-      )}
-
-      {evmChain !== null && (
-        <EvmConnectWalletDialog isOpen onClose={() => setEvmChain(null)} chainId={evmChain} />
       )}
     </>
   )
