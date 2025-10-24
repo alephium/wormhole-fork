@@ -1,20 +1,43 @@
-import { Typography } from "@material-ui/core"
-import { useTranslation } from "react-i18next"
-import { useSelector } from "react-redux"
-import { selectAttestAttestTx, selectAttestSourceChain } from "../../store/selectors"
-import ShowTx from "../ShowTx"
+import { makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import {
+  selectAttestSourceChain,
+  selectAttestAttestTx,
+} from "../../store/selectors";
+import ShowTx from "../ShowTx";
 
-const SendPreview = () => {
-  const { t } = useTranslation()
-  const sourceChain = useSelector(selectAttestSourceChain)
-  const attestTx = useSelector(selectAttestAttestTx)
+const useStyles = makeStyles((theme) => ({
+  description: {
+    textAlign: "center",
+  },
+  tx: {
+    marginTop: theme.spacing(1),
+    textAlign: "center",
+  },
+  viewButton: {
+    marginTop: theme.spacing(1),
+  },
+}));
+
+export default function SendPreview() {
+  const { t } = useTranslation();
+  const classes = useStyles();
+  const sourceChain = useSelector(selectAttestSourceChain);
+  const attestTx = useSelector(selectAttestAttestTx);
+
+  const explainerString = t("The token has been attested!");
 
   return (
-    <div>
-      <Typography variant="body2">{t("The token has been attested")}</Typography>
-      {attestTx && <ShowTx chainId={sourceChain} tx={attestTx} />}
-    </div>
-  )
+    <>
+      <Typography
+        component="div"
+        variant="subtitle2"
+        className={classes.description}
+      >
+        {explainerString}
+      </Typography>
+      {attestTx ? <ShowTx chainId={sourceChain} tx={attestTx} /> : null}
+    </>
+  );
 }
-
-export default SendPreview

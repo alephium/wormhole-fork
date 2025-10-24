@@ -1,25 +1,43 @@
-import { Typography } from "@material-ui/core"
-import { useTranslation } from "react-i18next"
-import { useSelector } from "react-redux"
-import { selectAttestSourceAsset, selectAttestSourceChain } from "../../store/selectors"
-import { CHAINS_BY_ID } from "../../utils/consts"
-import SmartAddress from "../SmartAddress"
+import { makeStyles, Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import {
+  selectAttestSourceAsset,
+  selectAttestSourceChain,
+} from "../../store/selectors";
+import { CHAINS_BY_ID } from "../../utils/consts";
+import SmartAddress from "../SmartAddress";
 
-const SourcePreview = () => {
-  const { t } = useTranslation()
-  const sourceChain = useSelector(selectAttestSourceChain)
-  const sourceAsset = useSelector(selectAttestSourceAsset)
+const useStyles = makeStyles((theme) => ({
+  description: {
+    textAlign: "center",
+  },
+}));
 
-  if (!sourceChain || !sourceAsset) return null
+export default function SourcePreview() {
+  const { t } = useTranslation();
+  const classes = useStyles();
+  const sourceChain = useSelector(selectAttestSourceChain);
+  const sourceAsset = useSelector(selectAttestSourceAsset);
+
+  const explainerContent =
+    sourceChain && sourceAsset ? (
+      <>
+        <span>{t("You will attest")}</span>
+        <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset />
+        <span>{t("on {{ chainName }}", { chainName: CHAINS_BY_ID[sourceChain].name })}</span>
+      </>
+    ) : (
+      ""
+    );
 
   return (
-    <Typography variant="body2" align="center">
-      {t("Will be attested on {{ chainName }}", {
-        chainName: CHAINS_BY_ID[sourceChain]?.name ?? t("Unknown chain")
-      })}
-      <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset />
+    <Typography
+      component="div"
+      variant="subtitle2"
+      className={classes.description}
+    >
+      {explainerContent}
     </Typography>
-  )
+  );
 }
-
-export default SourcePreview

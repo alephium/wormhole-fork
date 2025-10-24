@@ -6,23 +6,17 @@ import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton"
 
 const AlephiumWalletKey = () => {
   const { t } = useTranslation()
+
   return (
     <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
       {({ isConnected, show, account }) => {
         const address = account?.address
-        if (!isConnected || !address) {
-          const handleConnect = () => {
-            if (show) {
-              show()
-            }
-          }
-          return (
-            <BridgeWidgetButton short onClick={handleConnect}>
-              {t("Connect wallet")}
-            </BridgeWidgetButton>
-          )
-        }
-        return (
+
+        return !isConnected || !address ? (
+          <BridgeWidgetButton short onClick={show}>
+            {t("Connect wallet")}
+          </BridgeWidgetButton>
+        ) : (
           <Typography variant="body2" style={{ textAlign: "right", opacity: 0.75 }}>
             {`${t("Connected wallets", { count: 1 })}: ${shortenAddress(address)}`}
           </Typography>

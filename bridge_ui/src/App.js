@@ -17,7 +17,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
-import Attest from "./components/Attest";
+import Attest from "./components/AttestNew";
 import HeaderText from "./components/HeaderText";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
@@ -35,7 +35,7 @@ import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { web3 } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
-import AttestLegacy from "./components/AttestLegacy";
+import AttestLegacy from "./components/Attest";
 
 function App() {
   const { t } = useTranslation();
