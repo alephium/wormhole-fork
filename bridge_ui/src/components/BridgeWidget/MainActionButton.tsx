@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { makeStyles } from '@material-ui/core'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
@@ -14,11 +14,10 @@ import { selectTransferTargetChain } from '../../store/selectors'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import { CHAINS_BY_ID, getIsTransferDisabled } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
-import EvmConnectWalletDialog from '../EvmConnectWalletDialog'
-import { AlephiumConnectButton } from '@alephium/web3-react'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
 import SuccessPulse from './SuccessPulse'
+import ConnectWalletButton from './ConnectWalletButton'
 
 interface MainActionButtonProps {
   onNext?: () => void
@@ -39,8 +38,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const { isReady: isSourceReady } = useIsWalletReady(sourceChain)
   const { isReady: isTargetReady } = useIsWalletReady(targetChain)
 
-  const [evmChain, setEvmChain] = useState<ChainId | null>(null)
-
   const isSourceTransferDisabled = getIsTransferDisabled(sourceChain, true)
   const isTargetTransferDisabled = getIsTransferDisabled(targetChain, false)
 
@@ -49,7 +46,6 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
   const actionConfigs = useMemo<Record<ActionKey, ActionConfig>>(() => {
     const connectAction = (chainId: ChainId, fallbackLabel: string): ActionConfig => ({
       label: `Connect ${CHAINS_BY_ID[chainId]?.name ?? fallbackLabel} wallet`,
-      onClick: isEVMChain(chainId) ? () => setEvmChain(chainId) : undefined,
       disabled: !isEVMChain(chainId) && chainId !== CHAIN_ID_ALEPHIUM,
       chainId
     })
@@ -57,7 +53,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     return {
       'connect-source': connectAction(sourceChain, 'Source'),
       'connect-target': connectAction(targetChain, 'Target'),
-      next: { label: t('Next'), onClick: onNext, disabled: !onNext || isNextDisabled }
+      next: { label: t('Next'), disabled: !onNext || isNextDisabled }
     }
   }, [isNextDisabled, onNext, sourceChain, targetChain, t])
 
@@ -75,36 +71,29 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
     actionConfigs
   })
 
-  const handleClick = useCallback(() => {
-    if (isButtonDisabled) return
-
-    currentAction?.onClick?.()
-  }, [currentAction, isButtonDisabled])
-
   if (activeBridgeWidgetStep === 2 || isRedeemComplete || isRedeemedViaRelayer) {
     return null
   }
 
-  return (
-    <>
-      <AlephiumConnectButton.Custom displayAccount={(account) => account.address}>
-        {({ show }) => (
-          <BridgeWidgetButton
-            onClick={currentAction.chainId === CHAIN_ID_ALEPHIUM ? show : handleClick}
-            disabled={isButtonDisabled}
-            className={classes.button}
-            variant={'contained'}
-            tone={renderedActionKey === 'next' && !isNextDisabled ? 'primaryNext' : 'default'}
-          >
-            <div className={classes.content}>
-              <SuccessPulse hideIcon>{renderedAction.label}</SuccessPulse>
-            </div>
-          </BridgeWidgetButton>
-        )}
-      </AlephiumConnectButton.Custom>
+  const buttonContent = (
+    <div className={classes.content}>
+      <SuccessPulse hideIcon>{renderedAction.label}</SuccessPulse>
+    </div>
+  )
 
-      {evmChain !== null && <EvmConnectWalletDialog isOpen onClose={() => setEvmChain(null)} chainId={evmChain} />}
-    </>
+  return renderedActionKey === 'next' ? (
+    <BridgeWidgetButton
+      onClick={onNext}
+      disabled={isButtonDisabled}
+      className={classes.button}
+      tone={!isNextDisabled ? 'primaryNext' : 'default'}
+    >
+      {buttonContent}
+    </BridgeWidgetButton>
+  ) : (
+    <ConnectWalletButton chainId={currentAction.chainId} disabled={isButtonDisabled} className={classes.button}>
+      {buttonContent}
+    </ConnectWalletButton>
   )
 }
 
