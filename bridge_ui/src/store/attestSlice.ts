@@ -21,6 +21,7 @@ export interface AttestState {
   isWalletApproved: boolean
   isCreating: boolean;
   createTx: Transaction | undefined;
+  isAlphPoolCreated: boolean;
 }
 
 const initialState: AttestState = {
@@ -34,6 +35,7 @@ const initialState: AttestState = {
   isWalletApproved: false,
   isCreating: false,
   createTx: undefined,
+  isAlphPoolCreated: false,
 };
 
 export const attestSlice = createSlice({
@@ -94,6 +96,9 @@ export const attestSlice = createSlice({
       state.isCreating = false;
       state.isWalletApproved = false;
     },
+    setIsAlphPoolCreated: (state, action: PayloadAction<boolean>) => {
+      state.isAlphPoolCreated = action.payload;
+    },
     reset: (state) => ({
       ...initialState,
       sourceChain: state.sourceChain,
@@ -115,6 +120,7 @@ export const {
   setIsWalletApproved,
   setIsCreating,
   setCreateTx,
+  setIsAlphPoolCreated,
   reset,
 } = attestSlice.actions;
 

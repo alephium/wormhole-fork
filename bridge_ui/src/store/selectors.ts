@@ -31,6 +31,8 @@ export const selectAttestIsWalletApproved = (state: RootState) =>
 export const selectAttestIsCreating = (state: RootState) =>
   state.attest.isCreating;
 export const selectAttestCreateTx = (state: RootState) => state.attest.createTx;
+export const selectAttestIsAlphPoolCreated = (state: RootState) =>
+  state.attest.isAlphPoolCreated;
 export const selectAttestIsSourceComplete = (state: RootState) =>
   !!state.attest.sourceChain && !!state.attest.sourceAsset;
 // TODO: check wrapped asset exists or is native attest
@@ -170,6 +172,8 @@ export const selectNFTIsRecovery = (state: RootState) => state.nft.isRecovery;
 
 export const selectTransferActiveStep = (state: RootState) =>
   state.transfer.activeStep;
+export const selectTransferActiveBridgeWidgetStep = (state: RootState) =>
+  state.transfer.activeBridgeWidgetStep;
 export const selectTransferSourceChain = (state: RootState) =>
   state.transfer.sourceChain;
 export const selectTransferSourceAsset = (state: RootState) => {
@@ -356,6 +360,10 @@ export const selectTransferIsTargetComplete = (state: RootState) =>
   !selectTransferTargetError(state);
 export const selectTransferIsSendComplete = (state: RootState) =>
   !!selectTransferSignedVAAHex(state);
+export const selectTransferIsBlockFinalized = (state: RootState) =>
+  state.transfer.isBlockFinalized;
+export const selectTransferHasSentTokens = (state: RootState) =>
+  state.transfer.hasSentTokens;
 export const selectTransferIsRedeemComplete = (state: RootState) =>
   !!selectTransferRedeemTx(state) || state.transfer.isRedeemCompleted;
 export const selectTransferShouldLockFields = (state: RootState) =>
@@ -373,6 +381,8 @@ export const selectAcalaRelayerInfo = (state: RootState) =>
 export const selectSolanaTokenMap = (state: RootState) => {
   return state.tokens.solanaTokenMap;
 };
+export const selectTransferIsTokenPickerDialogOpen = (state: RootState) =>
+  state.transfer.isTokenPickerDialogOpen;
 
 export const selectTerraTokenMap = (state: RootState) => {
   return state.tokens.terraTokenMap;
@@ -389,3 +399,11 @@ export const selectTerraFeeDenom = (state: RootState) => {
 export const selectRelayerTokenInfo = (state: RootState) => {
   return state.tokens.relayerTokenInfo;
 };
+
+export const selectFinalityProgressInitialRemainingBlocks = (state: RootState) => {
+  return state.transfer.finalityProgressInitialRemainingBlocks;
+}
+
+export const selectFinalityProgressInitialRemainingSeconds = (state: RootState) => {
+  return state.transfer.finalityProgressInitialRemainingSeconds;
+}

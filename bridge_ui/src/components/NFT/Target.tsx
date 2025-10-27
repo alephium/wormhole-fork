@@ -136,7 +136,7 @@ function Target() {
           ) : null}
         </>
       ) : null}
-      <Alert severity="info" variant="outlined" className={classes.alert}>
+      <Alert severity="info" className={classes.alert}>
         <Typography>
           You will have to pay transaction fees on{" "}
           {CHAINS_BY_ID[targetChain].name} to redeem your NFT.

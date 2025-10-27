@@ -1,32 +1,34 @@
 import { useCallback, useState } from "react";
 import { Typography } from "@material-ui/core";
+import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import ToggleConnectedButton from "./ToggleConnectedButton";
-import EvmConnectWalletDialog from "./EvmConnectWalletDialog";
+import { shortenAddress } from "../utils/addresses";
 import { ChainId } from "@alephium/wormhole-sdk";
 import { getEvmChainId } from "../utils/consts";
+import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton";
+import EvmConnectWalletDialog from "./EvmConnectWalletDialog";
 
 const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {
-  const { disconnect, signerAddress, providerError, chainId: evmChainId } = useEthereumProvider();
-
+  const { t } = useTranslation();
+  const { signerAddress, providerError, chainId: evmChainId } = useEthereumProvider();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const openDialog = useCallback(() => {
-    setIsDialogOpen(true);
-  }, [setIsDialogOpen]);
-
-  const closeDialog = useCallback(() => {
-    setIsDialogOpen(false);
-  }, [setIsDialogOpen]);
+  const openDialog = useCallback(() => setIsDialogOpen(true), []);
+  const closeDialog = useCallback(() => setIsDialogOpen(false), []);
+  const isOnExpectedChain = getEvmChainId(chainId) === evmChainId;
+  const isConnected = !!signerAddress && isOnExpectedChain;
+  const truncatedAddress = signerAddress ? shortenAddress(signerAddress) : "";
 
   return (
     <>
-      <ToggleConnectedButton
-        connect={openDialog}
-        disconnect={disconnect}
-        connected={!!signerAddress && getEvmChainId(chainId) === evmChainId}
-        pk={signerAddress || ""}
-      />
+      {isConnected ? (
+        <Typography variant="body2" style={{ textAlign: "right", opacity: 0.75 }}>
+          {`${t("Connected wallets", { count: 1 })}: ${truncatedAddress}`}
+        </Typography>
+      ) : (
+        <BridgeWidgetButton short onClick={openDialog}>
+          {t("Connect wallet")}
+        </BridgeWidgetButton>
+      )}
       <EvmConnectWalletDialog
         isOpen={isDialogOpen}
         onClose={closeDialog}

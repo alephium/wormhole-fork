@@ -19,6 +19,7 @@ import i18n from "../i18n";
 const LAST_STEP = 3;
 
 type Steps = 0 | 1 | 2 | 3;
+type BridgeWidgetSteps = 0 | 1 | 2
 
 export interface ParsedTokenAccount {
   publicKey: string;
@@ -42,7 +43,7 @@ export interface Transaction {
 export interface TransferState {
   activeStep: Steps;
   sourceChain: ChainId;
-  sourceAssetInfo: DataWrapper<StateSafeWormholeWrappedInfo>
+  sourceAssetInfo: DataWrapper<StateSafeWormholeWrappedInfo>;
   sourceWalletAddress: string | undefined;
   sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
@@ -67,6 +68,12 @@ export interface TransferState {
   useRelayer: boolean;
   relayerFee: string | undefined;
   acalaRelayerInfo: DataWrapper<AcalaRelayerInfo>;
+  activeBridgeWidgetStep: BridgeWidgetSteps
+  isBlockFinalized: boolean
+  hasSentTokens: boolean
+  isTokenPickerDialogOpen: boolean
+  finalityProgressInitialRemainingBlocks: number | undefined
+  finalityProgressInitialRemainingSeconds: number | undefined
 }
 
 const initialState: TransferState = {
@@ -97,7 +104,13 @@ const initialState: TransferState = {
   useRelayer: false,
   relayerFee: undefined,
   acalaRelayerInfo: getEmptyDataWrapper(),
-};
+  activeBridgeWidgetStep: 0,
+  isBlockFinalized: false,
+  hasSentTokens: false,
+  isTokenPickerDialogOpen: false,
+  finalityProgressInitialRemainingBlocks: undefined,
+  finalityProgressInitialRemainingSeconds: undefined
+}
 
 export const transferSlice = createSlice({
   name: "transfer",
@@ -111,6 +124,15 @@ export const transferSlice = createSlice({
     },
     setStep: (state, action: PayloadAction<Steps>) => {
       state.activeStep = action.payload;
+    },
+    setBridgeWidgetStep: (state, action: PayloadAction<BridgeWidgetSteps>) => {
+      state.activeBridgeWidgetStep = action.payload;
+    },
+    openTokenPickerDialog: (state) => {
+      state.isTokenPickerDialogOpen = true;
+    },
+    closeTokenPickerDialog: (state) => {
+      state.isTokenPickerDialogOpen = false;
     },
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
       const prevSourceChain = state.sourceChain;
@@ -142,12 +164,30 @@ export const transferSlice = createSlice({
       state,
       action: PayloadAction<ParsedTokenAccount | undefined>
     ) => {
-      state.sourceParsedTokenAccount = action.payload;
-      // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset = getEmptyDataWrapper();
-      state.targetParsedTokenAccount = undefined;
-      state.targetAddressHex = undefined;
-      state.sourceAssetInfo = getEmptyDataWrapper()
+      const buildAccountKey = (account: ParsedTokenAccount | undefined) => {
+        if (!account) {
+          return undefined;
+        }
+        const maybeTokenId = (account as typeof account & { tokenId?: string }).tokenId ?? "";
+        return `${account.mintKey}:${maybeTokenId}`;
+      };
+
+      const previousAccount = state.sourceParsedTokenAccount;
+      const nextAccount = action.payload
+
+      state.sourceParsedTokenAccount = nextAccount;
+
+      const previousKey = buildAccountKey(previousAccount);
+      const nextKey = buildAccountKey(nextAccount);
+      const didChange = previousKey !== nextKey;
+
+      if (didChange) {
+        // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
+        state.targetAsset = getEmptyDataWrapper();
+        state.targetParsedTokenAccount = undefined;
+        state.targetAddressHex = undefined;
+        state.sourceAssetInfo = getEmptyDataWrapper();
+      }
     },
     setSourceParsedTokenAccounts: (
       state,
@@ -237,6 +277,7 @@ export const transferSlice = createSlice({
       state.isRedeeming = false;
       state.isRedeemingViaRelayer = false;
       state.isWalletApproved = false;
+      state.isBlockFinalized = false;
     },
     setIsRedeemedViaRelayer: (state, action: PayloadAction<boolean>) => {
       state.isRedeemedViaRelayer = action.payload
@@ -246,6 +287,7 @@ export const transferSlice = createSlice({
       state.isRedeeming = false
       state.isRedeemingViaRelayer = false;
       state.isWalletApproved = false
+      state.isBlockFinalized = false
     },
     setIsApproving: (state, action: PayloadAction<boolean>) => {
       state.isApproving = action.payload;
@@ -327,13 +369,28 @@ export const transferSlice = createSlice({
     ) => {
       state.acalaRelayerInfo = receiveDataWrapper(action.payload);
     },
-  },
-});
+    setIsBlockFinalized: (state, action: PayloadAction<boolean>) => {
+      state.isBlockFinalized = action.payload
+    },
+    setHasSentTokens: (state, action: PayloadAction<boolean>) => {
+      state.hasSentTokens = action.payload
+    },
+    setFinalityProgressInitialRemainingBlocks: (state, action: PayloadAction<number | undefined>) => {
+      state.finalityProgressInitialRemainingBlocks = action.payload
+    },
+    setFinalityProgressInitialRemainingSeconds: (state, action: PayloadAction<number | undefined>) => {
+      state.finalityProgressInitialRemainingSeconds = action.payload
+    }
+  }
+})
 
 export const {
   incrementStep,
   decrementStep,
   setStep,
+  setBridgeWidgetStep,
+  openTokenPickerDialog,
+  closeTokenPickerDialog,
   setSourceChain,
   setSourceWormholeWrappedInfo,
   setSourceWalletAddress,
@@ -367,6 +424,10 @@ export const {
   fetchAcalaRelayerInfo,
   errorAcalaRelayerInfo,
   receiveAcalaRelayerInfo,
+  setIsBlockFinalized,
+  setHasSentTokens,
+  setFinalityProgressInitialRemainingBlocks,
+  setFinalityProgressInitialRemainingSeconds
 } = transferSlice.actions;
 
 export default transferSlice.reducer;
