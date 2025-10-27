@@ -406,7 +406,7 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
    * You can run the spy locally (for TESTNET) by doing:
    * ```
     docker run \
-        --platform=linux/arm64 \
+        --platform=linux/amd64 \
         -p 7073:7073 \
         --entrypoint /guardiand \
         ghcr.io/wormhole-foundation/guardiand:latest \
@@ -416,7 +416,7 @@ export class RelayerApp<ContextT extends Context> extends EventEmitter {
    * You can run the spy locally (for MAINNET) by doing:
    * ```
    docker run \
-      --platform=linux/arm64 \
+      --platform=linux/amd64 \
       -p 7073:7073 \
       --entrypoint /guardiand \
       ghcr.io/wormhole-foundation/guardiand:latest \
