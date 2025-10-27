@@ -18,6 +18,7 @@ import { GRAY, useWidgetStyles } from './styles'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import SuccessPulse from './SuccessPulse'
 import WalletAddressButton from '../WalletAddressButton'
+import { shortenAddress } from '../../utils/addresses'
 
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
@@ -147,7 +148,7 @@ const AccountAddress = ({
   disconnect: () => void | Promise<void>
 } & ConnectedAccountProps) => {
   const classes = useStyles()
-  const shortAddress = `${address.slice(0, 5)}...${address.slice(-5)}`
+  const shortAddress = shortenAddress(address)
   const resolvedLabelClassName = labelClassName ?? classes.accountAddress
 
   return (
