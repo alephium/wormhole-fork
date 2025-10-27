@@ -70,9 +70,9 @@ function App() {
   );
   const navItems = [
     { label: t("Bridge"), type: "route", value: "/bridge" },
-    { label: t("Legacy tools"), type: "route", value: "/transfer" },
     { label: t("Explorer"), type: "external", value: "https://explorer.bridge.alephium.org" },
     { label: t("Alephium"), type: "external", value: "https://alephium.org" },
+    { label: t("Legacy Tools"), type: "route", value: "/transfer" },
   ];
 
   useEffect(() => {
