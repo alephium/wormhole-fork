@@ -137,72 +137,68 @@ export const EthereumProviderProvider = ({
     }
   }, [ethereumProvider, walletConnectProvider]);
 
+  const getSignerFromProvider = useCallback((provider: ethers.providers.Web3Provider) => {
+    try {
+      const signer = provider.getSigner();
+
+      setSigner(signer);
+
+      signer.getAddress().then((address) => {
+        setSignerAddress(address);
+      }).catch(() => {
+        setProviderError(t("An error occurred while getting the signer address"));
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [t])
+
+  const updateProvider = useCallback((provider: ethers.providers.Web3Provider) => {
+    setProviderError(null);
+    setProvider(provider);
+    getSignerFromProvider(provider);
+
+    provider.getNetwork().then((network) => {
+      setChainId(network.chainId);
+    })
+    .catch(() => {
+      setProviderError(t("An error occurred while getting the network"));
+    });
+  }, [getSignerFromProvider, t])
+
+
+  const handleChainChanged = useCallback((chainId) => {
+    try {
+      setChainId(BigNumber.from(chainId).toNumber());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [])
+
   const connect = useCallback(
     (connectType: ConnectType, wormholeChainId: ChainId) => {
       setConnectType(connectType);
+
       if (connectType === ConnectType.METAMASK) {
         detectEthereumProvider()
           .then((detectedProvider) => {
             if (detectedProvider) {
               setEthereumProvider(detectedProvider);
-              const provider = new ethers.providers.Web3Provider(
-                // @ts-ignore
-                detectedProvider,
-                "any"
-              );
+              // @ts-ignore
+              const provider = new ethers.providers.Web3Provider(detectedProvider, "any");
+
               provider
                 .send("eth_requestAccounts", [])
                 .then(() => {
-                  setProviderError(null);
-                  setProvider(provider);
-                  provider
-                    .getNetwork()
-                    .then((network) => {
-                      setChainId(network.chainId);
-                    })
-                    .catch(() => {
-                      setProviderError(
-                        t("An error occurred while getting the network")
-                      );
-                    });
-                  const signer = provider.getSigner();
-                  setSigner(signer);
-                  signer
-                    .getAddress()
-                    .then((address) => {
-                      setSignerAddress(address);
-                    })
-                    .catch(() => {
-                      setProviderError(
-                        t("An error occurred while getting the signer address")
-                      );
-                    });
+                  updateProvider(provider)
+
                   // TODO: try using ethers directly
                   // @ts-ignore
                   if (detectedProvider && detectedProvider.on) {
                     // @ts-ignore
-                    detectedProvider.on("chainChanged", (chainId) => {
-                      try {
-                        setChainId(BigNumber.from(chainId).toNumber());
-                      } catch (e) {}
-                    });
+                    detectedProvider.on("chainChanged", handleChainChanged);
                     // @ts-ignore
-                    detectedProvider.on("accountsChanged", (accounts) => {
-                      try {
-                        const signer = provider.getSigner();
-                        setSigner(signer);
-                        signer
-                          .getAddress()
-                          .then((address) => {
-                            setSignerAddress(address);
-                          })
-                          .catch(() => {
-                            setProviderError(
-                              t("An error occurred while getting the signer address")
-                            );
-                          });
-                      } catch (e) {}
-                    });
+                    detectedProvider.on("accountsChanged", (accounts) => getSignerFromProvider(provider));
                   }
                 })
                 .catch(() => {
@@ -233,62 +229,14 @@ export const EthereumProviderProvider = ({
             .enable()
             .then(() => {
               QRCodeModal.close()
-              setProviderError(null);
-              const provider = new ethers.providers.Web3Provider(
-                walletConnectProvider,
-                "any"
-              );
-              provider
-                .getNetwork()
-                .then((network) => {
-                  setChainId(network.chainId);
-                })
-                .catch(() => {
-                  setProviderError(t("An error occurred while getting the network"));
-                });
-              walletConnectProvider.on(
-                "accountsChanged",
-                (accounts: string[]) => {
-                  try {
-                    const signer = provider.getSigner();
-                    setSigner(signer);
-                    signer
-                      .getAddress()
-                      .then((address) => {
-                        setSignerAddress(address);
-                      })
-                      .catch(() => {
-                        setProviderError(
-                          t("An error occurred while getting the signer address")
-                        );
-                      });
-                  } catch (error) {
-                    console.error(error);
-                  }
-                }
-              );
-              walletConnectProvider.on(
-                "disconnect",
-                () => { disconnect() }
-              );
-              walletConnectProvider.on(
-                'chainChanged',
-                (hexChainId) => setChainId(BigNumber.from(hexChainId).toNumber())
-              );
-              setProvider(provider);
-              const signer = provider.getSigner();
-              setSigner(signer);
-              signer
-                .getAddress()
-                .then((address) => {
-                  setSignerAddress(address);
-                })
-                .catch((error) => {
-                  setProviderError(
-                    t("An error occurred while getting the signer address")
-                  );
-                  console.error(error);
-                });
+
+              const provider = new ethers.providers.Web3Provider(walletConnectProvider, "any");
+
+              updateProvider(provider)
+
+              walletConnectProvider.on("accountsChanged", (accounts) => getSignerFromProvider(provider));
+              walletConnectProvider.on("disconnect", disconnect);
+              walletConnectProvider.on('chainChanged', handleChainChanged);
             })
             .catch((error) => {
               if (error.message !== "User closed modal") {
@@ -299,7 +247,7 @@ export const EthereumProviderProvider = ({
         })
       }
     },
-    [disconnect, t]
+    [disconnect, getSignerFromProvider, handleChainChanged, t, updateProvider]
   );
 
   const contextValue = useMemo(
