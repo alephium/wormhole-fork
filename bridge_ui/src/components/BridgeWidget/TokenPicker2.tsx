@@ -23,7 +23,13 @@ import { balancePretty } from '../../utils/balancePretty'
 import { getIsTokenTransferDisabled } from '../../utils/consts'
 import { shortenAddress } from '../../utils/addresses'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTransferAmount, selectTransferIsTokenPickerDialogOpen, selectTransferSourceChain, selectTransferSourceError, selectTransferTargetChain } from '../../store/selectors'
+import {
+  selectTransferAmount,
+  selectTransferIsTokenPickerDialogOpen,
+  selectTransferSourceChain,
+  selectTransferSourceError,
+  selectTransferTargetChain
+} from '../../store/selectors'
 import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
@@ -62,17 +68,25 @@ export const BasicAccountRender2 = (
 
   const tokenContent = (
     <div className={classes.tokenOverviewContainer}>
-      <div className={classes.tokenImageContainer}>
-        {uri && <img alt="" className={classes.tokenImage} src={uri} />}
+      <div className={classes.tokenImageAndSymbol}>
+        <div className={classes.tokenImageContainer}>
+          {uri && <img alt="" className={classes.tokenImage} src={uri} />}
+        </div>
+        <div>
+          <Typography variant="subtitle1">{symbol}</Typography>
+        </div>
       </div>
-      <div>
-        <Typography variant="subtitle1">{symbol}</Typography>
+      <div className={classes.tokenAddress}>
+        <Typography variant="body1" style={{ opacity: 0.5 }}>
+          {account.isNativeAsset ? 'Native' : mintPrettyString}
+        </Typography>
       </div>
-      <div>{<Typography variant="body1" style={{ opacity: 0.5 }}>{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
       <div>
         {shouldDisplayBalance ? (
           <>
-            <Typography variant="body2" style={{ opacity: 0.5 }}>{'Balance'}</Typography>
+            <Typography variant="body2" style={{ opacity: 0.5 }}>
+              {'Balance'}
+            </Typography>
             <Typography variant="body1">{balancePretty(account.uiAmountString)}</Typography>
           </>
         ) : (
@@ -114,22 +128,21 @@ type TokenPicker2Props = {
   useTokenId?: boolean
 }
 
-const TokenPicker2 = function TokenPicker2(
-  {
-    value,
-    options,
-    RenderOption,
-    onChange,
-    isValidAddress,
-    getAddress,
-    disabled,
-    resetAccounts,
-    nft,
-    chainId,
-    error: externalError,
-    showLoader,
-    useTokenId
-  }: TokenPicker2Props) {
+const TokenPicker2 = function TokenPicker2({
+  value,
+  options,
+  RenderOption,
+  onChange,
+  isValidAddress,
+  getAddress,
+  disabled,
+  resetAccounts,
+  nft,
+  chainId,
+  error: externalError,
+  showLoader,
+  useTokenId
+}: TokenPicker2Props) {
   const { t } = useTranslation()
   const classes = useStyles()
   const [holderString, setHolderString] = useState('')
@@ -153,7 +166,6 @@ const TokenPicker2 = function TokenPicker2(
     setSelectionError('')
     setDialogIsOpen(true)
   }, [])
-
 
   const closeDialog = useCallback(() => {
     setDialogIsOpen(false)
@@ -371,6 +383,7 @@ const TokenPicker2 = function TokenPicker2(
                   onClick={() => handleSelectOption(option)}
                   key={option.publicKey + option.mintKey + (option.tokenId || '')}
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
+                  className={classes.tokenListItem}
                 >
                   <RenderOption account={option} />
                 </ListItem>
@@ -481,7 +494,6 @@ const useStyles = makeStyles((theme) =>
       overflowX: 'hidden'
     },
     selectionButtonContainer: {
-      //display: "flex",
       textAlign: 'center',
       marginTop: theme.spacing(2),
       marginBottom: theme.spacing(2)
@@ -490,13 +502,19 @@ const useStyles = makeStyles((theme) =>
       maxWidth: '100%',
       width: theme.breakpoints.values.sm
     },
+    tokenListItem: {
+      paddingLeft: '10px'
+    },
     tokenOverviewContainer: {
       display: 'flex',
       width: '100%',
       alignItems: 'center',
       justifyContent: 'space-between',
-      '& div': {
+      '& >div': {
         margin: theme.spacing(1),
+        [theme.breakpoints.down('xs')]: {
+          margin: 0
+        },
         flexBasis: '25%',
         '&$tokenMarketsList': {
           marginTop: theme.spacing(-0.5),
@@ -509,6 +527,19 @@ const useStyles = makeStyles((theme) =>
         flexShrink: 1
       }
     },
+    tokenImageAndSymbol: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      [theme.breakpoints.down('xs')]: {
+        gap: '10px'
+      }
+    },
+    tokenAddress: {
+      [theme.breakpoints.down('xs')]: {
+        display: 'none'
+      }
+    },
     tokenImageContainer: {
       display: 'flex',
       alignItems: 'center',
@@ -518,7 +549,9 @@ const useStyles = makeStyles((theme) =>
       maxWidth: 40,
       borderRadius: '50%',
       padding: 6,
-      border: `1px solid ${COLORS.whiteWithTransparency}`
+      border: `1px solid ${COLORS.whiteWithTransparency}`,
+      overflow: 'hidden',
+      flexShrink: 0
     },
     tokenImageContainer2: {
       display: 'flex',
@@ -576,7 +609,7 @@ const useStyles = makeStyles((theme) =>
       '&:has(input:focus)': {
         outline: `1px solid ${COLORS.blue}`,
         background: 'transparent'
-      },
+      }
     },
     tokenAmountControls: {
       display: 'flex',

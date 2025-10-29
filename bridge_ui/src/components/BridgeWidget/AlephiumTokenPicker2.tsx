@@ -5,10 +5,9 @@ import { createParsedTokenAccount } from '../../hooks/useGetSourceParsedTokenAcc
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 import { ParsedTokenAccount } from '../../store/transferSlice'
 import { getAlephiumTokenLogoAndSymbol, tryGetContractId } from '../../utils/alephium'
-import { BasicAccountRender } from '../TokenSelectors/TokenPicker'
 import { useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
-import TokenPicker2 from './TokenPicker2'
+import TokenPicker2, { BasicAccountRender2 } from './TokenPicker2'
 
 type AlephiumTokenPickerProps = {
   value: ParsedTokenAccount | null
@@ -24,15 +23,7 @@ const returnsFalse = () => false
 
 const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
   const { t } = useTranslation()
-  const {
-    value,
-    balances,
-    onChange,
-    disabled,
-    tokens,
-    isFetching,
-    resetAccounts
-  } = props
+  const { value, balances, onChange, disabled, tokens, isFetching, resetAccounts } = props
   const alphWallet = useWallet()
   const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM)
 
@@ -94,7 +85,7 @@ const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
   }, [])
 
   const RenderComp = useCallback(({ account }: { account: ParsedTokenAccount }) => {
-    return BasicAccountRender(account, returnsFalse, false)
+    return BasicAccountRender2(account, returnsFalse, false)
   }, [])
 
   return (

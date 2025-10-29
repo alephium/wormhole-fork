@@ -51,7 +51,8 @@ export const useWidgetStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%'
+    width: '100%',
+    gap: '20px'
   },
   expandButton: {
     color: GRAY,
@@ -68,7 +69,7 @@ export const useWidgetStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
     width: '24px',
-    height: '24px',
+    height: '24px'
   },
   expandIcon: {
     position: 'absolute',
@@ -90,7 +91,8 @@ export const useWidgetStyles = makeStyles((theme) => ({
   },
   expandableContainer: {
     overflow: 'hidden',
-    transition: 'max-height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    transition:
+      'max-height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   expanded: {
     maxHeight: '1000px',

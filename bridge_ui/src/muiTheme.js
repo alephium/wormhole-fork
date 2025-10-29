@@ -221,7 +221,6 @@ export const theme = responsiveFontSizes(
           borderRadius: "12px",
           gap: 14,
           backgroundColor: COLORS.whiteWithStrongTransparency,
-          minHeight: 52
         }
       },
       MuiListItemIcon: {
