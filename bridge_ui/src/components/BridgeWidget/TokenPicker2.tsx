@@ -503,9 +503,7 @@ const useStyles = makeStyles((theme) =>
       width: theme.breakpoints.values.sm
     },
     tokenListItem: {
-      [theme.breakpoints.down('xs')]: {
-        paddingLeft: '10px'
-      }
+      paddingLeft: '10px'
     },
     tokenOverviewContainer: {
       display: 'flex',
