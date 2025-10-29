@@ -5,6 +5,7 @@ import { selectSourceWalletAddress, selectTransferSourceChain } from '../../stor
 import { useSelector } from 'react-redux'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import { GRAY } from './styles'
+import { CHAIN_ID_BSC } from '@alephium/wormhole-sdk'
 
 const SendingAddress = ({ showIcon = false }: { showIcon?: boolean }) => {
   const classes = useStyles()
@@ -16,7 +17,7 @@ const SendingAddress = ({ showIcon = false }: { showIcon?: boolean }) => {
     <>
       <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px', color: GRAY }}>
         {showIcon && <img src={sourceChainInfo.logo} alt={sourceChainInfo.name} className={classes.networkIcon} />}
-        {sourceChainInfo.name} address
+        {sourceChain === CHAIN_ID_BSC ? 'BSC' : sourceChainInfo.name} address
       </Typography>
       <SmartAddress chainId={sourceChain} address={sourceWalletAddress} />
     </>
