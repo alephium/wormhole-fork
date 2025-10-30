@@ -53,12 +53,18 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
   }, [useNativeRedeem])
 
   const isRedeemDisabled =
-    !isReady ||
-    disabled ||
-    (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag)) ||
-    checkTransferCompletedError !== undefined
+    !isReady || disabled || (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag))
 
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
+
+  console.log('isReady', isReady)
+  console.log('disabled', disabled)
+  console.log('isRedeemDisabled', isRedeemDisabled)
+  console.log(
+    'isTransferCompletedLoading || isTransferCompletedFlag',
+    isTransferCompletedLoading || isTransferCompletedFlag
+  )
+  console.log('checkTransferCompletedError', checkTransferCompletedError)
 
   if (
     !isRedeemDisabled &&

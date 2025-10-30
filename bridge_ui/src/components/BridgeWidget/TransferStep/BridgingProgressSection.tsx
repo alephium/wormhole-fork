@@ -2,7 +2,12 @@ import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { useWidgetStyles } from '../styles'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
-import { selectTransferHasSentTokens, selectTransferRedeemTx, selectTransferTransferTx } from '../../../store/selectors'
+import {
+  selectTransferHasSentTokens,
+  selectTransferRecoverySourceTxId,
+  selectTransferRedeemTx,
+  selectTransferTransferTx
+} from '../../../store/selectors'
 import { selectTransferIsRedeemComplete } from '../../../store/selectors'
 import { selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
 import { selectTransferIsBlockFinalized } from '../../../store/selectors'
@@ -23,6 +28,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
   const transferTx = useSelector(selectTransferTransferTx)
+  const recoverySourceTx = useSelector(selectTransferRecoverySourceTxId)
   const signedVAA = useTransferSignedVAA()
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
@@ -54,7 +60,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
     }
   }, [step])
 
-  if (!transferTx) return null
+  if (!transferTx && !recoverySourceTx) return null
 
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded)

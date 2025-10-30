@@ -1,23 +1,24 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Button, Container, IconButton, makeStyles, Typography } from '@material-ui/core'
-import { useEffect, useMemo, useState } from 'react'
+import { Container, IconButton, makeStyles, Typography } from '@material-ui/core'
+import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory, useLocation } from 'react-router'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
+  selectBridgeWidgetPage,
   selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
   selectTransferIsSending
 } from '../../store/selectors'
-import { setSourceChain, setTargetChain } from '../../store/transferSlice'
+import { reset, setBridgeWidgetPage, setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
 import { useWidgetStyles } from './styles'
 import { ArrowBackOutlined, ListOutlined, RestoreOutlined } from '@material-ui/icons'
-import Recovery2 from './Recovery/Recovery2'
+import Recovery from './Recovery/Recovery'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
@@ -29,8 +30,9 @@ const BridgeWidget = () => {
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const history = useHistory()
+  const dispatch = useDispatch()
 
-  const [page, setPage] = useState<'bridge' | 'recovery' | 'history'>('bridge')
+  const page = useSelector(selectBridgeWidgetPage)
 
   const title =
     step === 0
@@ -49,7 +51,7 @@ const BridgeWidget = () => {
         <div className={widgetClasses.spaceBetween}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 24 }}>
             {page !== 'bridge' && (
-              <IconButton onClick={() => setPage('bridge')} size="small">
+              <IconButton onClick={() => dispatch(reset())} size="small">
                 <ArrowBackOutlined fontSize="small" />
               </IconButton>
             )}
@@ -58,7 +60,10 @@ const BridgeWidget = () => {
 
           {page === 'bridge' && step === 0 && (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button className={widgetClasses.discreetButton} onClick={() => setPage('recovery')}>
+              <button
+                className={widgetClasses.discreetButton}
+                onClick={() => dispatch(setBridgeWidgetPage('recovery'))}
+              >
                 <RestoreOutlined style={{ fontSize: '16px' }} />
                 Recovery
               </button>
@@ -71,7 +76,7 @@ const BridgeWidget = () => {
         </div>
         <div className={classes.mainBox}>
           <div className={classes.stack}>
-            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery2 /> : null}
+            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery /> : null}
           </div>
         </div>
       </div>

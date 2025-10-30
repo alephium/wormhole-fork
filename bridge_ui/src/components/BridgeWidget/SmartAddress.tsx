@@ -20,7 +20,7 @@ import {
 import { Button, makeStyles, Tooltip, Typography } from '@material-ui/core'
 import { FileCopy, OpenInNew } from '@material-ui/icons'
 import { withStyles } from '@material-ui/styles'
-import { ReactChild } from 'react'
+import { ReactChild, useState } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from '../../utils/consts'
@@ -58,12 +58,24 @@ const useStyles = makeStyles((theme) => ({
     '&:hover': {
       color: 'rgba(255, 255, 255, 0.7)'
     }
+  },
+  '@keyframes pulsePointer': {
+    '0%': {
+      transform: 'translateX(0)'
+    },
+    '100%': {
+      transform: 'translateX(8px)'
+    }
+  },
+  pulsingPointer: {
+    animation: '$pulsePointer 0.5s infinite alternate',
+    display: 'inline-block',
+    fontSize: '1.2rem'
   }
 }))
 
 const tooltipStyles = {
   tooltip: {
-    minWidth: 'max-content',
     textAlign: 'center',
     '& > *': {
       margin: '.25rem'
@@ -87,6 +99,8 @@ interface SmartAddressProps {
   noUnderline?: boolean
   extraContent?: ReactChild
   isAsset?: boolean
+  pulse?: boolean
+  tooltipText?: string
 }
 
 const SmartAddress = ({
@@ -98,7 +112,9 @@ const SmartAddress = ({
   tokenName,
   variant,
   extraContent,
-  isAsset
+  isAsset,
+  pulse,
+  tooltipText
 }: SmartAddressProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
@@ -109,6 +125,8 @@ const SmartAddress = ({
   // const useableLogo = logo || isNativeTerra ? getNativeTerraIcon(useableSymbol) : null
   const isNative = parsedTokenAccount?.isNativeAsset || isNativeETH || isNativeALPH || false
   const addressShort = shortenAddress(useableAddress) || ''
+
+  const [isPulsing, setIsPulsing] = useState(pulse)
 
   const useableName = isNative
     ? 'Native Currency'
@@ -221,6 +239,7 @@ const SmartAddress = ({
 
   const tooltipContent = (
     <>
+      {tooltipText && <Typography>{tooltipText}</Typography>}
       {useableName && <Typography>{useableName}</Typography>}
       {useableSymbol && !isNative && (
         <Typography noWrap variant="body2">
@@ -236,10 +255,13 @@ const SmartAddress = ({
   )
 
   return (
-    <StyledTooltip title={tooltipContent} interactive={true}>
-      <Typography variant={variant || 'body1'} component="div" className={classes.address}>
-        {useableSymbol || addressShort}
-      </Typography>
+    <StyledTooltip title={tooltipContent} interactive={true} onPointerEnter={() => setIsPulsing(false)}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        {isPulsing && <span className={classes.pulsingPointer}>👉</span>}
+        <Typography variant={variant || 'body1'} component="div" className={classes.address}>
+          {useableSymbol || addressShort}
+        </Typography>
+      </div>
     </StyledTooltip>
   )
 }

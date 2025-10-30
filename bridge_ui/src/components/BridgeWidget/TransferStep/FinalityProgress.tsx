@@ -30,6 +30,8 @@ import { useWallet } from '@alephium/web3-react'
 import { ethers } from 'ethers'
 import { AlephiumBlockTime } from '../../../utils/alephium'
 import { COLORS } from '../../../muiTheme'
+import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
+import { secondsToTime } from '../bridgeUtils'
 
 const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const classes = useWidgetStyles()
@@ -192,13 +194,6 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
 
 export default FinalityProgress
 
-const secondsToTime = (seconds: number, onlyMinutes: boolean = false) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-
-  return onlyMinutes ? (mins > 0 ? `~ ${mins}min` : 'less than a minute') : `${mins}m ${String(secs).padStart(2, '0')}s`
-}
-
 const BorderLinearProgress = styled(LinearProgress)(() => ({
   height: 8,
   borderRadius: 5,
@@ -229,20 +224,6 @@ const useRemainingBlocksForFinality = () => {
     : remainingBlocksUntilTxBlock + DefaultEVMChainConfirmations
 
   return remainingBlocksForFinality > 0 ? remainingBlocksForFinality : 0
-}
-
-const useFetchAvgBlockTime = () => {
-  const alphWallet = useWallet()
-  const [avgBlockTime, setAvgBlockTime] = useState<number>(0)
-
-  useEffect(() => {
-    alphWallet?.explorerProvider?.infos.getInfosAverageBlockTimes().then((data) => {
-      if (data && data.length > 0)
-        setAvgBlockTime(data.reduce((acc: number, { value }) => acc + value, 0.0) / data.length)
-    })
-  }, [alphWallet])
-
-  return avgBlockTime
 }
 
 const useFetchCurrentBlockNumber = () => {

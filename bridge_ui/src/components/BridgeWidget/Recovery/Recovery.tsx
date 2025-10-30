@@ -12,7 +12,7 @@ import {
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA
 } from '@alephium/wormhole-sdk'
-import { Card, Container, makeStyles, TextField, Typography } from '@material-ui/core'
+import { makeStyles, Typography } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 import axios from 'axios'
 import { ethers } from 'ethers'
@@ -25,7 +25,7 @@ import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import useRelayersAvailable, { Relayer } from '../../../hooks/useRelayersAvailable'
 import { COLORS } from '../../../muiTheme'
 import { setRecoveryVaa as setRecoveryNFTVaa } from '../../../store/nftSlice'
-import { setRecoveryVaa, setSourceChain } from '../../../store/transferSlice'
+import { setBridgeWidgetPage, setBridgeWidgetStep, setRecoveryVaa } from '../../../store/transferSlice'
 import { getAlphTxInfoByTxId } from '../../../utils/alephium'
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -41,24 +41,20 @@ import {
 } from '../../../utils/consts'
 import { getSignedVAAWithRetry } from '../../../utils/getSignedVAAWithRetry'
 import parseError from '../../../utils/parseError'
-import ButtonWithLoader from '../../ButtonWithLoader'
-import ChainSelect from '../../ChainSelect'
-import KeyAndBalance from '../../KeyAndBalance'
 import RelaySelector from '../../RelaySelector'
-import {
-  selectTransferShouldLockFields,
-  selectTransferSourceChain,
-  selectTransferTransferTx
-} from '../../../store/selectors'
+import { selectTransferSourceChain, selectTransferTransferTx } from '../../../store/selectors'
 import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from '../../../utils/evm'
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
 import clsx from 'clsx'
-import { RED, useWidgetStyles } from '../styles'
+import { GRAY, RED, useWidgetStyles } from '../styles'
 import ChainSelect2 from '../ChainSelect2'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ConnectWalletButton from '../ConnectWalletButton'
+import WarningBox from '../WarningBox'
+import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
+import { secondsToTime } from '../bridgeUtils'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -119,7 +115,9 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
     }
     const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId)
     if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-      throw new Error(i18n.t('The transaction is not confirmed'))
+      throw new Error(
+        `remaining-blocks-until-confirmation:${ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL - txInfo.confirmations}`
+      )
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -220,7 +218,7 @@ function RelayerRecovery({
   )
 }
 
-export default function Recovery2() {
+const Recovery = () => {
   const { t } = useTranslation()
   const { push } = useHistory()
   const { enqueueSnackbar } = useSnackbar()
@@ -385,7 +383,9 @@ export default function Recovery2() {
               }
             })
           )
-          push('/transfer')
+
+          dispatch(setBridgeWidgetPage('bridge'))
+          dispatch(setBridgeWidgetStep(2))
         }
       }
     },
@@ -413,7 +413,13 @@ export default function Recovery2() {
   const widgetClasses = useWidgetStyles()
   const isSourceChainReady = useIsWalletReady(recoverySourceChain)
   const error = recoverySourceTxError || walletConnectError
+  const isUnconfirmedTxError = error.startsWith('remaining-blocks-until-confirmation:')
+  const remainingBlocksUntilConfirmation = isUnconfirmedTxError ? parseInt(error.split(':')[1]) : undefined
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const avgAlphBlockTime = useFetchAvgBlockTime()
+  const remainingSecondsUntilConfirmation = remainingBlocksUntilConfirmation
+    ? remainingBlocksUntilConfirmation * (avgAlphBlockTime / 1000)
+    : undefined
 
   useLayoutEffect(() => {
     if (!isReady || typeof window === 'undefined') {
@@ -465,7 +471,43 @@ export default function Recovery2() {
           />
         </div>
       </div>
-      {error && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
+
+      {isUnconfirmedTxError && remainingSecondsUntilConfirmation && (
+        <WarningBox>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '20px',
+              width: '100%'
+            }}
+          >
+            <div>
+              <Typography style={{ fontWeight: 600 }}>The transaction is still awaiting confirmation.</Typography>
+              <Typography style={{ color: GRAY, fontSize: '14px' }}>
+                Try again in {secondsToTime(remainingSecondsUntilConfirmation, true)}.
+              </Typography>
+            </div>
+
+            <BridgeWidgetButton
+              variant="outlined"
+              size="small"
+              style={{ width: 'auto', boxShadow: 'none', padding: '0 20px' }}
+              onClick={() => {
+                setRecoverySourceTx('')
+                setTimeout(() => {
+                  setRecoverySourceTx(recoverySourceTx)
+                }, 0)
+              }}
+            >
+              Try again
+            </BridgeWidgetButton>
+          </div>
+        </WarningBox>
+      )}
+
+      {error && !isUnconfirmedTxError && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
 
       <RelayerRecovery
         parsedPayload={parsedPayload}
@@ -489,3 +531,5 @@ export default function Recovery2() {
     </>
   )
 }
+
+export default Recovery

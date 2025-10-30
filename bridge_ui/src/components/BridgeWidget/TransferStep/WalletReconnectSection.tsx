@@ -5,14 +5,14 @@ import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephiu
 import {
   selectTransferHasSentTokens,
   selectTransferSourceChain,
-  selectTransferTargetChain,
-  selectTransferTransferTx
+  selectTransferTargetChain
 } from '../../../store/selectors'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import { CHAINS_BY_ID } from '../../../utils/consts'
 import { useWidgetStyles } from '../styles'
 import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
 import ConnectWalletButton from '../ConnectWalletButton'
+import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SUPPORTED_CHAINS: ChainId[] = [CHAIN_ID_ETH, CHAIN_ID_BSC, CHAIN_ID_ALEPHIUM] // TODO: Update when more chains are supported
 
@@ -22,7 +22,7 @@ interface WalletReconnectSectionProps {
 
 const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionProps) => {
   const classes = useWidgetStyles()
-  const transferTx = useSelector(selectTransferTransferTx)
+  const txExists = useTransferOrRecoveryTxExists()
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
@@ -31,13 +31,13 @@ const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionP
   const { isReady: isTargetWalletReady } = useIsWalletReady(targetChain, false)
 
   const disconnectedChains = useMemo(() => {
-    if (!transferTx || hasSentTokens) return []
+    if (!txExists || hasSentTokens) return []
 
     return [
       !isSourceWalletReady && SUPPORTED_CHAINS.includes(sourceChain) && sourceChain,
       !isTargetWalletReady && SUPPORTED_CHAINS.includes(targetChain) && targetChain
     ].filter(Boolean) as ChainId[]
-  }, [hasSentTokens, isSourceWalletReady, isTargetWalletReady, sourceChain, targetChain, transferTx])
+  }, [hasSentTokens, isSourceWalletReady, isTargetWalletReady, sourceChain, targetChain, txExists])
 
   if (disconnectedChains.length === 0) return null
 
