@@ -23,7 +23,7 @@
     "@solana/wallet-adapter-wallets": "^0.16.1",
     "@solana/web3.js": "^1.35.1",
     "@terra-money/wallet-provider": "^3.8.0",
-    "@walletconnect/ethereum-provider": "2.17.2",
+    "@alephium/walletconnect-ethereum-provider": "0.2.0",
     "algosdk": "2.4.0",
     "axios": "^0.21.1",
     "bech32": "^1.1.4",

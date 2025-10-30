@@ -193,17 +193,3 @@ export const METAMASK_CHAIN_PARAMETERS: {
     blockExplorerUrls: ["https://testnet.aurorascan.dev"],
   },
 };
-
-export interface EvmRpcMap {
-  [chainId: string]: string;
-}
-
-export const EVM_RPC_MAP = Object.entries(METAMASK_CHAIN_PARAMETERS).reduce(
-  (evmRpcMap, [evmChainId, { rpcUrls }]) => {
-    if (rpcUrls.length > 0) {
-      evmRpcMap[evmChainId] = rpcUrls[0];
-    }
-    return evmRpcMap;
-  },
-  {} as EvmRpcMap
-);

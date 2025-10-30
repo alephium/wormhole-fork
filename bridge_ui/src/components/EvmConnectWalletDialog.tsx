@@ -17,7 +17,6 @@ import {
   useEthereumProvider,
 } from "../contexts/EthereumProviderContext";
 import { getEvmChainId } from "../utils/consts";
-import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { useTranslation } from "react-i18next";
 
@@ -91,10 +90,7 @@ const EvmConnectWalletDialog = ({
         return true;
       } else if (connection.connectType === ConnectType.WALLETCONNECT) {
         const evmChainId = getEvmChainId(chainId);
-        // WalletConnect requires a rpc provider
-        return (
-          evmChainId !== undefined && EVM_RPC_MAP[evmChainId] !== undefined
-        );
+        return (evmChainId !== undefined);
       } else {
         return false;
       }
