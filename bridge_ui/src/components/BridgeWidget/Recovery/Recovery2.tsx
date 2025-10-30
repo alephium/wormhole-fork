@@ -46,8 +46,11 @@ import ChainSelect from '../../ChainSelect'
 import KeyAndBalance from '../../KeyAndBalance'
 import RelaySelector from '../../RelaySelector'
 import {
+  selectTransferHasSentTokens,
+  selectTransferIsRecovery,
   selectTransferShouldLockFields,
   selectTransferSourceChain,
+  selectTransferTargetChain,
   selectTransferTransferTx
 } from '../../../store/selectors'
 import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from '../../../utils/evm'
@@ -55,10 +58,18 @@ import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
 import clsx from 'clsx'
-import { RED, useWidgetStyles } from '../styles'
+import { GRAY, RED, useWidgetStyles } from '../styles'
 import ChainSelect2 from '../ChainSelect2'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ConnectWalletButton from '../ConnectWalletButton'
+import WarningBox from '../WarningBox'
+import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
+import { secondsToTime } from '../bridgeUtils'
+import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
+import ManualRedeemSection from '../TransferStep/ManualRedeemSection'
+import useGetIsTransferCompleted from '../../../hooks/useGetIsTransferCompleted'
+import BridgingProgressSection from '../TransferStep/BridgingProgressSection'
+import TransferMoreTokensButton from '../TransferStep/TransferMoreTokensButton'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -119,7 +130,9 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
     }
     const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId)
     if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
-      throw new Error(i18n.t('The transaction is not confirmed'))
+      throw new Error(
+        `remaining-blocks-until-confirmation:${ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL - txInfo.confirmations}`
+      )
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -385,7 +398,6 @@ export default function Recovery2() {
               }
             })
           )
-          push('/transfer')
         }
       }
     },
@@ -412,8 +424,17 @@ export default function Recovery2() {
 
   const widgetClasses = useWidgetStyles()
   const isSourceChainReady = useIsWalletReady(recoverySourceChain)
+  const targetChain = useSelector(selectTransferTargetChain)
+  const isTargetChainReady = useIsWalletReady(targetChain)
   const error = recoverySourceTxError || walletConnectError
+  const isUnconfirmedTxError = error.startsWith('remaining-blocks-until-confirmation:')
+  const remainingBlocksUntilConfirmation = isUnconfirmedTxError ? parseInt(error.split(':')[1]) : undefined
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const avgAlphBlockTime = useFetchAvgBlockTime()
+  const remainingSecondsUntilConfirmation = remainingBlocksUntilConfirmation
+    ? remainingBlocksUntilConfirmation * (avgAlphBlockTime / 1000)
+    : undefined
+  const isRecovery = useSelector(selectTransferIsRecovery)
 
   useLayoutEffect(() => {
     if (!isReady || typeof window === 'undefined') {
@@ -428,6 +449,8 @@ export default function Recovery2() {
 
     return () => window.cancelAnimationFrame(frame)
   }, [isReady])
+
+  console.log('error', error)
 
   return (
     <>
@@ -465,7 +488,41 @@ export default function Recovery2() {
           />
         </div>
       </div>
-      {error && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
+
+      {isUnconfirmedTxError && remainingSecondsUntilConfirmation && (
+        <WarningBox>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '20px',
+              width: '100%'
+            }}
+          >
+            <div>
+              <Typography style={{ fontWeight: 600 }}>The transaction is still awaiting confirmation.</Typography>
+              <Typography style={{ color: GRAY, fontSize: '14px' }}>
+                Try again in {secondsToTime(remainingSecondsUntilConfirmation, true)}.
+              </Typography>
+            </div>
+
+            <BridgeWidgetButton
+              variant="outlined"
+              size="small"
+              style={{ width: 'auto', boxShadow: 'none', padding: '0 20px' }}
+              onClick={() => {
+                setRecoverySourceTx('')
+                setRecoverySourceTx(recoverySourceTx)
+              }}
+            >
+              Try again
+            </BridgeWidgetButton>
+          </div>
+        </WarningBox>
+      )}
+
+      {error && !isUnconfirmedTxError && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
 
       <RelayerRecovery
         parsedPayload={parsedPayload}
@@ -473,7 +530,16 @@ export default function Recovery2() {
         onClick={handleRecoverWithRelayerClick}
       />
 
-      {isReady ? (
+      {isRecovery && recoverySourceTx ? (
+        <>
+          <RedeemProgress />
+          {!isTargetChainReady.isReady && (
+            <ConnectWalletButton chainId={targetChain}>
+              {`Connect ${CHAINS_BY_ID[targetChain]?.name ?? 'selected chain'} wallet`}
+            </ConnectWalletButton>
+          )}
+        </>
+      ) : isReady ? (
         <BridgeWidgetButton
           onClick={handleRecoverClick}
           disabled={!enableRecovery || !isReady}
@@ -485,6 +551,22 @@ export default function Recovery2() {
         <ConnectWalletButton chainId={recoverySourceChain}>
           {`Connect ${CHAINS_BY_ID[recoverySourceChain]?.name ?? 'selected chain'} wallet`}
         </ConnectWalletButton>
+      )}
+    </>
+  )
+}
+
+const RedeemProgress = () => {
+  const isRecovery = useSelector(selectTransferIsRecovery)
+  const isTransferCompleted = useGetIsTransferCompleted(true, isRecovery ? 5000 : undefined)
+  const hasSentTokens = useSelector(selectTransferHasSentTokens)
+
+  return (
+    <>
+      <BridgingProgressSection isTransferCompleted={isTransferCompleted} />
+      <ManualRedeemSection isTransferCompleted={isTransferCompleted} />
+      {(hasSentTokens || isTransferCompleted.isTransferCompleted) && (
+        <TransferMoreTokensButton isTransferCompleted={isTransferCompleted} />
       )}
     </>
   )
