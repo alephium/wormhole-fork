@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import EthereumProvider from "@walletconnect/ethereum-provider";
+import EthereumProvider from "@alephium/walletconnect-ethereum-provider";
 import { BigNumber, ethers } from "ethers";
 import React, {
   ReactChildren,
@@ -11,7 +11,6 @@ import React, {
 } from "react";
 import metamaskIcon from "../icons/metamask-fox.svg";
 import walletconnectIcon from "../icons/walletconnect.svg";
-import { EVM_RPC_MAP } from "../utils/metaMaskChainParameters";
 import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
 import { getEvmChainId } from "../utils/consts";
 import { CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId } from "@alephium/wormhole-sdk";
@@ -222,7 +221,6 @@ export const EthereumProviderProvider = ({
           projectId: WALLET_CONNECT_PROJECT_ID,
           showQrModal: false,
           chains: [getEvmChainId(CHAIN_ID_ETH) as number, getEvmChainId(CHAIN_ID_BSC) as number],
-          rpcMap: EVM_RPC_MAP,
           customStoragePrefix: 'ethereum'
         }).then((walletConnectProvider) => {
           setWalletConnectProvider(walletConnectProvider);
