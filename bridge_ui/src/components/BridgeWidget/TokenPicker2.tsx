@@ -406,8 +406,8 @@ const TokenPicker2 = function TokenPicker2({
   return (
     <>
       {dialog}
-      <div className={classes.tokenAmountInputContainer}>
-        <div className={classes.tokenAmountInput}>
+      <div className={widgetClasses.inputFieldContainer}>
+        <div className={widgetClasses.inputFieldContainerInner}>
           <input
             ref={amountInputRef}
             className={classes.tokenAmountValueInput}
@@ -436,7 +436,7 @@ const TokenPicker2 = function TokenPicker2({
           <div className={classes.tokenAvailableMaxContainer}>
             <button
               onClick={() => dispatch(setAmount(selectedTokenAmount || ''))}
-              className={classes.tokenAvailableBalance}
+              className={widgetClasses.discreetButton}
             >
               Max: {balancePretty(selectedTokenAmount || '')}
             </button>
@@ -596,21 +596,6 @@ const useStyles = makeStyles((theme) =>
       justifyContent: 'center',
       color: COLORS.gray
     },
-    tokenAmountInputContainer: {
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '5px',
-      padding: '14px',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderRadius: '20px',
-      outline: '2px solid transparent',
-
-      '&:has(input:focus)': {
-        outline: `1px solid ${COLORS.blue}`,
-        background: 'transparent'
-      }
-    },
     tokenAmountControls: {
       display: 'flex',
       gap: '10px',
@@ -622,25 +607,8 @@ const useStyles = makeStyles((theme) =>
       alignItems: 'center',
       justifyContent: 'flex-end'
     },
-    tokenAvailableBalance: {
-      fontSize: '0.875rem',
-      color: 'rgba(255, 255, 255, 0.5)',
-      padding: '8px 12px',
-      border: 'none',
-      backgroundColor: 'transparent',
-      borderRadius: '20px',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      }
-    },
     useMaxButton: {
       fontSize: '0.875rem'
-    },
-    tokenAmountInput: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center'
     },
     tokenAmountValue: {
       display: 'flex',

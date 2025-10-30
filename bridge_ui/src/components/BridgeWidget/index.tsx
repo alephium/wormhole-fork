@@ -1,8 +1,8 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, makeStyles, Typography } from '@material-ui/core'
-import { useEffect, useMemo } from 'react'
+import { Button, Container, IconButton, makeStyles, Typography } from '@material-ui/core'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useLocation } from 'react-router'
+import { useHistory, useLocation } from 'react-router'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
@@ -15,27 +15,63 @@ import {
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
+import { useWidgetStyles } from './styles'
+import { ArrowBackOutlined, ListOutlined, RestoreOutlined } from '@material-ui/icons'
+import Recovery2 from './Recovery/Recovery2'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
   useFetchTargetAsset()
   useUrlPathParams()
   usePreventNavigation()
-  
+
   const step = useSelector(selectTransferActiveBridgeWidgetStep)
   const classes = useStyles()
+  const widgetClasses = useWidgetStyles()
+  const history = useHistory()
 
-  const title = step === 0 ? 'Bridge' : step === 1 ? 'Review' : ''
+  const [page, setPage] = useState<'bridge' | 'recovery' | 'history'>('bridge')
+
+  const title =
+    step === 0
+      ? page === 'bridge'
+        ? 'Bridge'
+        : page === 'recovery'
+        ? 'Recovery'
+        : 'Bridging history'
+      : step === 1
+      ? 'Review'
+      : ''
 
   return (
     <Container maxWidth="md" className={classes.mainContainer}>
       <div className={classes.innerContainer}>
-        <div>
-          <Typography variant='h1' style={{ margin: 0 }}>{title}</Typography>
+        <div className={widgetClasses.spaceBetween}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 24 }}>
+            {page !== 'bridge' && (
+              <IconButton onClick={() => setPage('bridge')} size="small">
+                <ArrowBackOutlined fontSize="small" />
+              </IconButton>
+            )}
+            <Typography variant="h1">{title}</Typography>
+          </div>
+
+          {page === 'bridge' && step === 0 && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <button className={widgetClasses.discreetButton} onClick={() => setPage('recovery')}>
+                <RestoreOutlined style={{ fontSize: '16px' }} />
+                Recovery
+              </button>
+              <button className={widgetClasses.discreetButton} onClick={() => history.push('/transactions')}>
+                <ListOutlined style={{ fontSize: '16px' }} />
+                History
+              </button>
+            </div>
+          )}
         </div>
         <div className={classes.mainBox}>
           <div className={classes.stack}>
-            <BridgeWidgetSteps />
+            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery2 /> : null}
           </div>
         </div>
       </div>
@@ -108,7 +144,6 @@ const useStyles = makeStyles((theme) => ({
   innerContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
     width: '100%',
     maxWidth: 520,
     margin: '0 auto',

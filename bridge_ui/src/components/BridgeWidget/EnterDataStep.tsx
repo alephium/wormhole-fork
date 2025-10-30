@@ -125,7 +125,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
         className={clsx(widgetClasses.grayRoundedBox, classes.chainSelectWrapper)}
         style={{ borderColor: isSourceChainReady && isTargetChainReady ? 'transparent' : COLORS.whiteWithTransparency }}
       >
-        <div className={classes.chainSelectContainer}>
+        <div className={widgetClasses.chainSelectContainer}>
           <ChainSelect2
             label="From"
             select
@@ -146,7 +146,7 @@ const EnterDataStep = ({ onNext }: EnterDataStepProps) => {
             />
           </div>
         </Divider>
-        <div className={classes.chainSelectContainer}>
+        <div className={widgetClasses.chainSelectContainer}>
           <ChainSelect2
             label="To"
             variant="outlined"
@@ -233,10 +233,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1
-  },
-  chainSelectContainer: {
-    flexBasis: '100%',
-    width: '100%'
   },
   chainSelectArrow: {
     position: 'absolute',
