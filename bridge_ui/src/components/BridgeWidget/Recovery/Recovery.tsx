@@ -98,11 +98,13 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
 function RelayerRecovery({
   parsedPayload,
   signedVaa,
-  onClick
+  onClick,
+  disableSnackbars = false
 }: {
   parsedPayload: any
   signedVaa: string
   onClick: () => void
+  disableSnackbars?: boolean
 }) {
   const { t } = useTranslation()
   const classes = useStyles()
@@ -110,6 +112,7 @@ function RelayerRecovery({
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null)
   const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
+  const showSnackbar = useMemo(() => (disableSnackbars ? () => undefined : enqueueSnackbar), [disableSnackbars, enqueueSnackbar])
 
   const fee = (parsedPayload && parsedPayload.fee && parseInt(parsedPayload.fee)) || null
   //This check is probably more sophisticated in the future. Possibly a net call.
@@ -141,7 +144,7 @@ function RelayerRecovery({
         },
         (error) => {
           setIsAttemptingToSchedule(false)
-          enqueueSnackbar(null, {
+          showSnackbar(null, {
             content: (
               <Alert severity="error">
                 {t('Relay request rejected.')} {t('Error')}: {error.message}
@@ -152,7 +155,7 @@ function RelayerRecovery({
       )
       .catch((error) => {
         setIsAttemptingToSchedule(false)
-        enqueueSnackbar(null, {
+        showSnackbar(null, {
           content: (
             <Alert severity="error">
               {t('Relay request rejected.')} {t('Error')}: {error.message}
@@ -160,7 +163,7 @@ function RelayerRecovery({
           )
         })
       })
-  }, [selectedRelayer, signedVaa, onClick, enqueueSnackbar, t])
+  }, [selectedRelayer, signedVaa, onClick, showSnackbar, t])
 
   if (!isEligible) {
     return null
@@ -180,10 +183,10 @@ function RelayerRecovery({
 const Recovery = () => {
   const { t } = useTranslation()
   const history = useHistory()
-  const { enqueueSnackbar } = useSnackbar()
   const dispatch = useDispatch()
   const { provider } = useEthereumProvider()
   const isNFT = false
+  const noopSnackbar = useCallback(() => undefined, [])
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTx = useSelector(selectTransferTransferTx)
   const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(CHAIN_ID_ALEPHIUM)
@@ -242,7 +245,7 @@ const Recovery = () => {
         setRecoverySourceTxError('')
         setRecoverySourceTxIsLoading(true)
         ;(async () => {
-          const { vaa, error } = await evm(provider, recoverySourceTx, enqueueSnackbar, recoverySourceChain, isNFT)
+          const { vaa, error } = await evm(provider, recoverySourceTx, noopSnackbar, recoverySourceChain, isNFT)
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false)
             if (vaa) {
@@ -257,7 +260,7 @@ const Recovery = () => {
         setRecoverySourceTxError('')
         setRecoverySourceTxIsLoading(true)
         ;(async (nodeProvider) => {
-          const { vaa, error } = await alephium(alphWallet, recoverySourceTx, enqueueSnackbar)
+          const { vaa, error } = await alephium(alphWallet, recoverySourceTx, noopSnackbar)
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false)
             if (vaa) {
@@ -273,7 +276,7 @@ const Recovery = () => {
         cancelled = true
       }
     }
-  }, [recoverySourceChain, recoverySourceTx, provider, enqueueSnackbar, isNFT, isReady, alphWallet])
+  }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
   const updateUrlParam = useCallback(
     (param: string, value?: string) => updateQueryParam(history, location, param, value),
     [history, location]
@@ -498,12 +501,13 @@ const Recovery = () => {
         </WarningBox>
       )}
 
-      {error && !isUnconfirmedTxError && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
+      {error && !isUnconfirmedTxError && recoverySourceTx && <Alert severity="warning">{error}</Alert>}
 
       <RelayerRecovery
         parsedPayload={parsedPayload}
         signedVaa={recoverySignedVAA}
         onClick={handleRecoverWithRelayerClick}
+        disableSnackbars
       />
 
       {isReady ? (

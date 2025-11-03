@@ -248,7 +248,7 @@ const TransactionTableCompact = (params: {
           </TableBody>
         </Table>
       ) : (
-        <Typography variant="body1">{t('No transactions yet')}</Typography>
+        <Typography variant="body2">{t('No transactions yet')}</Typography>
       )}
     </TableContainer>
   )
