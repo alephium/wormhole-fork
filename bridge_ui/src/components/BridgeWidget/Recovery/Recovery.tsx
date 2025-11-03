@@ -1,12 +1,9 @@
 import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
-  getEmitterAddressEth,
   hexToUint8Array,
   isEVMChain,
-  parseSequenceFromLogEth,
   uint8ArrayToHex,
-  parseTargetChainFromLogEth,
   TransferToken,
   TransferNFT,
   deserializeTransferTokenVAA,
@@ -15,7 +12,6 @@ import {
 import { makeStyles, Typography } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 import axios from 'axios'
-import { ethers } from 'ethers'
 import { useSnackbar } from 'notistack'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -33,9 +29,6 @@ import {
   CHAINS,
   CHAINS_BY_ID,
   CHAINS_WITH_NFT_SUPPORT,
-  getBridgeAddressForChain,
-  getNFTBridgeAddressForChain,
-  getTokenBridgeAddressForChain,
   RELAY_URL_EXTENSION,
   WORMHOLE_RPC_HOSTS
 } from '../../../utils/consts'
@@ -43,7 +36,6 @@ import { getSignedVAAWithRetry } from '../../../utils/getSignedVAAWithRetry'
 import parseError from '../../../utils/parseError'
 import RelaySelector from '../../RelaySelector'
 import { selectTransferSourceChain, selectTransferTransferTx } from '../../../store/selectors'
-import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from '../../../utils/evm'
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
@@ -54,6 +46,7 @@ import ConnectWalletButton from '../ConnectWalletButton'
 import WarningBox from '../WarningBox'
 import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
+import { evm } from '../../Recovery'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -71,41 +64,6 @@ const useStyles = makeStyles((theme) => ({
     }
   }
 }))
-
-async function evm(
-  provider: ethers.providers.Web3Provider,
-  tx: string,
-  enqueueSnackbar: any,
-  chainId: ChainId,
-  nft: boolean
-) {
-  try {
-    const receipt = await provider.getTransactionReceipt(tx)
-    const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
-    if (!isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
-      throw new Error(i18n.t('The transaction is awaiting confirmation'))
-    }
-    const sequence = parseSequenceFromLogEth(receipt, getBridgeAddressForChain(chainId))
-    const targetChain = parseTargetChainFromLogEth(receipt, getBridgeAddressForChain(chainId))
-    const emitterAddress = getEmitterAddressEth(
-      nft ? getNFTBridgeAddressForChain(chainId) : getTokenBridgeAddressForChain(chainId)
-    )
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      chainId,
-      emitterAddress,
-      targetChain,
-      sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    )
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null }
-  } catch (e) {
-    console.error(e)
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>
-    })
-    return { vaa: null, error: parseError(e) }
-  }
-}
 
 async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
   try {

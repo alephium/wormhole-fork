@@ -22,8 +22,6 @@ const SendTransactionSectionDetails = () => {
 
   const txId = transferTx ? transferTx.id : recoverySourceTx
 
-  console.log('recoverySourceTx', recoverySourceTx)
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {sourceParsedTokenAccount && (

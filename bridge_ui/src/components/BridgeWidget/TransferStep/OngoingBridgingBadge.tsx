@@ -1,17 +1,15 @@
-import { useSelector } from 'react-redux'
-import { selectTransferRecoverySourceTxId, selectTransferTransferTx } from '../../../store/selectors'
 import { CircularProgress, makeStyles } from '@material-ui/core'
 import { COLORS } from '../../../muiTheme'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const OngoingBridgingBadge = () => {
-  const transferTx = useSelector(selectTransferTransferTx)
-  const recoverySourceTx = useSelector(selectTransferRecoverySourceTxId)
+  const txExists = useTransferOrRecoveryTxExists()
   const classes = useStyles()
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
   const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
 
-  if (!transferTx && !recoverySourceTx) return null
+  if (!txExists) return null
 
   return (
     <div className={classes.container}>

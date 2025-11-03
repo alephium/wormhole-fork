@@ -86,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-async function evm(
+export async function evm(
   provider: ethers.providers.Web3Provider,
   tx: string,
   enqueueSnackbar: any,
