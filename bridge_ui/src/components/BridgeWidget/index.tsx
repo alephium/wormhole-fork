@@ -1,5 +1,5 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, IconButton, makeStyles, Typography } from '@material-ui/core'
+import { Container, IconButton, makeStyles, Tooltip, Typography } from '@material-ui/core'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
@@ -11,7 +11,9 @@ import {
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
-  selectTransferIsSending
+  selectTransferIsSending,
+  selectTransferSourceChain,
+  selectTransferTargetChain
 } from '../../store/selectors'
 import { reset, setBridgeWidgetPage, setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
@@ -20,6 +22,8 @@ import { useWidgetStyles } from './styles'
 import { ArrowBackOutlined, ListOutlined, RestoreOutlined } from '@material-ui/icons'
 import Recovery from './Recovery/Recovery'
 import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+import { useTranslation } from 'react-i18next'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
@@ -31,8 +35,16 @@ const BridgeWidget = () => {
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
   const dispatch = useDispatch()
+  const { t } = useTranslation()
 
   const page = useSelector(selectBridgeWidgetPage)
+  const transferSourceChain = useSelector(selectTransferSourceChain)
+  const transferTargetChain = useSelector(selectTransferTargetChain)
+  const { isReady: isSourceWalletReady } = useIsWalletReady(transferSourceChain, false)
+  const { isReady: isTargetWalletReady } = useIsWalletReady(transferTargetChain, false)
+
+  const recoveryDisabled = !isSourceWalletReady
+  const historyDisabled = !(isSourceWalletReady && isTargetWalletReady)
 
   const title =
     step === 0
@@ -60,17 +72,38 @@ const BridgeWidget = () => {
 
           {page === 'bridge' && step === 0 && (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button
-                className={widgetClasses.discreetButton}
-                onClick={() => dispatch(setBridgeWidgetPage('recovery'))}
+              <Tooltip
+                title={recoveryDisabled ? t('Connect the origin chain wallet to recover a transaction') : ''}
+                disableHoverListener={!recoveryDisabled}
               >
-                <RestoreOutlined style={{ fontSize: '16px' }} />
-                Recovery
-              </button>
-              <button className={widgetClasses.discreetButton} onClick={() => dispatch(setBridgeWidgetPage('history'))}>
-                <ListOutlined style={{ fontSize: '16px' }} />
-                History
-              </button>
+                <span style={{ display: 'inline-flex' }}>
+                  <button
+                    className={widgetClasses.discreetButton}
+                    onClick={() => dispatch(setBridgeWidgetPage('recovery'))}
+                    disabled={recoveryDisabled}
+                  >
+                    <RestoreOutlined style={{ fontSize: '16px' }} />
+                    {t('Recovery')}
+                  </button>
+                </span>
+              </Tooltip>
+              <Tooltip
+                title={
+                  historyDisabled ? t('Wallets should be connected to display bridging history') : ''
+                }
+                disableHoverListener={!historyDisabled}
+              >
+                <span style={{ display: 'inline-flex' }}>
+                  <button
+                    className={widgetClasses.discreetButton}
+                    onClick={() => dispatch(setBridgeWidgetPage('history'))}
+                    disabled={historyDisabled}
+                  >
+                    <ListOutlined style={{ fontSize: '16px' }} />
+                    {t('History')}
+                  </button>
+                </span>
+              </Tooltip>
             </div>
           )}
         </div>
