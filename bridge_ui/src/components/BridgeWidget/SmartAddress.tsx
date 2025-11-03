@@ -64,18 +64,55 @@ const useStyles = makeStyles((theme) => ({
     fontSize: '0.8rem',
     fontWeight: 400
   },
-  '@keyframes pulsePointer': {
+  '@keyframes pulseDot': {
     '0%': {
-      transform: 'translateX(0)'
+      opacity: 1
+    },
+    '60%': {
+      opacity: 0.6
     },
     '100%': {
-      transform: 'translateX(8px)'
+      opacity: 1
     }
   },
-  pulsingPointer: {
-    animation: '$pulsePointer 0.5s infinite alternate',
+  '@keyframes rippleWave': {
+    '0%': {
+      transform: 'translate(-50%, -50%) scale(0.6)',
+      opacity: 1,
+      filter: 'blur(0)'
+    },
+    '70%': {
+      transform: 'translate(-50%, -50%) scale(2.3)',
+      opacity: 0.5,
+      filter: 'blur(4px)'
+    },
+    '100%': {
+      transform: 'translate(-50%, -50%) scale(2.8)',
+      opacity: 0,
+      filter: 'blur(4px)'
+    }
+  },
+  pulsingDot: {
+    animation: '$pulseDot 2s infinite ease-out',
+    backgroundColor: '#4da3ff',
+    borderRadius: '50%',
     display: 'inline-block',
-    fontSize: '1.2rem'
+    position: 'relative',
+    height: '5px',
+    width: '5px',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      width: '5px',
+      height: '5px',
+      borderRadius: '50%',
+      backgroundColor: '#4da3ff',
+      transform: 'translate(-50%, -50%) scale(1)',
+      animation: '$rippleWave 2s infinite ease-out',
+      filter: 'blur(2px)'
+    }
   }
 }))
 
@@ -263,8 +300,8 @@ const SmartAddress = ({
 
   return (
     <StyledTooltip title={tooltipContent} interactive={true} onPointerEnter={() => setIsPulsing(false)}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        {isPulsing && <span className={classes.pulsingPointer}>👉</span>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {isPulsing && <span className={classes.pulsingDot} />}
         <Typography
           variant={variant || 'body1'}
           component="div"
