@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Tooltip,
   useMediaQuery,
   useTheme
 } from '@material-ui/core'
@@ -20,8 +21,8 @@ import { useDispatch } from 'react-redux'
 import { useHistory, useLocation } from 'react-router'
 import { setBridgeWidgetPage } from '../../store/transferSlice'
 import clsx from 'clsx'
-import { RestoreOutlined } from '@material-ui/icons'
-import { Tooltip } from '@material-ui/core'
+import { RestoreOutlined, DoneAll, Check } from '@material-ui/icons'
+import { COLORS } from '../../muiTheme'
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -36,6 +37,21 @@ const useStyles = makeStyles(() => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  statusIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    marginRight: 8
+  },
+  statusContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4
   }
 }))
 
@@ -112,7 +128,31 @@ const TransactionTableCompact = (params: {
   const renderCellContent = useCallback(
     (column: Column, txWithStatus: BridgeTransaction & { status: TxStatus }) => {
       if (column.id === 'status') {
-        return column.format ? column.format(txWithStatus, isMobile) : txWithStatus.status
+        const status = column.format ? column.format(txWithStatus, isMobile) : txWithStatus.status
+        let icon = null
+        let backgroundColor = 'transparent'
+        let iconColor = '#000'
+
+        if (txWithStatus.status === 'Pending' || txWithStatus.status === 'Loading') {
+          icon = <CircularProgress size={12} color="inherit" />
+          backgroundColor = 'rgba(0, 0, 0, 0.1)'
+          iconColor = '#4B4B4B'
+        } else if (txWithStatus.status === 'Confirmed') {
+          icon = <Check style={{ fontSize: 12 }} />
+          backgroundColor = 'rgba(50, 115, 220, 0.1)'
+          iconColor = 'rgba(50, 115, 220, 1)'
+        } else if (txWithStatus.status === 'Completed') {
+          icon = <DoneAll style={{ fontSize: 12 }} />
+          backgroundColor = 'rgba(17, 153, 98, 0.1)'
+          iconColor = 'rgba(17, 153, 98, 1)'
+        }
+
+        return (
+          <div className={classes.statusContent}>
+            <span className={classes.statusIcon} style={{ backgroundColor, color: iconColor }}>{icon}</span>
+            {status}
+          </div>
+        )
       }
 
       if (column.id === 'recover') {
@@ -171,7 +211,12 @@ const TransactionTableCompact = (params: {
                 <TableCell
                   key={column.id}
                   align={column.align}
-                  style={{ backgroundColor: 'transparent', width: column.minWidth, minWidth: column.minWidth }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    width: column.minWidth,
+                    minWidth: column.minWidth,
+                    borderBottom: `1px solid ${COLORS.whiteWithTransparency}`
+                  }}
                 >
                   {isMobile ? column.compactLabel : column.label}
                 </TableCell>
