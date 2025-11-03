@@ -2,7 +2,7 @@ import { ChainId } from '@alephium/wormhole-sdk'
 import { Container, IconButton, makeStyles, Typography } from '@material-ui/core'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useHistory, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
@@ -19,6 +19,7 @@ import BridgeWidgetSteps from './BridgeWidgetSteps'
 import { useWidgetStyles } from './styles'
 import { ArrowBackOutlined, ListOutlined, RestoreOutlined } from '@material-ui/icons'
 import Recovery from './Recovery/Recovery'
+import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
@@ -29,7 +30,6 @@ const BridgeWidget = () => {
   const step = useSelector(selectTransferActiveBridgeWidgetStep)
   const classes = useStyles()
   const widgetClasses = useWidgetStyles()
-  const history = useHistory()
   const dispatch = useDispatch()
 
   const page = useSelector(selectBridgeWidgetPage)
@@ -67,7 +67,7 @@ const BridgeWidget = () => {
                 <RestoreOutlined style={{ fontSize: '16px' }} />
                 Recovery
               </button>
-              <button className={widgetClasses.discreetButton} onClick={() => history.push('/transactions')}>
+              <button className={widgetClasses.discreetButton} onClick={() => dispatch(setBridgeWidgetPage('history'))}>
                 <ListOutlined style={{ fontSize: '16px' }} />
                 History
               </button>
@@ -76,7 +76,7 @@ const BridgeWidget = () => {
         </div>
         <div className={classes.mainBox}>
           <div className={classes.stack}>
-            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery /> : null}
+            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery /> : <TransactionsHistory />}
           </div>
         </div>
       </div>

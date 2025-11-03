@@ -47,7 +47,6 @@ import { getEVMCurrentBlockNumber, isEVMTxConfirmed } from '../../../utils/evm'
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
-import clsx from 'clsx'
 import { GRAY, RED, useWidgetStyles } from '../styles'
 import ChainSelect2 from '../ChainSelect2'
 import BridgeWidgetButton from '../BridgeWidgetButton'
@@ -438,7 +437,7 @@ const Recovery = () => {
   return (
     <>
       <div
-        className={clsx(widgetClasses.grayRoundedBox)}
+        className={widgetClasses.grayRoundedBox}
         style={{ borderColor: isSourceChainReady.isReady ? 'transparent' : COLORS.whiteWithTransparency }}
       >
         <div className={widgetClasses.chainSelectContainer}>

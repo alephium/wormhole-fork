@@ -27,6 +27,7 @@ import { CLUSTER, WETH_ADDRESS, getExplorerName } from '../../utils/consts'
 import { shortenAddress } from '../../utils/addresses'
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from '@alephium/web3'
 import { useTranslation } from 'react-i18next'
+import clsx from 'clsx'
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -58,6 +59,10 @@ const useStyles = makeStyles((theme) => ({
     '&:hover': {
       color: 'rgba(255, 255, 255, 0.7)'
     }
+  },
+  compactAddress: {
+    fontSize: '0.8rem',
+    fontWeight: 400
   },
   '@keyframes pulsePointer': {
     '0%': {
@@ -101,6 +106,7 @@ interface SmartAddressProps {
   isAsset?: boolean
   pulse?: boolean
   tooltipText?: string
+  isCompact?: boolean
 }
 
 const SmartAddress = ({
@@ -114,7 +120,8 @@ const SmartAddress = ({
   extraContent,
   isAsset,
   pulse,
-  tooltipText
+  tooltipText,
+  isCompact
 }: SmartAddressProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
@@ -258,7 +265,11 @@ const SmartAddress = ({
     <StyledTooltip title={tooltipContent} interactive={true} onPointerEnter={() => setIsPulsing(false)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         {isPulsing && <span className={classes.pulsingPointer}>👉</span>}
-        <Typography variant={variant || 'body1'} component="div" className={classes.address}>
+        <Typography
+          variant={variant || 'body1'}
+          component="div"
+          className={clsx(classes.address, { [classes.compactAddress]: isCompact })}
+        >
           {useableSymbol || addressShort}
         </Typography>
       </div>
