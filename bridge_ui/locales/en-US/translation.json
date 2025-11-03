@@ -35,6 +35,7 @@
   "History": "History",
   "Wallets should be connected to display bridging history": "Wallets should be connected to display bridging history",
   "Connect the origin chain wallet to recover a transaction": "Connect the origin chain wallet to recover a transaction",
+  "Clear input": "Clear input",
   "Advanced": "Advanced",
   "Signed VAA (Hex)": "Signed VAA (Hex)",
   "Emitter Chain": "Emitter Chain",

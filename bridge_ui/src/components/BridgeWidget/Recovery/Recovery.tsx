@@ -9,7 +9,7 @@ import {
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA
 } from '@alephium/wormhole-sdk'
-import { makeStyles, Typography } from '@material-ui/core'
+import { IconButton, makeStyles, Tooltip, Typography } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
@@ -47,6 +47,8 @@ import WarningBox from '../WarningBox'
 import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 import { evm } from '../../Recovery'
+import { Close } from '@material-ui/icons'
+import { updateQueryParam } from '../../../utils/url'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -177,7 +179,7 @@ function RelayerRecovery({
 
 const Recovery = () => {
   const { t } = useTranslation()
-  const { push } = useHistory()
+  const history = useHistory()
   const { enqueueSnackbar } = useSnackbar()
   const dispatch = useDispatch()
   const { provider } = useEthereumProvider()
@@ -201,8 +203,8 @@ const Recovery = () => {
     }
   }, [recoveryParsedVAA])
 
-  const { search } = useLocation()
-  const query = useMemo(() => new URLSearchParams(search), [search])
+  const location = useLocation()
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search])
   const pathSourceChain = query.get('sourceChain')
   const pathSourceTransaction = query.get('transactionId')
   const alphWallet = useWallet()
@@ -272,13 +274,26 @@ const Recovery = () => {
       }
     }
   }, [recoverySourceChain, recoverySourceTx, provider, enqueueSnackbar, isNFT, isReady, alphWallet])
-  const handleSourceChainChange = useCallback((event: any) => {
-    setRecoverySourceTx('')
-    setRecoverySourceChain(event.target.value)
-  }, [])
-  const handleSourceTxChange = useCallback((event: any) => {
-    setRecoverySourceTx(event.target.value.trim())
-  }, [])
+  const updateUrlParam = useCallback(
+    (param: string, value?: string) => updateQueryParam(history, location, param, value),
+    [history, location]
+  )
+  const handleSourceChainChange = useCallback(
+    (event: any) => {
+      setRecoverySourceTx('')
+      updateUrlParam('transactionId')
+      setRecoverySourceChain(event.target.value)
+    },
+    [updateUrlParam]
+  )
+  const handleSourceTxChange = useCallback(
+    (event: any) => {
+      const value = event.target.value.trim()
+      setRecoverySourceTx(value)
+      updateUrlParam('transactionId', value || undefined)
+    },
+    [updateUrlParam]
+  )
   useEffect(() => {
     let cancelled = false
     if (recoverySignedVAA) {
@@ -322,7 +337,7 @@ const Recovery = () => {
               }
             })
           )
-          push('/nft')
+          history.push('/nft')
         } else {
           const payload = parsedPayload as TransferToken
           dispatch(
@@ -355,7 +370,7 @@ const Recovery = () => {
       parsedVAAEmitterChain,
       parsedPayload,
       isNFT,
-      push
+      history
     ]
   )
 
@@ -426,6 +441,25 @@ const Recovery = () => {
             spellCheck="false"
             autoFocus
           />
+          {recoverySourceTx && (
+            <Tooltip title={t('Clear input')}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setRecoverySourceTx('')
+                    updateUrlParam('transactionId')
+                    setRecoverySignedVAA('')
+                    setRecoveryParsedVAA(null)
+                    setRecoverySourceTxError('')
+                  }}
+                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
         </div>
       </div>
 
