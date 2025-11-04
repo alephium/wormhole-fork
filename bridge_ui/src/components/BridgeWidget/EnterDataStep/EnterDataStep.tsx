@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { useHistory } from 'react-router'
-import useIsWalletReady from '../../hooks/useIsWalletReady'
+import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import {
   selectTransferShouldLockFields,
   selectTransferSourceAssetInfoWrapper,
@@ -15,20 +15,20 @@ import {
   selectTransferTargetAssetWrapper,
   selectTransferTargetChain,
   selectTransferTargetError
-} from '../../store/selectors'
-import { BSC_MIGRATION_ASSET_MAP, CHAINS_BY_ID, ETH_MIGRATION_ASSET_MAP } from '../../utils/consts'
-import LowBalanceWarning from '../LowBalanceWarning'
-import SourceAssetWarning from '../Transfer/SourceAssetWarning'
-import ChainWarningMessage from '../ChainWarningMessage'
+} from '../../../store/selectors'
+import { BSC_MIGRATION_ASSET_MAP, CHAINS_BY_ID, ETH_MIGRATION_ASSET_MAP } from '../../../utils/consts'
+import LowBalanceWarning from '../../LowBalanceWarning'
+import SourceAssetWarning from '../../Transfer/SourceAssetWarning'
+import ChainWarningMessage from '../../ChainWarningMessage'
 import { useTranslation } from 'react-i18next'
-import { TokenSelector2 } from './SourceTokenSelector2'
-import useSyncTargetAddress from '../../hooks/useSyncTargetAddress'
-import useGetTargetParsedTokenAccounts from '../../hooks/useGetTargetParsedTokenAccounts'
-import MainActionButton from './MainActionButton'
-import WarningBox from './WarningBox'
-import RegisterNowButton2 from './RegisterNowButton2'
-import { GRAY } from './styles'
-import ChainSelectors from './ChainSelectors'
+import { TokenSelector2 } from '../SourceTokenSelector2'
+import useSyncTargetAddress from '../../../hooks/useSyncTargetAddress'
+import useGetTargetParsedTokenAccounts from '../../../hooks/useGetTargetParsedTokenAccounts'
+import MainActionButton from '../MainActionButton'
+import WarningBox from '../WarningBox'
+import RegisterNowButton2 from '../RegisterNowButton2'
+import { GRAY } from '../styles'
+import ChainSelectors from '../ChainSelectors'
 
 // Copied from Source.tsx
 
