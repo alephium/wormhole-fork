@@ -42,16 +42,14 @@ const useStyles = makeStyles(() => ({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 18,
-    height: 18,
-    borderRadius: '50%',
-    marginRight: 8
+    width: 14,
+    height: 14,
   },
   statusContent: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 4
+    gap: 8
   }
 }))
 
@@ -92,11 +90,7 @@ const columns: Column[] = [
   }
 ]
 
-const TransactionTableCompact = (params: {
-  txs: BridgeTransaction[]
-  txsStatus: TxStatus[]
-  isLoading: boolean
-}) => {
+const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: TxStatus[]; isLoading: boolean }) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const theme = useTheme()
@@ -105,13 +99,10 @@ const TransactionTableCompact = (params: {
   const history = useHistory()
   const location = useLocation()
   const columnMinWidths = useMemo(() => {
-    return columns.reduce(
-      (acc, column) => {
-        acc[column.id] = column.minWidth
-        return acc
-      },
-      {} as Record<Column['id'], number | undefined>
-    )
+    return columns.reduce((acc, column) => {
+      acc[column.id] = column.minWidth
+      return acc
+    }, {} as Record<Column['id'], number | undefined>)
   }, [])
 
   const handleRecoverClick = useCallback(
@@ -130,26 +121,24 @@ const TransactionTableCompact = (params: {
       if (column.id === 'status') {
         const status = column.format ? column.format(txWithStatus, isMobile) : txWithStatus.status
         let icon = null
-        let backgroundColor = 'transparent'
         let iconColor = '#000'
 
         if (txWithStatus.status === 'Pending' || txWithStatus.status === 'Loading') {
-          icon = <CircularProgress size={12} color="inherit" />
-          backgroundColor = 'rgba(0, 0, 0, 0.1)'
+          icon = <CircularProgress size={14} color="inherit" />
           iconColor = '#4B4B4B'
         } else if (txWithStatus.status === 'Confirmed') {
-          icon = <Check style={{ fontSize: 12 }} />
-          backgroundColor = 'rgba(50, 115, 220, 0.1)'
-          iconColor = 'rgba(50, 115, 220, 1)'
+          icon = <Check style={{ fontSize: 14 }} />
+          iconColor = 'rgb(50, 115, 220)'
         } else if (txWithStatus.status === 'Completed') {
-          icon = <DoneAll style={{ fontSize: 12 }} />
-          backgroundColor = 'rgba(17, 153, 98, 0.1)'
-          iconColor = 'rgba(17, 153, 98, 1)'
+          icon = <DoneAll style={{ fontSize: 14 }} />
+          iconColor = 'rgb(17, 153, 98)'
         }
 
         return (
           <div className={classes.statusContent}>
-            <span className={classes.statusIcon} style={{ backgroundColor, color: iconColor }}>{icon}</span>
+            <span className={classes.statusIcon} style={{ color: iconColor }}>
+              {icon}
+            </span>
             {status}
           </div>
         )
@@ -183,7 +172,7 @@ const TransactionTableCompact = (params: {
       )
       return normalizedContent
     },
-    [classes.recoverButton, handleRecoverClick, isMobile, t]
+    [classes.recoverButton, classes.statusContent, classes.statusIcon, handleRecoverClick, isMobile, t]
   )
 
   const tableRows = useMemo(() => {

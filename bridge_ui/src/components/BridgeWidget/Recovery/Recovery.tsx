@@ -39,7 +39,7 @@ import { selectTransferSourceChain, selectTransferTransferTx } from '../../../st
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
-import { GRAY, RED, useWidgetStyles } from '../styles'
+import { GRAY, useWidgetStyles } from '../styles'
 import ChainSelect2 from '../ChainSelect2'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ConnectWalletButton from '../ConnectWalletButton'
@@ -48,7 +48,7 @@ import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 import { evm } from '../../Recovery'
 import { Close } from '@material-ui/icons'
-import { updateQueryParam } from '../../../utils/url'
+import useUpdateQuerySearchParam from '../useUpdateQuerySearchParam'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -112,7 +112,10 @@ function RelayerRecovery({
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null)
   const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
-  const showSnackbar = useMemo(() => (disableSnackbars ? () => undefined : enqueueSnackbar), [disableSnackbars, enqueueSnackbar])
+  const showSnackbar = useMemo(
+    () => (disableSnackbars ? () => undefined : enqueueSnackbar),
+    [disableSnackbars, enqueueSnackbar]
+  )
 
   const fee = (parsedPayload && parsedPayload.fee && parseInt(parsedPayload.fee)) || null
   //This check is probably more sophisticated in the future. Possibly a net call.
@@ -211,6 +214,7 @@ const Recovery = () => {
   const pathSourceChain = query.get('sourceChain')
   const pathSourceTransaction = query.get('transactionId')
   const alphWallet = useWallet()
+  const updateUrlParam = useUpdateQuerySearchParam()
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
@@ -228,15 +232,17 @@ const Recovery = () => {
 
       if (sourceChain) {
         setRecoverySourceChain(sourceChain)
+        updateUrlParam('sourceChain', undefined)
       }
       if (pathSourceTransaction) {
         setRecoverySourceTx(pathSourceTransaction)
+        updateUrlParam('transactionId', undefined)
       }
     } catch (e) {
       console.error(e)
       console.error('Invalid path params specified.')
     }
-  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx])
+  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx, updateUrlParam])
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
@@ -277,26 +283,16 @@ const Recovery = () => {
       }
     }
   }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
-  const updateUrlParam = useCallback(
-    (param: string, value?: string) => updateQueryParam(history, location, param, value),
-    [history, location]
-  )
-  const handleSourceChainChange = useCallback(
-    (event: any) => {
-      setRecoverySourceTx('')
-      updateUrlParam('transactionId')
-      setRecoverySourceChain(event.target.value)
-    },
-    [updateUrlParam]
-  )
-  const handleSourceTxChange = useCallback(
-    (event: any) => {
-      const value = event.target.value.trim()
-      setRecoverySourceTx(value)
-      updateUrlParam('transactionId', value || undefined)
-    },
-    [updateUrlParam]
-  )
+
+  const handleSourceChainChange = useCallback((event: any) => {
+    setRecoverySourceTx('')
+    setRecoverySourceChain(event.target.value)
+  }, [])
+
+  const handleSourceTxChange = useCallback((event: any) => {
+    setRecoverySourceTx(event.target.value.trim())
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     if (recoverySignedVAA) {
@@ -319,6 +315,7 @@ const Recovery = () => {
       cancelled = true
     }
   }, [recoverySignedVAA, isNFT])
+
   const parsedVAATargetChain = recoveryParsedVAA?.body.targetChainId
   const parsedVAAEmitterChain = recoveryParsedVAA?.body.emitterChainId
   const enableRecovery = recoverySignedVAA && parsedVAATargetChain
@@ -451,7 +448,6 @@ const Recovery = () => {
                   size="small"
                   onClick={() => {
                     setRecoverySourceTx('')
-                    updateUrlParam('transactionId')
                     setRecoverySignedVAA('')
                     setRecoveryParsedVAA(null)
                     setRecoverySourceTxError('')
