@@ -44,14 +44,13 @@ const useStyles = makeStyles(() => ({
     justifyContent: 'center',
     width: 18,
     height: 18,
-    borderRadius: '50%',
-    marginRight: 8
+    borderRadius: '50%'
   },
   statusContent: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 4
+    gap: 12
   }
 }))
 
@@ -92,11 +91,7 @@ const columns: Column[] = [
   }
 ]
 
-const TransactionTableCompact = (params: {
-  txs: BridgeTransaction[]
-  txsStatus: TxStatus[]
-  isLoading: boolean
-}) => {
+const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: TxStatus[]; isLoading: boolean }) => {
   const { t } = useTranslation()
   const classes = useStyles()
   const theme = useTheme()
@@ -105,13 +100,10 @@ const TransactionTableCompact = (params: {
   const history = useHistory()
   const location = useLocation()
   const columnMinWidths = useMemo(() => {
-    return columns.reduce(
-      (acc, column) => {
-        acc[column.id] = column.minWidth
-        return acc
-      },
-      {} as Record<Column['id'], number | undefined>
-    )
+    return columns.reduce((acc, column) => {
+      acc[column.id] = column.minWidth
+      return acc
+    }, {} as Record<Column['id'], number | undefined>)
   }, [])
 
   const handleRecoverClick = useCallback(
@@ -149,8 +141,10 @@ const TransactionTableCompact = (params: {
 
         return (
           <div className={classes.statusContent}>
-            <span className={classes.statusIcon} style={{ backgroundColor, color: iconColor }}>{icon}</span>
             {status}
+            <span className={classes.statusIcon} style={{ backgroundColor, color: iconColor }}>
+              {icon}
+            </span>
           </div>
         )
       }
@@ -183,7 +177,7 @@ const TransactionTableCompact = (params: {
       )
       return normalizedContent
     },
-    [classes.recoverButton, handleRecoverClick, isMobile, t]
+    [classes.recoverButton, classes.statusContent, classes.statusIcon, handleRecoverClick, isMobile, t]
   )
 
   const tableRows = useMemo(() => {
