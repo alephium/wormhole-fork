@@ -20,7 +20,6 @@ import { useWidgetStyles } from './styles'
 import { ArrowBackOutlined } from '@material-ui/icons'
 import Recovery from './Recovery/Recovery'
 import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
-import useUpdateQuerySearchParam from './useUpdateQuerySearchParam'
 import HistoryNavItem from './EnterDataStep/HistoryNavItem'
 import RecoveryNavItem from './EnterDataStep/RecoveryNavItem'
 
@@ -86,15 +85,6 @@ const useUrlPathParams = () => {
   const query = useMemo(() => new URLSearchParams(search), [search])
   const pathSourceChain = query.get('sourceChain')
   const pathTargetChain = query.get('targetChain')
-  const page = useSelector(selectBridgeWidgetPage)
-  const updateUrlParam = useUpdateQuerySearchParam()
-
-  // Reset transaction ID when navigating away from the recovery page
-  useEffect(() => {
-    if (page !== 'recovery') {
-      updateUrlParam('transactionId', undefined)
-    }
-  }, [updateUrlParam, page])
 
   useEffect(() => {
     if (!pathSourceChain && !pathTargetChain) {

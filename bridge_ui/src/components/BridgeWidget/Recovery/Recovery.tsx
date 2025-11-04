@@ -232,15 +232,17 @@ const Recovery = () => {
 
       if (sourceChain) {
         setRecoverySourceChain(sourceChain)
+        updateUrlParam('sourceChain', undefined)
       }
       if (pathSourceTransaction) {
         setRecoverySourceTx(pathSourceTransaction)
+        updateUrlParam('transactionId', undefined)
       }
     } catch (e) {
       console.error(e)
       console.error('Invalid path params specified.')
     }
-  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx])
+  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx, updateUrlParam])
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
@@ -282,23 +284,14 @@ const Recovery = () => {
     }
   }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
 
-  const handleSourceChainChange = useCallback(
-    (event: any) => {
-      setRecoverySourceTx('')
-      updateUrlParam('transactionId', undefined)
-      setRecoverySourceChain(event.target.value)
-    },
-    [updateUrlParam]
-  )
+  const handleSourceChainChange = useCallback((event: any) => {
+    setRecoverySourceTx('')
+    setRecoverySourceChain(event.target.value)
+  }, [])
 
-  const handleSourceTxChange = useCallback(
-    (event: any) => {
-      const value = event.target.value.trim()
-      setRecoverySourceTx(value)
-      updateUrlParam('transactionId', value || undefined)
-    },
-    [updateUrlParam]
-  )
+  const handleSourceTxChange = useCallback((event: any) => {
+    setRecoverySourceTx(event.target.value.trim())
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -455,7 +448,6 @@ const Recovery = () => {
                   size="small"
                   onClick={() => {
                     setRecoverySourceTx('')
-                    updateUrlParam('transactionId', undefined)
                     setRecoverySignedVAA('')
                     setRecoveryParsedVAA(null)
                     setRecoverySourceTxError('')
