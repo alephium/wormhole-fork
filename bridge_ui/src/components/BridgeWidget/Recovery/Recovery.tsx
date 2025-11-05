@@ -9,7 +9,7 @@ import {
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA
 } from '@alephium/wormhole-sdk'
-import { makeStyles, Typography } from '@material-ui/core'
+import { IconButton, makeStyles, Tooltip, Typography } from '@material-ui/core'
 import { Alert } from '@material-ui/lab'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
@@ -39,7 +39,7 @@ import { selectTransferSourceChain, selectTransferTransferTx } from '../../../st
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
-import { GRAY, RED, useWidgetStyles } from '../styles'
+import { GRAY, useWidgetStyles } from '../styles'
 import ChainSelect2 from '../ChainSelect2'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ConnectWalletButton from '../ConnectWalletButton'
@@ -47,6 +47,8 @@ import WarningBox from '../WarningBox'
 import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 import { evm } from '../../Recovery'
+import { Close } from '@material-ui/icons'
+import useUpdateQuerySearchParam from '../useUpdateQuerySearchParam'
 
 const useStyles = makeStyles((theme) => ({
   mainCard: {
@@ -96,11 +98,13 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
 function RelayerRecovery({
   parsedPayload,
   signedVaa,
-  onClick
+  onClick,
+  disableSnackbars = false
 }: {
   parsedPayload: any
   signedVaa: string
   onClick: () => void
+  disableSnackbars?: boolean
 }) {
   const { t } = useTranslation()
   const classes = useStyles()
@@ -108,6 +112,10 @@ function RelayerRecovery({
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null)
   const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
+  const showSnackbar = useMemo(
+    () => (disableSnackbars ? () => undefined : enqueueSnackbar),
+    [disableSnackbars, enqueueSnackbar]
+  )
 
   const fee = (parsedPayload && parsedPayload.fee && parseInt(parsedPayload.fee)) || null
   //This check is probably more sophisticated in the future. Possibly a net call.
@@ -139,7 +147,7 @@ function RelayerRecovery({
         },
         (error) => {
           setIsAttemptingToSchedule(false)
-          enqueueSnackbar(null, {
+          showSnackbar(null, {
             content: (
               <Alert severity="error">
                 {t('Relay request rejected.')} {t('Error')}: {error.message}
@@ -150,7 +158,7 @@ function RelayerRecovery({
       )
       .catch((error) => {
         setIsAttemptingToSchedule(false)
-        enqueueSnackbar(null, {
+        showSnackbar(null, {
           content: (
             <Alert severity="error">
               {t('Relay request rejected.')} {t('Error')}: {error.message}
@@ -158,7 +166,7 @@ function RelayerRecovery({
           )
         })
       })
-  }, [selectedRelayer, signedVaa, onClick, enqueueSnackbar, t])
+  }, [selectedRelayer, signedVaa, onClick, showSnackbar, t])
 
   if (!isEligible) {
     return null
@@ -177,11 +185,11 @@ function RelayerRecovery({
 
 const Recovery = () => {
   const { t } = useTranslation()
-  const { push } = useHistory()
-  const { enqueueSnackbar } = useSnackbar()
+  const history = useHistory()
   const dispatch = useDispatch()
   const { provider } = useEthereumProvider()
   const isNFT = false
+  const noopSnackbar = useCallback(() => undefined, [])
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTx = useSelector(selectTransferTransferTx)
   const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(CHAIN_ID_ALEPHIUM)
@@ -201,11 +209,12 @@ const Recovery = () => {
     }
   }, [recoveryParsedVAA])
 
-  const { search } = useLocation()
-  const query = useMemo(() => new URLSearchParams(search), [search])
+  const location = useLocation()
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search])
   const pathSourceChain = query.get('sourceChain')
   const pathSourceTransaction = query.get('transactionId')
   const alphWallet = useWallet()
+  const updateUrlParam = useUpdateQuerySearchParam()
 
   //This effect initializes the state based on the path params.
   useEffect(() => {
@@ -223,15 +232,17 @@ const Recovery = () => {
 
       if (sourceChain) {
         setRecoverySourceChain(sourceChain)
+        updateUrlParam('sourceChain', undefined)
       }
       if (pathSourceTransaction) {
         setRecoverySourceTx(pathSourceTransaction)
+        updateUrlParam('transactionId', undefined)
       }
     } catch (e) {
       console.error(e)
       console.error('Invalid path params specified.')
     }
-  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx])
+  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx, updateUrlParam])
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
@@ -240,7 +251,7 @@ const Recovery = () => {
         setRecoverySourceTxError('')
         setRecoverySourceTxIsLoading(true)
         ;(async () => {
-          const { vaa, error } = await evm(provider, recoverySourceTx, enqueueSnackbar, recoverySourceChain, isNFT)
+          const { vaa, error } = await evm(provider, recoverySourceTx, noopSnackbar, recoverySourceChain, isNFT)
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false)
             if (vaa) {
@@ -255,7 +266,7 @@ const Recovery = () => {
         setRecoverySourceTxError('')
         setRecoverySourceTxIsLoading(true)
         ;(async (nodeProvider) => {
-          const { vaa, error } = await alephium(alphWallet, recoverySourceTx, enqueueSnackbar)
+          const { vaa, error } = await alephium(alphWallet, recoverySourceTx, noopSnackbar)
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false)
             if (vaa) {
@@ -271,14 +282,17 @@ const Recovery = () => {
         cancelled = true
       }
     }
-  }, [recoverySourceChain, recoverySourceTx, provider, enqueueSnackbar, isNFT, isReady, alphWallet])
+  }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
+
   const handleSourceChainChange = useCallback((event: any) => {
     setRecoverySourceTx('')
     setRecoverySourceChain(event.target.value)
   }, [])
+
   const handleSourceTxChange = useCallback((event: any) => {
     setRecoverySourceTx(event.target.value.trim())
   }, [])
+
   useEffect(() => {
     let cancelled = false
     if (recoverySignedVAA) {
@@ -301,6 +315,7 @@ const Recovery = () => {
       cancelled = true
     }
   }, [recoverySignedVAA, isNFT])
+
   const parsedVAATargetChain = recoveryParsedVAA?.body.targetChainId
   const parsedVAAEmitterChain = recoveryParsedVAA?.body.emitterChainId
   const enableRecovery = recoverySignedVAA && parsedVAATargetChain
@@ -322,7 +337,7 @@ const Recovery = () => {
               }
             })
           )
-          push('/nft')
+          history.push('/nft')
         } else {
           const payload = parsedPayload as TransferToken
           dispatch(
@@ -355,7 +370,7 @@ const Recovery = () => {
       parsedVAAEmitterChain,
       parsedPayload,
       isNFT,
-      push
+      history
     ]
   )
 
@@ -426,6 +441,24 @@ const Recovery = () => {
             spellCheck="false"
             autoFocus
           />
+          {recoverySourceTx && (
+            <Tooltip title={t('Clear input')}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setRecoverySourceTx('')
+                    setRecoverySignedVAA('')
+                    setRecoveryParsedVAA(null)
+                    setRecoverySourceTxError('')
+                  }}
+                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
         </div>
       </div>
 
@@ -464,12 +497,13 @@ const Recovery = () => {
         </WarningBox>
       )}
 
-      {error && !isUnconfirmedTxError && recoverySourceTx && <div style={{ color: RED }}>{error}</div>}
+      {error && !isUnconfirmedTxError && recoverySourceTx && <Alert severity="warning">{error}</Alert>}
 
       <RelayerRecovery
         parsedPayload={parsedPayload}
         signedVaa={recoverySignedVAA}
         onClick={handleRecoverWithRelayerClick}
+        disableSnackbars
       />
 
       {isReady ? (

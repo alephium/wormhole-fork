@@ -121,6 +121,14 @@ export const useWidgetStyles = makeStyles((theme) => ({
     gap: '5px',
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.1)'
+    },
+    '&:disabled': {
+      color: 'rgba(255, 255, 255, 0.25)',
+      cursor: 'not-allowed',
+      backgroundColor: 'transparent',
+      '&:hover': {
+        backgroundColor: 'transparent'
+      }
     }
   },
   chainSelectContainer: {

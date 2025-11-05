@@ -13,13 +13,15 @@ import {
   selectTransferIsSendComplete,
   selectTransferIsSending
 } from '../../store/selectors'
-import { reset, setBridgeWidgetPage, setSourceChain, setTargetChain } from '../../store/transferSlice'
+import { reset, setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
 import { useWidgetStyles } from './styles'
-import { ArrowBackOutlined, ListOutlined, RestoreOutlined } from '@material-ui/icons'
+import { ArrowBackOutlined } from '@material-ui/icons'
 import Recovery from './Recovery/Recovery'
 import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
+import HistoryNavItem from './EnterDataStep/HistoryNavItem'
+import RecoveryNavItem from './EnterDataStep/RecoveryNavItem'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
@@ -49,7 +51,7 @@ const BridgeWidget = () => {
     <Container maxWidth="md" className={classes.mainContainer}>
       <div className={classes.innerContainer}>
         <div className={widgetClasses.spaceBetween}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 24 }}>
+          <div className={classes.pageTitle}>
             {page !== 'bridge' && (
               <IconButton onClick={() => dispatch(reset())} size="small">
                 <ArrowBackOutlined fontSize="small" />
@@ -60,17 +62,8 @@ const BridgeWidget = () => {
 
           {page === 'bridge' && step === 0 && (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button
-                className={widgetClasses.discreetButton}
-                onClick={() => dispatch(setBridgeWidgetPage('recovery'))}
-              >
-                <RestoreOutlined style={{ fontSize: '16px' }} />
-                Recovery
-              </button>
-              <button className={widgetClasses.discreetButton} onClick={() => dispatch(setBridgeWidgetPage('history'))}>
-                <ListOutlined style={{ fontSize: '16px' }} />
-                History
-              </button>
+              <RecoveryNavItem />
+              <HistoryNavItem />
             </div>
           )}
         </div>
@@ -144,6 +137,15 @@ const useStyles = makeStyles((theme) => ({
       width: '100%',
       padding: theme.spacing(2, 1.5),
       alignItems: 'stretch'
+    }
+  },
+  pageTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: 24,
+    [theme.breakpoints.down('xs')]: {
+      marginBottom: 0
     }
   },
   innerContainer: {
