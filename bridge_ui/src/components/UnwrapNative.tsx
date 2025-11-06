@@ -66,7 +66,7 @@ import HeaderText from "./HeaderText";
 const useStyles = makeStyles((theme) => ({
   formControl: {
     display: "flex",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     width: "100%",
     maxWidth: 400,
     textAlign: "center",

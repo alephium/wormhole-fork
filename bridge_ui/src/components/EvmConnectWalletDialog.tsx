@@ -113,7 +113,7 @@ const EvmConnectWalletDialog = ({
       <DialogTitle>
         <div className={classes.flexTitle}>
           <div>{t("Select your wallet")}</div>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={onClose} size="large">
             <CloseIcon />
           </IconButton>
         </div>

@@ -54,7 +54,7 @@ const TVLBarChart = ({
   }, []);
 
   const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmall = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <table className={classes.table}>

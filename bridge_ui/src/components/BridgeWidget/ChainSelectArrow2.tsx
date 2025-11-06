@@ -23,10 +23,10 @@ const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
         setShowSwap(false)
       }}
       disabled={disabled}
-    >
+      size="large">
       {showSwap ? <SwapHoriz fontSize="small" /> : <ArrowForward fontSize="small" />}
     </IconButton>
-  )
+  );
 }
 
 export default ChainSelectArrow2

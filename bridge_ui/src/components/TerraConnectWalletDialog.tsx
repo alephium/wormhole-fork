@@ -112,7 +112,7 @@ const TerraConnectWalletDialog = ({
       <DialogTitle>
         <div className={classes.flexTitle}>
           <div>Select your wallet</div>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={onClose} size="large">
             <CloseIcon />
           </IconButton>
         </div>

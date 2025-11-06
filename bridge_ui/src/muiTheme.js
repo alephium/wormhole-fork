@@ -1,4 +1,5 @@
 import { createTheme, responsiveFontSizes } from "@mui/material";
+import { adaptV4Theme } from '@mui/material/styles';
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
@@ -38,9 +39,9 @@ const inter = {
 };
 
 export const theme = responsiveFontSizes(
-  createTheme({
+  createTheme(adaptV4Theme({
     palette: {
-      type: "dark",
+      mode: "dark",
       background: {
         default: COLORS.nearBlack,
         paper: COLORS.nearBlack,
@@ -379,5 +380,5 @@ export const theme = responsiveFontSizes(
          }
        }
     },
-  })
+  }))
 );

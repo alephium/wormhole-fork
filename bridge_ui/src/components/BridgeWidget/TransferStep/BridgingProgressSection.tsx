@@ -84,7 +84,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
                 {step === 5 && 'Bridging completed!'}
               </div>
             )}
-            <IconButton onClick={handleExpandClick} className={classes.expandButton}>
+            <IconButton onClick={handleExpandClick} className={classes.expandButton} size="large">
               <div className={classes.expandIconWrapper}>
                 <UnfoldMoreOutlined
                   className={`${classes.expandIcon} ${
@@ -105,7 +105,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default BridgingProgressSection

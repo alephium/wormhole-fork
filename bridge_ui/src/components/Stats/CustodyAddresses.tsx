@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "flex-end",
     marginBottom: theme.spacing(4),
     textAlign: "left",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
       alignItems: "unset",
     },

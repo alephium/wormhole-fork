@@ -133,7 +133,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     gap: '16px',
     padding: theme.spacing(3, 2),
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: '100%',
       padding: theme.spacing(2, 1.5),
       alignItems: 'stretch'
@@ -144,7 +144,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     gap: '10px',
     marginBottom: 24,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       marginBottom: 0
     }
   },
@@ -154,7 +154,7 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     maxWidth: 520,
     margin: '0 auto',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       gap: theme.spacing(2.5),
       maxWidth: '100%'
     }
@@ -166,7 +166,7 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: 520,
     width: '100%',
     gap: '10px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       maxWidth: '100%'
     }
   },
@@ -175,7 +175,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     position: 'relative',
     gap: '24px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       gap: theme.spacing(2)
     }
   },

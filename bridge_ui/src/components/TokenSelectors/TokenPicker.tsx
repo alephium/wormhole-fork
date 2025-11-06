@@ -412,7 +412,7 @@ export default function TokenPicker({
           <Typography variant="h5">{t("Select a token")}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
-            <IconButton onClick={resetAccountsWrapper}>
+            <IconButton onClick={resetAccountsWrapper} size="large">
               <RefreshIcon />
             </IconButton>
           </Tooltip>

@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "flex-end",
     marginBottom: theme.spacing(4),
     textAlign: "left",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
       alignItems: "unset",
     },
@@ -58,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "flex-end",
     paddingBottom: 1, // line up with left text bottom
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       marginTop: theme.spacing(1),
     },
   },

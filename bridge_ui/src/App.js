@@ -45,7 +45,7 @@ function App() {
   const { pathname } = useLocation();
   const wallet = useWallet();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [navAnchorEl, setNavAnchorEl] = useState(null);
   const navMenuId = "app-navigation-menu";
   const navMenuOpen = !!navAnchorEl
@@ -138,7 +138,7 @@ function App() {
                   onClick={handleNavMenuOpen}
                   className={classes.mobileNavTrigger}
                   edge="end"
-                >
+                  size="large">
                   <MenuIcon />
                 </IconButton>
                 <Menu
@@ -349,10 +349,10 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     gap: theme.spacing(4),
     marginLeft: theme.spacing(4),
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       display: "none",
     },
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       display: "none",
     },
     flexWrap: "wrap",
@@ -364,10 +364,10 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up("md")]: {
       marginRight: theme.spacing(2.5),
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       marginRight: theme.spacing(2.5),
     },
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       marginRight: theme.spacing(1),
     },
   },

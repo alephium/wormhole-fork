@@ -92,7 +92,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                     )}
                     {column.canGroupBy ? (
                       // If the column can be grouped, let's add a toggle
-                      <span onClick={stopProp}>
+                      (<span onClick={stopProp}>
                         <IconButton
                           size="small"
                           {...column.getGroupByToggleProps()}
@@ -103,7 +103,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                             <AddCircleOutline fontSize="inherit" />
                           )}
                         </IconButton>
-                      </span>
+                      </span>)
                     ) : null}
                   </TableCell>
                 ))}
@@ -123,7 +123,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                       >
                         {cell.isGrouped ? (
                           // If it's a grouped cell, add an expander and row count
-                          <>
+                          (<>
                             <IconButton
                               size="small"
                               {...row.getToggleRowExpandedProps()}
@@ -134,15 +134,15 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                                 <KeyboardArrowRight fontSize="inherit" />
                               )}
                             </IconButton>{" "}
-                            {cell.render("Cell")} ({row.subRows.length})
-                          </>
+                            {cell.render("Cell")}({row.subRows.length})
+                                                      </>)
                         ) : cell.isAggregated ? (
                           // If the cell is aggregated, use the Aggregated
                           // renderer for cell
-                          cell.render("Aggregated")
+                          (cell.render("Aggregated"))
                         ) : cell.isPlaceholder ? null : ( // For cells with repeated values, render null
                           // Otherwise, just render the regular cell
-                          cell.render("Cell")
+                          (cell.render("Cell"))
                         )}
                       </TableCell>
                     );

@@ -40,7 +40,7 @@ const HeaderWalletButtons = () => {
   const hasAlephiumWallet =
     alphWallet.connectionStatus === "connected" && !!alphWallet.account?.address
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [walletAnchorEl, setWalletAnchorEl] = useState<null | HTMLElement>(null)
   const walletMenuId = "app-wallet-menu"
   const walletMenuOpen = !!walletAnchorEl
@@ -122,7 +122,7 @@ const HeaderWalletButtons = () => {
             aria-haspopup="true"
             onClick={handleWalletMenuButtonClick}
             className={classes.mobileWalletTrigger}
-          >
+            size="large">
             <AccountBalanceWalletOutlined />
           </IconButton>
           {connectedCount > 1 ? (
@@ -148,7 +148,7 @@ const HeaderWalletButtons = () => {
           <div className={classes.walletMenuContent}>{walletButtons}</div>
         </Menu>
       </>
-    )
+    );
   }
 
   return (

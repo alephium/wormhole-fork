@@ -112,7 +112,7 @@ const useStyles = makeStyles((theme) => ({
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%) rotate(90deg)',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       right: theme.spacing(1)
     }
   }

@@ -135,7 +135,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: 9,
     maxWidth: "100%",
     width: 400,
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     padding: 8,
     position: "relative",
     zIndex: 1,
@@ -255,7 +255,7 @@ const useStyles = makeStyles((theme) => ({
     height: "500px",
     width: "400px",
     maxWidth: "100%",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
   },
 }));
 
@@ -264,7 +264,7 @@ const ViewerLoader = () => {
 
   return (
     <div className={classes.wormholePositioner}>
-      <Skeleton variant="rect" animation="wave" className={classes.skeleton} />
+      <Skeleton variant="rectangular" animation="wave" className={classes.skeleton} />
       <img src={Wormhole} alt="Wormhole" className={classes.wormholeIcon} />
     </div>
   );

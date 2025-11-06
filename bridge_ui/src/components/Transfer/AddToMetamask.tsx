@@ -19,7 +19,7 @@ import {
 const useStyles = makeStyles((theme) => ({
   addButton: {
     display: "block",
-    margin: `${theme.spacing(1)}px auto 0px`,
+    margin: `${theme.spacing(1)} auto 0px`,
   },
 }));
 

@@ -224,7 +224,7 @@ const useStyles = makeStyles((theme) => ({
   accountAddress: {
     fontSize: '14px',
     fontWeight: 500,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       display: 'none'
     }
   },

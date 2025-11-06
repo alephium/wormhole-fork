@@ -16,7 +16,7 @@ export default function ChainSelectArrow({ onClick, disabled }: { onClick: () =>
         setShowSwap(false);
       }}
       disabled={disabled}
-    >
+      size="large">
       {showSwap ? <SwapHoriz /> : <ArrowForward />}
     </IconButton>
   );

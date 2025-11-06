@@ -52,20 +52,20 @@ const useStyles = makeStyles((theme) => ({
   chainSelectWrapper: {
     display: "flex",
     alignItems: "center",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
     },
   },
   chainSelectContainer: {
     flexBasis: "100%",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       width: "100%",
     },
   },
   chainSelectArrow: {
     position: "relative",
     top: "12px",
-    [theme.breakpoints.down("sm")]: { transform: "rotate(90deg)" },
+    [theme.breakpoints.down('md')]: { transform: "rotate(90deg)" },
   },
   transferField: {
     marginTop: theme.spacing(5),

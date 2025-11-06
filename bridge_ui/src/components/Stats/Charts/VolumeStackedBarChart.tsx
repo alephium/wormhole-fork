@@ -151,7 +151,7 @@ const VolumeStackedBarChart = ({
   }, [transferData, selectedChains]);
 
   const theme = useTheme();
-  const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
+  const isXSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <ResponsiveContainer height={452}>

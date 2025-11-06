@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 const useStyles = makeStyles((theme) => ({
   button: {
     display: "flex",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     width: "100%",
     maxWidth: 400,
   },

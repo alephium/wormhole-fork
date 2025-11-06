@@ -344,7 +344,7 @@ const TokenPicker2 = function TokenPicker2({
           <Typography variant="h6">{t('Available tokens')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
-            <IconButton onClick={resetAccountsWrapper}>
+            <IconButton onClick={resetAccountsWrapper} size="large">
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -512,7 +512,7 @@ const useStyles = makeStyles((theme) =>
       justifyContent: 'space-between',
       '& >div': {
         margin: theme.spacing(1),
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
           margin: 0
         },
         flexBasis: '25%',
@@ -531,12 +531,12 @@ const useStyles = makeStyles((theme) =>
       display: 'flex',
       alignItems: 'center',
       gap: '20px',
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         gap: '10px'
       }
     },
     tokenAddress: {
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         display: 'none'
       }
     },

@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: "16px",
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       flexDirection: "column",
     },
   },
@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     flexWrap: "wrap",
     marginBottom: "16px",
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       justifyContent: "center",
       columnGap: 8,
       rowGap: 8,

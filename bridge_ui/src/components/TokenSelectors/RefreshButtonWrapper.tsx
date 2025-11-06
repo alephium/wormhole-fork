@@ -37,7 +37,7 @@ export default function RefreshButtonWrapper({
     <div className={classes.flexWrapper}>
       <div className={classes.inlineContentWrapper}>{children}</div>
       <Tooltip title={t("Reload Tokens")}>
-        <IconButton onClick={callback}>
+        <IconButton onClick={callback} size="large">
           <RefreshIcon />
         </IconButton>
       </Tooltip>
