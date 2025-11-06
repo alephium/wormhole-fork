@@ -110,7 +110,7 @@ function Target() {
       <TextField
         label="Recipient Address"
         fullWidth
-        variant="standard"
+        variant="outlined"
         className={classes.transferField}
         value={readableTargetAddress}
         disabled={true}
@@ -120,14 +120,14 @@ function Target() {
           <TextField
             label="Token Address"
             fullWidth
-            variant="standard"
+            variant="outlined"
             className={classes.transferField}
             value={targetAsset || ""}
             disabled={true}
           />
           {isEVMChain(targetChain) ? (
             <TextField
-              variant="standard"
+              variant="outlined"
               label="TokenId"
               fullWidth
               className={classes.transferField}

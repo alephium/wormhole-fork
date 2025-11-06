@@ -153,7 +153,7 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
       tokenAccounts={maps?.tokenAccounts}
     />
   ) : (
-    <TextField variant="standard" placeholder={t('Asset')} fullWidth value={t('Not Implemented')} disabled={true} />
+    <TextField variant="outlined" placeholder={t('Asset')} fullWidth value={t('Not Implemented')} disabled={true} />
   )
 
   return <div>{content}</div>

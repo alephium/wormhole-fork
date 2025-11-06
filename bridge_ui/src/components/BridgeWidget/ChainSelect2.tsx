@@ -171,14 +171,14 @@ const useStyles = makeStyles((theme) => ({
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   },
   select: {
-    '& .MuiInputBase-root': {
+    '& .MuiInputBase-select': {
       border: 'none',
       '&:hover fieldset': {
         border: 'none !important'
       },
     },
 
-    '& .MuiSelect-root': {
+    '& .MuiSelect-select': {
       display: 'flex',
       alignItems: 'center',
       padding: 0

@@ -352,7 +352,7 @@ const TokenPicker2 = function TokenPicker2({
       </DialogTitle>
       <DialogContent className={classes.dialogContent}>
         <TextField
-          variant="standard"
+          variant="outlined"
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
@@ -361,7 +361,7 @@ const TokenPicker2 = function TokenPicker2({
         />
         {useTokenId ? (
           <TextField
-            variant="standard"
+            variant="outlined"
             label={t('Token ID')}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}

@@ -1,5 +1,4 @@
 import { createTheme, responsiveFontSizes } from "@mui/material";
-import { adaptV4Theme } from '@mui/material/styles';
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
@@ -39,7 +38,7 @@ const inter = {
 };
 
 export const theme = responsiveFontSizes(
-  createTheme(adaptV4Theme({
+  createTheme({
     palette: {
       mode: "dark",
       background: {
@@ -51,11 +50,11 @@ export const theme = responsiveFontSizes(
         primary: 'rgba(255, 255, 255, 0.9)',
       },
       primary: {
-        main: COLORS.blue, // #0074FF
+        main: COLORS.blue,
         light: COLORS.lightBlue,
       },
       secondary: {
-        main: COLORS.greenWithTransparency, // #00EFD8
+        main: COLORS.greenWithTransparency,
         light: COLORS.lightGreen,
       },
       error: {
@@ -82,6 +81,13 @@ export const theme = responsiveFontSizes(
       },
     },
     components: {
+      Mui: {
+        styleOverrides: {
+          selected: {
+            backgroundColor: "rgba(255, 255, 255, 0.16)",
+          }
+        }
+      },
       MuiCssBaseline: {
         styleOverrides: {
           "@font-face": [inter],
@@ -161,6 +167,9 @@ export const theme = responsiveFontSizes(
       },
       MuiButton: {
         styleOverrides: {
+          root: {
+            color: 'rgba(255, 255, 255, 0.9)'
+          },
           fontSize: "1.2rem",
           outlinedSizeSmall: {
             padding: "6px 9px",
@@ -192,7 +201,8 @@ export const theme = responsiveFontSizes(
             display: "flex",
             flexDirection: "column",
             padding: "16px",
-            gap: 10
+            gap: 10,
+            paddingTop: '16px !important'
           }
         }
       },
@@ -251,6 +261,27 @@ export const theme = responsiveFontSizes(
           }
         }
       },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            borderRadius: "12px",
+            gap: 14,
+            backgroundColor: COLORS.whiteWithStrongTransparency,
+            "&.Mui-selected": {
+              backgroundColor: "rgba(255, 255, 255, 0.16)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+              },
+              "&:active": {
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+              },
+              "&:focus": {
+                backgroundColor: "rgba(255, 255, 255, 0.16)",
+              },
+            },
+          }
+        }
+      },
       MuiListItemIcon: {
         styleOverrides: {
           root: {
@@ -268,6 +299,9 @@ export const theme = responsiveFontSizes(
       },
       MuiPaper: {
         styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+          },
           rounded: {
             borderRadius: "12px",
             backdropFilter: "blur(4px)"
@@ -285,6 +319,7 @@ export const theme = responsiveFontSizes(
             padding: 10,
             gap: 10,
             boxShadow: "0 30px 70px 10px rgba(0, 0, 0, 1)",
+            backgroundImage: 'none'
           },
           root: {
             '& .MuiList-root': {
@@ -376,6 +411,9 @@ export const theme = responsiveFontSizes(
             "&:hover": {
               backgroundColor: COLORS.whiteWithTransparency,
             },
+            "&.Mui-selected": {
+              color: COLORS.white
+            },
           },
           textColorInherit: {
             opacity: 1,
@@ -404,10 +442,6 @@ export const theme = responsiveFontSizes(
         styleOverrides: {
           root: {
             borderRadius: "12px",
-            '&:hover fieldset': {
-              border: `1px solid ${COLORS.gray} !important`,
-            },
-
             '& fieldset': {
               transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             }
@@ -441,5 +475,5 @@ export const theme = responsiveFontSizes(
         }
        }
     },
-  }))
+  })
 );

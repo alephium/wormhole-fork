@@ -203,7 +203,7 @@ const TVLStats = () => {
             <FormControl>
               <Select
                 multiple
-                variant="standard"
+                variant="outlined"
                 value={selectedChains}
                 onChange={handleSelectedChainsChange}
                 renderValue={(selected: any) =>
@@ -237,7 +237,7 @@ const TVLStats = () => {
             </FormControl>
             <TextField
               select
-              variant="standard"
+              variant="outlined"
               value={timeFrame}
               onChange={handleTimeFrameChange}
               style={{ marginLeft: 8 }}

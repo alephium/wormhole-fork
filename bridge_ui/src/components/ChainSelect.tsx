@@ -13,7 +13,7 @@ import { BETA_CHAINS, ChainInfo } from "../utils/consts";
 
 const useStyles = makeStyles((theme) => ({
   select: {
-    "& .MuiSelect-root": {
+    "& .MuiSelect-select": {
       display: "flex",
       alignItems: "center",
     },

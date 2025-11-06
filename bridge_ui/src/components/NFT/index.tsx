@@ -83,13 +83,13 @@ function NFT() {
   }, [preventNavigation]);
   return (
     <Container maxWidth="md">
-      <Stepper activeStep={activeStep} orientation="vertical" style={{ padding: 24 }}>
+      <Stepper activeStep={activeStep} orientation="vertical">
         <Step
           expanded={activeStep >= 0}
           disabled={preventNavigation || isRedeemComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. Source
+            Source
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -100,7 +100,7 @@ function NFT() {
           disabled={preventNavigation || isRedeemComplete || activeStep === 0}
         >
           <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. Target
+            Target
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -108,7 +108,7 @@ function NFT() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton disabled icon={null}>
-            3. Send NFT
+            Send NFT
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -120,7 +120,7 @@ function NFT() {
             disabled={!isSendComplete || isRedeemComplete}
             icon={null}
           >
-            4. Redeem NFT
+            Redeem NFT
           </StepButton>
           <StepContent>
             {isRedeemComplete ? <RedeemPreview /> : <Redeem />}

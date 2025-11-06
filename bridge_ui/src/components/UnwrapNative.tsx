@@ -82,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
   select: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(1),
-    "& .MuiSelect-root": {
+    "& .MuiSelect-select": {
       display: "flex",
       alignItems: "center",
     },

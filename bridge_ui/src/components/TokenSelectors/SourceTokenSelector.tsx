@@ -130,7 +130,7 @@ export const TokenSelector = (props: TokenSelectorProps) => {
     />
   ) : (
     <TextField
-      variant="standard"
+      variant="outlined"
       placeholder={t("Asset")}
       fullWidth
       value={t("Not Implemented")}

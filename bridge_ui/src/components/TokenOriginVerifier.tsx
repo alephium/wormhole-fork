@@ -278,7 +278,7 @@ export default function TokenOriginVerifier() {
       <div className={classes.spacer} />
       <TextField
         select
-        variant="standard"
+        variant="outlined"
         label={t("Chain")}
         value={primaryLookupChain}
         onChange={handlePrimaryLookupChainChange}
@@ -293,7 +293,7 @@ export default function TokenOriginVerifier() {
       </TextField>
       <TextField
         fullWidth
-        variant="standard"
+        variant="outlined"
         margin="normal"
         label={t("Paste an address")}
         value={primaryLookupAsset}
@@ -333,7 +333,7 @@ export default function TokenOriginVerifier() {
       <div className={classes.spacer} />
       <TextField
         select
-        variant="standard"
+        variant="outlined"
         label={t("Other Chain")}
         value={secondaryLookupChain}
         onChange={handleSecondaryLookupChainChange}

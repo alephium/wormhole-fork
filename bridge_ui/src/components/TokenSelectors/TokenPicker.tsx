@@ -420,7 +420,7 @@ export default function TokenPicker({
       </DialogTitle>
       <DialogContent className={classes.dialogContent}>
         <TextField
-          variant="standard"
+          variant="outlined"
           label={t("Search name or paste address")}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
@@ -429,7 +429,7 @@ export default function TokenPicker({
         />
         {useTokenId ? (
           <TextField
-            variant="standard"
+            variant="outlined"
             label={t("Token ID")}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}

@@ -527,7 +527,7 @@ export default function Recovery() {
         />
         <KeyAndBalance chainId={recoverySourceChain} />
         <TextField
-          variant="standard"
+          variant="outlined"
           label={t("Source Tx (paste here)")}
           disabled={
             !!recoverySignedVAA ||
@@ -568,7 +568,7 @@ export default function Recovery() {
               <div>
                 <Box position="relative">
                   <TextField
-                    variant="standard"
+                    variant="outlined"
                     label={t("Signed VAA (Hex)")}
                     disabled={recoverySourceTxIsLoading}
                     value={recoverySignedVAA || ""}
@@ -598,7 +598,7 @@ export default function Recovery() {
                   <Divider />
                 </Box>
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Emitter Chain")}
                   disabled
                   value={recoveryParsedVAA?.body.emitterChainId || ""}
@@ -606,7 +606,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Emitter Address")}
                   disabled
                   value={
@@ -621,7 +621,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Sequence")}
                   disabled
                   value={recoveryParsedVAA?.body.sequence.toString() || ""}
@@ -629,7 +629,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Timestamp")}
                   disabled
                   value={
@@ -643,7 +643,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Guardian Set")}
                   disabled
                   value={recoveryParsedVAA?.guardianSetIndex.toString() || ""}
@@ -654,7 +654,7 @@ export default function Recovery() {
                   <Divider />
                 </Box>
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Origin Chain")}
                   disabled
                   value={parsedPayload?.originChain.toString() || ""}
@@ -662,7 +662,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Origin Token Address")}
                   disabled
                   value={
@@ -678,7 +678,7 @@ export default function Recovery() {
                 />
                 {isNFT ? (
                   <TextField
-                    variant="standard"
+                    variant="outlined"
                     label={t("Origin Token ID")}
                     disabled
                     // @ts-ignore
@@ -688,7 +688,7 @@ export default function Recovery() {
                   />
                 ) : null}
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Target Chain")}
                   disabled
                   value={parsedVAATargetChain || ""}
@@ -696,7 +696,7 @@ export default function Recovery() {
                   margin="normal"
                 />
                 <TextField
-                  variant="standard"
+                  variant="outlined"
                   label={t("Target Address")}
                   disabled
                   value={
@@ -713,7 +713,7 @@ export default function Recovery() {
                 {isNFT ? null : (
                   <>
                     <TextField
-                      variant="standard"
+                      variant="outlined"
                       label={t("Amount")}
                       disabled
                       value={
@@ -725,7 +725,7 @@ export default function Recovery() {
                       margin="normal"
                     />
                     <TextField
-                      variant="standard"
+                      variant="outlined"
                       label={t("Relayer Fee")}
                       disabled
                       value={

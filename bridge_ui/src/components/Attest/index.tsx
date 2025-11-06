@@ -59,13 +59,13 @@ function AttestLegacy() {
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>
       <div className={classes.spacer} />
-      <Stepper activeStep={activeStep} orientation="vertical" style={{ padding: 24 }}>
+      <Stepper activeStep={activeStep} orientation="vertical">
         <Step
           expanded={activeStep >= 0}
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. {t("Source")}
+            {t("Source")}
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -76,7 +76,7 @@ function AttestLegacy() {
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. {t("Target")}
+            {t("Target")}
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -84,7 +84,7 @@ function AttestLegacy() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton onClick={() => dispatch(setStep(2))} icon={null}>
-            3. {t("Send attestation")}
+            {t("Send attestation")}
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -96,7 +96,7 @@ function AttestLegacy() {
             disabled={!isSendComplete}
             icon={null}
           >
-            4. {t("Create wrapped token")}
+            {t("Create wrapped token")}
           </StepButton>
           <StepContent>
             {isCreateComplete ? <CreatePreview /> : <Create />}
