@@ -12,9 +12,9 @@ import {
   Tooltip,
   Typography,
   withStyles,
-} from "@material-ui/core";
-import { InfoOutlined } from "@material-ui/icons";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
+} from "@mui/material";
+import { InfoOutlined } from "@mui/icons-material";
+import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
 import useNotionalTransferred from "../../hooks/useNotionalTransferred";
 import { COLORS } from "../../muiTheme";

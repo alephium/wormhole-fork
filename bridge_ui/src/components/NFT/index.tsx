@@ -5,7 +5,7 @@ import {
   StepButton,
   StepContent,
   Stepper,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router";

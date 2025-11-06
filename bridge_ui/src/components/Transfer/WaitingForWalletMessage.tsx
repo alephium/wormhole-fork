@@ -1,5 +1,5 @@
 import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
+import { makeStyles, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {

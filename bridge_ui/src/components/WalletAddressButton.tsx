@@ -7,8 +7,8 @@ import {
   PopoverOrigin,
   Typography,
   makeStyles,
-} from "@material-ui/core"
-import { AccountBalanceWalletOutlined } from "@material-ui/icons"
+} from "@mui/material"
+import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"
 import useCopyToClipboard from "../hooks/useCopyToClipboard"

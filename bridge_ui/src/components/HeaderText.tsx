@@ -1,4 +1,4 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { makeStyles, Typography } from "@mui/material";
 import clsx from "clsx";
 import { ReactChild } from "react";
 import { COLORS } from "../muiTheme";

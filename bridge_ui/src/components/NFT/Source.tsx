@@ -1,7 +1,7 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@material-ui/core";
-import { VerifiedUser } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+import { Button, makeStyles } from "@mui/material";
+import { VerifiedUser } from "@mui/icons-material";
+import { Alert } from "@mui/lab";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";

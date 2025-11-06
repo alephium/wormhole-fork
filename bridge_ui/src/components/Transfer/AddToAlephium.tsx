@@ -1,5 +1,5 @@
 import { getLocalTokenInfo } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@material-ui/core";
+import { Button, makeStyles } from "@mui/material";
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectTransferTargetAsset } from "../../store/selectors";
@@ -7,7 +7,7 @@ import { CLUSTER } from "../../utils/consts";
 import { getAlephiumTokenLogoURI } from "../../utils/alephium";
 import { AlephiumWindowObject } from '@alephium/get-extension-wallet'
 import { useSnackbar } from "notistack";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import { useWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";

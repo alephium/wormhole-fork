@@ -6,7 +6,7 @@ import {
   isEVMChain,
   CHAIN_ID_ETH
 } from "@alephium/wormhole-sdk";
-import { Card, Container, makeStyles } from "@material-ui/core";
+import { Card, Container, makeStyles } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../muiTheme";
 import {
@@ -20,7 +20,7 @@ import {
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";

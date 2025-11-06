@@ -12,8 +12,8 @@ import {
   makeStyles,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core";
-import MenuIcon from "@material-ui/icons/Menu";
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";

@@ -4,7 +4,7 @@ import {
   makeStyles,
   Paper,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
 import clsx from "clsx";
 import numeral from "numeral";
 import { useCallback, useEffect, useMemo, useState } from "react";

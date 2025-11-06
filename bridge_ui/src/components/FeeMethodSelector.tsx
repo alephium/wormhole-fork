@@ -11,7 +11,7 @@ import {
   Chip,
   makeStyles,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
 import clsx from "clsx";
 import { parseUnits } from "ethers/lib/utils";
 import { useCallback, useEffect } from "react";

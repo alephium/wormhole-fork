@@ -11,7 +11,7 @@ import { NotionalTVLCumulative } from "../../../hooks/useCumulativeTVL";
 import { useMemo } from "react";
 import { TimeFrame } from "./TimeFrame";
 import CustomTooltip from "./CustomTooltip";
-import { useTheme, useMediaQuery } from "@material-ui/core";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const TVLAreaChart = ({
   cumulativeTVL,

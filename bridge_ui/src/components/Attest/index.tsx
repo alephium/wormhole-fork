@@ -5,8 +5,8 @@ import {
   StepButton,
   StepContent,
   Stepper,
-} from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { Alert } from "@mui/lab";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";

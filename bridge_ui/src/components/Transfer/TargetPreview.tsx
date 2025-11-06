@@ -1,4 +1,4 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { makeStyles, Typography } from "@mui/material";
 import { CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk";
 import { hexToALPHAddress } from "../../utils/alephium";
 import { CHAINS_BY_ID } from "../../utils/consts";

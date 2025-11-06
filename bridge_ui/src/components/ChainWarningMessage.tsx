@@ -1,6 +1,6 @@
 import { ChainId } from "@alephium/wormhole-sdk";
-import { Link, makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Link, makeStyles, Typography } from "@mui/material";
+import { Alert } from "@mui/lab";
 import { useMemo } from "react";
 import { CHAIN_CONFIG_MAP } from "../config";
 

@@ -4,8 +4,8 @@ import {
   CHAIN_ID_SOLANA,
 } from "@alephium/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
-import { Button, makeStyles, Typography } from "@material-ui/core";
-import { VerifiedUser } from "@material-ui/icons";
+import { Button, makeStyles, Typography } from "@mui/material";
+import { VerifiedUser } from "@mui/icons-material";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";

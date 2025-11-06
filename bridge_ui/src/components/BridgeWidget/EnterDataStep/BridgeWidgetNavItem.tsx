@@ -1,6 +1,6 @@
-import { SvgIconTypeMap, Tooltip } from '@material-ui/core'
+import { SvgIconTypeMap, Tooltip } from '@mui/material'
 import { useWidgetStyles } from '../styles'
-import { OverridableComponent } from '@material-ui/core/OverridableComponent'
+import { OverridableComponent } from '@mui/material/OverridableComponent'
 
 interface BridgeWidgetNavItemProps {
   tooltipDisabledTitle: string

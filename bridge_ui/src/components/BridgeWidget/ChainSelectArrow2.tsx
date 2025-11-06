@@ -1,5 +1,5 @@
-import { IconButton, makeStyles } from '@material-ui/core'
-import { ArrowForward, SwapHoriz } from '@material-ui/icons'
+import { IconButton, makeStyles } from '@mui/material'
+import { ArrowForward, SwapHoriz } from '@mui/icons-material'
 import { useState } from 'react'
 import { COLORS } from '../../muiTheme';
 

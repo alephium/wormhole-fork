@@ -1,5 +1,5 @@
 import { ChainId } from "@alephium/wormhole-sdk";
-import { useTheme, useMediaQuery } from "@material-ui/core";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useCallback } from "react";
 import {
   ResponsiveContainer,

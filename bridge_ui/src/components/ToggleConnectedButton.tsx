@@ -1,5 +1,5 @@
-import { Button, makeStyles, Tooltip } from "@material-ui/core";
-import { LinkOff } from "@material-ui/icons";
+import { Button, makeStyles, Tooltip } from "@mui/material";
+import { LinkOff } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({

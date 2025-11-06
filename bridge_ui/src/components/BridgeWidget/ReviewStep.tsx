@@ -1,4 +1,4 @@
-import { Typography } from '@material-ui/core'
+import { Typography } from '@mui/material'
 import { useSelector } from 'react-redux'
 import {
   selectTransferAmount,
@@ -28,7 +28,7 @@ import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
 import Divider from './Divider'
 import { useSnackbar } from 'notistack'
-import { Alert } from '@material-ui/lab'
+import { Alert } from '@mui/lab'
 import ConnectWalletButton from './ConnectWalletButton'
 
 interface ReviewStepProps {

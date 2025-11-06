@@ -25,8 +25,8 @@ import {
   makeStyles,
   Tooltip,
   Typography,
-} from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { Alert } from "@mui/lab";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useGetIsTransferCompleted from "../../hooks/useGetIsTransferCompleted";

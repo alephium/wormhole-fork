@@ -5,8 +5,8 @@ import {
   makeStyles,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core"
-import { AccountBalanceWalletOutlined } from "@material-ui/icons"
+} from "@mui/material"
+import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import { useConnect, useWallet } from "@alephium/web3-react"
 import { MouseEvent, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"

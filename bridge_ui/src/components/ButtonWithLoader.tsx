@@ -3,7 +3,7 @@ import {
   CircularProgress,
   makeStyles,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
 import { ReactChild } from "react";
 
 const useStyles = makeStyles((theme) => ({

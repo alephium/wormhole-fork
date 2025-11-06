@@ -3,8 +3,8 @@ import {
   IconButton,
   makeStyles,
   Tooltip,
-} from "@material-ui/core";
-import RefreshIcon from "@material-ui/icons/Refresh";
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles(() =>

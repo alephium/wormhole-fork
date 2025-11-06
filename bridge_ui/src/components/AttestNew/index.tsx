@@ -3,8 +3,8 @@ import {
   Divider,
   Typography,
   makeStyles
-} from "@material-ui/core"
-import { Alert } from "@material-ui/lab"
+} from "@mui/material"
+import { Alert } from "@mui/lab"
 import clsx from "clsx"
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"

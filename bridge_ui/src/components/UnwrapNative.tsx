@@ -17,7 +17,7 @@ import {
   Paper,
   TextField,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";

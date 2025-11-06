@@ -1,6 +1,6 @@
-import { makeStyles, Button } from "@material-ui/core";
-import ChevronLeft from "@material-ui/icons/ChevronLeft";
-import ChevronRight from "@material-ui/icons/ChevronRight";
+import { makeStyles, Button } from "@mui/material";
+import ChevronLeft from "@mui/icons-material/ChevronLeft";
+import ChevronRight from "@mui/icons-material/ChevronRight";
 import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({

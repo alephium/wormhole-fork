@@ -3,7 +3,7 @@ import {
   CHAIN_ID_SOLANA,
   hexToNativeString
 } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
+import { makeStyles, Typography } from "@mui/material";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useGetTargetParsedTokenAccounts from "../../hooks/useGetTargetParsedTokenAccounts";

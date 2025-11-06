@@ -1,4 +1,4 @@
-import { CircularProgress, Typography } from '@material-ui/core'
+import { CircularProgress, Typography } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   selectTransferIsBlockFinalized,
@@ -9,8 +9,8 @@ import {
   selectTransferTargetChain
 } from '../../../store/selectors'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
-import { RadioButtonUncheckedRounded } from '@material-ui/icons'
-import { CheckCircleOutlineRounded } from '@material-ui/icons'
+import { RadioButtonUncheckedRounded } from '@mui/icons-material'
+import { CheckCircleOutlineRounded } from '@mui/icons-material'
 import useTransferSignedVAA from '../../../hooks/useTransferSignedVAA'
 import FinalityProgress from './FinalityProgress'
 import Divider from '../Divider'

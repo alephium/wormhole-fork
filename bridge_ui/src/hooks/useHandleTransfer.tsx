@@ -12,7 +12,7 @@ import {
   transferFromEthNative,
   checkRecipientAddress
 } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import { Signer } from "ethers";
 import { parseUnits } from "ethers/lib/utils";
 import { useSnackbar } from "notistack";

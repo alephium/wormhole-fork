@@ -28,9 +28,9 @@ import {
   makeStyles,
   TextField,
   Typography,
-} from "@material-ui/core";
-import { ExpandMore } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { ExpandMore } from "@mui/icons-material";
+import { Alert } from "@mui/lab";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";

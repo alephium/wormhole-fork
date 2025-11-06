@@ -9,7 +9,7 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@alephium/wormhole-sdk";
-import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
+import { Container, makeStyles, Paper, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { COLORS } from "../../muiTheme";
 import {

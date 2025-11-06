@@ -1,4 +1,4 @@
-import { Button, ButtonProps, CircularProgress, makeStyles } from '@material-ui/core'
+import { Button, ButtonProps, CircularProgress, makeStyles } from '@mui/material'
 import clsx from 'clsx'
 import { COLORS } from '../../muiTheme'
 

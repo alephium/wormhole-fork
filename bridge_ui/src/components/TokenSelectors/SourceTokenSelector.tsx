@@ -1,4 +1,4 @@
-//import Autocomplete from '@material-ui/lab/Autocomplete';
+//import Autocomplete from '@mui/lab/Autocomplete';
 import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
@@ -6,7 +6,7 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { TextField, Typography } from "@material-ui/core";
+import { TextField, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";

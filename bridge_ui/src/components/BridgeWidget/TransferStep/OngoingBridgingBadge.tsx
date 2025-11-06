@@ -1,4 +1,4 @@
-import { CircularProgress, makeStyles } from '@material-ui/core'
+import { CircularProgress, makeStyles } from '@mui/material'
 import { COLORS } from '../../../muiTheme'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'

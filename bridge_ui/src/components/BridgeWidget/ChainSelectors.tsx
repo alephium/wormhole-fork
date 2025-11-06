@@ -13,7 +13,7 @@ import { useCallback, useMemo } from 'react'
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { CHAINS } from '../../utils/consts'
-import { makeStyles } from '@material-ui/core'
+import { makeStyles } from '@mui/material'
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 

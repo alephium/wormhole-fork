@@ -4,7 +4,7 @@ import {
   MenuItem,
   TextField,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";

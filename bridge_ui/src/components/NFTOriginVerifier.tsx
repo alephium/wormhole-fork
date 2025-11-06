@@ -22,9 +22,9 @@ import {
   MenuItem,
   TextField,
   Typography,
-} from "@material-ui/core";
-import { Launch } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { Launch } from "@mui/icons-material";
+import { Alert } from "@mui/lab";
 import { useCallback, useEffect, useState } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";

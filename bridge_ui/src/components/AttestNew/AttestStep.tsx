@@ -1,7 +1,7 @@
 import { KeyboardEvent, MouseEvent, useCallback } from "react"
 import clsx from "clsx"
-import { CircularProgress, Typography, makeStyles } from "@material-ui/core"
-import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@material-ui/icons"
+import { CircularProgress, Typography, makeStyles } from "@mui/material"
+import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@mui/icons-material"
 
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
 import { GREEN, GRAY } from "../BridgeWidget/styles"

@@ -1,5 +1,5 @@
-import { makeStyles } from '@material-ui/core'
-import CheckCircleIcon from '@material-ui/icons/CheckCircle'
+import { makeStyles } from '@mui/material'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import clsx from 'clsx'
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { COLORS } from '../../muiTheme'

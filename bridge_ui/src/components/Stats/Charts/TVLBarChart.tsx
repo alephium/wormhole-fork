@@ -5,8 +5,8 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core";
-import { ArrowForward } from "@material-ui/icons";
+} from "@mui/material";
+import { ArrowForward } from "@mui/icons-material";
 import { useCallback, useMemo, useState } from "react";
 import { NotionalTVL } from "../../../hooks/useTVL";
 import { ChainInfo, getChainShortName } from "../../../utils/consts";

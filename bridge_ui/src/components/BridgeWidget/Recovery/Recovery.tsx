@@ -9,8 +9,8 @@ import {
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA
 } from '@alephium/wormhole-sdk'
-import { IconButton, makeStyles, Tooltip, Typography } from '@material-ui/core'
-import { Alert } from '@material-ui/lab'
+import { IconButton, makeStyles, Tooltip, Typography } from '@mui/material'
+import { Alert } from '@mui/lab'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -47,7 +47,7 @@ import WarningBox from '../WarningBox'
 import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 import { evm } from '../../Recovery'
-import { Close } from '@material-ui/icons'
+import { Close } from '@mui/icons-material'
 import useUpdateQuerySearchParam from '../useUpdateQuerySearchParam'
 
 const useStyles = makeStyles((theme) => ({

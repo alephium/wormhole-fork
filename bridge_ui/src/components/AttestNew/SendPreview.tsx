@@ -1,4 +1,4 @@
-import { Typography } from "@material-ui/core"
+import { Typography } from "@mui/material"
 import { useTranslation } from "react-i18next"
 import { useSelector } from "react-redux"
 import { selectAttestAttestTx, selectAttestSourceChain } from "../../store/selectors"

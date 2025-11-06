@@ -1,4 +1,4 @@
-import { createTheme, responsiveFontSizes } from "@material-ui/core";
+import { createTheme, responsiveFontSizes } from "@mui/material";
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {

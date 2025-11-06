@@ -5,7 +5,7 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,

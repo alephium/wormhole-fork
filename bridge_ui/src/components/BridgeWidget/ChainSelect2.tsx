@@ -6,7 +6,7 @@ import {
   OutlinedTextFieldProps,
   TextField,
   Typography,
-} from '@material-ui/core'
+} from '@mui/material'
 import clsx from 'clsx'
 import { ReactNode, useMemo } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'

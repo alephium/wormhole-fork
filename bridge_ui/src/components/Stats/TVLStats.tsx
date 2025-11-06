@@ -12,8 +12,8 @@ import {
   Tooltip,
   Typography,
   withStyles,
-} from "@material-ui/core";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
+} from "@mui/material";
+import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
 import TVLAreaChart from "./Charts/TVLAreaChart";
 import useCumulativeTVL from "../../hooks/useCumulativeTVL";
@@ -25,7 +25,7 @@ import { COLORS } from "../../muiTheme";
 import TVLBarChart from "./Charts/TVLBarChart";
 import TVLTable from "./Charts/TVLTable";
 import useTVL from "../../hooks/useTVL";
-import { ArrowBack, InfoOutlined } from "@material-ui/icons";
+import { ArrowBack, InfoOutlined } from "@mui/icons-material";
 
 const useStyles = makeStyles((theme) => ({
   description: {

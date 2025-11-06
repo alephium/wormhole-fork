@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { shortenAddress } from "../utils/addresses";

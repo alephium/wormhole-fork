@@ -7,7 +7,7 @@ import {
   uint8ArrayToHex,
 } from "@alephium/wormhole-sdk";
 import { transferFromEth } from "@alephium/wormhole-sdk/lib/esm/nft_bridge";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";

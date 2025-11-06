@@ -3,7 +3,7 @@ import {
   InputAdornment,
   TextField,
   TextFieldProps,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 export default function NumberTextField({

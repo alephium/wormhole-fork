@@ -1,5 +1,5 @@
 import { setBridgeWidgetPage } from '../../../store/transferSlice'
-import { RestoreOutlined } from '@material-ui/icons'
+import { RestoreOutlined } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectTransferSourceChain } from '../../../store/selectors'

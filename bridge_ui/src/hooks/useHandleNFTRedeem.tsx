@@ -6,7 +6,7 @@ import {
   isEVMChain,
   redeemOnEth
 } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";

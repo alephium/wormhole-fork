@@ -1,6 +1,6 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
-import { Checkbox, FormControlLabel } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Checkbox, FormControlLabel } from "@mui/material";
+import { Alert } from "@mui/lab";
 import { ethers } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
 import { useCallback, useMemo, useState } from "react";

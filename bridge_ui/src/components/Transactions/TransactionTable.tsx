@@ -8,7 +8,7 @@ import {
   TableHead,
   TableRow,
   Typography
-} from "@material-ui/core";
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { BridgeTransaction, TxStatus } from ".";
 import SmartTx from "./SmartTx";

@@ -1,6 +1,6 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
-import { Link, makeStyles } from "@material-ui/core";
+import { Alert } from "@mui/lab";
+import { Link, makeStyles } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHandleAttest } from "../../hooks/useHandleAttest";

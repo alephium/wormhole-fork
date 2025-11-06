@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { makeStyles } from "@mui/material";
+import { Alert } from "@mui/lab";
 import { Connection } from "@solana/web3.js";
 import numeral from "numeral";
 import { useEffect, useState } from "react";

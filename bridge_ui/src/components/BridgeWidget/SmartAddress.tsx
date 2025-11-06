@@ -17,9 +17,9 @@ import {
   CHAIN_ID_ACALA,
   CHAIN_ID_ALEPHIUM
 } from '@alephium/wormhole-sdk'
-import { Button, makeStyles, Tooltip, Typography } from '@material-ui/core'
-import { FileCopy, OpenInNew } from '@material-ui/icons'
-import { withStyles } from '@material-ui/styles'
+import { Button, makeStyles, Tooltip, Typography } from '@mui/material'
+import { FileCopy, OpenInNew } from '@mui/icons-material'
+import { withStyles } from '@mui/styles'
 import { ReactChild, useState } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'

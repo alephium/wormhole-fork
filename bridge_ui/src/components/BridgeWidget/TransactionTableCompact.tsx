@@ -12,7 +12,7 @@ import {
   Tooltip,
   useMediaQuery,
   useTheme
-} from '@material-ui/core'
+} from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'
@@ -21,7 +21,7 @@ import { useDispatch } from 'react-redux'
 import { useHistory, useLocation } from 'react-router'
 import { setBridgeWidgetPage } from '../../store/transferSlice'
 import clsx from 'clsx'
-import { RestoreOutlined, DoneAll, Check } from '@material-ui/icons'
+import { RestoreOutlined, DoneAll, Check } from '@mui/icons-material'
 import { COLORS } from '../../muiTheme'
 
 const useStyles = makeStyles(() => ({

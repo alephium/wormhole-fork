@@ -1,4 +1,4 @@
-import { Typography } from '@material-ui/core'
+import { Typography } from '@mui/material'
 import SmartAddress from '../SmartAddress'
 import SendingAddress from '../SendingAddress'
 import SendingAmount from '../SendingAmount'

@@ -1,7 +1,7 @@
 import { ChainId, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
-import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
-import { FileCopy, OpenInNew } from "@material-ui/icons";
-import { withStyles } from "@material-ui/styles";
+import { Button, makeStyles, Tooltip, Typography } from "@mui/material";
+import { FileCopy, OpenInNew } from "@mui/icons-material";
+import { withStyles } from "@mui/styles";
 import { useTranslation } from "react-i18next";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { CLUSTER, getExplorerName } from "../utils/consts";

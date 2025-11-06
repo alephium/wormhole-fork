@@ -4,7 +4,7 @@ import {
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount
 } from '../../store/selectors'
-import { makeStyles, Typography } from '@material-ui/core'
+import { makeStyles, Typography } from '@mui/material'
 import SmartAddress from './SmartAddress'
 
 const SendingAmount = () => {

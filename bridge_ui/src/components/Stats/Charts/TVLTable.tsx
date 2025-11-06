@@ -1,4 +1,4 @@
-import { makeStyles } from "@material-ui/core";
+import { makeStyles } from "@mui/material";
 import numeral from "numeral";
 import { useMemo } from "react";
 import { createTVLArray, NotionalTVL } from "../../../hooks/useTVL";

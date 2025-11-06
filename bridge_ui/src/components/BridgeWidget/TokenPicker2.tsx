@@ -12,10 +12,10 @@ import {
   TextField,
   Tooltip,
   Typography
-} from '@material-ui/core'
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
-import RefreshIcon from '@material-ui/icons/Refresh'
-import { Alert } from '@material-ui/lab'
+} from '@mui/material'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { Alert } from '@mui/lab'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'

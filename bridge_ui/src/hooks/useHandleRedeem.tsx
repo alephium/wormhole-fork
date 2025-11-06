@@ -14,7 +14,7 @@ import {
   redeemOnEthNative,
   redeemOnEth
 } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/lab";
 import axios from "axios";
 import { Signer } from "ethers";
 import { useSnackbar } from "notistack";

@@ -1,6 +1,6 @@
-import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
-import { FileCopy, OpenInNew } from "@material-ui/icons";
-import { withStyles } from "@material-ui/styles";
+import { Button, makeStyles, Tooltip, Typography } from "@mui/material";
+import { FileCopy, OpenInNew } from "@mui/icons-material";
+import { withStyles } from "@mui/styles";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
 import { getExplorerName } from "../../utils/consts";
 import { getTransactionLink, shortenTxId } from "../../utils/transaction";
