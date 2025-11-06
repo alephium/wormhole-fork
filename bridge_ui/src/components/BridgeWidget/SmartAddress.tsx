@@ -300,7 +300,7 @@ const SmartAddress = ({
   )
 
   return (
-    <StyledTooltip title={tooltipContent} interactive={true} onPointerEnter={() => setIsPulsing(false)}>
+    <StyledTooltip title={tooltipContent} onPointerEnter={() => setIsPulsing(false)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {isPulsing && <span className={classes.pulsingDot} />}
         <Typography

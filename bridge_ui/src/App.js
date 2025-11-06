@@ -148,7 +148,6 @@ function App() {
                   open={navMenuOpen}
                   onClose={handleNavMenuClose}
                   classes={{ paper: classes.mobileMenuPaper }}
-                  getContentAnchorEl={null}
                   anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                   transformOrigin={{ vertical: "top", horizontal: "right" }}
                 >
@@ -203,7 +202,7 @@ function App() {
           >
             {t("Token Bridge")} 🌉
           </HeaderText>
-          <Tabs value={pathname} variant="fullWidth" onChange={handleTabChange} indicatorColor="primary">
+          <Tabs value={pathname} variant="fullWidth" onChange={handleTabChange}>
             <Tab label={t("Tokens_other")} value="/transfer" disableRipple />
             {/* <Tab label="NFTs" value="/nft" /> */}
             <Tab label={t("Redeem")} value="/redeem" to="/redeem" disableRipple />

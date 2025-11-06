@@ -31,7 +31,7 @@ import solanaIcon from "../../icons/solana.svg";
 import polygonIcon from "../../icons/polygon.svg";
 import oasisIcon from "../../icons/oasis-network-rose-logo.svg";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
-import { Skeleton } from "@mui/lab";
+import Skeleton from '@mui/material/Skeleton';
 import Wormhole from "../../icons/wormhole-network.svg";
 import { useTranslation } from "react-i18next";
 

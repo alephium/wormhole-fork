@@ -15,7 +15,7 @@ import { makeStyles } from '@mui/styles';
 import { createStyles } from '@mui/styles';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import { Alert } from '@mui/lab'
+import { Alert } from '@mui/material'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
@@ -352,7 +352,7 @@ const TokenPicker2 = function TokenPicker2({
       </DialogTitle>
       <DialogContent className={classes.dialogContent}>
         <TextField
-          variant="outlined"
+          variant="standard"
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
@@ -361,7 +361,7 @@ const TokenPicker2 = function TokenPicker2({
         />
         {useTokenId ? (
           <TextField
-            variant="outlined"
+            variant="standard"
             label={t('Token ID')}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}

@@ -83,7 +83,7 @@ function NFT() {
   }, [preventNavigation]);
   return (
     <Container maxWidth="md">
-      <Stepper activeStep={activeStep} orientation="vertical">
+      <Stepper activeStep={activeStep} orientation="vertical" style={{ padding: 24 }}>
         <Step
           expanded={activeStep >= 0}
           disabled={preventNavigation || isRedeemComplete}

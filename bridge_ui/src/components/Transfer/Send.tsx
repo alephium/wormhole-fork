@@ -1,6 +1,6 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
 import { Checkbox, FormControlLabel } from "@mui/material";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { ethers } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
 import { useCallback, useMemo, useState } from "react";
@@ -166,7 +166,6 @@ function Send() {
               <Checkbox
                 checked={shouldApproveUnlimited}
                 onChange={toggleShouldApproveUnlimited}
-                color="primary"
               />
             }
             label={t("approveUnlimitedTokens_other")}

@@ -28,7 +28,7 @@ import { GRAY, useWidgetStyles } from './styles'
 import WarningBox from './WarningBox'
 import Divider from './Divider'
 import { useSnackbar } from 'notistack'
-import { Alert } from '@mui/lab'
+import { Alert } from '@mui/material'
 import ConnectWalletButton from './ConnectWalletButton'
 
 interface ReviewStepProps {

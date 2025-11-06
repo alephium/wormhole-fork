@@ -10,9 +10,10 @@ import {
   TextField,
   Tooltip,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup
 } from "@mui/material";
 import { makeStyles, withStyles } from '@mui/styles';
-import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
 import TVLAreaChart from "./Charts/TVLAreaChart";
 import useCumulativeTVL from "../../hooks/useCumulativeTVL";
@@ -202,7 +203,7 @@ const TVLStats = () => {
             <FormControl>
               <Select
                 multiple
-                variant="outlined"
+                variant="standard"
                 value={selectedChains}
                 onChange={handleSelectedChainsChange}
                 renderValue={(selected: any) =>
@@ -217,6 +218,7 @@ const TVLStats = () => {
               >
                 <MenuItem value="all">
                   <Checkbox
+                    color="secondary"
                     checked={availableChains.length > 0 && allChainsSelected}
                     indeterminate={
                       selectedChains.length > 0 &&
@@ -227,7 +229,7 @@ const TVLStats = () => {
                 </MenuItem>
                 {availableChains.map((option) => (
                   <MenuItem key={option} value={option}>
-                    <Checkbox checked={selectedChains.indexOf(option) > -1} />
+                    <Checkbox checked={selectedChains.indexOf(option) > -1} color="secondary" />
                     <ListItemText primary={CHAINS_BY_ID[option]?.name} />
                   </MenuItem>
                 ))}
@@ -235,7 +237,7 @@ const TVLStats = () => {
             </FormControl>
             <TextField
               select
-              variant="outlined"
+              variant="standard"
               value={timeFrame}
               onChange={handleTimeFrameChange}
               style={{ marginLeft: 8 }}

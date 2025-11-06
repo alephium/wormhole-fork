@@ -63,7 +63,7 @@ function Source() {
       <KeyAndBalance chainId={sourceChain} />
       <TextField
         label={t("Asset")}
-        variant="outlined"
+        variant="standard"
         fullWidth
         className={classes.transferField}
         value={sourceAsset}

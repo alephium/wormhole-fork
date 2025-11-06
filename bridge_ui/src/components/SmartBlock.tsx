@@ -88,7 +88,6 @@ export default function SmartBlock({
   return (
     <StyledTooltip
       title={tooltipContent}
-      interactive={true}
       className={classes.mainTypog}
     >
       <Typography

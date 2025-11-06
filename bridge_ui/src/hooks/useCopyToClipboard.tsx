@@ -1,4 +1,4 @@
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";

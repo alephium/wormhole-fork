@@ -94,7 +94,6 @@ export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
   return (
     <StyledTooltip
       title={tooltipContent}
-      interactive={true}
       className={classes.mainTypog}
     >
       <Typography

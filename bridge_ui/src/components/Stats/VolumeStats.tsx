@@ -223,7 +223,7 @@ const VolumeStats = () => {
           <FormControl>
             <Select
               multiple
-              variant="outlined"
+              variant="standard"
               value={selectedChains}
               onChange={handleSelectedChainsChange}
               renderValue={(selected: any) =>
@@ -238,6 +238,7 @@ const VolumeStats = () => {
             >
               <MenuItem value="all">
                 <Checkbox
+                  color="secondary"
                   checked={availableChains.length > 0 && allChainsSelected}
                   indeterminate={
                     selectedChains.length > 0 &&
@@ -248,7 +249,7 @@ const VolumeStats = () => {
               </MenuItem>
               {availableChains.map((option) => (
                 <MenuItem key={option} value={option}>
-                  <Checkbox checked={selectedChains.indexOf(option) > -1} />
+                  <Checkbox checked={selectedChains.indexOf(option) > -1} color="secondary" />
                   <ListItemText primary={CHAINS_BY_ID[option]?.name} />
                 </MenuItem>
               ))}
@@ -256,7 +257,7 @@ const VolumeStats = () => {
           </FormControl>
           <TextField
             select
-            variant="outlined"
+            variant="standard"
             value={timeFrame}
             onChange={handleTimeFrameChange}
             style={{ marginLeft: 8 }}

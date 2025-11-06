@@ -1,5 +1,5 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { Link } from "@mui/material";
 import { makeStyles } from '@mui/styles';
 import { useCallback, useMemo, useState } from "react";

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Alert } from '@mui/lab'
+import { Alert } from '@mui/material'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
 import {
   selectTransferHasSentTokens,

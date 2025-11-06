@@ -7,7 +7,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { Box, Link, Typography } from "@mui/material";
 import { makeStyles } from '@mui/styles';
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import {
   AVAILABLE_MARKETS_URL,

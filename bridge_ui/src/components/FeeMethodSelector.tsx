@@ -181,6 +181,7 @@ function FeeMethodSelector() {
     >
       <div className={classes.alignCenterContainer}>
         <Checkbox
+          color="secondary"
           checked={relayerSelected}
           disabled={!acalaRelayerEligible}
           onClick={chooseAcalaRelayer}
@@ -228,6 +229,7 @@ function FeeMethodSelector() {
     >
       <div className={classes.alignCenterContainer}>
         <Checkbox
+          color="secondary"
           checked={relayerSelected}
           disabled={!relayerEligible}
           onClick={chooseRelayer}
@@ -295,6 +297,7 @@ function FeeMethodSelector() {
     >
       <div className={classes.alignCenterContainer}>
         <Checkbox
+          color="secondary"
           checked={!relayerSelected}
           onClick={chooseManual}
           className={classes.inlineBlock}

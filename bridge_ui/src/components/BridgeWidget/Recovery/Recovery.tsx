@@ -11,7 +11,7 @@ import {
 } from '@alephium/wormhole-sdk'
 import { IconButton, Tooltip, Typography } from '@mui/material'
 import { makeStyles } from '@mui/styles';
-import { Alert } from '@mui/lab'
+import { Alert } from '@mui/material'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'

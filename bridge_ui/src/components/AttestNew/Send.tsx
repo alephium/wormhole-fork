@@ -1,5 +1,5 @@
 import { CHAIN_ID_ALEPHIUM, isEVMChain, waitAlphTxConfirmed } from '@alephium/wormhole-sdk'
-import { Alert } from '@mui/lab'
+import { Alert } from '@mui/material'
 import { Typography } from '@mui/material'
 import { makeStyles } from '@mui/styles';
 import { useCallback, useState } from 'react'

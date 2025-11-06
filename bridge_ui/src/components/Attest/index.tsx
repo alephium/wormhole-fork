@@ -6,7 +6,7 @@ import {
   Stepper,
 } from "@mui/material";
 import { makeStyles } from '@mui/styles';
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -59,7 +59,7 @@ function AttestLegacy() {
         {t("This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.")}
       </Alert>
       <div className={classes.spacer} />
-      <Stepper activeStep={activeStep} orientation="vertical">
+      <Stepper activeStep={activeStep} orientation="vertical" style={{ padding: 24 }}>
         <Step
           expanded={activeStep >= 0}
           disabled={preventNavigation || isCreateComplete}

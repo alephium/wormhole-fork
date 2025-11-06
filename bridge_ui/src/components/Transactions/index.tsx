@@ -21,7 +21,7 @@ import {
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";

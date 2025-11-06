@@ -1,7 +1,7 @@
 import { ChainId, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
 import { Typography } from "@mui/material";
 import { makeStyles } from '@mui/styles';
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useIsWalletReady from "../hooks/useIsWalletReady";

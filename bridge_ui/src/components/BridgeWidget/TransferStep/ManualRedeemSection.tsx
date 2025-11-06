@@ -80,7 +80,7 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
         <div>
           {isNativeEligible && (
             <FormControlLabel
-              control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} color="primary" />}
+              control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} />}
               label={t('Automatically unwrap to native currency')}
             />
           )}

@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { makeStyles } from '@mui/styles';
 import { Launch } from "@mui/icons-material";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -183,7 +183,7 @@ export default function NFTOriginVerifier() {
           </Alert>
           <TextField
             select
-            variant="outlined"
+            variant="standard"
             label="Chain"
             value={lookupChain}
             onChange={handleChainChange}
@@ -203,7 +203,7 @@ export default function NFTOriginVerifier() {
           ) : null}
           <TextField
             fullWidth
-            variant="outlined"
+            variant="standard"
             margin="normal"
             label="Paste an address"
             value={lookupAsset}
@@ -212,7 +212,7 @@ export default function NFTOriginVerifier() {
           {isEVMChain(lookupChain) ? (
             <TextField
               fullWidth
-              variant="outlined"
+              variant="standard"
               margin="normal"
               label="Paste a tokenId"
               value={lookupTokenId}

@@ -1,4 +1,3 @@
-//import Autocomplete from '@mui/lab/Autocomplete';
 import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
@@ -131,7 +130,7 @@ export const TokenSelector = (props: TokenSelectorProps) => {
     />
   ) : (
     <TextField
-      variant="outlined"
+      variant="standard"
       placeholder={t("Asset")}
       fullWidth
       value={t("Not Implemented")}

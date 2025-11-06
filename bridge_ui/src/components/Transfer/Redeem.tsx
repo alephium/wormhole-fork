@@ -26,7 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import { makeStyles } from '@mui/styles';
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useGetIsTransferCompleted from "../../hooks/useGetIsTransferCompleted";
@@ -257,7 +257,6 @@ function Redeem() {
             <Checkbox
               checked={useNativeRedeem}
               onChange={toggleNativeRedeem}
-              color="primary"
             />
           }
           label={t("Automatically unwrap to native currency")}

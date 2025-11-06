@@ -84,35 +84,33 @@ export const theme = responsiveFontSizes(
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          "@global": {
-            "@font-face": [inter],
-            "*": {
-              scrollbarWidth: "thin",
-              scrollbarColor: `${COLORS.gray} ${COLORS.nearBlackWithMinorTransparency}`,
+          "@font-face": [inter],
+          "*": {
+            scrollbarWidth: "thin",
+            scrollbarColor: `${COLORS.gray} ${COLORS.nearBlackWithMinorTransparency}`,
+          },
+          "*::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+            backgroundColor: COLORS.nearBlackWithMinorTransparency,
+          },
+          "*::-webkit-scrollbar-thumb": {
+            backgroundColor: COLORS.gray,
+            borderRadius: "4px",
+          },
+          "*::-webkit-scrollbar-corner": {
+            // this hides an annoying white box which appears when both scrollbars are present
+            backgroundColor: "transparent",
+          },
+          // Override the ripple keyframe animation
+          "@keyframes MuiTouchRipple-keyframes-enter": {
+            "0%": {
+              transform: "scale(0)",
+              opacity: 0.1,
             },
-            "*::-webkit-scrollbar": {
-              width: "8px",
-              height: "8px",
-              backgroundColor: COLORS.nearBlackWithMinorTransparency,
-            },
-            "*::-webkit-scrollbar-thumb": {
-              backgroundColor: COLORS.gray,
-              borderRadius: "4px",
-            },
-            "*::-webkit-scrollbar-corner": {
-              // this hides an annoying white box which appears when both scrollbars are present
-              backgroundColor: "transparent",
-            },
-            // Override the ripple keyframe animation
-            "@keyframes MuiTouchRipple-keyframes-enter": {
-              "0%": {
-                transform: "scale(0)",
-                opacity: 0.1,
-              },
-              "100%": {
-                transform: "scale(1)",
-                opacity: 0.3,
-              },
+            "100%": {
+              transform: "scale(1)",
+              opacity: 0.3,
             },
           },
         },
@@ -225,6 +223,9 @@ export const theme = responsiveFontSizes(
         }
       },
       MuiLink: {
+        defaultProps: {
+          underline: 'hover',
+        },
         styleOverrides: {
           root: {
             color: COLORS.lightBlue,

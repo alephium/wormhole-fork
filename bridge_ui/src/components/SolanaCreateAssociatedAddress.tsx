@@ -5,7 +5,7 @@ import {
   hexToNativeString,
 } from "@alephium/wormhole-sdk";
 import { Button, Typography } from "@mui/material";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,

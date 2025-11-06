@@ -8,7 +8,7 @@ import { CLUSTER } from "../../utils/consts";
 import { getAlephiumTokenLogoURI } from "../../utils/alephium";
 import { AlephiumWindowObject } from '@alephium/get-extension-wallet'
 import { useSnackbar } from "notistack";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";

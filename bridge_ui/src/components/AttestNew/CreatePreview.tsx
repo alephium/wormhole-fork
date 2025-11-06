@@ -10,7 +10,7 @@ import { reset } from "../../store/attestSlice";
 import ShowTx from "../ShowTx";
 import { useHistory } from "react-router";
 import { getHowToAddToTokenListUrl } from "../../utils/consts";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 

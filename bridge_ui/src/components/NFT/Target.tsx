@@ -6,7 +6,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { TextField, Typography } from "@mui/material";
 import { makeStyles } from '@mui/styles';
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { PublicKey } from "@solana/web3.js";
 import { BigNumber, ethers } from "ethers";
 import { useCallback, useMemo } from "react";
@@ -110,7 +110,7 @@ function Target() {
       <TextField
         label="Recipient Address"
         fullWidth
-        variant="outlined"
+        variant="standard"
         className={classes.transferField}
         value={readableTargetAddress}
         disabled={true}
@@ -120,14 +120,14 @@ function Target() {
           <TextField
             label="Token Address"
             fullWidth
-            variant="outlined"
+            variant="standard"
             className={classes.transferField}
             value={targetAsset || ""}
             disabled={true}
           />
           {isEVMChain(targetChain) ? (
             <TextField
-              variant="outlined"
+              variant="standard"
               label="TokenId"
               fullWidth
               className={classes.transferField}

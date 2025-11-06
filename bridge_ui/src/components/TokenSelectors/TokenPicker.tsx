@@ -16,7 +16,7 @@ import { makeStyles } from '@mui/styles';
 import { createStyles } from '@mui/styles';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -420,7 +420,7 @@ export default function TokenPicker({
       </DialogTitle>
       <DialogContent className={classes.dialogContent}>
         <TextField
-          variant="outlined"
+          variant="standard"
           label={t("Search name or paste address")}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
@@ -429,7 +429,7 @@ export default function TokenPicker({
         />
         {useTokenId ? (
           <TextField
-            variant="outlined"
+            variant="standard"
             label={t("Token ID")}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}

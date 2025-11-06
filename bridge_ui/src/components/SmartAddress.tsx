@@ -237,7 +237,6 @@ export default function SmartAddress({
   return (
     <StyledTooltip
       title={tooltipContent}
-      interactive={true}
       className={classes.mainTypog}
     >
       <Typography
