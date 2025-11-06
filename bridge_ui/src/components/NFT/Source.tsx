@@ -1,5 +1,6 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@mui/material";
+import { Button } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { VerifiedUser } from "@mui/icons-material";
 import { Alert } from "@mui/lab";
 import { useCallback, useMemo } from "react";

@@ -3,7 +3,8 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA
 } from "@alephium/wormhole-sdk";
-import { Button, makeStyles, Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useTranslation } from "react-i18next";
 import { Transaction } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";

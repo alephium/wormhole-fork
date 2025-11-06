@@ -1,4 +1,4 @@
-import { makeStyles } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import numeral from "numeral";
 import { useMemo } from "react";
 import { createTVLArray, NotionalTVL } from "../../../hooks/useTVL";

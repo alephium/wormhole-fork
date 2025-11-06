@@ -4,15 +4,14 @@ import {
   CircularProgress,
   FormControl,
   ListItemText,
-  makeStyles,
   MenuItem,
   Paper,
   Select,
   TextField,
   Tooltip,
   Typography,
-  withStyles,
 } from "@mui/material";
+import { makeStyles, withStyles } from '@mui/styles';
 import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
 import TVLAreaChart from "./Charts/TVLAreaChart";
@@ -214,7 +213,6 @@ const TVLStats = () => {
                     : //@ts-ignore
                       CHAINS_BY_ID[selected[0]]?.name
                 }
-                MenuProps={{ getContentAnchorEl: null }} // hack to prevent popup menu from moving
                 style={{ minWidth: 128 }}
               >
                 <MenuItem value="all">

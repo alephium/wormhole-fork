@@ -7,8 +7,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  makeStyles,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import CloseIcon from "@mui/icons-material/Close";
 import { ConnectType, useWallet } from "@terra-money/wallet-provider";
 import { useCallback } from "react";

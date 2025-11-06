@@ -1,7 +1,6 @@
 import {
   CircularProgress,
   IconButton,
-  makeStyles,
   Table,
   TableBody,
   TableCell,
@@ -13,6 +12,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import { useTranslation } from 'react-i18next'
 import { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'

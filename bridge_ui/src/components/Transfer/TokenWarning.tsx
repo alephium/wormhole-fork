@@ -5,7 +5,8 @@ import {
   CHAIN_ID_SOLANA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { Box, Link, makeStyles, Typography } from "@mui/material";
+import { Box, Link, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { Trans, useTranslation } from "react-i18next";
 import {

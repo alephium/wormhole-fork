@@ -9,10 +9,10 @@ import {
   Tabs,
   Toolbar,
   Typography,
-  makeStyles,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";

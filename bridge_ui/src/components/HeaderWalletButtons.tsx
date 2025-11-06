@@ -2,10 +2,10 @@ import {
   IconButton,
   Menu,
   Typography,
-  makeStyles,
   useMediaQuery,
   useTheme,
 } from "@mui/material"
+import { makeStyles } from '@mui/styles';
 import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import { useConnect, useWallet } from "@alephium/web3-react"
 import { MouseEvent, useMemo, useState } from "react"
@@ -136,7 +136,6 @@ const HeaderWalletButtons = () => {
           onClose={handleWalletMenuClose}
           keepMounted
           classes={{ paper: classes.walletMenuPaper }}
-          getContentAnchorEl={null}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
           MenuListProps={{ disablePadding: true, autoFocusItem: false }}

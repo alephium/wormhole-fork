@@ -13,7 +13,8 @@ import {
   isEVMChain,
   CHAIN_ID_ETH,
 } from "@alephium/wormhole-sdk";
-import { LinearProgress, makeStyles, Typography } from "@mui/material";
+import { LinearProgress, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";

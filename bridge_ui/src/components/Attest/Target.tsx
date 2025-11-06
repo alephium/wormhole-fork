@@ -1,5 +1,6 @@
 import { isEVMChain } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";

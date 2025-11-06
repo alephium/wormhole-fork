@@ -1,5 +1,6 @@
 import { isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@mui/material";
+import { Button } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";

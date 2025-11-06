@@ -1,9 +1,9 @@
 import {
   Button,
   CircularProgress,
-  makeStyles,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { ReactChild } from "react";
 
 const useStyles = makeStyles((theme) => ({

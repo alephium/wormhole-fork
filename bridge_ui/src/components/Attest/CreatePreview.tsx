@@ -1,4 +1,5 @@
-import { Link, makeStyles, Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {

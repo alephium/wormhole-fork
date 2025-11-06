@@ -1,4 +1,5 @@
-import { Button, makeStyles } from "@mui/material";
+import { Button } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { ReactChild } from "react";
 
 const useStyles = makeStyles((theme) => ({

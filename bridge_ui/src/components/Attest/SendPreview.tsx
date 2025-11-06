@@ -1,4 +1,5 @@
-import { makeStyles, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {

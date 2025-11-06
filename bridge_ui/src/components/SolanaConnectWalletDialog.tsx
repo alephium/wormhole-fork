@@ -8,8 +8,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  makeStyles,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import CloseIcon from "@mui/icons-material/Close";
 import { WalletName, WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet, Wallet } from "@solana/wallet-adapter-react";

@@ -1,4 +1,4 @@
-import { makeStyles } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import clsx from 'clsx'
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'

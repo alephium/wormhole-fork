@@ -1,4 +1,5 @@
-import { Button, makeStyles, Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Launch } from "@mui/icons-material";
 import { TokenInfo } from "@solana/spl-token-registry";
 import { useTranslation } from "react-i18next";

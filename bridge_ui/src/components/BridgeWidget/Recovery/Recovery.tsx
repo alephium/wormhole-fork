@@ -9,7 +9,8 @@ import {
   deserializeTransferTokenVAA,
   deserializeTransferNFTVAA
 } from '@alephium/wormhole-sdk'
-import { IconButton, makeStyles, Tooltip, Typography } from '@mui/material'
+import { IconButton, Tooltip, Typography } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import { Alert } from '@mui/lab'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'

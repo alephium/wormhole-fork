@@ -4,7 +4,8 @@ import {
   hexToUint8Array,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { makeStyles, TextField, Typography } from "@mui/material";
+import { TextField, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { PublicKey } from "@solana/web3.js";
 import { BigNumber, ethers } from "ethers";

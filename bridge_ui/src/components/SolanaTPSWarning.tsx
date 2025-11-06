@@ -1,4 +1,4 @@
-import { makeStyles } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { Connection } from "@solana/web3.js";
 import numeral from "numeral";

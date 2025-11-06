@@ -9,9 +9,9 @@ import {
   Card,
   Checkbox,
   Chip,
-  makeStyles,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import clsx from "clsx";
 import { parseUnits } from "ethers/lib/utils";
 import { useCallback, useEffect } from "react";

@@ -1,5 +1,6 @@
 import { getLocalTokenInfo } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@mui/material";
+import { Button } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectTransferTargetAsset } from "../../store/selectors";

@@ -6,8 +6,8 @@ import {
   Popover,
   PopoverOrigin,
   Typography,
-  makeStyles,
 } from "@mui/material"
+import { makeStyles } from '@mui/styles';
 import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"

@@ -1,5 +1,6 @@
 import { ChainId, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
-import { Button, makeStyles, Tooltip, Typography } from "@mui/material";
+import { Button, Tooltip, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { FileCopy, OpenInNew } from "@mui/icons-material";
 import { withStyles } from "@mui/styles";
 import { useTranslation } from "react-i18next";

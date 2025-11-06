@@ -1,11 +1,11 @@
 import { ChainId } from "@alephium/wormhole-sdk";
 import {
   Typography,
-  makeStyles,
   Grid,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,

@@ -22,10 +22,10 @@ import {
   CircularProgress,
   FormControlLabel,
   Link,
-  makeStyles,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

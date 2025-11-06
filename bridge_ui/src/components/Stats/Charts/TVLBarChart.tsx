@@ -1,11 +1,11 @@
 import { ChainId, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 import {
   Button,
-  makeStyles,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { ArrowForward } from "@mui/icons-material";
 import { useCallback, useMemo, useState } from "react";
 import { NotionalTVL } from "../../../hooks/useTVL";

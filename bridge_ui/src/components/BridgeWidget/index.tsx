@@ -1,5 +1,6 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, IconButton, makeStyles, Typography } from '@mui/material'
+import { Container, IconButton, Typography } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'

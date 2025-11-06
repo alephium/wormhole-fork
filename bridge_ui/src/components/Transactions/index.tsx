@@ -6,7 +6,8 @@ import {
   isEVMChain,
   CHAIN_ID_ETH
 } from "@alephium/wormhole-sdk";
-import { Card, Container, makeStyles } from "@mui/material";
+import { Card, Container } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../muiTheme";
 import {

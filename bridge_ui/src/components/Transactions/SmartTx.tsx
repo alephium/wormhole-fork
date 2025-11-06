@@ -1,4 +1,5 @@
-import { Button, makeStyles, Tooltip, Typography } from "@mui/material";
+import { Button, Tooltip, Typography } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { FileCopy, OpenInNew } from "@mui/icons-material";
 import { withStyles } from "@mui/styles";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";

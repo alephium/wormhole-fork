@@ -1,11 +1,11 @@
 import {
   Container,
-  makeStyles,
   Step,
   StepButton,
   StepContent,
   Stepper,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { Alert } from "@mui/lab";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,6 @@ import {
   selectAttestIsSendComplete,
   selectAttestIsSending,
 } from "../../store/selectors";
-import HeaderText from "../HeaderText";
 import Create from "./Create";
 import CreatePreview from "./CreatePreview";
 import Send from "./Send";

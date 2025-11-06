@@ -1,4 +1,5 @@
-import { CircularProgress, makeStyles } from "@mui/material";
+import { CircularProgress } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";

@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { makeStyles } from "@mui/material"
+import { makeStyles } from '@mui/styles';
 import { COLORS } from "../../muiTheme"
 
 interface DividerProps {

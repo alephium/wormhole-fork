@@ -4,15 +4,14 @@ import {
   CircularProgress,
   FormControl,
   ListItemText,
-  makeStyles,
   MenuItem,
   Paper,
   Select,
   TextField,
   Tooltip,
   Typography,
-  withStyles,
 } from "@mui/material";
+import { makeStyles, withStyles } from '@mui/styles';
 import { InfoOutlined } from "@mui/icons-material";
 import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
@@ -235,7 +234,6 @@ const VolumeStats = () => {
                   : //@ts-ignore
                     CHAINS_BY_ID[selected[0]]?.name
               }
-              MenuProps={{ getContentAnchorEl: null }} // hack to prevent popup menu from moving
               style={{ minWidth: 128 }}
             >
               <MenuItem value="all">

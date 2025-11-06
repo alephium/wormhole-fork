@@ -1,10 +1,10 @@
 import {
   Button,
   CircularProgress,
-  makeStyles,
   Paper,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import clsx from "clsx";
 import numeral from "numeral";
 import { useCallback, useEffect, useMemo, useState } from "react";

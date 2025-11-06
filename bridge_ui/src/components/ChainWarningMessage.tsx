@@ -1,8 +1,9 @@
 import { ChainId } from "@alephium/wormhole-sdk";
-import { Link, makeStyles, Typography } from "@mui/material";
+import { Link, Typography } from "@mui/material";
 import { Alert } from "@mui/lab";
 import { useMemo } from "react";
 import { CHAIN_CONFIG_MAP } from "../config";
+import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles((theme) => ({
   alert: {

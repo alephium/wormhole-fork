@@ -3,10 +3,10 @@ import {
   Card,
   CardContent,
   CardMedia,
-  makeStyles,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import axios from "axios";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";

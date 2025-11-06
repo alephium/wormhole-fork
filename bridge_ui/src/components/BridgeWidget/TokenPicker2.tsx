@@ -1,18 +1,18 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
   CircularProgress,
-  createStyles,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
   List,
   ListItem,
-  makeStyles,
   TextField,
   Tooltip,
   Typography
 } from '@mui/material'
+import { makeStyles } from '@mui/styles';
+import { createStyles } from '@mui/styles';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { Alert } from '@mui/lab'

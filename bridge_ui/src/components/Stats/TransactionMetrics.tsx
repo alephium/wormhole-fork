@@ -1,10 +1,10 @@
 import {
   CircularProgress,
   Link,
-  makeStyles,
   Paper,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import clsx from "clsx";
 import numeral from "numeral";
 import useTransactionCount from "../../hooks/useTransactionCount";

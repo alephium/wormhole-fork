@@ -1,9 +1,9 @@
 import {
-  createStyles,
   IconButton,
-  makeStyles,
   Tooltip,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
+import { createStyles } from '@mui/styles';
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 

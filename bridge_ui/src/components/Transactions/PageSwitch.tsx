@@ -1,4 +1,5 @@
-import { makeStyles, Button } from "@mui/material";
+import { Button } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import ChevronLeft from "@mui/icons-material/ChevronLeft";
 import ChevronRight from "@mui/icons-material/ChevronRight";
 import { useTranslation } from "react-i18next";

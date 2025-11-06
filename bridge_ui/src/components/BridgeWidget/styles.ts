@@ -1,4 +1,4 @@
-import { makeStyles } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import { COLORS } from '../../muiTheme'
 
 export const GRAY = 'rgba(255, 255, 255, 0.5)'

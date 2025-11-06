@@ -1,10 +1,10 @@
 import {
   CircularProgress,
-  makeStyles,
   MenuItem,
   TextField,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";

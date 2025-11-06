@@ -1,4 +1,5 @@
-import { Button, makeStyles, Tooltip } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { LinkOff } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 

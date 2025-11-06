@@ -12,12 +12,12 @@ import {
 import {
   Container,
   ListItemIcon,
-  makeStyles,
   MenuItem,
   Paper,
   TextField,
   Typography,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";

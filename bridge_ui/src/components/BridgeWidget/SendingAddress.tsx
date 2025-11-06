@@ -1,4 +1,5 @@
-import { makeStyles, Typography } from '@mui/material'
+import { Typography } from '@mui/material'
+import { makeStyles } from '@mui/styles';
 import SmartAddress from './SmartAddress'
 import { useMemo } from 'react'
 import { selectSourceWalletAddress, selectTransferSourceChain } from '../../store/selectors'

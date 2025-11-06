@@ -1,11 +1,11 @@
 import {
   ListItemIcon,
   ListItemText,
-  makeStyles,
   MenuItem,
   OutlinedTextFieldProps,
   TextField,
 } from "@mui/material";
+import { makeStyles } from '@mui/styles';
 import clsx from "clsx";
 import { useMemo } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
