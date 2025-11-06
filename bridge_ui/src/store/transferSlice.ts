@@ -20,6 +20,7 @@ const LAST_STEP = 3;
 
 type Steps = 0 | 1 | 2 | 3;
 type BridgeWidgetSteps = 0 | 1 | 2
+type BridgeWidgetPage = 'bridge' | 'recovery' | 'history'
 
 export interface ParsedTokenAccount {
   publicKey: string;
@@ -74,6 +75,7 @@ export interface TransferState {
   isTokenPickerDialogOpen: boolean
   finalityProgressInitialRemainingBlocks: number | undefined
   finalityProgressInitialRemainingSeconds: number | undefined
+  bridgeWidgetPage: BridgeWidgetPage
 }
 
 const initialState: TransferState = {
@@ -109,7 +111,8 @@ const initialState: TransferState = {
   hasSentTokens: false,
   isTokenPickerDialogOpen: false,
   finalityProgressInitialRemainingBlocks: undefined,
-  finalityProgressInitialRemainingSeconds: undefined
+  finalityProgressInitialRemainingSeconds: undefined,
+  bridgeWidgetPage: 'bridge'
 }
 
 export const transferSlice = createSlice({
@@ -380,6 +383,9 @@ export const transferSlice = createSlice({
     },
     setFinalityProgressInitialRemainingSeconds: (state, action: PayloadAction<number | undefined>) => {
       state.finalityProgressInitialRemainingSeconds = action.payload
+    },
+    setBridgeWidgetPage: (state, action: PayloadAction<BridgeWidgetPage>) => {
+      state.bridgeWidgetPage = action.payload
     }
   }
 })
@@ -427,7 +433,8 @@ export const {
   setIsBlockFinalized,
   setHasSentTokens,
   setFinalityProgressInitialRemainingBlocks,
-  setFinalityProgressInitialRemainingSeconds
+  setFinalityProgressInitialRemainingSeconds,
+  setBridgeWidgetPage
 } = transferSlice.actions;
 
 export default transferSlice.reducer;

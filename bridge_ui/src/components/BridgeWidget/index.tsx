@@ -1,41 +1,75 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, makeStyles, Typography } from '@material-ui/core'
+import { Container, IconButton, makeStyles, Typography } from '@material-ui/core'
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
+  selectBridgeWidgetPage,
   selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
   selectTransferIsSending
 } from '../../store/selectors'
-import { setSourceChain, setTargetChain } from '../../store/transferSlice'
+import { reset, setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
+import { useWidgetStyles } from './styles'
+import { ArrowBackOutlined } from '@material-ui/icons'
+import Recovery from './Recovery/Recovery'
+import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
+import HistoryNavItem from './EnterDataStep/HistoryNavItem'
+import RecoveryNavItem from './EnterDataStep/RecoveryNavItem'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
   useFetchTargetAsset()
   useUrlPathParams()
   usePreventNavigation()
-  
+
   const step = useSelector(selectTransferActiveBridgeWidgetStep)
   const classes = useStyles()
+  const widgetClasses = useWidgetStyles()
+  const dispatch = useDispatch()
 
-  const title = step === 0 ? 'Bridge' : step === 1 ? 'Review' : ''
+  const page = useSelector(selectBridgeWidgetPage)
+
+  const title =
+    step === 0
+      ? page === 'bridge'
+        ? 'Bridge'
+        : page === 'recovery'
+        ? 'Recovery'
+        : 'Bridging history'
+      : step === 1
+      ? 'Review'
+      : ''
 
   return (
     <Container maxWidth="md" className={classes.mainContainer}>
       <div className={classes.innerContainer}>
-        <div>
-          <Typography variant='h1' style={{ margin: 0 }}>{title}</Typography>
+        <div className={widgetClasses.spaceBetween}>
+          <div className={classes.pageTitle}>
+            {page !== 'bridge' && (
+              <IconButton onClick={() => dispatch(reset())} size="small">
+                <ArrowBackOutlined fontSize="small" />
+              </IconButton>
+            )}
+            <Typography variant="h1">{title}</Typography>
+          </div>
+
+          {page === 'bridge' && step === 0 && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <RecoveryNavItem />
+              <HistoryNavItem />
+            </div>
+          )}
         </div>
         <div className={classes.mainBox}>
           <div className={classes.stack}>
-            <BridgeWidgetSteps />
+            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery /> : <TransactionsHistory />}
           </div>
         </div>
       </div>
@@ -105,10 +139,18 @@ const useStyles = makeStyles((theme) => ({
       alignItems: 'stretch'
     }
   },
+  pageTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: 24,
+    [theme.breakpoints.down('xs')]: {
+      marginBottom: 0
+    }
+  },
   innerContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
     width: '100%',
     maxWidth: 520,
     margin: '0 auto',

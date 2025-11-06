@@ -4,9 +4,9 @@ import {
   selectTransferIsBlockFinalized,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeemedViaRelayer,
+  selectTransferRecoverySourceTxId,
   selectTransferRedeemTx,
-  selectTransferTargetChain,
-  selectTransferTransferTx
+  selectTransferTargetChain
 } from '../../../store/selectors'
 import { GRAY, GREEN, useWidgetStyles } from '../styles'
 import { RadioButtonUncheckedRounded } from '@material-ui/icons'
@@ -20,6 +20,7 @@ import ConfettiExplosion from 'react-confetti-explosion'
 import { setHasSentTokens } from '../../../store/transferSlice'
 import { COLORS } from '../../../muiTheme'
 import { TransferCompletionState } from '../../../hooks/useGetIsTransferCompleted'
+import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 interface BridgingProgressSectionDetailsProps {
   currentStep: number
@@ -29,31 +30,33 @@ interface BridgingProgressSectionDetailsProps {
 const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: BridgingProgressSectionDetailsProps) => {
   const classes = useWidgetStyles()
   const dispatch = useDispatch()
-  const transferTx = useSelector(selectTransferTransferTx)
+  const userSentTransaction = useTransferOrRecoveryTxExists()
+  const recoverySourceTx = useSelector(selectTransferRecoverySourceTxId)
   const signedVAA = useTransferSignedVAA()
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
 
   const targetChain = useSelector(selectTransferTargetChain)
-  const {
-    isTransferCompleted: isTransferCompletedFlag
-  } = isTransferCompleted
+  const { isTransferCompleted: isTransferCompletedFlag } = isTransferCompleted
 
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)
   const isRedeemedViaRelayer = useSelector(selectTransferIsRedeemedViaRelayer)
 
   const signedVAAExists = !!signedVAA || isTransferCompletedFlag
-  const userSentTransaction = !!transferTx
   const isFinalized = isBlockFinalized || isTransferCompletedFlag || redeemTx
   const isRedeemed = isTransferCompletedFlag || isRedeemComplete || isRedeemedViaRelayer || redeemTx
 
   useEffect(() => {
     if (isRedeemed) {
-      setTimeout(() => {
+      if (recoverySourceTx) {
         dispatch(setHasSentTokens(true))
-      }, 8000)
+      } else {
+        setTimeout(() => {
+          dispatch(setHasSentTokens(true))
+        }, 8000)
+      }
     }
-  }, [dispatch, isRedeemed])
+  }, [dispatch, isRedeemed, recoverySourceTx])
 
   return (
     <div className={classes.progressDetails}>
@@ -63,16 +66,34 @@ const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: Br
 
       <div className={classes.bridgingProgressRow} style={{ color: isFinalized ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {currentStep > 2 ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : currentStep === 2 ? <CircularProgress size={18} style={{ color: COLORS.nearWhite }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
+          {currentStep > 2 ? (
+            <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
+          ) : currentStep === 2 ? (
+            <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />
+          ) : (
+            <RadioButtonUncheckedRounded fontSize="small" />
+          )}
         </div>
         <div className={classes.bridgingProgressContent}>
-          {currentStep > 2 ? <Typography>VAA received!</Typography> : currentStep === 2 ? <Typography>Waiting for VAA...</Typography> : <Typography>Get verified action approval (VAA)</Typography>}
+          {currentStep > 2 ? (
+            <Typography>VAA received!</Typography>
+          ) : currentStep === 2 ? (
+            <Typography>Waiting for VAA...</Typography>
+          ) : (
+            <Typography>Get verified action approval (VAA)</Typography>
+          )}
         </div>
       </div>
 
       <div className={classes.bridgingProgressRow} style={{ color: signedVAAExists ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {currentStep > 3 ? <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} /> : currentStep === 3 ? <CircularProgress size={18} style={{ color: COLORS.nearWhite }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
+          {currentStep > 3 ? (
+            <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
+          ) : currentStep === 3 ? (
+            <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />
+          ) : (
+            <RadioButtonUncheckedRounded fontSize="small" />
+          )}
         </div>
         <div className={classes.bridgingProgressContent}>
           {currentStep > 3 ? (
@@ -90,10 +111,16 @@ const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: Br
 
       <div className={classes.bridgingProgressRow} style={{ color: isRedeemed ? 'inherit' : GRAY }}>
         <div className={classes.bridgingProgressIcon}>
-          {currentStep > 4 ? <div>
-            <ConfettiExplosion force={0.4} duration={2200} particleCount={30} width={400} />
-            <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
-          </div> : currentStep === 4 ? <CircularProgress size={18} style={{ color: COLORS.nearWhite }} /> : <RadioButtonUncheckedRounded fontSize="small" />}
+          {currentStep > 4 ? (
+            <div>
+              <ConfettiExplosion force={0.4} duration={2200} particleCount={30} width={400} />
+              <CheckCircleOutlineRounded fontSize="small" style={{ color: GREEN }} />
+            </div>
+          ) : currentStep === 4 ? (
+            <CircularProgress size={18} style={{ color: COLORS.nearWhite }} />
+          ) : (
+            <RadioButtonUncheckedRounded fontSize="small" />
+          )}
         </div>
         <div className={classes.bridgingProgressContent}>
           {currentStep > 4 ? (

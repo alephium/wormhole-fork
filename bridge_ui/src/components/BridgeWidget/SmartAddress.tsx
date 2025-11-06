@@ -20,13 +20,14 @@ import {
 import { Button, makeStyles, Tooltip, Typography } from '@material-ui/core'
 import { FileCopy, OpenInNew } from '@material-ui/icons'
 import { withStyles } from '@material-ui/styles'
-import { ReactChild } from 'react'
+import { ReactChild, useState } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from '../../utils/consts'
 import { shortenAddress } from '../../utils/addresses'
 import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from '@alephium/web3'
 import { useTranslation } from 'react-i18next'
+import clsx from 'clsx'
 
 const useStyles = makeStyles((theme) => ({
   mainTypog: {
@@ -58,12 +59,65 @@ const useStyles = makeStyles((theme) => ({
     '&:hover': {
       color: 'rgba(255, 255, 255, 0.7)'
     }
+  },
+  compactAddress: {
+    fontSize: '0.8rem',
+    fontWeight: 400
+  },
+  '@keyframes pulseDot': {
+    '0%': {
+      opacity: 1
+    },
+    '60%': {
+      opacity: 0.6
+    },
+    '100%': {
+      opacity: 1
+    }
+  },
+  '@keyframes rippleWave': {
+    '0%': {
+      transform: 'translate(-50%, -50%) scale(0.6)',
+      opacity: 1,
+      filter: 'blur(0)'
+    },
+    '70%': {
+      transform: 'translate(-50%, -50%) scale(2.3)',
+      opacity: 0.5,
+      filter: 'blur(4px)'
+    },
+    '100%': {
+      transform: 'translate(-50%, -50%) scale(2.8)',
+      opacity: 0,
+      filter: 'blur(4px)'
+    }
+  },
+  pulsingDot: {
+    animation: '$pulseDot 2s infinite ease-out',
+    backgroundColor: '#4da3ff',
+    borderRadius: '50%',
+    display: 'inline-block',
+    position: 'relative',
+    height: '5px',
+    width: '5px',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      width: '5px',
+      height: '5px',
+      borderRadius: '50%',
+      backgroundColor: '#4da3ff',
+      transform: 'translate(-50%, -50%) scale(1)',
+      animation: '$rippleWave 2s infinite ease-out',
+      filter: 'blur(2px)'
+    }
   }
 }))
 
 const tooltipStyles = {
   tooltip: {
-    minWidth: 'max-content',
     textAlign: 'center',
     '& > *': {
       margin: '.25rem'
@@ -87,6 +141,9 @@ interface SmartAddressProps {
   noUnderline?: boolean
   extraContent?: ReactChild
   isAsset?: boolean
+  pulse?: boolean
+  tooltipText?: string
+  isCompact?: boolean
 }
 
 const SmartAddress = ({
@@ -98,7 +155,10 @@ const SmartAddress = ({
   tokenName,
   variant,
   extraContent,
-  isAsset
+  isAsset,
+  pulse,
+  tooltipText,
+  isCompact
 }: SmartAddressProps) => {
   const { t } = useTranslation()
   const classes = useStyles()
@@ -109,6 +169,8 @@ const SmartAddress = ({
   // const useableLogo = logo || isNativeTerra ? getNativeTerraIcon(useableSymbol) : null
   const isNative = parsedTokenAccount?.isNativeAsset || isNativeETH || isNativeALPH || false
   const addressShort = shortenAddress(useableAddress) || ''
+
+  const [isPulsing, setIsPulsing] = useState(pulse)
 
   const useableName = isNative
     ? 'Native Currency'
@@ -221,6 +283,7 @@ const SmartAddress = ({
 
   const tooltipContent = (
     <>
+      {tooltipText && <Typography>{tooltipText}</Typography>}
       {useableName && <Typography>{useableName}</Typography>}
       {useableSymbol && !isNative && (
         <Typography noWrap variant="body2">
@@ -236,10 +299,17 @@ const SmartAddress = ({
   )
 
   return (
-    <StyledTooltip title={tooltipContent} interactive={true}>
-      <Typography variant={variant || 'body1'} component="div" className={classes.address}>
-        {useableSymbol || addressShort}
-      </Typography>
+    <StyledTooltip title={tooltipContent} interactive={true} onPointerEnter={() => setIsPulsing(false)}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {isPulsing && <span className={classes.pulsingDot} />}
+        <Typography
+          variant={variant || 'body1'}
+          component="div"
+          className={clsx(classes.address, { [classes.compactAddress]: isCompact })}
+        >
+          {useableSymbol || addressShort}
+        </Typography>
+      </div>
     </StyledTooltip>
   )
 }

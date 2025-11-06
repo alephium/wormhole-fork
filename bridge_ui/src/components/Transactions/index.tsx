@@ -34,6 +34,7 @@ import { getIsTxsCompletedAlph } from "../../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
 import { NodeProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
+import TransactionTableCompact from "../BridgeWidget/TransactionTableCompact";
 
 const useStyles = makeStyles(() => ({
   mainCard: {
@@ -42,7 +43,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-async function getTxNumber(address: string, emitterChain: ChainId, targetChain: ChainId): Promise<number> {
+export async function getTxNumber(address: string, emitterChain: ChainId, targetChain: ChainId): Promise<number> {
   const url = `${EXPLORER_API_SERVER_HOST}/api/transactions/${address}/${emitterChain}/${targetChain}/count`
   const response = await fetch(url)
   const json = await response.json()
@@ -64,7 +65,7 @@ export type BridgeTransaction = {
   status: TxStatus
 }
 
-async function getTxsByPageNumber(address: string, emitterChain: ChainId, targetChain: ChainId, pageNumber: number): Promise<BridgeTransaction[]> {
+export async function getTxsByPageNumber(address: string, emitterChain: ChainId, targetChain: ChainId, pageNumber: number): Promise<BridgeTransaction[]> {
   const url = `${EXPLORER_API_SERVER_HOST}/api/transactions/${address}/${emitterChain}/${targetChain}?page=${pageNumber}&pageSize=${DefaultPageSize}`
   const response = await fetch(url)
   const json = await response.json()
@@ -73,7 +74,7 @@ async function getTxsByPageNumber(address: string, emitterChain: ChainId, target
 
 type BlockNumberFetcher = () => Promise<number | undefined>
 
-const alphBlockNumberFetcher = (nodeProvider: NodeProvider | undefined, group: number) => {
+export const alphBlockNumberFetcher = (nodeProvider: NodeProvider | undefined, group: number) => {
   return nodeProvider === undefined
     ? Promise.resolve(undefined)
     : nodeProvider.blockflow
@@ -81,13 +82,13 @@ const alphBlockNumberFetcher = (nodeProvider: NodeProvider | undefined, group: n
       .then((chainInfo) => chainInfo.currentHeight)
 }
 
-const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Provider) => {
+export const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Provider) => {
   return provider === undefined
     ? Promise.resolve(undefined)
     : getEVMCurrentBlockNumber(provider, chainId)
 }
 
-function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher | undefined), chainId: ChainId): number | undefined {
+export function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher | undefined), chainId: ChainId): number | undefined {
   const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
   const chainName = coalesceChainName(chainId)
@@ -119,7 +120,7 @@ function isTxConfirmed(currentBlockNumber: number, txBlockNumber: number, chainI
   return false
 }
 
-function ListTransactions({
+export function ListTransactions({
   txSourceChain,
   txTargetChain,
   sourceChainBlockNumber,
@@ -127,6 +128,7 @@ function ListTransactions({
   txs,
   isLoading,
   getIsTxsCompleted,
+  tableLayout = 'normal'
 }: {
   txSourceChain: ChainId,
   txTargetChain: ChainId,
@@ -135,6 +137,7 @@ function ListTransactions({
   txs: BridgeTransaction[],
   isLoading: boolean,
   getIsTxsCompleted: (txs: BridgeTransaction[]) => Promise<boolean[]>
+  tableLayout?: 'normal' | 'compact'
 }) {
   const [txsStatus, setTxsStatus] = useState<TxStatus[]>(txs.map((tx) => tx.status))
   const [hasNewConfirmedTx, setHasNewConfirmedTx] = useState<boolean>(false)
@@ -181,7 +184,11 @@ function ListTransactions({
     })
   }, [txs, txSourceChain, txTargetChain, targetChainBlockNumber, getIsTxsCompleted, hasNewConfirmedTx])
 
-  return <TransactionTable txs={txs} txsStatus={txsStatus} isLoading={isLoading}/>
+  return tableLayout === 'normal' ? (
+    <TransactionTable txs={txs} txsStatus={txsStatus} isLoading={isLoading} />
+  ) : (
+    <TransactionTableCompact txs={txs} txsStatus={txsStatus} isLoading={isLoading} />
+  )
 }
 
 export default function Transactions() {

@@ -198,6 +198,7 @@ export const selectTransferSourceBalanceString = (state: RootState) =>
 export const selectTransferAmount = (state: RootState) => state.transfer.amount;
 export const selectTransferTargetChain = (state: RootState) =>
   state.transfer.targetChain;
+export const selectBridgeWidgetPage = (state: RootState) => state.transfer.bridgeWidgetPage
 export const selectTransferTargetAddressHex = (state: RootState) =>
   state.transfer.targetAddressHex;
 export const selectTransferTargetAssetWrapper = (state: RootState) =>

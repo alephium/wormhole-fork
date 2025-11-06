@@ -30,11 +30,7 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
   const isRecovery = useSelector(selectTransferIsRecovery)
   const isRedeeming = useSelector(selectTransferIsRedeeming)
 
-  const {
-    isTransferCompletedLoading,
-    isTransferCompleted: isTransferCompletedFlag,
-    error: checkTransferCompletedError
-  } = isTransferCompleted
+  const { isTransferCompletedLoading, isTransferCompleted: isTransferCompletedFlag } = isTransferCompleted
 
   const { isReady } = useIsWalletReady(targetChain)
   //TODO better check, probably involving a hook & the VAA
@@ -53,10 +49,7 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
   }, [useNativeRedeem])
 
   const isRedeemDisabled =
-    !isReady ||
-    disabled ||
-    (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag)) ||
-    checkTransferCompletedError !== undefined
+    !isReady || disabled || (isRecovery && (isTransferCompletedLoading || isTransferCompletedFlag))
 
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
 

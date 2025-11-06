@@ -1,24 +1,25 @@
-import { useSelector } from 'react-redux'
-import { selectTransferTransferTx } from '../../../store/selectors'
 import { CircularProgress, makeStyles } from '@material-ui/core'
 import { COLORS } from '../../../muiTheme'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
+import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const OngoingBridgingBadge = () => {
-  const transferTx = useSelector(selectTransferTransferTx)
+  const txExists = useTransferOrRecoveryTxExists()
   const classes = useStyles()
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
   const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
-  
-  if (!transferTx) return null
+
+  if (!txExists) return null
 
   return (
-    <div
-      className={classes.container}
-    >
-      <div className={classes.badge} style={{ backgroundColor: isManualRedeemRequired ? COLORS.darkGrey : COLORS.blue }}>
+    <div className={classes.container}>
+      <div
+        className={classes.badge}
+        style={{ backgroundColor: isManualRedeemRequired ? COLORS.darkGrey : COLORS.blue }}
+      >
         <CircularProgress size={20} style={{ color: isManualRedeemRequired ? COLORS.gray : COLORS.white }} />
-        {isManualRedeemRequired ? 'Waiting for manual redeem...' : 'Bridging...'}</div>
+        {isManualRedeemRequired ? 'Waiting for manual redeem...' : 'Bridging...'}
+      </div>
     </div>
   )
 }
@@ -57,4 +58,4 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: '0 0 0px 0 rgba(9, 137, 241, 0.2)'
     }
   }
-}));
+}))

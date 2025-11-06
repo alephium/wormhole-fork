@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import EnterDataStep from './EnterDataStep'
+import EnterDataStep from './EnterDataStep/EnterDataStep'
 import ReviewStep from './ReviewStep'
 import TransferStep from './TransferStep/TransferStep'
 import { useDispatch, useSelector } from 'react-redux'

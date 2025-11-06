@@ -1,37 +1,22 @@
-import { useDispatch, useSelector } from 'react-redux'
-import {
-  selectTransferIsSending,
-  selectTransferIsWalletApproved,
-  selectTransferTransferTx
-} from '../../../store/selectors'
-import { useCallback, useEffect } from 'react'
+import { useSelector } from 'react-redux'
+import { selectTransferIsWalletApproved } from '../../../store/selectors'
 import { ThumbUp } from '@material-ui/icons'
 import { CircularProgress } from '@material-ui/core'
 import { GRAY, useWidgetStyles } from '../styles'
 import SendTransactionSectionDetails from './SendTransactionSectionDetails'
-import { setBridgeWidgetStep } from '../../../store/transferSlice'
 import clsx from 'clsx'
+import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SendTransactionSection = () => {
   const classes = useWidgetStyles()
-
   const isWalletApproved = useSelector(selectTransferIsWalletApproved)
-  const transferTx = useSelector(selectTransferTransferTx)
-  const isSending = useSelector(selectTransferIsSending)
-  const dispatch = useDispatch()
-  const goToReview = useCallback(() => dispatch(setBridgeWidgetStep(1)), [dispatch])
+  const txExists = useTransferOrRecoveryTxExists()
 
-  useEffect(() => {
-    if (!isSending && !isWalletApproved && !transferTx) {
-      goToReview()
-    }
-  }, [isSending, isWalletApproved, goToReview, transferTx])
-
-  if (transferTx) {
+  if (txExists) {
     return <ConfirmedTransactionExpandableButton />
   }
 
-  if (!transferTx && isWalletApproved) {
+  if (!txExists && isWalletApproved) {
     return (
       <div className={classes.grayRoundedBox}>
         <div className={classes.sendStep}>

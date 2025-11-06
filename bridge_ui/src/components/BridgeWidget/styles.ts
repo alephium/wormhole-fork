@@ -108,6 +108,71 @@ export const useWidgetStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     gap: '5px'
   },
+  discreetButton: {
+    fontSize: '0.875rem',
+    color: 'rgba(255, 255, 255, 0.5)',
+    padding: '8px 12px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    borderRadius: '20px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+    },
+    '&:disabled': {
+      color: 'rgba(255, 255, 255, 0.25)',
+      cursor: 'not-allowed',
+      backgroundColor: 'transparent',
+      '&:hover': {
+        backgroundColor: 'transparent'
+      }
+    }
+  },
+  chainSelectContainer: {
+    flexBasis: '100%',
+    width: '100%'
+  },
+  inputFieldContainer: {
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+    padding: '14px',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '20px',
+    outline: '2px solid transparent',
+
+    '&:has(input:focus)': {
+      outline: `1px solid ${COLORS.blue}`,
+      background: 'transparent'
+    }
+  },
+  inputFieldContainerInner: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center'
+  },
+  inputField: {
+    marginLeft: '0.125rem',
+    display: 'block',
+    width: '100%',
+    boxShadow: 'none',
+    backgroundColor: 'transparent',
+    fontSize: '1rem',
+    lineHeight: 1,
+    border: 'none',
+    outline: 'none',
+    '&:focus': {
+      outline: 'none'
+    },
+    '&:hover': {
+      outline: 'none'
+    },
+    color: '#fff'
+  },
   networkAddressText: {
     display: 'flex',
     alignItems: 'center',
