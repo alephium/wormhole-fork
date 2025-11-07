@@ -120,6 +120,7 @@
     "timers-browserify": "^2.0.12",
     "truffle": "^5.4.1",
     "tty-browserify": "^0.0.1",
+    "typescript": "^4.9.5",
     "url": "^0.11.0",
     "util": "^0.12.4",
     "vm-browserify": "^1.1.2"
