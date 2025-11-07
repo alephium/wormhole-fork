@@ -1,7 +1,7 @@
 import {
   ButtonBase,
   List,
-  ListItem,
+  ListItemButton,
   ListItemText,
   Popover,
   PopoverOrigin,
@@ -131,11 +131,10 @@ const WalletAddressButton = ({
         </div>
         <Divider />
         <List>
-          <ListItem button onClick={handleCopy}>
+          <ListItemButton onClick={handleCopy}>
             <ListItemText primary="Copy address" />
-          </ListItem>
-          <ListItem
-            button
+          </ListItemButton>
+          <ListItemButton
             disabled={disableDisconnect}
             onClick={disableDisconnect ? undefined : handleDisconnect}
           >
@@ -143,7 +142,7 @@ const WalletAddressButton = ({
               primary="Disconnect"
               secondary={disableDisconnect ? "Complete bridging to disconnect." : undefined}
             />
-          </ListItem>
+          </ListItemButton>
         </List>
       </Popover>
     </>

@@ -5,7 +5,7 @@ import {
   Divider,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
@@ -47,9 +47,9 @@ const DetectedWalletListItem = ({
   }, [select, onClose, wallet]);
 
   return (
-    <ListItem button onClick={handleWalletClick}>
+    <ListItemButton onClick={handleWalletClick}>
       <WalletListItem wallet={wallet} text={wallet.adapter.name} />
-    </ListItem>
+    </ListItemButton>
   );
 };
 
@@ -116,8 +116,7 @@ const SolanaConnectWalletDialog = ({
         ))}
         {undetected && <Divider variant="middle" />}
         {undetected.map((wallet) => (
-          <ListItem
-            button
+          <ListItemButton
             onClick={onClose}
             component="a"
             key={wallet.adapter.name}
@@ -129,7 +128,7 @@ const SolanaConnectWalletDialog = ({
               wallet={wallet}
               text={"Install " + wallet.adapter.name}
             />
-          </ListItem>
+          </ListItemButton>
         ))}
       </List>
     </Dialog>

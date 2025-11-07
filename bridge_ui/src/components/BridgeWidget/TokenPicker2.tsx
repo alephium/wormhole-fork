@@ -6,7 +6,7 @@ import {
   DialogTitle,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   TextField,
   Tooltip,
   Typography
@@ -377,16 +377,16 @@ const TokenPicker2 = function TokenPicker2({
           <List component="div" className={classes.tokenList}>
             {nonFeaturedOptions.map((option) => {
               return (
-                <ListItem
+                <ListItemButton
                   component="div"
-                  button
+
                   onClick={() => handleSelectOption(option)}
                   key={option.publicKey + option.mintKey + (option.tokenId || '')}
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
                   className={classes.tokenListItem}
                 >
                   <RenderOption account={option} />
-                </ListItem>
+                </ListItemButton>
               )
             })}
 

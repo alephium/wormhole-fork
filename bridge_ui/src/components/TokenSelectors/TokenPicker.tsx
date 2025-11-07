@@ -7,7 +7,7 @@ import {
   DialogTitle,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   TextField,
   Tooltip,
   Typography,
@@ -445,9 +445,8 @@ export default function TokenPicker({
           <List component="div" className={classes.tokenList}>
             {nonFeaturedOptions.map((option) => {
               return (
-                <ListItem
+                <ListItemButton
                   component="div"
-                  button
                   onClick={() => handleSelectOption(option)}
                   key={
                     option.publicKey + option.mintKey + (option.tokenId || "")
@@ -455,7 +454,7 @@ export default function TokenPicker({
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
                 >
                   <RenderOption account={option} />
-                </ListItem>
+                </ListItemButton>
               );
             })}
             {nonFeaturedOptions.length ? null : (

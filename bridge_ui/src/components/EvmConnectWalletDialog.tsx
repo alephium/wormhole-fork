@@ -4,7 +4,7 @@ import {
   DialogTitle,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
@@ -56,7 +56,7 @@ const WalletOptions = ({
   }, [connect, connection, onClose]);
 
   return (
-    <ListItem button onClick={handleClick}>
+    <ListItemButton onClick={handleClick}>
       <ListItemIcon>
         <img
           src={connection.icon}
@@ -65,7 +65,7 @@ const WalletOptions = ({
         />
       </ListItemIcon>
       <ListItemText>{connection.name}</ListItemText>
-    </ListItem>
+    </ListItemButton>
   );
 };
 

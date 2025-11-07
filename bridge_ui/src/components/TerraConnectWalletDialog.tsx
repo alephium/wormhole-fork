@@ -4,7 +4,7 @@ import {
   Divider,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
@@ -56,12 +56,12 @@ const WalletOptions = ({
     onClose();
   }, [connect, onClose, type, identifier]);
   return (
-    <ListItem button onClick={handleClick}>
+    <ListItemButton onClick={handleClick}>
       <ListItemIcon>
         <img src={icon} alt={name} className={classes.icon} />
       </ListItemIcon>
       <ListItemText>{name}</ListItemText>
-    </ListItem>
+    </ListItemButton>
   );
 };
 
@@ -92,8 +92,7 @@ const TerraConnectWalletDialog = ({
   const filteredInstallations = availableInstallations
     .filter(({ type }) => type !== ConnectType.READONLY)
     .map(({ type, name, icon, url, identifier = "" }) => (
-      <ListItem
-        button
+      <ListItemButton
         component="a"
         onClick={onClose}
         key={"install-" + type + identifier}
@@ -105,7 +104,7 @@ const TerraConnectWalletDialog = ({
           <img src={icon} alt={name} className={classes.icon} />
         </ListItemIcon>
         <ListItemText>{"Install " + name}</ListItemText>
-      </ListItem>
+      </ListItemButton>
     ));
   return (
     <Dialog open={isOpen} onClose={onClose}>
