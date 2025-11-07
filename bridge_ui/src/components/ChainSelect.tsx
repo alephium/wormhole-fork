@@ -5,13 +5,13 @@ import {
   OutlinedTextFieldProps,
   TextField,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import { useMemo } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { BETA_CHAINS, ChainInfo } from "../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   select: {
     "& .MuiSelect-select": {
       display: "flex",
@@ -41,7 +41,7 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
 }
 
 export default function ChainSelect({ chains, ...rest }: ChainSelectProps) {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isBeta = useBetaContext();
   const filteredChains = useMemo(
     () =>

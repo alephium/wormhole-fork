@@ -1,13 +1,13 @@
 import { ChainId, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 import { Button, Tooltip, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { FileCopy, OpenInNew } from "@mui/icons-material";
-import { withStyles } from "@mui/styles";
+import { withStyles } from "tss-react/mui";
 import { useTranslation } from "react-i18next";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainTypog: {
     display: "inline-block",
     marginLeft: theme.spacing(1),
@@ -24,15 +24,14 @@ const useStyles = makeStyles((theme) => ({
 const tooltipStyles = {
   tooltip: {
     minWidth: "max-content",
-    textAlign: "center",
+    textAlign: "center" as const,
     "& > *": {
       margin: ".25rem",
     },
   },
 };
 
-// @ts-ignore
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip);
+const StyledTooltip = withStyles(Tooltip, tooltipStyles);
 
 export default function SmartBlock({
   chainId,
@@ -42,7 +41,7 @@ export default function SmartBlock({
   blockNumber: number;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const explorerAddress =
     chainId === CHAIN_ID_ETH
       ? `https://${

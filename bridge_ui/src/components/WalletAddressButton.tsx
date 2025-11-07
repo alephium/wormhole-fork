@@ -7,7 +7,7 @@ import {
   PopoverOrigin,
   Typography,
 } from "@mui/material"
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"
@@ -40,7 +40,7 @@ const WalletAddressButton = ({
   onlyShowChainIcon = false,
   disableDisconnect = false,
 }: WalletAddressButtonProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const copyToClipboard = useCopyToClipboard(address)
   const open = !!anchorEl
@@ -151,7 +151,7 @@ const WalletAddressButton = ({
 
 export default WalletAddressButton
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   button: {
     display: "inline-flex",
     alignItems: "center",

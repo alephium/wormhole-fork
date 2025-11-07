@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useSelector } from "react-redux";
 import {
   selectNFTSourceChain,
@@ -9,14 +9,14 @@ import { CHAINS_BY_ID } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 import NFTViewer from "../TokenSelectors/NFTViewer";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
 }));
 
 export default function SourcePreview() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const sourceChain = useSelector(selectNFTSourceChain);
   const sourceParsedTokenAccount = useSelector(
     selectNFTSourceParsedTokenAccount

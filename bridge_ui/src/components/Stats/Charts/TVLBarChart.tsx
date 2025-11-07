@@ -5,14 +5,14 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { ArrowForward } from "@mui/icons-material";
 import { useCallback, useMemo, useState } from "react";
 import { NotionalTVL } from "../../../hooks/useTVL";
 import { ChainInfo, getChainShortName } from "../../../utils/consts";
 import { createChainTVLChartData, formatTVL } from "./utils";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   table: {
     borderSpacing: "16px",
     overflowX: "auto",
@@ -33,7 +33,7 @@ const TVLBarChart = ({
   tvl: NotionalTVL;
   onChainSelected: (chainInfo: ChainInfo) => void;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const [mouseOverChainId, setMouseOverChainId] =
     useState<ChainId>(CHAIN_ID_ETH);

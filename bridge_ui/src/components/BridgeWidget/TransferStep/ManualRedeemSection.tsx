@@ -22,7 +22,7 @@ interface ManualRedeemSectionProps {
 }
 
 const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) => {
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const { t } = useTranslation()
   const { handleClick, handleNativeClick, disabled } = useHandleRedeem()
   const targetChain = useSelector(selectTransferTargetChain)

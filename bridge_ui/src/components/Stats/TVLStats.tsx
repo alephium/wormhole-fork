@@ -13,7 +13,7 @@ import {
   ToggleButton,
   ToggleButtonGroup
 } from "@mui/material";
-import { makeStyles, withStyles } from '@mui/styles';
+import { makeStyles, withStyles } from 'tss-react/mui';
 import { useCallback, useMemo, useState } from "react";
 import TVLAreaChart from "./Charts/TVLAreaChart";
 import useCumulativeTVL from "../../hooks/useCumulativeTVL";
@@ -27,7 +27,7 @@ import TVLTable from "./Charts/TVLTable";
 import useTVL from "../../hooks/useTVL";
 import { ArrowBack, InfoOutlined } from "@mui/icons-material";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     display: "flex",
     alignItems: "center",
@@ -79,12 +79,12 @@ const tooltipStyles = {
   },
 };
 
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip);
+const StyledTooltip = withStyles(Tooltip, tooltipStyles);
 
 const DISPLAY_BY_VALUES = ["Time", "Chain"];
 
 const TVLStats = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const [displayBy, setDisplayBy] = useState(DISPLAY_BY_VALUES[0]);
   const [timeFrame, setTimeFrame] = useState("All time");

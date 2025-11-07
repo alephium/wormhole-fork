@@ -8,7 +8,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import CloseIcon from "@mui/icons-material/Close";
 import { useCallback } from "react";
 import {
@@ -20,7 +20,7 @@ import { getEvmChainId } from "../utils/consts";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -48,7 +48,7 @@ const WalletOptions = ({
   connect: (connectType: ConnectType) => void;
   onClose: () => void;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const handleClick = useCallback(() => {
     connect(connection.connectType);
@@ -82,7 +82,7 @@ const EvmConnectWalletDialog = ({
   const { availableConnections, connect, chainId: evmChainId } = useEthereumProvider();
   const enableAutoSwitch = evmChainId === undefined
   const { forceNetworkSwitch } = useIsWalletReady(chainId, enableAutoSwitch)
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const availableWallets = availableConnections
     .filter((connection) => {

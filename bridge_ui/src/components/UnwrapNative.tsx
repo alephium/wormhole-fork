@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -63,7 +63,7 @@ import ButtonWithLoader from "./ButtonWithLoader";
 import EthereumSignerKey from "./EthereumSignerKey";
 import HeaderText from "./HeaderText";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   formControl: {
     display: "flex",
     margin: `${theme.spacing(1)} auto`,
@@ -156,7 +156,7 @@ interface BalancesInfo {
 
 function UnwrapNative() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [selectedChainId, setSelectedChainId] = useState<SupportedChain>(
     CHAIN_ID_ETH as SupportedChain
   );

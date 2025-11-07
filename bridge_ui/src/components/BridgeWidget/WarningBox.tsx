@@ -1,7 +1,7 @@
 import { useWidgetStyles, YELLOW_BG } from './styles'
 
 const WarningBox = ({ children }: { children: React.ReactNode }) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
 
   return (
     <div

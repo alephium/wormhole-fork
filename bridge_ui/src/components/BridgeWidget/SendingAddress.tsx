@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import SmartAddress from './SmartAddress'
 import { useMemo } from 'react'
 import { selectSourceWalletAddress, selectTransferSourceChain } from '../../store/selectors'
@@ -14,7 +14,7 @@ interface SendingAddressProps {
 }
 
 const SendingAddress = ({ showIcon = false, hideAddress = false }: SendingAddressProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const sourceChain = useSelector(selectTransferSourceChain)
   const sourceChainInfo = useMemo(() => CHAINS_BY_ID[sourceChain], [sourceChain])
   const sourceWalletAddress = useSelector(selectSourceWalletAddress)
@@ -36,7 +36,7 @@ const SendingAddress = ({ showIcon = false, hideAddress = false }: SendingAddres
 
 export default SendingAddress
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   networkIcon: {
     height: '1rem',
     width: '1rem'

@@ -25,7 +25,7 @@ import { getIsTxsCompletedAlph } from '../../../utils/alephium'
 import { useWidgetStyles } from '../styles'
 
 const TransactionsHistory = () => {
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTargetChain = useSelector(selectTransferTargetChain)
   const { isReady: sourceChainReady } = useIsWalletReady(transferSourceChain, false)

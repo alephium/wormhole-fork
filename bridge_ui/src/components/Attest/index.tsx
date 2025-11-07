@@ -5,7 +5,7 @@ import {
   StepContent,
   Stepper,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { Alert } from "@mui/material";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,13 +27,13 @@ import SourcePreview from "./SourcePreview";
 import Target from "./Target";
 import TargetPreview from "./TargetPreview";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   spacer: { height: theme.spacing(2) },
 }));
 
 function AttestLegacy() {
   const { t } = useTranslation()
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const activeStep = useSelector(selectAttestActiveStep);
   const isSending = useSelector(selectAttestIsSending);

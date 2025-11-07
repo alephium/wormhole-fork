@@ -8,12 +8,12 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import CloseIcon from "@mui/icons-material/Close";
 import { ConnectType, useWallet } from "@terra-money/wallet-provider";
 import { useCallback } from "react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -49,7 +49,7 @@ const WalletOptions = ({
   icon: string;
   name: string;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const handleClick = useCallback(() => {
     connect(type, identifier);
@@ -73,7 +73,7 @@ const TerraConnectWalletDialog = ({
   onClose: () => void;
 }) => {
   const { availableConnections, availableInstallations, connect } = useWallet();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const filteredConnections = availableConnections
     .filter(({ type }) => type !== ConnectType.READONLY)

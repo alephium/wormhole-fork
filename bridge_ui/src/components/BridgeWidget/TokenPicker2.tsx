@@ -11,8 +11,7 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { makeStyles } from '@mui/styles';
-import { createStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { Alert } from '@mui/material'
@@ -42,7 +41,7 @@ export const BasicAccountRender2 = (
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const mintPrettyString = shortenAddress(account.mintKey)
   const uri = nft ? account.image_256 : account.logo || account.uri
   const symbol = account.symbol || t('Unknown')
@@ -144,7 +143,7 @@ const TokenPicker2 = function TokenPicker2({
   useTokenId
 }: TokenPicker2Props) {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const [holderString, setHolderString] = useState('')
   const [tokenIdHolderString, setTokenIdHolderString] = useState('')
   const [loadingError, setLoadingError] = useState('')
@@ -401,7 +400,7 @@ const TokenPicker2 = function TokenPicker2({
     </Dialog>
   )
 
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
 
   return (
     <>
@@ -453,8 +452,8 @@ export const TokenIconSymbol = ({
 }: {
   account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
 }) => {
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const uri = account?.logo || account?.uri
   const symbol = account?.symbol || '-'
 
@@ -473,8 +472,7 @@ export const TokenIconSymbol = ({
 
 export default TokenPicker2
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
+const useStyles = makeStyles()((theme) => ({
     alignCenter: {
       textAlign: 'center'
     },

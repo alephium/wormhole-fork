@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { CHAIN_ID_ALEPHIUM, isEVMChain } from "@alephium/wormhole-sdk";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +15,7 @@ import AddToAlephium from "./AddToAlephium";
 import AddToMetamask from "./AddToMetamask";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
     marginBottom: theme.spacing(2),
@@ -28,7 +28,7 @@ export default function RedeemPreview({
   overrideExplainerString?: string;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const targetChain = useSelector(selectTransferTargetChain);
   const redeemTx = useSelector(selectTransferRedeemTx);

@@ -1,12 +1,12 @@
 import { CircularProgress } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { COLORS } from '../../../muiTheme'
 import useManualRedeemNecessary from '../../../hooks/useManualRedeemNecessary'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const OngoingBridgingBadge = () => {
   const txExists = useTransferOrRecoveryTxExists()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
   const isManualRedeemRequired = manualRedeemToAlephiumRequired || manualRedeemToEvmRequired
 
@@ -27,7 +27,7 @@ const OngoingBridgingBadge = () => {
 
 export default OngoingBridgingBadge
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     display: 'flex',
     alignItems: 'center',

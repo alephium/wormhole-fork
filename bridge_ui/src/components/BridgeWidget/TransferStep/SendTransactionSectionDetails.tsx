@@ -11,7 +11,7 @@ import Divider from '../Divider'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SendTransactionSectionDetails = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const sourceChain = useSelector(selectTransferSourceChain)
   const transferTx = useSelector(selectTransferTransferTx)
   const txExists = useTransferOrRecoveryTxExists()

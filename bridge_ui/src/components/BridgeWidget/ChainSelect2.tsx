@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import clsx from 'clsx'
 import { ReactNode, useMemo } from 'react'
 import { useBetaContext } from '../../contexts/BetaContext'
@@ -47,8 +47,8 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
 }
 
 const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const isBeta = useBetaContext()
   const filteredChains = useMemo(
     () => chains.filter(({ id }) => (isBeta ? true : !BETA_CHAINS.includes(id))),
@@ -100,7 +100,7 @@ const ConnectedChainAccount = ({ chainId, labelClassName }: { chainId: ChainId }
 }
 
 const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: boolean }) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   if (!isReady) return null
 
   return (
@@ -147,7 +147,7 @@ const AccountAddress = ({
   address: string
   disconnect: () => void | Promise<void>
 } & ConnectedAccountProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const shortAddress = shortenAddress(address)
   const resolvedLabelClassName = labelClassName ?? classes.accountAddress
 
@@ -163,7 +163,7 @@ const AccountAddress = ({
   )
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   selectWrapper: {
     position: 'relative',
     background: 'transparent',

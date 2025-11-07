@@ -4,7 +4,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import numeral from "numeral";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -22,7 +22,7 @@ import {
 } from "./nftLists";
 import { COLORS } from "../../muiTheme";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   logoPositioner: {
     height: "30px",
     width: "30px",
@@ -102,7 +102,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const NFTStats: React.FC<any> = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const nftTVL = useNFTTVL();
 
   //Disable this to quickly turn off

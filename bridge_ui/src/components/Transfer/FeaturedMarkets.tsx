@@ -1,5 +1,5 @@
 import { Button, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { Launch } from "@mui/icons-material";
 import { TokenInfo } from "@solana/spl-token-registry";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ import {
 } from "../../store/selectors";
 import { JUPITER_SWAP_BASE_URL } from "../../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     marginTop: theme.spacing(1),
   },
@@ -52,7 +52,7 @@ export default function FeaturedMarkets() {
   const targetAsset = useSelector(selectTransferTargetAsset);
   const solanaTokenMap = useSelector(selectSolanaTokenMap);
   const { data: marketsData } = useMarketsMap(true);
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   if (
     !sourceAsset ||

@@ -8,12 +8,12 @@ import {
   TableRow,
   Typography
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { BridgeTransaction, TxStatus } from ".";
 import SmartTx from "./SmartTx";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   container: {
     maxHeight: 800,
     marginTop: '25px',
@@ -63,7 +63,7 @@ const columns: Column[] = [
 
 export function TransactionTable(params: { txs: BridgeTransaction[], txsStatus: TxStatus[], isLoading: boolean }) {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
 
   return (
     <TableContainer className={classes.container}>

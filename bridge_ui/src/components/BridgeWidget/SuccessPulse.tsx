@@ -1,4 +1,4 @@
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import clsx from 'clsx'
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
@@ -25,7 +25,7 @@ const SuccessPulse = ({
   contentClassName,
   children
 }: SuccessPulseProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
 
   const [isShowingIcon, setIsShowingIcon] = useState(false)
   const [isContentVisible, setIsContentVisible] = useState(hideIcon)
@@ -117,7 +117,7 @@ const SuccessPulse = ({
 
 export default SuccessPulse
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   root: {
     position: 'relative',
     display: 'inline-flex',

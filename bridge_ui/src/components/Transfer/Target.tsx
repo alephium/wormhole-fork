@@ -4,7 +4,7 @@ import {
   hexToNativeString
 } from "@alephium/wormhole-sdk";
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useGetTargetParsedTokenAccounts from "../../hooks/useGetTargetParsedTokenAccounts";
@@ -40,7 +40,7 @@ import RegisterNowButton from "./RegisterNowButton";
 import { hexToALPHAddress } from "../../utils/alephium";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   transferField: {
     marginTop: theme.spacing(5),
   },
@@ -78,7 +78,7 @@ export const useTargetInfo = () => {
 function Target() {
   const { t } = useTranslation();
   useGetTargetParsedTokenAccounts();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectTransferSourceChain);
   const chains = useMemo(

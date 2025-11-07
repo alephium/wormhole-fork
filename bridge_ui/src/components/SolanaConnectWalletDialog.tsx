@@ -9,12 +9,12 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import CloseIcon from "@mui/icons-material/Close";
 import { WalletName, WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet, Wallet } from "@solana/wallet-adapter-react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -54,7 +54,7 @@ const DetectedWalletListItem = ({
 };
 
 const WalletListItem = ({ wallet, text }: { wallet: Wallet; text: string }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <>
       <ListItemIcon>
@@ -76,7 +76,7 @@ const SolanaConnectWalletDialog = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { wallets, select } = useWallet();
 
   const [detected, undetected] = useMemo(() => {

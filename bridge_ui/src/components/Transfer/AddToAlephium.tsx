@@ -1,6 +1,6 @@
 import { getLocalTokenInfo } from "@alephium/wormhole-sdk";
 import { Button } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { selectTransferTargetAsset } from "../../store/selectors";
@@ -13,7 +13,7 @@ import { useWallet } from "@alephium/web3-react";
 import { SignerProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   addButton: {
     display: "block",
     margin: `${theme.spacing(1)} auto 0px`,
@@ -26,7 +26,7 @@ function isExtensionWallet(signer: SignerProvider) {
 
 export default function AddToAlephium() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const targetAsset = useSelector(selectTransferTargetAsset);
   const { enqueueSnackbar } = useSnackbar()
   const alphWallet = useWallet()

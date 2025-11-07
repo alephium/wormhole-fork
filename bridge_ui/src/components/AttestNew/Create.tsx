@@ -1,5 +1,5 @@
 import { CircularProgress, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
@@ -14,7 +14,7 @@ import KeyAndBalance from "../KeyAndBalance";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alignCenter: {
     margin: "0 auto",
     display: "block",
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Create = () => {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const targetChain = useSelector(selectAttestTargetChain);
   const originAsset = useSelector(selectAttestSourceAsset);
   const originChain = useSelector(selectAttestSourceChain);

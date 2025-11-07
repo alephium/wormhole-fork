@@ -12,7 +12,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from 'react-i18next'
 import { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'
@@ -24,7 +24,7 @@ import clsx from 'clsx'
 import { RestoreOutlined, DoneAll, Check } from '@mui/icons-material'
 import { COLORS } from '../../muiTheme'
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   container: {
     display: 'flex',
     justifyContent: 'center',
@@ -92,7 +92,7 @@ const columns: Column[] = [
 
 const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: TxStatus[]; isLoading: boolean }) => {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const dispatch = useDispatch()

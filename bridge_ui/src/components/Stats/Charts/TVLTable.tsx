@@ -1,4 +1,4 @@
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import numeral from "numeral";
 import { useMemo } from "react";
 import { createTVLArray, NotionalTVL } from "../../../hooks/useTVL";
@@ -7,7 +7,7 @@ import SmartAddress from "../../SmartAddress";
 import MuiReactTable from "../tableComponents/MuiReactTable";
 import { formatTVL } from "./utils";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   logoPositioner: {
     height: "30px",
     width: "30px",
@@ -34,7 +34,7 @@ const TVLTable = ({
   chainInfo: ChainInfo;
   tvl: NotionalTVL;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const chainTVL = useMemo(() => {
     return createTVLArray(tvl).filter((x) => x.originChainId === chainInfo.id);
   }, [chainInfo, tvl]);

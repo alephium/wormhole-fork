@@ -1,4 +1,4 @@
-import { createTheme, responsiveFontSizes } from "@mui/material";
+import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 import Inter from "./fonts/Inter-Variable.ttf";
 
 export const COLORS = {
@@ -81,13 +81,6 @@ export const theme = responsiveFontSizes(
       },
     },
     components: {
-      Mui: {
-        styleOverrides: {
-          selected: {
-            backgroundColor: "rgba(255, 255, 255, 0.16)",
-          }
-        }
-      },
       MuiCssBaseline: {
         styleOverrides: {
           "@font-face": [inter],

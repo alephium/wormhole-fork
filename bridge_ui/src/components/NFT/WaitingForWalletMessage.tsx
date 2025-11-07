@@ -1,6 +1,6 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useSelector } from "react-redux";
 import {
   selectNFTIsRedeeming,
@@ -12,7 +12,7 @@ import {
 } from "../../store/selectors";
 import { WAITING_FOR_TX_CONFIRMATION } from "../Transfer/WaitingForWalletMessage";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   message: {
     color: theme.palette.warning.light,
     marginTop: theme.spacing(1),
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function WaitingForWalletMessage() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const sourceChain = useSelector(selectNFTSourceChain);
   const isSending = useSelector(selectNFTIsSending);
   const transferTx = useSelector(selectNFTTransferTx);

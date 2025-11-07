@@ -57,6 +57,7 @@
     "redux": "^3.7.2",
     "styled-components": "^5.3.5",
     "swr": "^2.1.5",
+    "tss-react": "^4.9.19",
     "use-debounce": "^7.0.0"
   },
   "scripts": {

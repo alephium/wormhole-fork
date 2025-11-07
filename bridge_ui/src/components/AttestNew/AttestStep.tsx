@@ -1,7 +1,7 @@
 import { KeyboardEvent, MouseEvent, useCallback } from "react"
 import clsx from "clsx"
 import { CircularProgress, Typography } from "@mui/material"
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@mui/icons-material"
 
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
@@ -47,7 +47,7 @@ const AttestStep = ({
   onOpenDialog,
   selectLabel
 }: AttestStepProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const isEditable = step.isEditable ?? canEditStep(step.id)
   const hasValue = step.value !== undefined && step.value !== null
   const isStepDisabled = step.disabled || step.status === "pending"
@@ -199,7 +199,7 @@ const AttestStep = ({
 
 export default AttestStep
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   stepRow: {
     display: "flex",
     alignItems: "center",

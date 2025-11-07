@@ -1,5 +1,5 @@
 import { IconButton } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { ArrowForward, SwapHoriz } from '@mui/icons-material'
 import { useState } from 'react'
 import { COLORS } from '../../muiTheme';
@@ -11,7 +11,7 @@ interface ChainSelectArrow2Props {
 
 const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
   const [showSwap, setShowSwap] = useState(false)
-  const classes = useStyles()
+  const { classes } = useStyles()
 
   return (
     <IconButton
@@ -32,7 +32,7 @@ const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
 
 export default ChainSelectArrow2
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   button: {
     color: theme.palette.grey[600],
     border: `1px solid ${COLORS.whiteWithTransparency}`,

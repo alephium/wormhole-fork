@@ -1,5 +1,5 @@
 import { Link, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,7 +14,7 @@ import { Alert } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
 const CreatePreview = () => {
   const { t } = useTranslation();
   const { push } = useHistory();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const targetChain = useSelector(selectAttestTargetChain);
   const createTx = useSelector(selectAttestCreateTx);

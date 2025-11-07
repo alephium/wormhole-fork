@@ -20,7 +20,7 @@ interface BridgingProgressSectionProps {
 }
 
 const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectionProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
   const txExists = useTransferOrRecoveryTxExists()

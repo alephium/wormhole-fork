@@ -14,7 +14,7 @@ import {
   CHAIN_ID_ETH,
 } from "@alephium/wormhole-sdk";
 import { LinearProgress, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -27,7 +27,7 @@ import { AlephiumBlockTime } from "../utils/alephium";
 import { ethers } from "ethers";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
     marginTop: theme.spacing(2),
     textAlign: "center",
@@ -49,7 +49,7 @@ export default function TransactionProgress({
   consistencyLevel?: number
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { provider } = useEthereumProvider();
   const alphWallet = useWallet()
   const [currentBlock, setCurrentBlock] = useState(0);

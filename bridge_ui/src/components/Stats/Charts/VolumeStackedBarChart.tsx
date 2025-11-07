@@ -5,7 +5,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
@@ -29,7 +29,7 @@ import {
   renderLegendText,
 } from "./utils";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   tooltipContainer: {
     padding: "16px",
     minWidth: "214px",
@@ -98,7 +98,7 @@ const createBarData = (
 };
 
 const CustomTooltip = ({ active, payload, chainId }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   if (active && payload && payload.length && chainId) {
     const chainShortName = getChainShortName(chainId);
     const data = payload.find((data: any) => data.name === chainShortName);

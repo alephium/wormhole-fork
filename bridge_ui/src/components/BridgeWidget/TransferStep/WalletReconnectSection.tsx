@@ -21,7 +21,7 @@ interface WalletReconnectSectionProps {
 }
 
 const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const txExists = useTransferOrRecoveryTxExists()
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
   const sourceChain = useSelector(selectTransferSourceChain)

@@ -1,7 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_SOLANA, waitAlphTxConfirmed } from "@alephium/wormhole-sdk";
 import { Alert } from "@mui/material";
 import { Link } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHandleAttest } from "../../hooks/useHandleAttest";
@@ -25,7 +25,7 @@ import { useSnackbar } from "notistack";
 import { setStep } from "../../store/attestSlice";
 import { Trans, useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
   },
@@ -38,7 +38,7 @@ const SolanaTokenMetadataWarning = () => {
     return [sourceAsset];
   }, [sourceAsset]);
   const metaplexData = useMetaplexData(sourceAssetArrayed);
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   if (metaplexData.isFetching || metaplexData.error) {
     return null;

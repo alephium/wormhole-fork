@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import axios from "axios";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -130,7 +130,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
     />
   ) : null;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   card: {
     borderRadius: 9,
     maxWidth: "100%",
@@ -260,7 +260,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ViewerLoader = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   return (
     <div className={classes.wormholePositioner}>
@@ -342,7 +342,7 @@ export default function NFTViewer({
     }
   }, [uri]);
 
-  const classes = useStyles();
+  const { classes } = useStyles();
   const animLower = metadata.animation_url?.toLowerCase();
   // const has3DModel = animLower?.endsWith('gltf') || animLower?.endsWith('glb')
   const hasVideo =

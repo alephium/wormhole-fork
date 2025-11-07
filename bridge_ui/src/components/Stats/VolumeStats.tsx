@@ -11,7 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { makeStyles, withStyles } from '@mui/styles';
+import { makeStyles, withStyles } from 'tss-react/mui';
 import { InfoOutlined } from "@mui/icons-material";
 import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
@@ -33,7 +33,7 @@ import useTransactionTotals from "../../hooks/useTransactionTotals";
 
 const DISPLAY_BY_VALUES = ["Dollar", "Percent", "Transactions"];
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     display: "flex",
     alignItems: "center",
@@ -85,10 +85,10 @@ const tooltipStyles = {
   },
 };
 
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip);
+const StyledTooltip = withStyles(Tooltip, tooltipStyles);
 
 const VolumeStats = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const [displayBy, setDisplayBy] = useState(DISPLAY_BY_VALUES[0]);
   const [timeFrame, setTimeFrame] = useState("All time");

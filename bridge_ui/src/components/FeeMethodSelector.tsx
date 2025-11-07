@@ -11,7 +11,7 @@ import {
   Chip,
   Typography,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import { parseUnits } from "ethers/lib/utils";
 import { useCallback, useEffect } from "react";
@@ -34,7 +34,7 @@ import {
 import { setRelayerFee, setUseRelayer } from "../store/transferSlice";
 import { CHAINS_BY_ID, getDefaultNativeCurrencySymbol } from "../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   feeSelectorContainer: {
     marginTop: "2rem",
     textAlign: "center",
@@ -86,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
 
 function FeeMethodSelector() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const originAsset = useSelector(selectTransferOriginAsset);
   const originChain = useSelector(selectTransferOriginChain);
   const targetChain = useSelector(selectTransferTargetChain);

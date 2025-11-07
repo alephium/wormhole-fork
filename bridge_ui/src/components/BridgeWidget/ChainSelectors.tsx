@@ -13,13 +13,13 @@ import { useCallback, useMemo } from 'react'
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 import { CHAINS } from '../../utils/consts'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
 
 const ChainSelectors = () => {
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const dispatch = useDispatch()
   const sourceChain = useSelector(selectTransferSourceChain)
   const targetChain = useSelector(selectTransferTargetChain)
@@ -91,7 +91,7 @@ const ChainSelectors = () => {
 
 export default ChainSelectors
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   chainSelectWrapper: {
     display: 'flex',
     flexDirection: 'column',

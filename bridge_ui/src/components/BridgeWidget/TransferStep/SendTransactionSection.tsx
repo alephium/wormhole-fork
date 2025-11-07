@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SendTransactionSection = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const isWalletApproved = useSelector(selectTransferIsWalletApproved)
   const txExists = useTransferOrRecoveryTxExists()
 
@@ -50,7 +50,7 @@ const SendTransactionSection = () => {
 export default SendTransactionSection
 
 const ConfirmedTransactionExpandableButton = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
 
   return (
     <div className={clsx(classes.grayRoundedBox, 'secondary')}>

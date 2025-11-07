@@ -12,7 +12,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
@@ -39,7 +39,7 @@ import AttestLegacy from "./components/Attest";
 
 function App() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
@@ -254,7 +254,7 @@ function App() {
 
 export default App;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   appBar: {
     background: "transparent",
     flexDirection: "row",

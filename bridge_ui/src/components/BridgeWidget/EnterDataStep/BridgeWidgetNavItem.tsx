@@ -11,7 +11,7 @@ interface BridgeWidgetNavItemProps {
 }
 
 const BridgeWidgetNavItem = ({ tooltipDisabledTitle, disabled, onClick, Icon, title }: BridgeWidgetNavItemProps) => {
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
 
   return (
     <Tooltip title={disabled ? tooltipDisabledTitle : ''} disableHoverListener={!disabled}>

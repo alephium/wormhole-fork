@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import {
@@ -24,7 +24,7 @@ interface MainActionButtonProps {
 }
 
 const MainActionButton = ({ onNext }: MainActionButtonProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const { t } = useTranslation()
 
   const activeBridgeWidgetStep = useSelector(selectTransferActiveBridgeWidgetStep)
@@ -99,7 +99,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
 export default MainActionButton
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   button: {
     position: 'relative',
     overflow: 'hidden',

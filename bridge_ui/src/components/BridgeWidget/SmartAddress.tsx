@@ -18,9 +18,9 @@ import {
   CHAIN_ID_ALEPHIUM
 } from '@alephium/wormhole-sdk'
 import { Button, Tooltip, Typography } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { FileCopy, OpenInNew } from '@mui/icons-material'
-import { withStyles } from '@mui/styles'
+import { withStyles } from 'tss-react/mui'
 import { ReactChild, useState } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'
@@ -30,7 +30,7 @@ import { addressFromContractId, ALPH_TOKEN_ID, isBase58 } from '@alephium/web3'
 import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainTypog: {
     display: 'inline-block',
     marginLeft: theme.spacing(1),
@@ -119,15 +119,14 @@ const useStyles = makeStyles((theme) => ({
 
 const tooltipStyles = {
   tooltip: {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     '& > *': {
       margin: '.25rem'
     }
   }
 }
 
-// @ts-ignore
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip)
+const StyledTooltip = withStyles(Tooltip, tooltipStyles)
 
 interface SmartAddressProps {
   chainId: ChainId
@@ -162,7 +161,7 @@ const SmartAddress = ({
   isCompact
 }: SmartAddressProps) => {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const isNativeETH = chainId === CHAIN_ID_ETH && address?.toLowerCase() === WETH_ADDRESS.toLowerCase()
   const isNativeALPH = chainId === CHAIN_ID_ALEPHIUM && address === ALPH_TOKEN_ID
   const useableAddress = parsedTokenAccount?.mintKey || address || transactionAddress || ''

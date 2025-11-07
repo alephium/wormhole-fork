@@ -28,7 +28,7 @@ interface BridgingProgressSectionDetailsProps {
 }
 
 const BridgingProgressSectionDetails = ({ currentStep, isTransferCompleted }: BridgingProgressSectionDetailsProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const dispatch = useDispatch()
   const userSentTransaction = useTransferOrRecoveryTxExists()
   const recoverySourceTx = useSelector(selectTransferRecoverySourceTxId)

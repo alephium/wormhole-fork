@@ -5,7 +5,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material"
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import { useConnect, useWallet } from "@alephium/web3-react"
 import { MouseEvent, useMemo, useState } from "react"
@@ -32,7 +32,7 @@ const getEvmChainInfo = (evmChainId: number | undefined): ChainInfo | undefined 
 }
 
 const HeaderWalletButtons = () => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const { t } = useTranslation()
   const { signerAddress, chainId, disconnect: disconnectEvm } = useEthereumProvider()
   const alphWallet = useWallet()
@@ -163,7 +163,7 @@ const HeaderWalletButtons = () => {
 
 export default HeaderWalletButtons
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     display: "flex",
     alignItems: "center",

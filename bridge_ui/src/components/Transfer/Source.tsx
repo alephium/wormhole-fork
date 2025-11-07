@@ -5,7 +5,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
 import { Button, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { VerifiedUser } from "@mui/icons-material";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -49,7 +49,7 @@ import SourceAssetWarning from "./SourceAssetWarning";
 import ChainWarningMessage from "../ChainWarningMessage";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   chainSelectWrapper: {
     display: "flex",
     alignItems: "center",
@@ -75,7 +75,7 @@ const useStyles = makeStyles((theme) => ({
 
 function Source() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
   const sourceChain = useSelector(selectTransferSourceChain);

@@ -1,6 +1,6 @@
 import { ChainId } from "@alephium/wormhole-sdk";
 import { Grid, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import {
   getChainShortName,
   CHAINS_BY_ID,
@@ -8,7 +8,7 @@ import {
 } from "../../../utils/consts";
 import { formatDate } from "./utils";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   container: {
     padding: "16px",
     minWidth: "214px",
@@ -41,7 +41,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const MultiChainTooltip = ({ active, payload, title, valueFormatter }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   if (active && payload && payload.length) {
     if (payload.length === 1) {
       const chainId = +payload[0].dataKey.split(".")[1] as ChainId;

@@ -1,8 +1,8 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { formatDate } from "./utils";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   container: {
     padding: "16px",
     minWidth: "214px",
@@ -26,7 +26,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const CustomTooltip = ({ active, payload, title, valueFormatter }: any) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   if (active && payload && payload.length) {
     return (
       <div className={classes.container}>

@@ -1,6 +1,6 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import { Container, IconButton, Typography } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
@@ -31,8 +31,8 @@ const BridgeWidget = () => {
   usePreventNavigation()
 
   const step = useSelector(selectTransferActiveBridgeWidgetStep)
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const dispatch = useDispatch()
 
   const page = useSelector(selectBridgeWidgetPage)
@@ -127,7 +127,7 @@ const usePreventNavigation = () => {
   }, [preventNavigation])
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainContainer: {
     display: 'flex',
     flexDirection: 'column',

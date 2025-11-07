@@ -3,7 +3,7 @@ import {
   Divider,
   Typography
 } from "@mui/material"
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { Alert } from "@mui/material"
 import clsx from "clsx"
 import { Fragment, useCallback, useEffect, useState } from "react"
@@ -19,7 +19,7 @@ import { useHistory } from "react-router-dom"
 
 const Attest = () => {
   const { t } = useTranslation()
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const {
     steps,
     derivedActiveStep,
@@ -27,7 +27,7 @@ const Attest = () => {
     canEditStep
   } = useAttestSteps()
   const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
-  const classes = useStyles()
+  const { classes } = useStyles()
   const selectLabel = t("Select")
   const { push } = useHistory();
 
@@ -100,7 +100,7 @@ const Attest = () => {
 
 export default Attest
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   pageContainer: {
     display: 'flex',
     flexDirection: 'column',

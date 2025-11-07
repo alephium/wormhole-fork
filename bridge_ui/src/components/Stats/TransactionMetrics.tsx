@@ -4,14 +4,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import numeral from "numeral";
 import useTransactionCount from "../../hooks/useTransactionCount";
 import { COLORS } from "../../muiTheme";
 import { WORMHOLE_EXPLORER_BASE } from "../../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   logoPositioner: {
     height: "30px",
     width: "30px",
@@ -79,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
 
 const TransactionMetrics: React.FC<any> = () => {
   const transactionCount = useTransactionCount();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isFetching = transactionCount.isFetching;
 
   const header = (

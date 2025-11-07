@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { COLORS } from "../../muiTheme"
 
 interface DividerProps {
@@ -8,7 +8,7 @@ interface DividerProps {
 }
 
 const Divider = ({ children, className }: DividerProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
 
   return (
     <div className={className ?? classes.root}>
@@ -20,7 +20,7 @@ const Divider = ({ children, className }: DividerProps) => {
 
 export default Divider
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
     position: "relative",
     width: "100%",

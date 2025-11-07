@@ -1,10 +1,10 @@
 import { Button } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import ChevronLeft from "@mui/icons-material/ChevronLeft";
 import ChevronRight from "@mui/icons-material/ChevronRight";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     justifyContent: "center",
     display: "flex",
@@ -42,7 +42,7 @@ export const PageSwitch = ({
   numberOfElementsLoaded,
 }: PageSwitchProps) => {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const handlePageSwitch = (direction: "previous" | "next") => {
     setPageNumber(direction === "previous" ? pageNumber - 1 : pageNumber + 1);
   };

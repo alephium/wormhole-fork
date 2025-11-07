@@ -1,7 +1,7 @@
 import { CHAIN_ID_ALEPHIUM, isEVMChain, waitAlphTxConfirmed } from '@alephium/wormhole-sdk'
 import { Alert } from '@mui/material'
 import { Typography } from '@mui/material'
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHandleAttest } from '../../hooks/useHandleAttest'
@@ -26,7 +26,7 @@ import BridgeWidgetButton from '../BridgeWidget/BridgeWidgetButton'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
 import ConnectWalletButton from '../BridgeWidget/ConnectWalletButton'
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   statusMessage: {
     marginTop: theme.spacing(1),
     textAlign: 'center'
@@ -46,7 +46,7 @@ const CreateLocalTokenPool = ({ localTokenId }: CreateLocalTokenPoolProps) => {
   const isAlphPoolCreated = useSelector(selectAttestIsAlphPoolCreated)
   const [isSending, setIsSending] = useState<boolean>(false)
   const [error, setError] = useState<string | undefined>()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const onClick = useCallback(async () => {
     if (signedVAAHex !== undefined && alephiumWallet?.nodeProvider !== undefined) {
       try {
@@ -104,7 +104,7 @@ const Send = () => {
   const attestTx = useSelector(selectAttestAttestTx)
   const isSendComplete = useSelector(selectAttestIsSendComplete)
   const { isReady, statusMessage: walletErrorMessage } = useIsWalletReady(sourceChain)
-  const classes = useStyles()
+  const { classes } = useStyles()
 
   const isEvmChain = isEVMChain(sourceChain)
   const isAlephiumChain = sourceChain === CHAIN_ID_ALEPHIUM

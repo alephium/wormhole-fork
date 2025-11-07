@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useSelector } from "react-redux";
 import {
   selectNFTSourceChain,
@@ -7,7 +7,7 @@ import {
 } from "../../store/selectors";
 import ShowTx from "../ShowTx";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SendPreview() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const sourceChain = useSelector(selectNFTSourceChain);
   const transferTx = useSelector(selectNFTTransferTx);
 

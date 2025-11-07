@@ -6,10 +6,10 @@ import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import { useTheme } from "@mui/material/styles";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import PropTypes from "prop-types";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
     flexShrink: 0,
     marginLeft: theme.spacing(1),
@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const TablePaginationActions = (props) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const theme = useTheme();
   const { count, page, rowsPerPage, onPageChange } = props;
 

@@ -10,7 +10,7 @@ import {
   CHAIN_ID_TERRA,
 } from "@alephium/wormhole-sdk";
 import { Container, Paper, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useMemo } from "react";
 import { COLORS } from "../../muiTheme";
 import {
@@ -23,7 +23,7 @@ import HeaderText from "../HeaderText";
 import SmartAddress from "../SmartAddress";
 import MuiReactTable from "./tableComponents/MuiReactTable";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexBox: {
     display: "flex",
     alignItems: "flex-end",
@@ -49,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const CustodyAddresses: React.FC<any> = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const data = useMemo(() => {
     return [
       {

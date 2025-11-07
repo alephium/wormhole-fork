@@ -4,13 +4,13 @@ import {
   CHAIN_ID_TERRA
 } from "@alephium/wormhole-sdk";
 import { Button, Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { Transaction } from "../store/transferSlice";
 import { CLUSTER, getExplorerName } from "../utils/consts";
 import { getTransactionLink } from "../utils/transaction";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   tx: {
     marginTop: theme.spacing(1),
     textAlign: "center",
@@ -28,7 +28,7 @@ export default function ShowTx({
   tx: Transaction;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const showExplorerLink =
     CLUSTER === "testnet" ||
     CLUSTER === "mainnet" ||

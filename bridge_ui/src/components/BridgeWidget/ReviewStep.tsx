@@ -37,7 +37,7 @@ interface ReviewStepProps {
 }
 
 const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
 

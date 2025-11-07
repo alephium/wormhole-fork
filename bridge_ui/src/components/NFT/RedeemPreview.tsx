@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectNFTRedeemTx, selectNFTTargetChain } from "../../store/selectors";
@@ -7,14 +7,14 @@ import { reset } from "../../store/nftSlice";
 import ButtonWithLoader from "../ButtonWithLoader";
 import ShowTx from "../ShowTx";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
 }));
 
 export default function RedeemPreview() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const targetChain = useSelector(selectNFTTargetChain);
   const redeemTx = useSelector(selectNFTRedeemTx);

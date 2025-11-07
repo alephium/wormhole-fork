@@ -2,13 +2,11 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { makeStyles } from '@mui/styles';
-import { createStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles(() =>
-  createStyles({
+const useStyles = makeStyles()(() => ({
     inlineContentWrapper: {
       display: "inline-block",
       flexGrow: 1,
@@ -31,7 +29,7 @@ export default function RefreshButtonWrapper({
   callback: () => any;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const refreshWrapper = (
     <div className={classes.flexWrapper}>
