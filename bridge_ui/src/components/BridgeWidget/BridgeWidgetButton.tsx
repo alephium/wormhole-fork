@@ -22,7 +22,7 @@ const BridgeWidgetButton = ({
 
 export default BridgeWidgetButton
 
-const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>(({ tone, short }) => ({
+const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>({
   textTransform: 'none',
   borderRadius: '16px',
   height: '52px',
@@ -57,19 +57,29 @@ const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>(({ tone, short }) =
     backgroundColor: 'rgba(255, 255, 255, 0.65)',
     color: 'rgba(0, 0, 0, 0.35)'
   },
-  ...(tone === 'primaryNext' && {
-    '&.MuiButton-containedPrimary': {
-      backgroundColor: COLORS.blue,
-      color: COLORS.white,
-      '&:hover': {
-        filter: 'brightness(1.1)',
-        backgroundColor: COLORS.blue,
-        color: COLORS.white
+  variants: [
+    {
+      props: {
+        tone: 'primaryNext'
+      },
+      style: {
+        '&.MuiButton-containedPrimary': {
+          backgroundColor: COLORS.blue,
+          color: COLORS.white,
+          '&:hover': {
+            filter: 'brightness(1.1)',
+            backgroundColor: COLORS.blue,
+            color: COLORS.white
+          }
+        }
+      }
+    },
+    {
+      props: ({ short }) => short,
+      style: {
+        height: '36px',
+        borderRadius: '12px'
       }
     }
-  }),
-  ...(short && {
-    height: '36px',
-    borderRadius: '12px'
-  })
-}))
+  ]
+})
