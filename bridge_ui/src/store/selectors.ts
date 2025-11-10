@@ -173,7 +173,7 @@ export const selectNFTIsRecovery = (state: RootState) => state.nft.isRecovery;
 export const selectTransferActiveStep = (state: RootState) =>
   state.transfer.activeStep;
 export const selectTransferActiveBridgeWidgetStep = (state: RootState) =>
-  state.transfer.activeBridgeWidgetStep;
+  state.widget.activeBridgeWidgetStep;
 export const selectTransferSourceChain = (state: RootState) =>
   state.transfer.sourceChain;
 export const selectTransferSourceAsset = (state: RootState) => {
@@ -198,7 +198,7 @@ export const selectTransferSourceBalanceString = (state: RootState) =>
 export const selectTransferAmount = (state: RootState) => state.transfer.amount;
 export const selectTransferTargetChain = (state: RootState) =>
   state.transfer.targetChain;
-export const selectBridgeWidgetPage = (state: RootState) => state.transfer.bridgeWidgetPage
+export const selectBridgeWidgetPage = (state: RootState) => state.widget.bridgeWidgetPage
 export const selectTransferTargetAddressHex = (state: RootState) =>
   state.transfer.targetAddressHex;
 export const selectTransferTargetAssetWrapper = (state: RootState) =>
@@ -364,7 +364,7 @@ export const selectTransferIsSendComplete = (state: RootState) =>
 export const selectTransferIsBlockFinalized = (state: RootState) =>
   state.transfer.isBlockFinalized;
 export const selectTransferHasSentTokens = (state: RootState) =>
-  state.transfer.hasSentTokens;
+  state.widget.hasSentTokens;
 export const selectTransferIsRedeemComplete = (state: RootState) =>
   !!selectTransferRedeemTx(state) || state.transfer.isRedeemCompleted;
 export const selectTransferShouldLockFields = (state: RootState) =>
@@ -383,7 +383,7 @@ export const selectSolanaTokenMap = (state: RootState) => {
   return state.tokens.solanaTokenMap;
 };
 export const selectTransferIsTokenPickerDialogOpen = (state: RootState) =>
-  state.transfer.isTokenPickerDialogOpen;
+  state.widget.isTokenPickerDialogOpen;
 
 export const selectTerraTokenMap = (state: RootState) => {
   return state.tokens.terraTokenMap;
@@ -402,9 +402,17 @@ export const selectRelayerTokenInfo = (state: RootState) => {
 };
 
 export const selectFinalityProgressInitialRemainingBlocks = (state: RootState) => {
-  return state.transfer.finalityProgressInitialRemainingBlocks;
+  return state.widget.finalityProgressInitialRemainingBlocks;
 }
 
 export const selectFinalityProgressInitialRemainingSeconds = (state: RootState) => {
-  return state.transfer.finalityProgressInitialRemainingSeconds;
+  return state.widget.finalityProgressInitialRemainingSeconds;
+}
+
+export const selectRecoverySourceChain = (state: RootState) => {
+  return state.widget.recoverySourceChain;
+}
+
+export const selectRecoverySourceTx = (state: RootState) => {
+  return state.widget.recoverySourceTx;
 }

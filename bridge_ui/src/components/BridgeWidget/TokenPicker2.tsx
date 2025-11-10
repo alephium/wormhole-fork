@@ -37,7 +37,8 @@ import {
   selectTransferSourceError,
   selectTransferTargetChain
 } from '../../store/selectors'
-import { closeTokenPickerDialog, setAmount } from '../../store/transferSlice'
+import { setAmount } from '../../store/transferSlice'
+import { closeTokenPickerDialog } from '../../store/widgetSlice'
 import { RED, useWidgetStyles } from './styles'
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
