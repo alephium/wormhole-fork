@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { makeStyles, withStyles } from 'tss-react/mui';
 import { InfoOutlined } from "@mui/icons-material";
-import { useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import useNotionalTransferred from "../../hooks/useNotionalTransferred";
 import { COLORS } from "../../muiTheme";
 import { CHAINS_BY_ID } from "../../utils/consts";
@@ -148,26 +148,30 @@ const VolumeStats = () => {
     return chainIds;
   }, [notionalTransferred]);
 
-  const handleDisplayByChange = useCallback((event, nextValue) => {
+  const handleDisplayByChange = useCallback((event: React.MouseEvent<HTMLElement>, nextValue: string) => {
     if (nextValue !== null) {
       setDisplayBy(nextValue);
     }
   }, []);
 
   const handleTimeFrameChange = useCallback(
-    (event) => setTimeFrame(event.target.value),
+    (event: React.ChangeEvent<HTMLInputElement>) => setTimeFrame(event.target.value),
     []
   );
 
   const handleSelectedChainsChange = useCallback(
-    (event) => {
+    (event: ChangeEvent<HTMLInputElement> | (Event & { target: {value: ChainId[]; name: string; } })) => {
       const value = event.target.value;
       if (value[value.length - 1] === "all") {
         setSelectedChains((prevValue) =>
           prevValue.length === availableChains.length ? [] : availableChains
         );
       } else {
-        setSelectedChains(value);
+        if (typeof value === "string") {
+          setSelectedChains([]);
+        } else {
+          setSelectedChains(value);
+        }
       }
     },
     [availableChains]

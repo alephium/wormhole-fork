@@ -1,5 +1,5 @@
 import { NetworkInfo, WalletProvider } from "@terra-money/wallet-provider";
-import { ReactChildren } from "react";
+import { ReactNode } from "react";
 import { CLUSTER } from "../utils/consts";
 
 const mainnet: NetworkInfo = {
@@ -22,7 +22,7 @@ const walletConnectChainIds: Record<number, NetworkInfo> = {
 export const TerraWalletProvider = ({
   children,
 }: {
-  children: ReactChildren;
+  children: ReactNode;
 }) => {
   return (
     <WalletProvider

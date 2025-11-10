@@ -14,7 +14,7 @@ import {
   ToggleButtonGroup
 } from "@mui/material";
 import { makeStyles, withStyles } from 'tss-react/mui';
-import { useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import TVLAreaChart from "./Charts/TVLAreaChart";
 import useCumulativeTVL from "../../hooks/useCumulativeTVL";
 import { TIME_FRAMES } from "./Charts/TimeFrame";
@@ -127,26 +127,30 @@ const TVLStats = () => {
     return chainIds;
   }, [cumulativeTVL]);
 
-  const handleDisplayByChange = useCallback((event, nextValue) => {
+  const handleDisplayByChange = useCallback((event: React.MouseEvent<HTMLElement>, nextValue: string) => {
     if (nextValue) {
       setDisplayBy(nextValue);
     }
   }, []);
 
   const handleTimeFrameChange = useCallback(
-    (event) => setTimeFrame(event.target.value),
+    (event: React.ChangeEvent<HTMLInputElement>) => setTimeFrame(event.target.value),
     []
   );
 
   const handleSelectedChainsChange = useCallback(
-    (event) => {
+    (event: ChangeEvent<HTMLInputElement> | (Event & { target: {value: ChainId[]; name: string; } })) => {
       const value = event.target.value;
       if (value[value.length - 1] === "all") {
         setSelectedChains((prevValue) =>
           prevValue.length === availableChains.length ? [] : availableChains
         );
       } else {
-        setSelectedChains(value);
+        if (typeof value === "string") {
+          setSelectedChains([]);
+        } else {
+          setSelectedChains(value);
+        }
       }
     },
     [availableChains]
