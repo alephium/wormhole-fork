@@ -1,4 +1,6 @@
+import { ChainId } from '@alephium/wormhole-sdk'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { reset as resetTransfer } from './transferSlice'
 
 type BridgeWidgetTransferSteps = 0 | 1 | 2
 type BridgeWidgetPage = 'bridge' | 'recovery' | 'history' | 'register'
@@ -10,6 +12,8 @@ export interface TransferState {
   finalityProgressInitialRemainingBlocks: number | undefined
   finalityProgressInitialRemainingSeconds: number | undefined
   bridgeWidgetPage: BridgeWidgetPage
+  recoverySourceChain: ChainId | undefined
+  recoverySourceTx: string | undefined
 }
 
 const initialState: TransferState = {
@@ -18,7 +22,9 @@ const initialState: TransferState = {
   isTokenPickerDialogOpen: false,
   finalityProgressInitialRemainingBlocks: undefined,
   finalityProgressInitialRemainingSeconds: undefined,
-  bridgeWidgetPage: 'bridge'
+  bridgeWidgetPage: 'bridge',
+  recoverySourceChain: undefined,
+  recoverySourceTx: undefined
 }
 
 export const widgetSlice = createSlice({
@@ -29,10 +35,10 @@ export const widgetSlice = createSlice({
       state.activeBridgeWidgetStep = action.payload
     },
     openTokenPickerDialog: (state) => {
-      state.isTokenPickerDialogOpen = true;
+      state.isTokenPickerDialogOpen = true
     },
     closeTokenPickerDialog: (state) => {
-      state.isTokenPickerDialogOpen = false;
+      state.isTokenPickerDialogOpen = false
     },
     setHasSentTokens: (state, action: PayloadAction<boolean>) => {
       state.hasSentTokens = action.payload
@@ -45,7 +51,16 @@ export const widgetSlice = createSlice({
     },
     setBridgeWidgetPage: (state, action: PayloadAction<BridgeWidgetPage>) => {
       state.bridgeWidgetPage = action.payload
+    },
+    setRecoverySourceChainFromTxHistoryPage: (state, action: PayloadAction<ChainId | undefined>) => {
+      state.recoverySourceChain = action.payload
+    },
+    setRecoverySourceTxFromTxHistoryPage: (state, action: PayloadAction<string | undefined>) => {
+      state.recoverySourceTx = action.payload
     }
+  },
+  extraReducers: (builder) => {
+    builder.addCase(resetTransfer, () => initialState)
   }
 })
 
@@ -56,7 +71,9 @@ export const {
   setHasSentTokens,
   setFinalityProgressInitialRemainingBlocks,
   setFinalityProgressInitialRemainingSeconds,
-  setBridgeWidgetPage
+  setBridgeWidgetPage,
+  setRecoverySourceChainFromTxHistoryPage,
+  setRecoverySourceTxFromTxHistoryPage
 } = widgetSlice.actions
 
 export default widgetSlice.reducer

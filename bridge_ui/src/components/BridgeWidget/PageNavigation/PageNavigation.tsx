@@ -11,8 +11,8 @@ const PageNavigation = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
-      <HistoryNavItem />
       <RecoveryNavItem />
+      <HistoryNavItem />
     </div>
   )
 }

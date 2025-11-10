@@ -1,9 +1,7 @@
-import { ChainId } from '@alephium/wormhole-sdk'
 import { Container } from '@mui/material'
 import { makeStyles } from 'tss-react/mui'
-import { useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useLocation } from 'react-router'
+import { useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
@@ -13,8 +11,6 @@ import {
   selectTransferIsSendComplete,
   selectTransferIsSending
 } from '../../store/selectors'
-import { setSourceChain, setTargetChain } from '../../store/transferSlice'
-import { CHAINS_BY_ID } from '../../utils/consts'
 import TransferPage from './TransferPage/TransferPage'
 import { useWidgetStyles } from './styles'
 import RecoveryPage from './RecoveryPage/RecoveryPage'
@@ -26,7 +22,6 @@ import RegisterTokenPage from './RegisterTokenPage/RegisterTokenPage'
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
   useFetchTargetAsset()
-  useUrlPathParams()
   usePreventNavigation()
 
   const { classes } = useStyles()
@@ -60,36 +55,6 @@ const BridgeWidget = () => {
 }
 
 export default BridgeWidget
-
-const useUrlPathParams = () => {
-  const dispatch = useDispatch()
-  const { search } = useLocation()
-  const query = useMemo(() => new URLSearchParams(search), [search])
-  const pathSourceChain = query.get('sourceChain')
-  const pathTargetChain = query.get('targetChain')
-
-  useEffect(() => {
-    if (!pathSourceChain && !pathTargetChain) {
-      return
-    }
-    try {
-      const sourceChain: ChainId = CHAINS_BY_ID[parseFloat(pathSourceChain || '') as ChainId]?.id
-      const targetChain: ChainId = CHAINS_BY_ID[parseFloat(pathTargetChain || '') as ChainId]?.id
-
-      if (sourceChain === targetChain) {
-        return
-      }
-      if (sourceChain) {
-        dispatch(setSourceChain(sourceChain))
-      }
-      if (targetChain) {
-        dispatch(setTargetChain(targetChain))
-      }
-    } catch (e) {
-      console.error('Invalid path params specified.')
-    }
-  }, [pathSourceChain, pathTargetChain, dispatch])
-}
 
 const usePreventNavigation = () => {
   const isSending = useSelector(selectTransferIsSending)

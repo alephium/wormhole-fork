@@ -408,3 +408,11 @@ export const selectFinalityProgressInitialRemainingBlocks = (state: RootState) =
 export const selectFinalityProgressInitialRemainingSeconds = (state: RootState) => {
   return state.widget.finalityProgressInitialRemainingSeconds;
 }
+
+export const selectRecoverySourceChain = (state: RootState) => {
+  return state.widget.recoverySourceChain;
+}
+
+export const selectRecoverySourceTx = (state: RootState) => {
+  return state.widget.recoverySourceTx;
+}

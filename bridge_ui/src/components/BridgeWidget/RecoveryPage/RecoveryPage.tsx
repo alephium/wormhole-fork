@@ -15,14 +15,18 @@ import axios from 'axios'
 import { useSnackbar } from 'notistack'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useLocation } from 'react-router'
 import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
 import useRelayersAvailable, { Relayer } from '../../../hooks/useRelayersAvailable'
 import { COLORS } from '../../../muiTheme'
 // import { setRecoveryVaa as setRecoveryNFTVaa } from '../../../store/nftSlice'
 import { setRecoveryVaa } from '../../../store/transferSlice'
-import { setBridgeWidgetPage, setBridgeWidgetStep } from '../../../store/widgetSlice'
+import {
+  setBridgeWidgetPage,
+  setBridgeWidgetStep,
+  setRecoverySourceChainFromTxHistoryPage,
+  setRecoverySourceTxFromTxHistoryPage
+} from '../../../store/widgetSlice'
 import { getAlphTxInfoByTxId } from '../../../utils/alephium'
 import {
   ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
@@ -36,7 +40,7 @@ import {
 import { getSignedVAAWithRetry } from '../../../utils/getSignedVAAWithRetry'
 import parseError from '../../../utils/parseError'
 import RelaySelector from '../../RelaySelector'
-import { selectTransferSourceChain, selectTransferTransferTx } from '../../../store/selectors'
+import { selectRecoverySourceChain, selectRecoverySourceTx } from '../../../store/selectors'
 import { Wallet, useWallet } from '@alephium/web3-react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
@@ -49,7 +53,6 @@ import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 import { evm } from '../../Recovery'
 import { Close } from '@mui/icons-material'
-import useUpdateQuerySearchParam from '../useUpdateQuerySearchParam'
 
 const useStyles = makeStyles()((theme) => ({
   mainCard: {
@@ -190,10 +193,7 @@ const RecoveryPage = () => {
   const { provider } = useEthereumProvider()
   const isNFT = false
   const noopSnackbar = useCallback(() => undefined, [])
-  const transferSourceChain = useSelector(selectTransferSourceChain)
-  const transferTx = useSelector(selectTransferTransferTx)
-  const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(CHAIN_ID_ALEPHIUM)
-  const [recoverySourceTx, setRecoverySourceTx] = useState('')
+  const { recoverySourceChain, setRecoverySourceChain, recoverySourceTx, setRecoverySourceTx } = useRecoveryData()
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] = useState(false)
   const [recoverySourceTxError, setRecoverySourceTxError] = useState('')
   const [recoverySignedVAA, setRecoverySignedVAA] = useState('')
@@ -209,40 +209,7 @@ const RecoveryPage = () => {
     }
   }, [recoveryParsedVAA])
 
-  const location = useLocation()
-  const query = useMemo(() => new URLSearchParams(location.search), [location.search])
-  const pathSourceChain = query.get('sourceChain')
-  const pathSourceTransaction = query.get('transactionId')
   const alphWallet = useWallet()
-  const updateUrlParam = useUpdateQuerySearchParam()
-
-  //This effect initializes the state based on the path params.
-  useEffect(() => {
-    if (!pathSourceChain) {
-      setRecoverySourceChain(transferSourceChain)
-    }
-    if (!pathSourceTransaction && transferTx !== undefined) {
-      setRecoverySourceTx(transferTx.id)
-    }
-    if (!pathSourceChain && !pathSourceTransaction) {
-      return
-    }
-    try {
-      const sourceChain: ChainId = CHAINS_BY_ID[parseFloat(pathSourceChain || '') as ChainId]?.id
-
-      if (sourceChain) {
-        setRecoverySourceChain(sourceChain)
-        updateUrlParam('sourceChain', undefined)
-      }
-      if (pathSourceTransaction) {
-        setRecoverySourceTx(pathSourceTransaction)
-        updateUrlParam('transactionId', undefined)
-      }
-    } catch (e) {
-      console.error(e)
-      console.error('Invalid path params specified.')
-    }
-  }, [pathSourceChain, pathSourceTransaction, transferSourceChain, transferTx, updateUrlParam])
 
   useEffect(() => {
     if (recoverySourceTx && (!isEVMChain(recoverySourceChain) || isReady)) {
@@ -284,14 +251,20 @@ const RecoveryPage = () => {
     }
   }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
 
-  const handleSourceChainChange = useCallback((event: any) => {
-    setRecoverySourceTx('')
-    setRecoverySourceChain(event.target.value)
-  }, [])
+  const handleSourceChainChange = useCallback(
+    (event: any) => {
+      setRecoverySourceTx('')
+      setRecoverySourceChain(event.target.value)
+    },
+    [setRecoverySourceChain, setRecoverySourceTx]
+  )
 
-  const handleSourceTxChange = useCallback((event: any) => {
-    setRecoverySourceTx(event.target.value.trim())
-  }, [])
+  const handleSourceTxChange = useCallback(
+    (event: any) => {
+      setRecoverySourceTx(event.target.value.trim())
+    },
+    [setRecoverySourceTx]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -524,3 +497,27 @@ const RecoveryPage = () => {
 }
 
 export default RecoveryPage
+
+const useRecoveryData = () => {
+  const dispatch = useDispatch()
+  const recoverySourceTxFromTxHistoryPage = useSelector(selectRecoverySourceTx)
+  const [recoverySourceTx, setRecoverySourceTx] = useState<string>(recoverySourceTxFromTxHistoryPage || '')
+  const recoverySourceChainFromTxHistoryPage = useSelector(selectRecoverySourceChain)
+  const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(
+    recoverySourceChainFromTxHistoryPage || CHAIN_ID_ALEPHIUM
+  )
+
+  // The recovery source chain and tx of the global state are only used to initialize the recovery page from the tx
+  // history page. Reset the recovery source chain and tx global state when the recovery page is loaded.
+  // This is done so that we don't have to catch all cases where we need to clean the global state.
+  useEffect(() => {
+    if (recoverySourceChainFromTxHistoryPage) {
+      dispatch(setRecoverySourceChainFromTxHistoryPage(undefined))
+    }
+    if (recoverySourceTxFromTxHistoryPage) {
+      dispatch(setRecoverySourceTxFromTxHistoryPage(undefined))
+    }
+  }, [dispatch, recoverySourceChainFromTxHistoryPage, recoverySourceTxFromTxHistoryPage])
+
+  return { recoverySourceChain, setRecoverySourceChain, recoverySourceTx, setRecoverySourceTx }
+}
