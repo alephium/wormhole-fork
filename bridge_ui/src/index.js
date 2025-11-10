@@ -3,7 +3,7 @@ import "./i18n";
 import { CssBaseline } from "@mui/material";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { SnackbarProvider } from "notistack";
-import ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
@@ -23,7 +23,10 @@ const connectors = {
   desktopWallet: createDesktopWalletConnector({customStoragePrefix: 'alephium'})
 }
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container);
+
+root.render(
   <ErrorBoundary>
     <Provider store={store}>
       <StyledEngineProvider injectFirst>
@@ -55,6 +58,5 @@ ReactDOM.render(
         </ThemeProvider>
       </StyledEngineProvider>
     </Provider>
-  </ErrorBoundary>,
-  document.getElementById("root")
+  </ErrorBoundary>
 );
