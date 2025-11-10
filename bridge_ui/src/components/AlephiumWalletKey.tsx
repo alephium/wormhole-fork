@@ -1,4 +1,4 @@
-import { Typography } from "@material-ui/core"
+import { Typography } from "@mui/material"
 import { AlephiumConnectButton } from "@alephium/web3-react"
 import { useTranslation } from "react-i18next"
 import { shortenAddress } from "../utils/addresses"

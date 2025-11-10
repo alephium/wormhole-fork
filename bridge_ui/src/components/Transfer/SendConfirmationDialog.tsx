@@ -6,8 +6,8 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
-} from "@material-ui/core";
-import { ArrowDownward } from "@material-ui/icons";
+} from "@mui/material";
+import { ArrowDownward } from "@mui/icons-material";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";

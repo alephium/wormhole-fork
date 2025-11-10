@@ -1,12 +1,12 @@
 import {
   Button,
   CircularProgress,
-  makeStyles,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { ReactChild } from "react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   root: {
     position: "relative",
   },
@@ -40,7 +40,7 @@ export default function ButtonWithLoader({
   error?: string;
   children: ReactChild;
 }) {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <>
       <div className={classes.root}>

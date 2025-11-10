@@ -5,16 +5,16 @@ import {
   Divider,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  makeStyles,
-} from "@material-ui/core";
-import CloseIcon from "@material-ui/icons/Close";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import CloseIcon from "@mui/icons-material/Close";
 import { WalletName, WalletReadyState } from "@solana/wallet-adapter-base";
 import { useWallet, Wallet } from "@solana/wallet-adapter-react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -47,14 +47,14 @@ const DetectedWalletListItem = ({
   }, [select, onClose, wallet]);
 
   return (
-    <ListItem button onClick={handleWalletClick}>
+    <ListItemButton onClick={handleWalletClick}>
       <WalletListItem wallet={wallet} text={wallet.adapter.name} />
-    </ListItem>
+    </ListItemButton>
   );
 };
 
 const WalletListItem = ({ wallet, text }: { wallet: Wallet; text: string }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <>
       <ListItemIcon>
@@ -76,7 +76,7 @@ const SolanaConnectWalletDialog = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { wallets, select } = useWallet();
 
   const [detected, undetected] = useMemo(() => {
@@ -100,7 +100,7 @@ const SolanaConnectWalletDialog = ({
       <DialogTitle>
         <div className={classes.flexTitle}>
           <div>Select your wallet</div>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={onClose} size="large">
             <CloseIcon />
           </IconButton>
         </div>
@@ -116,8 +116,7 @@ const SolanaConnectWalletDialog = ({
         ))}
         {undetected && <Divider variant="middle" />}
         {undetected.map((wallet) => (
-          <ListItem
-            button
+          <ListItemButton
             onClick={onClose}
             component="a"
             key={wallet.adapter.name}
@@ -129,7 +128,7 @@ const SolanaConnectWalletDialog = ({
               wallet={wallet}
               text={"Install " + wallet.adapter.name}
             />
-          </ListItem>
+          </ListItemButton>
         ))}
       </List>
     </Dialog>

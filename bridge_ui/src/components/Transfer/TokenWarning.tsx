@@ -5,8 +5,9 @@ import {
   CHAIN_ID_SOLANA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { Box, Link, makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Box, Link, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 import {
   AVAILABLE_MARKETS_URL,
@@ -14,7 +15,7 @@ import {
   MULTI_CHAIN_TOKENS,
 } from "../../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
@@ -29,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
 
 function WormholeWrappedWarning() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Alert severity="info" variant="outlined" className={classes.alert}>
       <Typography component="div" className={classes.line}>
@@ -53,7 +54,7 @@ function MultichainWarning({
   targetChain: ChainId;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Alert severity="warning" className={classes.alert}>
       <Typography
@@ -73,7 +74,7 @@ function MultichainWarning({
 
 function RewardsWarning() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Alert severity="warning" className={classes.alert}>
       {t("Lido stETH rewards can only be received on Ethereum. Use the value accruing wrapper token wstETH instead.")}
@@ -83,7 +84,7 @@ function RewardsWarning() {
 
 function LiquidityWarning() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Alert severity="info" className={classes.alert}>
       <Typography component="div" className={classes.line}>

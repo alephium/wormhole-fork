@@ -1,12 +1,12 @@
 import {
   Container,
-  makeStyles,
   Step,
   StepButton,
   StepContent,
   Stepper,
-} from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +18,6 @@ import {
   selectAttestIsSendComplete,
   selectAttestIsSending,
 } from "../../store/selectors";
-import HeaderText from "../HeaderText";
 import Create from "./Create";
 import CreatePreview from "./CreatePreview";
 import Send from "./Send";
@@ -28,13 +27,13 @@ import SourcePreview from "./SourcePreview";
 import Target from "./Target";
 import TargetPreview from "./TargetPreview";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   spacer: { height: theme.spacing(2) },
 }));
 
 function AttestLegacy() {
   const { t } = useTranslation()
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const activeStep = useSelector(selectAttestActiveStep);
   const isSending = useSelector(selectAttestIsSending);
@@ -66,7 +65,7 @@ function AttestLegacy() {
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. {t("Source")}
+            {t("Source")}
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -77,7 +76,7 @@ function AttestLegacy() {
           disabled={preventNavigation || isCreateComplete}
         >
           <StepButton onClick={() => dispatch(setStep(1))} icon={null}>
-            2. {t("Target")}
+            {t("Target")}
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -85,7 +84,7 @@ function AttestLegacy() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton onClick={() => dispatch(setStep(2))} icon={null}>
-            3. {t("Send attestation")}
+            {t("Send attestation")}
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -97,7 +96,7 @@ function AttestLegacy() {
             disabled={!isSendComplete}
             icon={null}
           >
-            4. {t("Create wrapped token")}
+            {t("Create wrapped token")}
           </StepButton>
           <StepContent>
             {isCreateComplete ? <CreatePreview /> : <Create />}

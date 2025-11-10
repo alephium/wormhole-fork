@@ -1,4 +1,4 @@
-import { useTheme, useMediaQuery } from "@material-ui/core";
+import { useTheme, useMediaQuery } from "@mui/material";
 import {
   Area,
   AreaChart,
@@ -19,7 +19,7 @@ const VolumeAreaChart = ({
   timeFrame: TimeFrame;
 }) => {
   const theme = useTheme();
-  const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
+  const isXSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <ResponsiveContainer height={452}>

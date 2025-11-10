@@ -1,4 +1,5 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk";
 import { hexToALPHAddress } from "../../utils/alephium";
 import { CHAINS_BY_ID } from "../../utils/consts";
@@ -9,7 +10,7 @@ import { selectTransferAmount, selectTransferIsRecovery } from "../../store/sele
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
@@ -17,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function TargetPreview() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const transferAmount = useSelector(selectTransferAmount)
   const {
     targetChain,

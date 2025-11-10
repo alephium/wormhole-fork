@@ -1,4 +1,4 @@
-import { ListOutlined } from '@material-ui/icons'
+import { ListOutlined } from '@mui/icons-material'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectTransferSourceChain, selectTransferTargetChain } from '../../../store/selectors'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'

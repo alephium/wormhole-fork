@@ -2,11 +2,11 @@ import {
   IconButton,
   Menu,
   Typography,
-  makeStyles,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core"
-import { AccountBalanceWalletOutlined } from "@material-ui/icons"
+} from "@mui/material"
+import { makeStyles } from 'tss-react/mui';
+import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import { useConnect, useWallet } from "@alephium/web3-react"
 import { MouseEvent, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -32,7 +32,7 @@ const getEvmChainInfo = (evmChainId: number | undefined): ChainInfo | undefined 
 }
 
 const HeaderWalletButtons = () => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const { t } = useTranslation()
   const { signerAddress, chainId, disconnect: disconnectEvm } = useEthereumProvider()
   const alphWallet = useWallet()
@@ -40,7 +40,7 @@ const HeaderWalletButtons = () => {
   const hasAlephiumWallet =
     alphWallet.connectionStatus === "connected" && !!alphWallet.account?.address
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [walletAnchorEl, setWalletAnchorEl] = useState<null | HTMLElement>(null)
   const walletMenuId = "app-wallet-menu"
   const walletMenuOpen = !!walletAnchorEl
@@ -122,7 +122,7 @@ const HeaderWalletButtons = () => {
             aria-haspopup="true"
             onClick={handleWalletMenuButtonClick}
             className={classes.mobileWalletTrigger}
-          >
+            size="large">
             <AccountBalanceWalletOutlined />
           </IconButton>
           {connectedCount > 1 ? (
@@ -136,7 +136,6 @@ const HeaderWalletButtons = () => {
           onClose={handleWalletMenuClose}
           keepMounted
           classes={{ paper: classes.walletMenuPaper }}
-          getContentAnchorEl={null}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
           MenuListProps={{ disablePadding: true, autoFocusItem: false }}
@@ -148,7 +147,7 @@ const HeaderWalletButtons = () => {
           <div className={classes.walletMenuContent}>{walletButtons}</div>
         </Menu>
       </>
-    )
+    );
   }
 
   return (
@@ -164,7 +163,7 @@ const HeaderWalletButtons = () => {
 
 export default HeaderWalletButtons
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     display: "flex",
     alignItems: "center",

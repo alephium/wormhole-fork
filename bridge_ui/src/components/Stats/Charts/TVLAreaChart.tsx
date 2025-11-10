@@ -11,7 +11,7 @@ import { NotionalTVLCumulative } from "../../../hooks/useCumulativeTVL";
 import { useMemo } from "react";
 import { TimeFrame } from "./TimeFrame";
 import CustomTooltip from "./CustomTooltip";
-import { useTheme, useMediaQuery } from "@material-ui/core";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const TVLAreaChart = ({
   cumulativeTVL,
@@ -25,7 +25,7 @@ const TVLAreaChart = ({
   }, [cumulativeTVL, timeFrame]);
 
   const theme = useTheme();
-  const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
+  const isXSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <ResponsiveContainer height={452}>

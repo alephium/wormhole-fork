@@ -1,7 +1,8 @@
 import { CHAIN_ID_SOLANA, isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@material-ui/core";
-import { VerifiedUser } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+import { Button } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { VerifiedUser } from "@mui/icons-material";
+import { Alert } from "@mui/material";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -28,14 +29,14 @@ import StepDescription from "../StepDescription";
 import { TokenSelector } from "../TokenSelectors/SourceTokenSelector";
 import ChainWarningMessage from "../ChainWarningMessage";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   transferField: {
     marginTop: theme.spacing(5),
   },
 }));
 
 function Source() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectNFTSourceChain);
   const uiAmountString = useSelector(selectNFTSourceBalanceString);

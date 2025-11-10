@@ -4,8 +4,9 @@ import {
   hexToUint8Array,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { makeStyles, TextField, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { TextField, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { PublicKey } from "@solana/web3.js";
 import { BigNumber, ethers } from "ethers";
 import { useCallback, useMemo } from "react";
@@ -40,7 +41,7 @@ import SolanaTPSWarning from "../SolanaTPSWarning";
 import StepDescription from "../StepDescription";
 import ChainWarningMessage from "../ChainWarningMessage";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   transferField: {
     marginTop: theme.spacing(5),
   },
@@ -51,7 +52,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Target() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectNFTSourceChain);
   const chains = useMemo(

@@ -9,7 +9,8 @@ import {
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@alephium/wormhole-sdk";
-import { Container, makeStyles, Paper, Typography } from "@material-ui/core";
+import { Container, Paper, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useMemo } from "react";
 import { COLORS } from "../../muiTheme";
 import {
@@ -22,13 +23,13 @@ import HeaderText from "../HeaderText";
 import SmartAddress from "../SmartAddress";
 import MuiReactTable from "./tableComponents/MuiReactTable";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexBox: {
     display: "flex",
     alignItems: "flex-end",
     marginBottom: theme.spacing(4),
     textAlign: "left",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
       alignItems: "unset",
     },
@@ -48,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const CustodyAddresses: React.FC<any> = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const data = useMemo(() => {
     return [
       {

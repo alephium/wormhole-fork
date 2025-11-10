@@ -1,10 +1,10 @@
 import {
   Button,
   CircularProgress,
-  makeStyles,
   Paper,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import numeral from "numeral";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -22,7 +22,7 @@ import {
 } from "./nftLists";
 import { COLORS } from "../../muiTheme";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   logoPositioner: {
     height: "30px",
     width: "30px",
@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "flex-end",
     marginBottom: theme.spacing(4),
     textAlign: "left",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
       alignItems: "unset",
     },
@@ -58,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "flex-end",
     paddingBottom: 1, // line up with left text bottom
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       marginTop: theme.spacing(1),
     },
   },
@@ -102,7 +102,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const NFTStats: React.FC<any> = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const nftTVL = useNFTTVL();
 
   //Disable this to quickly turn off

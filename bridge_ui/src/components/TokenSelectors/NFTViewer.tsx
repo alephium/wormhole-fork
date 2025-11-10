@@ -3,10 +3,10 @@ import {
   Card,
   CardContent,
   CardMedia,
-  makeStyles,
   Tooltip,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import axios from "axios";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -31,7 +31,7 @@ import solanaIcon from "../../icons/solana.svg";
 import polygonIcon from "../../icons/polygon.svg";
 import oasisIcon from "../../icons/oasis-network-rose-logo.svg";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
-import { Skeleton } from "@material-ui/lab";
+import Skeleton from '@mui/material/Skeleton';
 import Wormhole from "../../icons/wormhole-network.svg";
 import { useTranslation } from "react-i18next";
 
@@ -130,12 +130,12 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
     />
   ) : null;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   card: {
     borderRadius: 9,
     maxWidth: "100%",
     width: 400,
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     padding: 8,
     position: "relative",
     zIndex: 1,
@@ -255,16 +255,16 @@ const useStyles = makeStyles((theme) => ({
     height: "500px",
     width: "400px",
     maxWidth: "100%",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
   },
 }));
 
 const ViewerLoader = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   return (
     <div className={classes.wormholePositioner}>
-      <Skeleton variant="rect" animation="wave" className={classes.skeleton} />
+      <Skeleton variant="rectangular" animation="wave" className={classes.skeleton} />
       <img src={Wormhole} alt="Wormhole" className={classes.wormholeIcon} />
     </div>
   );
@@ -342,7 +342,7 @@ export default function NFTViewer({
     }
   }, [uri]);
 
-  const classes = useStyles();
+  const { classes } = useStyles();
   const animLower = metadata.animation_url?.toLowerCase();
   // const has3DModel = animLower?.endsWith('gltf') || animLower?.endsWith('glb')
   const hasVideo =

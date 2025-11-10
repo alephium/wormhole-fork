@@ -1,4 +1,4 @@
-import { Typography } from '@material-ui/core'
+import { Typography } from '@mui/material'
 import SmartAddress from '../SmartAddress'
 import SendingAddress from '../SendingAddress'
 import SendingAmount from '../SendingAmount'
@@ -11,7 +11,7 @@ import Divider from '../Divider'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SendTransactionSectionDetails = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const sourceChain = useSelector(selectTransferSourceChain)
   const transferTx = useSelector(selectTransferTransferTx)
   const txExists = useTransferOrRecoveryTxExists()

@@ -11,7 +11,7 @@ import {
   updateWrappedOnEth,
   createWrappedOnEth
 } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/material";
 import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";

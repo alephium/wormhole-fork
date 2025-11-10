@@ -1,5 +1,6 @@
 import { isEVMChain } from "@alephium/wormhole-sdk";
-import { Button, makeStyles } from "@material-ui/core";
+import { Button } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,16 +17,16 @@ import {
   getEthereumToken,
 } from "../../utils/evm";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   addButton: {
     display: "block",
-    margin: `${theme.spacing(1)}px auto 0px`,
+    margin: `${theme.spacing(1)} auto 0px`,
   },
 }));
 
 export default function AddToMetamask() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const sourceParsedTokenAccount = useSelector(
     selectTransferSourceParsedTokenAccount
   );

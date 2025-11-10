@@ -1,21 +1,20 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import {
   CircularProgress,
-  createStyles,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
   List,
-  ListItem,
-  makeStyles,
+  ListItemButton,
   TextField,
   Tooltip,
   Typography
-} from '@material-ui/core'
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
-import RefreshIcon from '@material-ui/icons/Refresh'
-import { Alert } from '@material-ui/lab'
+} from '@mui/material'
+import { makeStyles } from 'tss-react/mui';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { Alert } from '@mui/material'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
@@ -42,7 +41,7 @@ export const BasicAccountRender2 = (
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const mintPrettyString = shortenAddress(account.mintKey)
   const uri = nft ? account.image_256 : account.logo || account.uri
   const symbol = account.symbol || t('Unknown')
@@ -144,7 +143,7 @@ const TokenPicker2 = function TokenPicker2({
   useTokenId
 }: TokenPicker2Props) {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const [holderString, setHolderString] = useState('')
   const [tokenIdHolderString, setTokenIdHolderString] = useState('')
   const [loadingError, setLoadingError] = useState('')
@@ -344,7 +343,7 @@ const TokenPicker2 = function TokenPicker2({
           <Typography variant="h6">{t('Available tokens')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
-            <IconButton onClick={resetAccountsWrapper}>
+            <IconButton onClick={resetAccountsWrapper} size="large">
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -377,16 +376,16 @@ const TokenPicker2 = function TokenPicker2({
           <List component="div" className={classes.tokenList}>
             {nonFeaturedOptions.map((option) => {
               return (
-                <ListItem
+                <ListItemButton
                   component="div"
-                  button
+
                   onClick={() => handleSelectOption(option)}
                   key={option.publicKey + option.mintKey + (option.tokenId || '')}
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
                   className={classes.tokenListItem}
                 >
                   <RenderOption account={option} />
-                </ListItem>
+                </ListItemButton>
               )
             })}
 
@@ -401,7 +400,7 @@ const TokenPicker2 = function TokenPicker2({
     </Dialog>
   )
 
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
 
   return (
     <>
@@ -453,8 +452,8 @@ export const TokenIconSymbol = ({
 }: {
   account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
 }) => {
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const uri = account?.logo || account?.uri
   const symbol = account?.symbol || '-'
 
@@ -473,8 +472,7 @@ export const TokenIconSymbol = ({
 
 export default TokenPicker2
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
+const useStyles = makeStyles()((theme) => ({
     alignCenter: {
       textAlign: 'center'
     },
@@ -512,7 +510,7 @@ const useStyles = makeStyles((theme) =>
       justifyContent: 'space-between',
       '& >div': {
         margin: theme.spacing(1),
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
           margin: 0
         },
         flexBasis: '25%',
@@ -531,12 +529,12 @@ const useStyles = makeStyles((theme) =>
       display: 'flex',
       alignItems: 'center',
       gap: '20px',
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         gap: '10px'
       }
     },
     tokenAddress: {
-      [theme.breakpoints.down('xs')]: {
+      [theme.breakpoints.down('sm')]: {
         display: 'none'
       }
     },

@@ -1,5 +1,6 @@
 import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
@@ -13,7 +14,7 @@ import {
   selectTransferTransferTx,
 } from "../../store/selectors";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   message: {
     color: theme.palette.warning.light,
     marginTop: theme.spacing(1),
@@ -29,7 +30,7 @@ export const WAITING_FOR_TX_CONFIRMATION =
 
 export default function WaitingForWalletMessage() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isApproving = useSelector(selectTransferIsApproving);
   const isSending = useSelector(selectTransferIsSending);
   const isWalletApproved = useSelector(selectTransferIsWalletApproved)

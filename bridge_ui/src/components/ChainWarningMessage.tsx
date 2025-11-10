@@ -1,10 +1,11 @@
 import { ChainId } from "@alephium/wormhole-sdk";
-import { Link, makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Link, Typography } from "@mui/material";
+import { Alert } from "@mui/material";
 import { useMemo } from "react";
 import { CHAIN_CONFIG_MAP } from "../config";
+import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
@@ -12,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function ChainWarningMessage({ chainId }: { chainId: ChainId }) {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const warningMessage = useMemo(() => {
     return CHAIN_CONFIG_MAP[chainId]?.warningMessage;

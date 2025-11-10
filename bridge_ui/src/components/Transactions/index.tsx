@@ -6,7 +6,8 @@ import {
   isEVMChain,
   CHAIN_ID_ETH
 } from "@alephium/wormhole-sdk";
-import { Card, Container, makeStyles } from "@material-ui/core";
+import { Card, Container } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../muiTheme";
 import {
@@ -20,7 +21,7 @@ import {
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/material";
 import { ethers } from "ethers";
 import useSWR from "swr";
 import { useSnackbar } from "notistack";
@@ -36,7 +37,7 @@ import { NodeProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
 import TransactionTableCompact from "../BridgeWidget/TransactionTableCompact";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
   mainCard: {
     padding: "32px 32px 16px",
     backgroundColor: COLORS.whiteWithTransparency,
@@ -193,7 +194,7 @@ export function ListTransactions({
 
 export default function Transactions() {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTargetChain = useSelector(selectTransferTargetChain)
   const [txSourceChain, setTxSourceChain] =

@@ -1,4 +1,4 @@
-import { Container } from "@material-ui/core";
+import { Container } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import HeaderText from "../HeaderText";
 import TVLStats from "./TVLStats";

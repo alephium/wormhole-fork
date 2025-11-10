@@ -1,7 +1,8 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   footer: {
     position: "relative",
     color: "rgba(255, 255, 255, 0.3)",
@@ -52,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Footer() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <footer className={classes.footer}>
       <div className={classes.container}>

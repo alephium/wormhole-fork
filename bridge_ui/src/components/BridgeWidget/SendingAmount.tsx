@@ -4,11 +4,12 @@ import {
   selectTransferSourceChain,
   selectTransferSourceParsedTokenAccount
 } from '../../store/selectors'
-import { makeStyles, Typography } from '@material-ui/core'
+import { Typography } from '@mui/material'
+import { makeStyles } from 'tss-react/mui';
 import SmartAddress from './SmartAddress'
 
 const SendingAmount = () => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const sourceAmount = useSelector(selectTransferAmount)
   const sourceChain = useSelector(selectTransferSourceChain)
   const sourceParsedTokenAccount = useSelector(selectTransferSourceParsedTokenAccount)
@@ -26,7 +27,7 @@ const SendingAmount = () => {
 
 export default SendingAmount
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   networkIcon: {
     height: '1rem',
     width: '1rem'

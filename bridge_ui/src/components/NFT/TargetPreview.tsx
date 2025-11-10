@@ -1,4 +1,5 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useSelector } from "react-redux";
 import {
   selectNFTTargetAddressHex,
@@ -8,14 +9,14 @@ import { hexToNativeString } from "@alephium/wormhole-sdk";
 import { CHAINS_BY_ID } from "../../utils/consts";
 import SmartAddress from "../SmartAddress";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
 }));
 
 export default function TargetPreview() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const targetChain = useSelector(selectNFTTargetChain);
   const targetAddress = useSelector(selectNFTTargetAddressHex);
   const targetAddressNative = hexToNativeString(targetAddress, targetChain);

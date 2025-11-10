@@ -4,16 +4,16 @@ import {
   Divider,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  makeStyles,
-} from "@material-ui/core";
-import CloseIcon from "@material-ui/icons/Close";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import CloseIcon from "@mui/icons-material/Close";
 import { ConnectType, useWallet } from "@terra-money/wallet-provider";
 import { useCallback } from "react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -49,19 +49,19 @@ const WalletOptions = ({
   icon: string;
   name: string;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const handleClick = useCallback(() => {
     connect(type, identifier);
     onClose();
   }, [connect, onClose, type, identifier]);
   return (
-    <ListItem button onClick={handleClick}>
+    <ListItemButton onClick={handleClick}>
       <ListItemIcon>
         <img src={icon} alt={name} className={classes.icon} />
       </ListItemIcon>
       <ListItemText>{name}</ListItemText>
-    </ListItem>
+    </ListItemButton>
   );
 };
 
@@ -73,7 +73,7 @@ const TerraConnectWalletDialog = ({
   onClose: () => void;
 }) => {
   const { availableConnections, availableInstallations, connect } = useWallet();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const filteredConnections = availableConnections
     .filter(({ type }) => type !== ConnectType.READONLY)
@@ -92,8 +92,7 @@ const TerraConnectWalletDialog = ({
   const filteredInstallations = availableInstallations
     .filter(({ type }) => type !== ConnectType.READONLY)
     .map(({ type, name, icon, url, identifier = "" }) => (
-      <ListItem
-        button
+      <ListItemButton
         component="a"
         onClick={onClose}
         key={"install-" + type + identifier}
@@ -105,14 +104,14 @@ const TerraConnectWalletDialog = ({
           <img src={icon} alt={name} className={classes.icon} />
         </ListItemIcon>
         <ListItemText>{"Install " + name}</ListItemText>
-      </ListItem>
+      </ListItemButton>
     ));
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>
         <div className={classes.flexTitle}>
           <div>Select your wallet</div>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={onClose} size="large">
             <CloseIcon />
           </IconButton>
         </div>

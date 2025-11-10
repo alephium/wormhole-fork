@@ -1,14 +1,14 @@
 import { useSelector } from 'react-redux'
 import { selectTransferIsWalletApproved } from '../../../store/selectors'
-import { ThumbUp } from '@material-ui/icons'
-import { CircularProgress } from '@material-ui/core'
+import { ThumbUp } from '@mui/icons-material'
+import { CircularProgress } from '@mui/material'
 import { GRAY, useWidgetStyles } from '../styles'
 import SendTransactionSectionDetails from './SendTransactionSectionDetails'
 import clsx from 'clsx'
 import useTransferOrRecoveryTxExists from '../useTransferOrRecoveryTxExists'
 
 const SendTransactionSection = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const isWalletApproved = useSelector(selectTransferIsWalletApproved)
   const txExists = useTransferOrRecoveryTxExists()
 
@@ -50,7 +50,7 @@ const SendTransactionSection = () => {
 export default SendTransactionSection
 
 const ConfirmedTransactionExpandableButton = () => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
 
   return (
     <div className={clsx(classes.grayRoundedBox, 'secondary')}>

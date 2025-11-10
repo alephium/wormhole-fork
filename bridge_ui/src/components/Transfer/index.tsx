@@ -5,7 +5,7 @@ import {
   StepButton,
   StepContent,
   Stepper,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -93,7 +93,7 @@ function Transfer() {
           disabled={preventNavigation || isRedeemComplete}
         >
           <StepButton onClick={() => dispatch(setStep(0))} icon={null}>
-            1. {t("Source")}
+            {t("Source")}
           </StepButton>
           <StepContent>
             {activeStep === 0 ? <Source /> : <SourcePreview />}
@@ -108,7 +108,7 @@ function Transfer() {
             onClick={() => dispatch(setStep(1))}
             icon={null}
           >
-            2. {t("Target")}
+            {t("Target")}
           </StepButton>
           <StepContent>
             {activeStep === 1 ? <Target /> : <TargetPreview />}
@@ -116,7 +116,7 @@ function Transfer() {
         </Step>
         <Step expanded={activeStep >= 2} disabled={isSendComplete}>
           <StepButton disabled icon={null}>
-            3. {t("Send tokens")}
+            {t("Send tokens")}
           </StepButton>
           <StepContent>
             {activeStep === 2 ? <Send /> : <SendPreview />}
@@ -128,7 +128,7 @@ function Transfer() {
             disabled={!isSendComplete || isRedeemComplete}
             icon={null}
           >
-            4. {t("Redeem tokens")}
+            {t("Redeem tokens")}
           </StepButton>
           <StepContent>
             {isRedeemComplete ? <RedeemPreview /> : <Redeem />}

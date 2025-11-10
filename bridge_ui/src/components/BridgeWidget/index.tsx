@@ -1,5 +1,6 @@
 import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, IconButton, makeStyles, Typography } from '@material-ui/core'
+import { Container, IconButton, Typography } from '@mui/material'
+import { makeStyles } from 'tss-react/mui';
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
@@ -17,7 +18,7 @@ import { reset, setSourceChain, setTargetChain } from '../../store/transferSlice
 import { CHAINS_BY_ID } from '../../utils/consts'
 import BridgeWidgetSteps from './BridgeWidgetSteps'
 import { useWidgetStyles } from './styles'
-import { ArrowBackOutlined } from '@material-ui/icons'
+import { ArrowBackOutlined } from '@mui/icons-material'
 import Recovery from './Recovery/Recovery'
 import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
 import HistoryNavItem from './EnterDataStep/HistoryNavItem'
@@ -30,8 +31,8 @@ const BridgeWidget = () => {
   usePreventNavigation()
 
   const step = useSelector(selectTransferActiveBridgeWidgetStep)
-  const classes = useStyles()
-  const widgetClasses = useWidgetStyles()
+  const { classes } = useStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const dispatch = useDispatch()
 
   const page = useSelector(selectBridgeWidgetPage)
@@ -126,14 +127,14 @@ const usePreventNavigation = () => {
   }, [preventNavigation])
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainContainer: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '16px',
     padding: theme.spacing(3, 2),
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: '100%',
       padding: theme.spacing(2, 1.5),
       alignItems: 'stretch'
@@ -144,7 +145,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     gap: '10px',
     marginBottom: 24,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       marginBottom: 0
     }
   },
@@ -154,7 +155,7 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     maxWidth: 520,
     margin: '0 auto',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       gap: theme.spacing(2.5),
       maxWidth: '100%'
     }
@@ -166,7 +167,7 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: 520,
     width: '100%',
     gap: '10px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       maxWidth: '100%'
     }
   },
@@ -175,7 +176,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     position: 'relative',
     gap: '24px',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       gap: theme.spacing(2)
     }
   },

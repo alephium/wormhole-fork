@@ -25,12 +25,12 @@ import {
   CircularProgress,
   Container,
   Divider,
-  makeStyles,
   TextField,
   Typography,
-} from "@material-ui/core";
-import { ExpandMore } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { ExpandMore } from "@mui/icons-material";
+import { Alert } from "@mui/material";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useSnackbar } from "notistack";
@@ -69,7 +69,7 @@ import { Wallet, useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainCard: {
     padding: "32px 32px 16px",
     backgroundColor: COLORS.whiteWithTransparency,
@@ -165,7 +165,7 @@ function RelayerRecovery({
   onClick: () => void;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const relayerInfo = useRelayersAvailable(true);
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null);
   const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false);
@@ -256,7 +256,7 @@ function AcalaRelayerRecovery({
   isNFT: boolean;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const originChain: ChainId = parsedPayload?.originChain;
   const originAsset = parsedPayload?.originAddress;
   const targetChain: ChainId = parsedPayload?.targetChain;
@@ -292,7 +292,7 @@ function AcalaRelayerRecovery({
 
 export default function Recovery() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { push } = useHistory();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();

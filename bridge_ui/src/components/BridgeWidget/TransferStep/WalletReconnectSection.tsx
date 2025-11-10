@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Alert } from '@material-ui/lab'
+import { Alert } from '@mui/material'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
 import {
   selectTransferHasSentTokens,
@@ -21,7 +21,7 @@ interface WalletReconnectSectionProps {
 }
 
 const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const txExists = useTransferOrRecoveryTxExists()
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
   const sourceChain = useSelector(selectTransferSourceChain)

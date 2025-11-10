@@ -1,5 +1,5 @@
 import { ChainId } from "@alephium/wormhole-sdk"
-import { Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core"
+import { Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useDispatch, useSelector } from "react-redux"

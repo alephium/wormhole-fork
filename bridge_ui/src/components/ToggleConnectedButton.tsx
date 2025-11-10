@@ -1,11 +1,12 @@
-import { Button, makeStyles, Tooltip } from "@material-ui/core";
-import { LinkOff } from "@material-ui/icons";
+import { Button, Tooltip } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { LinkOff } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   button: {
     display: "flex",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     width: "100%",
     maxWidth: 400,
   },
@@ -29,7 +30,7 @@ const ToggleConnectedButton = ({
   walletIcon?: string;
 }) => {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const is0x = pk.startsWith("0x");
   return connected ? (
     <Tooltip title={pk}>
