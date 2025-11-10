@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
-import { ReactChild } from "react";
+import { ReactNode } from "react";
 
 const useStyles = makeStyles()((theme) => ({
   description: {
@@ -11,7 +11,7 @@ const useStyles = makeStyles()((theme) => ({
 export default function StepDescription({
   children,
 }: {
-  children: ReactChild;
+  children: ReactNode;
 }) {
   const { classes } = useStyles();
   return (

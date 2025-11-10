@@ -22,7 +22,7 @@ import { makeStyles } from 'tss-react/mui';
 import { FileCopy, OpenInNew } from "@mui/icons-material";
 import { withStyles } from "tss-react/mui";
 import clsx from "clsx";
-import { ReactChild } from "react";
+import { ReactNode } from "react";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
 import { ParsedTokenAccount } from "../store/transferSlice";
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from "../utils/consts";
@@ -84,7 +84,7 @@ export default function SmartAddress({
   variant?: any;
   noGutter?: boolean;
   noUnderline?: boolean;
-  extraContent?: ReactChild;
+  extraContent?: ReactNode;
   isAsset?: boolean;
 }) {
   const { t } = useTranslation();
