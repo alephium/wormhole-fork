@@ -1,4 +1,6 @@
-import { Button, ButtonProps, CircularProgress, styled } from '@mui/material'
+import Button, { ButtonProps } from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import { styled } from '@mui/material/styles'
 import { COLORS } from '../../muiTheme'
 
 export type BridgeWidgetButtonProps = ButtonProps & {
@@ -22,10 +24,13 @@ const BridgeWidgetButton = ({
 
 export default BridgeWidgetButton
 
-const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>({
+const ButtonStyled = styled(Button, {
+  // prevent custom props from reaching the DOM
+  shouldForwardProp: (prop) => prop !== 'tone' && prop !== 'short'
+})<BridgeWidgetButtonProps>(({ tone = 'default', short }) => ({
   textTransform: 'none',
-  borderRadius: '16px',
-  height: '52px',
+  borderRadius: short ? '12px' : '16px',
+  height: short ? '36px' : '52px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -34,15 +39,18 @@ const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>({
   fontSize: '16px',
   letterSpacing: 'normal',
   transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+
   '&.MuiButton-containedPrimary': {
-    backgroundColor: COLORS.nearWhite,
-    color: COLORS.nearBlack,
+    backgroundColor: tone === 'primaryNext' ? COLORS.blue : COLORS.nearWhite,
+    color: tone === 'primaryNext' ? COLORS.white : COLORS.nearBlack,
     '&:hover': {
       transform: 'scale(1.005)',
-      backgroundColor: COLORS.white,
+      backgroundColor: tone === 'primaryNext' ? COLORS.blue : COLORS.white,
+      color: tone === 'primaryNext' ? COLORS.white : COLORS.nearBlack,
       filter: 'brightness(1.1)'
     }
   },
+
   '&.MuiButton-outlinedPrimary': {
     backgroundColor: COLORS.whiteWithStrongTransparency,
     borderColor: COLORS.whiteWithStrongTransparency,
@@ -53,33 +61,9 @@ const ButtonStyled = styled(Button)<BridgeWidgetButtonProps>({
       backgroundColor: COLORS.whiteWithTransparency
     }
   },
+
   '&.Mui-disabled': {
     backgroundColor: 'rgba(255, 255, 255, 0.65)',
     color: 'rgba(0, 0, 0, 0.35)'
-  },
-  variants: [
-    {
-      props: {
-        tone: 'primaryNext'
-      },
-      style: {
-        '&.MuiButton-containedPrimary': {
-          backgroundColor: COLORS.blue,
-          color: COLORS.white,
-          '&:hover': {
-            filter: 'brightness(1.1)',
-            backgroundColor: COLORS.blue,
-            color: COLORS.white
-          }
-        }
-      }
-    },
-    {
-      props: ({ short }) => short,
-      style: {
-        height: '36px',
-        borderRadius: '12px'
-      }
-    }
-  ]
-})
+  }
+}))

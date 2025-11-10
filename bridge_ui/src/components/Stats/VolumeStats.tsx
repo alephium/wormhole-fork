@@ -10,10 +10,11 @@ import {
   TextField,
   Tooltip,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup
 } from "@mui/material";
 import { makeStyles, withStyles } from 'tss-react/mui';
 import { InfoOutlined } from "@mui/icons-material";
-import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useCallback, useMemo, useState } from "react";
 import useNotionalTransferred from "../../hooks/useNotionalTransferred";
 import { COLORS } from "../../muiTheme";

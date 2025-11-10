@@ -171,7 +171,7 @@ const useStyles = makeStyles()((theme) => ({
     transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   },
   select: {
-    '& .MuiInputBase-select': {
+    '& .MuiOutlinedInput-root fieldset': {
       border: 'none',
       '&:hover fieldset': {
         border: 'none !important'
@@ -182,11 +182,6 @@ const useStyles = makeStyles()((theme) => ({
       display: 'flex',
       alignItems: 'center',
       padding: 0
-    },
-
-
-    '& fieldset': {
-      border: 'none',
     },
 
     '& .MuiSelect-iconOutlined': {
