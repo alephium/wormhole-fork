@@ -15,8 +15,6 @@ import useAlgoMetadata, { AlgoMetadata } from "./useAlgoMetadata";
 import useEvmMetadata, { EvmMetadata } from "./useEvmMetadata";
 import useMetaplexData from "./useMetaplexData";
 import useSolanaTokenMap from "./useSolanaTokenMap";
-import useTerraMetadata, { TerraMetadata } from "./useTerraMetadata";
-import useTerraTokenMap, { TerraTokenMap } from "./useTerraTokenMap";
 import useAlphMetadata, { AlphMetadata } from "./useAlephiumMetadata";
 
 export type GenericMetadata = {
@@ -48,35 +46,6 @@ const constructSolanaMetadata = (
       tokenName: metaplex?.data?.name || tokenInfo?.name || undefined,
       decimals: tokenInfo?.decimals || undefined, //TODO decimals are actually on the mint, not the metaplex account.
       raw: metaplex,
-    };
-    data.set(address, obj);
-  });
-
-  return {
-    isFetching,
-    error,
-    receivedAt,
-    data,
-  };
-};
-
-const constructTerraMetadata = (
-  addresses: string[],
-  tokenMap: DataWrapper<TerraTokenMap>,
-  terraMetadata: DataWrapper<Map<string, TerraMetadata>>
-) => {
-  const isFetching = tokenMap.isFetching || terraMetadata.isFetching;
-  const error = tokenMap.error || terraMetadata.error;
-  const receivedAt = tokenMap.receivedAt && terraMetadata.receivedAt;
-  const data = new Map<string, GenericMetadata>();
-  addresses.forEach((address) => {
-    const metadata = terraMetadata.data?.get(address);
-    const tokenInfo = tokenMap.data?.mainnet[address];
-    const obj = {
-      symbol: tokenInfo?.symbol || metadata?.symbol || undefined,
-      logo: tokenInfo?.icon || metadata?.logo || undefined,
-      tokenName: tokenInfo?.name || metadata?.tokenName || undefined,
-      decimals: metadata?.decimals || undefined,
     };
     data.set(address, obj);
   });
@@ -178,14 +147,10 @@ export default function useMetadata(
   fetchBalance: boolean = false,
   walletAddress?: string,
 ): DataWrapper<Map<string, GenericMetadata>> {
-  const terraTokenMap = useTerraTokenMap(chainId === CHAIN_ID_TERRA);
   const solanaTokenMap = useSolanaTokenMap();
 
   const solanaAddresses = useMemo(() => {
     return chainId === CHAIN_ID_SOLANA ? addresses : [];
-  }, [chainId, addresses]);
-  const terraAddresses = useMemo(() => {
-    return chainId === CHAIN_ID_TERRA ? addresses : [];
   }, [chainId, addresses]);
   const ethereumAddresses = useMemo(() => {
     return isEVMChain(chainId) ? addresses : [];
@@ -198,7 +163,6 @@ export default function useMetadata(
   }, [chainId, addresses])
 
   const metaplexData = useMetaplexData(solanaAddresses);
-  const terraMetadata = useTerraMetadata(terraAddresses);
   const ethMetadata = useEvmMetadata(ethereumAddresses, chainId, fetchBalance, walletAddress);
   const algoMetadata = useAlgoMetadata(algoAddresses);
   const alphMetadata = useAlphMetadata(alphTokenIds, fetchBalance, walletAddress)
@@ -210,8 +174,6 @@ export default function useMetadata(
         : isEVMChain(chainId)
         ? constructEthMetadata(ethereumAddresses, ethMetadata)
         : chainId === CHAIN_ID_TERRA
-        ? constructTerraMetadata(terraAddresses, terraTokenMap, terraMetadata)
-        : chainId === CHAIN_ID_ALGORAND
         ? constructAlgoMetadata(algoAddresses, algoMetadata)
         : chainId === CHAIN_ID_ALEPHIUM
         ? constructAlphMetadata(alphTokenIds, alphMetadata)
@@ -223,9 +185,6 @@ export default function useMetadata(
       metaplexData,
       ethereumAddresses,
       ethMetadata,
-      terraAddresses,
-      terraMetadata,
-      terraTokenMap,
       algoAddresses,
       algoMetadata,
       alphTokenIds,

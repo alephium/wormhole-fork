@@ -11,7 +11,6 @@ import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
 import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
-import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
@@ -37,19 +36,17 @@ root.render(
               <BetaContextProvider>
                 <SolanaWalletProvider>
                   <EthereumProviderProvider>
-                    <TerraWalletProvider>
-                      <AlephiumWalletProvider
-                        network={CLUSTER}
-                        addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
-                        connectors={connectors}
-                      >
-                        <AlgorandContextProvider>
-                          <HashRouter>
-                            <App />
-                          </HashRouter>
-                        </AlgorandContextProvider>
-                      </AlephiumWalletProvider>
-                    </TerraWalletProvider>
+                    <AlephiumWalletProvider
+                      network={CLUSTER}
+                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                      connectors={connectors}
+                    >
+                      <AlgorandContextProvider>
+                        <HashRouter>
+                          <App />
+                        </HashRouter>
+                      </AlgorandContextProvider>
+                    </AlephiumWalletProvider>
                   </EthereumProviderProvider>
                 </SolanaWalletProvider>
               </BetaContextProvider>

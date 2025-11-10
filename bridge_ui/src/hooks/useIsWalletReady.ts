@@ -3,11 +3,9 @@ import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
 import { hexlify, hexStripZeros } from "@ethersproject/bytes";
-import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useCallback, useMemo } from "react";
 import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
 import {
@@ -45,9 +43,7 @@ function useIsWalletReady(
   const autoSwitch = enableNetworkAutoswitch;
   const solanaWallet = useSolanaWallet();
   const solPK = solanaWallet?.publicKey;
-  const terraWallet = useConnectedWallet();
   const alphWallet = useWallet();
-  const hasTerraWallet = !!terraWallet;
   const {
     provider,
     signerAddress,
@@ -113,19 +109,6 @@ function useIsWalletReady(
         alphWallet.account.address
       );
     }
-    if (
-      chainId === CHAIN_ID_TERRA &&
-      hasTerraWallet &&
-      terraWallet?.walletAddress
-    ) {
-      // TODO: terraWallet does not update on wallet changes
-      return createWalletStatus(
-        true,
-        undefined,
-        forceNetworkSwitch,
-        terraWallet.walletAddress
-      );
-    }
     if (chainId === CHAIN_ID_SOLANA && solPK) {
       return createWalletStatus(
         true,
@@ -168,14 +151,12 @@ function useIsWalletReady(
     chainId,
     autoSwitch,
     forceNetworkSwitch,
-    hasTerraWallet,
     solPK,
     hasEthInfo,
     correctEvmNetwork,
     hasCorrectEvmNetwork,
     provider,
     signerAddress,
-    terraWallet,
     alphWallet,
     algoPK,
     t
