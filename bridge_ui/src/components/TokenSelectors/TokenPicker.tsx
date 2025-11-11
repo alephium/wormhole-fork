@@ -16,7 +16,7 @@ import { makeStyles } from 'tss-react/mui';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Alert } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 import { useTranslation } from "react-i18next";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { balancePretty } from "../../utils/balancePretty";

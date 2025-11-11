@@ -2,7 +2,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import EthereumProvider from "@alephium/walletconnect-ethereum-provider";
 import { BigNumber, ethers } from "ethers";
 import React, {
-  ReactChildren,
+  ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -60,7 +60,7 @@ const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
 export const EthereumProviderProvider = ({
   children,
 }: {
-  children: ReactChildren;
+  children: ReactNode;
 }) => {
   const { t } = useTranslation();
   const [providerError, setProviderError] = useState<string | null>(null);
@@ -166,7 +166,7 @@ export const EthereumProviderProvider = ({
   }, [getSignerFromProvider, t])
 
 
-  const handleChainChanged = useCallback((chainId) => {
+  const handleChainChanged = useCallback((chainId: string) => {
     try {
       setChainId(BigNumber.from(chainId).toNumber());
     } catch (e) {

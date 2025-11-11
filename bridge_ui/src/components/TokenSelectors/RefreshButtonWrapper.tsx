@@ -6,6 +6,8 @@ import { makeStyles } from 'tss-react/mui';
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 
+import type { JSX } from "react";
+
 const useStyles = makeStyles()(() => ({
     inlineContentWrapper: {
       display: "inline-block",

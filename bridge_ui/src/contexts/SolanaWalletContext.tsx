@@ -15,10 +15,10 @@ import {
   SolletExtensionWalletAdapter,
   ExodusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
-import { FC, useMemo } from "react";
+import { FC, ReactNode, useMemo } from "react";
 import { SOLANA_HOST } from "../utils/consts";
 
-export const SolanaWalletProvider: FC = (props) => {
+export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
@@ -38,7 +38,7 @@ export const SolanaWalletProvider: FC = (props) => {
   return (
     <ConnectionProvider endpoint={SOLANA_HOST}>
       <WalletProvider wallets={wallets} autoConnect>
-        {props.children}
+        {children}
       </WalletProvider>
     </ConnectionProvider>
   );

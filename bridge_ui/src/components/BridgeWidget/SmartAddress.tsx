@@ -21,7 +21,7 @@ import { Button, Tooltip, Typography } from '@mui/material'
 import { makeStyles } from 'tss-react/mui';
 import { FileCopy, OpenInNew } from '@mui/icons-material'
 import { withStyles } from 'tss-react/mui'
-import { ReactChild, useState } from 'react'
+import { ReactNode, useState } from 'react'
 import useCopyToClipboard from '../../hooks/useCopyToClipboard'
 import { ParsedTokenAccount } from '../../store/transferSlice'
 import { CLUSTER, WETH_ADDRESS, getExplorerName } from '../../utils/consts'
@@ -139,7 +139,7 @@ interface SmartAddressProps {
   variant?: any
   noGutter?: boolean
   noUnderline?: boolean
-  extraContent?: ReactChild
+  extraContent?: ReactNode
   isAsset?: boolean
   pulse?: boolean
   tooltipText?: string

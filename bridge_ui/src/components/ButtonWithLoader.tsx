@@ -4,7 +4,7 @@ import {
   Typography,
 } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
-import { ReactChild } from "react";
+import { ReactNode } from "react";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -38,7 +38,7 @@ export default function ButtonWithLoader({
   onClick: () => void;
   showLoader?: boolean;
   error?: string;
-  children: ReactChild;
+  children: ReactNode;
 }) {
   const { classes } = useStyles();
   return (

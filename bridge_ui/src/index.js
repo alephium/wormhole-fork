@@ -3,7 +3,7 @@ import "./i18n";
 import { CssBaseline } from "@mui/material";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { SnackbarProvider } from "notistack";
-import ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
@@ -11,7 +11,6 @@ import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
 import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
 import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
-import { TerraWalletProvider } from "./contexts/TerraWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
@@ -23,7 +22,10 @@ const connectors = {
   desktopWallet: createDesktopWalletConnector({customStoragePrefix: 'alephium'})
 }
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container);
+
+root.render(
   <ErrorBoundary>
     <Provider store={store}>
       <StyledEngineProvider injectFirst>
@@ -34,19 +36,17 @@ ReactDOM.render(
               <BetaContextProvider>
                 <SolanaWalletProvider>
                   <EthereumProviderProvider>
-                    <TerraWalletProvider>
-                      <AlephiumWalletProvider
-                        network={CLUSTER}
-                        addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
-                        connectors={connectors}
-                      >
-                        <AlgorandContextProvider>
-                          <HashRouter>
-                            <App />
-                          </HashRouter>
-                        </AlgorandContextProvider>
-                      </AlephiumWalletProvider>
-                    </TerraWalletProvider>
+                    <AlephiumWalletProvider
+                      network={CLUSTER}
+                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                      connectors={connectors}
+                    >
+                      <AlgorandContextProvider>
+                        <HashRouter>
+                          <App />
+                        </HashRouter>
+                      </AlgorandContextProvider>
+                    </AlephiumWalletProvider>
                   </EthereumProviderProvider>
                 </SolanaWalletProvider>
               </BetaContextProvider>
@@ -55,6 +55,5 @@ ReactDOM.render(
         </ThemeProvider>
       </StyledEngineProvider>
     </Provider>
-  </ErrorBoundary>,
-  document.getElementById("root")
+  </ErrorBoundary>
 );
