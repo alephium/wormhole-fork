@@ -10,7 +10,11 @@ const AlephiumBridgeWidget = () => {
     }
   }, []);
 
-  return <div>HELLO from the Alephium Bridge Widget!</div>;
+  return (
+    <div>
+      <div>HELLO from the Alephium Bridge Widget!</div>
+    </div>
+  );
 };
 
 export default AlephiumBridgeWidget;

@@ -1,6 +1,6 @@
 {
   "name": "@alephium/bridge-widget",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",
@@ -51,7 +51,7 @@
     "ethers": "^5.7.1",
     "js-base64": "^3.6.1",
     "luxon": "^2.3.1",
-    "notistack": "^1.0.10",
+    "notistack": "^2.0.8",
     "numeral": "^2.0.6",
     "qrcode.react": "^3.0.1",
     "react-confetti-explosion": "^3.0.3",

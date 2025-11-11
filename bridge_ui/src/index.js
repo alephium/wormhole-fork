@@ -8,7 +8,6 @@ import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
-import { BetaContextProvider } from "./contexts/BetaContext";
 import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
 import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
@@ -33,23 +32,21 @@ root.render(
           <CssBaseline />
           <ErrorBoundary>
             <SnackbarProvider maxSnack={3}>
-              <BetaContextProvider>
-                <SolanaWalletProvider>
-                  <EthereumProviderProvider>
-                    <AlephiumWalletProvider
-                      network={CLUSTER}
-                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
-                      connectors={connectors}
-                    >
-                      <AlgorandContextProvider>
-                        <HashRouter>
-                          <App />
-                        </HashRouter>
-                      </AlgorandContextProvider>
-                    </AlephiumWalletProvider>
-                  </EthereumProviderProvider>
-                </SolanaWalletProvider>
-              </BetaContextProvider>
+              <SolanaWalletProvider>
+                <EthereumProviderProvider>
+                  <AlephiumWalletProvider
+                    network={CLUSTER}
+                    addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                    connectors={connectors}
+                  >
+                    <AlgorandContextProvider>
+                      <HashRouter>
+                        <App />
+                      </HashRouter>
+                    </AlgorandContextProvider>
+                  </AlephiumWalletProvider>
+                </EthereumProviderProvider>
+              </SolanaWalletProvider>
             </SnackbarProvider>
           </ErrorBoundary>
         </ThemeProvider>
