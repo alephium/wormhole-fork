@@ -48,6 +48,7 @@ const resolve = {
     exports: path.resolve(__dirname, './src/exports'),
     'process/': 'process',
     'buffer/': 'buffer',
+    '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src')
   },
 };
 
@@ -140,6 +141,7 @@ const peerDeps = [
   '@mui/material',
   '@mui/icons-material',
   '@mui/styles',
+  'tss-react'
 ];
 
 const external = (id: string) => {
