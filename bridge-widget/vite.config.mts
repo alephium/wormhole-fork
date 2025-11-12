@@ -48,9 +48,19 @@ const resolve = {
     exports: path.resolve(__dirname, './src/exports'),
     'process/': 'process',
     'buffer/': 'buffer',
-    '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src')
+    '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src'),
   },
-  dedupe: ['@emotion/react', '@emotion/styled', '@mui/styled-engine', '@mui/system'],
+  dedupe: [
+    '@emotion/react',
+    '@emotion/styled',
+    '@mui/styled-engine',
+    '@mui/system',
+    '@solana/web3.js',
+    '@solana/spl-token',
+    '@solana/spl-token-registry',
+    '@solana/wallet-adapter-react',
+    '@solana/wallet-adapter-wallets',
+  ],
   // Ensure node_modules resolution works correctly for aliased paths
   // This makes Vite look in bridge-widget's node_modules even when resolving
   // imports from bridge-common
@@ -148,7 +158,7 @@ const peerDeps = [
   '@mui/styled-engine',
   '@mui/system',
   '@mui/styles',
-  'tss-react'
+  'tss-react',
 ];
 
 const external = (id: string) => {

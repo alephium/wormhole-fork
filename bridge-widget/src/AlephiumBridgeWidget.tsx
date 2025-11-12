@@ -1,3 +1,4 @@
+import { BridgeWidget } from '@alephium/bridge-common';
 import { useEffect } from 'react';
 
 const AlephiumBridgeWidget = () => {
@@ -13,6 +14,7 @@ const AlephiumBridgeWidget = () => {
   return (
     <div>
       <div>HELLO from the Alephium Bridge Widget!</div>
+      <BridgeWidget />
     </div>
   );
 };
