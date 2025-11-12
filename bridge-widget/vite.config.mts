@@ -50,6 +50,11 @@ const resolve = {
     'buffer/': 'buffer',
     '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src')
   },
+  dedupe: ['@emotion/react', '@emotion/styled', '@mui/styled-engine', '@mui/system'],
+  // Ensure node_modules resolution works correctly for aliased paths
+  // This makes Vite look in bridge-widget's node_modules even when resolving
+  // imports from bridge-common
+  preserveSymlinks: false,
 };
 
 const plugins = [
@@ -140,6 +145,8 @@ const peerDeps = [
   '@emotion/styled',
   '@mui/material',
   '@mui/icons-material',
+  '@mui/styled-engine',
+  '@mui/system',
   '@mui/styles',
   'tss-react'
 ];

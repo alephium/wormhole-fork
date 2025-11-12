@@ -86,49 +86,6 @@ const useStyles = makeStyles()((theme) => ({
   },
 }));
 
-export async function evm(
-  provider: ethers.providers.Web3Provider,
-  tx: string,
-  enqueueSnackbar: any,
-  chainId: ChainId,
-  nft: boolean
-) {
-  try {
-    const receipt = await provider.getTransactionReceipt(tx);
-    const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
-    if (!isEVMTxConfirmed(chainId, receipt.blockNumber, currentBlockNumber)) {
-      throw new Error(i18n.t('The transaction is awaiting confirmation'))
-    }
-    const sequence = parseSequenceFromLogEth(
-      receipt,
-      getBridgeAddressForChain(chainId)
-    );
-    const targetChain = parseTargetChainFromLogEth(
-      receipt,
-      getBridgeAddressForChain(chainId)
-    )
-    const emitterAddress = getEmitterAddressEth(
-      nft
-        ? getNFTBridgeAddressForChain(chainId)
-        : getTokenBridgeAddressForChain(chainId)
-    );
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      chainId,
-      emitterAddress,
-      targetChain,
-      sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
-    );
-    return { vaa: uint8ArrayToHex(vaaBytes), error: null };
-  } catch (e) {
-    console.error(e);
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{parseError(e)}</Alert>,
-    });
-    return { vaa: null, error: parseError(e) };
-  }
-}
-
 async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
   try {
     if (wallet.nodeProvider === undefined) {
