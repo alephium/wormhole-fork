@@ -1,6 +1,6 @@
 {
   "name": "@alephium/bridge-widget",
-  "version": "0.0.3",
+  "version": "0.0.8",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",
@@ -68,7 +68,7 @@
     "start:mainnet": "NODE_OPTIONS=--max-http-header-size=32000 REACT_APP_WIDGET_ENV=Mainnet vite --host --force",
     "build:common": "cd ../bridge-common && npm run build",
     "prebuild": "npm run build:common",
-    "build": "npm run build:lib; npm run build:hosted",
+    "build": "npm run build:lib",
     "build:lib": "NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",
     "build:minimal": "VITE_BUILD_MINIMAL=1 NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",
     "build:hosted": "VITE_BUILD_HOSTED=1 NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",

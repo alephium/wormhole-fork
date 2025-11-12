@@ -2,10 +2,6 @@ import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/ErrorBoundary';
 import AlephiumBridgeWidget from './AlephiumBridgeWidget';
 import { StrictMode } from 'react';
-import { Provider } from 'react-redux';
-import { store, theme } from '@alephium/bridge-common';
-import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
 
 // This is the entry point that runs when integrators add the Alephium Bridge Widget
 // to their websites by pasting <script> and <link> tags pointing to the
@@ -16,7 +12,9 @@ import { CssBaseline } from '@mui/material';
 //
 // - id: "alephium-bridge-widget"
 
-const container = document.getElementById('alephium-bridge-widget') as HTMLElement;
+const container = document.getElementById(
+  'alephium-bridge-widget',
+) as HTMLElement;
 const root = createRoot(container);
 
 if (!container) {
@@ -33,16 +31,7 @@ if (!container) {
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <Provider store={store}>
-        <StyledEngineProvider injectFirst>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <ErrorBoundary>
-              <AlephiumBridgeWidget />
-            </ErrorBoundary>
-          </ThemeProvider>
-        </StyledEngineProvider>
-      </Provider>
+      <AlephiumBridgeWidget />
     </ErrorBoundary>
   </StrictMode>,
 );

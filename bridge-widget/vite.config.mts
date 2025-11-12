@@ -121,29 +121,29 @@ const sampleAppBuild: BuildEnvironmentOptions = {
 };
 
 // Legacy production build, hosted by unpkg.com (includes React, auto-binds to DOM)
-const hostedBuild: BuildEnvironmentOptions = {
-  outDir: './dist',
-  rollupOptions: {
-    input: {
-      main: 'src/main.tsx',
-    } as Record<string, string>,
-    output: {
-      entryFileNames: '[name].mjs',
-      assetFileNames,
-      inlineDynamicImports: false,
-      exports: 'named' as const,
-    },
-  },
-};
+// const hostedBuild: BuildEnvironmentOptions = {
+//   outDir: './dist',
+//   rollupOptions: {
+//     input: {
+//       main: 'src/main.tsx',
+//     } as Record<string, string>,
+//     output: {
+//       entryFileNames: '[name].mjs',
+//       assetFileNames,
+//       inlineDynamicImports: false,
+//       exports: 'named' as const,
+//     },
+//   },
+// };
 
 const libEntry: InputOption = [
   path.resolve(__dirname, 'src/exports/index.ts'),
-  path.resolve(__dirname, 'src/exports/hosted.ts'),
+  // path.resolve(__dirname, 'src/exports/hosted.ts'),
 ];
 
 const rollupInput: InputOption = {
   index: 'src/exports/index.ts',
-  hosted: 'src/exports/hosted.ts',
+  // hosted: 'src/exports/hosted.ts',
 };
 
 // Function-based external to catch all peer dependency paths
@@ -217,7 +217,8 @@ const minimalBuild: BuildEnvironmentOptions = {
 
 export default defineConfig(({ command, mode }: ConfigEnv) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const isHosted = !!env.VITE_BUILD_HOSTED;
+  // const isHosted = !!env.VITE_BUILD_HOSTED;
+  const isHosted = false;
   const isMinimal = !!env.VITE_BUILD_MINIMAL;
   const isSampleApp = command === 'serve';
 
@@ -227,10 +228,11 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     build = sampleAppBuild;
   } else if (command === 'build') {
     if (isHosted) {
-      build = hostedBuild;
+      // build = hostedBuild;
     } else if (isMinimal) {
       build = minimalBuild;
     } else {
+      console.log('Building lib build');
       build = libBuild;
     }
   }
