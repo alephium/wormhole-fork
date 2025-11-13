@@ -1,12 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import {
-  defineConfig,
-  loadEnv,
-  ConfigEnv,
-  BuildEnvironmentOptions,
-} from 'vite';
+import { defineConfig, ConfigEnv, BuildEnvironmentOptions } from 'vite';
 import type { InputOption, PreRenderedAsset } from 'rollup';
 import react from '@vitejs/plugin-react-swc';
 import checker from 'vite-plugin-checker';
@@ -120,46 +115,15 @@ const sampleAppBuild: BuildEnvironmentOptions = {
   },
 };
 
-// Legacy production build, hosted by unpkg.com (includes React, auto-binds to DOM)
-// const hostedBuild: BuildEnvironmentOptions = {
-//   outDir: './dist',
-//   rollupOptions: {
-//     input: {
-//       main: 'src/main.tsx',
-//     } as Record<string, string>,
-//     output: {
-//       entryFileNames: '[name].mjs',
-//       assetFileNames,
-//       inlineDynamicImports: false,
-//       exports: 'named' as const,
-//     },
-//   },
-// };
-
-const libEntry: InputOption = [
-  path.resolve(__dirname, 'src/exports/index.ts'),
-  // path.resolve(__dirname, 'src/exports/hosted.ts'),
-];
+const libEntry: InputOption = [path.resolve(__dirname, 'src/exports/index.ts')];
 
 const rollupInput: InputOption = {
   index: 'src/exports/index.ts',
-  // hosted: 'src/exports/hosted.ts',
 };
 
 // Function-based external to catch all peer dependency paths
 // This is more robust than an array, especially with preserveModules
-const peerDeps = [
-  'react',
-  'react-dom',
-  '@emotion/react',
-  '@emotion/styled',
-  '@mui/material',
-  '@mui/icons-material',
-  '@mui/styled-engine',
-  '@mui/system',
-  '@mui/styles',
-  'tss-react',
-];
+const peerDeps = ['react', 'react-dom'];
 
 const external = (id: string) => {
   // Check if the module ID starts with any peer dependency
@@ -188,38 +152,7 @@ const libBuild: BuildEnvironmentOptions = {
   },
 };
 
-// Minimal build, for submodule import
-const minimalBuild: BuildEnvironmentOptions = {
-  sourcemap: true,
-  minify: false,
-  outDir: './lib',
-  lib: {
-    entry: libEntry,
-    formats: ['es'],
-  },
-  rollupOptions: {
-    input: rollupInput,
-    output: {
-      entryFileNames: '[name].mjs',
-      chunkFileNames: '[name]-[hash].mjs',
-      assetFileNames: '[name].[ext]',
-      inlineDynamicImports: false,
-      preserveModules: true,
-      preserveModulesRoot: 'src',
-    },
-    external,
-  },
-  terserOptions: {
-    mangle: false,
-    compress: false,
-  },
-};
-
-export default defineConfig(({ command, mode }: ConfigEnv) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  // const isHosted = !!env.VITE_BUILD_HOSTED;
-  const isHosted = false;
-  const isMinimal = !!env.VITE_BUILD_MINIMAL;
+export default defineConfig(({ command }: ConfigEnv) => {
   const isSampleApp = command === 'serve';
 
   let build: BuildEnvironmentOptions | undefined = undefined;
@@ -227,14 +160,7 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
   if (isSampleApp) {
     build = sampleAppBuild;
   } else if (command === 'build') {
-    if (isHosted) {
-      // build = hostedBuild;
-    } else if (isMinimal) {
-      build = minimalBuild;
-    } else {
-      console.log('Building lib build');
-      build = libBuild;
-    }
+    build = libBuild;
   }
 
   return {
