@@ -24,7 +24,7 @@ import CustodyAddresses from "./components/Stats/CustodyAddresses";
 import TokenOriginVerifier from "./components/TokenOriginVerifier";
 import Transactions from "./components/Transactions";
 import Transfer from "./components/Transfer";
-import BridgeWidget from "./components/BridgeWidget";
+import BridgeWidget from "@alephium/bridge-widget";
 import HeaderWalletButtons from "./components/HeaderWalletButtons";
 import UnwrapNative from "./components/UnwrapNative";
 import noise from './images/noise.png';
