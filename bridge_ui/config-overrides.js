@@ -1,33 +1,8 @@
 const { ProvidePlugin } = require("webpack");
 const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
-const path = require("path");
 
 module.exports = function override(config, env) {
   config.resolve.plugins = config.resolve.plugins.filter(plugin => !(plugin instanceof ModuleScopePlugin));
-
-  config.resolve.alias = {
-    ...config.resolve.alias,
-    '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src')
-  };
-
-  // Find the existing TypeScript rule and extend it to include bridge-common
-  const oneOfRule = config.module.rules.find((rule) => rule.oneOf);
-  if (oneOfRule) {
-    const bridgeCommonPath = path.resolve(__dirname, '../bridge-common/src');
-
-    // Find the rule that handles .ts and .tsx files (the one with include pointing to src)
-    const tsRule = oneOfRule.oneOf.find((rule) =>  (
-      rule.test && rule.test.toString().indexOf('ts|tsx') >= 0 && rule.include && typeof rule.include === 'string'
-    ))
-
-    if (tsRule) {
-      // Convert include from string to array and add bridge-common
-      tsRule.include = [tsRule.include, bridgeCommonPath];
-      console.log('Modified TypeScript rule include:', tsRule.include);
-    } else {
-      console.warn('Could not find TypeScript rule to modify');
-    }
-  }
 
   return {
     ...config,

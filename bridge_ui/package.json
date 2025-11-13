@@ -61,11 +61,8 @@
     "use-debounce": "^7.0.0"
   },
   "scripts": {
-    "prestart": "npm run build:common",
     "start": "rm -rf build && react-app-rewired start",
     "build": "rm -rf build && react-app-rewired --max_old_space_size=4096 build",
-    "build:common": "cd ../bridge-common && npm run build",
-    "prebuild": "npm run build:common",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },

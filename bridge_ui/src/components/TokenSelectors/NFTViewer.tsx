@@ -23,16 +23,16 @@ import {
   CHAIN_ID_FANTOM,
 } from "@alephium/wormhole-sdk";
 import SmartAddress from "../SmartAddress";
-import avaxIcon from "../../icons/avax.svg";
-import bscIcon from "../../icons/bsc.svg";
-import ethIcon from "../../icons/eth.svg";
-import fantomIcon from "../../icons/fantom.svg";
-import solanaIcon from "../../icons/solana.svg";
-import polygonIcon from "../../icons/polygon.svg";
-import oasisIcon from "../../icons/oasis-network-rose-logo.svg";
+import avaxIcon from "../../../../bridge-common/icons/avax.svg";
+import bscIcon from "../../../../bridge-common/icons/bsc.svg";
+import ethIcon from "../../../../bridge-common/icons/eth.svg";
+import fantomIcon from "../../../../bridge-common/icons/fantom.svg";
+import solanaIcon from "../../../../bridge-common/icons/solana.svg";
+import polygonIcon from "../../../../bridge-common/icons/polygon.svg";
+import oasisIcon from "../../../../bridge-common/icons/oasis-network-rose-logo.svg";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
 import Skeleton from '@mui/material/Skeleton';
-import Wormhole from "../../icons/wormhole-network.svg";
+import Wormhole from "../../../../bridge-common/icons/wormhole-network.svg";
 import { useTranslation } from "react-i18next";
 
 const safeIPFS = (uri: string) =>

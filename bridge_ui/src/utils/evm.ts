@@ -9,8 +9,8 @@ import {
 import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
 import i18n from "../i18n";
-import { default as ETHTokens } from '../tokens/eth-token-whitelist.json'
-import { default as BSCTokens } from '../tokens/bsc-token-whitelist.json'
+import { default as ETHTokens } from '../../../bridge-common/tokens/eth-token-whitelist.json'
+import { default as BSCTokens } from '../../../bridge-common/tokens/bsc-token-whitelist.json'
 
 export const DefaultEVMChainConfirmations = 15
 export const EpochDuration = 480000

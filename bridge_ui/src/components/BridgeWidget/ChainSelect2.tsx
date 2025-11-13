@@ -9,7 +9,6 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import clsx from 'clsx'
 import { ReactNode, useMemo } from 'react'
-import { useBetaContext } from '../../contexts/BetaContext'
 import { BETA_CHAINS, ChainInfo, CHAINS_BY_ID } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
 import { useConnect, useWallet } from '@alephium/web3-react'
@@ -49,10 +48,9 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
 const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
   const { classes } = useStyles()
   const { classes: widgetClasses } = useWidgetStyles()
-  const isBeta = useBetaContext()
   const filteredChains = useMemo(
-    () => chains.filter(({ id }) => (isBeta ? true : !BETA_CHAINS.includes(id))),
-    [chains, isBeta]
+    () => chains.filter(({ id }) => (!BETA_CHAINS.includes(id))),
+    [chains]
   )
   const chainId = rest.value as ChainId
   const { isReady } = useIsWalletReady(chainId)

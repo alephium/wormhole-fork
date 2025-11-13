@@ -19,17 +19,9 @@
     "isolatedModules": true,
     "downlevelIteration": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@alephium/bridge-common": ["../bridge-common/src"]
-    }
+    "jsx": "react-jsx"
   },
   "include": [
     "src"
-  ],
-  "references": [
-    { "path": "../bridge-common" }
   ]
 }
