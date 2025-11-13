@@ -61,7 +61,6 @@ export default defineConfig(({ command }: ConfigEnv) => {
         exports: path.resolve(__dirname, './src/exports'),
         'process/': 'process',
         'buffer/': 'buffer',
-        // '@alephium/bridge-assets': path.resolve(__dirname, '../bridge-assets'),
       },
       dedupe: [
         '@emotion/react',
@@ -73,11 +72,7 @@ export default defineConfig(({ command }: ConfigEnv) => {
         '@solana/spl-token-registry',
         '@solana/wallet-adapter-react',
         '@solana/wallet-adapter-wallets',
-      ],
-      // Ensure node_modules resolution works correctly for aliased paths
-      // This makes Vite look in bridge-widget's node_modules even when resolving
-      // imports from bridge-assets
-      preserveSymlinks: false,
+      ]
     },
     plugins: [
       checker({ typescript: true }),
@@ -87,26 +82,9 @@ export default defineConfig(({ command }: ConfigEnv) => {
         include: ['process', 'buffer'],
         globals: {
           global: false,
-          Buffer: true,
-          // process: false,
+          Buffer: true
         },
       }),
-      // nodePolyfills({
-      //   include: [
-      //     'crypto',
-      //     'http',
-      //     'https',
-      //     'stream',
-      //     'buffer',
-      //     'url',
-      //     'os',
-      //     'zlib',
-      //   ],
-      //   globals: {
-      //     global: true,
-      //     Buffer: true,
-      //   },
-      // }),
     ],
   };
 });
