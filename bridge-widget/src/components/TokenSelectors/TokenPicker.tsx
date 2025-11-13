@@ -1,4 +1,4 @@
-import { ChainId } from "@alephium/wormhole-sdk";
+import type { ChainId } from "@alephium/wormhole-sdk";
 import {
   Button,
   CircularProgress,
@@ -18,7 +18,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { Alert } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 import { useTranslation } from "react-i18next";
-import { NFTParsedTokenAccount } from "../../store/nftSlice";
+import type { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { balancePretty } from "../../utils/balancePretty";
 import { getIsTokenTransferDisabled } from "../../utils/consts";
 import { shortenAddress } from "../../utils/addresses";
@@ -250,7 +250,7 @@ export default function TokenPicker({
   const handleSelectOption = useCallback(
     async (option: NFTParsedTokenAccount) => {
       setSelectionError("");
-      let newOption = null;
+      let newOption: NFTParsedTokenAccount | null = null;
       try {
         //Covalent balances tend to be stale, so we make an attempt to correct it at selection time.
         if (getAddress && !option.isNativeAsset) {
@@ -284,7 +284,7 @@ export default function TokenPicker({
     setHolderString("");
     setTokenIdHolderString("");
     setSelectionError("");
-    resetAccounts && resetAccounts();
+    resetAccounts?.();
   }, [resetAccounts]);
 
   const searchFilter = useCallback(

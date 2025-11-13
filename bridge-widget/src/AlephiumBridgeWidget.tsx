@@ -1,8 +1,8 @@
-import { BridgeWidget } from '@alephium/bridge-common';
 import ErrorBoundary from './components/ErrorBoundary';
-import { theme } from '@alephium/bridge-common';
 import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
+import { theme } from './muiTheme';
+import BridgeWidget from './components/BridgeWidget';
 
 const AlephiumBridgeWidget = () => {
   return (

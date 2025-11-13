@@ -1,16 +1,18 @@
+import type { PublicKey } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { useLayoutEffect, useMemo, useState } from "react";
-import { DataWrapper } from "../store/helpers";
+import type { DataWrapper } from "../store/helpers";
 import { SOLANA_HOST } from "../utils/consts";
+import type {
+  Metadata} from "../utils/metaplex";
 import {
   decodeMetadata,
-  getMetadataAddress,
-  Metadata,
+  getMetadataAddress
 } from "../utils/metaplex";
 import { getMultipleAccountsRPC } from "../utils/solana";
 
-export const getMetaplexData = async (mintAddresses: string[]) => {
-  const promises = [];
+export const getMetaplexData = async (mintAddresses: string[]): Promise<(Metadata | undefined)[]> => {
+  const promises: Promise<[PublicKey, number]>[] = [];
   for (const address of mintAddresses) {
     promises.push(getMetadataAddress(address));
   }

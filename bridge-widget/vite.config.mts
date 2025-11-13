@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react-swc';
 import checker from 'vite-plugin-checker';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import dts from 'vite-plugin-dts';
-import packageJson from './package.json' with { type: 'json' };
+import packageJson from './package.json';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,22 +40,28 @@ const libBuild: BuildEnvironmentOptions = {
 
 // Local dev server
 const sampleAppBuild: BuildEnvironmentOptions = {
-  outDir: './build'
+  outDir: './build',
 };
 
 export default defineConfig(({ command }: ConfigEnv) => {
   return {
     build: command === 'serve' ? sampleAppBuild : libBuild,
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2020',
+        // Node.js global to browser globalThis
+        define: {
+          global: 'globalThis',
+        },
+      },
+    },
     resolve: {
       alias: {
         public: path.resolve(__dirname, './public'),
         exports: path.resolve(__dirname, './src/exports'),
         'process/': 'process',
         'buffer/': 'buffer',
-        '@alephium/bridge-common': path.resolve(
-          __dirname,
-          '../bridge-common/src',
-        ),
+        // '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common'),
       },
       dedupe: [
         '@emotion/react',
@@ -78,23 +84,29 @@ export default defineConfig(({ command }: ConfigEnv) => {
       dts({ insertTypesEntry: true }),
       react(),
       nodePolyfills({
-        include: [
-          'crypto',
-          'http',
-          'https',
-          'stream',
-          'buffer',
-          'url',
-          'os',
-          'zlib',
-        ],
+        include: ['process', 'buffer'],
         globals: {
-          global: true,
+          global: false,
           Buffer: true,
+          // process: false,
         },
       }),
+      // nodePolyfills({
+      //   include: [
+      //     'crypto',
+      //     'http',
+      //     'https',
+      //     'stream',
+      //     'buffer',
+      //     'url',
+      //     'os',
+      //     'zlib',
+      //   ],
+      //   globals: {
+      //     global: true,
+      //     Buffer: true,
+      //   },
+      // }),
     ],
   };
 });
-
-

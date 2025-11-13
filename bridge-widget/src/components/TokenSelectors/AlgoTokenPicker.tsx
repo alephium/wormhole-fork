@@ -1,14 +1,14 @@
 import { CHAIN_ID_ALGORAND } from "@alephium/wormhole-sdk";
 import { formatUnits } from "@ethersproject/units";
 import { Algodv2 } from "algosdk";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchSingleMetadata } from "../../hooks/useAlgoMetadata";
 import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
-import { DataWrapper } from "../../store/helpers";
-import { NFTParsedTokenAccount } from "../../store/nftSlice";
-import { ParsedTokenAccount } from "../../store/transferSlice";
+import type { DataWrapper } from "../../store/helpers";
+import type { NFTParsedTokenAccount } from "../../store/nftSlice";
+import type { ParsedTokenAccount } from "../../store/transferSlice";
 import { ALGORAND_HOST } from "../../utils/consts";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 
@@ -28,7 +28,7 @@ export default function AlgoTokenPicker(props: AlgoTokenPickerProps) {
   const { walletAddress } = useIsWalletReady(CHAIN_ID_ALGORAND);
 
   const resetAccountWrapper = useCallback(() => {
-    resetAccounts && resetAccounts();
+    resetAccounts?.();
   }, [resetAccounts]);
   const isLoading = tokenAccounts?.isFetching || false;
 

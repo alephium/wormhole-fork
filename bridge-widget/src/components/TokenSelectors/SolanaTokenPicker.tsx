@@ -1,20 +1,20 @@
 import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
-import { TokenInfo } from "@solana/spl-token-registry";
-import React, { useCallback, useMemo } from "react";
+import type { TokenInfo } from "@solana/spl-token-registry";
+import  { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useMarketsMap from "../../hooks/useMarketsMap";
 import useMetaplexData from "../../hooks/useMetaplexData";
 import useSolanaTokenMap from "../../hooks/useSolanaTokenMap";
-import { DataWrapper } from "../../store/helpers";
-import { NFTParsedTokenAccount } from "../../store/nftSlice";
+import type { DataWrapper } from "../../store/helpers";
+import type { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { selectTransferTargetChain } from "../../store/selectors";
-import { ParsedTokenAccount } from "../../store/transferSlice";
+import type { ParsedTokenAccount } from "../../store/transferSlice";
 import {
   MIGRATION_ASSET_MAP,
   WORMHOLE_V1_MINT_AUTHORITY,
 } from "../../utils/consts";
-import { ExtractedMintInfo } from "../../utils/solana";
+import type { ExtractedMintInfo } from "../../utils/solana";
 import { sortParsedTokenAccounts } from "../../utils/sort";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 
@@ -59,8 +59,8 @@ export default function SolanaSourceTokenSelector(
   const markets = useMarketsMap(!nft);
   const targetChain = useSelector(selectTransferTargetChain);
 
-  const memoizedTokenMap: Map<String, TokenInfo> = useMemo(() => {
-    const output = new Map<String, TokenInfo>();
+  const memoizedTokenMap: Map<string, TokenInfo> = useMemo(() => {
+    const output = new Map<string, TokenInfo>();
 
     if (tokenMap.data) {
       for (const data of tokenMap.data) {
@@ -160,7 +160,7 @@ export default function SolanaSourceTokenSelector(
         const marketsData = markets.data;
         const featuredMarkets =
           marketsData?.tokenMarkets?.[CHAIN_ID_SOLANA]?.[targetChain];
-        if (!!featuredMarkets?.[address]) {
+        if (featuredMarkets?.[address]) {
           return false;
         }
       }

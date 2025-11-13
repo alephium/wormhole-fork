@@ -1,13 +1,14 @@
-import { ChainId, CHAIN_ID_ETH, ethers_contracts } from "@alephium/wormhole-sdk";
+import type { ChainId, ethers_contracts } from "@alephium/wormhole-sdk";
+import { CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
 import { WormholeAbi__factory } from "@alephium/wormhole-sdk/lib/esm/ethers-contracts/abi";
 import { getAddress as getEthAddress } from "@ethersproject/address";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
-import { DataWrapper } from "../../store/helpers";
-import { NFTParsedTokenAccount } from "../../store/nftSlice";
-import { ParsedTokenAccount } from "../../store/transferSlice";
+import type { DataWrapper } from "../../store/helpers";
+import type { NFTParsedTokenAccount } from "../../store/nftSlice";
+import type { ParsedTokenAccount } from "../../store/transferSlice";
 import {
   getMigrationAssetMap,
   WORMHOLE_V1_ETH_ADDRESS,

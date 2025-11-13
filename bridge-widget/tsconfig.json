@@ -28,12 +28,7 @@
     "sourceMap": true,
     "target": "es2022",
     "strict": true,
-    "jsx": "react-jsx",
-    "paths": {
-      "@alephium/bridge-common": ["../bridge-common/src"]
-    }
+    "jsx": "react-jsx"
   },
-  "references": [
-    { "path": "../bridge-common" }
-  ]
+  "references": [{ "path": "../bridge-common" }]
 }

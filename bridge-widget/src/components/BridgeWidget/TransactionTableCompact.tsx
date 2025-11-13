@@ -14,9 +14,10 @@ import {
 } from '@mui/material'
 import { makeStyles } from 'tss-react/mui'
 import { useTranslation } from 'react-i18next'
-import { BridgeTransaction, TxStatus } from '../Transactions'
+import type { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'
-import { isValidElement, ReactNode, useCallback, useMemo } from 'react'
+import type { ReactNode} from 'react';
+import { isValidElement, useCallback, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import {
   setBridgeWidgetPage,
@@ -119,7 +120,7 @@ const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: 
     (column: Column, txWithStatus: BridgeTransaction & { status: TxStatus }) => {
       if (column.id === 'status') {
         const status = column.format ? column.format(txWithStatus, isMobile) : txWithStatus.status
-        let icon = null
+        let icon: ReactNode | null = null
         let iconColor = '#000'
 
         if (txWithStatus.status === 'Pending' || txWithStatus.status === 'Loading') {
