@@ -1,6 +1,6 @@
 {
   "name": "@alephium/bridge-widget",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",
@@ -9,17 +9,23 @@
       "types": "./lib/index.d.ts",
       "require": "./lib/index.js",
       "import": "./lib/index.mjs"
-    },
-    "./hosted": {
-      "types": "./lib/hosted.d.ts",
-      "require": "./lib/hosted.js",
-      "import": "./lib/hosted.mjs"
     }
   },
   "files": [
-    "lib",
-    "dist"
+    "lib"
   ],
+  "scripts": {
+    "start": "vite",
+    "start:testnet": "VITE_REACT_APP_CLUSTER=testnet vite",
+    "start:mainnet": "VITE_REACT_APP_CLUSTER=mainnet vite",
+    "build": "NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "prettier": "prettier --write ./src",
+    "prettier:check": "prettier --check ./src",
+    "preview": "vite preview",
+    "unused:exports": "ts-unused-exports ./tsconfig.json --ignoreLocallyUsed"
+  },
   "dependencies": {
     "@alephium/token-list": "0.0.12",
     "@alephium/walletconnect-ethereum-provider": "0.2.0",
@@ -71,22 +77,6 @@
     "@emotion/styled": "^11.14.1",
     "tss-react": "^4.9.19",
     "framer-motion": "^12.23.24"
-  },
-  "scripts": {
-    "start": "vite --host --force",
-    "build": "NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",
-    "lint": "eslint ./src",
-    "lint:fix": "eslint ./src --fix",
-    "prettier": "prettier --write ./src",
-    "prettier:check": "prettier --check ./src",
-    "analyze": "ANALYZE=true NODE_ENV=production NODE_OPTIONS=--max-old-space-size=10240 vite build",
-    "preview": "vite preview",
-    "unused:exports": "ts-unused-exports ./tsconfig.json --ignoreLocallyUsed",
-    "test:unit": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:with-wallet": "playwright test --grep-invert @noWallet",
-    "test:e2e:without-wallet": "playwright test --grep @noWallet"
   },
   "browserslist": {
     "production": [

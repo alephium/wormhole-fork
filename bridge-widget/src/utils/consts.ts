@@ -51,11 +51,12 @@ export const alphArbiterFee = BigInt('0');
 
 export type Cluster = 'devnet' | 'testnet' | 'mainnet';
 export const CLUSTER: Cluster =
-  process.env.REACT_APP_CLUSTER === 'mainnet'
+import.meta.env.VITE_REACT_APP_CLUSTER === 'mainnet'
     ? 'mainnet'
-    : process.env.REACT_APP_CLUSTER === 'testnet'
+    : import.meta.env.VITE_REACT_APP_CLUSTER === 'testnet'
     ? 'testnet'
     : 'devnet';
+
 export interface ChainInfo {
   id: ChainId;
   name: string;
