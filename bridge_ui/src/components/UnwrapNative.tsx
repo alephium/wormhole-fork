@@ -24,14 +24,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import useIsWalletReady from "../hooks/useIsWalletReady";
-import avaxIcon from "../../../bridge-common/icons/avax.svg";
-import bnbIcon from "../../../bridge-common/icons/bnb.svg";
-import ethIcon from "../../../bridge-common/icons/eth.svg";
-import fantomIcon from "../../../bridge-common/icons/fantom.svg";
-import klaytnIcon from "../../../bridge-common/icons/klaytn.svg";
-import neonIcon from "../../../bridge-common/icons/neon.svg";
-import oasisIcon from "../../../bridge-common/icons/oasis-network-rose-logo.svg";
-import polygonIcon from "../../../bridge-common/icons/polygon.svg";
+import avaxIcon from "../../../bridge-assets/icons/avax.svg";
+import bnbIcon from "../../../bridge-assets/icons/bnb.svg";
+import ethIcon from "../../../bridge-assets/icons/eth.svg";
+import fantomIcon from "../../../bridge-assets/icons/fantom.svg";
+import klaytnIcon from "../../../bridge-assets/icons/klaytn.svg";
+import neonIcon from "../../../bridge-assets/icons/neon.svg";
+import oasisIcon from "../../../bridge-assets/icons/oasis-network-rose-logo.svg";
+import polygonIcon from "../../../bridge-assets/icons/polygon.svg";
 import { COLORS } from "../muiTheme";
 import {
   DataWrapper,

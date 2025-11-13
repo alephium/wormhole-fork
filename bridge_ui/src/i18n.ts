@@ -19,7 +19,7 @@ along with the library. If not, see <http://www.gnu.org/licenses/>.
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-import en from '../../bridge-common/locales/en-US/translation.json'
+import en from '../../bridge-assets/locales/en-US/translation.json'
 
 i18next.use(initReactI18next).init({
   resources: {

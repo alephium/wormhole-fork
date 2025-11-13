@@ -26,9 +26,9 @@ import {
 import { clusterApiUrl } from '@solana/web3.js';
 import { getAddress } from 'ethers/lib/utils';
 import { CHAIN_CONFIG_MAP } from '../config';
-import bscIcon from '../../../bridge-common/icons/bsc.svg';
-import ethIcon from '../../../bridge-common/icons/eth.svg';
-import alephiumIcon from '../../../bridge-common/icons/alephium.svg';
+import bscIcon from '../../../bridge-assets/icons/bsc.svg';
+import ethIcon from '../../../bridge-assets/icons/eth.svg';
+import alephiumIcon from '../../../bridge-assets/icons/alephium.svg';
 import {
   testnetTokensMetadata,
   mainnetTokensMetadata,

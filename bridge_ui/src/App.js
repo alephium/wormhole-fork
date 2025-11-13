@@ -28,7 +28,7 @@ import BridgeWidget from "./components/BridgeWidget";
 import HeaderWalletButtons from "./components/HeaderWalletButtons";
 import UnwrapNative from "./components/UnwrapNative";
 import noise from './images/noise.png';
-import AlephiumLogo from "../../bridge-common/icons/alephium.svg";
+import AlephiumLogo from "../../bridge-assets/icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { web3 } from "@alephium/web3";

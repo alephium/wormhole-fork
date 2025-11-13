@@ -20,7 +20,7 @@ export default defineConfig({
     alias: {
       public: path.resolve(__dirname, './public'),
       exports: path.resolve(__dirname, './src/exports'),
-      '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common/src'),
+      '@alephium/bridge-assets': path.resolve(__dirname, '../bridge-assets/src'),
     },
   },
 });

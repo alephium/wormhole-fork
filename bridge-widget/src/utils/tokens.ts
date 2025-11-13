@@ -1,6 +1,6 @@
-import bscIcon from '../../../bridge-common/icons/bsc.svg';
-import ethIcon from '../../../bridge-common/icons/eth.svg';
-import alephiumIcon from '../../../bridge-common/icons/alephium.svg';
+import bscIcon from '../../../bridge-assets/icons/bsc.svg';
+import ethIcon from '../../../bridge-assets/icons/eth.svg';
+import alephiumIcon from '../../../bridge-assets/icons/alephium.svg';
 import {
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_BSC,

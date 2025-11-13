@@ -61,7 +61,7 @@ export default defineConfig(({ command }: ConfigEnv) => {
         exports: path.resolve(__dirname, './src/exports'),
         'process/': 'process',
         'buffer/': 'buffer',
-        // '@alephium/bridge-common': path.resolve(__dirname, '../bridge-common'),
+        // '@alephium/bridge-assets': path.resolve(__dirname, '../bridge-assets'),
       },
       dedupe: [
         '@emotion/react',
@@ -76,7 +76,7 @@ export default defineConfig(({ command }: ConfigEnv) => {
       ],
       // Ensure node_modules resolution works correctly for aliased paths
       // This makes Vite look in bridge-widget's node_modules even when resolving
-      // imports from bridge-common
+      // imports from bridge-assets
       preserveSymlinks: false,
     },
     plugins: [

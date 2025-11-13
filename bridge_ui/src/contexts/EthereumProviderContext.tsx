@@ -9,8 +9,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import metamaskIcon from "../../../bridge-common/icons/metamask-fox.svg";
-import walletconnectIcon from "../../../bridge-common/icons/walletconnect.svg";
+import metamaskIcon from "../../../bridge-assets/icons/metamask-fox.svg";
+import walletconnectIcon from "../../../bridge-assets/icons/walletconnect.svg";
 import QRCodeModal from '@alephium/walletconnect-qrcode-modal'
 import { getEvmChainId } from "../utils/consts";
 import { CHAIN_ID_BSC, CHAIN_ID_ETH, ChainId } from "@alephium/wormhole-sdk";

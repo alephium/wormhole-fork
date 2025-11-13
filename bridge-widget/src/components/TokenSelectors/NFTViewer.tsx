@@ -23,16 +23,16 @@ import {
   CHAIN_ID_FANTOM,
 } from '@alephium/wormhole-sdk';
 import SmartAddress from '../SmartAddress';
-import avaxIcon from '../../../../bridge-common/icons/avax.svg';
-import bscIcon from '../../../../bridge-common/icons/bsc.svg';
-import ethIcon from '../../../../bridge-common/icons/eth.svg';
-import fantomIcon from '../../../../bridge-common/icons/fantom.svg';
-import solanaIcon from '../../../../bridge-common/icons/solana.svg';
-import polygonIcon from '../../../../bridge-common/icons/polygon.svg';
-import oasisIcon from '../../../../bridge-common/icons/oasis-network-rose-logo.svg';
+import avaxIcon from '../../../../bridge-assets/icons/avax.svg';
+import bscIcon from '../../../../bridge-assets/icons/bsc.svg';
+import ethIcon from '../../../../bridge-assets/icons/eth.svg';
+import fantomIcon from '../../../../bridge-assets/icons/fantom.svg';
+import solanaIcon from '../../../../bridge-assets/icons/solana.svg';
+import polygonIcon from '../../../../bridge-assets/icons/polygon.svg';
+import oasisIcon from '../../../../bridge-assets/icons/oasis-network-rose-logo.svg';
 import useCopyToClipboard from '../../hooks/useCopyToClipboard';
 import Skeleton from '@mui/material/Skeleton';
-import Wormhole from '../../../../bridge-common/icons/wormhole-network.svg';
+import Wormhole from '../../../../bridge-assets/icons/wormhole-network.svg';
 import { useTranslation } from 'react-i18next';
 
 const safeIPFS = (uri: string) =>
