@@ -6,6 +6,7 @@ import checker from 'vite-plugin-checker';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import dts from 'vite-plugin-dts';
 import packageJson from './package.json';
+import { analyzer } from 'vite-bundle-analyzer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,7 @@ const libBuild: BuildEnvironmentOptions = {
   outDir: './lib',
   lib: {
     entry: path.resolve(__dirname, 'src/exports/index.ts'),
-    formats: ['es', 'cjs'],
+    formats: ['es'],
     fileName: (format, entryname) => {
       const n = entryname.split('/').pop()!;
       return `${n.split('.')[0]}.${format === 'es' ? 'mjs' : 'js'}`;
@@ -72,9 +73,10 @@ export default defineConfig(({ command }: ConfigEnv) => {
         '@solana/spl-token-registry',
         '@solana/wallet-adapter-react',
         '@solana/wallet-adapter-wallets',
-      ]
+      ],
     },
     plugins: [
+      // analyzer(),
       checker({ typescript: true }),
       dts({ insertTypesEntry: true }),
       react(),
@@ -82,7 +84,7 @@ export default defineConfig(({ command }: ConfigEnv) => {
         include: ['process', 'buffer'],
         globals: {
           global: false,
-          Buffer: true
+          Buffer: true,
         },
       }),
     ],
