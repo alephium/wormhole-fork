@@ -10,7 +10,7 @@ import { Typography } from "@mui/material";
 import { LocalGasStation } from "@mui/icons-material";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import {
   getDefaultNativeCurrencySymbol,
   SOLANA_HOST

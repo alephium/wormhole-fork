@@ -20,7 +20,7 @@ import {
 } from "../../utils/consts";
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { Alert } from "@mui/material";
 import { ethers } from "ethers";
 import useSWR from "swr";

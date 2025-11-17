@@ -22,7 +22,7 @@ import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import avaxIcon from "../../../bridge-assets/icons/avax.svg";
 import bnbIcon from "../../../bridge-assets/icons/bnb.svg";

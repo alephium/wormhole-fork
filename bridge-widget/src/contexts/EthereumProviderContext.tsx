@@ -58,7 +58,7 @@ const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
   walletConnectProvider: undefined,
 });
 
-export const EthereumProviderProvider = ({
+export const EthereumWalletProvider = ({
   children,
 }: {
   children: ReactNode;

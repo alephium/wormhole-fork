@@ -7,12 +7,12 @@ import {
 } from "@alephium/wormhole-sdk";
 import { hexlify, hexStripZeros } from "@ethersproject/bytes";
 import { useCallback, useMemo } from "react";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
 import {
   ConnectType,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+} from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import { CLUSTER, getEvmChainId } from "../utils/consts";
 import { METAMASK_CHAIN_PARAMETERS } from "../utils/metaMaskChainParameters";
 import { useWallet } from "@alephium/web3-react";

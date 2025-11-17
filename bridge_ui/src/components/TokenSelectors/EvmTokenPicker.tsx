@@ -3,7 +3,7 @@ import { WormholeAbi__factory } from "@alephium/wormhole-sdk/lib/esm/ethers-cont
 import { getAddress as getEthAddress } from "@ethersproject/address";
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import useIsWalletReady from "../../hooks/useIsWalletReady";
 import { DataWrapper } from "../../store/helpers";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";

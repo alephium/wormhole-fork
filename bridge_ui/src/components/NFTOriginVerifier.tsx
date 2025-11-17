@@ -26,7 +26,7 @@ import { makeStyles } from 'tss-react/mui';
 import { Launch } from "@mui/icons-material";
 import { Alert } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { COLORS } from "../muiTheme";
 import { NFTParsedTokenAccount } from "../store/nftSlice";

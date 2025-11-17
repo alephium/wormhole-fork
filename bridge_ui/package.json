@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@alephium/bridge-widget": "^0.0.23",
+    "@alephium/bridge-widget": "^0.0.31",
     "@alephium/token-list": "0.0.12",
     "@alephium/walletconnect-ethereum-provider": "0.2.0",
     "@alephium/walletconnect-qrcode-modal": "0.1.0",

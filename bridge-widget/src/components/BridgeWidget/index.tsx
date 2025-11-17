@@ -18,41 +18,15 @@ import TransactionsHistoryPage from './TransactionsHistoryPage/TransactionsHisto
 import PageNavigation from './PageNavigation/PageNavigation'
 import PageTitle from './PageTitle'
 import RegisterTokenPage from './RegisterTokenPage/RegisterTokenPage'
-import {
-  AlephiumWalletProvider,
-  createDesktopWalletConnector,
-  createWalletConnectConnector
-} from '@alephium/web3-react'
 import { Provider } from 'react-redux'
 import { store } from '../../store'
 import { SnackbarProvider } from 'notistack'
-import { SolanaWalletProvider } from '../../contexts/SolanaWalletContext'
-import { EthereumProviderProvider } from '../../contexts/EthereumProviderContext'
-import { AlgorandContextProvider } from '../../contexts/AlgorandWalletContext'
-import { getConst, getCluster } from '../../utils/consts'
-
-const connectors = {
-  walletConnect: createWalletConnectConnector({ customStoragePrefix: 'alephium' }),
-  desktopWallet: createDesktopWalletConnector({ customStoragePrefix: 'alephium' })
-}
 
 const BridgeWidget = () => {
   return (
     <Provider store={store}>
       <SnackbarProvider maxSnack={3}>
-        <SolanaWalletProvider>
-          <EthereumProviderProvider>
-            <AlephiumWalletProvider
-              network={getCluster()}
-              addressGroup={getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')}
-              connectors={connectors}
-            >
-              <AlgorandContextProvider>
-                <BridgeWidgetRoutes />
-              </AlgorandContextProvider>
-            </AlephiumWalletProvider>
-          </EthereumProviderProvider>
-        </SolanaWalletProvider>
+        <BridgeWidgetRoutes />
       </SnackbarProvider>
     </Provider>
   )

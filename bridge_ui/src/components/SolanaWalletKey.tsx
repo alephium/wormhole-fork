@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import SolanaConnectWalletDialog from "./SolanaConnectWalletDialog";
 import ToggleConnectedButton from "./ToggleConnectedButton";
 

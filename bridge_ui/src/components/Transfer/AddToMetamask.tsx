@@ -5,7 +5,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import {
   selectTransferSourceParsedTokenAccount,
   selectTransferTargetAsset,

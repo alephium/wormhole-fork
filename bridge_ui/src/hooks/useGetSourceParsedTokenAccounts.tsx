@@ -38,12 +38,12 @@ import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
 import {
   Provider,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+} from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import acalaIcon from "../../../bridge-assets/icons/acala.svg";
 import auroraIcon from "../../../bridge-assets/icons/aurora.svg";
 import avaxIcon from "../../../bridge-assets/icons/avax.svg";

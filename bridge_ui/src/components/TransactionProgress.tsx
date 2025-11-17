@@ -17,7 +17,7 @@ import { LinearProgress, Typography } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
 import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { Transaction } from "../store/transferSlice";
 import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST, ALEPHIUM_BRIDGE_GROUP_INDEX } from "../utils/consts";
 import SmartBlock from "./SmartBlock";

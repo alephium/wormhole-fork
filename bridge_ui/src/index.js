@@ -7,15 +7,12 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from "react-redux";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
-import { AlgorandContextProvider } from "./contexts/AlgorandWalletContext";
-import { EthereumProviderProvider } from "./contexts/EthereumProviderContext";
-import { SolanaWalletProvider } from "./contexts/SolanaWalletContext.tsx";
 import ErrorBoundary from "./ErrorBoundary";
 import { theme } from "./muiTheme";
 import { store } from "./store";
 import { AlephiumWalletProvider, createWalletConnectConnector, createDesktopWalletConnector } from "@alephium/web3-react";
 import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from "./utils/consts";
-import { setCluster } from "@alephium/bridge-widget";
+import { WalletProviders, setCluster, EthereumWalletProvider, AlgorandContextProvider, SolanaWalletProvider } from "@alephium/bridge-widget";
 
 setCluster(CLUSTER);
 
@@ -35,21 +32,15 @@ root.render(
           <CssBaseline />
           <ErrorBoundary>
             <SnackbarProvider maxSnack={3}>
-              <SolanaWalletProvider>
-                <EthereumProviderProvider>
-                  <AlephiumWalletProvider
-                    network={CLUSTER}
-                    addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
-                    connectors={connectors}
-                  >
-                    <AlgorandContextProvider>
-                      <HashRouter>
-                        <App />
-                      </HashRouter>
-                    </AlgorandContextProvider>
-                  </AlephiumWalletProvider>
-                </EthereumProviderProvider>
-              </SolanaWalletProvider>
+              <WalletProviders
+                network={CLUSTER}
+                addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                connectors={connectors}
+              >
+                <HashRouter>
+                  <App />
+                </HashRouter>
+              </WalletProviders>
             </SnackbarProvider>
           </ErrorBoundary>
         </ThemeProvider>
