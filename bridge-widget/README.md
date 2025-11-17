@@ -14,28 +14,22 @@ If you're using React, you can import the `<AlephiumBridgeWidget />` component d
 npm i @alephium/bridge-widget
 ```
 
+You should also install the peer dependencies:
+
+```bash
+npm i @alephium/web3-react
+```
+
 #### Using the component
 
 ```javascript
-import WormholeConnect from ' @alephium/bridge-widget';
+import AlephiumBridgeWidget, { WalletProviders } from '@alephium/bridge-widget';
 
 function App() {
   return (
-    <AlephiumBridgeWidget />
+    <WalletProviders>
+      <AlephiumBridgeWidget />
+    </WalletProviders>
   );
 }
-```
-
-### Alternative: hosted version via CDN (for any website)
-
-If you're not using React, you can still embed Connect on your website by using the hosted version:
-
-```ts
-import {
-  alephiumBridgeWidgetHosted,
-} from '@alephium/bridge-widget';
-
-const container = document.getElementById('alephium-bridge-widget')!;
-
-alephiumBridgeWidgetHosted(container);
 ```
