@@ -15,10 +15,12 @@ export function WalletProviders({
   addressGroup,
   connectors,
   children,
+  includeAlephium = false,
 }: {
   network?: NetworkId;
   addressGroup?: number;
   connectors?: Connectors;
+  includeAlephium?: boolean;
   children: React.ReactNode;
 }) {
   const _network = network ?? getCluster();
@@ -29,13 +31,17 @@ export function WalletProviders({
     <SolanaWalletProvider>
       <EthereumWalletProvider>
         <AlgorandContextProvider>
-          <AlephiumWalletProvider
-            network={_network}
-            addressGroup={_addressGroup}
-            connectors={_connectors}
-          >
-            {children}
-          </AlephiumWalletProvider>
+          {includeAlephium ? (
+            <AlephiumWalletProvider
+              network={_network}
+              addressGroup={_addressGroup}
+              connectors={_connectors}
+            >
+              {children}
+            </AlephiumWalletProvider>
+          ) : (
+            children
+          )}
         </AlgorandContextProvider>
       </EthereumWalletProvider>
     </SolanaWalletProvider>
