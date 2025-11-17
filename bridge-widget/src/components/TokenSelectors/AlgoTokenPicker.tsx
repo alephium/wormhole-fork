@@ -9,7 +9,7 @@ import useIsWalletReady from "../../hooks/useIsWalletReady";
 import type { DataWrapper } from "../../store/helpers";
 import type { NFTParsedTokenAccount } from "../../store/nftSlice";
 import type { ParsedTokenAccount } from "../../store/transferSlice";
-import { ALGORAND_HOST } from "../../utils/consts";
+import { getConst } from "../../utils/consts";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
 
 type AlgoTokenPickerProps = {
@@ -50,9 +50,9 @@ export default function AlgoTokenPicker(props: AlgoTokenPickerProps) {
         return Promise.reject(t("Wallet is not connected."));
       }
       const algodClient = new Algodv2(
-        ALGORAND_HOST.algodToken,
-        ALGORAND_HOST.algodServer,
-        ALGORAND_HOST.algodPort
+        getConst('ALGORAND_HOST').algodToken,
+        getConst('ALGORAND_HOST').algodServer,
+        getConst('ALGORAND_HOST').algodPort
       );
       return fetchSingleMetadata(lookupAsset, algodClient)
         .then((metadata) => {

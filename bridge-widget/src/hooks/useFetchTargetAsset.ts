@@ -31,8 +31,7 @@ import {
 } from "../store/selectors";
 import { setTargetAsset as setTransferTargetAsset } from "../store/transferSlice";
 import {
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  getConst,
   getEvmChainId,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
@@ -172,11 +171,11 @@ function useFetchTargetAsset(nft?: boolean) {
         dispatch(setTargetAsset(fetchDataWrapper()))
         try {
           const remoteTokenPoolId = await getForeignAssetAlephium(
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
             alphWallet.nodeProvider,
             originChain,
             hexToUint8Array(originAsset),
-            ALEPHIUM_BRIDGE_GROUP_INDEX
+            getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
           )
           if (!cancelled) {
             dispatch(

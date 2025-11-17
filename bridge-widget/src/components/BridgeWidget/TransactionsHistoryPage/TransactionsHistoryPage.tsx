@@ -14,7 +14,7 @@ import {
 import { DefaultPageSize, PageSwitch } from '../../Transactions/PageSwitch'
 import { useCallback, useEffect, useState } from 'react'
 import { CHAIN_ID_ALEPHIUM, ChainId, getTokenBridgeForChainId, isEVMChain } from '@alephium/wormhole-sdk'
-import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID } from '../../../utils/consts'
+import { getConst } from '../../../utils/consts'
 import { useWallet } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import { useSnackbar } from 'notistack'
@@ -53,7 +53,7 @@ const TransactionsHistoryPage = () => {
       if (chainId === CHAIN_ID_ALEPHIUM) {
         return alphWallet.connectionStatus !== 'connected'
           ? undefined
-          : () => alphBlockNumberFetcher(alphWallet.nodeProvider, ALEPHIUM_BRIDGE_GROUP_INDEX)
+          : () => alphBlockNumberFetcher(alphWallet.nodeProvider, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
       }
       if (isEVMChain(chainId)) {
         return () => evmBlockNumberFetcher(chainId, evmProvider)
@@ -70,9 +70,9 @@ const TransactionsHistoryPage = () => {
     async (txs: BridgeTransaction[]) => {
       if (transferTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
         const tokenBridgeForChainId = getTokenBridgeForChainId(
-          ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+          getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
           transferSourceChain,
-          ALEPHIUM_BRIDGE_GROUP_INDEX
+          getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
         )
         return await getIsTxsCompletedAlph(
           tokenBridgeForChainId,

@@ -9,7 +9,7 @@ import {
   selectTransferTargetChain
 } from '../../../../store/selectors'
 import { useSelector } from 'react-redux'
-import { CHAINS_BY_ID } from '../../../../utils/consts'
+import { getConst } from '../../../../utils/consts'
 
 const UnregisteredTokenWarning = () => {
   const targetChain = useSelector(selectTransferTargetChain)
@@ -34,7 +34,7 @@ const UnregisteredTokenWarning = () => {
       >
         <div>
           <Typography style={{ fontWeight: 600 }}>
-            {parsedTokenAccount?.symbol} is not registered on {CHAINS_BY_ID[targetChain].name}.
+            {parsedTokenAccount?.symbol} is not registered on {getConst('CHAINS_BY_ID')[targetChain].name}.
           </Typography>
           <Typography style={{ color: GRAY, fontSize: '14px' }}>Please register it now.</Typography>
         </div>

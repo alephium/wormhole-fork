@@ -6,7 +6,7 @@ import {
   createNFTParsedTokenAccount,
   createParsedTokenAccount,
 } from "../hooks/useGetSourceParsedTokenAccounts";
-import { BSC_RPC_HOST, CLUSTER, ETH_RPC_HOST, getTokenBridgeAddressForChain } from "./consts";
+import { getConst, getCluster, getTokenBridgeAddressForChain } from "./consts";
 import { Multicall, ContractCallContext } from 'ethereum-multicall';
 import i18n from "../i18n";
 import { default as ETHTokens } from '../../../bridge-assets/tokens/eth-token-whitelist.json'
@@ -34,7 +34,7 @@ function loadEVMTokenWhitelist(chainId: ChainId): TokenInfo[] {
 }
 
 async function checkEVMToken(chainId: ChainId, tokenAddress: string) {
-  if (CLUSTER !== 'mainnet') return
+  if (getCluster() !== 'mainnet') return
 
   const tokenWhitelist = await loadEVMTokenWhitelist(chainId)
   if (tokenWhitelist.find((token) => token.address.toLowerCase() === tokenAddress.toLowerCase()) === undefined) {
@@ -152,7 +152,7 @@ function checkEVMChainId(chainId: ChainId) {
 
 export async function getEVMCurrentBlockNumber(provider: ethers.providers.Provider, chainId: ChainId): Promise<number> {
   checkEVMChainId(chainId)
-  return chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet'
+  return chainId === CHAIN_ID_ETH && getCluster() !== 'devnet'
     ? (await provider.getBlock("finalized")).number
     : await provider.getBlockNumber()
 }
@@ -193,9 +193,9 @@ async function _waitEVMTxConfirmed(
 export function getEvmJsonRpcProvider(chainId: ChainId): ethers.providers.Provider | undefined {
   checkEVMChainId(chainId)
   return chainId === CHAIN_ID_ETH
-    ? new ethers.providers.JsonRpcProvider(ETH_RPC_HOST)
+    ? new ethers.providers.JsonRpcProvider(getConst('ETH_RPC_HOST'))
     : chainId === CHAIN_ID_BSC
-    ? new ethers.providers.JsonRpcProvider(BSC_RPC_HOST)
+    ? new ethers.providers.JsonRpcProvider(getConst('BSC_RPC_HOST'))
     : undefined
 }
 

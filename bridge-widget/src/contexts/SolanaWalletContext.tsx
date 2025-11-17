@@ -16,7 +16,7 @@ import {
   ExodusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { FC, ReactNode, useMemo } from "react";
-import { SOLANA_HOST } from "../utils/consts";
+import { getConst } from "../utils/consts";
 
 export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = useMemo(
@@ -36,7 +36,7 @@ export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) 
   );
 
   return (
-    <ConnectionProvider endpoint={SOLANA_HOST}>
+    <ConnectionProvider endpoint={getConst('SOLANA_HOST')}>
       <WalletProvider wallets={wallets} autoConnect>
         {children}
       </WalletProvider>

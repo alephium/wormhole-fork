@@ -40,10 +40,8 @@ import {
   setIsWalletApproved
 } from "../store/transferSlice";
 import {
-  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  getConst,
   alphArbiterFee,
-  ALEPHIUM_MESSAGE_FEE,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain
 } from "../utils/consts";
@@ -174,20 +172,20 @@ async function alephium(
     if (tokenChainId === CHAIN_ID_ALEPHIUM) {
       result = await transferLocalTokenFromAlph(
         wallet.signer,
-        ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+        getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
         wallet.account.address,
         tokenId,
         targetChain,
         uint8ArrayToHex(targetAddress),
         amountParsed,
-        ALEPHIUM_MESSAGE_FEE,
+        getConst('ALEPHIUM_MESSAGE_FEE'),
         alphArbiterFee,
-        ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+        getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')
       )
     } else {
       result = await transferRemoteTokenFromAlph(
         wallet.signer,
-        ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+        getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
         wallet.account.address,
         tokenId,
         originAsset,
@@ -195,9 +193,9 @@ async function alephium(
         targetChain,
         uint8ArrayToHex(targetAddress),
         amountParsed,
-        ALEPHIUM_MESSAGE_FEE,
+        getConst('ALEPHIUM_MESSAGE_FEE'),
         alphArbiterFee,
-        ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+        getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')
       )
     }
     dispatch(setIsWalletApproved(true))
@@ -207,13 +205,13 @@ async function alephium(
     enqueueSnackbar(null, {
       content: <Alert severity="success">{i18n.t('Transaction confirmed')}</Alert>,
     });
-    await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL)
+    await waitALPHTxConfirmed(wallet.nodeProvider, txInfo.txId, getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL'))
     enqueueSnackbar(null, {
       content: <Alert severity="info">{i18n.t('Fetching VAA')}</Alert>,
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
       targetChain,
       txInfo.sequence
     );

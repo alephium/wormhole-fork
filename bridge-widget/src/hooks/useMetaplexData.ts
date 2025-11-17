@@ -2,7 +2,7 @@ import type { PublicKey } from "@solana/web3.js";
 import { Connection } from "@solana/web3.js";
 import { useLayoutEffect, useMemo, useState } from "react";
 import type { DataWrapper } from "../store/helpers";
-import { SOLANA_HOST } from "../utils/consts";
+import { getConst } from "../utils/consts";
 import type {
   Metadata} from "../utils/metaplex";
 import {
@@ -17,7 +17,7 @@ export const getMetaplexData = async (mintAddresses: string[]): Promise<(Metadat
     promises.push(getMetadataAddress(address));
   }
   const metaAddresses = await Promise.all(promises);
-  const connection = new Connection(SOLANA_HOST, "confirmed");
+  const connection = new Connection(getConst('SOLANA_HOST'), "confirmed");
   const results = await getMultipleAccountsRPC(
     connection,
     metaAddresses.map((pair) => pair && pair[0])

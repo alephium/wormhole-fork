@@ -19,7 +19,7 @@ import { CheckCircleOutlineRounded } from '@mui/icons-material'
 import { CircularProgress, LinearProgress, Typography } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
-import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../../utils/consts'
+import { getConst, getCluster } from '../../../../utils/consts'
 import {
   DefaultEVMChainConfirmations,
   EpochDuration,
@@ -50,7 +50,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const initialRemainingBlocks = useSelector(selectFinalityProgressInitialRemainingBlocks)
   const initialRemainingSeconds = useSelector(selectFinalityProgressInitialRemainingSeconds)
   const alphTxConfirmsAt = tx?.blockTimestamp
-    ? tx.blockTimestamp + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL * AlephiumBlockTime
+    ? tx.blockTimestamp + getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL') * AlephiumBlockTime
     : undefined
 
   useEffect(() => {
@@ -212,7 +212,7 @@ const useRemainingBlocksForFinality = () => {
   const sourceChain = useSelector(selectTransferSourceChain)
   const tx = useSelector(selectTransferTransferTx)
 
-  const isEthereum = sourceChain === CHAIN_ID_ETH && CLUSTER !== 'devnet'
+  const isEthereum = sourceChain === CHAIN_ID_ETH && getCluster() !== 'devnet'
   const isAlephium = sourceChain === CHAIN_ID_ALEPHIUM
 
   if (!tx || !currentBlockHeight) return undefined
@@ -221,7 +221,7 @@ const useRemainingBlocksForFinality = () => {
   const remainingBlocksForFinality = isEthereum
     ? remainingBlocksUntilTxBlock
     : isAlephium
-    ? remainingBlocksUntilTxBlock + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    ? remainingBlocksUntilTxBlock + getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')
     : remainingBlocksUntilTxBlock + DefaultEVMChainConfirmations
 
   return remainingBlocksForFinality > 0 ? remainingBlocksForFinality : 0
@@ -275,12 +275,12 @@ const useFetchCurrentBlockNumber = () => {
       let cancelled = false
       ;(async (nodeProvider) => {
         while (!cancelled) {
-          const timeout = CLUSTER === 'devnet' ? 1000 : 10000
+          const timeout = getCluster() === 'devnet' ? 1000 : 10000
           await new Promise((resolve) => setTimeout(resolve, timeout))
           try {
             const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: ALEPHIUM_BRIDGE_GROUP_INDEX,
-              toGroup: ALEPHIUM_BRIDGE_GROUP_INDEX
+              fromGroup: getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
+              toGroup: getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
             })
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight)

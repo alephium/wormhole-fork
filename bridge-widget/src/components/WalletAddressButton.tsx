@@ -12,7 +12,7 @@ import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"
 import useCopyToClipboard from "../hooks/useCopyToClipboard"
-import { CHAINS } from "../utils/consts"
+import { getConst } from "../utils/consts"
 import Divider from "./BridgeWidget/Divider"
 import { COLORS } from "../muiTheme"
 
@@ -71,7 +71,7 @@ const WalletAddressButton = ({
     if (iconType !== "chainLogo") {
       return undefined
     }
-    const info = CHAINS.find(({ name }) => name === chainName)
+    const info = getConst('CHAINS').find(({ name }) => name === chainName)
     return info?.logo
   }, [chainName, iconType])
 

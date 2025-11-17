@@ -12,11 +12,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import { setTargetParsedTokenAccount } from "../store/transferSlice";
-import {
-  ALGORAND_HOST,
-  getEvmChainId,
-  SOLANA_HOST
-} from "../utils/consts";
+import { getEvmChainId, getConst } from "../utils/consts";
 import { createParsedTokenAccount } from "./useGetSourceParsedTokenAccounts";
 import useMetadata from "./useMetadata";
 import { Algodv2 } from "algosdk";
@@ -95,7 +91,7 @@ function useGetTargetParsedTokenAccounts() {
       } catch (e) {
         return;
       }
-      const connection = new Connection(SOLANA_HOST, "confirmed");
+      const connection = new Connection(getConst('SOLANA_HOST'), "confirmed");
       connection
         .getParsedTokenAccountsByOwner(solPK, { mint })
         .then(({ value }) => {
@@ -161,9 +157,9 @@ function useGetTargetParsedTokenAccounts() {
       decimals !== undefined
     ) {
       const algodClient = new Algodv2(
-        ALGORAND_HOST.algodToken,
-        ALGORAND_HOST.algodServer,
-        ALGORAND_HOST.algodPort
+        getConst('ALGORAND_HOST').algodToken,
+        getConst('ALGORAND_HOST').algodServer,
+        getConst('ALGORAND_HOST').algodPort
       );
       try {
         const tokenId = BigInt(targetAsset);

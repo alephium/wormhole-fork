@@ -29,13 +29,8 @@ import {
 } from '../../../store/widgetSlice'
 import { getAlphTxInfoByTxId } from '../../../utils/alephium'
 import {
-  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  CHAINS,
-  CHAINS_BY_ID,
-  CHAINS_WITH_NFT_SUPPORT,
+  getConst,
   RELAY_URL_EXTENSION,
-  WORMHOLE_RPC_HOSTS
 } from '../../../utils/consts'
 import { getSignedVAAWithRetry } from '../../../utils/getSignedVAAWithRetry'
 import parseError from '../../../utils/parseError'
@@ -77,17 +72,17 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
       throw new Error(i18n.t('Wallet is not connected'))
     }
     const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId)
-    if (txInfo.confirmations < ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL) {
+    if (txInfo.confirmations < getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')) {
       throw new Error(
-        `remaining-blocks-until-confirmation:${ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL - txInfo.confirmations}`
+        `remaining-blocks-until-confirmation:${getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL') - txInfo.confirmations}`
       )
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
       txInfo.targetChain,
       txInfo.sequence,
-      WORMHOLE_RPC_HOSTS.length
+      getConst('WORMHOLE_RPC_HOSTS').length
     )
     return { vaa: uint8ArrayToHex(vaaBytes), error: null }
   } catch (e) {
@@ -394,7 +389,7 @@ const RecoveryPage = () => {
             value={recoverySourceChain}
             onChange={handleSourceChainChange}
             disabled={!!recoverySignedVAA}
-            chains={isNFT ? CHAINS_WITH_NFT_SUPPORT : CHAINS}
+            chains={isNFT ? getConst('CHAINS_WITH_NFT_SUPPORT') : getConst('CHAINS')}
           />
         </div>
       </div>
@@ -489,7 +484,7 @@ const RecoveryPage = () => {
         </BridgeWidgetButton>
       ) : (
         <ConnectWalletButton chainId={recoverySourceChain}>
-          {`Connect ${CHAINS_BY_ID[recoverySourceChain]?.name ?? 'selected chain'} wallet`}
+          {`Connect ${getConst('CHAINS_BY_ID')[recoverySourceChain]?.name ?? 'selected chain'} wallet`}
         </ConnectWalletButton>
       )}
     </>

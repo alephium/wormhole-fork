@@ -8,7 +8,7 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import { useMemo } from "react";
-import { BETA_CHAINS, ChainInfo } from "../utils/consts";
+import { ChainInfo, getConst } from "../utils/consts";
 
 const useStyles = makeStyles()((theme) => ({
   select: {
@@ -42,7 +42,7 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
 export default function ChainSelect({ chains, ...rest }: ChainSelectProps) {
   const { classes } = useStyles();
   const filteredChains = useMemo(
-    () => chains.filter(({ id }) => !BETA_CHAINS.includes(id)),
+    () => chains.filter(({ id }) => !getConst('BETA_CHAINS').includes(id)),
     [chains]
   );
   return (

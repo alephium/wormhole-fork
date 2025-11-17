@@ -24,11 +24,8 @@ import {
   selectAttestTargetChain
 } from "../store/selectors";
 import {
-  ACALA_HOST,
   getTokenBridgeAddressForChain,
-  KARURA_HOST,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
+  getConst
 } from "../utils/consts";
 import { getKaruraGasParams } from "../utils/karura";
 import parseError from "../utils/parseError";
@@ -52,9 +49,9 @@ async function evm(
     // Klaytn requires specifying gasPrice
     const overrides =
       chainId === CHAIN_ID_KARURA
-        ? await getKaruraGasParams(KARURA_HOST)
+        ? await getKaruraGasParams(getConst('KARURA_HOST'))
         : chainId === CHAIN_ID_ACALA
-        ? await getKaruraGasParams(ACALA_HOST)
+        ? await getKaruraGasParams(getConst('ACALA_HOST'))
         : chainId === CHAIN_ID_KLAYTN
         ? { gasPrice: (await signer.getGasPrice()).toString() }
         : {};
@@ -100,7 +97,7 @@ async function alephium(
   }
   dispatch(setIsCreating(true));
   try {
-    const attestTokenHandlerId = getAttestTokenHandlerId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
+    const attestTokenHandlerId = getAttestTokenHandlerId(getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'), sourceChain, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
     const result = shouldUpdate
       ? await updateRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA)
       : await createRemoteTokenPoolOnAlph(wallet.signer, attestTokenHandlerId, signedVAA, wallet.account.address, MINIMAL_CONTRACT_DEPOSIT)

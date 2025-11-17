@@ -29,7 +29,7 @@ import { SnackbarProvider } from 'notistack'
 import { SolanaWalletProvider } from '../../contexts/SolanaWalletContext'
 import { EthereumProviderProvider } from '../../contexts/EthereumProviderContext'
 import { AlgorandContextProvider } from '../../contexts/AlgorandWalletContext'
-import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from '../../utils/consts'
+import { getConst, getCluster } from '../../utils/consts'
 
 const connectors = {
   walletConnect: createWalletConnectConnector({ customStoragePrefix: 'alephium' }),
@@ -43,8 +43,8 @@ const BridgeWidget = () => {
         <SolanaWalletProvider>
           <EthereumProviderProvider>
             <AlephiumWalletProvider
-              network={CLUSTER}
-              addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+              network={getCluster()}
+              addressGroup={getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')}
               connectors={connectors}
             >
               <AlgorandContextProvider>

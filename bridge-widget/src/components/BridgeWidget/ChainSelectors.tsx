@@ -12,7 +12,7 @@ import {
 import { useCallback, useMemo } from 'react'
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
-import { CHAINS } from '../../utils/consts'
+import { getConst } from '../../utils/consts'
 import { makeStyles } from 'tss-react/mui'
 import { COLORS } from '../../muiTheme'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
@@ -26,6 +26,7 @@ const ChainSelectors = () => {
   const { isReady: isTargetChainReady } = useIsWalletReady(targetChain)
   const { isReady: isSourceChainReady } = useIsWalletReady(sourceChain)
   const shouldLockFields = useSelector(selectTransferShouldLockFields)
+  const CHAINS = getConst('CHAINS')
   const sourceChainOptions = useMemo(
     () => CHAINS.filter((c) => (targetChain !== CHAIN_ID_ALEPHIUM ? c.id === CHAIN_ID_ALEPHIUM : c.id !== targetChain)),
     [targetChain]

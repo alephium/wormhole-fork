@@ -5,7 +5,7 @@ import { FileCopy, OpenInNew } from "@mui/icons-material";
 import { withStyles } from "tss-react/mui";
 import { useTranslation } from "react-i18next";
 import useCopyToClipboard from "../hooks/useCopyToClipboard";
-import { CLUSTER, getExplorerName } from "../utils/consts";
+import { getCluster, getExplorerName } from "../utils/consts";
 
 const useStyles = makeStyles()((theme) => ({
   mainTypog: {
@@ -45,7 +45,7 @@ export default function SmartBlock({
   const explorerAddress =
     chainId === CHAIN_ID_ETH
       ? `https://${
-          CLUSTER === "testnet" ? "sepolia." : ""
+          getCluster() === "testnet" ? "sepolia." : ""
         }etherscan.io/block/${blockNumber}`
       : undefined;
   const explorerName = getExplorerName(chainId);

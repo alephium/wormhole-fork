@@ -86,37 +86,23 @@ import {
   setSourceWalletAddress,
 } from "../store/transferSlice";
 import {
-  ACA_ADDRESS,
   ACA_DECIMALS,
-  ALGORAND_HOST,
   ALGO_DECIMALS,
-  KAR_ADDRESS,
   KAR_DECIMALS,
   logoOverrides,
-  ROPSTEN_WETH_ADDRESS,
   ROPSTEN_WETH_DECIMALS,
-  SOLANA_HOST,
-  WAVAX_ADDRESS,
   WAVAX_DECIMALS,
-  WBNB_ADDRESS,
   WBNB_DECIMALS,
-  CELO_ADDRESS,
   CELO_DECIMALS,
-  WETH_ADDRESS,
-  WETH_AURORA_ADDRESS,
   WETH_AURORA_DECIMALS,
   WETH_DECIMALS,
-  WFTM_ADDRESS,
   WFTM_DECIMALS,
-  WKLAY_ADDRESS,
   WKLAY_DECIMALS,
-  WMATIC_ADDRESS,
   WMATIC_DECIMALS,
-  WNEON_ADDRESS,
   WNEON_DECIMALS,
-  WROSE_ADDRESS,
   WROSE_DECIMALS,
   getTokenBridgeAddressForChain,
+  getConst
 } from "../utils/consts";
 import {
   ExtractedMintInfo,
@@ -264,7 +250,7 @@ const createNativeEthParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WETH_ADDRESS, //Mint key, On the other side this will be WETH, so this is hopefully a white lie.
+          getConst('WETH_ADDRESS'), //Mint key, On the other side this will be WETH, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WETH_DECIMALS, //Luckily both ETH and WETH have 18 decimals, so this should not be an issue.
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -287,7 +273,7 @@ const createNativeEthRopstenParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          ROPSTEN_WETH_ADDRESS, //Mint key, On the other side this will be WETH, so this is hopefully a white lie.
+          getConst('ROPSTEN_WETH_ADDRESS'), //Mint key, On the other side this will be WETH, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           ROPSTEN_WETH_DECIMALS, //Luckily both ETH and WETH have 18 decimals, so this should not be an issue.
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -310,7 +296,7 @@ const createNativeBscParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WBNB_ADDRESS, //Mint key, On the other side this will be WBNB, so this is hopefully a white lie.
+          getConst('WBNB_ADDRESS'), //Mint key, On the other side this will be WBNB, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WBNB_DECIMALS, //Luckily both BNB and WBNB have 18 decimals, so this should not be an issue.
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -333,7 +319,7 @@ const createNativePolygonParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WMATIC_ADDRESS, //Mint key, On the other side this will be WMATIC, so this is hopefully a white lie.
+          getConst('WMATIC_ADDRESS'), //Mint key, On the other side this will be WMATIC, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WMATIC_DECIMALS, //Luckily both MATIC and WMATIC have 18 decimals, so this should not be an issue.
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -356,7 +342,7 @@ const createNativeAvaxParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WAVAX_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+          getConst('WAVAX_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WAVAX_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -379,7 +365,7 @@ const createNativeOasisParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WROSE_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+          getConst('WROSE_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WROSE_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -402,7 +388,7 @@ const createNativeAuroraParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WETH_AURORA_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+          getConst('WETH_AURORA_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WETH_AURORA_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -425,7 +411,7 @@ const createNativeFantomParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WFTM_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+          getConst('WFTM_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WFTM_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -444,13 +430,13 @@ const createNativeKaruraParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : ethers_contracts.TokenImplementation__factory.connect(KAR_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(getConst('KAR_ADDRESS'), provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, KAR_DECIMALS);
           return createParsedTokenAccount(
             signerAddress, //public key
-            KAR_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+            getConst('KAR_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
             balance.toString(), //amount, in wei
             KAR_DECIMALS,
             parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -469,13 +455,13 @@ const createNativeAcalaParsedTokenAccount = (
 ) => {
   return !(provider && signerAddress)
     ? Promise.reject()
-    : ethers_contracts.TokenImplementation__factory.connect(ACA_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(getConst('ACA_ADDRESS'), provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, ACA_DECIMALS);
           return createParsedTokenAccount(
             signerAddress, //public key
-            ACA_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+            getConst('ACA_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
             balance.toString(), //amount, in wei
             ACA_DECIMALS,
             parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -498,7 +484,7 @@ const createNativeKlaytnParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WKLAY_ADDRESS, //Mint key, On the other side this will be wklay, so this is hopefully a white lie.
+          getConst('WKLAY_ADDRESS'), //Mint key, On the other side this will be wklay, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WKLAY_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -519,13 +505,13 @@ const createNativeCeloParsedTokenAccount = (
   // https://docs.celo.org/developer-guide/celo-for-eth-devs
   return !(provider && signerAddress)
     ? Promise.reject()
-    : ethers_contracts.TokenImplementation__factory.connect(CELO_ADDRESS, provider)
+    : ethers_contracts.TokenImplementation__factory.connect(getConst('CELO_ADDRESS'), provider)
         .balanceOf(signerAddress)
         .then((balance) => {
           const balanceInEth = ethers.utils.formatUnits(balance, CELO_DECIMALS);
           return createParsedTokenAccount(
             signerAddress, //public key
-            CELO_ADDRESS, //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
+            getConst('CELO_ADDRESS'), //Mint key, On the other side this will be wavax, so this is hopefully a white lie.
             balance.toString(), //amount, in wei
             CELO_DECIMALS,
             parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -548,7 +534,7 @@ const createNativeNeonParsedTokenAccount = (
         const balanceInEth = ethers.utils.formatEther(balanceInWei);
         return createParsedTokenAccount(
           signerAddress, //public key
-          WNEON_ADDRESS, //Mint key, On the other side this will be wneon, so this is hopefully a white lie.
+          getConst('WNEON_ADDRESS'), //Mint key, On the other side this will be wneon, so this is hopefully a white lie.
           balanceInWei.toString(), //amount, in wei
           WNEON_DECIMALS,
           parseFloat(balanceInEth), //This loses precision, but is a limitation of the current datamodel. This field is essentially deprecated
@@ -651,7 +637,7 @@ const getSolanaParsedTokenAccounts = async (
   dispatch: Dispatch,
   nft: boolean
 ) => {
-  const connection = new Connection(SOLANA_HOST, "confirmed");
+  const connection = new Connection(getConst('SOLANA_HOST'), "confirmed");
   dispatch(
     nft ? fetchSourceParsedTokenAccountsNFT() : fetchSourceParsedTokenAccounts()
   );
@@ -716,9 +702,9 @@ const getAlgorandParsedTokenAccounts = async (
   );
   try {
     const algodClient = new Algodv2(
-      ALGORAND_HOST.algodToken,
-      ALGORAND_HOST.algodServer,
-      ALGORAND_HOST.algodPort
+      getConst('ALGORAND_HOST').algodToken,
+      getConst('ALGORAND_HOST').algodServer,
+      getConst('ALGORAND_HOST').algodPort,
     );
     const accountInfo = await algodClient
       .accountInformation(walletAddress)
@@ -963,7 +949,7 @@ function useGetAvailableTokens(nft: boolean = false) {
     // degenerate monkey NFT
     // mintAddresses.push("EzYsbigNNGbNuANRJ3mnnyJYU2Bk7mBYVsxuonUwAX7r");
 
-    const connection = new Connection(SOLANA_HOST, "confirmed");
+    const connection = new Connection(getConst('SOLANA_HOST'), "confirmed");
     getMultipleAccountsRPC(
       connection,
       mintAddresses.map((x) => new PublicKey(x))

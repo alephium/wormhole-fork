@@ -15,6 +15,9 @@ import { theme } from "./muiTheme";
 import { store } from "./store";
 import { AlephiumWalletProvider, createWalletConnectConnector, createDesktopWalletConnector } from "@alephium/web3-react";
 import { CLUSTER, ALEPHIUM_BRIDGE_GROUP_INDEX } from "./utils/consts";
+import { setCluster } from "@alephium/bridge-widget";
+
+setCluster(CLUSTER);
 
 const connectors = {
   walletConnect: createWalletConnectConnector({customStoragePrefix: 'alephium'}),

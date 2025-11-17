@@ -10,7 +10,7 @@ import {
   selectTransferTargetAsset,
   selectTransferTargetChain
 } from '../../../../store/selectors'
-import { ROPSTEN_WETH_ADDRESS, WBNB_ADDRESS, WETH_ADDRESS } from '../../../../utils/consts'
+import { getConst } from '../../../../utils/consts'
 import { useTranslation } from 'react-i18next'
 import { GRAY, useWidgetStyles } from '../../styles'
 import BridgeWidgetButton from '../../BridgeWidgetButton'
@@ -35,13 +35,13 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
   const { isReady } = useIsWalletReady(targetChain)
   //TODO better check, probably involving a hook & the VAA
   const isEthNative =
-    targetChain === CHAIN_ID_ETH && targetAsset && targetAsset.toLowerCase() === WETH_ADDRESS.toLowerCase()
+    targetChain === CHAIN_ID_ETH && targetAsset && targetAsset.toLowerCase() === getConst('WETH_ADDRESS').toLowerCase()
   const isEthRopstenNative =
     targetChain === CHAIN_ID_ETHEREUM_ROPSTEN &&
     targetAsset &&
-    targetAsset.toLowerCase() === ROPSTEN_WETH_ADDRESS.toLowerCase()
+    targetAsset.toLowerCase() === getConst('ROPSTEN_WETH_ADDRESS').toLowerCase()
   const isBscNative =
-    targetChain === CHAIN_ID_BSC && targetAsset && targetAsset.toLowerCase() === WBNB_ADDRESS.toLowerCase()
+    targetChain === CHAIN_ID_BSC && targetAsset && targetAsset.toLowerCase() === getConst('WBNB_ADDRESS').toLowerCase()
   const isNativeEligible = isEthNative || isEthRopstenNative || isBscNative
   const [useNativeRedeem, setUseNativeRedeem] = useState(true)
   const toggleNativeRedeem = useCallback(() => {

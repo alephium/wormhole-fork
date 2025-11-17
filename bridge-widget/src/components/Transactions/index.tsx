@@ -10,14 +10,7 @@ import { Card, Container } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
 import { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../muiTheme";
-import {
-  EXPLORER_API_SERVER_HOST,
-  CHAINS,
-  ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_POLLING_INTERVAL,
-  ALEPHIUM_BRIDGE_GROUP_INDEX
-} from "../../utils/consts";
+import { getConst } from "../../utils/consts";
 import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
@@ -45,7 +38,7 @@ const useStyles = makeStyles()(() => ({
 }));
 
 export async function getTxNumber(address: string, emitterChain: ChainId, targetChain: ChainId): Promise<number> {
-  const url = `${EXPLORER_API_SERVER_HOST}/api/transactions/${address}/${emitterChain}/${targetChain}/count`
+  const url = `${getConst('EXPLORER_API_SERVER_HOST')}/api/transactions/${address}/${emitterChain}/${targetChain}/count`
   const response = await fetch(url)
   const json = await response.json()
   return json.txNumber as number
@@ -67,7 +60,7 @@ export type BridgeTransaction = {
 }
 
 export async function getTxsByPageNumber(address: string, emitterChain: ChainId, targetChain: ChainId, pageNumber: number): Promise<BridgeTransaction[]> {
-  const url = `${EXPLORER_API_SERVER_HOST}/api/transactions/${address}/${emitterChain}/${targetChain}?page=${pageNumber}&pageSize=${DefaultPageSize}`
+  const url = `${getConst('EXPLORER_API_SERVER_HOST')}/api/transactions/${address}/${emitterChain}/${targetChain}?page=${pageNumber}&pageSize=${DefaultPageSize}`
   const response = await fetch(url)
   const json = await response.json()
   return (json as BridgeTransaction[]).map((tx) => ({ ...tx, status: 'Loading'}))
@@ -93,7 +86,7 @@ export function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumber
   const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
   const chainName = coalesceChainName(chainId)
-  const pollingInterval = chainId === CHAIN_ID_ALEPHIUM ? ALEPHIUM_POLLING_INTERVAL : 3000
+  const pollingInterval = chainId === CHAIN_ID_ALEPHIUM ? getConst('ALEPHIUM_POLLING_INTERVAL') : 3000
   const fetcher = fetcherGetter(chainId)
   const { data: blockNumber, error } = useSWR(
     fetcher === undefined ? null : `${chainName}-block-number`,
@@ -113,7 +106,7 @@ export function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumber
 
 function isTxConfirmed(currentBlockNumber: number, txBlockNumber: number, chainId: ChainId): boolean {
   if (chainId === CHAIN_ID_ALEPHIUM) {
-    return txBlockNumber + ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL <= currentBlockNumber
+    return txBlockNumber + getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL') <= currentBlockNumber
   }
   if (isEVMChain(chainId)) {
     return isEVMTxConfirmed(chainId, txBlockNumber, currentBlockNumber)
@@ -224,7 +217,7 @@ export default function Transactions() {
     if (chainId === CHAIN_ID_ALEPHIUM) {
       return alphWallet.connectionStatus !== 'connected'
         ? undefined
-        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, ALEPHIUM_BRIDGE_GROUP_INDEX)
+        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
     }
     if (bothAreEvmChain) {
       if (chainId === txSourceChain && sourceChainReady) {
@@ -245,7 +238,7 @@ export default function Transactions() {
 
   const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
     if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
-      const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, txSourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
+      const tokenBridgeForChainId = getTokenBridgeForChainId(getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'), txSourceChain, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
       return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
     }
     const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
@@ -335,7 +328,7 @@ export default function Transactions() {
           onChange={handleSourceChainChange}
           fullWidth
           margin="normal"
-          chains={CHAINS}
+          chains={getConst('CHAINS')}
         />
         <KeyAndBalance chainId={txSourceChain} />
         <ChainSelect
@@ -346,7 +339,7 @@ export default function Transactions() {
           onChange={handleTargetChainChange}
           fullWidth
           margin="normal"
-          chains={CHAINS.filter((c) => c.id !== txSourceChain)}
+          chains={getConst('CHAINS').filter((c) => c.id !== txSourceChain)}
         />
         {bothAreEvmChain ? null : <KeyAndBalance chainId={txTargetChain} />}
         {

@@ -11,7 +11,7 @@ import type { NFTParsedTokenAccount } from "../../store/nftSlice";
 import type { ParsedTokenAccount } from "../../store/transferSlice";
 import {
   getMigrationAssetMap,
-  WORMHOLE_V1_ETH_ADDRESS,
+  getConst
 } from "../../utils/consts";
 import {
   ethNFTToNFTParsedTokenAccount,
@@ -28,7 +28,7 @@ const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
     return Promise.resolve(false);
   }
   const connection = WormholeAbi__factory.connect(
-    WORMHOLE_V1_ETH_ADDRESS,
+    getConst('WORMHOLE_V1_ETH_ADDRESS'),
     provider
   );
   return connection.isWrappedAsset(address);

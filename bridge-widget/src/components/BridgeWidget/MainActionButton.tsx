@@ -12,7 +12,7 @@ import {
 } from '../../store/selectors'
 import { selectTransferTargetChain } from '../../store/selectors'
 import useIsWalletReady from '../../hooks/useIsWalletReady'
-import { CHAINS_BY_ID, getIsTransferDisabled } from '../../utils/consts'
+import { getConst, getIsTransferDisabled } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import BridgeWidgetButton from './BridgeWidgetButton'
 import { ActionConfig, ActionKey, useMainActionTransition } from './useMainActionTransition'
@@ -45,7 +45,7 @@ const MainActionButton = ({ onNext }: MainActionButtonProps) => {
 
   const actionConfigs = useMemo<Record<ActionKey, ActionConfig>>(() => {
     const connectAction = (chainId: ChainId, fallbackLabel: string): ActionConfig => ({
-      label: `Connect ${CHAINS_BY_ID[chainId]?.name ?? fallbackLabel} wallet`,
+      label: `Connect ${getConst('CHAINS_BY_ID')[chainId]?.name ?? fallbackLabel} wallet`,
       disabled: !isEVMChain(chainId) && chainId !== CHAIN_ID_ALEPHIUM,
       chainId
     })

@@ -8,7 +8,7 @@ import useIsWalletReady from '../../hooks/useIsWalletReady'
 import { DataWrapper } from '../../store/helpers'
 import { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { ParsedTokenAccount } from '../../store/transferSlice'
-import { getMigrationAssetMap, WORMHOLE_V1_ETH_ADDRESS } from '../../utils/consts'
+import { getMigrationAssetMap, getConst } from '../../utils/consts'
 import {
   ethNFTToNFTParsedTokenAccount,
   evmTokenToParsedTokenAccount,
@@ -23,7 +23,7 @@ const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
   if (chainId !== CHAIN_ID_ETH) {
     return Promise.resolve(false)
   }
-  const connection = WormholeAbi__factory.connect(WORMHOLE_V1_ETH_ADDRESS, provider)
+  const connection = WormholeAbi__factory.connect(getConst('WORMHOLE_V1_ETH_ADDRESS'), provider)
   return connection.isWrappedAsset(address)
 }
 

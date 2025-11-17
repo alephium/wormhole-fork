@@ -13,7 +13,7 @@ import {
   useEthereumProvider,
 } from "../contexts/EthereumProviderContext";
 import { useSolanaWallet } from "../contexts/SolanaWalletContext";
-import { CLUSTER, getEvmChainId } from "../utils/consts";
+import { getCluster, getEvmChainId } from "../utils/consts";
 import { METAMASK_CHAIN_PARAMETERS } from "../utils/metaMaskChainParameters";
 import { useWallet } from "@alephium/web3-react";
 import { useTranslation } from "react-i18next";
@@ -134,7 +134,7 @@ function useIsWalletReady(
         }
         return createWalletStatus(
           false,
-          `${t('Wallet is not connected to {{ cluster }}', { cluster: CLUSTER })}. ${t('Expected Chain ID')}: ${correctEvmNetwork}`,
+          `${t('Wallet is not connected to {{ cluster }}', { cluster: getCluster() })}. ${t('Expected Chain ID')}: ${correctEvmNetwork}`,
           forceNetworkSwitch,
           undefined
         );

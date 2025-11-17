@@ -7,7 +7,7 @@ import { Button, Typography } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { Transaction } from "../store/transferSlice";
-import { CLUSTER, getExplorerName } from "../utils/consts";
+import { getCluster, getExplorerName } from "../utils/consts";
 import { getTransactionLink } from "../utils/transaction";
 
 const useStyles = makeStyles()((theme) => ({
@@ -29,6 +29,7 @@ export default function ShowTx({
 }) {
   const { t } = useTranslation();
   const { classes } = useStyles();
+  const CLUSTER = getCluster();
   const showExplorerLink =
     CLUSTER === "testnet" ||
     CLUSTER === "mainnet" ||

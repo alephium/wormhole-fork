@@ -8,7 +8,7 @@ import {
   selectTransferTargetChain
 } from '../../../../store/selectors'
 import useIsWalletReady from '../../../../hooks/useIsWalletReady'
-import { CHAINS_BY_ID } from '../../../../utils/consts'
+import { getConst } from '../../../../utils/consts'
 import { useWidgetStyles } from '../../styles'
 import { TransferCompletionState } from '../../../../hooks/useGetIsTransferCompleted'
 import ConnectWalletButton from '../../ConnectWalletButton'
@@ -44,7 +44,7 @@ const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionP
   return (
     <>
       {disconnectedChains.map((chainId) => {
-        const chainName = CHAINS_BY_ID[chainId]?.name ?? 'selected chain'
+        const chainName = getConst('CHAINS_BY_ID')[chainId]?.name ?? 'selected chain'
 
         return (
           <div className={classes.grayRoundedBox} key={`wallet-reconnect-${chainId}`}>

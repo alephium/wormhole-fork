@@ -34,8 +34,7 @@ import {
 import { getAndCheckLocalTokenInfo, isValidAlephiumTokenId, waitALPHTxConfirmed, waitTxConfirmedAndGetTxInfo } from "../utils/alephium";
 import {
   ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  ALEPHIUM_MESSAGE_FEE,
+  getConst,
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
 } from "../utils/consts";
@@ -132,13 +131,13 @@ async function alephium(
     const tokenInfo = await getAndCheckLocalTokenInfo(wallet.nodeProvider, localTokenId)
     const result = await attestFromAlph(
       wallet.signer,
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
       localTokenId,
       tokenInfo.decimals,
       tokenInfo.symbol,
       tokenInfo.name,
       wallet.account.address,
-      ALEPHIUM_MESSAGE_FEE,
+      getConst('ALEPHIUM_MESSAGE_FEE'),
       ALEPHIUM_ATTEST_TOKEN_CONSISTENCY_LEVEL
     )
     dispatch(setIsWalletApproved(true))
@@ -153,7 +152,7 @@ async function alephium(
     });
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
       txInfo.targetChain,
       txInfo.sequence
     );

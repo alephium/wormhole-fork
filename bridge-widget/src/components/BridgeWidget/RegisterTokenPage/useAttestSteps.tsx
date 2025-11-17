@@ -20,7 +20,7 @@ import {
   selectAttestIsAlphPoolCreated
 } from '../../../store/selectors'
 import { setStep } from '../../../store/attestSlice'
-import { CHAINS_BY_ID } from '../../../utils/consts'
+import { getConst } from '../../../utils/consts'
 import SmartAddress from '../../SmartAddress'
 import SmartAddress2 from '../SmartAddress'
 import KeyAndBalance from '../../KeyAndBalance'
@@ -172,15 +172,15 @@ export function useAttestSteps(): UseAttestStepsResult {
 
   const sourceSubLabel = isSourceComplete
     ? t('Will be attested on {{ chainName }}', {
-        chainName: CHAINS_BY_ID[sourceChain]?.name ?? t('Unknown chain')
+        chainName: getConst('CHAINS_BY_ID')[sourceChain]?.name ?? t('Unknown chain')
       })
     : undefined
 
-  const hasTargetChainInfo = !!CHAINS_BY_ID[targetChain]
+  const hasTargetChainInfo = !!getConst('CHAINS_BY_ID')[targetChain]
   const shouldShowTargetConnectButton = isSourceComplete && hasTargetChainInfo && !isTargetWalletReady
 
   const targetValue = isTargetStepComplete ? (
-    <span>{CHAINS_BY_ID[targetChain]?.name ?? t('Unknown chain')}</span>
+    <span>{getConst('CHAINS_BY_ID')[targetChain]?.name ?? t('Unknown chain')}</span>
   ) : shouldShowTargetConnectButton ? (
     <KeyAndBalance chainId={targetChain} />
   ) : undefined

@@ -20,7 +20,7 @@ import {
   receiveAcalaRelayerInfo,
   setAcalaRelayerInfo,
 } from "../store/transferSlice";
-import { ACALA_RELAYER_URL, ACALA_SHOULD_RELAY_URL } from "../utils/consts";
+import { getConst } from "../utils/consts";
 
 export interface AcalaRelayerInfo {
   shouldRelay: boolean;
@@ -42,7 +42,7 @@ export const useAcalaRelayerInfo = (
   useEffect(() => {
     let cancelled = false;
     if (
-      !ACALA_RELAYER_URL ||
+      !getConst('ACALA_RELAYER_URL') ||
       !targetChain ||
       (targetChain !== CHAIN_ID_ACALA && targetChain !== CHAIN_ID_KARURA) ||
       !vaaNormalizedAmount ||
@@ -56,7 +56,7 @@ export const useAcalaRelayerInfo = (
     useStore ? dispatch(fetchAcalaRelayerInfo()) : setState(fetchDataWrapper());
     (async () => {
       try {
-        const result = await axios.get(ACALA_SHOULD_RELAY_URL, {
+        const result = await axios.get(getConst('ACALA_SHOULD_RELAY_URL'), {
           params: {
             targetChain,
             originAsset,

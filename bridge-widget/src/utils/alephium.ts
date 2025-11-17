@@ -1,10 +1,7 @@
 import {
-  ALEPHIUM_BRIDGE_ADDRESS,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_POLLING_INTERVAL,
   ALEPHIUM_REMOTE_TOKEN_POOL_CODE_HASH,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  CLUSTER,
+  getCluster,
+  getConst,
 } from './consts';
 import {
   ChainId,
@@ -49,11 +46,11 @@ export const AlephiumBlockTime = 8000; // 8 seconds in ms
 let tokenListCache: TokenList | undefined = undefined;
 
 async function fetchTokenList(): Promise<TokenList> {
-  if (CLUSTER === 'devnet') {
+  if (getCluster() === 'devnet') {
     return { networkId: 2, tokens: [] };
   }
 
-  const file = CLUSTER === 'mainnet' ? 'mainnet.json' : 'testnet.json';
+  const file = getCluster() === 'mainnet' ? 'mainnet.json' : 'testnet.json';
   const url = `https://raw.githubusercontent.com/alephium/token-list/master/tokens/${file}`;
   const response = await fetch(url);
   if (!response.ok) {
@@ -127,16 +124,16 @@ export async function waitALPHTxConfirmed(
   } catch (error) {
     console.error(`${i18n.t('Failed to get tx status')}, tx id: ${txId}`);
   }
-  await sleep(ALEPHIUM_POLLING_INTERVAL);
+  await sleep(getConst('ALEPHIUM_POLLING_INTERVAL'));
   return waitALPHTxConfirmed(provider, txId, confirmations);
 }
 
 async function getTxInfo(provider: NodeProvider, txId: string) {
   const events = await provider.events.getEventsTxIdTxid(txId, {
-    group: ALEPHIUM_BRIDGE_GROUP_INDEX,
+    group: getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
   });
   const event = events.events.find(
-    (event) => event.contractAddress === ALEPHIUM_BRIDGE_ADDRESS,
+    (event) => event.contractAddress === getConst('ALEPHIUM_BRIDGE_ADDRESS'),
   );
   if (typeof event === 'undefined') {
     return Promise.reject(`${i18n.t('Failed to get event for tx')}: ${txId}`);
@@ -151,7 +148,7 @@ async function getTxInfo(provider: NodeProvider, txId: string) {
     );
   }
   const senderContractId = (sender as node.ValByteVec).value;
-  if (senderContractId !== ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID) {
+  if (senderContractId !== getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID')) {
     return Promise.reject(
       'invalid sender, expect token bridge contract id, have: ' +
         senderContractId,
@@ -213,10 +210,10 @@ async function localTokenPoolExists(
     throw Error('invalid token id ' + tokenId);
   }
   const localTokenPoolId = getTokenPoolId(
-    ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+    getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
     CHAIN_ID_ALEPHIUM,
     tokenId,
-    ALEPHIUM_BRIDGE_GROUP_INDEX,
+    getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
   );
   return await contractExists(localTokenPoolId, nodeProvider);
 }
@@ -252,7 +249,7 @@ export async function getAlephiumBridgedTokenInfo(
     if (!exist) {
       return undefined;
     }
-    if (CLUSTER === 'devnet') {
+    if (getCluster() === 'devnet') {
       return await getLocalTokenInfo(provider, tokenId);
     }
     return undefined;
@@ -288,7 +285,7 @@ export async function getAndCheckLocalTokenInfo(
   tokenId: string,
 ): Promise<TokenInfo> {
   const onChainTokenInfo = await getLocalTokenInfo(provider, tokenId);
-  if (CLUSTER === 'devnet' || tokenId === ALPH_TOKEN_ID) {
+  if (getCluster() === 'devnet' || tokenId === ALPH_TOKEN_ID) {
     return onChainTokenInfo;
   }
 
@@ -398,7 +395,7 @@ async function getAlephiumTokenInfo(
   // in a long loading time. Therefore, we use the github token list to reduce RPC calls.
   const remoteTokenPostfix = '(AlphBridge)';
   const tokenInfo = await getTokenFromTokenList(tokenId);
-  if (CLUSTER !== 'devnet' && tokenInfo === undefined) {
+  if (getCluster() !== 'devnet' && tokenInfo === undefined) {
     return undefined;
   }
 
@@ -450,7 +447,7 @@ export function getAlephiumRecipientAddrss(recipient: Uint8Array): Uint8Array {
   const address = base58.encode(recipient);
   if (isGrouplessAddress(address)) {
     const addr = addressWithoutExplicitGroupIndex(address);
-    const addrWithGroup = `${addr}:${ALEPHIUM_BRIDGE_GROUP_INDEX}`;
+    const addrWithGroup = `${addr}:${getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')}`;
     return addressToBytes(addrWithGroup);
   } else {
     return recipient;
@@ -461,11 +458,6 @@ export function isValidAlephiumTokenId(tokenId: string): boolean {
   return tokenId.length === 64 && isHexString(tokenId);
 }
 
-const LocalAttestTokenhandlerId = getAttestTokenHandlerId(
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  CHAIN_ID_ALEPHIUM,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-);
 export async function createLocalTokenPool(
   signer: SignerProvider,
   nodeProvider: NodeProvider,
@@ -474,10 +466,10 @@ export async function createLocalTokenPool(
   signedVaa: Uint8Array,
 ): Promise<string | undefined> {
   const tokenPoolId = getTokenPoolId(
-    ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+    getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
     CHAIN_ID_ALEPHIUM,
     localTokenId,
-    ALEPHIUM_BRIDGE_GROUP_INDEX,
+    getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
   );
   const exist = await contractExists(tokenPoolId, nodeProvider);
   if (exist) {
@@ -486,7 +478,11 @@ export async function createLocalTokenPool(
 
   const result = await createLocalTokenPoolOnAlph(
     signer,
-    LocalAttestTokenhandlerId,
+    getAttestTokenHandlerId(
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
+      CHAIN_ID_ALEPHIUM,
+      getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
+    ),
     localTokenId,
     signedVaa,
     payer,
@@ -539,7 +535,7 @@ export async function getIsTxsCompletedAlph(
         await isSequenceExecuted(
           tokenBridgeForChainId,
           seq,
-          ALEPHIUM_BRIDGE_GROUP_INDEX,
+          getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
         ),
       );
       continue;

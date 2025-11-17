@@ -9,7 +9,7 @@ import {
 import { makeStyles } from 'tss-react/mui';
 import clsx from 'clsx'
 import { ReactNode, useMemo } from 'react'
-import { BETA_CHAINS, ChainInfo, CHAINS_BY_ID } from '../../utils/consts'
+import { getConst, ChainInfo } from '../../utils/consts'
 import { CHAIN_ID_ALEPHIUM, ChainId, ChainName, isEVMChain, toChainName } from '@alephium/wormhole-sdk'
 import { useConnect, useWallet } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
@@ -49,7 +49,7 @@ const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
   const { classes } = useStyles()
   const { classes: widgetClasses } = useWidgetStyles()
   const filteredChains = useMemo(
-    () => chains.filter(({ id }) => !BETA_CHAINS.includes(id)),
+    () => chains.filter(({ id }) => !getConst('BETA_CHAINS').includes(id)),
     [chains]
   )
   const chainId = rest.value as ChainId
@@ -80,7 +80,7 @@ type ConnectedAccountProps = ConnectedAccountStyles & {
 }
 
 const ConnectedChainAccount = ({ chainId, labelClassName }: { chainId: ChainId } & ConnectedAccountStyles) => {
-  const chainName = CHAINS_BY_ID[chainId]?.name ?? 'Wallet'
+  const chainName = getConst('CHAINS_BY_ID')[chainId]?.name ?? 'Wallet'
   const accountProps: ConnectedAccountProps = {
     labelClassName,
     chainName

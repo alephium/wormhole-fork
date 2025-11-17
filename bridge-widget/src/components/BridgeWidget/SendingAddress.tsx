@@ -4,7 +4,7 @@ import SmartAddress from './SmartAddress'
 import { useMemo } from 'react'
 import { selectSourceWalletAddress, selectTransferSourceChain } from '../../store/selectors'
 import { useSelector } from 'react-redux'
-import { CHAINS_BY_ID } from '../../utils/consts'
+import { getConst } from '../../utils/consts'
 import { GRAY } from './styles'
 import { CHAIN_ID_BSC } from '@alephium/wormhole-sdk'
 
@@ -16,7 +16,7 @@ interface SendingAddressProps {
 const SendingAddress = ({ showIcon = false, hideAddress = false }: SendingAddressProps) => {
   const { classes } = useStyles()
   const sourceChain = useSelector(selectTransferSourceChain)
-  const sourceChainInfo = useMemo(() => CHAINS_BY_ID[sourceChain], [sourceChain])
+  const sourceChainInfo = useMemo(() => getConst('CHAINS_BY_ID')[sourceChain], [sourceChain])
   const sourceWalletAddress = useSelector(selectSourceWalletAddress)
 
   const chainName = sourceChain === CHAIN_ID_BSC ? 'BSC' : sourceChainInfo.name

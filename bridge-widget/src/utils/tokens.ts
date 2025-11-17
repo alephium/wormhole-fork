@@ -9,11 +9,7 @@ import {
   getTokenPoolId,
   tryNativeToHexString,
 } from '@alephium/wormhole-sdk';
-import {
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
-  EXPLORER_API_SERVER_HOST,
-} from './consts';
+import { getConst } from './consts';
 import i18n from '../i18n';
 import { getAlephiumTokenLogoAndSymbol } from './alephium';
 import { getBSCTokenLogoAndSymbol, getETHTokenLogoAndSymbol } from './evm';
@@ -35,7 +31,7 @@ export async function getRegisteredTokens(): Promise<RegisteredTokenInfo[]> {
     if (_registeredTokens !== undefined) return _registeredTokens;
 
     const response = await fetch(
-      `${EXPLORER_API_SERVER_HOST}/api/stats/tokens`,
+      `${getConst('EXPLORER_API_SERVER_HOST')}/api/stats/tokens`,
     );
     if (!response.ok) {
       throw new Error(
@@ -81,10 +77,10 @@ export async function getTokenLogoAndSymbol(
 ): Promise<{ logoURI?: string; symbol?: string } | undefined> {
   if (tokenChainId !== CHAIN_ID_ALEPHIUM) {
     const wrappedIdOnALPH = getTokenPoolId(
-      ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+      getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
       tokenChainId,
       tryNativeToHexString(tokenId, tokenChainId),
-      ALEPHIUM_BRIDGE_GROUP_INDEX,
+      getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
     );
     const info = await getAlephiumTokenLogoAndSymbol(wrappedIdOnALPH);
     if (info !== undefined) return info;

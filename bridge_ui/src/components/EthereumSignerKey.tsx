@@ -5,7 +5,7 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { shortenAddress } from "../utils/addresses";
 import { ChainId } from "@alephium/wormhole-sdk";
 import { getEvmChainId } from "../utils/consts";
-import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton";
+import { BridgeWidgetButton } from "@alephium/bridge-widget"
 import EvmConnectWalletDialog from "./EvmConnectWalletDialog";
 
 const EthereumSignerKey = ({ chainId }: { chainId: ChainId }) => {

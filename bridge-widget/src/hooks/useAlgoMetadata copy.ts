@@ -1,7 +1,7 @@
 import { Algodv2 } from "algosdk";
 import { useEffect, useMemo, useState } from "react";
 import { DataWrapper } from "../store/helpers";
-import { ALGORAND_HOST, ALGO_DECIMALS } from "../utils/consts";
+import { getConst, ALGO_DECIMALS } from "../utils/consts";
 
 export type AlgoMetadata = {
   symbol?: string;
@@ -31,9 +31,9 @@ export const fetchSingleMetadata = async (
 
 const fetchAlgoMetadata = async (addresses: string[]) => {
   const algodClient = new Algodv2(
-    ALGORAND_HOST.algodToken,
-    ALGORAND_HOST.algodServer,
-    ALGORAND_HOST.algodPort
+    getConst('ALGORAND_HOST').algodToken,
+    getConst('ALGORAND_HOST').algodServer,
+    getConst('ALGORAND_HOST').algodPort
   );
   const promises: Promise<AlgoMetadata>[] = [];
   addresses.forEach((address) => {

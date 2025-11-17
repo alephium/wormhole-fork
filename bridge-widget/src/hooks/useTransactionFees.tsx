@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import {
   getDefaultNativeCurrencySymbol,
-  SOLANA_HOST
+  getConst
 } from "../utils/consts";
 import { getMultipleAccountsRPC } from "../utils/solana";
 import useIsWalletReady from "./useIsWalletReady";
@@ -73,7 +73,7 @@ const isSufficientBalance = (
 
 //TODO move to more generic location
 const getBalanceSolana = async (walletAddress: string) => {
-  const connection = new Connection(SOLANA_HOST);
+  const connection = new Connection(getConst('SOLANA_HOST'));
   return getMultipleAccountsRPC(connection, [
     new PublicKey(walletAddress),
   ]).then(

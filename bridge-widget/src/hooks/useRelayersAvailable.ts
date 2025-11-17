@@ -11,7 +11,7 @@ import {
   fetchRelayerTokenInfo,
   receiveRelayerTokenInfo,
 } from "../store/tokenSlice";
-import { RELAYER_INFO_URL } from "../utils/consts";
+import { getConst } from "../utils/consts";
 
 export type RelayToken = {
   chainId?: ChainId;
@@ -63,8 +63,8 @@ const useRelayersAvailable = (
 
 const getRelayersAvailable = (dispatch: Dispatch) => {
   dispatch(fetchRelayerTokenInfo());
-  if (RELAYER_INFO_URL !== '') {
-    axios.get(RELAYER_INFO_URL).then(
+  if (getConst('RELAYER_INFO_URL') !== '') {
+    axios.get(getConst('RELAYER_INFO_URL')).then(
       (response) => {
         dispatch(receiveRelayerTokenInfo(response.data as RelayerTokenInfo));
       },

@@ -10,7 +10,7 @@ import {
   getBridgeAddressForChain,
   getNFTBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  WORMHOLE_RPC_HOSTS
+  getConst
 } from "./consts";
 import { getSignedVAAWithRetry } from "./getSignedVAAWithRetry";
 import parseError from "./parseError";
@@ -50,7 +50,7 @@ export async function evm(
       emitterAddress,
       targetChain,
       sequence.toString(),
-      WORMHOLE_RPC_HOSTS.length
+      getConst('WORMHOLE_RPC_HOSTS').length
     );
     return { vaa: uint8ArrayToHex(vaaBytes), error: null };
   } catch (e) {

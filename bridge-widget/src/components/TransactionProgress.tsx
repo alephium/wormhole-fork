@@ -19,7 +19,7 @@ import { Connection } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { Transaction } from "../store/transferSlice";
-import { ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER, CHAINS_BY_ID, SOLANA_HOST, ALEPHIUM_BRIDGE_GROUP_INDEX } from "../utils/consts";
+import { getCluster, getConst } from "../utils/consts";
 import SmartBlock from "./SmartBlock";
 import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from "../utils/evm";
 import { useWallet } from "@alephium/web3-react";
@@ -60,7 +60,7 @@ export default function TransactionProgress({
   useEffect(() => {
     if (chainId !== CHAIN_ID_ALEPHIUM) return
 
-    const confirmations = consistencyLevel ?? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
+    const confirmations = consistencyLevel ?? getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')
     const now = Date.now()
     const confirmedTimestamp = (tx?.blockTimestamp ?? now) + (confirmations * AlephiumBlockTime)
     setAlphTxConfirmedTs(confirmedTimestamp)
@@ -98,7 +98,7 @@ export default function TransactionProgress({
     }
     if (chainId === CHAIN_ID_SOLANA) {
       let cancelled = false;
-      const connection = new Connection(SOLANA_HOST, "confirmed");
+      const connection = new Connection(getConst('SOLANA_HOST'), "confirmed");
       const sub = connection.onSlotChange((slotInfo) => {
         if (!cancelled) {
           setCurrentBlock(slotInfo.slot);
@@ -113,12 +113,12 @@ export default function TransactionProgress({
       let cancelled = false;
       (async (nodeProvider) => {
         while (!cancelled) {
-          const timeout = CLUSTER === "devnet" ? 1000 : 10000
+          const timeout = getCluster() === "devnet" ? 1000 : 10000
           await new Promise((resolve) => setTimeout(resolve, timeout));
           try {
             const chainInfo = await nodeProvider.blockflow.getBlockflowChainInfo({
-              fromGroup: ALEPHIUM_BRIDGE_GROUP_INDEX,
-              toGroup: ALEPHIUM_BRIDGE_GROUP_INDEX
+              fromGroup: getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
+              toGroup: getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
             });
             if (!cancelled) {
               setCurrentBlock(chainInfo.currentHeight);
@@ -137,8 +137,8 @@ export default function TransactionProgress({
     const blockDiff =
       tx && tx.blockHeight && currentBlock ? currentBlock - tx.blockHeight : undefined;
     const remainMinutes = alphTxConfirmedTs === undefined ? undefined : getRemainMinutes(alphTxConfirmedTs)
-    const expectedBlocks = consistencyLevel ?? ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL
-    const chainName = CHAINS_BY_ID[chainId].name
+    const expectedBlocks = consistencyLevel ?? getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')
+    const chainName = getConst('CHAINS_BY_ID')[chainId].name
     if (!isSendComplete && blockDiff !== undefined) {
       return (
         <div className={classes.root}>
@@ -158,14 +158,14 @@ export default function TransactionProgress({
         </div>
       );
     }
-  } else if (chainId === CHAIN_ID_ETH && CLUSTER !== 'devnet') {
+  } else if (chainId === CHAIN_ID_ETH && getCluster() !== 'devnet') {
     if (!isSendComplete && tx && tx.blockHeight && currentBlock) {
       const isFinalized = currentBlock >= tx.blockHeight;
       return (
         <div className={classes.root}>
           <Typography variant="body2" className={classes.message}>
             {!isFinalized
-              ? `${t('Waiting for finality on {{ chainName }} which may take up to 15 minutes.', { chainName: CHAINS_BY_ID[chainId].name })}`
+              ? `${t('Waiting for finality on {{ chainName }} which may take up to 15 minutes.', { chainName: getConst('CHAINS_BY_ID')[chainId].name })}`
               : `${t('Waiting for Wormhole Network consensus')}...`}
           </Typography>
           {!isFinalized ? (
@@ -185,7 +185,7 @@ export default function TransactionProgress({
     // minimum confirmations enforced by guardians or specified by the contract
     const expectedBlocks = consistencyLevel ?? (
       chainId === CHAIN_ID_POLYGON
-        ? CLUSTER === "testnet"
+        ? getCluster() === "testnet"
           ? 64
           : 512
         : chainId === CHAIN_ID_OASIS ||
@@ -206,7 +206,7 @@ export default function TransactionProgress({
       (chainId === CHAIN_ID_SOLANA || isEVMChain(chainId)) &&
       blockDiff !== undefined
     ) {
-      const chainName = CHAINS_BY_ID[chainId].name
+      const chainName = getConst('CHAINS_BY_ID')[chainId].name
       return (
         <div className={classes.root}>
           <LinearProgress

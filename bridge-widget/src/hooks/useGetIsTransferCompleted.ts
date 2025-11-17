@@ -15,8 +15,7 @@ import {
   selectTransferTargetChain,
 } from "../store/selectors";
 import {
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  getConst,
   getEvmChainId,
   getTokenBridgeAddressForChain
 } from "../utils/consts";
@@ -112,10 +111,10 @@ export default function useGetIsTransferCompleted(
               throw Error(t("Transfer source chain is undefined"))
             }
 
-            const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, sourceChain, ALEPHIUM_BRIDGE_GROUP_INDEX)
+            const tokenBridgeForChainId = getTokenBridgeForChainId(getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'), sourceChain, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
             transferCompleted = await getIsTransferCompletedAlph(
               tokenBridgeForChainId,
-              ALEPHIUM_BRIDGE_GROUP_INDEX,
+              getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
               signedVAA
             )
           } catch (error) {

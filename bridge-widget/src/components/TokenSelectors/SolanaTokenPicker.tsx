@@ -10,10 +10,7 @@ import type { DataWrapper } from "../../store/helpers";
 import type { NFTParsedTokenAccount } from "../../store/nftSlice";
 import { selectTransferTargetChain } from "../../store/selectors";
 import type { ParsedTokenAccount } from "../../store/transferSlice";
-import {
-  MIGRATION_ASSET_MAP,
-  WORMHOLE_V1_MINT_AUTHORITY,
-} from "../../utils/consts";
+import { getConst } from "../../utils/consts";
 import type { ExtractedMintInfo } from "../../utils/solana";
 import { sortParsedTokenAccounts } from "../../utils/sort";
 import TokenPicker, { BasicAccountRender } from "./TokenPicker";
@@ -31,7 +28,7 @@ type SolanaSourceTokenSelectorProps = {
 };
 
 const isMigrationEligible = (address: string) => {
-  return !!MIGRATION_ASSET_MAP.get(address);
+  return !!getConst('MIGRATION_ASSET_MAP').get(address);
 };
 
 export default function SolanaSourceTokenSelector(
@@ -174,7 +171,7 @@ export default function SolanaSourceTokenSelector(
         return true; //We should never fail to pull the mint of an account.
       }
 
-      if (mintAuthority === WORMHOLE_V1_MINT_AUTHORITY) {
+      if (mintAuthority === getConst('WORMHOLE_V1_MINT_AUTHORITY')) {
         return true; //This means the mint was created by the wormhole v1 contract, and we want to disallow its transfer.
       }
 

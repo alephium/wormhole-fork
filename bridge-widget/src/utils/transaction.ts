@@ -1,7 +1,8 @@
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from "@alephium/wormhole-sdk";
-import { CLUSTER } from "./consts";
+import { getCluster } from "./consts";
 
 export function getTransactionLink(chainId: ChainId, txId: string): string | undefined {
+  const CLUSTER = getCluster();
   return chainId === CHAIN_ID_ETH
     ? `https://${CLUSTER === "testnet" ? "sepolia." : ""}etherscan.io/tx/${txId}`
     : chainId === CHAIN_ID_BSC

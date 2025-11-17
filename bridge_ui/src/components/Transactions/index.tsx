@@ -35,7 +35,7 @@ import { getIsTxsCompletedAlph } from "../../utils/alephium";
 import { useWallet } from "@alephium/web3-react";
 import { NodeProvider } from "@alephium/web3";
 import { useTranslation } from "react-i18next";
-import TransactionTableCompact from "../BridgeWidget/TransactionTableCompact";
+import { TransactionTableCompact } from "@alephium/bridge-widget";
 
 const useStyles = makeStyles()(() => ({
   mainCard: {

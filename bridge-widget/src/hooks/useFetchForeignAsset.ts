@@ -12,8 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { DataWrapper } from "../store/helpers";
 import {
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+  getConst,
   getEvmChainId,
   getTokenBridgeAddressForChain
 } from "../utils/consts";
@@ -111,11 +110,11 @@ function useFetchForeignAsset(
         : foreignChain === CHAIN_ID_ALEPHIUM
         ? () => {
           return getForeignAssetAlephium(
-            ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
+            getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
             alphWallet?.nodeProvider!, // we have checked the wallet in `useIsWalletReady`
             originChain,
             hexToUint8Array(originAssetHex),
-            ALEPHIUM_BRIDGE_GROUP_INDEX
+            getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
           )
         }
         : () => Promise.resolve(null);

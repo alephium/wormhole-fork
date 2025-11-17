@@ -24,14 +24,9 @@ import { useEthereumProvider } from "../contexts/EthereumProviderContext";
 import { selectTransferIsRedeeming, selectTransferTargetChain } from "../store/selectors";
 import { setIsRedeemedViaRelayer, setIsRedeeming, setIsRedeemingViaRelayer, setIsWalletApproved, setRedeemCompleted, setRedeemTx } from "../store/transferSlice";
 import {
-  ACALA_RELAY_URL,
-  ALEPHIUM_BRIDGE_GROUP_INDEX,
-  ALEPHIUM_BRIDGE_REWARD_ROUTER_ID,
-  ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID,
   getTokenBridgeAddressForChain,
-  CLUSTER,
-  RELAYER_HOST,
-  BSC_TOKENS_FOR_REWARD,
+  getConst,
+  getCluster
 } from "../utils/consts";
 import parseError from "../utils/parseError";
 import { getEmitterChainId, waitALPHTxConfirmed } from "../utils/alephium";
@@ -97,7 +92,7 @@ async function redeemViaRelayer(
     const targetChain = parsedVAA.body.targetChainId.toString()
     const emitterAddress = uint8ArrayToHex(parsedVAA.body.emitterAddress)
     const sequence = parsedVAA.body.sequence.toString()
-    const url = `${RELAYER_HOST}/vaas/${emitterChain}/${emitterAddress}/${targetChain}/${sequence}`
+    const url = `${getConst('RELAYER_HOST')}/vaas/${emitterChain}/${emitterAddress}/${targetChain}/${sequence}`
     const { data } = await axios.request({ url, method: 'POST', timeout: 15000 })
     if (data.error) {
       throw new Error(data.error)
@@ -122,8 +117,8 @@ async function redeemManually(
   dispatch(setIsRedeemedViaRelayer(false))
   const parsedVaa = deserializeTransferTokenVAA(signedVAA)
   let txId: string
-  if (needToReward(parsedVaa, BSC_TOKENS_FOR_REWARD)) {
-    txId = (await redeemOnAlphWithReward(signer, ALEPHIUM_BRIDGE_REWARD_ROUTER_ID, tokenBridgeForChainId, signedVAA)).txId
+  if (needToReward(parsedVaa, getConst('BSC_TOKENS_FOR_REWARD'))) {
+    txId = (await redeemOnAlphWithReward(signer, getConst('ALEPHIUM_BRIDGE_REWARD_ROUTER_ID'), tokenBridgeForChainId, signedVAA)).txId
   } else {
     txId = (await redeemOnAlph(signer, tokenBridgeForChainId, signedVAA)).txId
   }
@@ -144,10 +139,10 @@ async function alephium(
   dispatch(setIsRedeeming(true));
   try {
     const emitterChainId = getEmitterChainId(signedVAA)
-    const tokenBridgeForChainId = getTokenBridgeForChainId(ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID, emitterChainId, ALEPHIUM_BRIDGE_GROUP_INDEX)
+    const tokenBridgeForChainId = getTokenBridgeForChainId(getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'), emitterChainId, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
 
     let txId: string | undefined = undefined
-    if (CLUSTER === 'mainnet') {
+    if (getCluster() === 'mainnet') {
       txId = await redeemViaRelayer(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
     } else {
       txId = await redeemManually(dispatch, wallet.signer, tokenBridgeForChainId, signedVAA)
@@ -169,7 +164,7 @@ async function alephium(
     console.log(`the redeem tx has been confirmed, txId: ${txId}`)
     const isTransferCompleted = await getIsTransferCompletedAlph(
       tokenBridgeForChainId,
-      ALEPHIUM_BRIDGE_GROUP_INDEX,
+      getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'),
       signedVAA
     )
     if (isTransferCompleted) {
@@ -233,7 +228,7 @@ export function useHandleRedeem() {
     dispatch(setIsRedeeming(true));
 
     try {
-      const res = await axios.post(ACALA_RELAY_URL, {
+      const res = await axios.post(getConst('ACALA_RELAY_URL'), {
         targetChain,
         signedVAA: uint8ArrayToHex(signedVAA),
       });

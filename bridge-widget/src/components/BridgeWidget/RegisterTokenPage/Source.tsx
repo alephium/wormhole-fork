@@ -11,7 +11,7 @@ import {
   selectAttestSourceAsset,
   selectAttestSourceChain
 } from '../../../store/selectors'
-import { CHAINS } from '../../../utils/consts'
+import { getConst } from '../../../utils/consts'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ChainSelect from '../../ChainSelect'
 import KeyAndBalance from '../../KeyAndBalance'
@@ -79,7 +79,7 @@ const Source = ({
         value={sourceChain}
         onChange={handleSourceChange}
         disabled={shouldLockFields}
-        chains={CHAINS}
+        chains={getConst('CHAINS')}
       />
       <KeyAndBalance chainId={sourceChain} />
       <TextField

@@ -9,9 +9,7 @@ import {
   fetchSolanaTokenMap,
   receiveSolanaTokenMap,
 } from "../store/tokenSlice";
-import { CLUSTER } from "../utils/consts";
-
-const environment = CLUSTER === "testnet" ? ENV.Testnet : ENV.MainnetBeta;
+import { getCluster } from "../utils/consts";
 
 const useSolanaTokenMap = (): DataWrapper<TokenInfo[]> => {
   const tokenMap = useSelector(selectSolanaTokenMap);
@@ -34,7 +32,7 @@ const getSolanaTokenMap = (dispatch: Dispatch) => {
 
   new TokenListProvider().resolve().then(
     (tokens) => {
-      const tokenList = tokens.filterByChainId(environment).getList();
+      const tokenList = tokens.filterByChainId(getCluster() === "testnet" ? ENV.Testnet : ENV.MainnetBeta).getList();
       dispatch(receiveSolanaTokenMap(tokenList));
     },
     (error) => {

@@ -1,6 +1,6 @@
 {
   "name": "@alephium/bridge-widget",
-  "version": "0.0.21",
+  "version": "0.0.23",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",

@@ -10,7 +10,7 @@ import {
   selectTransferIsSending
 } from '../../../store/selectors'
 import SmartAddress from '../SmartAddress'
-import { CHAINS_BY_ID } from '../../../utils/consts'
+import { getConst } from '../../../utils/consts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CHAIN_ID_ALEPHIUM, ChainId, isEVMChain } from '@alephium/wormhole-sdk'
 import { hexToALPHAddress } from '../../../utils/alephium'
@@ -56,7 +56,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const transferAmountParsed = baseAmountParsed && baseAmountParsed.add(feeParsed).toBigInt()
 
   const { targetChain, readableTargetAddress, targetAsset, symbol, tokenName, logo } = useTargetInfo()
-  const targetChainInfo = useMemo(() => CHAINS_BY_ID[targetChain], [targetChain])
+  const targetChainInfo = useMemo(() => getConst('CHAINS_BY_ID')[targetChain], [targetChain])
 
   const { isReady: isSourceWalletReady, statusMessage, walletAddress } = useIsWalletReady(sourceChain)
   const { isReady: isTargetWalletReady, statusMessage: targetStatusMessage } = useIsWalletReady(targetChain)
@@ -146,7 +146,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
       return t('Connect wallet')
     }
 
-    const chainName = CHAINS_BY_ID[connectChainId]?.name
+    const chainName = getConst('CHAINS_BY_ID')[connectChainId]?.name
     return chainName ? `Connect ${chainName} wallet` : t('Connect wallet')
   }, [connectChainId, isConnectAction, t])
 

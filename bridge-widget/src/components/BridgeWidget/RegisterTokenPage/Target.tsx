@@ -13,7 +13,7 @@ import {
   selectAttestSourceChain,
   selectAttestTargetChain
 } from '../../../store/selectors'
-import { CHAINS, CHAINS_BY_ID } from '../../../utils/consts'
+import { getConst } from '../../../utils/consts'
 import BridgeWidgetButton from '../BridgeWidgetButton'
 import ChainSelect from '../../ChainSelect'
 import KeyAndBalance from '../../KeyAndBalance'
@@ -30,7 +30,7 @@ const Target = ({ showNextButton = true, targetChain: targetChainOverride, onTar
   const { classes } = useStyles()
   const dispatch = useDispatch()
   const sourceChain = useSelector(selectAttestSourceChain)
-  const chains = useMemo(() => CHAINS.filter((c) => c.id !== sourceChain), [sourceChain])
+  const chains = useMemo(() => getConst('CHAINS').filter((c) => c.id !== sourceChain), [sourceChain])
   const storeTargetChain = useSelector(selectAttestTargetChain)
   const storeIsTargetComplete = useSelector(selectAttestIsTargetComplete)
   const shouldLockFields = useSelector(selectAttestShouldLockFields)
@@ -65,7 +65,7 @@ const Target = ({ showNextButton = true, targetChain: targetChainOverride, onTar
       <Alert severity="info" className={classes.alert}>
         <Typography>
           {t('You will have to pay transaction fees on {{ chainName }} to attest this token.', {
-            chainName: CHAINS_BY_ID[targetChain].name
+            chainName: getConst('CHAINS_BY_ID')[targetChain].name
           })}
         </Typography>
         {isEVMChain(targetChain) && <GasEstimateSummary methodType="createWrapped" chainId={targetChain} />}
