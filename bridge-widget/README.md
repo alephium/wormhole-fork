@@ -46,6 +46,20 @@ provide one, you can enable it with:
 npm i
 ```
 
+You can start a development server on devnet with a testing React app that uses the bridge widget with:
+
+```bash
+npm start
+```
+
+For mainnet or testnet you can use:
+```bash
+npm start:mainnet
+npm start:testnet
+```
+
+### Publishing
+
 To publish to a local registry, you can use [Verdaccio](https://verdaccio.org/):
 
 ```bash

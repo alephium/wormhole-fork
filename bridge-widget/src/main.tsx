@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/ErrorBoundary';
 import AlephiumBridgeWidget from './AlephiumBridgeWidget';
+import { WalletProviders } from './contexts/WalletProviders';
 import { StrictMode } from 'react';
 
 // This is the entry point that runs when integrators add the Alephium Bridge Widget
@@ -31,7 +32,9 @@ if (!container) {
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <AlephiumBridgeWidget />
+      <WalletProviders includeAlephium>
+        <AlephiumBridgeWidget />
+      </WalletProviders>
     </ErrorBoundary>
   </StrictMode>,
 );
