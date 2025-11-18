@@ -4,12 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
   push:
     branches:
       - master
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
 
 jobs:
   lint:
@@ -59,38 +59,3 @@ jobs:
 
       - name: Check Prettier formatting
         run: npm run prettier:check
-
-  code-quality-summary:
-    name: Code Quality Summary
-    runs-on: ubuntu-latest
-    needs: [lint, format]
-    if: always()
-
-    steps:
-      - name: Summary
-        run: |
-          echo "## Code Quality Check Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Check job statuses
-          if [ "${{ needs.lint.result }}" == "success" ]; then
-            echo "✅ **ESLint**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **ESLint**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [ "${{ needs.format.result }}" == "success" ]; then
-            echo "✅ **Prettier**: Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Prettier**: Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # Overall status
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.lint.result }}" == "success" ] && \
-             [ "${{ needs.format.result }}" == "success" ]; then
-            echo "### ✅ All quality checks passed!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ Some quality checks failed. Please review the logs above." >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
