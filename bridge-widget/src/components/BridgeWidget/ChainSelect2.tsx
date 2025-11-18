@@ -1,12 +1,5 @@
-import {
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  OutlinedTextFieldProps,
-  TextField,
-  Typography,
-} from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { ListItemIcon, ListItemText, MenuItem, OutlinedTextFieldProps, TextField, Typography } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
 import clsx from 'clsx'
 import { ReactNode, useMemo } from 'react'
 import { getConst, ChainInfo } from '../../utils/consts'
@@ -22,9 +15,10 @@ import { shortenAddress } from '../../utils/addresses'
 const chainColors: Partial<Record<ChainName, string>> = {
   alephium: '#000000',
   ethereum: '#4628df',
-  bsc: '#deb440',
+  bsc: '#deb440'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createChainMenuItem = ({ id, name, logo }: ChainInfo, label: ReactNode, selected: boolean, classes: any) => {
   const backgroundColor = chainColors[toChainName(id)]
 
@@ -48,10 +42,7 @@ interface ChainSelectProps extends OutlinedTextFieldProps {
 const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
   const { classes } = useStyles()
   const { classes: widgetClasses } = useWidgetStyles()
-  const filteredChains = useMemo(
-    () => chains.filter(({ id }) => !getConst('BETA_CHAINS').includes(id)),
-    [chains]
-  )
+  const filteredChains = useMemo(() => chains.filter(({ id }) => !getConst('BETA_CHAINS').includes(id)), [chains])
   const chainId = rest.value as ChainId
   const { isReady } = useIsWalletReady(chainId)
 
@@ -67,9 +58,7 @@ const ChainSelect2 = ({ chains, ...rest }: ChainSelectProps) => {
 
 export default ChainSelect2
 
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
-)
+const Label = ({ children }: { children: React.ReactNode }) => <Typography style={{ fontSize: '14px', color: GRAY }}>{children}</Typography>
 
 type ConnectedAccountStyles = {
   labelClassName?: string
@@ -103,14 +92,8 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
 
   return (
     <div className={classes.activeWalletButton}>
-      <SuccessPulse
-        className={classes.statusPulse}
-        contentClassName={classes.statusContent}
-      >
-        <ConnectedChainAccount
-          chainId={chainId}
-          labelClassName={classes.accountAddress}
-        />
+      <SuccessPulse className={classes.statusPulse} contentClassName={classes.statusContent}>
+        <ConnectedChainAccount chainId={chainId} labelClassName={classes.accountAddress} />
       </SuccessPulse>
     </div>
   )
@@ -118,9 +101,7 @@ const WalletStatusButton = ({ chainId, isReady }: { chainId: ChainId; isReady: b
 
 const CurrentlyConnectedEVMAccount = (props: ConnectedAccountProps) => {
   const { signerAddress, disconnect } = useEthereumProvider()
-  return signerAddress ? (
-    <AccountAddress address={signerAddress} disconnect={disconnect} {...props} />
-  ) : null
+  return signerAddress ? <AccountAddress address={signerAddress} disconnect={disconnect} {...props} /> : null
 }
 
 const CurrentlyConnectedAlephiumAccount = (props: ConnectedAccountProps) => {
@@ -150,12 +131,7 @@ const AccountAddress = ({
   const resolvedLabelClassName = labelClassName ?? classes.accountAddress
 
   return (
-    <WalletAddressButton
-      address={address}
-      onDisconnect={disconnect}
-      chainName={chainName}
-      iconType="generic"
-    >
+    <WalletAddressButton address={address} onDisconnect={disconnect} chainName={chainName} iconType="generic">
       <Typography className={resolvedLabelClassName}>{shortAddress}</Typography>
     </WalletAddressButton>
   )
@@ -166,14 +142,14 @@ const useStyles = makeStyles()((theme) => ({
     position: 'relative',
     background: 'transparent',
     borderRadius: '16px',
-    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   select: {
     '& .MuiOutlinedInput-root fieldset': {
       border: 'none',
       '&:hover fieldset': {
         border: 'none !important'
-      },
+      }
     },
 
     '& .MuiSelect-select': {

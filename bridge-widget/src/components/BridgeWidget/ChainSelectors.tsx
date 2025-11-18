@@ -4,11 +4,7 @@ import ChainSelectArrow2 from './ChainSelectArrow2'
 import Divider from './Divider'
 import { useWidgetStyles } from './styles'
 import clsx from 'clsx'
-import {
-  selectTransferShouldLockFields,
-  selectTransferSourceChain,
-  selectTransferTargetChain
-} from '../../store/selectors'
+import { selectTransferShouldLockFields, selectTransferSourceChain, selectTransferTargetChain } from '../../store/selectors'
 import { useCallback, useMemo } from 'react'
 import { setSourceChain, setTargetChain } from '../../store/transferSlice'
 import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
@@ -36,6 +32,7 @@ const ChainSelectors = () => {
     [sourceChain]
   )
   const handleSourceChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       dispatch(setSourceChain(event.target.value))
     },
@@ -43,6 +40,7 @@ const ChainSelectors = () => {
   )
 
   const handleTargetChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       dispatch(setTargetChain(event.target.value))
     },

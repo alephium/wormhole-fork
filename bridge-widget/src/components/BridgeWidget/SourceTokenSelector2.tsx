@@ -1,10 +1,4 @@
-import {
-  CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
-  isEVMChain
-} from '@alephium/wormhole-sdk'
+import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ALGORAND, CHAIN_ID_SOLANA, CHAIN_ID_TERRA, isEVMChain } from '@alephium/wormhole-sdk'
 import { TextField, Typography } from '@mui/material'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,9 +37,7 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
   const dispatch = useDispatch()
 
   const lookupChain = useSelector(nft ? selectNFTSourceChain : selectTransferSourceChain)
-  const sourceParsedTokenAccount = useSelector(
-    nft ? selectNFTSourceParsedTokenAccount : selectTransferSourceParsedTokenAccount
-  )
+  const sourceParsedTokenAccount = useSelector(nft ? selectNFTSourceParsedTokenAccount : selectTransferSourceParsedTokenAccount)
   const walletIsReady = useIsWalletReady(lookupChain)
 
   const setSourceParsedTokenAccount = nft ? setNFTSourceParsedTokenAccount : setTransferSourceParsedTokenAccount
@@ -78,11 +70,7 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
 
     if (lookupChain === CHAIN_ID_ALEPHIUM) {
       availableAccounts = maps?.tokens || undefined
-    } else if (
-      lookupChain === CHAIN_ID_SOLANA ||
-      lookupChain === CHAIN_ID_ALGORAND ||
-      isEVMChain(lookupChain)
-    ) {
+    } else if (lookupChain === CHAIN_ID_SOLANA || lookupChain === CHAIN_ID_ALGORAND || isEVMChain(lookupChain)) {
       availableAccounts = maps?.tokenAccounts?.data || undefined
     }
 
@@ -90,22 +78,14 @@ export const TokenSelector2 = (props: TokenSelectorProps) => {
       return
     }
 
-    const defaultAccount =
-      availableAccounts.find((account) => account?.isNativeAsset) || availableAccounts[0]
+    const defaultAccount = availableAccounts.find((account) => account?.isNativeAsset) || availableAccounts[0]
 
     if (!defaultAccount) {
       return
     }
 
     handleOnChange(defaultAccount)
-  }, [
-    handleOnChange,
-    lookupChain,
-    maps,
-    nft,
-    sourceParsedTokenAccount,
-    walletIsReady.walletAddress
-  ])
+  }, [handleOnChange, lookupChain, maps, nft, sourceParsedTokenAccount, walletIsReady.walletAddress])
 
   //This is only for errors so bad that we shouldn't even mount the component
   const fatalError = !isEVMChain(lookupChain) && lookupChain !== CHAIN_ID_TERRA && maps?.tokenAccounts?.error //Terra & ETH can proceed because it has advanced mode

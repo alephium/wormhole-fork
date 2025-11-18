@@ -90,17 +90,9 @@ const TransactionsHistoryPage = () => {
         content: <Alert severity="error">{t('Wallet is not connected')}</Alert>,
         preventDuplicate: true
       })
-      return txs.map((_) => false)
+      return txs.map(() => false)
     },
-    [
-      alphWallet.connectionStatus,
-      enqueueSnackbar,
-      evmProvider,
-      t,
-      targetChainReady,
-      transferSourceChain,
-      transferTargetChain
-    ]
+    [alphWallet.connectionStatus, enqueueSnackbar, evmProvider, t, targetChainReady, transferSourceChain, transferTargetChain]
   )
 
   useEffect(() => {

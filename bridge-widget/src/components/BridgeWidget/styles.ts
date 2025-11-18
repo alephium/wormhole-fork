@@ -1,4 +1,4 @@
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import { COLORS } from '../../muiTheme'
 
 export const GRAY = 'rgba(255, 255, 255, 0.5)'
@@ -91,8 +91,7 @@ export const useWidgetStyles = makeStyles()((theme) => ({
   },
   expandableContainer: {
     overflow: 'hidden',
-    transition:
-      'max-height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+    transition: 'max-height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
   },
   expanded: {
     maxHeight: '1000px',

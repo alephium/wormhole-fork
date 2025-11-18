@@ -1,65 +1,50 @@
-import MyAlgoConnect, { Accounts } from "@randlabs/myalgo-connect";
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import MyAlgoConnect, { Accounts } from '@randlabs/myalgo-connect'
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 
 interface IAlgorandContext {
-  connect(): void;
-  disconnect(): void;
-  accounts: Accounts[];
+  connect(): void
+  disconnect(): void
+  accounts: Accounts[]
 }
 
 const AlgorandContext = createContext<IAlgorandContext>({
   connect: () => {},
   disconnect: () => {},
-  accounts: [],
-});
+  accounts: []
+})
 
-export const AlgorandContextProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
-  const myAlgoConnect = useMemo(() => new MyAlgoConnect(), []);
-  const [accounts, setAccounts] = useState<Accounts[]>([]);
+export const AlgorandContextProvider = ({ children }: { children: ReactNode }) => {
+  const myAlgoConnect = useMemo(() => new MyAlgoConnect(), [])
+  const [accounts, setAccounts] = useState<Accounts[]>([])
   const connect = useCallback(() => {
-    let cancelled = false;
-    (async () => {
+    let cancelled = false
+    ;(async () => {
       const accounts = await myAlgoConnect.connect({
-        shouldSelectOneAccount: true,
-      });
+        shouldSelectOneAccount: true
+      })
       if (!cancelled) {
-        setAccounts(accounts);
+        setAccounts(accounts)
       }
-    })();
+    })()
     return () => {
-      cancelled = true;
-    };
-  }, [myAlgoConnect]);
+      cancelled = true
+    }
+  }, [myAlgoConnect])
   const disconnect = useCallback(() => {
-    setAccounts([]);
-  }, []);
+    setAccounts([])
+  }, [])
   const value = useMemo(
     () => ({
       connect,
       disconnect,
-      accounts,
+      accounts
     }),
     [connect, disconnect, accounts]
-  );
+  )
 
-  return (
-    <AlgorandContext.Provider value={value}>
-      {children}
-    </AlgorandContext.Provider>
-  );
-};
+  return <AlgorandContext.Provider value={value}>{children}</AlgorandContext.Provider>
+}
 
 export const useAlgorandContext = () => {
-  return useContext(AlgorandContext);
-};
+  return useContext(AlgorandContext)
+}

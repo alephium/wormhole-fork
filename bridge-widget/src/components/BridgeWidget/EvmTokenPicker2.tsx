@@ -19,6 +19,7 @@ import {
 import { getTokenLogoAndSymbol } from '../../utils/tokens'
 import TokenPicker2, { BasicAccountRender2 } from './TokenPicker2'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isWormholev1 = (provider: any, address: string, chainId: ChainId) => {
   if (chainId !== CHAIN_ID_ETH) {
     return Promise.resolve(false)
@@ -39,15 +40,7 @@ type EthereumSourceTokenSelectorProps = {
 
 const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
   const { t } = useTranslation()
-  const {
-    value,
-    onChange,
-    tokenAccounts,
-    disabled,
-    resetAccounts,
-    chainId,
-    nft
-  } = props
+  const { value, onChange, tokenAccounts, disabled, resetAccounts, chainId, nft } = props
   const { provider, signerAddress } = useEthereumProvider()
   const { isReady } = useIsWalletReady(chainId)
 
@@ -70,11 +63,7 @@ const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
           if (nft && !tokenId) {
             return Promise.reject(t('Token ID is required.'))
           } else if (nft && tokenId) {
-            return ethNFTToNFTParsedTokenAccount(
-              tokenAccount as ethers_contracts.NFTImplementation,
-              tokenId,
-              signerAddress
-            )
+            return ethNFTToNFTParsedTokenAccount(tokenAccount as ethers_contracts.NFTImplementation, tokenId, signerAddress)
           } else {
             const logoAndSymbol = await getTokenLogoAndSymbol(chainId, tokenAccount.address)
             const tokenInfo = await evmTokenToParsedTokenAccount(
@@ -89,6 +78,7 @@ const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
             }
           }
         } catch (e) {
+          console.error(e)
           return Promise.reject(t('Unable to retrive the specific token.'))
         }
       } else {
@@ -110,6 +100,7 @@ const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
         v1 = await isWormholev1(provider, account.mintKey, chainId)
       } catch (e) {
         //For now, just swallow this one.
+        console.error(e)
       }
       const migration = isMigrationEligible(account.mintKey)
       if (v1 === true && !migration) {
@@ -123,7 +114,7 @@ const EvmTokenPicker2 = (props: EthereumSourceTokenSelectorProps) => {
 
   const RenderComp = useCallback(
     ({ account }: { account: NFTParsedTokenAccount }) => {
-      return BasicAccountRender2(account, isMigrationEligible, nft || false, (_: NFTParsedTokenAccount) => true)
+      return BasicAccountRender2(account, isMigrationEligible, nft || false, () => true)
     },
     [nft, isMigrationEligible]
   )

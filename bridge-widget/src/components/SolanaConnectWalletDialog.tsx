@@ -1,99 +1,77 @@
-import { useCallback, useMemo } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  Divider,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import { makeStyles } from 'tss-react/mui';
-import CloseIcon from "@mui/icons-material/Close";
-import { WalletName, WalletReadyState } from "@solana/wallet-adapter-base";
-import { useWallet, Wallet } from "@solana/wallet-adapter-react";
+import { useCallback, useMemo } from 'react'
+import { Dialog, DialogTitle, Divider, IconButton, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import CloseIcon from '@mui/icons-material/Close'
+import { WalletName, WalletReadyState } from '@solana/wallet-adapter-base'
+import { useWallet, Wallet } from '@solana/wallet-adapter-react'
 
 const useStyles = makeStyles()((theme) => ({
   flexTitle: {
-    display: "flex",
-    alignItems: "center",
-    "& > div": {
+    display: 'flex',
+    alignItems: 'center',
+    '& > div': {
       flexGrow: 1,
-      marginRight: theme.spacing(4),
+      marginRight: theme.spacing(4)
     },
-    "& > button": {
-      marginRight: theme.spacing(-1),
-    },
+    '& > button': {
+      marginRight: theme.spacing(-1)
+    }
   },
   icon: {
     height: 24,
-    width: 24,
-  },
-}));
+    width: 24
+  }
+}))
 
 const DetectedWalletListItem = ({
   wallet,
   select,
-  onClose,
+  onClose
 }: {
-  wallet: Wallet;
-  select: (walletName: WalletName) => void;
-  onClose: () => void;
+  wallet: Wallet
+  select: (walletName: WalletName) => void
+  onClose: () => void
 }) => {
   const handleWalletClick = useCallback(() => {
-    select(wallet.adapter.name);
-    onClose();
-  }, [select, onClose, wallet]);
+    select(wallet.adapter.name)
+    onClose()
+  }, [select, onClose, wallet])
 
   return (
     <ListItemButton onClick={handleWalletClick}>
       <WalletListItem wallet={wallet} text={wallet.adapter.name} />
     </ListItemButton>
-  );
-};
+  )
+}
 
 const WalletListItem = ({ wallet, text }: { wallet: Wallet; text: string }) => {
-  const { classes } = useStyles();
+  const { classes } = useStyles()
   return (
     <>
       <ListItemIcon>
-        <img
-          src={wallet.adapter.icon}
-          alt={wallet.adapter.name}
-          className={classes.icon}
-        />
+        <img src={wallet.adapter.icon} alt={wallet.adapter.name} className={classes.icon} />
       </ListItemIcon>
       <ListItemText>{text}</ListItemText>
     </>
-  );
-};
+  )
+}
 
-const SolanaConnectWalletDialog = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
-  const { classes } = useStyles();
-  const { wallets, select } = useWallet();
+const SolanaConnectWalletDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { classes } = useStyles()
+  const { wallets, select } = useWallet()
 
   const [detected, undetected] = useMemo(() => {
-    const detected: Wallet[] = [];
-    const undetected: Wallet[] = [];
+    const detected: Wallet[] = []
+    const undetected: Wallet[] = []
     for (const wallet of wallets) {
-      if (
-        wallet.readyState === WalletReadyState.Installed ||
-        wallet.readyState === WalletReadyState.Loadable
-      ) {
-        detected.push(wallet);
+      if (wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable) {
+        detected.push(wallet)
       } else if (wallet.readyState === WalletReadyState.NotDetected) {
-        undetected.push(wallet);
+        undetected.push(wallet)
       }
     }
-    return [detected, undetected];
-  }, [wallets]);
+    return [detected, undetected]
+  }, [wallets])
 
   return (
     <Dialog open={isOpen} onClose={onClose}>
@@ -107,12 +85,7 @@ const SolanaConnectWalletDialog = ({
       </DialogTitle>
       <List>
         {detected.map((wallet) => (
-          <DetectedWalletListItem
-            wallet={wallet}
-            select={select}
-            onClose={onClose}
-            key={wallet.adapter.name}
-          />
+          <DetectedWalletListItem wallet={wallet} select={select} onClose={onClose} key={wallet.adapter.name} />
         ))}
         {undetected && <Divider variant="middle" />}
         {undetected.map((wallet) => (
@@ -124,15 +97,12 @@ const SolanaConnectWalletDialog = ({
             target="_blank"
             rel="noreferrer"
           >
-            <WalletListItem
-              wallet={wallet}
-              text={"Install " + wallet.adapter.name}
-            />
+            <WalletListItem wallet={wallet} text={'Install ' + wallet.adapter.name} />
           </ListItemButton>
         ))}
       </List>
     </Dialog>
-  );
-};
+  )
+}
 
-export default SolanaConnectWalletDialog;
+export default SolanaConnectWalletDialog

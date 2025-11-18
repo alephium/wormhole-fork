@@ -7,8 +7,7 @@ const useFetchAvgBlockTime = () => {
 
   useEffect(() => {
     alphWallet?.explorerProvider?.infos.getInfosAverageBlockTimes().then((data) => {
-      if (data && data.length > 0)
-        setAvgBlockTime(data.reduce((acc: number, { value }) => acc + value, 0.0) / data.length)
+      if (data && data.length > 0) setAvgBlockTime(data.reduce((acc: number, { value }) => acc + value, 0.0) / data.length)
     })
   }, [alphWallet])
 

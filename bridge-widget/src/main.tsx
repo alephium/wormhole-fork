@@ -1,8 +1,8 @@
-import { createRoot } from 'react-dom/client';
-import ErrorBoundary from './components/ErrorBoundary';
-import AlephiumBridgeWidget from './AlephiumBridgeWidget';
-import { WalletProviders } from './contexts/WalletProviders';
-import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client'
+import ErrorBoundary from './components/ErrorBoundary'
+import AlephiumBridgeWidget from './AlephiumBridgeWidget'
+import { WalletProviders } from './contexts/WalletProviders'
+import { StrictMode } from 'react'
 
 // This is the entry point that runs when integrators add the Alephium Bridge Widget
 // to their websites by pasting <script> and <link> tags pointing to the
@@ -13,21 +13,12 @@ import { StrictMode } from 'react';
 //
 // - id: "alephium-bridge-widget"
 
-const container = document.getElementById(
-  'alephium-bridge-widget',
-) as HTMLElement;
-const root = createRoot(container);
+const container = document.getElementById('alephium-bridge-widget') as HTMLElement
+const root = createRoot(container)
 
 if (!container) {
-  throw new Error(
-    'Could not find an element with id "alephium-bridge-widget". Please add one to use the Alephium Bridge Widget.',
-  );
+  throw new Error('Could not find an element with id "alephium-bridge-widget". Please add one to use the Alephium Bridge Widget.')
 }
-
-/* @ts-ignore */
-// const config = window.__WIDGET_CONFIG as WormholeConnectConfig;
-/* @ts-ignore */
-// const theme = window.__WIDGET_THEME as WormholeConnectPartialTheme;
 
 root.render(
   <StrictMode>
@@ -36,5 +27,5 @@ root.render(
         <AlephiumBridgeWidget />
       </WalletProviders>
     </ErrorBoundary>
-  </StrictMode>,
-);
+  </StrictMode>
+)

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import {

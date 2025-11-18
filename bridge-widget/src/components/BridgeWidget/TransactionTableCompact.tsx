@@ -16,14 +16,10 @@ import { makeStyles } from 'tss-react/mui'
 import { useTranslation } from 'react-i18next'
 import type { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'
-import type { ReactNode} from 'react';
+import type { ReactNode } from 'react'
 import { isValidElement, useCallback, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import {
-  setBridgeWidgetPage,
-  setRecoverySourceChainFromTxHistoryPage,
-  setRecoverySourceTxFromTxHistoryPage
-} from '../../store/widgetSlice'
+import { setBridgeWidgetPage, setRecoverySourceChainFromTxHistoryPage, setRecoverySourceTxFromTxHistoryPage } from '../../store/widgetSlice'
 import clsx from 'clsx'
 import { RestoreOutlined, DoneAll, Check } from '@mui/icons-material'
 import { COLORS } from '../../muiTheme'
@@ -63,7 +59,7 @@ interface Column {
   compactLabel: string
   align?: 'right'
   minWidth?: number
-  format?: (tx: BridgeTransaction, isCompact?: boolean) => any
+  format?: (tx: BridgeTransaction, isCompact?: boolean) => ReactNode
 }
 
 const columns: Column[] = [

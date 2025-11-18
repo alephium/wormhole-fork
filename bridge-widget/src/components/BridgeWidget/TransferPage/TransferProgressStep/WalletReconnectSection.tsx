@@ -2,25 +2,16 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Alert } from '@mui/material'
 import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_BSC, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
-import {
-  selectTransferHasSentTokens,
-  selectTransferSourceChain,
-  selectTransferTargetChain
-} from '../../../../store/selectors'
+import { selectTransferHasSentTokens, selectTransferSourceChain, selectTransferTargetChain } from '../../../../store/selectors'
 import useIsWalletReady from '../../../../hooks/useIsWalletReady'
 import { getConst } from '../../../../utils/consts'
 import { useWidgetStyles } from '../../styles'
-import { TransferCompletionState } from '../../../../hooks/useGetIsTransferCompleted'
 import ConnectWalletButton from '../../ConnectWalletButton'
 import useTransferOrRecoveryTxExists from '../../useTransferOrRecoveryTxExists'
 
 const SUPPORTED_CHAINS: ChainId[] = [CHAIN_ID_ETH, CHAIN_ID_BSC, CHAIN_ID_ALEPHIUM] // TODO: Update when more chains are supported
 
-interface WalletReconnectSectionProps {
-  isTransferCompleted: TransferCompletionState
-}
-
-const WalletReconnectSection = ({ isTransferCompleted }: WalletReconnectSectionProps) => {
+const WalletReconnectSection = () => {
   const { classes } = useWidgetStyles()
   const txExists = useTransferOrRecoveryTxExists()
   const hasSentTokens = useSelector(selectTransferHasSentTokens)

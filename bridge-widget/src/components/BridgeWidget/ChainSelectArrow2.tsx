@@ -1,8 +1,8 @@
 import { IconButton } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import { ArrowForward, SwapHoriz } from '@mui/icons-material'
 import { useState } from 'react'
-import { COLORS } from '../../muiTheme';
+import { COLORS } from '../../muiTheme'
 
 interface ChainSelectArrow2Props {
   onClick: () => void
@@ -24,10 +24,11 @@ const ChainSelectArrow2 = ({ onClick, disabled }: ChainSelectArrow2Props) => {
         setShowSwap(false)
       }}
       disabled={disabled}
-      size="large">
+      size="large"
+    >
       {showSwap ? <SwapHoriz fontSize="small" /> : <ArrowForward fontSize="small" />}
     </IconButton>
-  );
+  )
 }
 
 export default ChainSelectArrow2
@@ -42,8 +43,8 @@ const useStyles = makeStyles()((theme) => ({
     height: 32,
     borderRadius: 10,
     transition: 'border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, outline-width 0.2s ease',
-    "&:hover": {
-      backgroundColor: COLORS.darkGrey2,
-    },
+    '&:hover': {
+      backgroundColor: COLORS.darkGrey2
+    }
   }
 }))

@@ -2,11 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { useSelector } from 'react-redux'
 import useIsWalletReady from '../../../../hooks/useIsWalletReady'
-import {
-  selectTransferShouldLockFields,
-  selectTransferSourceChain,
-  selectTransferTargetChain
-} from '../../../../store/selectors'
+import { selectTransferShouldLockFields, selectTransferSourceChain, selectTransferTargetChain } from '../../../../store/selectors'
 import { TokenSelector2 } from '../../SourceTokenSelector2'
 import useSyncTargetAddress from '../../../../hooks/useSyncTargetAddress'
 import useGetTargetParsedTokenAccounts from '../../../../hooks/useGetTargetParsedTokenAccounts'

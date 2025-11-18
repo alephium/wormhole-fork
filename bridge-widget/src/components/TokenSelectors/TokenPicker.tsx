@@ -1,4 +1,4 @@
-import type { ChainId } from "@alephium/wormhole-sdk";
+import type { ChainId } from '@alephium/wormhole-sdk'
 import {
   Button,
   CircularProgress,
@@ -10,104 +10,103 @@ import {
   ListItemButton,
   TextField,
   Tooltip,
-  Typography,
-} from "@mui/material";
-import { makeStyles } from 'tss-react/mui';
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import { Alert } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
-import { useTranslation } from "react-i18next";
-import type { NFTParsedTokenAccount } from "../../store/nftSlice";
-import { balancePretty } from "../../utils/balancePretty";
-import { getIsTokenTransferDisabled } from "../../utils/consts";
-import { shortenAddress } from "../../utils/addresses";
-import NFTViewer from "./NFTViewer";
+  Typography
+} from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { Alert } from '@mui/material'
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { NFTParsedTokenAccount } from '../../store/nftSlice'
+import { balancePretty } from '../../utils/balancePretty'
+import { getIsTokenTransferDisabled } from '../../utils/consts'
+import { shortenAddress } from '../../utils/addresses'
+import NFTViewer from './NFTViewer'
 
 const useStyles = makeStyles()((theme) => ({
-    alignCenter: {
-      textAlign: "center",
-    },
-    optionContainer: {
-      padding: 0,
-    },
-    optionContent: {
-      padding: theme.spacing(1),
-    },
-    tokenList: {
-      maxHeight: theme.spacing(80), //TODO smarter
-      height: theme.spacing(80),
-      overflow: "auto",
-    },
-    dialogContent: {
-      overflowX: "hidden",
-    },
-    selectionButtonContainer: {
-      //display: "flex",
-      textAlign: "center",
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(2),
-    },
-    selectionButton: {
-      maxWidth: "100%",
-      width: theme.breakpoints.values.sm,
-    },
-    tokenOverviewContainer: {
-      display: "flex",
-      width: "100%",
-      alignItems: "center",
-      "& div": {
-        margin: theme.spacing(1),
-        flexBasis: "25%",
-        "&$tokenImageContainer": {
-          maxWidth: 40,
-        },
-        "&$tokenMarketsList": {
-          marginTop: theme.spacing(-0.5),
-          marginLeft: 0,
-          flexBasis: "100%",
-        },
-        "&:last-child": {
-          textAlign: "right",
-        },
-        flexShrink: 1,
+  alignCenter: {
+    textAlign: 'center'
+  },
+  optionContainer: {
+    padding: 0
+  },
+  optionContent: {
+    padding: theme.spacing(1)
+  },
+  tokenList: {
+    maxHeight: theme.spacing(80), //TODO smarter
+    height: theme.spacing(80),
+    overflow: 'auto'
+  },
+  dialogContent: {
+    overflowX: 'hidden'
+  },
+  selectionButtonContainer: {
+    //display: "flex",
+    textAlign: 'center',
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2)
+  },
+  selectionButton: {
+    maxWidth: '100%',
+    width: theme.breakpoints.values.sm
+  },
+  tokenOverviewContainer: {
+    display: 'flex',
+    width: '100%',
+    alignItems: 'center',
+    '& div': {
+      margin: theme.spacing(1),
+      flexBasis: '25%',
+      '&$tokenImageContainer': {
+        maxWidth: 40
       },
-      flexWrap: "wrap",
-    },
-    tokenImageContainer: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: 40,
-    },
-    tokenImage: {
-      maxHeight: "2.5rem", //Eyeballing this based off the text size
-    },
-    tokenMarketsList: {
-      order: 1,
-      textAlign: "left",
-      width: "100%",
-      "& > .MuiButton-root": {
-        marginTop: theme.spacing(1),
-        marginRight: theme.spacing(1),
+      '&$tokenMarketsList': {
+        marginTop: theme.spacing(-0.5),
+        marginLeft: 0,
+        flexBasis: '100%'
       },
-    },
-    migrationAlert: {
-      width: "100%",
-      "& .MuiAlert-message": {
-        width: "100%",
+      '&:last-child': {
+        textAlign: 'right'
       },
+      flexShrink: 1
     },
-    flexTitle: {
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    grower: {
-      flexGrow: 1,
-    },
-  })
-);
+    flexWrap: 'wrap'
+  },
+  tokenImageContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40
+  },
+  tokenImage: {
+    maxHeight: '2.5rem' //Eyeballing this based off the text size
+  },
+  tokenMarketsList: {
+    order: 1,
+    textAlign: 'left',
+    width: '100%',
+    '& > .MuiButton-root': {
+      marginTop: theme.spacing(1),
+      marginRight: theme.spacing(1)
+    }
+  },
+  migrationAlert: {
+    width: '100%',
+    '& .MuiAlert-message': {
+      width: '100%'
+    }
+  },
+  flexTitle: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  grower: {
+    flexGrow: 1
+  }
+}))
 
 export const BasicAccountRender = (
   account: MarketParsedTokenAccount,
@@ -115,81 +114,63 @@ export const BasicAccountRender = (
   nft: boolean,
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
-  const { t } = useTranslation();
-  const { classes } = useStyles();
-  const mintPrettyString = shortenAddress(account.mintKey);
-  const uri = nft ? account.image_256 : account.logo || account.uri;
-  const symbol = account.symbol || t("Unknown");
-  const name = account.name || t("Unknown");
-  const tokenId = account.tokenId;
-  const shouldDisplayBalance = !displayBalance || displayBalance(account);
+  const { t } = useTranslation()
+  const { classes } = useStyles()
+  const mintPrettyString = shortenAddress(account.mintKey)
+  const uri = nft ? account.image_256 : account.logo || account.uri
+  const symbol = account.symbol || t('Unknown')
+  const name = account.name || t('Unknown')
+  const tokenId = account.tokenId
+  const shouldDisplayBalance = !displayBalance || displayBalance(account)
 
   const nftContent = (
     <div className={classes.tokenOverviewContainer}>
-      <div className={classes.tokenImageContainer}>
-        {uri && <img alt="" className={classes.tokenImage} src={uri} />}
-      </div>
+      <div className={classes.tokenImageContainer}>{uri && <img alt="" className={classes.tokenImage} src={uri} />}</div>
       <div>
         <Typography>{symbol}</Typography>
         <Typography>{name}</Typography>
       </div>
       <div>
         <Typography>{mintPrettyString}</Typography>
-        <Typography style={{ wordBreak: "break-all" }}>{tokenId}</Typography>
+        <Typography style={{ wordBreak: 'break-all' }}>{tokenId}</Typography>
       </div>
     </div>
-  );
+  )
 
   const tokenContent = (
     <div className={classes.tokenOverviewContainer}>
-      <div className={classes.tokenImageContainer}>
-        {uri && <img alt="" className={classes.tokenImage} src={uri} />}
-      </div>
+      <div className={classes.tokenImageContainer}>{uri && <img alt="" className={classes.tokenImage} src={uri} />}</div>
       <div>
         <Typography variant="subtitle1">{symbol}</Typography>
       </div>
-      <div>
-        {
-          <Typography variant="body1">
-            {account.isNativeAsset ? "Native" : mintPrettyString}
-          </Typography>
-        }
-      </div>
+      <div>{<Typography variant="body1">{account.isNativeAsset ? 'Native' : mintPrettyString}</Typography>}</div>
       <div>
         {shouldDisplayBalance ? (
           <>
-            <Typography variant="body2">{"Balance"}</Typography>
-            <Typography variant="h6">
-              {balancePretty(account.uiAmountString)}
-            </Typography>
+            <Typography variant="body2">{'Balance'}</Typography>
+            <Typography variant="h6">{balancePretty(account.uiAmountString)}</Typography>
           </>
         ) : (
           <div />
         )}
       </div>
     </div>
-  );
+  )
 
   const migrationRender = (
     <div className={classes.migrationAlert}>
       <Alert severity="warning">
-        <Typography variant="body2">
-          {t("This is a legacy asset eligible for migration.")}
-        </Typography>
+        <Typography variant="body2">{t('This is a legacy asset eligible for migration.')}</Typography>
         <div>{tokenContent}</div>
       </Alert>
     </div>
-  );
+  )
 
-  return nft
-    ? nftContent
-    : isMigrationEligible(account.mintKey)
-    ? migrationRender
-    : tokenContent;
-};
+  return nft ? nftContent : isMigrationEligible(account.mintKey) ? migrationRender : tokenContent
+}
 
 interface MarketParsedTokenAccount extends NFTParsedTokenAccount {
-  markets?: string[];
+  markets?: string[]
 }
 
 export default function TokenPicker({
@@ -203,178 +184,155 @@ export default function TokenPicker({
   resetAccounts,
   nft,
   chainId,
-  error,
   showLoader,
-  useTokenId,
+  useTokenId
 }: {
-  value: NFTParsedTokenAccount | null;
-  options: NFTParsedTokenAccount[];
-  RenderOption: ({
-    account,
-  }: {
-    account: NFTParsedTokenAccount;
-  }) => JSX.Element;
-  onChange: (newValue: NFTParsedTokenAccount | null) => Promise<void>;
-  isValidAddress?: (address: string) => boolean;
-  getAddress?: (
-    address: string,
-    tokenId?: string
-  ) => Promise<NFTParsedTokenAccount>;
-  disabled: boolean;
-  resetAccounts: (() => void) | undefined;
-  nft: boolean;
-  chainId: ChainId;
-  error?: string;
-  showLoader?: boolean;
-  useTokenId?: boolean;
+  value: NFTParsedTokenAccount | null
+  options: NFTParsedTokenAccount[]
+  RenderOption: ({ account }: { account: NFTParsedTokenAccount }) => JSX.Element
+  onChange: (newValue: NFTParsedTokenAccount | null) => Promise<void>
+  isValidAddress?: (address: string) => boolean
+  getAddress?: (address: string, tokenId?: string) => Promise<NFTParsedTokenAccount>
+  disabled: boolean
+  resetAccounts: (() => void) | undefined
+  nft: boolean
+  chainId: ChainId
+  error?: string
+  showLoader?: boolean
+  useTokenId?: boolean
 }) {
-  const { t } = useTranslation();
-  const { classes } = useStyles();
-  const [holderString, setHolderString] = useState("");
-  const [tokenIdHolderString, setTokenIdHolderString] = useState("");
-  const [loadingError, setLoadingError] = useState("");
-  const [isLocalLoading, setLocalLoading] = useState(false);
-  const [dialogIsOpen, setDialogIsOpen] = useState(false);
-  const [selectionError, setSelectionError] = useState("");
+  const { t } = useTranslation()
+  const { classes } = useStyles()
+  const [holderString, setHolderString] = useState('')
+  const [tokenIdHolderString, setTokenIdHolderString] = useState('')
+  const [loadingError, setLoadingError] = useState('')
+  const [isLocalLoading, setLocalLoading] = useState(false)
+  const [dialogIsOpen, setDialogIsOpen] = useState(false)
+  const [selectionError, setSelectionError] = useState('')
 
   const openDialog = useCallback(() => {
-    setHolderString("");
-    setSelectionError("");
-    setDialogIsOpen(true);
-  }, []);
+    setHolderString('')
+    setSelectionError('')
+    setDialogIsOpen(true)
+  }, [])
 
   const closeDialog = useCallback(() => {
-    setDialogIsOpen(false);
-  }, []);
+    setDialogIsOpen(false)
+  }, [])
 
   const handleSelectOption = useCallback(
     async (option: NFTParsedTokenAccount) => {
-      setSelectionError("");
-      let newOption: NFTParsedTokenAccount | null = null;
+      setSelectionError('')
+      let newOption: NFTParsedTokenAccount | null = null
       try {
         //Covalent balances tend to be stale, so we make an attempt to correct it at selection time.
         if (getAddress && !option.isNativeAsset) {
-          newOption = await getAddress(option.mintKey, option.tokenId);
+          newOption = await getAddress(option.mintKey, option.tokenId)
           newOption = {
             ...option,
             ...newOption,
             // keep logo and uri from covalent / market list / etc (otherwise would be overwritten by undefined)
             logo: option.logo || newOption.logo,
-            uri: option.uri || newOption.uri,
-          } as NFTParsedTokenAccount;
+            uri: option.uri || newOption.uri
+          } as NFTParsedTokenAccount
         } else {
-          newOption = option;
+          newOption = option
         }
-        await onChange(newOption);
-        closeDialog();
+        await onChange(newOption)
+        closeDialog()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
-        if (e.message?.includes("v1")) {
-          setSelectionError(e.message);
+        if (e.message?.includes('v1')) {
+          setSelectionError(e.message)
         } else {
           setSelectionError(
-            t("Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list.")
-          );
+            t('Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list.')
+          )
         }
       }
     },
     [getAddress, onChange, closeDialog, t]
-  );
+  )
 
   const resetAccountsWrapper = useCallback(() => {
-    setHolderString("");
-    setTokenIdHolderString("");
-    setSelectionError("");
-    resetAccounts?.();
-  }, [resetAccounts]);
+    setHolderString('')
+    setTokenIdHolderString('')
+    setSelectionError('')
+    resetAccounts?.()
+  }, [resetAccounts])
 
   const searchFilter = useCallback(
     (option: NFTParsedTokenAccount) => {
       if (!holderString) {
-        return true;
+        return true
       }
       const optionString = (
-        (option.publicKey || "") +
-        " " +
-        (option.mintKey || "") +
-        " " +
-        (option.symbol || "") +
-        " " +
-        (option.name || " ")
-      ).toLowerCase();
-      const searchString = holderString.toLowerCase();
-      return optionString.includes(searchString);
+        (option.publicKey || '') +
+        ' ' +
+        (option.mintKey || '') +
+        ' ' +
+        (option.symbol || '') +
+        ' ' +
+        (option.name || ' ')
+      ).toLowerCase()
+      const searchString = holderString.toLowerCase()
+      return optionString.includes(searchString)
     },
     [holderString]
-  );
+  )
 
   const nonFeaturedOptions = useMemo(() => {
-    return options.filter(
-      (option: NFTParsedTokenAccount) => searchFilter(option)
-    );
-  }, [options, searchFilter]);
+    return options.filter((option: NFTParsedTokenAccount) => searchFilter(option))
+  }, [options, searchFilter])
 
   const localFind = useCallback(
     (address: string, tokenIdHolderString: string) => {
       return options.find(
-        (x) =>
-          x.mintKey.toLowerCase() === address.toLowerCase() &&
-          (!tokenIdHolderString || x.tokenId === tokenIdHolderString)
-      );
+        (x) => x.mintKey.toLowerCase() === address.toLowerCase() && (!tokenIdHolderString || x.tokenId === tokenIdHolderString)
+      )
     },
     [options]
-  );
+  )
 
   //This is the effect which allows pasting an address in directly
   useEffect(() => {
     if (!isValidAddress || !getAddress) {
-      return;
+      return
     }
     if (useTokenId && !tokenIdHolderString) {
-      return;
+      return
     }
-    setLoadingError("");
-    let cancelled = false;
+    setLoadingError('')
+    let cancelled = false
     if (isValidAddress(holderString)) {
-      const option = localFind(holderString, tokenIdHolderString);
+      const option = localFind(holderString, tokenIdHolderString)
       if (option) {
-        handleSelectOption(option);
+        handleSelectOption(option)
         return () => {
-          cancelled = true;
-        };
+          cancelled = true
+        }
       }
-      setLocalLoading(true);
-      setLoadingError("");
-      getAddress(
-        holderString,
-        useTokenId ? tokenIdHolderString : undefined
-      ).then(
+      setLocalLoading(true)
+      setLoadingError('')
+      getAddress(holderString, useTokenId ? tokenIdHolderString : undefined).then(
         (result) => {
           if (!cancelled) {
-            setLocalLoading(false);
+            setLocalLoading(false)
             if (result) {
-              handleSelectOption(result);
+              handleSelectOption(result)
             }
           }
         },
-        (error) => {
+        () => {
           if (!cancelled) {
-            setLocalLoading(false);
-            setLoadingError(t("Could not find the specified address."));
+            setLocalLoading(false)
+            setLoadingError(t('Could not find the specified address.'))
           }
         }
-      );
+      )
     }
-    return () => (cancelled = true);
-  }, [
-    holderString,
-    isValidAddress,
-    getAddress,
-    handleSelectOption,
-    localFind,
-    tokenIdHolderString,
-    useTokenId,
-    t
-  ]);
+    return () => (cancelled = true)
+  }, [holderString, isValidAddress, getAddress, handleSelectOption, localFind, tokenIdHolderString, useTokenId, t])
 
   //TODO reset button
   //TODO debounce & save hotloaded options as an option before automatically selecting
@@ -383,11 +341,9 @@ export default function TokenPicker({
   const localLoader = (
     <div className={classes.alignCenter}>
       <CircularProgress />
-      <Typography variant="body2">
-        {showLoader ? t("Loading available tokens") : t("Searching for results")}
-      </Typography>
+      <Typography variant="body2">{showLoader ? t('Loading available tokens') : t('Searching for results')}</Typography>
     </div>
-  );
+  )
 
   const displayLocalError = (
     <div className={classes.alignCenter}>
@@ -395,19 +351,13 @@ export default function TokenPicker({
         {loadingError || selectionError}
       </Typography>
     </div>
-  );
+  )
 
   const dialog = (
-    <Dialog
-      onClose={closeDialog}
-      aria-labelledby="simple-dialog-title"
-      open={dialogIsOpen}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog onClose={closeDialog} aria-labelledby="simple-dialog-title" open={dialogIsOpen} maxWidth="sm" fullWidth>
       <DialogTitle>
         <div id="simple-dialog-title" className={classes.flexTitle}>
-          <Typography variant="h5">{t("Select a token")}</Typography>
+          <Typography variant="h5">{t('Select a token')}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
             <IconButton onClick={resetAccountsWrapper} size="large">
@@ -419,7 +369,7 @@ export default function TokenPicker({
       <DialogContent className={classes.dialogContent}>
         <TextField
           variant="outlined"
-          label={t("Search name or paste address")}
+          label={t('Search name or paste address')}
           value={holderString}
           onChange={(event) => setHolderString(event.target.value)}
           fullWidth
@@ -428,7 +378,7 @@ export default function TokenPicker({
         {useTokenId ? (
           <TextField
             variant="outlined"
-            label={t("Token ID")}
+            label={t('Token ID')}
             value={tokenIdHolderString}
             onChange={(event) => setTokenIdHolderString(event.target.value)}
             fullWidth
@@ -446,25 +396,23 @@ export default function TokenPicker({
                 <ListItemButton
                   component="div"
                   onClick={() => handleSelectOption(option)}
-                  key={
-                    option.publicKey + option.mintKey + (option.tokenId || "")
-                  }
+                  key={option.publicKey + option.mintKey + (option.tokenId || '')}
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
                 >
                   <RenderOption account={option} />
                 </ListItemButton>
-              );
+              )
             })}
             {nonFeaturedOptions.length ? null : (
               <div className={classes.alignCenter}>
-                <Typography>{t("No results found")}</Typography>
+                <Typography>{t('No results found')}</Typography>
               </div>
             )}
           </List>
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 
   const selectionChip = (
     <div className={classes.selectionButtonContainer}>
@@ -475,14 +423,10 @@ export default function TokenPicker({
         startIcon={<KeyboardArrowDownIcon />}
         className={classes.selectionButton}
       >
-        {value ? (
-          <RenderOption account={value} />
-        ) : (
-          <Typography color="textSecondary">{t("Select a token")}</Typography>
-        )}
+        {value ? <RenderOption account={value} /> : <Typography color="textSecondary">{t('Select a token')}</Typography>}
       </Button>
     </div>
-  );
+  )
 
   return (
     <>
@@ -490,5 +434,5 @@ export default function TokenPicker({
       {value && nft ? <NFTViewer value={value} chainId={chainId} /> : null}
       {selectionChip}
     </>
-  );
+  )
 }

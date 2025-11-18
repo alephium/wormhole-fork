@@ -2,9 +2,9 @@
 
 interface ImportMetaEnv {
   // env
-  REACT_APP_WIDGET_ENV: string;
+  REACT_APP_WIDGET_ENV: string
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  readonly env: ImportMetaEnv
 }

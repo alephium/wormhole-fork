@@ -119,12 +119,7 @@ const Send = () => {
           {t('Connect wallet')}
         </ConnectWalletButton>
       ) : (
-        <BridgeWidgetButton
-          short
-          disabled={!isReady || isAttestDisabled}
-          onClick={handleAttestClick}
-          isLoading={isAttestLoading}
-        >
+        <BridgeWidgetButton short disabled={!isReady || isAttestDisabled} onClick={handleAttestClick} isLoading={isAttestLoading}>
           {t('Attest')}
         </BridgeWidgetButton>
       )}

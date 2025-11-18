@@ -1,10 +1,9 @@
-import { ChainId, getSignedVAA } from "@alephium/wormhole-sdk";
-import { getConst } from "./consts";
+import { ChainId, getSignedVAA } from '@alephium/wormhole-sdk'
+import { getConst } from './consts'
 
-export let CURRENT_WORMHOLE_RPC_HOST = -1;
+export let CURRENT_WORMHOLE_RPC_HOST = -1
 
-export const getNextRpcHost = () =>
-  ++CURRENT_WORMHOLE_RPC_HOST % getConst('WORMHOLE_RPC_HOSTS').length;
+export const getNextRpcHost = () => ++CURRENT_WORMHOLE_RPC_HOST % getConst('WORMHOLE_RPC_HOSTS').length
 
 export async function getSignedVAAWithRetry(
   emitterChain: ChainId,
@@ -13,24 +12,18 @@ export async function getSignedVAAWithRetry(
   sequence: string,
   retryAttempts?: number
 ) {
-  let result;
-  let attempts = 0;
+  let result
+  let attempts = 0
   while (!result) {
-    attempts++;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    attempts++
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     try {
-      result = await getSignedVAA(
-        getConst('WORMHOLE_RPC_HOSTS')[getNextRpcHost()],
-        emitterChain,
-        emitterAddress,
-        targetChain,
-        sequence
-      );
+      result = await getSignedVAA(getConst('WORMHOLE_RPC_HOSTS')[getNextRpcHost()], emitterChain, emitterAddress, targetChain, sequence)
     } catch (e) {
       if (retryAttempts !== undefined && attempts > retryAttempts) {
-        throw e;
+        throw e
       }
     }
   }
-  return result;
+  return result
 }

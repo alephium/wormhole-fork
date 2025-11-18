@@ -28,10 +28,7 @@ const TransferProgressStep = () => {
   const txExists = useTransferOrRecoveryTxExists()
   const useAutoRelayer = targetChain === CHAIN_ID_ALEPHIUM
   const shouldCheckCompletion = useRelayer || useAutoRelayer
-  const isTransferCompleted = useGetIsTransferCompleted(
-    !shouldCheckCompletion,
-    shouldCheckCompletion ? 5000 : undefined
-  )
+  const isTransferCompleted = useGetIsTransferCompleted(!shouldCheckCompletion, shouldCheckCompletion ? 5000 : undefined)
   const { error } = isTransferCompleted
   const { enqueueSnackbar } = useSnackbar()
   const dispatch = useDispatch()
@@ -66,9 +63,7 @@ const TransferProgressStep = () => {
 
       <MainActionButton />
 
-      {(hasSentTokens || isTransferCompleted.isTransferCompleted) && (
-        <TransferMoreTokensButton isTransferCompleted={isTransferCompleted} />
-      )}
+      {(hasSentTokens || isTransferCompleted.isTransferCompleted) && <TransferMoreTokensButton isTransferCompleted={isTransferCompleted} />}
     </div>
   )
 }
