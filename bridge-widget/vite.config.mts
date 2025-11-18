@@ -6,7 +6,6 @@ import checker from 'vite-plugin-checker';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import dts from 'vite-plugin-dts';
 import packageJson from './package.json';
-import { analyzer } from 'vite-bundle-analyzer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,20 +62,8 @@ export default defineConfig(({ command }: ConfigEnv) => {
         'process/': 'process',
         'buffer/': 'buffer',
       },
-      dedupe: [
-        '@emotion/react',
-        '@emotion/styled',
-        '@mui/styled-engine',
-        '@mui/system',
-        '@solana/web3.js',
-        '@solana/spl-token',
-        '@solana/spl-token-registry',
-        '@solana/wallet-adapter-react',
-        '@solana/wallet-adapter-wallets',
-      ],
     },
     plugins: [
-      // analyzer(),
       checker({ typescript: true }),
       dts({ insertTypesEntry: true }),
       react(),
