@@ -6,7 +6,8 @@ import {
   CHAIN_ID_TERRA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
-import { TokenInfo } from "@solana/spl-token-registry";
+// import { TokenInfo } from "@solana/spl-token-registry"; // Removed to keep package size small, replaced below
+import { TokenInfo } from "../utils/solana";
 import { useMemo } from "react";
 import { DataWrapper, getEmptyDataWrapper } from "../store/helpers";
 import { logoOverrides } from "../utils/consts";

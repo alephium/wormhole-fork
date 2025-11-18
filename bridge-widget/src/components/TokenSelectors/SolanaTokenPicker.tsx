@@ -1,5 +1,6 @@
 import { CHAIN_ID_SOLANA } from "@alephium/wormhole-sdk";
-import type { TokenInfo } from "@solana/spl-token-registry";
+// import type { TokenInfo } from "@solana/spl-token-registry"; // Removed to keep package size small, replaced below
+import { TokenInfo } from "../../utils/solana";
 import  { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";

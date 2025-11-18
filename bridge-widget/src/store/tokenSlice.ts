@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { TokenInfo } from '@solana/spl-token-registry'
+// import { TokenInfo } from '@solana/spl-token-registry' // Removed to keep package size small, replaced below
+import { TokenInfo } from '../utils/solana'
 import { MarketsMap } from '../hooks/useMarketsMap'
 import { RelayerTokenInfo } from '../hooks/useRelayersAvailable'
 import { DataWrapper, errorDataWrapper, fetchDataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './helpers'

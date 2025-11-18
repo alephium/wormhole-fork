@@ -1,15 +1,11 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { ENV, TokenInfo, TokenListProvider } from "@solana/spl-token-registry";
+// import { ENV, TokenInfo, TokenListProvider } from "@solana/spl-token-registry";
+import { TokenInfo } from "../utils/solana";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DataWrapper } from "../store/helpers";
 import { selectSolanaTokenMap } from "../store/selectors";
-import {
-  errorSolanaTokenMap,
-  fetchSolanaTokenMap,
-  receiveSolanaTokenMap,
-} from "../store/tokenSlice";
-import { getCluster } from "../utils/consts";
+import { fetchSolanaTokenMap } from "../store/tokenSlice";
 
 const useSolanaTokenMap = (): DataWrapper<TokenInfo[]> => {
   const tokenMap = useSelector(selectSolanaTokenMap);
@@ -30,16 +26,17 @@ const useSolanaTokenMap = (): DataWrapper<TokenInfo[]> => {
 const getSolanaTokenMap = (dispatch: Dispatch) => {
   dispatch(fetchSolanaTokenMap());
 
-  new TokenListProvider().resolve().then(
-    (tokens) => {
-      const tokenList = tokens.filterByChainId(getCluster() === "testnet" ? ENV.Testnet : ENV.MainnetBeta).getList();
-      dispatch(receiveSolanaTokenMap(tokenList));
-    },
-    (error) => {
-      console.error(error);
-      dispatch(errorSolanaTokenMap("Failed to retrieve the Solana token map."));
-    }
-  );
+  // TODO: Uncomment when integrating Solana, removed to keep package size small
+  // new TokenListProvider().resolve().then(
+  //   (tokens) => {
+  //     const tokenList = tokens.filterByChainId(getCluster() === "testnet" ? ENV.Testnet : ENV.MainnetBeta).getList();
+  //     dispatch(receiveSolanaTokenMap(tokenList));
+  //   },
+  //   (error) => {
+  //     console.error(error);
+  //     dispatch(errorSolanaTokenMap("Failed to retrieve the Solana token map."));
+  //   }
+  // );
 };
 
 export default useSolanaTokenMap;
