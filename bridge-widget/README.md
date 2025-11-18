@@ -39,3 +39,22 @@ provide one, you can enable it with:
   <AlephiumBridgeWidget />
 </WalletProviders>
 ```
+
+## Development
+
+```bash
+npm i
+```
+
+To publish to a local registry, you can use [Verdaccio](https://verdaccio.org/):
+
+```bash
+npx verdaccio
+```
+
+Then, you can build and publish the package:
+
+```bash
+npm run build
+npm publish --registry http://localhost:4873
+```
