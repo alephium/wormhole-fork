@@ -1,8 +1,8 @@
-import { Typography } from "@mui/material"
-import { AlephiumConnectButton } from "@alephium/web3-react"
-import { useTranslation } from "react-i18next"
-import { shortenAddress } from "../utils/addresses"
-import BridgeWidgetButton from "./BridgeWidget/BridgeWidgetButton"
+import { Typography } from '@mui/material'
+import { AlephiumConnectButton } from '@alephium/web3-react'
+import { useTranslation } from 'react-i18next'
+import { shortenAddress } from '../utils/addresses'
+import BridgeWidgetButton from './BridgeWidget/BridgeWidgetButton'
 
 const AlephiumWalletKey = () => {
   const { t } = useTranslation()
@@ -14,16 +14,16 @@ const AlephiumWalletKey = () => {
 
         return !isConnected || !address ? (
           <BridgeWidgetButton short onClick={show}>
-            {t("Connect wallet")}
+            {t('Connect wallet')}
           </BridgeWidgetButton>
         ) : (
-          <Typography variant="body2" style={{ textAlign: "right", opacity: 0.75 }}>
-            {`${t("Connected wallets", { count: 1 })}: ${shortenAddress(address)}`}
+          <Typography variant="body2" style={{ textAlign: 'right', opacity: 0.75 }}>
+            {`${t('Connected wallets', { count: 1 })}: ${shortenAddress(address)}`}
           </Typography>
         )
       }}
     </AlephiumConnectButton.Custom>
   )
-};
+}
 
-export default AlephiumWalletKey;
+export default AlephiumWalletKey

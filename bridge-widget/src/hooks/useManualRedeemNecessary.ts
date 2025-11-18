@@ -1,8 +1,13 @@
-import { useSelector } from "react-redux"
-import { selectTransferIsRedeemComplete, selectTransferRedeemTx, selectTransferIsRedeemedViaRelayer, selectTransferTargetChain } from "../store/selectors"
-import { useEffect, useState } from "react"
-import useTransferSignedVAA from "./useTransferSignedVAA"
-import { CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk"
+import { useSelector } from 'react-redux'
+import {
+  selectTransferIsRedeemComplete,
+  selectTransferRedeemTx,
+  selectTransferIsRedeemedViaRelayer,
+  selectTransferTargetChain
+} from '../store/selectors'
+import { useEffect, useState } from 'react'
+import useTransferSignedVAA from './useTransferSignedVAA'
+import { CHAIN_ID_ALEPHIUM } from '@alephium/wormhole-sdk'
 
 const useManualRedeemNecessary = () => {
   const isRedeemComplete = useSelector(selectTransferIsRedeemComplete)

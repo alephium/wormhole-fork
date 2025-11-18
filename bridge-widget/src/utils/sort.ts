@@ -1,9 +1,6 @@
-import { ParsedTokenAccount } from "../store/transferSlice";
+import { ParsedTokenAccount } from '../store/transferSlice'
 
-export const sortParsedTokenAccounts = (
-  a: ParsedTokenAccount,
-  b: ParsedTokenAccount
-) =>
+export const sortParsedTokenAccounts = (a: ParsedTokenAccount, b: ParsedTokenAccount) =>
   a.isNativeAsset && !b.isNativeAsset
     ? -1
     : !a.isNativeAsset && b.isNativeAsset
@@ -14,4 +11,4 @@ export const sortParsedTokenAccounts = (
     ? -1
     : b.symbol
     ? 1
-    : 0;
+    : 0

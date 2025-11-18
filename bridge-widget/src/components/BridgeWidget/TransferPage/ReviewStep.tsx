@@ -137,9 +137,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
     onNext()
   }, [handleClick, onNext])
 
-  const isButtonDisabled = isConnectAction
-    ? !isConnectSupported
-    : isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing
+  const isButtonDisabled = isConnectAction ? !isConnectSupported : isWrongWallet || disabled || isAllowanceFetching || isApproveProcessing
 
   const connectWalletLabel = useMemo(() => {
     if (!isConnectAction || connectChainId === null) {
@@ -154,10 +152,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
   const primaryButtonTone: 'default' | 'primaryNext' = isConnectAction ? 'default' : 'primaryNext'
 
   const humanReadableTransferAmount =
-    sourceDecimals !== undefined &&
-    sourceDecimals !== null &&
-    transferAmountParsed &&
-    formatUnits(transferAmountParsed, sourceDecimals)
+    sourceDecimals !== undefined && sourceDecimals !== null && transferAmountParsed && formatUnits(transferAmountParsed, sourceDecimals)
   let tokensAmount = 0
   try {
     tokensAmount = Number(humanReadableTransferAmount || sourceAmount)
@@ -203,9 +198,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
             </Typography>
             <SmartAddress
               chainId={targetChain}
-              address={
-                targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress
-              }
+              address={targetChain === CHAIN_ID_ALEPHIUM ? hexToALPHAddress(readableTargetAddress) : readableTargetAddress}
             />
           </div>
         </div>
@@ -219,14 +212,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
               <div className={classes.networkAddressText}>
                 <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ fontWeight: 'bold' }}>{sourceAmount}</span>{' '}
-                  <SmartAddress
-                    chainId={targetChain}
-                    address={targetAsset}
-                    symbol={symbol}
-                    tokenName={tokenName}
-                    logo={logo}
-                    isAsset
-                  />
+                  <SmartAddress chainId={targetChain} address={targetAsset} symbol={symbol} tokenName={tokenName} logo={logo} isAsset />
                   {logo && <img alt="" className={classes.networkIcon} src={logo} />}
                 </Typography>
               </div>
@@ -242,9 +228,7 @@ const ReviewStep = ({ onBack, onNext }: ReviewStepProps) => {
                 <Typography style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ fontWeight: 'bold' }}>{numeral(relayerFee).format('0.00')}</span>{' '}
                   <SmartAddress chainId={sourceChain} parsedTokenAccount={sourceParsedTokenAccount} isAsset />
-                  {sourceParsedTokenAccount.logo && (
-                    <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />
-                  )}
+                  {sourceParsedTokenAccount.logo && <img alt="" className={classes.networkIcon} src={sourceParsedTokenAccount.logo} />}
                 </Typography>
               </div>
             </div>

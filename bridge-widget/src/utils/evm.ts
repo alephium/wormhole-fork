@@ -1,14 +1,11 @@
-import { sleep } from "@alephium/web3";
-import { ChainId, CHAIN_ID_BSC, CHAIN_ID_ETH, ethers_contracts, getSignedVAAHash, isEVMChain } from "@alephium/wormhole-sdk";
-import { ethers } from "ethers";
-import { arrayify, formatUnits } from "ethers/lib/utils";
-import {
-  createNFTParsedTokenAccount,
-  createParsedTokenAccount,
-} from "../hooks/useGetSourceParsedTokenAccounts";
-import { getConst, getCluster, getTokenBridgeAddressForChain } from "./consts";
-import { Multicall, ContractCallContext } from 'ethereum-multicall';
-import i18n from "../i18n";
+import { sleep } from '@alephium/web3'
+import { ChainId, CHAIN_ID_BSC, CHAIN_ID_ETH, ethers_contracts, getSignedVAAHash, isEVMChain } from '@alephium/wormhole-sdk'
+import { ethers } from 'ethers'
+import { arrayify, formatUnits } from 'ethers/lib/utils'
+import { createNFTParsedTokenAccount, createParsedTokenAccount } from '../hooks/useGetSourceParsedTokenAccounts'
+import { getConst, getCluster, getTokenBridgeAddressForChain } from './consts'
+import { Multicall, ContractCallContext } from 'ethereum-multicall'
+import i18n from '../i18n'
 import { default as ETHTokens } from '../../../bridge-assets/tokens/eth-token-whitelist.json'
 import { default as BSCTokens } from '../../../bridge-assets/tokens/bsc-token-whitelist.json'
 
@@ -66,23 +63,16 @@ export async function getBSCTokenLogoAndSymbol(tokenAddress: string) {
 }
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
-export async function getEthereumToken(
-  tokenAddress: string,
-  provider: ethers.providers.Web3Provider
-) {
-  const token = ethers_contracts.TokenImplementation__factory.connect(tokenAddress, provider);
-  return token;
+export async function getEthereumToken(tokenAddress: string, provider: ethers.providers.Web3Provider) {
+  const token = ethers_contracts.TokenImplementation__factory.connect(tokenAddress, provider)
+  return token
 }
 
-export async function evmTokenToParsedTokenAccount(
-  chainId: ChainId,
-  token: ethers_contracts.TokenImplementation,
-  signerAddress: string
-) {
-  const decimals = await token.decimals();
-  const balance = await token.balanceOf(signerAddress);
-  const symbol = await token.symbol();
-  const name = await token.name();
+export async function evmTokenToParsedTokenAccount(chainId: ChainId, token: ethers_contracts.TokenImplementation, signerAddress: string) {
+  const decimals = await token.decimals()
+  const balance = await token.balanceOf(signerAddress)
+  const symbol = await token.symbol()
+  const name = await token.name()
   const logoURI = (await getEVMTokenLogoAndSymbol(chainId, token.address))?.logoURI
   return createParsedTokenAccount(
     signerAddress,
@@ -94,38 +84,29 @@ export async function evmTokenToParsedTokenAccount(
     symbol,
     name,
     logoURI
-  );
+  )
 }
 
 //This is a valuable intermediate step to the parsed token account, as the token has metadata information on it.
-export async function getEthereumNFT(
-  tokenAddress: string,
-  provider: ethers.providers.Web3Provider
-) {
-  const token = ethers_contracts.NFTImplementation__factory.connect(tokenAddress, provider);
-  return token;
+export async function getEthereumNFT(tokenAddress: string, provider: ethers.providers.Web3Provider) {
+  const token = ethers_contracts.NFTImplementation__factory.connect(tokenAddress, provider)
+  return token
 }
 
 export async function isNFT(token: ethers_contracts.NFTImplementation) {
-  const erc721 = "0x80ac58cd";
-  const erc721metadata = "0x5b5e139f";
-  const supportsErc721 = await token.supportsInterface(arrayify(erc721));
-  const supportsErc721Metadata = await token.supportsInterface(
-    arrayify(erc721metadata)
-  );
-  return supportsErc721 && supportsErc721Metadata;
+  const erc721 = '0x80ac58cd'
+  const erc721metadata = '0x5b5e139f'
+  const supportsErc721 = await token.supportsInterface(arrayify(erc721))
+  const supportsErc721Metadata = await token.supportsInterface(arrayify(erc721metadata))
+  return supportsErc721 && supportsErc721Metadata
 }
 
-export async function ethNFTToNFTParsedTokenAccount(
-  token: ethers_contracts.NFTImplementation,
-  tokenId: string,
-  signerAddress: string
-) {
-  const decimals = 0;
-  const balance = (await token.ownerOf(tokenId)) === signerAddress ? 1 : 0;
-  const symbol = await token.symbol();
-  const name = await token.name();
-  const uri = await token.tokenURI(tokenId);
+export async function ethNFTToNFTParsedTokenAccount(token: ethers_contracts.NFTImplementation, tokenId: string, signerAddress: string) {
+  const decimals = 0
+  const balance = (await token.ownerOf(tokenId)) === signerAddress ? 1 : 0
+  const symbol = await token.symbol()
+  const name = await token.name()
+  const uri = await token.tokenURI(tokenId)
   return createNFTParsedTokenAccount(
     signerAddress,
     token.address,
@@ -137,11 +118,11 @@ export async function ethNFTToNFTParsedTokenAccount(
     symbol,
     name,
     uri
-  );
+  )
 }
 
 export function isValidEthereumAddress(address: string) {
-  return ethers.utils.isAddress(address);
+  return ethers.utils.isAddress(address)
 }
 
 function checkEVMChainId(chainId: ChainId) {
@@ -153,15 +134,13 @@ function checkEVMChainId(chainId: ChainId) {
 export async function getEVMCurrentBlockNumber(provider: ethers.providers.Provider, chainId: ChainId): Promise<number> {
   checkEVMChainId(chainId)
   return chainId === CHAIN_ID_ETH && getCluster() !== 'devnet'
-    ? (await provider.getBlock("finalized")).number
+    ? (await provider.getBlock('finalized')).number
     : await provider.getBlockNumber()
 }
 
 export function isEVMTxConfirmed(chainId: ChainId, txBlock: number, currentBlock: number): boolean {
   checkEVMChainId(chainId)
-  return chainId === CHAIN_ID_ETH
-    ? currentBlock >= txBlock
-    : currentBlock >= (txBlock + DefaultEVMChainConfirmations)
+  return chainId === CHAIN_ID_ETH ? currentBlock >= txBlock : currentBlock >= txBlock + DefaultEVMChainConfirmations
 }
 
 export async function waitEVMTxConfirmed(provider: ethers.providers.Provider, txBlockNumber: number, chainId: ChainId) {
@@ -174,7 +153,7 @@ async function _waitEVMTxConfirmed(
   txBlockNumber: number,
   chainId: ChainId,
   lastBlockNumber: number | undefined = undefined,
-  lastBlockUpdatedTs: number = Date.now(),
+  lastBlockUpdatedTs: number = Date.now()
 ) {
   const currentBlockNumber = await getEVMCurrentBlockNumber(provider, chainId)
   if (isEVMTxConfirmed(chainId, txBlockNumber, currentBlockNumber)) {
@@ -182,11 +161,12 @@ async function _waitEVMTxConfirmed(
   }
   await sleep(3000)
   const now = Date.now()
-  const [evmProvider, timestamp] = currentBlockNumber === lastBlockNumber && (now - lastBlockUpdatedTs > EpochDuration)
-    ? [getEvmJsonRpcProvider(chainId) ?? provider, now]
-    : currentBlockNumber !== lastBlockNumber
-    ? [provider, now]
-    : [provider, lastBlockUpdatedTs]
+  const [evmProvider, timestamp] =
+    currentBlockNumber === lastBlockNumber && now - lastBlockUpdatedTs > EpochDuration
+      ? [getEvmJsonRpcProvider(chainId) ?? provider, now]
+      : currentBlockNumber !== lastBlockNumber
+      ? [provider, now]
+      : [provider, lastBlockUpdatedTs]
   await _waitEVMTxConfirmed(evmProvider, txBlockNumber, chainId, currentBlockNumber, timestamp)
 }
 
@@ -199,15 +179,33 @@ export function getEvmJsonRpcProvider(chainId: ChainId): ethers.providers.Provid
     : undefined
 }
 
-export async function getIsTxsCompletedEvm(chainId: ChainId, provider: ethers.providers.Provider, signedVaas: string[]): Promise<boolean[]> {
+export async function getIsTxsCompletedEvm(
+  chainId: ChainId,
+  provider: ethers.providers.Provider,
+  signedVaas: string[]
+): Promise<boolean[]> {
   const tokenBridgeAddress = getTokenBridgeAddressForChain(chainId)
-  const multicall = new Multicall({ ethersProvider: provider, tryAggregate: true });
-  const abi = [{ name: 'isTransferCompleted', type: 'function', stateMutability: 'view', inputs: [{ name: 'hash', type: 'bytes32' }], outputs: [{ type: 'bool' }] }]
+  const multicall = new Multicall({ ethersProvider: provider, tryAggregate: true })
+  const abi = [
+    {
+      name: 'isTransferCompleted',
+      type: 'function',
+      stateMutability: 'view',
+      inputs: [{ name: 'hash', type: 'bytes32' }],
+      outputs: [{ type: 'bool' }]
+    }
+  ]
   const contractCallContext: ContractCallContext[] = signedVaas.map((signedVaa, index) => ({
     reference: `call-${index}`,
     contractAddress: tokenBridgeAddress,
     abi,
-    calls: [{ reference: 'getIsTransferCompleted', methodName: 'isTransferCompleted', methodParameters: [getSignedVAAHash(Buffer.from(signedVaa, 'hex'))] }]
+    calls: [
+      {
+        reference: 'getIsTransferCompleted',
+        methodName: 'isTransferCompleted',
+        methodParameters: [getSignedVAAHash(Buffer.from(signedVaa, 'hex'))]
+      }
+    ]
   }))
   const result = await multicall.call(contractCallContext)
 

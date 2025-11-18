@@ -6,7 +6,9 @@ import {
   uint8ArrayToHex,
   TransferToken,
   deserializeTransferTokenVAA,
-  deserializeTransferNFTVAA
+  deserializeTransferNFTVAA,
+  VAA,
+  TransferNFT
 } from '@alephium/wormhole-sdk'
 import { IconButton, Tooltip, Typography } from '@mui/material'
 import { makeStyles } from 'tss-react/mui'
@@ -28,10 +30,7 @@ import {
   setRecoverySourceTxFromTxHistoryPage
 } from '../../../store/widgetSlice'
 import { getAlphTxInfoByTxId } from '../../../utils/alephium'
-import {
-  getConst,
-  RELAY_URL_EXTENSION,
-} from '../../../utils/consts'
+import { getConst, RELAY_URL_EXTENSION } from '../../../utils/consts'
 import { getSignedVAAWithRetry } from '../../../utils/getSignedVAAWithRetry'
 import parseError from '../../../utils/parseError'
 import RelaySelector from '../../RelaySelector'
@@ -66,6 +65,7 @@ const useStyles = makeStyles()((theme) => ({
   }
 }))
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
   try {
     if (wallet.nodeProvider === undefined) {
@@ -73,9 +73,7 @@ async function alephium(wallet: Wallet, txId: string, enqueueSnackbar: any) {
     }
     const txInfo = await getAlphTxInfoByTxId(wallet.nodeProvider, txId)
     if (txInfo.confirmations < getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL')) {
-      throw new Error(
-        `remaining-blocks-until-confirmation:${getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL') - txInfo.confirmations}`
-      )
+      throw new Error(`remaining-blocks-until-confirmation:${getConst('ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL') - txInfo.confirmations}`)
     }
     const { vaaBytes } = await getSignedVAAWithRetry(
       CHAIN_ID_ALEPHIUM,
@@ -100,7 +98,7 @@ function RelayerRecovery({
   onClick,
   disableSnackbars = false
 }: {
-  parsedPayload: any
+  parsedPayload: TransferNFT | TransferToken | null
   signedVaa: string
   onClick: () => void
   disableSnackbars?: boolean
@@ -111,12 +109,9 @@ function RelayerRecovery({
   const [selectedRelayer, setSelectedRelayer] = useState<Relayer | null>(null)
   const [isAttemptingToSchedule, setIsAttemptingToSchedule] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
-  const showSnackbar = useMemo(
-    () => (disableSnackbars ? () => undefined : enqueueSnackbar),
-    [disableSnackbars, enqueueSnackbar]
-  )
+  const showSnackbar = useMemo(() => (disableSnackbars ? () => undefined : enqueueSnackbar), [disableSnackbars, enqueueSnackbar])
 
-  const fee = (parsedPayload && parsedPayload.fee && parseInt(parsedPayload.fee)) || null
+  const fee = (parsedPayload && parsedPayload.type === 'TransferToken' && parsedPayload.fee) || null
   //This check is probably more sophisticated in the future. Possibly a net call.
   const isEligible = fee && fee > 0 && relayerInfo?.data?.relayers?.length && relayerInfo?.data?.relayers?.length > 0
 
@@ -134,11 +129,7 @@ function RelayerRecovery({
 
     setIsAttemptingToSchedule(true)
     axios
-      .get(
-        selectedRelayer.url +
-          RELAY_URL_EXTENSION +
-          encodeURIComponent(Buffer.from(hexToUint8Array(signedVaa)).toString('base64'))
-      )
+      .get(selectedRelayer.url + RELAY_URL_EXTENSION + encodeURIComponent(Buffer.from(hexToUint8Array(signedVaa)).toString('base64')))
       .then(
         () => {
           setIsAttemptingToSchedule(false)
@@ -192,7 +183,7 @@ const RecoveryPage = () => {
   const [recoverySourceTxIsLoading, setRecoverySourceTxIsLoading] = useState(false)
   const [recoverySourceTxError, setRecoverySourceTxError] = useState('')
   const [recoverySignedVAA, setRecoverySignedVAA] = useState('')
-  const [recoveryParsedVAA, setRecoveryParsedVAA] = useState<any>(null)
+  const [recoveryParsedVAA, setRecoveryParsedVAA] = useState<VAA<TransferNFT> | VAA<TransferToken> | null>(null)
   const { isReady, statusMessage } = useIsWalletReady(recoverySourceChain)
   const walletConnectError = isEVMChain(recoverySourceChain) && !isReady ? statusMessage : ''
   const parsedPayload = useMemo(() => {
@@ -227,7 +218,7 @@ const RecoveryPage = () => {
       } else if (recoverySourceChain === CHAIN_ID_ALEPHIUM && isReady) {
         setRecoverySourceTxError('')
         setRecoverySourceTxIsLoading(true)
-        ;(async (nodeProvider) => {
+        ;(async () => {
           const { vaa, error } = await alephium(alphWallet, recoverySourceTx, noopSnackbar)
           if (!cancelled) {
             setRecoverySourceTxIsLoading(false)
@@ -238,7 +229,7 @@ const RecoveryPage = () => {
               setRecoverySourceTxError(error)
             }
           }
-        })(alphWallet.nodeProvider)
+        })()
       }
       return () => {
         cancelled = true
@@ -247,6 +238,7 @@ const RecoveryPage = () => {
   }, [recoverySourceChain, recoverySourceTx, provider, noopSnackbar, isNFT, isReady, alphWallet])
 
   const handleSourceChainChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       setRecoverySourceTx('')
       setRecoverySourceChain(event.target.value)
@@ -255,7 +247,7 @@ const RecoveryPage = () => {
   )
 
   const handleSourceTxChange = useCallback(
-    (event: any) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       setRecoverySourceTx(event.target.value.trim())
     },
     [setRecoverySourceTx]
@@ -290,7 +282,7 @@ const RecoveryPage = () => {
 
   const handleRecoverClickBase = useCallback(
     (useRelayer: boolean) => {
-      if (enableRecovery && recoverySignedVAA && parsedVAATargetChain && parsedPayload) {
+      if (enableRecovery && recoverySignedVAA && parsedVAATargetChain && parsedPayload && parsedVAAEmitterChain) {
         // TODO: make recovery reducer
         // if (isNFT) {
         //   const payload = parsedPayload as TransferNFT
@@ -475,11 +467,7 @@ const RecoveryPage = () => {
       />
 
       {isReady ? (
-        <BridgeWidgetButton
-          onClick={handleRecoverClick}
-          disabled={!enableRecovery || !isReady}
-          isLoading={recoverySourceTxIsLoading}
-        >
+        <BridgeWidgetButton onClick={handleRecoverClick} disabled={!enableRecovery || !isReady} isLoading={recoverySourceTxIsLoading}>
           {t('Recover')}
         </BridgeWidgetButton>
       ) : (
@@ -498,9 +486,7 @@ const useRecoveryData = () => {
   const recoverySourceTxFromTxHistoryPage = useSelector(selectRecoverySourceTx)
   const [recoverySourceTx, setRecoverySourceTx] = useState<string>(recoverySourceTxFromTxHistoryPage || '')
   const recoverySourceChainFromTxHistoryPage = useSelector(selectRecoverySourceChain)
-  const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(
-    recoverySourceChainFromTxHistoryPage || CHAIN_ID_ALEPHIUM
-  )
+  const [recoverySourceChain, setRecoverySourceChain] = useState<ChainId>(recoverySourceChainFromTxHistoryPage || CHAIN_ID_ALEPHIUM)
 
   // The recovery source chain and tx of the global state are only used to initialize the recovery page from the tx
   // history page. Reset the recovery source chain and tx global state when the recovery page is loaded.

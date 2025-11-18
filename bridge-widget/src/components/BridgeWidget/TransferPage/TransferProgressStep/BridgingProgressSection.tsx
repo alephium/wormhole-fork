@@ -30,8 +30,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)
   const redeemTx = useSelector(selectTransferRedeemTx)
   const { manualRedeemToAlephiumRequired, manualRedeemToEvmRequired } = useManualRedeemNecessary()
-  const isManualRedeemRequired =
-    (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) && !isTransferCompleted.isTransferCompleted
+  const isManualRedeemRequired = (manualRedeemToAlephiumRequired || manualRedeemToEvmRequired) && !isTransferCompleted.isTransferCompleted
   const hasSentTokens = useSelector(selectTransferHasSentTokens)
 
   const isRedeemed = isRedeemComplete || isRedeemedViaRelayer || redeemTx || isTransferCompleted.isTransferCompleted
@@ -41,7 +40,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
       setStep(5)
     } else if (isRedeemed) {
       setStep(4)
-    } else if (!!signedVAA) {
+    } else if (signedVAA) {
       setStep(3)
     } else if (isBlockFinalized) {
       setStep(2)
@@ -62,10 +61,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
   }
 
   return (
-    <div
-      className={classes.grayRoundedBox}
-      style={{ backgroundColor: step === 5 ? COLORS.greenWithStrongTransparency : undefined }}
-    >
+    <div className={classes.grayRoundedBox} style={{ backgroundColor: step === 5 ? COLORS.greenWithStrongTransparency : undefined }}>
       <div>
         <div className={classes.sendStep}>
           {step === 5 && (
@@ -87,14 +83,10 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
             <IconButton onClick={handleExpandClick} className={classes.expandButton} size="large">
               <div className={classes.expandIconWrapper}>
                 <UnfoldMoreOutlined
-                  className={`${classes.expandIcon} ${
-                    !isExpanded ? classes.expandIconVisible : classes.expandIconHidden
-                  }`}
+                  className={`${classes.expandIcon} ${!isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
                 />
                 <UnfoldLessOutlined
-                  className={`${classes.expandIcon} ${
-                    isExpanded ? classes.expandIconVisible : classes.expandIconHidden
-                  }`}
+                  className={`${classes.expandIcon} ${isExpanded ? classes.expandIconVisible : classes.expandIconHidden}`}
                 />
               </div>
             </IconButton>

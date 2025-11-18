@@ -1,66 +1,46 @@
-import {
-  ChainId,
-  CHAIN_ID_ALEPHIUM,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_SOLANA,
-  isEVMChain,
-} from "@alephium/wormhole-sdk";
-import { hexlify, hexStripZeros } from "@ethersproject/bytes";
-import { useCallback, useMemo } from "react";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
-import {
-  ConnectType,
-  useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
-import { getCluster, getEvmChainId } from "../utils/consts";
-import { METAMASK_CHAIN_PARAMETERS } from "../utils/metaMaskChainParameters";
-import { useWallet } from "@alephium/web3-react";
-import { useTranslation } from "react-i18next";
+import { ChainId, CHAIN_ID_ALEPHIUM, CHAIN_ID_ALGORAND, CHAIN_ID_SOLANA, isEVMChain } from '@alephium/wormhole-sdk'
+import { hexlify, hexStripZeros } from '@ethersproject/bytes'
+import { useCallback, useMemo } from 'react'
+import { useAlgorandContext } from '../contexts/AlgorandWalletContext'
+import { ConnectType, useEthereumProvider } from '../contexts/EthereumProviderContext'
+import { useSolanaWallet } from '../contexts/SolanaWalletContext'
+import { getCluster, getEvmChainId } from '../utils/consts'
+import { METAMASK_CHAIN_PARAMETERS } from '../utils/metaMaskChainParameters'
+import { useWallet } from '@alephium/web3-react'
+import { useTranslation } from 'react-i18next'
 
-const createWalletStatus = (
-  isReady: boolean,
-  statusMessage: string = "",
-  forceNetworkSwitch: () => void,
-  walletAddress?: string
-) => ({
+const createWalletStatus = (isReady: boolean, statusMessage: string = '', forceNetworkSwitch: () => void, walletAddress?: string) => ({
   isReady,
   statusMessage,
   forceNetworkSwitch,
-  walletAddress,
-});
+  walletAddress
+})
 
 function useIsWalletReady(
   chainId: ChainId,
   enableNetworkAutoswitch: boolean = true
 ): {
-  isReady: boolean;
-  statusMessage: string;
-  walletAddress?: string;
-  forceNetworkSwitch: () => void;
+  isReady: boolean
+  statusMessage: string
+  walletAddress?: string
+  forceNetworkSwitch: () => void
 } {
-  const { t } = useTranslation();
-  const autoSwitch = enableNetworkAutoswitch;
-  const solanaWallet = useSolanaWallet();
-  const solPK = solanaWallet?.publicKey;
-  const alphWallet = useWallet();
-  const {
-    provider,
-    signerAddress,
-    chainId: evmChainId,
-    connectType,
-    walletConnectProvider
-  } = useEthereumProvider();
-  const hasEthInfo = !!provider && !!signerAddress;
-  const correctEvmNetwork = getEvmChainId(chainId);
-  const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork;
-  const { accounts: algorandAccounts } = useAlgorandContext();
-  const algoPK = algorandAccounts[0]?.address;
+  const { t } = useTranslation()
+  const autoSwitch = enableNetworkAutoswitch
+  const solanaWallet = useSolanaWallet()
+  const solPK = solanaWallet?.publicKey
+  const alphWallet = useWallet()
+  const { provider, signerAddress, chainId: evmChainId, connectType, walletConnectProvider } = useEthereumProvider()
+  const hasEthInfo = !!provider && !!signerAddress
+  const correctEvmNetwork = getEvmChainId(chainId)
+  const hasCorrectEvmNetwork = evmChainId === correctEvmNetwork
+  const { accounts: algorandAccounts } = useAlgorandContext()
+  const algoPK = algorandAccounts[0]?.address
 
   const forceNetworkSwitch = useCallback(async () => {
     if (provider && correctEvmNetwork) {
       if (!isEVMChain(chainId)) {
-        return;
+        return
       }
       try {
         if (connectType === ConnectType.WALLETCONNECT && walletConnectProvider) {
@@ -77,76 +57,52 @@ function useIsWalletReady(
 
       try {
         if (connectType === ConnectType.METAMASK) {
-          await provider.send("wallet_switchEthereumChain", [
-            { chainId: hexStripZeros(hexlify(correctEvmNetwork)) },
-          ]);
+          await provider.send('wallet_switchEthereumChain', [{ chainId: hexStripZeros(hexlify(correctEvmNetwork)) }])
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (switchError: any) {
         // This error code indicates that the chain has not been added to MetaMask.
         if (switchError.code === 4902) {
-          const addChainParameter =
-            METAMASK_CHAIN_PARAMETERS[correctEvmNetwork];
+          const addChainParameter = METAMASK_CHAIN_PARAMETERS[correctEvmNetwork]
           if (addChainParameter !== undefined) {
             try {
-              await provider.send("wallet_addEthereumChain", [
-                addChainParameter,
-              ]);
+              await provider.send('wallet_addEthereumChain', [addChainParameter])
             } catch (addError) {
-              console.error(addError);
+              console.error(addError)
             }
           }
         }
       }
     }
-  }, [provider, correctEvmNetwork, chainId, connectType, walletConnectProvider]);
+  }, [provider, correctEvmNetwork, chainId, connectType, walletConnectProvider])
 
   return useMemo(() => {
     if (chainId === CHAIN_ID_ALEPHIUM && alphWallet && alphWallet.nodeProvider) {
-      return createWalletStatus(
-        true,
-        undefined,
-        forceNetworkSwitch,
-        alphWallet.account.address
-      );
+      return createWalletStatus(true, undefined, forceNetworkSwitch, alphWallet.account.address)
     }
     if (chainId === CHAIN_ID_SOLANA && solPK) {
-      return createWalletStatus(
-        true,
-        undefined,
-        forceNetworkSwitch,
-        solPK.toString()
-      );
+      return createWalletStatus(true, undefined, forceNetworkSwitch, solPK.toString())
     }
     if (chainId === CHAIN_ID_ALGORAND && algoPK) {
-      return createWalletStatus(true, undefined, forceNetworkSwitch, algoPK);
+      return createWalletStatus(true, undefined, forceNetworkSwitch, algoPK)
     }
     if (isEVMChain(chainId) && hasEthInfo && signerAddress) {
       if (hasCorrectEvmNetwork) {
-        return createWalletStatus(
-          true,
-          undefined,
-          forceNetworkSwitch,
-          signerAddress
-        );
+        return createWalletStatus(true, undefined, forceNetworkSwitch, signerAddress)
       } else {
         if (provider && correctEvmNetwork && autoSwitch) {
-          forceNetworkSwitch();
+          forceNetworkSwitch()
         }
         return createWalletStatus(
           false,
           `${t('Wallet is not connected to {{ cluster }}', { cluster: getCluster() })}. ${t('Expected Chain ID')}: ${correctEvmNetwork}`,
           forceNetworkSwitch,
           undefined
-        );
+        )
       }
     }
 
-    return createWalletStatus(
-      false,
-      t("Wallet is not connected"),
-      forceNetworkSwitch,
-      undefined
-    );
+    return createWalletStatus(false, t('Wallet is not connected'), forceNetworkSwitch, undefined)
   }, [
     chainId,
     autoSwitch,
@@ -160,7 +116,7 @@ function useIsWalletReady(
     alphWallet,
     algoPK,
     t
-  ]);
+  ])
 }
 
-export default useIsWalletReady;
+export default useIsWalletReady

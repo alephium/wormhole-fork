@@ -48,11 +48,7 @@ const TargetDialog = ({ open, title, onClose }: TargetDialogProps) => {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
-        <Target
-          showNextButton={false}
-          targetChain={draftTargetChain}
-          onTargetChainChange={handleDraftTargetChainChange}
-        />
+        <Target showNextButton={false} targetChain={draftTargetChain} onTargetChainChange={handleDraftTargetChainChange} />
       </DialogContent>
       <DialogActions>
         <BridgeWidgetButton onClick={handleSave} disabled={!canSave}>

@@ -1,4 +1,4 @@
-import { ChainId } from "@alephium/wormhole-sdk";
+import { ChainId } from '@alephium/wormhole-sdk'
 import {
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
@@ -13,69 +13,69 @@ import {
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
   CHAIN_ID_TERRA,
-  CHAIN_ID_SOLANA,
-} from "@alephium/wormhole-sdk";
+  CHAIN_ID_SOLANA
+} from '@alephium/wormhole-sdk'
 
-export type DisableTransfers = boolean | "to" | "from";
+export type DisableTransfers = boolean | 'to' | 'from'
 
 export interface WarningMessage {
-  text: string;
+  text: string
   link?: {
-    url: string;
-    text: string;
-  };
+    url: string
+    text: string
+  }
 }
 
 export interface ChainConfig {
-  disableTransfers?: DisableTransfers;
-  warningMessage?: WarningMessage;
+  disableTransfers?: DisableTransfers
+  warningMessage?: WarningMessage
 }
 
 export type ChainConfigMap = {
-  [key in ChainId]?: ChainConfig;
-};
+  [key in ChainId]?: ChainConfig
+}
 
 export const CHAIN_CONFIG_MAP: ChainConfigMap = {
   [CHAIN_ID_SOLANA]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_ACALA]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_ALGORAND]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_AURORA]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_AVAX]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_CELO]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_ETHEREUM_ROPSTEN]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_FANTOM]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_KARURA]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_KLAYTN]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_NEON]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_OASIS]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_POLYGON]: {
-    disableTransfers: true,
+    disableTransfers: true
   },
   [CHAIN_ID_TERRA]: {
-    disableTransfers: true,
-  },
-};
+    disableTransfers: true
+  }
+}

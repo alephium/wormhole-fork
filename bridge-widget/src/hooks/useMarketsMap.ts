@@ -1,73 +1,66 @@
-import { ChainId } from "@alephium/wormhole-sdk";
-import { Dispatch } from "@reduxjs/toolkit";
-import axios from "axios";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { DataWrapper } from "../store/helpers";
-import { selectMarketsMap } from "../store/selectors";
-import {
-  errorMarketsMap,
-  fetchMarketsMap,
-  receiveMarketsMap,
-} from "../store/tokenSlice";
-import { getCluster, FEATURED_MARKETS_JSON_URL } from "../utils/consts";
+import { ChainId } from '@alephium/wormhole-sdk'
+import { Dispatch } from '@reduxjs/toolkit'
+import axios from 'axios'
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { DataWrapper } from '../store/helpers'
+import { selectMarketsMap } from '../store/selectors'
+import { errorMarketsMap, fetchMarketsMap, receiveMarketsMap } from '../store/tokenSlice'
+import { getCluster, FEATURED_MARKETS_JSON_URL } from '../utils/consts'
 
 export type MarketsMap = {
   markets?: {
     [index: string]: {
-      name: string;
-      link: string;
-    };
-  };
+      name: string
+      link: string
+    }
+  }
   tokens?: {
     [key in ChainId]?: {
       [index: string]: {
-        symbol: string;
-        logo: string;
-      };
-    };
-  };
+        symbol: string
+        logo: string
+      }
+    }
+  }
   tokenMarkets?: {
     [key in ChainId]?: {
       [key in ChainId]?: {
         [index: string]: {
-          symbol: string;
-          logo: string;
-          markets: string[];
-        };
-      };
-    };
-  };
-};
+          symbol: string
+          logo: string
+          markets: string[]
+        }
+      }
+    }
+  }
+}
 
 const useMarketsMap = (shouldFire: boolean): DataWrapper<MarketsMap> => {
-  const marketsMap = useSelector(selectMarketsMap);
-  const dispatch = useDispatch();
+  const marketsMap = useSelector(selectMarketsMap)
+  const dispatch = useDispatch()
   const internalShouldFire =
-    shouldFire &&
-    getCluster() === "mainnet" &&
-    (marketsMap.data === undefined ||
-      (marketsMap.data === null && !marketsMap.isFetching));
+    shouldFire && getCluster() === 'mainnet' && (marketsMap.data === undefined || (marketsMap.data === null && !marketsMap.isFetching))
 
   useEffect(() => {
     if (internalShouldFire) {
-      getMarketsMap(dispatch);
+      getMarketsMap(dispatch)
     }
-  }, [internalShouldFire, dispatch]);
+  }, [internalShouldFire, dispatch])
 
-  return marketsMap;
-};
+  return marketsMap
+}
 
 const getMarketsMap = (dispatch: Dispatch) => {
-  dispatch(fetchMarketsMap());
+  dispatch(fetchMarketsMap())
   axios.get(FEATURED_MARKETS_JSON_URL).then(
     (response) => {
-      dispatch(receiveMarketsMap(response.data as MarketsMap));
+      dispatch(receiveMarketsMap(response.data as MarketsMap))
     },
-    (error) => {
-      dispatch(errorMarketsMap("Failed to retrieve the Terra Token List."));
+    () => {
+      dispatch(errorMarketsMap('Failed to retrieve the Terra Token List.'))
     }
-  );
-};
+  )
+}
 
-export default useMarketsMap;
+export default useMarketsMap

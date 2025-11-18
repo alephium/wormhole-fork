@@ -1,37 +1,37 @@
-import { Button, Tooltip } from "@mui/material";
-import { makeStyles } from 'tss-react/mui';
-import { LinkOff } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+import { Button, Tooltip } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import { LinkOff } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 
 const useStyles = makeStyles()((theme) => ({
   button: {
-    display: "flex",
+    display: 'flex',
     margin: `${theme.spacing(1)} auto`,
-    width: "100%",
-    maxWidth: 400,
+    width: '100%',
+    maxWidth: 400
   },
   icon: {
     height: 24,
-    width: 24,
-  },
-}));
+    width: 24
+  }
+}))
 
 const ToggleConnectedButton = ({
   connect,
   disconnect,
   connected,
   pk,
-  walletIcon,
+  walletIcon
 }: {
-  connect(): any;
-  disconnect(): any;
-  connected: boolean;
-  pk: string;
-  walletIcon?: string;
+  connect(): void
+  disconnect(): void
+  connected: boolean
+  pk: string
+  walletIcon?: string
 }) => {
-  const { t } = useTranslation();
-  const { classes } = useStyles();
-  const is0x = pk.startsWith("0x");
+  const { t } = useTranslation()
+  const { classes } = useStyles()
+  const is0x = pk.startsWith('0x')
   return connected ? (
     <Tooltip title={pk}>
       <Button
@@ -40,29 +40,17 @@ const ToggleConnectedButton = ({
         size="small"
         onClick={disconnect}
         className={classes.button}
-        startIcon={
-          walletIcon ? (
-            <img className={classes.icon} src={walletIcon} alt="Wallet" />
-          ) : (
-            <LinkOff />
-          )
-        }
+        startIcon={walletIcon ? <img className={classes.icon} src={walletIcon} alt="Wallet" /> : <LinkOff />}
       >
-        {t("Disconnect")} {pk.substring(0, is0x ? 6 : 3)}...
+        {t('Disconnect')} {pk.substring(0, is0x ? 6 : 3)}...
         {pk.substr(pk.length - (is0x ? 4 : 3))}
       </Button>
     </Tooltip>
   ) : (
-    <Button
-      color="primary"
-      variant="contained"
-      size="small"
-      onClick={connect}
-      className={classes.button}
-    >
-      {t("Connect")}
+    <Button color="primary" variant="contained" size="small" onClick={connect} className={classes.button}>
+      {t('Connect')}
     </Button>
-  );
-};
+  )
+}
 
-export default ToggleConnectedButton;
+export default ToggleConnectedButton

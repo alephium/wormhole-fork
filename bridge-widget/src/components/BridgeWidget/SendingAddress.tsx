@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import SmartAddress from './SmartAddress'
 import { useMemo } from 'react'
 import { selectSourceWalletAddress, selectTransferSourceChain } from '../../store/selectors'
@@ -36,7 +36,7 @@ const SendingAddress = ({ showIcon = false, hideAddress = false }: SendingAddres
 
 export default SendingAddress
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()(() => ({
   networkIcon: {
     height: '1rem',
     width: '1rem'

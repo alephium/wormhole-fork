@@ -1,51 +1,51 @@
-import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from "@alephium/wormhole-sdk";
-import { formatUnits } from "ethers/lib/utils";
-import { useCallback } from "react";
-import { createParsedTokenAccount } from "../../hooks/useGetSourceParsedTokenAccounts";
-import useIsWalletReady from "../../hooks/useIsWalletReady";
-import { ParsedTokenAccount } from "../../store/transferSlice";
-import { getAlephiumTokenLogoAndSymbol, tryGetContractId } from "../../utils/alephium";
-import TokenPicker, { BasicAccountRender } from "./TokenPicker";
-import { useWallet } from "@alephium/web3-react";
-import { useTranslation } from "react-i18next";
+import { CHAIN_ID_ALEPHIUM, getLocalTokenInfo } from '@alephium/wormhole-sdk'
+import { formatUnits } from 'ethers/lib/utils'
+import { useCallback } from 'react'
+import { createParsedTokenAccount } from '../../hooks/useGetSourceParsedTokenAccounts'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+import { ParsedTokenAccount } from '../../store/transferSlice'
+import { getAlephiumTokenLogoAndSymbol, tryGetContractId } from '../../utils/alephium'
+import TokenPicker, { BasicAccountRender } from './TokenPicker'
+import { useWallet } from '@alephium/web3-react'
+import { useTranslation } from 'react-i18next'
 
 type AlephiumTokenPickerProps = {
-  value: ParsedTokenAccount | null;
+  value: ParsedTokenAccount | null
   balances: Map<string, bigint>
-  onChange: (newValue: ParsedTokenAccount | null) => void;
+  onChange: (newValue: ParsedTokenAccount | null) => void
   tokens: ParsedTokenAccount[] | undefined
-  isFetching: boolean;
-  disabled: boolean;
-  resetAccounts: (() => void) | undefined;
-};
+  isFetching: boolean
+  disabled: boolean
+  resetAccounts: (() => void) | undefined
+}
 
-const returnsFalse = () => false;
+const returnsFalse = () => false
 
 export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
   const { t } = useTranslation()
   const { value, balances, onChange, disabled, tokens, isFetching, resetAccounts } = props
   const alphWallet = useWallet()
-  const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM);
+  const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM)
 
   const resetAccountWrapper = useCallback(() => {
-    resetAccounts && resetAccounts();
-  }, [resetAccounts]);
+    resetAccounts?.()
+  }, [resetAccounts])
   const isLoading = isFetching
 
   const onChangeWrapper = useCallback(
     async (account: ParsedTokenAccount | null) => {
       if (account === null) {
-        onChange(null);
-        return Promise.resolve();
+        onChange(null)
+        return Promise.resolve()
       }
-      onChange(account);
-      return Promise.resolve();
+      onChange(account)
+      return Promise.resolve()
     },
     [onChange]
-  );
+  )
 
   const getAddress: (address: string, tokenId?: string) => Promise<ParsedTokenAccount> = useCallback(
-    async (address: string, tokenId?: string) => {
+    async (address: string) => {
       if (isReady && alphWallet.connectionStatus === 'connected' && alphWallet.nodeProvider !== undefined) {
         try {
           const contractId = tryGetContractId(address)
@@ -66,30 +66,29 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
             false
           )
         } catch (e) {
-          return Promise.reject(t("Unable to retrive the specific token."));
+          console.error(e)
+          return Promise.reject(t('Unable to retrive the specific token.'))
         }
       } else {
-        return Promise.reject({ error: t("Wallet is not connected.") });
+        return Promise.reject({ error: t('Wallet is not connected.') })
       }
     },
     [isReady, alphWallet, balances, t]
-  );
+  )
 
   const isSearchableAddress = useCallback((address: string) => {
     try {
       tryGetContractId(address)
       return true
     } catch (error) {
+      console.error(error)
       return false
     }
-  }, []);
+  }, [])
 
-  const RenderComp = useCallback(
-    ({ account }: { account: ParsedTokenAccount }) => {
-      return BasicAccountRender(account, returnsFalse, false);
-    },
-    []
-  );
+  const RenderComp = useCallback(({ account }: { account: ParsedTokenAccount }) => {
+    return BasicAccountRender(account, returnsFalse, false)
+  }, [])
 
   return (
     <TokenPicker
@@ -101,10 +100,10 @@ export default function AlephiumTokenPicker(props: AlephiumTokenPickerProps) {
       getAddress={getAddress}
       disabled={disabled}
       resetAccounts={resetAccountWrapper}
-      error={""}
+      error={''}
       showLoader={isLoading}
       nft={false}
       chainId={CHAIN_ID_ALEPHIUM}
     />
-  );
+  )
 }
