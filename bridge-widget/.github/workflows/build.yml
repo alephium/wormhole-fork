@@ -17,21 +17,6 @@ jobs:
         run: npm i prettier
         working-directory: ./
 
-  build-hosted:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "npm"
-          cache-dependency-path: "package-lock.json"
-      - run: npm ci
-        working-directory: ./
-      - run: npm run build:hosted
-        working-directory: ./
-
   build-library:
     runs-on: ubuntu-latest
 
@@ -45,7 +30,7 @@ jobs:
       - run: npm ci
         working-directory: ./
       - name: Build Lib
-        run: npm run build:lib 2>&1 | tee build-output.txt
+        run: npm run build 2>&1 | tee build-output.txt
         working-directory: ./
       - name: Check bundle sizes
         run: |
