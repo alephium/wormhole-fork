@@ -1,14 +1,10 @@
 # Alephium Bridge Widget [![npm version](https://img.shields.io/npm/v/@alephium/bridge-widget.svg)](https://www.npmjs.com/package/@alephium/bridge-widget)
 
-Alephium Bridge Widget is a React widget for cross-chain asset transfers.
+Alephium Bridge Widget is a React component library for cross-chain asset transfers to and from the Alephium blockchain.
 
 ## Getting Started
 
-### Via NPM for React apps (Recommended)
-
-If you're using React, you can import the `<AlephiumBridgeWidget />` component directly into your JSX:
-
-#### Installation
+### Installation
 
 ```bash
 npm i @alephium/bridge-widget
@@ -17,12 +13,12 @@ npm i @alephium/bridge-widget
 You should also install the peer dependencies:
 
 ```bash
-npm i @alephium/web3-react
+npm i @alephium/web3 @alephium/web3-react
 ```
 
-#### Using the component
+### Usage
 
-```javascript
+```tsx
 import AlephiumBridgeWidget, { WalletProviders } from '@alephium/bridge-widget';
 
 function App() {
@@ -32,4 +28,14 @@ function App() {
     </WalletProviders>
   );
 }
+```
+
+`WalletProviders` supplies the necessary wallet contexts for the bridge widget to work. It **excludes** Alephium by
+default since it assumes that your React dApp will already provide one, to avoid conflicts. If your dApp does not
+provide one, you can enable it with:
+
+```tsx
+<WalletProviders includeAlephium>
+  <AlephiumBridgeWidget />
+</WalletProviders>
 ```
