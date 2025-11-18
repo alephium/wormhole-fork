@@ -2,23 +2,32 @@ name: Build
 
 on:
   pull_request:
+    paths:
+      - 'bridge-widget/**'
   push:
     branches:
       - master
+    paths:
+      - 'bridge-widget/**'
 
 jobs:
   check-sdn-list:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge-widget
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Run script
         run: npm i prettier
-        working-directory: ./
 
   build-library:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge-widget
 
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +35,10 @@ jobs:
         with:
           node-version: 22
           cache: "npm"
-          cache-dependency-path: "package-lock.json"
+          cache-dependency-path: bridge-widget/package-lock.json
       - run: npm ci
-        working-directory: ./
       - name: Build Lib
         run: npm run build 2>&1 | tee build-output.txt
-        working-directory: ./
       - name: Check bundle sizes
         run: |
           echo "Checking JS bundle sizes..."
@@ -66,4 +73,3 @@ jobs:
           fi
 
           rm -f /tmp/large_bundles
-        working-directory: ./

@@ -7,10 +7,5 @@
     "source.fixAll.prettier": "always"
   },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "prettier.requireConfig": true,
-  "workbench.colorCustomizations": {
-    "activityBar.background": "#02072d",
-    "titleBar.activeBackground": "#000285",
-    "titleBar.activeForeground": "#dae6f9"
-  }
+  "prettier.requireConfig": true
 }
