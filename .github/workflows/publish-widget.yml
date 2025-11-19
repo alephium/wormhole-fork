@@ -1,11 +1,11 @@
-name: Publish
+name: Publish Widget
 
 on:
   push:
     branches:
-      - 'master'
+      - "master"
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
 
 jobs:
   publish:
@@ -21,9 +21,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: bridge-widget/package-lock.json
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Get package version from package.json
         id: getPackageVersion

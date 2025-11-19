@@ -1,14 +1,14 @@
-name: Build
+name: Build Widget
 
 on:
   pull_request:
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
   push:
     branches:
       - master
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
 
 jobs:
   check-sdn-list:
