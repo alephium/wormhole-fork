@@ -1,6 +1,7 @@
 name: Widget Build
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - "bridge-widget/**"
