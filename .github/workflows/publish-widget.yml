@@ -1,4 +1,4 @@
-name: Widget - Publish
+name: Widget Publish
 
 on:
   push:

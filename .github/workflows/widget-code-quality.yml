@@ -1,4 +1,4 @@
-name: Widget - Code Quality
+name: Widget Code Quality
 
 on:
   pull_request:
