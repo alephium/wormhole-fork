@@ -54,6 +54,9 @@ jobs:
           [ -z "$dist_tag" ] && echo "Distribution tag is not set to latest nor to rc" && exit 1
           echo ::set-output name=dist_tag::$dist_tag
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
