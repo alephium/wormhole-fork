@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - master
+      - widget-format
     paths:
       - "bridge-widget/**"
 
