@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'widget'
     paths:
       - 'bridge-widget/**'
 
