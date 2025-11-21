@@ -1,4 +1,4 @@
-name: Widget - Build
+name: Widget Build
 
 on:
   pull_request:
