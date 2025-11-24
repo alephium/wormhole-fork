@@ -15,7 +15,7 @@ import {
   Connection,
   ConnectType,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
+} from "@alephium/bridge-widget";
 import { getEvmChainId } from "../utils/consts";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { useTranslation } from "react-i18next";

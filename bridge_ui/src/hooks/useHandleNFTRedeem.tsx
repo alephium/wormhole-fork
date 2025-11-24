@@ -11,7 +11,7 @@ import { Signer } from "ethers";
 import { useSnackbar } from "notistack";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { setIsRedeeming, setRedeemTx } from "../store/nftSlice";
 import { selectNFTIsRedeeming, selectNFTTargetChain } from "../store/selectors";
 import { ACALA_HOST, getNFTBridgeAddressForChain, KARURA_HOST } from "../utils/consts";

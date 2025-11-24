@@ -2,7 +2,6 @@ import {
   ChainId,
   CHAIN_ID_ALEPHIUM,
   CHAIN_ID_SOLANA,
-  CHAIN_ID_TERRA,
   isEVMChain,
 } from "@alephium/wormhole-sdk";
 import { Provider } from "@ethersproject/abstract-provider";
@@ -11,15 +10,13 @@ import { Typography } from "@mui/material";
 import { LocalGasStation } from "@mui/icons-material";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import {
   getDefaultNativeCurrencySymbol,
-  SOLANA_HOST,
-  TERRA_HOST,
+  SOLANA_HOST
 } from "../utils/consts";
 import { getMultipleAccountsRPC } from "../utils/solana";
 import useIsWalletReady from "./useIsWalletReady";
-import { LCDClient } from "@terra-money/terra.js";
 import { NodeProvider } from "@alephium/web3";
 import { setGasPrice } from "../store/transferSlice";
 import { useDispatch } from "react-redux";
@@ -74,23 +71,6 @@ const isSufficientBalance = (
   return true;
 };
 
-type TerraBalance = {
-  denom: string;
-  balance: bigint;
-};
-
-const isSufficientBalanceTerra = (balances: TerraBalance[]) => {
-  return balances.some(({ denom, balance }) => {
-    if (denom === "uluna") {
-      return balance > TERRA_THRESHOLD_ULUNA;
-    }
-    if (denom === "uusd") {
-      return balance > TERRA_THRESHOLD_UUSD;
-    }
-    return false;
-  });
-};
-
 //TODO move to more generic location
 const getBalanceSolana = async (walletAddress: string) => {
   const connection = new Connection(SOLANA_HOST);
@@ -110,34 +90,6 @@ const getBalanceSolana = async (walletAddress: string) => {
 
 const getBalanceEvm = async (walletAddress: string, provider: Provider) => {
   return provider.getBalance(walletAddress).then((result) => result.toBigInt());
-};
-
-const getBalancesTerra = async (walletAddress: string) => {
-  const TARGET_DENOMS = ["uluna", "uusd"];
-
-  const lcd = new LCDClient(TERRA_HOST);
-  return lcd.bank
-    .balance(walletAddress)
-    .then(([coins]) => {
-      const balances = coins
-        .filter(({ denom }) => {
-          return TARGET_DENOMS.includes(denom);
-        })
-        .map(({ amount, denom }) => {
-          return {
-            denom,
-            balance: BigInt(amount.toString()),
-          };
-        });
-      if (balances) {
-        return balances;
-      } else {
-        return Promise.reject();
-      }
-    })
-    .catch((e) => {
-      return Promise.reject();
-    });
 };
 
 const getBalancesAlephium = async (provider: NodeProvider, walletAddress: string) => {
@@ -170,7 +122,6 @@ export default function useTransactionFees(chainId: ChainId) {
   const { walletAddress, isReady } = useIsWalletReady(chainId);
   const { provider } = useEthereumProvider();
   const [balance, setBalance] = useState<bigint | undefined>(undefined);
-  const [terraBalances, setTerraBalances] = useState<TerraBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const alphWallet = useWallet()
@@ -212,25 +163,6 @@ export default function useTransactionFees(chainId: ChainId) {
           }
         );
       }
-    } else if (chainId === CHAIN_ID_TERRA && isReady && walletAddress) {
-      loadStart();
-      getBalancesTerra(walletAddress).then(
-        (results) => {
-          const adjustedResults = results.map(({ denom, balance }) => {
-            return {
-              denom,
-              balance:
-                balance === undefined || balance === null ? BigInt(0) : balance,
-            };
-          });
-          setIsLoading(false);
-          setTerraBalances(adjustedResults);
-        },
-        (error) => {
-          setIsLoading(false);
-          setError(t("Cannot load wallet balance"));
-        }
-      );
     } else if (chainId === CHAIN_ID_ALEPHIUM && isReady && walletAddress && alphWallet?.nodeProvider !== undefined) {
       loadStart();
       getBalancesAlephium(alphWallet.nodeProvider, walletAddress).then(
@@ -250,16 +182,13 @@ export default function useTransactionFees(chainId: ChainId) {
 
   const results = useMemo(() => {
     return {
-      isSufficientBalance:
-        chainId === CHAIN_ID_TERRA
-          ? isSufficientBalanceTerra(terraBalances)
-          : isSufficientBalance(chainId, balance),
+      isSufficientBalance: isSufficientBalance(chainId, balance),
       balance,
       balanceString: toBalanceString(balance, chainId),
       isLoading,
       error,
     };
-  }, [balance, terraBalances, chainId, isLoading, error]);
+  }, [balance, chainId, isLoading, error]);
 
   return results;
 }

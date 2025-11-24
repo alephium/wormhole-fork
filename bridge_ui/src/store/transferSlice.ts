@@ -19,8 +19,6 @@ import i18n from "../i18n";
 const LAST_STEP = 3;
 
 type Steps = 0 | 1 | 2 | 3;
-type BridgeWidgetSteps = 0 | 1 | 2
-type BridgeWidgetPage = 'bridge' | 'recovery' | 'history'
 
 export interface ParsedTokenAccount {
   publicKey: string;
@@ -69,13 +67,7 @@ export interface TransferState {
   useRelayer: boolean;
   relayerFee: string | undefined;
   acalaRelayerInfo: DataWrapper<AcalaRelayerInfo>;
-  activeBridgeWidgetStep: BridgeWidgetSteps
-  isBlockFinalized: boolean
-  hasSentTokens: boolean
-  isTokenPickerDialogOpen: boolean
-  finalityProgressInitialRemainingBlocks: number | undefined
-  finalityProgressInitialRemainingSeconds: number | undefined
-  bridgeWidgetPage: BridgeWidgetPage
+  isBlockFinalized: boolean;
 }
 
 const initialState: TransferState = {
@@ -106,13 +98,7 @@ const initialState: TransferState = {
   useRelayer: false,
   relayerFee: undefined,
   acalaRelayerInfo: getEmptyDataWrapper(),
-  activeBridgeWidgetStep: 0,
   isBlockFinalized: false,
-  hasSentTokens: false,
-  isTokenPickerDialogOpen: false,
-  finalityProgressInitialRemainingBlocks: undefined,
-  finalityProgressInitialRemainingSeconds: undefined,
-  bridgeWidgetPage: 'bridge'
 }
 
 export const transferSlice = createSlice({
@@ -127,15 +113,6 @@ export const transferSlice = createSlice({
     },
     setStep: (state, action: PayloadAction<Steps>) => {
       state.activeStep = action.payload;
-    },
-    setBridgeWidgetStep: (state, action: PayloadAction<BridgeWidgetSteps>) => {
-      state.activeBridgeWidgetStep = action.payload;
-    },
-    openTokenPickerDialog: (state) => {
-      state.isTokenPickerDialogOpen = true;
-    },
-    closeTokenPickerDialog: (state) => {
-      state.isTokenPickerDialogOpen = false;
     },
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
       const prevSourceChain = state.sourceChain;
@@ -375,18 +352,6 @@ export const transferSlice = createSlice({
     setIsBlockFinalized: (state, action: PayloadAction<boolean>) => {
       state.isBlockFinalized = action.payload
     },
-    setHasSentTokens: (state, action: PayloadAction<boolean>) => {
-      state.hasSentTokens = action.payload
-    },
-    setFinalityProgressInitialRemainingBlocks: (state, action: PayloadAction<number | undefined>) => {
-      state.finalityProgressInitialRemainingBlocks = action.payload
-    },
-    setFinalityProgressInitialRemainingSeconds: (state, action: PayloadAction<number | undefined>) => {
-      state.finalityProgressInitialRemainingSeconds = action.payload
-    },
-    setBridgeWidgetPage: (state, action: PayloadAction<BridgeWidgetPage>) => {
-      state.bridgeWidgetPage = action.payload
-    }
   }
 })
 
@@ -394,9 +359,6 @@ export const {
   incrementStep,
   decrementStep,
   setStep,
-  setBridgeWidgetStep,
-  openTokenPickerDialog,
-  closeTokenPickerDialog,
   setSourceChain,
   setSourceWormholeWrappedInfo,
   setSourceWalletAddress,
@@ -430,11 +392,7 @@ export const {
   fetchAcalaRelayerInfo,
   errorAcalaRelayerInfo,
   receiveAcalaRelayerInfo,
-  setIsBlockFinalized,
-  setHasSentTokens,
-  setFinalityProgressInitialRemainingBlocks,
-  setFinalityProgressInitialRemainingSeconds,
-  setBridgeWidgetPage
+  setIsBlockFinalized
 } = transferSlice.actions;
 
 export default transferSlice.reducer;

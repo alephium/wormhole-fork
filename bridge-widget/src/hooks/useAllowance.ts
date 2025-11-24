@@ -1,0 +1,90 @@
+import { ChainId, CHAIN_ID_KLAYTN, getAllowanceEth, isEVMChain, approveEth } from '@alephium/wormhole-sdk'
+import { BigNumber } from 'ethers'
+import { useEffect, useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useEthereumProvider } from '../contexts/EthereumProviderContext'
+import { selectTransferIsApproving } from '../store/selectors'
+import { setIsApproving, setIsWalletApproved } from '../store/transferSlice'
+import { getTokenBridgeAddressForChain } from '../utils/consts'
+
+export default function useAllowance(chainId: ChainId, tokenAddress?: string, transferAmount?: bigint, sourceIsNative?: boolean) {
+  const dispatch = useDispatch()
+  const [allowance, setAllowance] = useState<bigint | null>(null)
+  const [isAllowanceFetching, setIsAllowanceFetching] = useState(false)
+  const isApproveProcessing = useSelector(selectTransferIsApproving)
+  const { signer } = useEthereumProvider()
+  const sufficientAllowance = !isEVMChain(chainId) || sourceIsNative || (allowance && transferAmount && allowance >= transferAmount)
+
+  useEffect(() => {
+    let cancelled = false
+    if (isEVMChain(chainId) && tokenAddress && signer && !isApproveProcessing) {
+      setIsAllowanceFetching(true)
+      getAllowanceEth(getTokenBridgeAddressForChain(chainId), tokenAddress, signer).then(
+        (result) => {
+          if (!cancelled) {
+            setIsAllowanceFetching(false)
+            setAllowance(result.toBigInt())
+          }
+        },
+        () => {
+          if (!cancelled) {
+            setIsAllowanceFetching(false)
+            //setError("Unable to retrieve allowance"); //TODO set an error
+          }
+        }
+      )
+    }
+
+    return () => {
+      cancelled = true
+    }
+  }, [chainId, tokenAddress, signer, isApproveProcessing])
+
+  const approveAmount: (amount: bigint) => Promise<unknown> = useMemo(() => {
+    return !isEVMChain(chainId) || !tokenAddress || !signer
+      ? () => {
+          return Promise.resolve()
+        }
+      : (amount: bigint) => {
+          dispatch(setIsApproving(true))
+          // Klaytn requires specifying gasPrice
+          const gasPricePromise = chainId === CHAIN_ID_KLAYTN ? signer.getGasPrice() : Promise.resolve(undefined)
+          return gasPricePromise.then(
+            (gasPrice) =>
+              approveEth(
+                getTokenBridgeAddressForChain(chainId),
+                tokenAddress,
+                signer,
+                BigNumber.from(amount),
+                gasPrice === undefined ? {} : { gasPrice }
+              ).then(
+                (result) => {
+                  dispatch(setIsWalletApproved(true))
+                  return result.wait().then(() => {
+                    dispatch(setIsApproving(false))
+                    dispatch(setIsWalletApproved(false))
+                  })
+                },
+                () => {
+                  dispatch(setIsApproving(false))
+                  return Promise.reject()
+                }
+              ),
+            () => {
+              dispatch(setIsApproving(false))
+              return Promise.reject()
+            }
+          )
+        }
+  }, [chainId, tokenAddress, signer, dispatch])
+
+  return useMemo(
+    () => ({
+      sufficientAllowance,
+      approveAmount,
+      isAllowanceFetching,
+      isApproveProcessing
+    }),
+    [sufficientAllowance, approveAmount, isAllowanceFetching, isApproveProcessing]
+  )
+}

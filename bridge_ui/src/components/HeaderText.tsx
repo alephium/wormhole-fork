@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
-import { ReactChild } from "react";
+import { ReactNode } from "react";
 import { COLORS } from "../muiTheme";
 
 const useStyles = makeStyles()((theme) => ({
@@ -28,10 +28,10 @@ export default function HeaderText({
   small,
   subtitle,
 }: {
-  children: ReactChild;
+  children: ReactNode;
   white?: boolean;
   small?: boolean;
-  subtitle?: ReactChild;
+  subtitle?: ReactNode;
 }) {
   const { classes } = useStyles();
   return (

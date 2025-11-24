@@ -11,7 +11,7 @@ import { getForeignAssetEth as getForeignAssetEthNFT } from "@alephium/wormhole-
 import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import {
   errorDataWrapper,
   fetchDataWrapper,

@@ -1,0 +1,32 @@
+{
+  "exclude": ["dist", "node_modules", "tests", "coverage"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/*.test.ts"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["es2022", "dom"],
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": true,
+    "preserveSymlinks": true,
+    "preserveWatchOutput": true,
+    "pretty": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "es2022",
+    "strict": true,
+    "jsx": "react-jsx"
+  },
+}

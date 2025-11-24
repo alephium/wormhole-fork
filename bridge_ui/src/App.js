@@ -17,7 +17,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
-import Attest from "./components/AttestNew";
 import HeaderText from "./components/HeaderText";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
@@ -25,12 +24,11 @@ import CustodyAddresses from "./components/Stats/CustodyAddresses";
 import TokenOriginVerifier from "./components/TokenOriginVerifier";
 import Transactions from "./components/Transactions";
 import Transfer from "./components/Transfer";
-import BridgeWidget from "./components/BridgeWidget";
+import BridgeWidget from "@alephium/bridge-widget";
 import HeaderWalletButtons from "./components/HeaderWalletButtons";
 import UnwrapNative from "./components/UnwrapNative";
-import { useBetaContext } from "./contexts/BetaContext";
 import noise from './images/noise.png';
-import AlephiumLogo from "./icons/alephium.svg";
+import AlephiumLogo from "../../bridge-assets/icons/alephium.svg";
 import { CLUSTER } from "./utils/consts";
 import { useWallet } from "@alephium/web3-react";
 import { web3 } from "@alephium/web3";
@@ -40,7 +38,6 @@ import AttestLegacy from "./components/Attest";
 function App() {
   const { t } = useTranslation();
   const { classes } = useStyles();
-  const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
   const wallet = useWallet();
@@ -181,13 +178,6 @@ function App() {
           </div>
         </Toolbar>
       </AppBar>
-      {isBeta ? (
-        <AppBar position="static" className={classes.betaBanner} elevation={0}>
-          <Typography style={{ textAlign: "center" }}>
-            {t("Caution! You have enabled the beta. Enter the secret code again to disable.")}
-          </Typography>
-        </AppBar>
-      ) : null}
       {["/transfer", "/redeem", "/transactions"].includes(pathname) ? (
         <Container maxWidth="md" style={{ paddingBottom: 24 }}>
           <HeaderText
@@ -230,9 +220,6 @@ function App() {
         </Route>
         <Route exact path="/register-legacy">
           <AttestLegacy />
-        </Route>
-        <Route exact path="/register">
-          <Attest />
         </Route>
         <Route exact path="/stats">
           <Stats />

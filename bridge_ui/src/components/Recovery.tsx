@@ -37,7 +37,7 @@ import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory, useLocation } from "react-router";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { useAcalaRelayerInfo } from "../hooks/useAcalaRelayerInfo";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import useRelayersAvailable, { Relayer } from "../hooks/useRelayersAvailable";

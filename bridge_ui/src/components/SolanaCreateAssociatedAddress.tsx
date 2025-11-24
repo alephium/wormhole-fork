@@ -15,7 +15,7 @@ import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import {
   selectTransferOriginAsset,
   selectTransferOriginChain,

@@ -12,12 +12,11 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import { useConnectedWallet } from "@terra-money/wallet-provider";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
+import { useEthereumProvider } from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import { setTargetAddressHex as setNFTTargetAddressHex } from "../store/nftSlice";
 import {
   selectNFTTargetAsset,
@@ -46,7 +45,6 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     selectTransferTargetParsedTokenAccount
   );
   const targetTokenAccountPublicKey = targetParsedTokenAccount?.publicKey;
-  const terraWallet = useConnectedWallet();
   const alphWallet = useWallet();
   const { accounts: algoAccounts } = useAlgorandContext();
   const setTargetAddressHex = nft
@@ -127,7 +125,6 @@ function useSyncTargetAddress(shouldFire: boolean, nft?: boolean) {
     solPK,
     targetAsset,
     targetTokenAccountPublicKey,
-    terraWallet,
     alphWallet,
     nft,
     setTargetAddressHex,

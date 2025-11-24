@@ -1,0 +1,16 @@
+node_modules/
+.env
+tsconfig.json
+lib/favicon.ico
+lib/logo192.png
+lib/logo512.png
+lib/manifest.json
+lib/robots.txt
+lib/SampleApp.*
+lib/setupTests.*
+lib/main.*
+src/
+build/
+public/
+*.md
+!README.md

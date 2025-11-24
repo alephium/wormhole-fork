@@ -7,7 +7,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import {
   selectTransferIsRecovery,
   selectTransferSourceChain,

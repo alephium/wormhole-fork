@@ -1,0 +1,102 @@
+import { ChainId } from '@alephium/wormhole-sdk'
+import { Dialog, DialogTitle, IconButton, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import CloseIcon from '@mui/icons-material/Close'
+import { useCallback } from 'react'
+import { Connection, ConnectType, useEthereumProvider } from '../contexts/EthereumProviderContext'
+import { getEvmChainId } from '../utils/consts'
+import useIsWalletReady from '../hooks/useIsWalletReady'
+import { useTranslation } from 'react-i18next'
+
+const useStyles = makeStyles()((theme) => ({
+  flexTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    '& > div': {
+      flexGrow: 1,
+      marginRight: theme.spacing(4),
+      fontSize: '20px'
+    },
+    '& > button': {
+      marginRight: theme.spacing(-1)
+    }
+  },
+  icon: {
+    height: 24,
+    width: 24
+  }
+}))
+
+const WalletOptions = ({
+  connection,
+  connect,
+  onClose
+}: {
+  connection: Connection
+  connect: (connectType: ConnectType) => void
+  onClose: () => void
+}) => {
+  const { classes } = useStyles()
+
+  const handleClick = useCallback(() => {
+    connect(connection.connectType)
+    onClose()
+  }, [connect, connection, onClose])
+
+  return (
+    <ListItemButton onClick={handleClick}>
+      <ListItemIcon>
+        <img src={connection.icon} alt={connection.name} className={classes.icon} />
+      </ListItemIcon>
+      <ListItemText>{connection.name}</ListItemText>
+    </ListItemButton>
+  )
+}
+
+const EvmConnectWalletDialog = ({ isOpen, onClose, chainId }: { isOpen: boolean; onClose: () => void; chainId: ChainId }) => {
+  const { t } = useTranslation()
+  const { availableConnections, connect, chainId: evmChainId } = useEthereumProvider()
+  const enableAutoSwitch = evmChainId === undefined
+  const { forceNetworkSwitch } = useIsWalletReady(chainId, enableAutoSwitch)
+  const { classes } = useStyles()
+
+  const availableWallets = availableConnections
+    .filter((connection) => {
+      if (connection.connectType === ConnectType.METAMASK) {
+        return true
+      } else if (connection.connectType === ConnectType.WALLETCONNECT) {
+        const evmChainId = getEvmChainId(chainId)
+        return evmChainId !== undefined
+      } else {
+        return false
+      }
+    })
+    .map((connection) => (
+      <WalletOptions
+        connection={connection}
+        connect={
+          evmChainId === undefined || getEvmChainId(chainId) === evmChainId
+            ? (connectionType) => connect(connectionType, chainId)
+            : forceNetworkSwitch
+        }
+        onClose={onClose}
+        key={connection.name}
+      />
+    ))
+
+  return (
+    <Dialog open={isOpen} onClose={onClose}>
+      <DialogTitle>
+        <div className={classes.flexTitle}>
+          <div>{t('Select your wallet')}</div>
+          <IconButton onClick={onClose} size="large">
+            <CloseIcon />
+          </IconButton>
+        </div>
+      </DialogTitle>
+      <List>{availableWallets}</List>
+    </Dialog>
+  )
+}
+
+export default EvmConnectWalletDialog

@@ -2,7 +2,7 @@ import { PublicKey, AccountInfo } from "@solana/web3.js";
 import BN from "bn.js";
 import { deserializeUnchecked } from "borsh";
 import { BinaryReader, BinaryWriter } from "borsh";
-const base58: any = require("bs58");
+import base58 from "bs58";
 
 // eslint-disable-next-line
 export const METADATA_REPLACE = new RegExp("\u0000", "g");

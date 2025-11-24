@@ -10,16 +10,14 @@ import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import { useConnect, useWallet } from "@alephium/web3-react"
 import { MouseEvent, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useEthereumProvider } from "../contexts/EthereumProviderContext"
 import { CHAIN_ID_ALEPHIUM } from "@alephium/wormhole-sdk"
 import { CHAINS_BY_ID, ChainInfo, getEvmChainId } from "../utils/consts"
 import WalletAddressButton from "./WalletAddressButton"
 import { COLORS } from "../muiTheme"
-import Divider from "./BridgeWidget/Divider"
+import { Divider, SuccessPulse, useEthereumProvider } from "@alephium/bridge-widget"
 import { useSelector } from "react-redux"
 import { selectTransferHasSentTokens, selectTransferIsSending, selectTransferTransferTx } from "../store/selectors"
 import { shortenAddress } from "../utils/addresses"
-import SuccessPulse from "./BridgeWidget/SuccessPulse"
 
 const ALEPHIUM_CHAIN_INFO = CHAINS_BY_ID[CHAIN_ID_ALEPHIUM]
 

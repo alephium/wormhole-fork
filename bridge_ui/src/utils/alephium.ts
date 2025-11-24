@@ -23,7 +23,7 @@ import {
   isSequenceExecuted
 } from '@alephium/wormhole-sdk';
 import { TokenInfo, ALPH, TokenList } from "@alephium/token-list";
-import alephiumIcon from "../icons/alephium.svg";
+import alephiumIcon from "../../../bridge-assets/icons/alephium.svg";
 import {
   NodeProvider,
   node,
