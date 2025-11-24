@@ -6,7 +6,7 @@ interface BridgeWidgetNavItemProps {
   tooltipDisabledTitle: string
   disabled: boolean
   onClick: () => void
-  Icon: OverridableComponent<SvgIconTypeMap<{}, "svg">>
+  Icon: OverridableComponent<SvgIconTypeMap<object, 'svg'>>
   title: string
 }
 

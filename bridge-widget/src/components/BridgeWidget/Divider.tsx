@@ -1,6 +1,6 @@
-import { ReactNode } from "react"
-import { makeStyles } from 'tss-react/mui';
-import { COLORS } from "../../muiTheme"
+import { ReactNode } from 'react'
+import { makeStyles } from 'tss-react/mui'
+import { COLORS } from '../../muiTheme'
 
 interface DividerProps {
   children?: ReactNode
@@ -22,14 +22,14 @@ export default Divider
 
 const useStyles = makeStyles()((theme) => ({
   root: {
-    position: "relative",
-    width: "100%",
-    height: 1,
+    position: 'relative',
+    width: '100%',
+    height: 1
   },
   line: {
-    position: "absolute",
+    position: 'absolute',
     inset: 0,
     backgroundColor: COLORS.whiteWithTransparency,
-    borderRadius: theme.shape.borderRadius,
-  },
+    borderRadius: theme.shape.borderRadius
+  }
 }))

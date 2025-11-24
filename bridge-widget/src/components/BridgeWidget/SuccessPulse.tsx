@@ -1,4 +1,4 @@
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import clsx from 'clsx'
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
@@ -17,14 +17,7 @@ const ICON_SIZE = 20
 const SUCCESS_PULSE_ICON_DURATION = 1100
 const SUCCESS_PULSE_ENTER_DURATION = 900
 
-const SuccessPulse = ({
-  hideIcon = false,
-  icon,
-  className,
-  iconClassName,
-  contentClassName,
-  children
-}: SuccessPulseProps) => {
+const SuccessPulse = ({ hideIcon = false, icon, className, iconClassName, contentClassName, children }: SuccessPulseProps) => {
   const { classes } = useStyles()
 
   const [isShowingIcon, setIsShowingIcon] = useState(false)
@@ -90,12 +83,7 @@ const SuccessPulse = ({
     <span className={clsx(classes.root, className)}>
       {!hideIcon && isShowingIcon && (
         <span
-          className={clsx(
-            classes.successIcon,
-            iconClassName,
-            isShowingIcon && classes.iconVisible,
-            isShowingIcon && classes.iconEntering
-          )}
+          className={clsx(classes.successIcon, iconClassName, isShowingIcon && classes.iconVisible, isShowingIcon && classes.iconEntering)}
         >
           {icon ?? <CheckCircleIcon className={classes.iconDefault} htmlColor={COLORS.green} />}
         </span>
@@ -180,8 +168,7 @@ const useStyles = makeStyles()(() => ({
     maxWidth: 0,
     transform: 'scale(0.9)',
     filter: 'blur(8px)',
-    transition:
-      'all 600ms cubic-bezier(0.25, 1, 0.5, 1)',
+    transition: 'all 600ms cubic-bezier(0.25, 1, 0.5, 1)',
     pointerEvents: 'auto'
   },
   contentVisible: {

@@ -1,16 +1,9 @@
-import {
-  Avatar,
-  Card,
-  CardContent,
-  CardMedia,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import { makeStyles } from 'tss-react/mui';
-import axios from 'axios';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import { NFTParsedTokenAccount } from '../../store/nftSlice';
-import clsx from 'clsx';
+import { Avatar, Card, CardContent, CardMedia, Tooltip, Typography } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import axios from 'axios'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { NFTParsedTokenAccount } from '../../store/nftSlice'
+import clsx from 'clsx'
 import {
   ChainId,
   CHAIN_ID_AVAX,
@@ -20,20 +13,20 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   CHAIN_ID_OASIS,
-  CHAIN_ID_FANTOM,
-} from '@alephium/wormhole-sdk';
-import SmartAddress from '../SmartAddress';
-import avaxIcon from '../../../../bridge-assets/icons/avax.svg';
-import bscIcon from '../../../../bridge-assets/icons/bsc.svg';
-import ethIcon from '../../../../bridge-assets/icons/eth.svg';
-import fantomIcon from '../../../../bridge-assets/icons/fantom.svg';
-import solanaIcon from '../../../../bridge-assets/icons/solana.svg';
-import polygonIcon from '../../../../bridge-assets/icons/polygon.svg';
-import oasisIcon from '../../../../bridge-assets/icons/oasis-network-rose-logo.svg';
-import useCopyToClipboard from '../../hooks/useCopyToClipboard';
-import Skeleton from '@mui/material/Skeleton';
-import Wormhole from '../../../../bridge-assets/icons/wormhole-network.svg';
-import { useTranslation } from 'react-i18next';
+  CHAIN_ID_FANTOM
+} from '@alephium/wormhole-sdk'
+import SmartAddress from '../SmartAddress'
+import avaxIcon from '../../../../bridge-assets/icons/avax.svg'
+import bscIcon from '../../../../bridge-assets/icons/bsc.svg'
+import ethIcon from '../../../../bridge-assets/icons/eth.svg'
+import fantomIcon from '../../../../bridge-assets/icons/fantom.svg'
+import solanaIcon from '../../../../bridge-assets/icons/solana.svg'
+import polygonIcon from '../../../../bridge-assets/icons/polygon.svg'
+import oasisIcon from '../../../../bridge-assets/icons/oasis-network-rose-logo.svg'
+import useCopyToClipboard from '../../hooks/useCopyToClipboard'
+import Skeleton from '@mui/material/Skeleton'
+import Wormhole from '../../../../bridge-assets/icons/wormhole-network.svg'
+import { useTranslation } from 'react-i18next'
 
 const safeIPFS = (uri: string) =>
   uri.startsWith('ipfs://ipfs/')
@@ -42,7 +35,7 @@ const safeIPFS = (uri: string) =>
     ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/')
     : uri.startsWith('https://cloudflare-ipfs.com/ipfs/') // no CORS support?
     ? uri.replace('https://cloudflare-ipfs.com/ipfs/', 'https://ipfs.io/ipfs/')
-    : uri;
+    : uri
 
 const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
   chainId === CHAIN_ID_SOLANA ? (
@@ -52,7 +45,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '4px',
+        padding: '4px'
       }}
       src={solanaIcon}
       alt="Solana"
@@ -63,7 +56,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         backgroundColor: 'white',
         height: '1em',
         width: '1em',
-        marginLeft: '4px',
+        marginLeft: '4px'
       }}
       src={ethIcon}
       alt="Ethereum"
@@ -75,7 +68,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '2px',
+        padding: '2px'
       }}
       src={bscIcon}
       alt="Binance Smart Chain"
@@ -87,7 +80,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '3px',
+        padding: '3px'
       }}
       src={polygonIcon}
       alt="Polygon"
@@ -99,7 +92,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '3px',
+        padding: '3px'
       }}
       src={avaxIcon}
       alt="Avalanche"
@@ -111,7 +104,7 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '3px',
+        padding: '3px'
       }}
       src={oasisIcon}
       alt="Oasis"
@@ -123,12 +116,12 @@ const LogoIcon = ({ chainId }: { chainId: ChainId }) =>
         height: '1em',
         width: '1em',
         marginLeft: '4px',
-        padding: '3px',
+        padding: '3px'
       }}
       src={fantomIcon}
       alt="Fantom"
     />
-  ) : null;
+  ) : null
 
 const useStyles = makeStyles()((theme) => ({
   card: {
@@ -142,28 +135,26 @@ const useStyles = makeStyles()((theme) => ({
     transition: 'background-position 1s, transform 0.25s',
     '&:hover': {
       backgroundPosition: 'right center',
-      transform: 'scale(1.25)',
+      transform: 'scale(1.25)'
     },
     backgroundSize: '200% auto',
     backgroundColor: '#ffb347',
-    background:
-      'linear-gradient(to right, #ffb347 0%, #ffcc33  51%, #ffb347  100%)',
+    background: 'linear-gradient(to right, #ffb347 0%, #ffcc33  51%, #ffb347  100%)'
   },
   silverBorder: {
     backgroundColor: '#D9D8D6',
     backgroundSize: '200% auto',
-    background:
-      'linear-gradient(to bottom right, #757F9A 0%, #D7DDE8  51%, #757F9A  100%)',
+    background: 'linear-gradient(to bottom right, #757F9A 0%, #D7DDE8  51%, #757F9A  100%)',
     '&:hover': {
-      backgroundPosition: 'right center',
-    },
+      backgroundPosition: 'right center'
+    }
   },
   cardInset: {},
   textContent: {
     background: 'transparent',
     paddingTop: 4,
     paddingBottom: 2,
-    display: 'flex',
+    display: 'flex'
   },
   detailsContent: {
     background: 'transparent',
@@ -171,17 +162,17 @@ const useStyles = makeStyles()((theme) => ({
     paddingBottom: 2,
     '&:last-child': {
       //override rule
-      paddingBottom: 2,
-    },
+      paddingBottom: 2
+    }
   },
   title: {
-    flex: 1,
+    flex: 1
   },
   description: {
-    padding: theme.spacing(0.5, 0, 1),
+    padding: theme.spacing(0.5, 0, 1)
   },
   tokenId: {
-    fontSize: '8px',
+    fontSize: '8px'
   },
   mediaContent: {
     display: 'flex',
@@ -191,41 +182,37 @@ const useStyles = makeStyles()((theme) => ({
     background: 'transparent',
     margin: theme.spacing(0, 2),
     '& > img, & > video': {
-      border: '1px solid #ffb347',
-    },
+      border: '1px solid #ffb347'
+    }
   },
   silverMediaBorder: {
     '& > img, & > video': {
-      borderColor: '#D7DDE8',
-    },
+      borderColor: '#D7DDE8'
+    }
   },
   // thanks https://cssgradient.io/ and https://htmlcolorcodes.com/color-picker/
   eth: {
     // colors from https://en.wikipedia.org/wiki/Ethereum#/media/File:Ethereum-icon-purple.svg
     backgroundColor: 'rgb(69,74,117)',
-    background:
-      'linear-gradient(160deg, rgba(69,74,117,1) 0%, rgba(138,146,178,1) 33%, rgba(69,74,117,1) 66%, rgba(98,104,143,1) 100%)',
+    background: 'linear-gradient(160deg, rgba(69,74,117,1) 0%, rgba(138,146,178,1) 33%, rgba(69,74,117,1) 66%, rgba(98,104,143,1) 100%)'
   },
   bsc: {
     // color from binance background rgb(20, 21, 26), 2 and 1 tint lighter
     backgroundColor: '#F0B90B',
-    background:
-      'linear-gradient(160deg, rgb(20, 21, 26) 0%, #4A4D57 33%, rgb(20, 21, 26) 66%, #2C2F3B 100%)',
+    background: 'linear-gradient(160deg, rgb(20, 21, 26) 0%, #4A4D57 33%, rgb(20, 21, 26) 66%, #2C2F3B 100%)'
   },
   polygon: {
     // color from polygon logo #8247E5 down to 30 lightness
     backgroundColor: '#0F0323',
-    background:
-      'linear-gradient(160deg, #0F0323 0%, #250957 33%, #0F0323 66%, #0F0323 100%)',
+    background: 'linear-gradient(160deg, #0F0323 0%, #250957 33%, #0F0323 66%, #0F0323 100%)'
   },
   solana: {
     // colors from https://solana.com/branding/new/exchange/exchange-sq-black.svg
     backgroundColor: 'rgb(153,69,255)',
-    background:
-      'linear-gradient(45deg, rgba(153,69,255,1) 0%, rgba(121,98,231,1) 20%, rgba(0,209,140,1) 100%)',
+    background: 'linear-gradient(45deg, rgba(153,69,255,1) 0%, rgba(121,98,231,1) 20%, rgba(0,209,140,1) 100%)'
   },
   hidden: {
-    display: 'none',
+    display: 'none'
   },
   skeleton: {
     height: '500px',
@@ -234,7 +221,7 @@ const useStyles = makeStyles()((theme) => ({
     borderRadius: 9,
     display: 'grid',
     placeItems: 'center',
-    position: 'absolute',
+    position: 'absolute'
   },
   wormholeIcon: {
     height: 48,
@@ -242,11 +229,11 @@ const useStyles = makeStyles()((theme) => ({
     filter: 'contrast(0)',
     transition: 'filter 0.5s',
     '&:hover': {
-      filter: 'contrast(1)',
+      filter: 'contrast(1)'
     },
     verticalAlign: 'middle',
     marginRight: theme.spacing(1),
-    zIndex: 10,
+    zIndex: 10
   },
   wormholePositioner: {
     display: 'grid',
@@ -255,47 +242,37 @@ const useStyles = makeStyles()((theme) => ({
     height: '500px',
     width: '400px',
     maxWidth: '100%',
-    margin: `${theme.spacing(1)} auto`,
-  },
-}));
+    margin: `${theme.spacing(1)} auto`
+  }
+}))
 
 const ViewerLoader = () => {
-  const { classes } = useStyles();
+  const { classes } = useStyles()
 
   return (
     <div className={classes.wormholePositioner}>
-      <Skeleton
-        variant="rectangular"
-        animation="wave"
-        className={classes.skeleton}
-      />
+      <Skeleton variant="rectangular" animation="wave" className={classes.skeleton} />
       <img src={Wormhole} alt="Wormhole" className={classes.wormholeIcon} />
     </div>
-  );
-};
+  )
+}
 
-export default function NFTViewer({
-  value,
-  chainId,
-}: {
-  value: NFTParsedTokenAccount;
-  chainId: ChainId;
-}) {
-  const { t } = useTranslation();
-  const uri = safeIPFS(value.uri || '');
+export default function NFTViewer({ value, chainId }: { value: NFTParsedTokenAccount; chainId: ChainId }) {
+  const { t } = useTranslation()
+  const uri = safeIPFS(value.uri || '')
   const [metadata, setMetadata] = useState({
     uri,
     image: value.image,
     animation_url: value.animation_url,
     nftName: value.nftName,
     description: value.description,
-    isLoading: !!uri,
-  });
-  const [isMediaLoading, setIsMediaLoading] = useState(false);
+    isLoading: !!uri
+  })
+  const [isMediaLoading, setIsMediaLoading] = useState(false)
   const onLoad = useCallback(() => {
-    setIsMediaLoading(false);
-  }, []);
-  const isLoading = isMediaLoading || metadata.isLoading;
+    setIsMediaLoading(false)
+  }, [])
+  const isLoading = isMediaLoading || metadata.isLoading
   useEffect(() => {
     setMetadata((m) =>
       m.uri === uri
@@ -306,48 +283,45 @@ export default function NFTViewer({
             animation_url: value.animation_url,
             nftName: value.nftName,
             description: value.description,
-            isLoading: !!uri,
-          },
-    );
-  }, [value, uri]);
+            isLoading: !!uri
+          }
+    )
+  }, [value, uri])
   useEffect(() => {
     if (uri) {
-      let cancelled = false;
-      (async () => {
+      let cancelled = false
+      ;(async () => {
         try {
-          const result = await axios.get(uri);
+          const result = await axios.get(uri)
           if (!cancelled && result && result.data) {
             // support returns with nested data (e.g. {status: 10000, result: {data: {...}}})
-            const data = result.data.result?.data || result.data;
+            const data = result.data.result?.data || result.data
             setMetadata({
               uri,
-              image:
-                data.image ||
-                data.image_url ||
-                data.big_image ||
-                data.small_image,
+              image: data.image || data.image_url || data.big_image || data.small_image,
               animation_url: data.animation_url,
               nftName: data.name,
               description: data.description,
-              isLoading: false,
-            });
+              isLoading: false
+            })
           } else if (!cancelled) {
-            setMetadata((m) => ({ ...m, isLoading: false }));
+            setMetadata((m) => ({ ...m, isLoading: false }))
           }
         } catch (e) {
           if (!cancelled) {
-            setMetadata((m) => ({ ...m, isLoading: false }));
+            setMetadata((m) => ({ ...m, isLoading: false }))
+            console.error(e)
           }
         }
-      })();
+      })()
       return () => {
-        cancelled = true;
-      };
+        cancelled = true
+      }
     }
-  }, [uri]);
+  }, [uri])
 
-  const { classes } = useStyles();
-  const animLower = metadata.animation_url?.toLowerCase();
+  const { classes } = useStyles()
+  const animLower = metadata.animation_url?.toLowerCase()
   // const has3DModel = animLower?.endsWith('gltf') || animLower?.endsWith('glb')
   const hasVideo =
     !animLower?.startsWith('ipfs://') && // cloudflare ipfs doesn't support streaming video
@@ -356,63 +330,37 @@ export default function NFTViewer({
       animLower?.endsWith('mov') ||
       animLower?.endsWith('m4v') ||
       animLower?.endsWith('ogv') ||
-      animLower?.endsWith('ogg'));
-  const hasAudio =
-    animLower?.endsWith('mp3') ||
-    animLower?.endsWith('flac') ||
-    animLower?.endsWith('wav') ||
-    animLower?.endsWith('oga');
-  const hasImage = metadata.image;
-  const copyTokenId = useCopyToClipboard(value.tokenId || '');
-  const videoSrc = hasVideo && safeIPFS(metadata.animation_url || '');
-  const imageSrc = hasImage && safeIPFS(metadata.image || '');
-  const audioSrc = hasAudio && safeIPFS(metadata.animation_url || '');
+      animLower?.endsWith('ogg'))
+  const hasAudio = animLower?.endsWith('mp3') || animLower?.endsWith('flac') || animLower?.endsWith('wav') || animLower?.endsWith('oga')
+  const hasImage = metadata.image
+  const copyTokenId = useCopyToClipboard(value.tokenId || '')
+  const videoSrc = hasVideo && safeIPFS(metadata.animation_url || '')
+  const imageSrc = hasImage && safeIPFS(metadata.image || '')
+  const audioSrc = hasAudio && safeIPFS(metadata.animation_url || '')
 
   //set loading when the media src changes
   useLayoutEffect(() => {
     if (videoSrc || imageSrc || audioSrc) {
-      setIsMediaLoading(true);
+      setIsMediaLoading(true)
     } else {
-      setIsMediaLoading(false);
+      setIsMediaLoading(false)
     }
-  }, [videoSrc, imageSrc, audioSrc]);
+  }, [videoSrc, imageSrc, audioSrc])
 
-  const image = (
-    <img
-      src={imageSrc}
-      alt={metadata.nftName || ''}
-      style={{ maxWidth: '100%' }}
-      onLoad={onLoad}
-      onError={onLoad}
-    />
-  );
+  const image = <img src={imageSrc} alt={metadata.nftName || ''} style={{ maxWidth: '100%' }} onLoad={onLoad} onError={onLoad} />
   const media = (
     <>
       {hasVideo ? (
-        <video
-          autoPlay
-          controls
-          loop
-          style={{ maxWidth: '100%' }}
-          onLoadedData={onLoad}
-          onError={onLoad}
-        >
+        <video autoPlay controls loop style={{ maxWidth: '100%' }} onLoadedData={onLoad} onError={onLoad}>
           <source src={videoSrc || ''} />
           {image}
         </video>
       ) : hasImage ? (
         image
       ) : null}
-      {hasAudio ? (
-        <audio
-          controls
-          src={audioSrc || ''}
-          onLoadedData={onLoad}
-          onError={onLoad}
-        />
-      ) : null}
+      {hasAudio ? <audio controls src={audioSrc || ''} onLoadedData={onLoad} onError={onLoad} /> : null}
     </>
-  );
+  )
 
   return (
     <>
@@ -421,11 +369,8 @@ export default function NFTViewer({
       </div>
       <Card
         className={clsx(classes.card, {
-          [classes.silverBorder]:
-            chainId === CHAIN_ID_SOLANA ||
-            chainId === CHAIN_ID_POLYGON ||
-            chainId === CHAIN_ID_AVAX,
-          [classes.hidden]: isLoading,
+          [classes.silverBorder]: chainId === CHAIN_ID_SOLANA || chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_AVAX,
+          [classes.hidden]: isLoading
         })}
         elevation={10}
       >
@@ -439,32 +384,18 @@ export default function NFTViewer({
               chainId === CHAIN_ID_FANTOM, //TODO: give fantom it's own bg
             [classes.bsc]: chainId === CHAIN_ID_BSC,
             [classes.solana]: chainId === CHAIN_ID_SOLANA,
-            [classes.polygon]: chainId === CHAIN_ID_POLYGON,
+            [classes.polygon]: chainId === CHAIN_ID_POLYGON
           })}
         >
           <CardContent className={classes.textContent}>
-            {metadata.nftName ? (
-              <Typography className={classes.title}>
-                {metadata.nftName}
-              </Typography>
-            ) : (
-              <div className={classes.title} />
-            )}
-            <SmartAddress
-              chainId={chainId}
-              parsedTokenAccount={value}
-              noGutter
-              noUnderline
-            />
+            {metadata.nftName ? <Typography className={classes.title}>{metadata.nftName}</Typography> : <div className={classes.title} />}
+            <SmartAddress chainId={chainId} parsedTokenAccount={value} noGutter noUnderline />
             <LogoIcon chainId={chainId} />
           </CardContent>
           <CardMedia
             className={clsx(classes.mediaContent, {
               [classes.silverMediaBorder]:
-                chainId === CHAIN_ID_SOLANA ||
-                chainId === CHAIN_ID_POLYGON ||
-                chainId === CHAIN_ID_OASIS ||
-                chainId === CHAIN_ID_AVAX,
+                chainId === CHAIN_ID_SOLANA || chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_OASIS || chainId === CHAIN_ID_AVAX
             })}
           >
             {media}
@@ -479,9 +410,7 @@ export default function NFTViewer({
               <Typography className={classes.tokenId} align="right">
                 <Tooltip title={t('Copy')} arrow>
                   <span onClick={copyTokenId}>
-                    {value.tokenId.length > 18
-                      ? `#${value.tokenId.substr(0, 16)}...`
-                      : `#${value.tokenId}`}
+                    {value.tokenId.length > 18 ? `#${value.tokenId.substr(0, 16)}...` : `#${value.tokenId}`}
                   </span>
                 </Tooltip>
               </Typography>
@@ -490,5 +419,5 @@ export default function NFTViewer({
         </div>
       </Card>
     </>
-  );
+  )
 }

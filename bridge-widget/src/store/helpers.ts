@@ -1,18 +1,19 @@
 export type DataWrapper<T> = {
-  data: T | null;
-  error: any | null;
-  isFetching: boolean;
-  receivedAt: string | null;
+  data: T | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error: any | null
+  isFetching: boolean
+  receivedAt: string | null
   //possibly invalidate
-};
+}
 
 export function getEmptyDataWrapper() {
   return {
     data: null,
     error: null,
     isFetching: false,
-    receivedAt: null,
-  };
+    receivedAt: null
+  }
 }
 
 export function receiveDataWrapper<T>(data: T): DataWrapper<T> {
@@ -20,8 +21,8 @@ export function receiveDataWrapper<T>(data: T): DataWrapper<T> {
     data,
     error: null,
     isFetching: false,
-    receivedAt: new Date().toISOString(),
-  };
+    receivedAt: new Date().toISOString()
+  }
 }
 
 export function errorDataWrapper<T>(error: string): DataWrapper<T> {
@@ -29,8 +30,8 @@ export function errorDataWrapper<T>(error: string): DataWrapper<T> {
     data: null,
     error,
     isFetching: false,
-    receivedAt: null,
-  };
+    receivedAt: null
+  }
 }
 
 export function fetchDataWrapper() {
@@ -38,6 +39,6 @@ export function fetchDataWrapper() {
     data: null,
     error: null,
     isFetching: true,
-    receivedAt: null,
-  };
+    receivedAt: null
+  }
 }

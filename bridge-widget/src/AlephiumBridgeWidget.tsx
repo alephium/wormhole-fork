@@ -1,8 +1,8 @@
-import ErrorBoundary from './components/ErrorBoundary';
-import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { theme } from './muiTheme';
-import BridgeWidget from './components/BridgeWidget';
+import ErrorBoundary from './components/ErrorBoundary'
+import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles'
+import { CssBaseline } from '@mui/material'
+import { theme } from './muiTheme'
+import BridgeWidget from './components/BridgeWidget'
 
 const AlephiumBridgeWidget = () => {
   return (
@@ -14,7 +14,7 @@ const AlephiumBridgeWidget = () => {
         </ErrorBoundary>
       </ThemeProvider>
     </StyledEngineProvider>
-  );
-};
+  )
+}
 
-export default AlephiumBridgeWidget;
+export default AlephiumBridgeWidget

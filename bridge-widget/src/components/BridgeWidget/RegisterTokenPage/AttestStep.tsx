@@ -117,11 +117,7 @@ const AttestStep = ({ step, derivedActiveStep, canEditStep, onOpenDialog, select
         <div
           role="button"
           tabIndex={isStepDisabled ? -1 : 0}
-          className={clsx(
-            classes.stepValue,
-            !isStepDisabled && classes.stepValueInteractive,
-            isStepDisabled && classes.stepValueDisabled
-          )}
+          className={clsx(classes.stepValue, !isStepDisabled && classes.stepValueInteractive, isStepDisabled && classes.stepValueDisabled)}
           onClick={handleValueClick}
           onKeyDown={handleValueKeyDown}
           aria-disabled={isStepDisabled}
@@ -141,13 +137,7 @@ const AttestStep = ({ step, derivedActiveStep, canEditStep, onOpenDialog, select
   }
 
   return (
-    <div
-      className={clsx(
-        classes.stepRow,
-        step.status === 'active' && classes.stepRowActive,
-        isRowDisabled && classes.stepRowDisabled
-      )}
-    >
+    <div className={clsx(classes.stepRow, step.status === 'active' && classes.stepRowActive, isRowDisabled && classes.stepRowDisabled)}>
       <div className={classes.stepIcon}>{renderStatusIcon(step.status)}</div>
       <div className={classes.stepMainColumn}>
         <Typography className={classes.stepTitle}>{step.title}</Typography>

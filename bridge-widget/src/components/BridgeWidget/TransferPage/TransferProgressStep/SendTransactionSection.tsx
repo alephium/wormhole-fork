@@ -36,9 +36,7 @@ const SendTransactionSection = () => {
           <div className={classes.sendStepIcon}>
             <ThumbUp style={{ color: GRAY }} />
           </div>
-          <div className={classes.sendStepContent}>
-            Confirm the transaction in your wallet to send the tokens to the Alephium bridge.
-          </div>
+          <div className={classes.sendStepContent}>Confirm the transaction in your wallet to send the tokens to the Alephium bridge.</div>
         </div>
       </div>
     )

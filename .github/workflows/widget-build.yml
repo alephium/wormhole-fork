@@ -1,14 +1,15 @@
-name: Build
+name: Widget Build
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
   push:
     branches:
       - master
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
 
 jobs:
   check-sdn-list:

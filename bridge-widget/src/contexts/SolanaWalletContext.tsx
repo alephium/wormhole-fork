@@ -1,8 +1,4 @@
-import {
-  ConnectionProvider,
-  WalletProvider,
-  useWallet,
-} from "@solana/wallet-adapter-react";
+import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react'
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
@@ -13,10 +9,10 @@ import {
   SolongWalletAdapter,
   TorusWalletAdapter,
   SolletExtensionWalletAdapter,
-  ExodusWalletAdapter,
-} from "@solana/wallet-adapter-wallets";
-import { FC, ReactNode, useMemo } from "react";
-import { getConst } from "../utils/consts";
+  ExodusWalletAdapter
+} from '@solana/wallet-adapter-wallets'
+import { FC, ReactNode, useMemo } from 'react'
+import { getConst } from '../utils/consts'
 
 export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = useMemo(
@@ -30,10 +26,10 @@ export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) 
       new SlopeWalletAdapter(),
       new SolongWalletAdapter(),
       new TorusWalletAdapter(),
-      new ExodusWalletAdapter(),
+      new ExodusWalletAdapter()
     ],
     []
-  );
+  )
 
   return (
     <ConnectionProvider endpoint={getConst('SOLANA_HOST')}>
@@ -41,7 +37,7 @@ export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) 
         {children}
       </WalletProvider>
     </ConnectionProvider>
-  );
-};
+  )
+}
 
-export const useSolanaWallet = useWallet;
+export const useSolanaWallet = useWallet

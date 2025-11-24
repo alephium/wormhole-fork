@@ -14,10 +14,7 @@ const OngoingBridgingBadge = () => {
 
   return (
     <div className={classes.container}>
-      <div
-        className={classes.badge}
-        style={{ backgroundColor: isManualRedeemRequired ? COLORS.darkGrey : COLORS.blue }}
-      >
+      <div className={classes.badge} style={{ backgroundColor: isManualRedeemRequired ? COLORS.darkGrey : COLORS.blue }}>
         <CircularProgress size={20} style={{ color: isManualRedeemRequired ? COLORS.gray : COLORS.white }} />
         {isManualRedeemRequired ? 'Waiting for manual redeem...' : 'Bridging...'}
       </div>
@@ -27,7 +24,7 @@ const OngoingBridgingBadge = () => {
 
 export default OngoingBridgingBadge
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()(() => ({
   container: {
     display: 'flex',
     alignItems: 'center',

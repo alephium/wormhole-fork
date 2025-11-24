@@ -18,18 +18,20 @@ const fetchAlphMetadata = async (nodeProvider: NodeProvider, tokenIds: string[],
   }
   const promises: Promise<TokenInfo>[] = []
   tokenIds.forEach((tokenId) => {
-    promises.push(getAlephiumBridgedTokenInfo(nodeProvider, tokenId).then((result) => {
-      if (result !== undefined) return result
-      return getLocalTokenInfo(nodeProvider, tokenId)
-    }))
-  });
+    promises.push(
+      getAlephiumBridgedTokenInfo(nodeProvider, tokenId).then((result) => {
+        if (result !== undefined) return result
+        return getLocalTokenInfo(nodeProvider, tokenId)
+      })
+    )
+  })
   const resultsArray = await Promise.all(promises)
   tokenIds.forEach((address, index) => {
     output.set(address.toLowerCase(), resultsArray[index])
   })
   if (fetchBalance && walletAddress !== undefined) {
     const balances = await getAvailableBalances(nodeProvider, walletAddress)
-    output.forEach((o) => o.balance = balances.get(o.id) ?? BigInt(0))
+    output.forEach((o) => (o.balance = balances.get(o.id) ?? BigInt(0)))
   }
 
   return output
@@ -57,14 +59,14 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
         },
         (error) => {
           if (!cancelled) {
-            setError(`${t("Could not retrieve contract metadata")}, ${t("Error")}: ${error}`)
+            setError(`${t('Could not retrieve contract metadata')}, ${t('Error')}: ${error}`)
             setIsFetching(false)
           }
         }
       )
     }
     return () => {
-      cancelled = true;
+      cancelled = true
     }
   }, [tokenIds, walletAddress, fetchBalance, alphWallet, t])
 
@@ -73,10 +75,10 @@ function useAlphMetadata(tokenIds: string[], fetchBalance: boolean, walletAddres
       data,
       isFetching,
       error,
-      receivedAt: null,
+      receivedAt: null
     }),
     [data, isFetching, error]
   )
 }
 
-export default useAlphMetadata;
+export default useAlphMetadata

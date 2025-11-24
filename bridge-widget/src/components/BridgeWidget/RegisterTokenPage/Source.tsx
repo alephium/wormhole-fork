@@ -46,6 +46,7 @@ const Source = ({
       ? !!sourceChain && sourceAsset.trim().length > 0
       : storeIsSourceComplete
   const handleSourceChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       const nextChain = Number(event.target.value) as ChainId
       if (onSourceChainChange) {
@@ -57,8 +58,8 @@ const Source = ({
     [dispatch, onSourceChainChange]
   )
   const handleAssetChange = useCallback(
-    (event: any) => {
-      const nextAsset = event.target.value as string
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextAsset = event.target.value
       if (onSourceAssetChange) {
         onSourceAssetChange(nextAsset)
         return

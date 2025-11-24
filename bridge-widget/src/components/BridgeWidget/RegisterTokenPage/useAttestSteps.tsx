@@ -167,8 +167,7 @@ export function useAttestSteps(): UseAttestStepsResult {
     return baseStatusForStep(stepId)
   }
 
-  const sourceValue =
-    isSourceComplete && sourceAsset ? <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset /> : undefined
+  const sourceValue = isSourceComplete && sourceAsset ? <SmartAddress chainId={sourceChain} address={sourceAsset} isAsset /> : undefined
 
   const sourceSubLabel = isSourceComplete
     ? t('Will be attested on {{ chainName }}', {

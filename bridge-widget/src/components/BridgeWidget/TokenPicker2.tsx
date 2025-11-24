@@ -11,19 +11,11 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { Alert } from '@mui/material'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type JSX,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { NFTParsedTokenAccount } from '../../store/nftSlice'
 import { balancePretty } from '../../utils/balancePretty'
@@ -60,9 +52,7 @@ export const BasicAccountRender2 = (
 
   const nftContent = (
     <div className={classes.tokenOverviewContainer}>
-      <div className={classes.tokenImageContainer}>
-        {uri && <img alt="" className={classes.tokenImage} src={uri} />}
-      </div>
+      <div className={classes.tokenImageContainer}>{uri && <img alt="" className={classes.tokenImage} src={uri} />}</div>
       <div>
         <Typography>{symbol}</Typography>
         <Typography>{name}</Typography>
@@ -77,9 +67,7 @@ export const BasicAccountRender2 = (
   const tokenContent = (
     <div className={classes.tokenOverviewContainer}>
       <div className={classes.tokenImageAndSymbol}>
-        <div className={classes.tokenImageContainer}>
-          {uri && <img alt="" className={classes.tokenImage} src={uri} />}
-        </div>
+        <div className={classes.tokenImageContainer}>{uri && <img alt="" className={classes.tokenImage} src={uri} />}</div>
         <div>
           <Typography variant="subtitle1">{symbol}</Typography>
         </div>
@@ -143,9 +131,7 @@ const TokenPicker2 = function TokenPicker2({
   onChange,
   isValidAddress,
   getAddress,
-  disabled,
   resetAccounts,
-  nft,
   chainId,
   error: externalError,
   showLoader,
@@ -229,14 +215,13 @@ const TokenPicker2 = function TokenPicker2({
         }
         await onChange(newOption)
         closeDialog()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (e.message?.includes('v1')) {
           setSelectionError(e.message)
         } else {
           setSelectionError(
-            t(
-              'Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list.'
-            )
+            t('Unable to retrieve required information about this token. Ensure your wallet is connected, then refresh the list.')
           )
         }
       }
@@ -278,9 +263,7 @@ const TokenPicker2 = function TokenPicker2({
   const localFind = useCallback(
     (address: string, tokenIdHolderString: string) => {
       return options.find(
-        (x) =>
-          x.mintKey.toLowerCase() === address.toLowerCase() &&
-          (!tokenIdHolderString || x.tokenId === tokenIdHolderString)
+        (x) => x.mintKey.toLowerCase() === address.toLowerCase() && (!tokenIdHolderString || x.tokenId === tokenIdHolderString)
       )
     },
     [options]
@@ -315,7 +298,7 @@ const TokenPicker2 = function TokenPicker2({
             }
           }
         },
-        (error) => {
+        () => {
           if (!cancelled) {
             setLocalLoading(false)
             setLoadingError(t('Could not find the specified address.'))
@@ -387,7 +370,6 @@ const TokenPicker2 = function TokenPicker2({
               return (
                 <ListItemButton
                   component="div"
-
                   onClick={() => handleSelectOption(option)}
                   key={option.publicKey + option.mintKey + (option.tokenId || '')}
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
@@ -442,10 +424,7 @@ const TokenPicker2 = function TokenPicker2({
         </div>
         <div className={classes.tokenAmountControls}>
           <div className={classes.tokenAvailableMaxContainer}>
-            <button
-              onClick={() => dispatch(setAmount(selectedTokenAmount || ''))}
-              className={widgetClasses.discreetButton}
-            >
+            <button onClick={() => dispatch(setAmount(selectedTokenAmount || ''))} className={widgetClasses.discreetButton}>
               Max: {balancePretty(selectedTokenAmount || '')}
             </button>
           </div>
@@ -456,11 +435,7 @@ const TokenPicker2 = function TokenPicker2({
   )
 }
 
-export const TokenIconSymbol = ({
-  account
-}: {
-  account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null
-}) => {
+export const TokenIconSymbol = ({ account }: { account: { logo?: string | null; uri?: string | null; symbol?: string | null } | null }) => {
   const { classes } = useStyles()
   const { classes: widgetClasses } = useWidgetStyles()
   const uri = account?.logo || account?.uri
@@ -468,9 +443,7 @@ export const TokenIconSymbol = ({
 
   return (
     <div className={widgetClasses.tokenIconSymbolContainer}>
-      <div className={classes.tokenImageContainer2}>
-        {uri && <img alt="" className={classes.tokenImage2} src={uri} />}
-      </div>
+      <div className={classes.tokenImageContainer2}>{uri && <img alt="" className={classes.tokenImage2} src={uri} />}</div>
       <div>
         <Typography style={{ fontWeight: 'bold' }}>{symbol}</Typography>
       </div>
@@ -482,164 +455,163 @@ export const TokenIconSymbol = ({
 export default TokenPicker2
 
 const useStyles = makeStyles()((theme) => ({
-    alignCenter: {
-      textAlign: 'center'
-    },
-    optionContainer: {
-      padding: 0
-    },
-    optionContent: {
-      padding: theme.spacing(1)
-    },
-    tokenList: {
-      maxHeight: theme.spacing(80), //TODO smarter
-      height: theme.spacing(80),
-      overflow: 'auto',
-      padding: 0
-    },
-    dialogContent: {
-      overflowX: 'hidden'
-    },
-    selectionButtonContainer: {
-      textAlign: 'center',
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(2)
-    },
-    selectionButton: {
-      maxWidth: '100%',
-      width: theme.breakpoints.values.sm
-    },
-    tokenListItem: {
-      paddingLeft: '10px'
-    },
-    tokenOverviewContainer: {
-      display: 'flex',
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      '& >div': {
-        margin: theme.spacing(1),
-        [theme.breakpoints.down('sm')]: {
-          margin: 0
-        },
-        flexBasis: '25%',
-        '&$tokenMarketsList': {
-          marginTop: theme.spacing(-0.5),
-          marginLeft: 0,
-          flexBasis: '100%'
-        },
-        '&:last-child': {
-          textAlign: 'right'
-        },
-        flexShrink: 1
-      }
-    },
-    tokenImageAndSymbol: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '20px',
+  alignCenter: {
+    textAlign: 'center'
+  },
+  optionContainer: {
+    padding: 0
+  },
+  optionContent: {
+    padding: theme.spacing(1)
+  },
+  tokenList: {
+    maxHeight: theme.spacing(80), //TODO smarter
+    height: theme.spacing(80),
+    overflow: 'auto',
+    padding: 0
+  },
+  dialogContent: {
+    overflowX: 'hidden'
+  },
+  selectionButtonContainer: {
+    textAlign: 'center',
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2)
+  },
+  selectionButton: {
+    maxWidth: '100%',
+    width: theme.breakpoints.values.sm
+  },
+  tokenListItem: {
+    paddingLeft: '10px'
+  },
+  tokenOverviewContainer: {
+    display: 'flex',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    '& >div': {
+      margin: theme.spacing(1),
       [theme.breakpoints.down('sm')]: {
-        gap: '10px'
-      }
-    },
-    tokenAddress: {
-      [theme.breakpoints.down('sm')]: {
-        display: 'none'
-      }
-    },
-    tokenImageContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 40,
-      height: 40,
-      maxWidth: 40,
-      borderRadius: '50%',
-      padding: 6,
-      border: `1px solid ${COLORS.whiteWithTransparency}`,
-      overflow: 'hidden',
-      flexShrink: 0
-    },
-    tokenImageContainer2: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 20
-    },
-    tokenImage: {
-      maxHeight: '2.5rem'
-    },
-    tokenImage2: {
-      maxHeight: '1rem',
-      maxWidth: '100%'
-    },
-    tokenMarketsList: {
-      order: 1,
-      textAlign: 'left',
-      width: '100%',
-      '& > .MuiButton-root': {
-        marginTop: theme.spacing(1),
-        marginRight: theme.spacing(1)
-      }
-    },
-    migrationAlert: {
-      width: '100%',
-      '& .MuiAlert-message': {
-        width: '100%'
-      }
-    },
-    flexTitle: {
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center'
-    },
-    grower: {
-      flexGrow: 1
-    },
-    emptyPlaceholder: {
-      padding: theme.spacing(2),
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: COLORS.gray
-    },
-    tokenAmountControls: {
-      display: 'flex',
-      gap: '10px',
-      justifyContent: 'space-between'
-    },
-    tokenAvailableMaxContainer: {
-      display: 'flex',
-      gap: '10px',
-      alignItems: 'center',
-      justifyContent: 'flex-end'
-    },
-    useMaxButton: {
-      fontSize: '0.875rem'
-    },
-    tokenAmountValue: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-    },
-    tokenAmountValueInput: {
-      marginLeft: '0.125rem',
-      display: 'block',
-      width: '100%',
-      boxShadow: 'none',
-      backgroundColor: 'transparent',
-      fontSize: '2.25rem',
-      lineHeight: 1,
-      border: 'none',
-      outline: 'none',
-      '&:focus': {
-        outline: 'none'
+        margin: 0
       },
-      '&:hover': {
-        outline: 'none'
+      flexBasis: '25%',
+      '&$tokenMarketsList': {
+        marginTop: theme.spacing(-0.5),
+        marginLeft: 0,
+        flexBasis: '100%'
       },
-      color: '#fff',
-      fontFeatureSettings: 'tnum'
+      '&:last-child': {
+        textAlign: 'right'
+      },
+      flexShrink: 1
     }
-  })
-)
+  },
+  tokenImageAndSymbol: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+    [theme.breakpoints.down('sm')]: {
+      gap: '10px'
+    }
+  },
+  tokenAddress: {
+    [theme.breakpoints.down('sm')]: {
+      display: 'none'
+    }
+  },
+  tokenImageContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    maxWidth: 40,
+    borderRadius: '50%',
+    padding: 6,
+    border: `1px solid ${COLORS.whiteWithTransparency}`,
+    overflow: 'hidden',
+    flexShrink: 0
+  },
+  tokenImageContainer2: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20
+  },
+  tokenImage: {
+    maxHeight: '2.5rem'
+  },
+  tokenImage2: {
+    maxHeight: '1rem',
+    maxWidth: '100%'
+  },
+  tokenMarketsList: {
+    order: 1,
+    textAlign: 'left',
+    width: '100%',
+    '& > .MuiButton-root': {
+      marginTop: theme.spacing(1),
+      marginRight: theme.spacing(1)
+    }
+  },
+  migrationAlert: {
+    width: '100%',
+    '& .MuiAlert-message': {
+      width: '100%'
+    }
+  },
+  flexTitle: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  grower: {
+    flexGrow: 1
+  },
+  emptyPlaceholder: {
+    padding: theme.spacing(2),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: COLORS.gray
+  },
+  tokenAmountControls: {
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'space-between'
+  },
+  tokenAvailableMaxContainer: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+    justifyContent: 'flex-end'
+  },
+  useMaxButton: {
+    fontSize: '0.875rem'
+  },
+  tokenAmountValue: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  },
+  tokenAmountValueInput: {
+    marginLeft: '0.125rem',
+    display: 'block',
+    width: '100%',
+    boxShadow: 'none',
+    backgroundColor: 'transparent',
+    fontSize: '2.25rem',
+    lineHeight: 1,
+    border: 'none',
+    outline: 'none',
+    '&:focus': {
+      outline: 'none'
+    },
+    '&:hover': {
+      outline: 'none'
+    },
+    color: '#fff',
+    fontFeatureSettings: 'tnum'
+  }
+}))

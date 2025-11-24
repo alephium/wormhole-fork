@@ -11,21 +11,13 @@ import { GRAY, GREEN, useWidgetStyles } from '../../styles'
 import { useEffect, useState } from 'react'
 import useTransferSignedVAA from '../../../../hooks/useTransferSignedVAA'
 import { setIsBlockFinalized } from '../../../../store/transferSlice'
-import {
-  setFinalityProgressInitialRemainingBlocks,
-  setFinalityProgressInitialRemainingSeconds
-} from '../../../../store/widgetSlice'
+import { setFinalityProgressInitialRemainingBlocks, setFinalityProgressInitialRemainingSeconds } from '../../../../store/widgetSlice'
 import { CheckCircleOutlineRounded } from '@mui/icons-material'
 import { CircularProgress, LinearProgress, Typography } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
 import { getConst, getCluster } from '../../../../utils/consts'
-import {
-  DefaultEVMChainConfirmations,
-  EpochDuration,
-  getEVMCurrentBlockNumber,
-  getEvmJsonRpcProvider
-} from '../../../../utils/evm'
+import { DefaultEVMChainConfirmations, EpochDuration, getEVMCurrentBlockNumber, getEvmJsonRpcProvider } from '../../../../utils/evm'
 import { useEthereumProvider } from '../../../../contexts/EthereumProviderContext'
 import { useWallet } from '@alephium/web3-react'
 import { ethers } from 'ethers'
@@ -65,8 +57,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   const showProgress = tx && remainingBlocksForFinality !== undefined && initialRemainingBlocks !== undefined
 
   const isCompleted =
-    !!signedVAA ||
-    ((remainingBlocksForFinality === 0 || isBlockFinalized) && (sourceChain !== CHAIN_ID_ALEPHIUM || alphTxConfirmed))
+    !!signedVAA || ((remainingBlocksForFinality === 0 || isBlockFinalized) && (sourceChain !== CHAIN_ID_ALEPHIUM || alphTxConfirmed))
 
   useEffect(() => {
     if (isCompleted) {
@@ -83,13 +74,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
   }, [isActive, showProgress, remainingBlocksForFinality, initialRemainingBlocks])
 
   useEffect(() => {
-    if (
-      sourceChain === CHAIN_ID_ALEPHIUM &&
-      isActive &&
-      showProgress &&
-      remainingBlocksForFinality === 0 &&
-      alphTxConfirmsAt
-    ) {
+    if (sourceChain === CHAIN_ID_ALEPHIUM && isActive && showProgress && remainingBlocksForFinality === 0 && alphTxConfirmsAt) {
       dispatch(setFinalityProgressInitialRemainingSeconds((alphTxConfirmsAt - Date.now()) / 1000))
     }
   }, [isActive, showProgress, remainingBlocksForFinality, alphTxConfirmsAt, sourceChain, dispatch])
@@ -164,9 +149,7 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
             ) : (
               <div className={classes.spaceBetween}>
                 <Typography>Waiting for confirmations...</Typography>
-                {remainingSeconds && (
-                  <Typography style={{ fontWeight: 600 }}>{secondsToTime(remainingSeconds)}</Typography>
-                )}
+                {remainingSeconds && <Typography style={{ fontWeight: 600 }}>{secondsToTime(remainingSeconds)}</Typography>}
               </div>
             )
           ) : (
@@ -177,13 +160,9 @@ const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
           {!isCompleted && isActive && showProgress && (
             <div>
               <BorderLinearProgress value={progress} variant="determinate" style={{ marginBottom: 5 }} />
-              {sourceChain === CHAIN_ID_ETH && (
-                <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee&nbsp; ☕️</div>
-              )}
+              {sourceChain === CHAIN_ID_ETH && <div style={{ color: GRAY, textAlign: 'right' }}>Time for a coffee&nbsp; ☕️</div>}
               {sourceChain === CHAIN_ID_ALEPHIUM && remainingSecondsForAlphFinality && (
-                <div style={{ color: GRAY, textAlign: 'right' }}>
-                  {secondsToTime(remainingSecondsForAlphFinality, true)}
-                </div>
+                <div style={{ color: GRAY, textAlign: 'right' }}>{secondsToTime(remainingSecondsForAlphFinality, true)}</div>
               )}
             </div>
           )}

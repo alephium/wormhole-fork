@@ -1,52 +1,42 @@
-import {
-  ChainId,
-  CHAIN_ID_ETH,
-  CHAIN_ID_SOLANA,
-} from "@alephium/wormhole-sdk";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { StateSafeWormholeWrappedInfo } from "../hooks/useCheckIfWormholeWrapped";
-import { ForeignAssetInfo } from "../hooks/useFetchForeignAsset";
-import {
-  DataWrapper,
-  errorDataWrapper,
-  fetchDataWrapper,
-  getEmptyDataWrapper,
-  receiveDataWrapper,
-} from "./helpers";
-import { ParsedTokenAccount, Transaction } from "./transferSlice";
+import { ChainId, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { StateSafeWormholeWrappedInfo } from '../hooks/useCheckIfWormholeWrapped'
+import { ForeignAssetInfo } from '../hooks/useFetchForeignAsset'
+import { DataWrapper, errorDataWrapper, fetchDataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './helpers'
+import { ParsedTokenAccount, Transaction } from './transferSlice'
 
-const LAST_STEP = 3;
+const LAST_STEP = 3
 
-type Steps = 0 | 1 | 2 | 3;
+type Steps = 0 | 1 | 2 | 3
 
 // these all are optional so NFT could share TokenSelectors
 export interface NFTParsedTokenAccount extends ParsedTokenAccount {
-  tokenId?: string;
-  uri?: string;
-  animation_url?: string | null;
-  external_url?: string | null;
-  image?: string;
-  image_256?: string;
-  nftName?: string;
-  description?: string;
+  tokenId?: string
+  uri?: string
+  animation_url?: string | null
+  external_url?: string | null
+  image?: string
+  image_256?: string
+  nftName?: string
+  description?: string
 }
 
 export interface NFTState {
-  activeStep: Steps;
-  sourceChain: ChainId;
+  activeStep: Steps
+  sourceChain: ChainId
   sourceAssetInfo: DataWrapper<StateSafeWormholeWrappedInfo>
-  sourceWalletAddress: string | undefined;
-  sourceParsedTokenAccount: NFTParsedTokenAccount | undefined;
-  sourceParsedTokenAccounts: DataWrapper<NFTParsedTokenAccount[]>;
-  targetChain: ChainId;
-  targetAddressHex: string | undefined;
-  targetAsset: DataWrapper<ForeignAssetInfo>;
-  transferTx: Transaction | undefined;
-  signedVAAHex: string | undefined;
-  isSending: boolean;
-  isRedeeming: boolean;
-  redeemTx: Transaction | undefined;
-  isRecovery: boolean;
+  sourceWalletAddress: string | undefined
+  sourceParsedTokenAccount: NFTParsedTokenAccount | undefined
+  sourceParsedTokenAccounts: DataWrapper<NFTParsedTokenAccount[]>
+  targetChain: ChainId
+  targetAddressHex: string | undefined
+  targetAsset: DataWrapper<ForeignAssetInfo>
+  transferTx: Transaction | undefined
+  signedVAAHex: string | undefined
+  isSending: boolean
+  isRedeeming: boolean
+  redeemTx: Transaction | undefined
+  isRecovery: boolean
 }
 
 const initialState: NFTState = {
@@ -64,161 +54,136 @@ const initialState: NFTState = {
   isSending: false,
   isRedeeming: false,
   redeemTx: undefined,
-  isRecovery: false,
-};
+  isRecovery: false
+}
 
 export const nftSlice = createSlice({
-  name: "nft",
+  name: 'nft',
   initialState,
   reducers: {
     incrementStep: (state) => {
-      if (state.activeStep < LAST_STEP) state.activeStep++;
+      if (state.activeStep < LAST_STEP) state.activeStep++
     },
     decrementStep: (state) => {
-      if (state.activeStep > 0) state.activeStep--;
+      if (state.activeStep > 0) state.activeStep--
     },
     setStep: (state, action: PayloadAction<Steps>) => {
-      state.activeStep = action.payload;
+      state.activeStep = action.payload
     },
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
-      const prevSourceChain = state.sourceChain;
-      state.sourceChain = action.payload;
-      state.sourceParsedTokenAccount = undefined;
-      state.sourceParsedTokenAccounts = getEmptyDataWrapper();
+      const prevSourceChain = state.sourceChain
+      state.sourceChain = action.payload
+      state.sourceParsedTokenAccount = undefined
+      state.sourceParsedTokenAccounts = getEmptyDataWrapper()
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset = getEmptyDataWrapper();
-      state.targetAddressHex = undefined;
+      state.targetAsset = getEmptyDataWrapper()
+      state.targetAddressHex = undefined
       state.sourceAssetInfo = getEmptyDataWrapper()
       if (state.targetChain === action.payload) {
-        state.targetChain = prevSourceChain;
+        state.targetChain = prevSourceChain
       }
     },
-    setSourceWormholeWrappedInfo: (
-      state,
-      action: PayloadAction<DataWrapper<StateSafeWormholeWrappedInfo>>
-    ) => {
+    setSourceWormholeWrappedInfo: (state, action: PayloadAction<DataWrapper<StateSafeWormholeWrappedInfo>>) => {
       state.sourceAssetInfo = action.payload
     },
-    setSourceWalletAddress: (
-      state,
-      action: PayloadAction<string | undefined>
-    ) => {
-      state.sourceWalletAddress = action.payload;
+    setSourceWalletAddress: (state, action: PayloadAction<string | undefined>) => {
+      state.sourceWalletAddress = action.payload
     },
-    setSourceParsedTokenAccount: (
-      state,
-      action: PayloadAction<NFTParsedTokenAccount | undefined>
-    ) => {
-      state.sourceParsedTokenAccount = action.payload;
+    setSourceParsedTokenAccount: (state, action: PayloadAction<NFTParsedTokenAccount | undefined>) => {
+      state.sourceParsedTokenAccount = action.payload
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset = getEmptyDataWrapper();
-      state.targetAddressHex = undefined;
+      state.targetAsset = getEmptyDataWrapper()
+      state.targetAddressHex = undefined
       state.sourceAssetInfo = getEmptyDataWrapper()
     },
-    setSourceParsedTokenAccounts: (
-      state,
-      action: PayloadAction<NFTParsedTokenAccount[] | undefined>
-    ) => {
-      state.sourceParsedTokenAccounts = action.payload
-        ? receiveDataWrapper(action.payload)
-        : getEmptyDataWrapper();
+    setSourceParsedTokenAccounts: (state, action: PayloadAction<NFTParsedTokenAccount[] | undefined>) => {
+      state.sourceParsedTokenAccounts = action.payload ? receiveDataWrapper(action.payload) : getEmptyDataWrapper()
     },
     fetchSourceParsedTokenAccounts: (state) => {
-      state.sourceParsedTokenAccounts = fetchDataWrapper();
+      state.sourceParsedTokenAccounts = fetchDataWrapper()
     },
-    errorSourceParsedTokenAccounts: (
-      state,
-      action: PayloadAction<string | undefined>
-    ) => {
-      state.sourceParsedTokenAccounts = errorDataWrapper(
-        action.payload || "An unknown error occurred."
-      );
+    errorSourceParsedTokenAccounts: (state, action: PayloadAction<string | undefined>) => {
+      state.sourceParsedTokenAccounts = errorDataWrapper(action.payload || 'An unknown error occurred.')
     },
-    receiveSourceParsedTokenAccounts: (
-      state,
-      action: PayloadAction<NFTParsedTokenAccount[]>
-    ) => {
-      state.sourceParsedTokenAccounts = receiveDataWrapper(action.payload);
+    receiveSourceParsedTokenAccounts: (state, action: PayloadAction<NFTParsedTokenAccount[]>) => {
+      state.sourceParsedTokenAccounts = receiveDataWrapper(action.payload)
     },
     setTargetChain: (state, action: PayloadAction<ChainId>) => {
-      const prevTargetChain = state.targetChain;
-      state.targetChain = action.payload;
-      state.targetAddressHex = undefined;
+      const prevTargetChain = state.targetChain
+      state.targetChain = action.payload
+      state.targetAddressHex = undefined
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset = getEmptyDataWrapper();
+      state.targetAsset = getEmptyDataWrapper()
       if (state.sourceChain === action.payload) {
-        state.sourceChain = prevTargetChain;
-        state.activeStep = 0;
-        state.sourceParsedTokenAccount = undefined;
+        state.sourceChain = prevTargetChain
+        state.activeStep = 0
+        state.sourceParsedTokenAccount = undefined
         state.sourceAssetInfo = getEmptyDataWrapper()
-        state.sourceParsedTokenAccounts = getEmptyDataWrapper();
+        state.sourceParsedTokenAccounts = getEmptyDataWrapper()
       }
     },
     setTargetAddressHex: (state, action: PayloadAction<string | undefined>) => {
-      state.targetAddressHex = action.payload;
+      state.targetAddressHex = action.payload
     },
-    setTargetAsset: (
-      state,
-      action: PayloadAction<DataWrapper<ForeignAssetInfo>>
-    ) => {
-      state.targetAsset = action.payload;
+    setTargetAsset: (state, action: PayloadAction<DataWrapper<ForeignAssetInfo>>) => {
+      state.targetAsset = action.payload
     },
     setTransferTx: (state, action: PayloadAction<Transaction>) => {
-      state.transferTx = action.payload;
+      state.transferTx = action.payload
     },
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
-      state.signedVAAHex = action.payload;
-      state.isSending = false;
-      state.activeStep = 3;
+      state.signedVAAHex = action.payload
+      state.isSending = false
+      state.activeStep = 3
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
-      state.isSending = action.payload;
+      state.isSending = action.payload
     },
     setIsRedeeming: (state, action: PayloadAction<boolean>) => {
-      state.isRedeeming = action.payload;
+      state.isRedeeming = action.payload
     },
     setRedeemTx: (state, action: PayloadAction<Transaction>) => {
-      state.redeemTx = action.payload;
-      state.isRedeeming = false;
+      state.redeemTx = action.payload
+      state.isRedeeming = false
     },
     reset: (state) => ({
       ...initialState,
       sourceChain: state.sourceChain,
-      targetChain: state.targetChain,
+      targetChain: state.targetChain
     }),
     setRecoveryVaa: (
       state,
       action: PayloadAction<{
-        vaa: any;
+        vaa: string
         parsedPayload: {
-          targetChain: ChainId;
-          targetAddress: string;
-          originChain: ChainId;
-          originAddress: string; //TODO maximum amount of fields
-        };
+          targetChain: ChainId
+          targetAddress: string
+          originChain: ChainId
+          originAddress: string //TODO maximum amount of fields
+        }
       }>
     ) => {
-      const prevTargetChain = state.targetChain;
-      state.signedVAAHex = action.payload.vaa;
-      state.targetChain = action.payload.parsedPayload.targetChain;
+      const prevTargetChain = state.targetChain
+      state.signedVAAHex = action.payload.vaa
+      state.targetChain = action.payload.parsedPayload.targetChain
       if (state.sourceChain === action.payload.parsedPayload.targetChain) {
-        state.sourceChain = prevTargetChain;
+        state.sourceChain = prevTargetChain
       }
-      state.sourceParsedTokenAccount = undefined;
-      state.sourceParsedTokenAccounts = getEmptyDataWrapper();
-      state.targetAsset = getEmptyDataWrapper();
-      state.targetAddressHex = action.payload.parsedPayload.targetAddress;
+      state.sourceParsedTokenAccount = undefined
+      state.sourceParsedTokenAccounts = getEmptyDataWrapper()
+      state.targetAsset = getEmptyDataWrapper()
+      state.targetAddressHex = action.payload.parsedPayload.targetAddress
       state.sourceAssetInfo = receiveDataWrapper({
         isWrapped: action.payload.parsedPayload.originChain !== state.sourceChain,
         chainId: action.payload.parsedPayload.originChain,
         assetAddress: action.payload.parsedPayload.originAddress,
         tokenId: undefined
       })
-      state.activeStep = 3;
-      state.isRecovery = true;
-    },
-  },
-});
+      state.activeStep = 3
+      state.isRecovery = true
+    }
+  }
+})
 
 export const {
   incrementStep,
@@ -241,7 +206,7 @@ export const {
   setIsRedeeming,
   setRedeemTx,
   reset,
-  setRecoveryVaa,
-} = nftSlice.actions;
+  setRecoveryVaa
+} = nftSlice.actions
 
-export default nftSlice.reducer;
+export default nftSlice.reducer

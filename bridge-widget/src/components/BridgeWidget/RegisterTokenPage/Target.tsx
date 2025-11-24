@@ -37,6 +37,7 @@ const Target = ({ showNextButton = true, targetChain: targetChainOverride, onTar
   const targetChain = targetChainOverride ?? storeTargetChain
   const isTargetComplete = targetChainOverride !== undefined ? !!targetChain : storeIsTargetComplete
   const handleTargetChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       const nextTarget = Number(event.target.value) as ChainId
       if (onTargetChainChange) {

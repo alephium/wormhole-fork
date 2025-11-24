@@ -28,7 +28,9 @@ const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
   const { isReady } = useIsWalletReady(CHAIN_ID_ALEPHIUM)
 
   const resetAccountWrapper = useCallback(() => {
-    resetAccounts && resetAccounts()
+    if (resetAccounts) {
+      resetAccounts()
+    }
   }, [resetAccounts])
   const isLoading = isFetching
 
@@ -45,7 +47,7 @@ const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
   )
 
   const getAddress: (address: string, tokenId?: string) => Promise<ParsedTokenAccount> = useCallback(
-    async (address: string, tokenId?: string) => {
+    async (address: string) => {
       if (isReady && alphWallet.connectionStatus === 'connected' && alphWallet.nodeProvider !== undefined) {
         try {
           const contractId = tryGetContractId(address)
@@ -66,6 +68,7 @@ const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
             false
           )
         } catch (e) {
+          console.error(e)
           return Promise.reject(t('Unable to retrive the specific token.'))
         }
       } else {
@@ -80,6 +83,7 @@ const AlephiumTokenPicker2 = (props: AlephiumTokenPickerProps) => {
       tryGetContractId(address)
       return true
     } catch (error) {
+      console.error(error)
       return false
     }
   }, [])

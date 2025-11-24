@@ -1,41 +1,34 @@
-import {
-  ChainId,
-  CHAIN_ID_ALEPHIUM,
-  coalesceChainName,
-  getTokenBridgeForChainId,
-  isEVMChain,
-  CHAIN_ID_ETH
-} from "@alephium/wormhole-sdk";
-import { Card, Container } from "@mui/material";
-import { makeStyles } from 'tss-react/mui';
-import { useCallback, useEffect, useState } from "react";
-import { COLORS } from "../../muiTheme";
-import { getConst } from "../../utils/consts";
-import ChainSelect from "../ChainSelect";
-import KeyAndBalance from "../KeyAndBalance";
-import { useEthereumProvider } from "../../contexts/EthereumProviderContext";
-import { Alert } from "@mui/material";
-import { ethers } from "ethers";
-import useSWR from "swr";
-import { useSnackbar } from "notistack";
-import { PageSwitch, DefaultPageSize } from "./PageSwitch";
-import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, getIsTxsCompletedEvm, isEVMTxConfirmed } from "../../utils/evm";
-import { TransactionTable } from "./TransactionTable";
-import useIsWalletReady from "../../hooks/useIsWalletReady";
-import { useSelector } from "react-redux";
-import { selectTransferSourceChain, selectTransferTargetChain } from "../../store/selectors";
-import { getIsTxsCompletedAlph } from "../../utils/alephium";
-import { useWallet } from "@alephium/web3-react";
-import { NodeProvider } from "@alephium/web3";
-import { useTranslation } from "react-i18next";
-import TransactionTableCompact from "../BridgeWidget/TransactionTableCompact";
+import { ChainId, CHAIN_ID_ALEPHIUM, coalesceChainName, getTokenBridgeForChainId, isEVMChain, CHAIN_ID_ETH } from '@alephium/wormhole-sdk'
+import { Card, Container } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import { useCallback, useEffect, useState } from 'react'
+import { COLORS } from '../../muiTheme'
+import { getConst } from '../../utils/consts'
+import ChainSelect from '../ChainSelect'
+import KeyAndBalance from '../KeyAndBalance'
+import { useEthereumProvider } from '../../contexts/EthereumProviderContext'
+import { Alert } from '@mui/material'
+import { ethers } from 'ethers'
+import useSWR from 'swr'
+import { useSnackbar } from 'notistack'
+import { PageSwitch, DefaultPageSize } from './PageSwitch'
+import { getEVMCurrentBlockNumber, getEvmJsonRpcProvider, getIsTxsCompletedEvm, isEVMTxConfirmed } from '../../utils/evm'
+import { TransactionTable } from './TransactionTable'
+import useIsWalletReady from '../../hooks/useIsWalletReady'
+import { useSelector } from 'react-redux'
+import { selectTransferSourceChain, selectTransferTargetChain } from '../../store/selectors'
+import { getIsTxsCompletedAlph } from '../../utils/alephium'
+import { useWallet } from '@alephium/web3-react'
+import { NodeProvider } from '@alephium/web3'
+import { useTranslation } from 'react-i18next'
+import TransactionTableCompact from '../BridgeWidget/TransactionTableCompact'
 
 const useStyles = makeStyles()(() => ({
   mainCard: {
-    padding: "32px 32px 16px",
-    backgroundColor: COLORS.whiteWithTransparency,
-  },
-}));
+    padding: '32px 32px 16px',
+    backgroundColor: COLORS.whiteWithTransparency
+  }
+}))
 
 export async function getTxNumber(address: string, emitterChain: ChainId, targetChain: ChainId): Promise<number> {
   const url = `${getConst('EXPLORER_API_SERVER_HOST')}/api/transactions/${address}/${emitterChain}/${targetChain}/count`
@@ -59,11 +52,18 @@ export type BridgeTransaction = {
   status: TxStatus
 }
 
-export async function getTxsByPageNumber(address: string, emitterChain: ChainId, targetChain: ChainId, pageNumber: number): Promise<BridgeTransaction[]> {
-  const url = `${getConst('EXPLORER_API_SERVER_HOST')}/api/transactions/${address}/${emitterChain}/${targetChain}?page=${pageNumber}&pageSize=${DefaultPageSize}`
+export async function getTxsByPageNumber(
+  address: string,
+  emitterChain: ChainId,
+  targetChain: ChainId,
+  pageNumber: number
+): Promise<BridgeTransaction[]> {
+  const url = `${getConst(
+    'EXPLORER_API_SERVER_HOST'
+  )}/api/transactions/${address}/${emitterChain}/${targetChain}?page=${pageNumber}&pageSize=${DefaultPageSize}`
   const response = await fetch(url)
   const json = await response.json()
-  return (json as BridgeTransaction[]).map((tx) => ({ ...tx, status: 'Loading'}))
+  return (json as BridgeTransaction[]).map((tx) => ({ ...tx, status: 'Loading' }))
 }
 
 type BlockNumberFetcher = () => Promise<number | undefined>
@@ -71,18 +71,14 @@ type BlockNumberFetcher = () => Promise<number | undefined>
 export const alphBlockNumberFetcher = (nodeProvider: NodeProvider | undefined, group: number) => {
   return nodeProvider === undefined
     ? Promise.resolve(undefined)
-    : nodeProvider.blockflow
-      .getBlockflowChainInfo({ fromGroup: group, toGroup: group })
-      .then((chainInfo) => chainInfo.currentHeight)
+    : nodeProvider.blockflow.getBlockflowChainInfo({ fromGroup: group, toGroup: group }).then((chainInfo) => chainInfo.currentHeight)
 }
 
 export const evmBlockNumberFetcher = (chainId: ChainId, provider?: ethers.providers.Provider) => {
-  return provider === undefined
-    ? Promise.resolve(undefined)
-    : getEVMCurrentBlockNumber(provider, chainId)
+  return provider === undefined ? Promise.resolve(undefined) : getEVMCurrentBlockNumber(provider, chainId)
 }
 
-export function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumberFetcher | undefined), chainId: ChainId): number | undefined {
+export function useBlockNumber(fetcherGetter: (chainId: ChainId) => BlockNumberFetcher | undefined, chainId: ChainId): number | undefined {
   const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
   const chainName = coalesceChainName(chainId)
@@ -90,13 +86,15 @@ export function useBlockNumber(fetcherGetter: (chainId: ChainId) => (BlockNumber
   const fetcher = fetcherGetter(chainId)
   const { data: blockNumber, error } = useSWR(
     fetcher === undefined ? null : `${chainName}-block-number`,
-    () => fetcher === undefined ? undefined : fetcher(),
+    () => (fetcher === undefined ? undefined : fetcher()),
     { refreshInterval: pollingInterval }
   )
   useEffect(() => {
     if (error) {
       enqueueSnackbar(null, {
-        content: <Alert severity="error">{`${t('Failed to get {{ chainName }} block number', { chainName })}, ${t('Error')}: ${error}`}</Alert>,
+        content: (
+          <Alert severity="error">{`${t('Failed to get {{ chainName }} block number', { chainName })}, ${t('Error')}: ${error}`}</Alert>
+        ),
         preventDuplicate: true
       })
     }
@@ -124,12 +122,12 @@ export function ListTransactions({
   getIsTxsCompleted,
   tableLayout = 'normal'
 }: {
-  txSourceChain: ChainId,
-  txTargetChain: ChainId,
-  sourceChainBlockNumber: number | undefined,
-  targetChainBlockNumber: number | undefined,
-  txs: BridgeTransaction[],
-  isLoading: boolean,
+  txSourceChain: ChainId
+  txTargetChain: ChainId
+  sourceChainBlockNumber: number | undefined
+  targetChainBlockNumber: number | undefined
+  txs: BridgeTransaction[]
+  isLoading: boolean
   getIsTxsCompleted: (txs: BridgeTransaction[]) => Promise<boolean[]>
   tableLayout?: 'normal' | 'compact'
 }) {
@@ -149,11 +147,10 @@ export function ListTransactions({
     const confirmedTxsSize1 = txs.filter((tx) => tx.status === 'Confirmed').length
     setHasNewConfirmedTx(confirmedTxsSize1 > confirmedTxsSize0)
     setTxsStatus(txs.map((tx) => tx.status))
-
   }, [txs, txSourceChain, sourceChainBlockNumber])
 
   useEffect(() => {
-    let cancelled = false
+    const cancelled = false
     const fetch = async () => {
       if (targetChainBlockNumber === undefined && !hasNewConfirmedTx) {
         return
@@ -165,9 +162,9 @@ export function ListTransactions({
       }
       try {
         const results = await getIsTxsCompleted(confirmedTxs)
-        confirmedTxs.forEach(((tx, index) => {
+        confirmedTxs.forEach((tx, index) => {
           if (results[index]) tx.status = 'Completed'
-        }))
+        })
       } catch (error) {
         console.error(`${error}`)
       }
@@ -190,10 +187,8 @@ export default function Transactions() {
   const { classes } = useStyles()
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTargetChain = useSelector(selectTransferTargetChain)
-  const [txSourceChain, setTxSourceChain] =
-    useState<ChainId>(transferSourceChain || CHAIN_ID_ALEPHIUM)
-  const [txTargetChain, setTxTargetChain] =
-    useState<ChainId>(transferTargetChain || CHAIN_ID_ETH)
+  const [txSourceChain, setTxSourceChain] = useState<ChainId>(transferSourceChain || CHAIN_ID_ALEPHIUM)
+  const [txTargetChain, setTxTargetChain] = useState<ChainId>(transferTargetChain || CHAIN_ID_ETH)
 
   const { enqueueSnackbar } = useSnackbar()
   const alphWallet = useWallet()
@@ -213,44 +208,61 @@ export default function Transactions() {
   const [isLoading, setIsLoading] = useState(true)
   const bothAreEvmChain = isEVMChain(txSourceChain) && isEVMChain(txTargetChain)
 
-  const blockNumberFetcherGetter = useCallback((chainId: ChainId) => {
-    if (chainId === CHAIN_ID_ALEPHIUM) {
-      return alphWallet.connectionStatus !== 'connected'
-        ? undefined
-        : () => alphBlockNumberFetcher(alphWallet.nodeProvider, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
-    }
-    if (bothAreEvmChain) {
-      if (chainId === txSourceChain && sourceChainReady) {
+  const blockNumberFetcherGetter = useCallback(
+    (chainId: ChainId) => {
+      if (chainId === CHAIN_ID_ALEPHIUM) {
+        return alphWallet.connectionStatus !== 'connected'
+          ? undefined
+          : () => alphBlockNumberFetcher(alphWallet.nodeProvider, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
+      }
+      if (bothAreEvmChain) {
+        if (chainId === txSourceChain && sourceChainReady) {
+          return () => evmBlockNumberFetcher(chainId, evmProvider)
+        }
+        if (chainId === txTargetChain) {
+          return () => evmBlockNumberFetcher(chainId, getEvmJsonRpcProvider(chainId))
+        }
+      }
+      if (isEVMChain(chainId)) {
         return () => evmBlockNumberFetcher(chainId, evmProvider)
       }
-      if (chainId === txTargetChain) {
-        return () => evmBlockNumberFetcher(chainId, getEvmJsonRpcProvider(chainId))
-      }
-    }
-    if (isEVMChain(chainId)) {
-      return () => evmBlockNumberFetcher(chainId, evmProvider)
-    }
-    return undefined
-  }, [alphWallet, evmProvider, bothAreEvmChain, txSourceChain, txTargetChain, sourceChainReady])
+      return undefined
+    },
+    [alphWallet, evmProvider, bothAreEvmChain, txSourceChain, txTargetChain, sourceChainReady]
+  )
 
   const sourceChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txSourceChain)
   const targetChainBlockNumber = useBlockNumber(blockNumberFetcherGetter, txTargetChain)
 
-  const getIsTxsCompleted = useCallback(async (txs: BridgeTransaction[]) => {
-    if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
-      const tokenBridgeForChainId = getTokenBridgeForChainId(getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'), txSourceChain, getConst('ALEPHIUM_BRIDGE_GROUP_INDEX'))
-      return await getIsTxsCompletedAlph(tokenBridgeForChainId, txs.map((t) => BigInt(t.sequence)))
-    }
-    const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
-    if (isEVMChain(txTargetChain) && provider) {
-      return await getIsTxsCompletedEvm(txTargetChain, provider, txs.map((t) => t.vaa))
-    }
-    enqueueSnackbar(null, {
-      content: <Alert severity="error">{t('Wallet is not connected')}</Alert>,
-      preventDuplicate: true
-    })
-    return txs.map((_) => false)
-  }, [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain, t])
+  const getIsTxsCompleted = useCallback(
+    async (txs: BridgeTransaction[]) => {
+      if (txTargetChain === CHAIN_ID_ALEPHIUM && alphWallet.connectionStatus === 'connected') {
+        const tokenBridgeForChainId = getTokenBridgeForChainId(
+          getConst('ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID'),
+          txSourceChain,
+          getConst('ALEPHIUM_BRIDGE_GROUP_INDEX')
+        )
+        return await getIsTxsCompletedAlph(
+          tokenBridgeForChainId,
+          txs.map((t) => BigInt(t.sequence))
+        )
+      }
+      const provider = bothAreEvmChain ? getEvmJsonRpcProvider(txTargetChain) : targetChainReady ? evmProvider : undefined
+      if (isEVMChain(txTargetChain) && provider) {
+        return await getIsTxsCompletedEvm(
+          txTargetChain,
+          provider,
+          txs.map((t) => t.vaa)
+        )
+      }
+      enqueueSnackbar(null, {
+        content: <Alert severity="error">{t('Wallet is not connected')}</Alert>,
+        preventDuplicate: true
+      })
+      return txs.map(() => false)
+    },
+    [txTargetChain, txSourceChain, alphWallet, enqueueSnackbar, evmProvider, targetChainReady, bothAreEvmChain, t]
+  )
 
   const reset = () => {
     setTxNumber(undefined)
@@ -259,6 +271,7 @@ export default function Transactions() {
     setIsLoading(true)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSourceChainChange = useCallback((event: any) => {
     const newSourceChain = event.target.value
     setTxSourceChain((prevSourceChain) => {
@@ -270,6 +283,7 @@ export default function Transactions() {
     reset()
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleTargetChainChange = useCallback((event: any) => {
     setTxTargetChain(event.target.value)
     reset()
@@ -284,8 +298,8 @@ export default function Transactions() {
         setTxNumber(txNumber)
       } catch (error) {
         enqueueSnackbar(null, {
-          content: <Alert severity="error">{`${t('Failed to get tx number')}, ${t('Error')}: ${error}`}</Alert>,
-        });
+          content: <Alert severity="error">{`${t('Failed to get tx number')}, ${t('Error')}: ${error}`}</Alert>
+        })
         console.error(`failed to get tx number, error: ${error}`)
       }
     }
@@ -305,17 +319,16 @@ export default function Transactions() {
       } catch (error) {
         setIsLoading(false)
         enqueueSnackbar(null, {
-          content: <Alert severity="error">{`${t('Failed to get txs')}, ${t('Error')}: ${error}`}</Alert>,
-        });
+          content: <Alert severity="error">{`${t('Failed to get txs')}, ${t('Error')}: ${error}`}</Alert>
+        })
         console.error(`failed to get txs, error: ${error}`)
       }
     }
 
     fetch()
-
   }, [walletAddress, txSourceChain, txTargetChain, pageNumber, enqueueSnackbar, t])
 
-  const ready = bothAreEvmChain ? sourceChainReady : (sourceChainReady && targetChainReady)
+  const ready = bothAreEvmChain ? sourceChainReady : sourceChainReady && targetChainReady
 
   return (
     <Container maxWidth="md">
@@ -323,7 +336,7 @@ export default function Transactions() {
         <ChainSelect
           select
           variant="outlined"
-          label={t("Source Chain")}
+          label={t('Source Chain')}
           value={txSourceChain}
           onChange={handleSourceChainChange}
           fullWidth
@@ -334,7 +347,7 @@ export default function Transactions() {
         <ChainSelect
           select
           variant="outlined"
-          label={t("Target Chain")}
+          label={t('Target Chain')}
           value={txTargetChain}
           onChange={handleTargetChainChange}
           fullWidth
@@ -344,29 +357,28 @@ export default function Transactions() {
         {bothAreEvmChain ? null : <KeyAndBalance chainId={txTargetChain} />}
         {
           <>
-            {ready
-              ? <div>
-                  <ListTransactions
-                    txSourceChain={txSourceChain}
-                    txTargetChain={txTargetChain}
-                    sourceChainBlockNumber={sourceChainBlockNumber}
-                    targetChainBlockNumber={targetChainBlockNumber}
-                    txs={currentTransactions}
-                    isLoading={isLoading}
-                    getIsTxsCompleted={getIsTxsCompleted}
-                  />
-                  <PageSwitch
-                    pageNumber={pageNumber}
-                    setPageNumber={setPageNumber}
-                    totalNumberOfPages={txNumber ? Math.ceil(txNumber / DefaultPageSize) : 0}
-                    numberOfElementsLoaded={currentTransactions?.length}
-                  />
-                </div>
-              : null
-            }
+            {ready ? (
+              <div>
+                <ListTransactions
+                  txSourceChain={txSourceChain}
+                  txTargetChain={txTargetChain}
+                  sourceChainBlockNumber={sourceChainBlockNumber}
+                  targetChainBlockNumber={targetChainBlockNumber}
+                  txs={currentTransactions}
+                  isLoading={isLoading}
+                  getIsTxsCompleted={getIsTxsCompleted}
+                />
+                <PageSwitch
+                  pageNumber={pageNumber}
+                  setPageNumber={setPageNumber}
+                  totalNumberOfPages={txNumber ? Math.ceil(txNumber / DefaultPageSize) : 0}
+                  numberOfElementsLoaded={currentTransactions?.length}
+                />
+              </div>
+            ) : null}
           </>
         }
       </Card>
     </Container>
-  );
+  )
 }

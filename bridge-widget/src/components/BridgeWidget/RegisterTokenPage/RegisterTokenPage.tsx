@@ -51,9 +51,7 @@ const RegisterTokenPage = () => {
         {t('Token Registration')}
       </Typography>
       <Alert severity="info">
-        {t(
-          'This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.'
-        )}
+        {t('This form allows you to register a token on a new foreign chain. Tokens must be registered before they can be transferred.')}
       </Alert>
       <div className={clsx(widgetClasses.grayRoundedBox, classes.stepsWrapper)}>
         <div className={classes.stepsContainer}>
@@ -72,11 +70,7 @@ const RegisterTokenPage = () => {
         </div>
       </div>
 
-      {isCompleted && (
-        <BridgeWidgetButton onClick={() => dispatch(setBridgeWidgetPage('bridge'))}>
-          Back to the homepage
-        </BridgeWidgetButton>
-      )}
+      {isCompleted && <BridgeWidgetButton onClick={() => dispatch(setBridgeWidgetPage('bridge'))}>Back to the homepage</BridgeWidgetButton>}
 
       {sourceStep && <SourceDialog open={editDialogStep === 0} title={sourceStep.title} onClose={handleCloseDialog} />}
       {targetStep && <TargetDialog open={editDialogStep === 1} title={targetStep.title} onClose={handleCloseDialog} />}

@@ -1,12 +1,12 @@
-name: Publish
+name: Widget Publish
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - 'master'
-      - 'widget'
+      - "master"
     paths:
-      - 'bridge-widget/**'
+      - "bridge-widget/**"
 
 jobs:
   publish:
@@ -22,9 +22,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: bridge-widget/package-lock.json
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Get package version from package.json
         id: getPackageVersion
@@ -54,6 +54,9 @@ jobs:
           dist_tag=$([[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]] && echo rc || echo $dist_tag)
           [ -z "$dist_tag" ] && echo "Distribution tag is not set to latest nor to rc" && exit 1
           echo ::set-output name=dist_tag::$dist_tag
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Publish to npm
         env:

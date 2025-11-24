@@ -17,8 +17,8 @@ import {
   CHAIN_ID_ACALA,
   CHAIN_ID_ALEPHIUM
 } from '@alephium/wormhole-sdk'
-import { Button, Tooltip, Typography } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { Button, Tooltip, Typography, TypographyOwnProps } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
 import { FileCopy, OpenInNew } from '@mui/icons-material'
 import { withStyles } from 'tss-react/mui'
 import { ReactNode, useState } from 'react'
@@ -136,7 +136,7 @@ interface SmartAddressProps {
   logo?: string
   tokenName?: string
   symbol?: string
-  variant?: any
+  variant?: TypographyOwnProps['variant']
   noGutter?: boolean
   noUnderline?: boolean
   extraContent?: ReactNode
@@ -172,13 +172,7 @@ const SmartAddress = ({
 
   const [isPulsing, setIsPulsing] = useState(pulse)
 
-  const useableName = isNative
-    ? 'Native Currency'
-    : parsedTokenAccount?.name
-    ? parsedTokenAccount.name
-    : tokenName
-    ? tokenName
-    : ''
+  const useableName = isNative ? 'Native Currency' : parsedTokenAccount?.name ? parsedTokenAccount.name : tokenName ? tokenName : ''
   const CLUSTER = getCluster()
   const explorerAddress =
     isNative || useableAddress === ''
@@ -233,11 +227,7 @@ const SmartAddress = ({
         }/${useableAddress}`
       : chainId === CHAIN_ID_SOLANA
       ? `https://solscan.io/address/${useableAddress}${
-          CLUSTER === 'testnet'
-            ? '?cluster=devnet'
-            : CLUSTER === 'devnet'
-            ? '?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899'
-            : ''
+          CLUSTER === 'testnet' ? '?cluster=devnet' : CLUSTER === 'devnet' ? '?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899' : ''
         }`
       : chainId === CHAIN_ID_TERRA
       ? `https://finder.terra.money/${
@@ -248,9 +238,9 @@ const SmartAddress = ({
           isAsset ? 'asset' : transactionAddress ? 'tx' : 'address'
         }/${useableAddress}`
       : chainId === CHAIN_ID_ALEPHIUM
-      ? `https://${CLUSTER === 'testnet' ? 'testnet.' : 'explorer.'}alephium.org/${
-          transactionAddress ? 'transactions' : 'addresses'
-        }/${transactionAddress || toALPHAddress(useableAddress)}`
+      ? `https://${CLUSTER === 'testnet' ? 'testnet.' : 'explorer.'}alephium.org/${transactionAddress ? 'transactions' : 'addresses'}/${
+          transactionAddress || toALPHAddress(useableAddress)
+        }`
       : undefined
   const explorerName = getExplorerName(chainId)
 
@@ -271,13 +261,7 @@ const SmartAddress = ({
   )
   //TODO add icon here
   const copyButton = isNative ? null : (
-    <Button
-      size="small"
-      variant="outlined"
-      startIcon={<FileCopy />}
-      onClick={copyToClipboard}
-      className={classes.buttons}
-    >
+    <Button size="small" variant="outlined" startIcon={<FileCopy />} onClick={copyToClipboard} className={classes.buttons}>
       {t('Copy')}
     </Button>
   )
@@ -303,11 +287,7 @@ const SmartAddress = ({
     <StyledTooltip title={tooltipContent} onPointerEnter={() => setIsPulsing(false)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {isPulsing && <span className={classes.pulsingDot} />}
-        <Typography
-          variant={variant || 'body1'}
-          component="div"
-          className={clsx(classes.address, { [classes.compactAddress]: isCompact })}
-        >
+        <Typography variant={variant || 'body1'} component="div" className={clsx(classes.address, { [classes.compactAddress]: isCompact })}>
           {useableSymbol || addressShort}
         </Typography>
       </div>

@@ -78,11 +78,7 @@ const SendTransactionSectionDetails = () => {
               chainId={sourceChain}
               transactionAddress={txId}
               pulse={!!transferTx}
-              tooltipText={
-                !!transferTx
-                  ? 'Copy this transaction ID to resume your transfer in case you leave this page.'
-                  : undefined
-              }
+              tooltipText={transferTx ? 'Copy this transaction ID to resume your transfer in case you leave this page.' : undefined}
             />
           </div>
         </div>
