@@ -1,13 +1,13 @@
 {
   "name": "@alephium/bridge-widget",
-  "version": "0.0.1-rc.3",
-  "main": "./lib/index.js",
+  "version": "0.0.1-rc.4",
+  "main": "./lib/index.mjs",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
-      "require": "./lib/index.js",
+      "require": "./lib/index.mjs",
       "import": "./lib/index.mjs"
     }
   },
