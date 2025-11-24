@@ -26,8 +26,7 @@ import { makeStyles } from 'tss-react/mui';
 import { Launch } from "@mui/icons-material";
 import { Alert } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useBetaContext } from "../contexts/BetaContext";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { COLORS } from "../muiTheme";
 import { NFTParsedTokenAccount } from "../store/nftSlice";
@@ -69,7 +68,6 @@ const useStyles = makeStyles()((theme) => ({
 
 export default function NFTOriginVerifier() {
   const { classes } = useStyles();
-  const isBeta = useBetaContext();
   const { provider, signerAddress } = useEthereumProvider();
   const [lookupChain, setLookupChain] = useState<ChainId>(CHAIN_ID_ETH);
   const { isReady, statusMessage } = useIsWalletReady(lookupChain);
@@ -190,9 +188,7 @@ export default function NFTOriginVerifier() {
             fullWidth
             margin="normal"
           >
-            {CHAINS_WITH_NFT_SUPPORT.filter(({ id }) =>
-              isBeta ? true : !BETA_CHAINS.includes(id)
-            ).map(({ id, name }) => (
+            {CHAINS_WITH_NFT_SUPPORT.filter(({ id }) => !BETA_CHAINS.includes(id)).map(({ id, name }) => (
               <MenuItem key={id} value={id}>
                 {name}
               </MenuItem>

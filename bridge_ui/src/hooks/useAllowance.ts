@@ -8,7 +8,7 @@ import {
 import { BigNumber } from "ethers";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { selectTransferIsApproving } from "../store/selectors";
 import { setIsApproving, setIsWalletApproved } from "../store/transferSlice";
 import { getTokenBridgeAddressForChain } from "../utils/consts";

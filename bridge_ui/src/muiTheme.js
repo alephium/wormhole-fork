@@ -1,5 +1,5 @@
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
-import Inter from "./fonts/Inter-Variable.ttf";
+import Inter from "../../bridge-assets/fonts/Inter-Variable.ttf";
 
 export const COLORS = {
   blue: "rgb(9, 137, 241)",

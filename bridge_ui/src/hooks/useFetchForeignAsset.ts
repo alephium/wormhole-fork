@@ -9,7 +9,7 @@ import {
 } from "@alephium/wormhole-sdk";
 import { ethers } from "ethers";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
+import { useEthereumProvider } from "@alephium/bridge-widget";
 import { DataWrapper } from "../store/helpers";
 import {
   ALEPHIUM_BRIDGE_GROUP_INDEX,

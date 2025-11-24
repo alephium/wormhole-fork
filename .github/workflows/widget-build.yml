@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  pull_request:
+    paths:
+      - 'bridge-widget/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'bridge-widget/**'
+
+jobs:
+  check-sdn-list:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge-widget
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run script
+        run: npm i prettier
+
+  build-library:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge-widget
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: bridge-widget/package-lock.json
+      - run: npm ci
+      - name: Build Lib
+        run: npm run build 2>&1 | tee build-output.txt
+      - name: Check bundle sizes
+        run: |
+          echo "Checking JS bundle sizes..."
+          SIZE_LIMIT_KB=1024 # 1MB in KB
+
+          # Create a temporary file to store large bundles
+          touch /tmp/large_bundles
+
+          # Find all JS files and their gzip sizes
+          grep "\.js.*│.*gzip:" build-output.txt | while read -r line; do
+            # Extract filename and size, stripping ANSI color codes
+            filename=$(echo "$line" | awk '{print $1}' | sed 's/\x1b\[[0-9;]*m//g')
+            size_kb=$(echo "$line" | grep -o 'gzip:.*kB' | grep -o '[0-9,.]*' | tr -d ',' | bc)
+
+            if (( $(echo "$size_kb > $SIZE_LIMIT_KB" | bc -l) )); then
+              size_mb=$(echo "scale=2; $size_kb/1024" | bc)
+              echo "${filename}|${size_mb}" >> /tmp/large_bundles
+            fi
+          done
+
+          if [ -s /tmp/large_bundles ]; then
+            # Construct the bundle list message
+            bundle_list=""
+            while IFS='|' read -r filename size; do
+              bundle_list="${bundle_list}• ${filename}: ${size}MB gzipped%0A"
+            done < /tmp/large_bundles
+
+            # Output the consolidated error message
+            echo "::error file=package.json,line=1,title=Large Bundles Detected::The following bundles exceed the 1MB size limit:%0A${bundle_list}%0AOptimization suggestions:%0A• Use dynamic imports and/or React.lazy for better code splitting%0A• Analyze your bundle with 'npm run analyze' to identify large dependencies%0A• Review and remove unused exports/imports"
+            # Uncomment the next line to fail the build if a large bundle is found
+            # exit 1
+          fi
+
+          rm -f /tmp/large_bundles

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   Provider,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
+} from "@alephium/bridge-widget";
 import { DataWrapper } from "../store/helpers";
 import useIsWalletReady from "./useIsWalletReady";
 

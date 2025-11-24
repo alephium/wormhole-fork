@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Provider,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
+} from "@alephium/bridge-widget";
 import { DataWrapper } from "../store/helpers";
 import {
   getNFTBridgeAddressForChain,

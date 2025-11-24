@@ -13,7 +13,7 @@ import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"
 import useCopyToClipboard from "../hooks/useCopyToClipboard"
 import { CHAINS } from "../utils/consts"
-import Divider from "./BridgeWidget/Divider"
+import { Divider } from "@alephium/bridge-widget"
 import { COLORS } from "../muiTheme"
 
 const defaultAnchorOrigin: PopoverOrigin = { vertical: "bottom", horizontal: "left" }

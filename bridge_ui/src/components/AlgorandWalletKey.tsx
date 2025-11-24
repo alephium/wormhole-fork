@@ -1,4 +1,4 @@
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
 import ToggleConnectedButton from "./ToggleConnectedButton";
 
 const AlgorandWalletKey = () => {

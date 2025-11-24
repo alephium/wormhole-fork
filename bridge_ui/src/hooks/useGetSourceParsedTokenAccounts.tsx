@@ -38,24 +38,24 @@ import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
 import {
   Provider,
   useEthereumProvider,
-} from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
-import acalaIcon from "../icons/acala.svg";
-import auroraIcon from "../icons/aurora.svg";
-import avaxIcon from "../icons/avax.svg";
-import bnbIcon from "../icons/bnb.svg";
-import celoIcon from "../icons/celo.svg";
-import ethIcon from "../icons/eth.svg";
-import fantomIcon from "../icons/fantom.svg";
-import karuraIcon from "../icons/karura.svg";
-import klaytnIcon from "../icons/klaytn.svg";
-import neonIcon from "../icons/neon.svg";
-import oasisIcon from "../icons/oasis-network-rose-logo.svg";
-import polygonIcon from "../icons/polygon.svg";
+} from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
+import acalaIcon from "../../../bridge-assets/icons/acala.svg";
+import auroraIcon from "../../../bridge-assets/icons/aurora.svg";
+import avaxIcon from "../../../bridge-assets/icons/avax.svg";
+import bnbIcon from "../../../bridge-assets/icons/bnb.svg";
+import celoIcon from "../../../bridge-assets/icons/celo.svg";
+import ethIcon from "../../../bridge-assets/icons/eth.svg";
+import fantomIcon from "../../../bridge-assets/icons/fantom.svg";
+import karuraIcon from "../../../bridge-assets/icons/karura.svg";
+import klaytnIcon from "../../../bridge-assets/icons/klaytn.svg";
+import neonIcon from "../../../bridge-assets/icons/neon.svg";
+import oasisIcon from "../../../bridge-assets/icons/oasis-network-rose-logo.svg";
+import polygonIcon from "../../../bridge-assets/icons/polygon.svg";
 import {
   errorSourceParsedTokenAccounts as errorSourceParsedTokenAccountsNFT,
   fetchSourceParsedTokenAccounts as fetchSourceParsedTokenAccountsNFT,

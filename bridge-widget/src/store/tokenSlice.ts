@@ -1,0 +1,71 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+// import { TokenInfo } from '@solana/spl-token-registry' // Removed to keep package size small, replaced below
+import { TokenInfo } from '../utils/solana'
+import { MarketsMap } from '../hooks/useMarketsMap'
+import { RelayerTokenInfo } from '../hooks/useRelayersAvailable'
+import { DataWrapper, errorDataWrapper, fetchDataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './helpers'
+
+export interface TokenMetadataState {
+  solanaTokenMap: DataWrapper<TokenInfo[]>
+  marketsMap: DataWrapper<MarketsMap>
+  relayerTokenInfo: DataWrapper<RelayerTokenInfo>
+}
+
+const initialState: TokenMetadataState = {
+  solanaTokenMap: getEmptyDataWrapper(),
+  marketsMap: getEmptyDataWrapper(),
+  relayerTokenInfo: getEmptyDataWrapper()
+}
+
+export const tokenSlice = createSlice({
+  name: 'tokenInfos',
+  initialState,
+  reducers: {
+    receiveSolanaTokenMap: (state, action: PayloadAction<TokenInfo[]>) => {
+      state.solanaTokenMap = receiveDataWrapper(action.payload)
+    },
+    fetchSolanaTokenMap: (state) => {
+      state.solanaTokenMap = fetchDataWrapper()
+    },
+    errorSolanaTokenMap: (state, action: PayloadAction<string>) => {
+      state.solanaTokenMap = errorDataWrapper(action.payload)
+    },
+
+    receiveMarketsMap: (state, action: PayloadAction<MarketsMap>) => {
+      state.marketsMap = receiveDataWrapper(action.payload)
+    },
+    fetchMarketsMap: (state) => {
+      state.marketsMap = fetchDataWrapper()
+    },
+    errorMarketsMap: (state, action: PayloadAction<string>) => {
+      state.marketsMap = errorDataWrapper(action.payload)
+    },
+
+    receiveRelayerTokenInfo: (state, action: PayloadAction<RelayerTokenInfo>) => {
+      state.relayerTokenInfo = receiveDataWrapper(action.payload)
+    },
+    fetchRelayerTokenInfo: (state) => {
+      state.relayerTokenInfo = fetchDataWrapper()
+    },
+    errorRelayerTokenInfo: (state, action: PayloadAction<string>) => {
+      state.relayerTokenInfo = errorDataWrapper(action.payload)
+    },
+
+    reset: () => initialState
+  }
+})
+
+export const {
+  receiveSolanaTokenMap,
+  fetchSolanaTokenMap,
+  errorSolanaTokenMap,
+  receiveMarketsMap,
+  fetchMarketsMap,
+  errorMarketsMap,
+  receiveRelayerTokenInfo,
+  fetchRelayerTokenInfo,
+  errorRelayerTokenInfo,
+  reset
+} = tokenSlice.actions
+
+export default tokenSlice.reducer

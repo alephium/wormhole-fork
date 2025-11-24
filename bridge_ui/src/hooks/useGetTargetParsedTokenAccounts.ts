@@ -3,9 +3,9 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { formatUnits } from "ethers/lib/utils";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
+import { useEthereumProvider } from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import {
   selectTransferTargetAsset,
   selectTransferTargetAssetWrapper,

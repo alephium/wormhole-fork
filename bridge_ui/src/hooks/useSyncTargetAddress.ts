@@ -14,9 +14,9 @@ import {
 import { PublicKey } from "@solana/web3.js";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAlgorandContext } from "../contexts/AlgorandWalletContext";
-import { useEthereumProvider } from "../contexts/EthereumProviderContext";
-import { useSolanaWallet } from "../contexts/SolanaWalletContext";
+import { useAlgorandContext } from "@alephium/bridge-widget";
+import { useEthereumProvider } from "@alephium/bridge-widget";
+import { useSolanaWallet } from "@alephium/bridge-widget";
 import { setTargetAddressHex as setNFTTargetAddressHex } from "../store/nftSlice";
 import {
   selectNFTTargetAsset,
