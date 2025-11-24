@@ -4,17 +4,17 @@ import {
   CircularProgress,
   FormControl,
   ListItemText,
-  makeStyles,
   MenuItem,
   Paper,
   Select,
   TextField,
   Tooltip,
   Typography,
-  withStyles,
-} from "@material-ui/core";
-import { InfoOutlined } from "@material-ui/icons";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
+  ToggleButton,
+  ToggleButtonGroup
+} from "@mui/material";
+import { makeStyles, withStyles } from 'tss-react/mui';
+import { InfoOutlined } from "@mui/icons-material";
 import { useCallback, useMemo, useState } from "react";
 import useNotionalTransferred from "../../hooks/useNotionalTransferred";
 import { COLORS } from "../../muiTheme";
@@ -34,13 +34,13 @@ import useTransactionTotals from "../../hooks/useTransactionTotals";
 
 const DISPLAY_BY_VALUES = ["Dollar", "Percent", "Transactions"];
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: "16px",
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       flexDirection: "column",
     },
   },
@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     flexWrap: "wrap",
     marginBottom: "16px",
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       justifyContent: "center",
       columnGap: 8,
       rowGap: 8,
@@ -86,10 +86,10 @@ const tooltipStyles = {
   },
 };
 
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip);
+const StyledTooltip = withStyles(Tooltip, tooltipStyles);
 
 const VolumeStats = () => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const [displayBy, setDisplayBy] = useState(DISPLAY_BY_VALUES[0]);
   const [timeFrame, setTimeFrame] = useState("All time");
@@ -235,11 +235,11 @@ const VolumeStats = () => {
                   : //@ts-ignore
                     CHAINS_BY_ID[selected[0]]?.name
               }
-              MenuProps={{ getContentAnchorEl: null }} // hack to prevent popup menu from moving
               style={{ minWidth: 128 }}
             >
               <MenuItem value="all">
                 <Checkbox
+                  color="secondary"
                   checked={availableChains.length > 0 && allChainsSelected}
                   indeterminate={
                     selectedChains.length > 0 &&
@@ -250,7 +250,7 @@ const VolumeStats = () => {
               </MenuItem>
               {availableChains.map((option) => (
                 <MenuItem key={option} value={option}>
-                  <Checkbox checked={selectedChains.indexOf(option) > -1} />
+                  <Checkbox checked={selectedChains.indexOf(option) > -1} color="secondary" />
                   <ListItemText primary={CHAINS_BY_ID[option]?.name} />
                 </MenuItem>
               ))}

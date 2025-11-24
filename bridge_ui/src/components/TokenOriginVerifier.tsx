@@ -9,12 +9,12 @@ import {
   Card,
   CircularProgress,
   Container,
-  makeStyles,
   MenuItem,
   TextField,
   Typography,
-} from "@material-ui/core";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBetaContext } from "../contexts/BetaContext";
@@ -31,7 +31,7 @@ import KeyAndBalance from "./KeyAndBalance";
 import SmartAddress from "./SmartAddress";
 import { RegisterNowButtonCore } from "./Transfer/RegisterNowButton";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexBox: {
     display: "flex",
     width: "100%",
@@ -73,7 +73,7 @@ function PrimaryAssetInfomation({
   showLoader: boolean;
 }) {
   const { t } = useTranslation()
-  const classes = useStyles();
+  const { classes } = useStyles();
   const tokenArray = useMemo(() => [originAsset], [originAsset]);
   const metadata = useMetadata(originChain, tokenArray);
   const nativeContent = (
@@ -114,7 +114,7 @@ function SecondaryAssetInformation({
   originAssetInfo?: OriginalAssetInfo;
 }) {
   const { t } = useTranslation()
-  const classes = useStyles();
+  const { classes } = useStyles();
   const tokenArray: string[] = useMemo(() => {
     //Saved to a variable to help typescript cope
     const originAddress = originAssetInfo?.originAddress;
@@ -186,7 +186,7 @@ function SecondaryAssetInformation({
 
 export default function TokenOriginVerifier() {
   const { t } = useTranslation()
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isBeta = useBetaContext();
 
   const [primaryLookupChain, setPrimaryLookupChain] = useState(CHAIN_ID_ALEPHIUM);

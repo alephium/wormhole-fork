@@ -1,4 +1,5 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
@@ -7,7 +8,7 @@ import {
 } from "../../store/selectors";
 import ShowTx from "../ShowTx";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
@@ -22,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SendPreview() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const sourceChain = useSelector(selectTransferSourceChain);
   const transferTx = useSelector(selectTransferTransferTx);
 

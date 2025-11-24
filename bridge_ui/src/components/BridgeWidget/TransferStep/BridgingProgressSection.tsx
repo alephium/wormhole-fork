@@ -6,8 +6,8 @@ import { selectTransferHasSentTokens, selectTransferRedeemTx } from '../../../st
 import { selectTransferIsRedeemComplete } from '../../../store/selectors'
 import { selectTransferIsRedeemedViaRelayer } from '../../../store/selectors'
 import { selectTransferIsBlockFinalized } from '../../../store/selectors'
-import { IconButton } from '@material-ui/core'
-import { CheckCircleOutlineRounded, UnfoldLessOutlined, UnfoldMoreOutlined } from '@material-ui/icons'
+import { IconButton } from '@mui/material'
+import { CheckCircleOutlineRounded, UnfoldLessOutlined, UnfoldMoreOutlined } from '@mui/icons-material'
 import BridgingProgressSectionDetails from './BridgingProgressSectionDetails'
 import OngoingBridgingBadge from './OngoingBridgingBadge'
 import { COLORS } from '../../../muiTheme'
@@ -20,7 +20,7 @@ interface BridgingProgressSectionProps {
 }
 
 const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectionProps) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const [step, setStep] = useState<number>(1)
   const [isExpanded, setIsExpanded] = useState<boolean>(false)
   const txExists = useTransferOrRecoveryTxExists()
@@ -84,7 +84,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
                 {step === 5 && 'Bridging completed!'}
               </div>
             )}
-            <IconButton onClick={handleExpandClick} className={classes.expandButton}>
+            <IconButton onClick={handleExpandClick} className={classes.expandButton} size="large">
               <div className={classes.expandIconWrapper}>
                 <UnfoldMoreOutlined
                   className={`${classes.expandIcon} ${
@@ -105,7 +105,7 @@ const BridgingProgressSection = ({ isTransferCompleted }: BridgingProgressSectio
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default BridgingProgressSection

@@ -9,11 +9,11 @@ import {
   Tabs,
   Toolbar,
   Typography,
-  makeStyles,
   useMediaQuery,
   useTheme,
-} from "@material-ui/core";
-import MenuIcon from "@material-ui/icons/Menu";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
@@ -39,13 +39,13 @@ import AttestLegacy from "./components/Attest";
 
 function App() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isBeta = useBetaContext();
   const { push } = useHistory();
   const { pathname } = useLocation();
   const wallet = useWallet();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [navAnchorEl, setNavAnchorEl] = useState(null);
   const navMenuId = "app-navigation-menu";
   const navMenuOpen = !!navAnchorEl
@@ -138,7 +138,7 @@ function App() {
                   onClick={handleNavMenuOpen}
                   className={classes.mobileNavTrigger}
                   edge="end"
-                >
+                  size="large">
                   <MenuIcon />
                 </IconButton>
                 <Menu
@@ -148,7 +148,6 @@ function App() {
                   open={navMenuOpen}
                   onClose={handleNavMenuClose}
                   classes={{ paper: classes.mobileMenuPaper }}
-                  getContentAnchorEl={null}
                   anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                   transformOrigin={{ vertical: "top", horizontal: "right" }}
                 >
@@ -203,7 +202,7 @@ function App() {
           >
             {t("Token Bridge")} 🌉
           </HeaderText>
-          <Tabs value={pathname} variant="fullWidth" onChange={handleTabChange} indicatorColor="primary">
+          <Tabs value={pathname} variant="fullWidth" onChange={handleTabChange}>
             <Tab label={t("Tokens_other")} value="/transfer" disableRipple />
             {/* <Tab label="NFTs" value="/nft" /> */}
             <Tab label={t("Redeem")} value="/redeem" to="/redeem" disableRipple />
@@ -255,7 +254,7 @@ function App() {
 
 export default App;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   appBar: {
     background: "transparent",
     flexDirection: "row",
@@ -349,10 +348,10 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     gap: theme.spacing(4),
     marginLeft: theme.spacing(4),
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       display: "none",
     },
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       display: "none",
     },
     flexWrap: "wrap",
@@ -364,10 +363,10 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up("md")]: {
       marginRight: theme.spacing(2.5),
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       marginRight: theme.spacing(2.5),
     },
-    [theme.breakpoints.down("xs")]: {
+    [theme.breakpoints.down('sm')]: {
       marginRight: theme.spacing(1),
     },
   },

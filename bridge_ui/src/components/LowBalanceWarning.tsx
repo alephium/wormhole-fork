@@ -1,6 +1,7 @@
 import { ChainId, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useIsWalletReady from "../hooks/useIsWalletReady";
@@ -8,7 +9,7 @@ import useTransactionFees from "../hooks/useTransactionFees";
 import { selectTransferUseRelayer } from "../store/selectors";
 import { getDefaultNativeCurrencySymbol } from "../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
@@ -17,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
 
 function LowBalanceWarning({ chainId }: { chainId: ChainId }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const { isReady } = useIsWalletReady(chainId);
   const transactionFeeWarning = useTransactionFees(chainId);
   const relayerSelected = !!useSelector(selectTransferUseRelayer);

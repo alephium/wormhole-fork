@@ -4,8 +4,9 @@ import {
   CHAIN_ID_SOLANA,
 } from "@alephium/wormhole-sdk";
 import { getAddress } from "@ethersproject/address";
-import { Button, makeStyles, Typography } from "@material-ui/core";
-import { VerifiedUser } from "@material-ui/icons";
+import { Button, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { VerifiedUser } from "@mui/icons-material";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router";
@@ -48,24 +49,24 @@ import SourceAssetWarning from "./SourceAssetWarning";
 import ChainWarningMessage from "../ChainWarningMessage";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   chainSelectWrapper: {
     display: "flex",
     alignItems: "center",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       flexDirection: "column",
     },
   },
   chainSelectContainer: {
     flexBasis: "100%",
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
       width: "100%",
     },
   },
   chainSelectArrow: {
     position: "relative",
     top: "12px",
-    [theme.breakpoints.down("sm")]: { transform: "rotate(90deg)" },
+    [theme.breakpoints.down('md')]: { transform: "rotate(90deg)" },
   },
   transferField: {
     marginTop: theme.spacing(5),
@@ -74,7 +75,7 @@ const useStyles = makeStyles((theme) => ({
 
 function Source() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
   const sourceChain = useSelector(selectTransferSourceChain);

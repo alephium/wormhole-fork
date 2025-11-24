@@ -1,7 +1,8 @@
 import { KeyboardEvent, MouseEvent, useCallback } from "react"
 import clsx from "clsx"
-import { CircularProgress, Typography, makeStyles } from "@material-ui/core"
-import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@material-ui/icons"
+import { CircularProgress, Typography } from "@mui/material"
+import { makeStyles } from 'tss-react/mui';
+import { RadioButtonUncheckedRounded, CheckCircleOutlineRounded } from "@mui/icons-material"
 
 import BridgeWidgetButton from "../BridgeWidget/BridgeWidgetButton"
 import { GREEN, GRAY } from "../BridgeWidget/styles"
@@ -46,7 +47,7 @@ const AttestStep = ({
   onOpenDialog,
   selectLabel
 }: AttestStepProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const isEditable = step.isEditable ?? canEditStep(step.id)
   const hasValue = step.value !== undefined && step.value !== null
   const isStepDisabled = step.disabled || step.status === "pending"
@@ -198,13 +199,13 @@ const AttestStep = ({
 
 export default AttestStep
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   stepRow: {
     display: "flex",
     alignItems: "center",
     gap: theme.spacing(2),
     cursor: "default",
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       flexDirection: "column",
       alignItems: "stretch",
       gap: theme.spacing(1.5)
@@ -227,14 +228,14 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     flex: 1,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: "100%"
     }
   },
   stepTitle: {
     color: COLORS.white,
     minWidth: 140,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       minWidth: "auto"
     }
   },
@@ -245,7 +246,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 400,
     lineHeight: "1.2",
     maxWidth: "65%",
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       maxWidth: "100%",
       marginTop: theme.spacing(0.5),
       textAlign: "left"
@@ -257,7 +258,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     justifyContent: "flex-end",
     alignItems: "flex-end",
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: "100%",
       alignItems: "stretch"
     }
@@ -276,7 +277,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
     alignSelf: "flex-end",
     transition: "border-color 0.2s ease, background-color 0.2s ease",
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: "100%",
       justifyContent: "flex-start",
       textAlign: "left",
@@ -297,7 +298,7 @@ const useStyles = makeStyles((theme) => ({
     color: GRAY,
     fontSize: "14px",
     fontWeight: 400,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       textAlign: "left"
     }
   },
@@ -319,7 +320,7 @@ const useStyles = makeStyles((theme) => ({
   selectButtonWrapper: {
     minWidth: 140,
     maxWidth: 160,
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       width: "100%",
       minWidth: 0,
       maxWidth: "none"

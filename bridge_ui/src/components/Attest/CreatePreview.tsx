@@ -1,4 +1,5 @@
-import { Link, makeStyles, Typography } from "@material-ui/core";
+import { Link, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -10,10 +11,10 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import ShowTx from "../ShowTx";
 import { useHistory } from "react-router";
 import { getHowToAddToTokenListUrl } from "../../utils/consts";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/material";
 import { Trans, useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   description: {
     textAlign: "center",
   },
@@ -25,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
 export default function CreatePreview() {
   const { t } = useTranslation();
   const { push } = useHistory();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const targetChain = useSelector(selectAttestTargetChain);
   const createTx = useSelector(selectAttestCreateTx);

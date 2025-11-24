@@ -1,9 +1,10 @@
-import { makeStyles, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import clsx from "clsx";
 import { ReactChild } from "react";
 import { COLORS } from "../muiTheme";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     marginBottom: theme.spacing(10),
     width: "100%",
@@ -32,7 +33,7 @@ export default function HeaderText({
   small?: boolean;
   subtitle?: ReactChild;
 }) {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <div className={classes.container}>
       <Typography

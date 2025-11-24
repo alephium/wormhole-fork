@@ -1,14 +1,14 @@
 import {
   ButtonBase,
   List,
-  ListItem,
+  ListItemButton,
   ListItemText,
   Popover,
   PopoverOrigin,
   Typography,
-  makeStyles,
-} from "@material-ui/core"
-import { AccountBalanceWalletOutlined } from "@material-ui/icons"
+} from "@mui/material"
+import { makeStyles } from 'tss-react/mui';
+import { AccountBalanceWalletOutlined } from "@mui/icons-material"
 import clsx from "clsx"
 import { MouseEvent, ReactNode, useMemo, useState } from "react"
 import useCopyToClipboard from "../hooks/useCopyToClipboard"
@@ -40,7 +40,7 @@ const WalletAddressButton = ({
   onlyShowChainIcon = false,
   disableDisconnect = false,
 }: WalletAddressButtonProps) => {
-  const classes = useStyles()
+  const { classes } = useStyles()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const copyToClipboard = useCopyToClipboard(address)
   const open = !!anchorEl
@@ -131,11 +131,10 @@ const WalletAddressButton = ({
         </div>
         <Divider />
         <List>
-          <ListItem button onClick={handleCopy}>
+          <ListItemButton onClick={handleCopy}>
             <ListItemText primary="Copy address" />
-          </ListItem>
-          <ListItem
-            button
+          </ListItemButton>
+          <ListItemButton
             disabled={disableDisconnect}
             onClick={disableDisconnect ? undefined : handleDisconnect}
           >
@@ -143,7 +142,7 @@ const WalletAddressButton = ({
               primary="Disconnect"
               secondary={disableDisconnect ? "Complete bridging to disconnect." : undefined}
             />
-          </ListItem>
+          </ListItemButton>
         </List>
       </Popover>
     </>
@@ -152,7 +151,7 @@ const WalletAddressButton = ({
 
 export default WalletAddressButton
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   button: {
     display: "inline-flex",
     alignItems: "center",

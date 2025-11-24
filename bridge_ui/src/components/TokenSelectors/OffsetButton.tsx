@@ -1,7 +1,8 @@
-import { Button, makeStyles } from "@material-ui/core";
+import { Button } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { ReactChild } from "react";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   offsetButton: { display: "block", marginLeft: "auto", marginTop: 8 },
 }));
 
@@ -14,7 +15,7 @@ export default function OffsetButton({
   disabled?: boolean;
   children: ReactChild;
 }) {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Button
       onClick={onClick}

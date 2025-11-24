@@ -1,14 +1,12 @@
 import {
-  createStyles,
   IconButton,
-  makeStyles,
   Tooltip,
-} from "@material-ui/core";
-import RefreshIcon from "@material-ui/icons/Refresh";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles(() =>
-  createStyles({
+const useStyles = makeStyles()(() => ({
     inlineContentWrapper: {
       display: "inline-block",
       flexGrow: 1,
@@ -31,13 +29,13 @@ export default function RefreshButtonWrapper({
   callback: () => any;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const refreshWrapper = (
     <div className={classes.flexWrapper}>
       <div className={classes.inlineContentWrapper}>{children}</div>
       <Tooltip title={t("Reload Tokens")}>
-        <IconButton onClick={callback}>
+        <IconButton onClick={callback} size="large">
           <RefreshIcon />
         </IconButton>
       </Tooltip>

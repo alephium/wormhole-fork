@@ -4,12 +4,12 @@ import {
   DialogTitle,
   IconButton,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  makeStyles,
-} from "@material-ui/core";
-import CloseIcon from "@material-ui/icons/Close";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import CloseIcon from "@mui/icons-material/Close";
 import { useCallback } from "react";
 import {
   Connection,
@@ -20,7 +20,7 @@ import { getEvmChainId } from "../utils/consts";
 import useIsWalletReady from "../hooks/useIsWalletReady";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   flexTitle: {
     display: "flex",
     alignItems: "center",
@@ -48,7 +48,7 @@ const WalletOptions = ({
   connect: (connectType: ConnectType) => void;
   onClose: () => void;
 }) => {
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const handleClick = useCallback(() => {
     connect(connection.connectType);
@@ -56,7 +56,7 @@ const WalletOptions = ({
   }, [connect, connection, onClose]);
 
   return (
-    <ListItem button onClick={handleClick}>
+    <ListItemButton onClick={handleClick}>
       <ListItemIcon>
         <img
           src={connection.icon}
@@ -65,7 +65,7 @@ const WalletOptions = ({
         />
       </ListItemIcon>
       <ListItemText>{connection.name}</ListItemText>
-    </ListItem>
+    </ListItemButton>
   );
 };
 
@@ -82,7 +82,7 @@ const EvmConnectWalletDialog = ({
   const { availableConnections, connect, chainId: evmChainId } = useEthereumProvider();
   const enableAutoSwitch = evmChainId === undefined
   const { forceNetworkSwitch } = useIsWalletReady(chainId, enableAutoSwitch)
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const availableWallets = availableConnections
     .filter((connection) => {
@@ -113,7 +113,7 @@ const EvmConnectWalletDialog = ({
       <DialogTitle>
         <div className={classes.flexTitle}>
           <div>{t("Select your wallet")}</div>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={onClose} size="large">
             <CloseIcon />
           </IconButton>
         </div>

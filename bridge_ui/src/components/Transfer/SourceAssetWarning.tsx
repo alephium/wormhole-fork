@@ -1,10 +1,11 @@
 import { ChainId, CHAIN_ID_POLYGON, isEVMChain } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { POLYGON_TERRA_WRAPPED_TOKENS } from "../../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   container: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
@@ -17,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
 
 function PolygonTerraWrappedWarning() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <Alert severity="warning" variant="outlined" className={classes.alert}>
       <Typography variant="body1">

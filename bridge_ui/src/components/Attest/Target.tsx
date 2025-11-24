@@ -1,6 +1,7 @@
 import { isEVMChain } from "@alephium/wormhole-sdk";
-import { makeStyles, Typography } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +19,7 @@ import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
@@ -27,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
 
 function Target() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectAttestSourceChain);
   const chains = useMemo(

@@ -1,5 +1,5 @@
 import { ChainId } from "@alephium/wormhole-sdk";
-import { useTheme, useMediaQuery } from "@material-ui/core";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { useMemo } from "react";
 import {
   Legend,
@@ -34,7 +34,7 @@ const TVLLineChart = ({
   }, [cumulativeTVL, timeFrame]);
 
   const theme = useTheme();
-  const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
+  const isXSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <ResponsiveContainer height={452}>

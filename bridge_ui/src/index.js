@@ -1,7 +1,7 @@
 import "./i18n";
 
-import { CssBaseline } from "@material-ui/core";
-import { ThemeProvider } from "@material-ui/core/styles";
+import { CssBaseline } from "@mui/material";
+import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { SnackbarProvider } from "notistack";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
@@ -26,32 +26,34 @@ const connectors = {
 ReactDOM.render(
   <ErrorBoundary>
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ErrorBoundary>
-          <SnackbarProvider maxSnack={3}>
-            <BetaContextProvider>
-              <SolanaWalletProvider>
-                <EthereumProviderProvider>
-                  <TerraWalletProvider>
-                    <AlephiumWalletProvider
-                      network={CLUSTER}
-                      addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
-                      connectors={connectors}
-                    >
-                      <AlgorandContextProvider>
-                        <HashRouter>
-                          <App />
-                        </HashRouter>
-                      </AlgorandContextProvider>
-                    </AlephiumWalletProvider>
-                  </TerraWalletProvider>
-                </EthereumProviderProvider>
-              </SolanaWalletProvider>
-            </BetaContextProvider>
-          </SnackbarProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
+      <StyledEngineProvider injectFirst>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <ErrorBoundary>
+            <SnackbarProvider maxSnack={3}>
+              <BetaContextProvider>
+                <SolanaWalletProvider>
+                  <EthereumProviderProvider>
+                    <TerraWalletProvider>
+                      <AlephiumWalletProvider
+                        network={CLUSTER}
+                        addressGroup={ALEPHIUM_BRIDGE_GROUP_INDEX}
+                        connectors={connectors}
+                      >
+                        <AlgorandContextProvider>
+                          <HashRouter>
+                            <App />
+                          </HashRouter>
+                        </AlgorandContextProvider>
+                      </AlephiumWalletProvider>
+                    </TerraWalletProvider>
+                  </EthereumProviderProvider>
+                </SolanaWalletProvider>
+              </BetaContextProvider>
+            </SnackbarProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </StyledEngineProvider>
     </Provider>
   </ErrorBoundary>,
   document.getElementById("root")

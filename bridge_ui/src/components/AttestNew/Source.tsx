@@ -1,5 +1,6 @@
 import { ChainId } from "@alephium/wormhole-sdk"
-import { makeStyles, TextField } from "@material-ui/core"
+import { TextField } from "@mui/material"
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useDispatch, useSelector } from "react-redux"
@@ -36,7 +37,7 @@ const Source = ({
   onSourceAssetChange
 }: SourceProps) => {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const dispatch = useDispatch()
   const storeSourceChain = useSelector(selectAttestSourceChain)
   const storeSourceAsset = useSelector(selectAttestSourceAsset)
@@ -111,7 +112,7 @@ const Source = ({
 
 export default Source
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   transferField: {
     marginTop: theme.spacing(5),
   },

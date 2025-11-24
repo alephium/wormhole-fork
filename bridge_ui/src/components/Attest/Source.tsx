@@ -1,4 +1,5 @@
-import { makeStyles, TextField } from "@material-ui/core";
+import { TextField } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,7 +20,7 @@ import ChainSelect from "../ChainSelect";
 import KeyAndBalance from "../KeyAndBalance";
 import LowBalanceWarning from "../LowBalanceWarning";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   transferField: {
     marginTop: theme.spacing(5),
   },
@@ -27,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
 
 function Source() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const dispatch = useDispatch();
   const sourceChain = useSelector(selectAttestSourceChain);
   const sourceAsset = useSelector(selectAttestSourceAsset);

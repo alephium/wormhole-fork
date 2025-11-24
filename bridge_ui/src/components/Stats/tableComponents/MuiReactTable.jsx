@@ -1,18 +1,18 @@
-import { IconButton } from "@material-ui/core";
-import MaUTable from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TablePagination from "@material-ui/core/TablePagination";
-import TableRow from "@material-ui/core/TableRow";
-import TableSortLabel from "@material-ui/core/TableSortLabel";
+import { IconButton } from "@mui/material";
+import MaUTable from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
+import TableRow from "@mui/material/TableRow";
+import TableSortLabel from "@mui/material/TableSortLabel";
 import {
   AddCircleOutline,
   KeyboardArrowDown,
   KeyboardArrowRight,
   RemoveCircleOutline,
-} from "@material-ui/icons";
+} from "@mui/icons-material";
 import React from "react";
 import {
   useExpanded,
@@ -92,7 +92,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                     )}
                     {column.canGroupBy ? (
                       // If the column can be grouped, let's add a toggle
-                      <span onClick={stopProp}>
+                      (<span onClick={stopProp}>
                         <IconButton
                           size="small"
                           {...column.getGroupByToggleProps()}
@@ -103,7 +103,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                             <AddCircleOutline fontSize="inherit" />
                           )}
                         </IconButton>
-                      </span>
+                      </span>)
                     ) : null}
                   </TableCell>
                 ))}
@@ -123,7 +123,7 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                       >
                         {cell.isGrouped ? (
                           // If it's a grouped cell, add an expander and row count
-                          <>
+                          (<>
                             <IconButton
                               size="small"
                               {...row.getToggleRowExpandedProps()}
@@ -134,15 +134,15 @@ const EnhancedTable = ({ columns, data, skipPageReset, initialState = {} }) => {
                                 <KeyboardArrowRight fontSize="inherit" />
                               )}
                             </IconButton>{" "}
-                            {cell.render("Cell")} ({row.subRows.length})
-                          </>
+                            {cell.render("Cell")}({row.subRows.length})
+                                                      </>)
                         ) : cell.isAggregated ? (
                           // If the cell is aggregated, use the Aggregated
                           // renderer for cell
-                          cell.render("Aggregated")
+                          (cell.render("Aggregated"))
                         ) : cell.isPlaceholder ? null : ( // For cells with repeated values, render null
                           // Otherwise, just render the regular cell
-                          cell.render("Cell")
+                          (cell.render("Cell"))
                         )}
                       </TableCell>
                     );

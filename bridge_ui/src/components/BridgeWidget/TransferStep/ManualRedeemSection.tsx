@@ -1,5 +1,5 @@
 import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_ETHEREUM_ROPSTEN } from '@alephium/wormhole-sdk'
-import { Checkbox, FormControlLabel, Typography } from '@material-ui/core'
+import { Checkbox, FormControlLabel, Typography } from '@mui/material'
 import { useCallback, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useHandleRedeem } from '../../../hooks/useHandleRedeem'
@@ -22,7 +22,7 @@ interface ManualRedeemSectionProps {
 }
 
 const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) => {
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const { t } = useTranslation()
   const { handleClick, handleNativeClick, disabled } = useHandleRedeem()
   const targetChain = useSelector(selectTransferTargetChain)
@@ -80,7 +80,7 @@ const ManualRedeemSection = ({ isTransferCompleted }: ManualRedeemSectionProps) 
         <div>
           {isNativeEligible && (
             <FormControlLabel
-              control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} color="primary" />}
+              control={<Checkbox checked={useNativeRedeem} onChange={toggleNativeRedeem} />}
               label={t('Automatically unwrap to native currency')}
             />
           )}

@@ -1,6 +1,7 @@
-import { Button, makeStyles, Tooltip, Typography } from "@material-ui/core";
-import { FileCopy, OpenInNew } from "@material-ui/icons";
-import { withStyles } from "@material-ui/styles";
+import { Button, Tooltip, Typography } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { FileCopy, OpenInNew } from "@mui/icons-material";
+import { withStyles } from "tss-react/mui";
 import useCopyToClipboard from "../../hooks/useCopyToClipboard";
 import { getExplorerName } from "../../utils/consts";
 import { getTransactionLink, shortenTxId } from "../../utils/transaction";
@@ -9,7 +10,7 @@ import { useHistory } from "react-router-dom";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainTypog: {
     display: "inline-block",
     marginRight: theme.spacing(1),
@@ -25,19 +26,18 @@ const useStyles = makeStyles((theme) => ({
 const tooltipStyles = {
   tooltip: {
     minWidth: "max-content",
-    textAlign: "center",
+    textAlign: "center" as const,
     "& > *": {
       margin: ".25rem"
     }
   }
 }
 
-// @ts-ignore
-const StyledTooltip = withStyles(tooltipStyles)(Tooltip)
+const StyledTooltip = withStyles(Tooltip, tooltipStyles)
 
 export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
   const { t } = useTranslation()
-  const classes = useStyles()
+  const { classes } = useStyles()
   const explorerAddress = getTransactionLink(tx.emitterChain, tx.txId)
   const explorerName = getExplorerName(tx.emitterChain)
 
@@ -93,7 +93,6 @@ export default function SmartTx({ tx }: { tx: BridgeTransaction }) {
   return (
     <StyledTooltip
       title={tooltipContent}
-      interactive={true}
       className={classes.mainTypog}
     >
       <Typography

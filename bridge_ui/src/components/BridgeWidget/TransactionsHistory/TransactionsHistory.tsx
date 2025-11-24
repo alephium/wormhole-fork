@@ -18,14 +18,14 @@ import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_TOKEN_BRIDGE_CONTRACT_ID } from '
 import { useWallet } from '@alephium/web3-react'
 import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import { useSnackbar } from 'notistack'
-import { Alert } from '@material-ui/lab'
+import { Alert } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { getIsTxsCompletedEvm } from '../../../utils/evm'
 import { getIsTxsCompletedAlph } from '../../../utils/alephium'
 import { useWidgetStyles } from '../styles'
 
 const TransactionsHistory = () => {
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const transferSourceChain = useSelector(selectTransferSourceChain)
   const transferTargetChain = useSelector(selectTransferTargetChain)
   const { isReady: sourceChainReady } = useIsWalletReady(transferSourceChain, false)

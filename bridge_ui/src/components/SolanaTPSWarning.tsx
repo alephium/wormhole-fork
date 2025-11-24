@@ -1,11 +1,11 @@
-import { makeStyles } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material";
 import { Connection } from "@solana/web3.js";
 import numeral from "numeral";
 import { useEffect, useState } from "react";
 import { SOLANA_HOST } from "../utils/consts";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alert: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
@@ -13,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function SolanaTPSWarning() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [tps, setTps] = useState<number | null>(null);
   useEffect(() => {
     let cancelled = false;

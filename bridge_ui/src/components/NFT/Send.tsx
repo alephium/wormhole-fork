@@ -1,5 +1,5 @@
 import { CHAIN_ID_SOLANA, CHAIN_ID_TERRA } from "@alephium/wormhole-sdk";
-import { Alert } from "@material-ui/lab";
+import { Alert } from "@mui/material";
 import { useSelector } from "react-redux";
 import { useHandleNFTTransfer } from "../../hooks/useHandleNFTTransfer";
 import useIsWalletReady from "../../hooks/useIsWalletReady";

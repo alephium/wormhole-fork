@@ -15,8 +15,9 @@ import {
   setFinalityProgressInitialRemainingSeconds,
   setIsBlockFinalized
 } from '../../../store/transferSlice'
-import { CheckCircleOutlineRounded } from '@material-ui/icons'
-import { CircularProgress, LinearProgress, styled, Typography } from '@material-ui/core'
+import { CheckCircleOutlineRounded } from '@mui/icons-material'
+import { CircularProgress, LinearProgress, Typography } from '@mui/material'
+import { styled } from '@mui/material/styles';
 import { CHAIN_ID_ALEPHIUM, CHAIN_ID_ETH, isEVMChain } from '@alephium/wormhole-sdk'
 import { ALEPHIUM_BRIDGE_GROUP_INDEX, ALEPHIUM_MINIMAL_CONSISTENCY_LEVEL, CLUSTER } from '../../../utils/consts'
 import {
@@ -34,7 +35,7 @@ import useFetchAvgBlockTime from '../useFetchAvgBlockTime'
 import { secondsToTime } from '../bridgeUtils'
 
 const FinalityProgress = ({ isActive }: { isActive: boolean }) => {
-  const classes = useWidgetStyles()
+  const { classes } = useWidgetStyles()
   const tx = useSelector(selectTransferTransferTx)
   const sourceChain = useSelector(selectTransferSourceChain)
   const isBlockFinalized = useSelector(selectTransferIsBlockFinalized)

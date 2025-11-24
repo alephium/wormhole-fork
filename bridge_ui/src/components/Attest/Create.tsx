@@ -1,4 +1,5 @@
-import { CircularProgress, makeStyles } from "@material-ui/core";
+import { CircularProgress } from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import useFetchForeignAsset from "../../hooks/useFetchForeignAsset";
@@ -13,7 +14,7 @@ import ButtonWithLoader from "../ButtonWithLoader";
 import KeyAndBalance from "../KeyAndBalance";
 import WaitingForWalletMessage from "./WaitingForWalletMessage";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   alignCenter: {
     margin: "0 auto",
     display: "block",
@@ -26,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
 
 function Create() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const targetChain = useSelector(selectAttestTargetChain);
   const originAsset = useSelector(selectAttestSourceAsset);
   const originChain = useSelector(selectAttestSourceChain);

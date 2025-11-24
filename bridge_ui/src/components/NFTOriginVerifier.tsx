@@ -18,13 +18,13 @@ import {
   Card,
   CircularProgress,
   Container,
-  makeStyles,
   MenuItem,
   TextField,
   Typography,
-} from "@material-ui/core";
-import { Launch } from "@material-ui/icons";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import { Launch } from "@mui/icons-material";
+import { Alert } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useBetaContext } from "../contexts/BetaContext";
 import { useEthereumProvider } from "../contexts/EthereumProviderContext";
@@ -47,7 +47,7 @@ import HeaderText from "./HeaderText";
 import KeyAndBalance from "./KeyAndBalance";
 import NFTViewer from "./TokenSelectors/NFTViewer";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   mainCard: {
     padding: "32px 32px 16px",
     backgroundColor: COLORS.whiteWithTransparency,
@@ -68,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function NFTOriginVerifier() {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isBeta = useBetaContext();
   const { provider, signerAddress } = useEthereumProvider();
   const [lookupChain, setLookupChain] = useState<ChainId>(CHAIN_ID_ETH);

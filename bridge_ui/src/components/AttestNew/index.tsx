@@ -1,10 +1,10 @@
 import {
   Container,
   Divider,
-  Typography,
-  makeStyles
-} from "@material-ui/core"
-import { Alert } from "@material-ui/lab"
+  Typography
+} from "@mui/material"
+import { makeStyles } from 'tss-react/mui';
+import { Alert } from "@mui/material"
 import clsx from "clsx"
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,7 +19,7 @@ import { useHistory } from "react-router-dom"
 
 const Attest = () => {
   const { t } = useTranslation()
-  const widgetClasses = useWidgetStyles()
+  const { classes: widgetClasses } = useWidgetStyles()
   const {
     steps,
     derivedActiveStep,
@@ -27,7 +27,7 @@ const Attest = () => {
     canEditStep
   } = useAttestSteps()
   const [editDialogStep, setEditDialogStep] = useState<AttestStepId | null>(null)
-  const classes = useStyles()
+  const { classes } = useStyles()
   const selectLabel = t("Select")
   const { push } = useHistory();
 
@@ -100,13 +100,13 @@ const Attest = () => {
 
 export default Attest
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   pageContainer: {
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing(2),
     paddingBottom: theme.spacing(4),
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       gap: theme.spacing(1.5),
       paddingBottom: theme.spacing(3),
       paddingLeft: theme.spacing(1.5),
@@ -120,7 +120,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     gap: theme.spacing(1.5),
     width: '100%',
-    [theme.breakpoints.down('xs')]: {
+    [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(2)
     }
   },

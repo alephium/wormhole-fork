@@ -12,12 +12,12 @@ import {
 import {
   Container,
   ListItemIcon,
-  makeStyles,
   MenuItem,
   Paper,
   TextField,
   Typography,
-} from "@material-ui/core";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
 import { ethers } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -63,10 +63,10 @@ import ButtonWithLoader from "./ButtonWithLoader";
 import EthereumSignerKey from "./EthereumSignerKey";
 import HeaderText from "./HeaderText";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles()((theme) => ({
   formControl: {
     display: "flex",
-    margin: `${theme.spacing(1)}px auto`,
+    margin: `${theme.spacing(1)} auto`,
     width: "100%",
     maxWidth: 400,
     textAlign: "center",
@@ -82,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
   select: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(1),
-    "& .MuiSelect-root": {
+    "& .MuiSelect-select": {
       display: "flex",
       alignItems: "center",
     },
@@ -156,7 +156,7 @@ interface BalancesInfo {
 
 function UnwrapNative() {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [selectedChainId, setSelectedChainId] = useState<SupportedChain>(
     CHAIN_ID_ETH as SupportedChain
   );

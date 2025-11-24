@@ -1,6 +1,6 @@
 import { CHAIN_ID_BSC, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from '@alephium/wormhole-sdk'
 import { getAddress } from '@ethersproject/address'
-import { Button, Typography } from '@material-ui/core'
+import { Button, Typography } from '@mui/material'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { useCallback, useEffect, useMemo } from 'react'

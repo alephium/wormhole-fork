@@ -2,21 +2,20 @@ import { ChainId } from "@alephium/wormhole-sdk";
 import {
   Button,
   CircularProgress,
-  createStyles,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
   List,
-  ListItem,
-  makeStyles,
+  ListItemButton,
   TextField,
   Tooltip,
   Typography,
-} from "@material-ui/core";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import RefreshIcon from "@material-ui/icons/Refresh";
-import { Alert } from "@material-ui/lab";
+} from "@mui/material";
+import { makeStyles } from 'tss-react/mui';
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { Alert } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NFTParsedTokenAccount } from "../../store/nftSlice";
@@ -25,8 +24,7 @@ import { getIsTokenTransferDisabled } from "../../utils/consts";
 import { shortenAddress } from "../../utils/addresses";
 import NFTViewer from "./NFTViewer";
 
-const useStyles = makeStyles((theme) =>
-  createStyles({
+const useStyles = makeStyles()((theme) => ({
     alignCenter: {
       textAlign: "center",
     },
@@ -118,7 +116,7 @@ export const BasicAccountRender = (
   displayBalance?: (account: NFTParsedTokenAccount) => boolean
 ) => {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const mintPrettyString = shortenAddress(account.mintKey);
   const uri = nft ? account.image_256 : account.logo || account.uri;
   const symbol = account.symbol || t("Unknown");
@@ -231,7 +229,7 @@ export default function TokenPicker({
   useTokenId?: boolean;
 }) {
   const { t } = useTranslation();
-  const classes = useStyles();
+  const { classes } = useStyles();
   const [holderString, setHolderString] = useState("");
   const [tokenIdHolderString, setTokenIdHolderString] = useState("");
   const [loadingError, setLoadingError] = useState("");
@@ -412,7 +410,7 @@ export default function TokenPicker({
           <Typography variant="h5">{t("Select a token")}</Typography>
           <div className={classes.grower} />
           <Tooltip title="Reload tokens">
-            <IconButton onClick={resetAccountsWrapper}>
+            <IconButton onClick={resetAccountsWrapper} size="large">
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -445,9 +443,8 @@ export default function TokenPicker({
           <List component="div" className={classes.tokenList}>
             {nonFeaturedOptions.map((option) => {
               return (
-                <ListItem
+                <ListItemButton
                   component="div"
-                  button
                   onClick={() => handleSelectOption(option)}
                   key={
                     option.publicKey + option.mintKey + (option.tokenId || "")
@@ -455,7 +452,7 @@ export default function TokenPicker({
                   disabled={getIsTokenTransferDisabled(chainId, option.mintKey)}
                 >
                   <RenderOption account={option} />
-                </ListItem>
+                </ListItemButton>
               );
             })}
             {nonFeaturedOptions.length ? null : (
