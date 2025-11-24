@@ -1,6 +1,6 @@
 import { CircularProgress, MenuItem, TextField, Typography } from '@mui/material'
 import { makeStyles } from 'tss-react/mui'
-import { useCallback } from 'react'
+import { ChangeEvent, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import useRelayersAvailable, { Relayer } from '../hooks/useRelayersAvailable'
 
@@ -29,7 +29,7 @@ export default function RelaySelector({
   )
 
   const onChangeWrapper = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       console.log(event, 'event in selector')
       if (event.target.value) {
         onChange(availableRelayers?.data?.relayers?.find((x) => x.url === event.target.value) || null)

@@ -57,7 +57,7 @@ const TransferProgressStep = () => {
         <BridgingProgressSection isTransferCompleted={isTransferCompleted} />
       </div>
 
-      <WalletReconnectSection isTransferCompleted={isTransferCompleted} />
+      <WalletReconnectSection />
 
       <ManualRedeemSection isTransferCompleted={isTransferCompleted} />
 

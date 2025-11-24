@@ -15,7 +15,7 @@ import { makeStyles } from 'tss-react/mui'
 import { Alert } from '@mui/material'
 import axios from 'axios'
 import { useSnackbar } from 'notistack'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEthereumProvider } from '../../../contexts/EthereumProviderContext'
 import useIsWalletReady from '../../../hooks/useIsWalletReady'
@@ -247,7 +247,7 @@ const RecoveryPage = () => {
   )
 
   const handleSourceTxChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       setRecoverySourceTx(event.target.value.trim())
     },
     [setRecoverySourceTx]

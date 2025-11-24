@@ -11,10 +11,10 @@ import {
   SolletExtensionWalletAdapter,
   ExodusWalletAdapter
 } from '@solana/wallet-adapter-wallets'
-import { FC, ReactNode, useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { getConst } from '../utils/consts'
 
-export const SolanaWalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export const SolanaWalletProvider = ({ children }: { children: ReactNode }) => {
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),

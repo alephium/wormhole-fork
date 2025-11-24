@@ -1,7 +1,7 @@
 import { ChainId } from '@alephium/wormhole-sdk'
 import { TextField } from '@mui/material'
 import { makeStyles } from 'tss-react/mui'
-import { useCallback } from 'react'
+import { ChangeEvent, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { incrementStep, setSourceAsset, setSourceChain } from '../../../store/attestSlice'
@@ -58,7 +58,7 @@ const Source = ({
     [dispatch, onSourceChainChange]
   )
   const handleAssetChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       const nextAsset = event.target.value
       if (onSourceAssetChange) {
         onSourceAssetChange(nextAsset)
