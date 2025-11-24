@@ -1,76 +1,52 @@
-import { ChainId } from '@alephium/wormhole-sdk'
-import { Container, IconButton, Typography } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
-import { useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useLocation } from 'react-router'
+import { Container } from '@mui/material'
+import { makeStyles } from 'tss-react/mui'
+import { useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import useCheckIfWormholeWrapped from '../../hooks/useCheckIfWormholeWrapped'
 import useFetchTargetAsset from '../../hooks/useFetchTargetAsset'
 import {
   selectBridgeWidgetPage,
-  selectTransferActiveBridgeWidgetStep,
   selectTransferIsRedeemComplete,
   selectTransferIsRedeeming,
   selectTransferIsSendComplete,
   selectTransferIsSending
 } from '../../store/selectors'
-import { reset, setSourceChain, setTargetChain } from '../../store/transferSlice'
-import { CHAINS_BY_ID } from '../../utils/consts'
-import BridgeWidgetSteps from './BridgeWidgetSteps'
+import TransferPage from './TransferPage/TransferPage'
 import { useWidgetStyles } from './styles'
-import { ArrowBackOutlined } from '@mui/icons-material'
-import Recovery from './Recovery/Recovery'
-import TransactionsHistory from './TransactionsHistory/TransactionsHistory'
-import HistoryNavItem from './EnterDataStep/HistoryNavItem'
-import RecoveryNavItem from './EnterDataStep/RecoveryNavItem'
+import RecoveryPage from './RecoveryPage/RecoveryPage'
+import TransactionsHistoryPage from './TransactionsHistoryPage/TransactionsHistoryPage'
+import PageNavigation from './PageNavigation/PageNavigation'
+import PageTitle from './PageTitle'
+import RegisterTokenPage from './RegisterTokenPage/RegisterTokenPage'
 
 const BridgeWidget = () => {
   useCheckIfWormholeWrapped()
   useFetchTargetAsset()
-  useUrlPathParams()
   usePreventNavigation()
 
-  const step = useSelector(selectTransferActiveBridgeWidgetStep)
   const { classes } = useStyles()
   const { classes: widgetClasses } = useWidgetStyles()
-  const dispatch = useDispatch()
 
   const page = useSelector(selectBridgeWidgetPage)
-
-  const title =
-    step === 0
-      ? page === 'bridge'
-        ? 'Bridge'
-        : page === 'recovery'
-        ? 'Recovery'
-        : 'Bridging history'
-      : step === 1
-      ? 'Review'
-      : ''
 
   return (
     <Container maxWidth="md" className={classes.mainContainer}>
       <div className={classes.innerContainer}>
         <div className={widgetClasses.spaceBetween}>
-          <div className={classes.pageTitle}>
-            {page !== 'bridge' && (
-              <IconButton onClick={() => dispatch(reset())} size="small">
-                <ArrowBackOutlined fontSize="small" />
-              </IconButton>
-            )}
-            <Typography variant="h1">{title}</Typography>
-          </div>
-
-          {page === 'bridge' && step === 0 && (
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <RecoveryNavItem />
-              <HistoryNavItem />
-            </div>
-          )}
+          <PageTitle />
+          <PageNavigation />
         </div>
         <div className={classes.mainBox}>
           <div className={classes.stack}>
-            {page === 'bridge' ? <BridgeWidgetSteps /> : page === 'recovery' ? <Recovery /> : <TransactionsHistory />}
+            {page === 'bridge' ? (
+              <TransferPage />
+            ) : page === 'recovery' ? (
+              <RecoveryPage />
+            ) : page === 'register' ? (
+              <RegisterTokenPage />
+            ) : page === 'history' ? (
+              <TransactionsHistoryPage />
+            ) : null}
           </div>
         </div>
       </div>
@@ -79,36 +55,6 @@ const BridgeWidget = () => {
 }
 
 export default BridgeWidget
-
-const useUrlPathParams = () => {
-  const dispatch = useDispatch()
-  const { search } = useLocation()
-  const query = useMemo(() => new URLSearchParams(search), [search])
-  const pathSourceChain = query.get('sourceChain')
-  const pathTargetChain = query.get('targetChain')
-
-  useEffect(() => {
-    if (!pathSourceChain && !pathTargetChain) {
-      return
-    }
-    try {
-      const sourceChain: ChainId = CHAINS_BY_ID[parseFloat(pathSourceChain || '') as ChainId]?.id
-      const targetChain: ChainId = CHAINS_BY_ID[parseFloat(pathTargetChain || '') as ChainId]?.id
-
-      if (sourceChain === targetChain) {
-        return
-      }
-      if (sourceChain) {
-        dispatch(setSourceChain(sourceChain))
-      }
-      if (targetChain) {
-        dispatch(setTargetChain(targetChain))
-      }
-    } catch (e) {
-      console.error('Invalid path params specified.')
-    }
-  }, [pathSourceChain, pathTargetChain, dispatch])
-}
 
 const usePreventNavigation = () => {
   const isSending = useSelector(selectTransferIsSending)

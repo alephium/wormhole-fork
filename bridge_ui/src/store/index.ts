@@ -4,6 +4,7 @@ import nftReducer from "./nftSlice";
 import transferReducer from "./transferSlice";
 import tokenReducer from "./tokenSlice";
 import feeReducer from "./feeSlice";
+import widgetReducer from "./widgetSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     transfer: transferReducer,
     tokens: tokenReducer,
     fee: feeReducer,
+    widget: widgetReducer,
   },
 });
 

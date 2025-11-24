@@ -17,7 +17,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router";
 import { Link as RouterLink, NavLink, Redirect, Route, Switch } from "react-router-dom";
-import Attest from "./components/AttestNew";
 import HeaderText from "./components/HeaderText";
 import Recovery from "./components/Recovery";
 import Stats from "./components/Stats";
@@ -230,9 +229,6 @@ function App() {
         </Route>
         <Route exact path="/register-legacy">
           <AttestLegacy />
-        </Route>
-        <Route exact path="/register">
-          <Attest />
         </Route>
         <Route exact path="/stats">
           <Stats />

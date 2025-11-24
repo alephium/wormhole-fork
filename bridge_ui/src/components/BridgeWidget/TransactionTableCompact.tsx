@@ -12,14 +12,17 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material'
-import { makeStyles } from 'tss-react/mui';
+import { makeStyles } from 'tss-react/mui'
 import { useTranslation } from 'react-i18next'
 import { BridgeTransaction, TxStatus } from '../Transactions'
 import SmartAddress from './SmartAddress'
 import { isValidElement, ReactNode, useCallback, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { useHistory, useLocation } from 'react-router'
-import { setBridgeWidgetPage } from '../../store/transferSlice'
+import {
+  setBridgeWidgetPage,
+  setRecoverySourceChainFromTxHistoryPage,
+  setRecoverySourceTxFromTxHistoryPage
+} from '../../store/widgetSlice'
 import clsx from 'clsx'
 import { RestoreOutlined, DoneAll, Check } from '@mui/icons-material'
 import { COLORS } from '../../muiTheme'
@@ -43,7 +46,7 @@ const useStyles = makeStyles()(() => ({
     alignItems: 'center',
     justifyContent: 'center',
     width: 14,
-    height: 14,
+    height: 14
   },
   statusContent: {
     display: 'flex',
@@ -96,8 +99,6 @@ const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const dispatch = useDispatch()
-  const history = useHistory()
-  const location = useLocation()
   const columnMinWidths = useMemo(() => {
     return columns.reduce((acc, column) => {
       acc[column.id] = column.minWidth
@@ -107,13 +108,11 @@ const TransactionTableCompact = (params: { txs: BridgeTransaction[]; txsStatus: 
 
   const handleRecoverClick = useCallback(
     (tx: BridgeTransaction) => {
+      dispatch(setRecoverySourceChainFromTxHistoryPage(tx.emitterChain))
+      dispatch(setRecoverySourceTxFromTxHistoryPage(tx.txId))
       dispatch(setBridgeWidgetPage('recovery'))
-      const searchParams = new URLSearchParams(location.search)
-      searchParams.set('sourceChain', tx.emitterChain.toString())
-      searchParams.set('transactionId', tx.txId)
-      history.replace({ pathname: location.pathname, search: `?${searchParams.toString()}` })
     },
-    [dispatch, history, location.pathname, location.search]
+    [dispatch]
   )
 
   const renderCellContent = useCallback(
