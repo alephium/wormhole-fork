@@ -8,6 +8,10 @@ on:
     paths:
       - "bridge-widget/**"
 
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -21,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: "npm"
           cache-dependency-path: bridge-widget/package-lock.json
           registry-url: "https://registry.npmjs.org"
@@ -59,8 +63,6 @@ jobs:
         run: npm ci
 
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: steps.checkVersion.outputs.publish == 'true'
         run: |
           npm run build
