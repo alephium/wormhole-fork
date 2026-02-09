@@ -3,7 +3,11 @@ name: Publish Wormhole SDK
 on:
   push:
     branches:
-      - '*'
+      - "*"
+
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read
 
 jobs:
   publish:
@@ -11,14 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
-          registry-url: 'https://registry.npmjs.org'
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.19.2'
+          go-version: "1.19.2"
 
       - name: Get package version from package.json
         id: getPackageVersion
@@ -50,8 +54,6 @@ jobs:
           echo ::set-output name=dist_tag::$dist_tag
 
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: steps.checkVersion.outputs.publish == 'true'
         run: |
           cd tools && npm ci && ./build.sh && cd ..
