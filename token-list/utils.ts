@@ -62,7 +62,9 @@ function getEVMNodeUrl(chainId: EVMChainId, network: 'testnet' | 'mainnet'): str
     case CHAIN_ID_ETH:
       return network === 'testnet' ? 'https://0xrpc.io/sep' : 'https://eth-mainnet.public.blastapi.io'
     case CHAIN_ID_BSC:
-      return network === 'testnet' ? 'https://bsc-testnet.public.blastapi.io' : 'https://bsc-mainnet.public.blastapi.io'
+      return network === 'testnet'
+        ? 'https://bnb-testnet.api.onfinality.io/public'
+        : 'https://bsc-mainnet.public.blastapi.io'
   }
   throw new Error(`Invalid chain id: ${chainId}`)
 }

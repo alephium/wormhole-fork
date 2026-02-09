@@ -285,7 +285,7 @@ export const BSC_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://bsc-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://bsc-testnet.public.blastapi.io'
+    ? "https://bnb-testnet.api.onfinality.io/public"
     : 'http://localhost:8546'
 
 export const TERRA_HOST =

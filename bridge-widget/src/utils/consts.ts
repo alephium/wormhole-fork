@@ -492,7 +492,7 @@ export const getConst = (
       return CLUSTER === 'mainnet'
         ? 'https://bsc-mainnet.public.blastapi.io'
         : CLUSTER === 'testnet'
-        ? 'https://bsc-testnet.public.blastapi.io'
+        ? 'https://bnb-testnet.api.onfinality.io/public'
         : 'http://localhost:8546'
 
     case 'EXPLORER_API_SERVER_HOST':
