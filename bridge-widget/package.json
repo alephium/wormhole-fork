@@ -4,6 +4,7 @@
   "main": "./lib/index.mjs",
   "module": "./lib/index.mjs",
   "types": "./lib/index.d.ts",
+  "repository": "https://github.com/alephium/wormhole-fork",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
