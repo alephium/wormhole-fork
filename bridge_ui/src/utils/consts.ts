@@ -278,14 +278,14 @@ export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://eth-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://eth-sepolia.public.blastapi.io'
+    ? "https://0xrpc.io/sep"
     : 'http://localhost:8545'
 
 export const BSC_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://bsc-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://bsc-testnet.public.blastapi.io'
+    ? "https://bnb-testnet.api.onfinality.io/public"
     : 'http://localhost:8546'
 
 export const TERRA_HOST =

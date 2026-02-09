@@ -485,14 +485,14 @@ export const getConst = (
       return CLUSTER === 'mainnet'
         ? 'https://eth-mainnet.public.blastapi.io'
         : CLUSTER === 'testnet'
-        ? 'https://eth-sepolia.public.blastapi.io'
+        ? 'https://0xrpc.io/sep'
         : 'http://localhost:8545'
 
     case 'BSC_RPC_HOST':
       return CLUSTER === 'mainnet'
         ? 'https://bsc-mainnet.public.blastapi.io'
         : CLUSTER === 'testnet'
-        ? 'https://bsc-testnet.public.blastapi.io'
+        ? 'https://bnb-testnet.api.onfinality.io/public'
         : 'http://localhost:8546'
 
     case 'EXPLORER_API_SERVER_HOST':
