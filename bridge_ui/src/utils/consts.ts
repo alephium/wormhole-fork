@@ -278,7 +278,7 @@ export const ETH_RPC_HOST =
   CLUSTER === 'mainnet'
     ? 'https://eth-mainnet.public.blastapi.io'
     : CLUSTER === 'testnet'
-    ? 'https://eth-sepolia.public.blastapi.io'
+    ? "https://0xrpc.io/sep"
     : 'http://localhost:8545'
 
 export const BSC_RPC_HOST =
